@@ -1,0 +1,362 @@
+[
+  {
+    "id": 2,
+    "query": "WITH c(city) AS (VALUES('A'),('A'),(NULL),(NULL)) SELECT DISTINCT city FROM c ORDER BY city",
+    "rows": [
+      [
+        null
+      ],
+      [
+        "A"
+      ]
+    ]
+  },
+  {
+    "id": 8,
+    "query": "WITH products(id,price) AS (VALUES(1,20),(2,10),(3,10),(4,30)) SELECT id FROM products ORDER BY price,id LIMIT 3",
+    "rows": [
+      [
+        2
+      ],
+      [
+        3
+      ],
+      [
+        1
+      ]
+    ]
+  },
+  {
+    "id": 12,
+    "query": "SELECT CASE WHEN 2>3 THEN 'yes' ELSE 'fallback' END",
+    "rows": [
+      [
+        "fallback"
+      ]
+    ]
+  },
+  {
+    "id": 13,
+    "query": "WITH orders(status) AS (VALUES('paid'),('open'),('paid')) SELECT SUM(CASE WHEN status='paid' THEN 1 ELSE 0 END) FROM orders",
+    "rows": [
+      [
+        2
+      ]
+    ]
+  },
+  {
+    "id": 18,
+    "query": "WITH customers(id) AS (VALUES(1),(2)),orders(customer_id) AS (VALUES(1)) SELECT id FROM customers c WHERE NOT EXISTS(SELECT 1 FROM orders o WHERE o.customer_id=c.id)",
+    "rows": [
+      [
+        2
+      ]
+    ]
+  },
+  {
+    "id": 19,
+    "query": "SELECT (SELECT COUNT(*) FROM (SELECT 1 UNION SELECT 1)),(SELECT COUNT(*) FROM (SELECT 1 UNION ALL SELECT 1))",
+    "rows": [
+      [
+        1,
+        2
+      ]
+    ]
+  },
+  {
+    "id": 22,
+    "query": "WITH x(v) AS (VALUES(100),(100),(90)),r AS (SELECT v,RANK() OVER(ORDER BY v DESC) a,DENSE_RANK() OVER(ORDER BY v DESC) b FROM x) SELECT a,b FROM r WHERE v=90",
+    "rows": [
+      [
+        3,
+        2
+      ]
+    ]
+  },
+  {
+    "id": 24,
+    "query": "WITH x(id,v) AS (VALUES(1,10),(2,20)) SELECT LAG(v) OVER(ORDER BY id) FROM x ORDER BY id",
+    "rows": [
+      [
+        null
+      ],
+      [
+        10
+      ]
+    ]
+  },
+  {
+    "id": 25,
+    "query": "WITH x(id,c,at) AS (VALUES(1,'A',1),(2,'A',2),(3,'B',1)),r AS (SELECT *,ROW_NUMBER() OVER(PARTITION BY c ORDER BY at DESC,id DESC) rn FROM x) SELECT id FROM r WHERE rn=1 ORDER BY id",
+    "rows": [
+      [
+        2
+      ],
+      [
+        3
+      ]
+    ]
+  },
+  {
+    "id": 27,
+    "query": "WITH RECURSIVE n(x) AS (SELECT 1 UNION ALL SELECT x+1 FROM n WHERE x<3) SELECT x FROM n",
+    "rows": [
+      [
+        1
+      ],
+      [
+        2
+      ],
+      [
+        3
+      ]
+    ]
+  },
+  {
+    "id": 28,
+    "query": "EXPLAIN QUERY PLAN SELECT 1",
+    "rows": null
+  },
+  {
+    "id": 29,
+    "query": "WITH sales(c,amount) AS (VALUES('A',4),('A',8),('B',9)),t AS (SELECT c,SUM(amount) total FROM sales GROUP BY c) SELECT c,total,RANK() OVER(ORDER BY total DESC) FROM t ORDER BY total DESC",
+    "rows": [
+      [
+        "A",
+        12,
+        1
+      ],
+      [
+        "B",
+        9,
+        2
+      ]
+    ]
+  },
+  {
+    "id": 30,
+    "query": "WITH products(price) AS (VALUES(10),(20),(30)) SELECT MIN(price),MAX(price) FROM products",
+    "rows": [
+      [
+        10,
+        30
+      ]
+    ]
+  },
+  {
+    "id": 32,
+    "query": "SELECT NULLIF(0,0),10.0/NULLIF(0,0)",
+    "rows": [
+      [
+        null,
+        null
+      ]
+    ]
+  },
+  {
+    "id": 33,
+    "query": "SELECT TRIM('  A B  ')",
+    "rows": [
+      [
+        "A B"
+      ]
+    ]
+  },
+  {
+    "id": 34,
+    "query": "WITH people(id,referrer) AS (VALUES(1,NULL),(2,1)) SELECT c.id,r.id FROM people c JOIN people r ON r.id=c.referrer",
+    "rows": [
+      [
+        2,
+        1
+      ]
+    ]
+  },
+  {
+    "id": 35,
+    "query": "WITH c(id) AS (VALUES(1),(2)),d(day) AS (VALUES(1),(2),(3)) SELECT COUNT(*) FROM c CROSS JOIN d",
+    "rows": [
+      [
+        6
+      ]
+    ]
+  },
+  {
+    "id": 36,
+    "query": "WITH a(id) AS (VALUES(1)),b(id) AS (VALUES(2)) SELECT a.id,b.id FROM a FULL OUTER JOIN b ON a.id=b.id ORDER BY a.id",
+    "rows": [
+      [
+        null,
+        2
+      ],
+      [
+        1,
+        null
+      ]
+    ]
+  },
+  {
+    "id": 37,
+    "query": "WITH c(id) AS (VALUES(1),(2)),o(customer_id,status) AS (VALUES(1,'paid')) SELECT c.id FROM c LEFT JOIN o ON o.customer_id=c.id WHERE o.status='paid'",
+    "rows": [
+      [
+        1
+      ]
+    ]
+  },
+  {
+    "id": 38,
+    "query": "SELECT 1 AS x UNION SELECT 2 EXCEPT SELECT 2",
+    "rows": [
+      [
+        1
+      ]
+    ]
+  },
+  {
+    "id": 40,
+    "query": "WITH x(id,v) AS (VALUES(1,10),(2,20)) SELECT LEAD(v) OVER(ORDER BY id) FROM x ORDER BY id",
+    "rows": [
+      [
+        20
+      ],
+      [
+        null
+      ]
+    ]
+  },
+  {
+    "id": 43,
+    "query": "WITH x(v) AS (VALUES(10),(30)) SELECT v,SUM(v) OVER(),1.0*v/SUM(v) OVER() FROM x ORDER BY v",
+    "rows": [
+      [
+        10,
+        40,
+        0.25
+      ],
+      [
+        30,
+        40,
+        0.75
+      ]
+    ]
+  },
+  {
+    "id": 44,
+    "query": "WITH events(id,event,version) AS (VALUES(1,'A',1),(2,'A',2)),r AS (SELECT *,ROW_NUMBER() OVER(PARTITION BY event ORDER BY version DESC,id DESC) rn FROM events) SELECT id FROM r WHERE rn=1",
+    "rows": [
+      [
+        2
+      ]
+    ]
+  },
+  {
+    "id": 49,
+    "query": "WITH r(account,id) AS (VALUES(1,1),(1,2)),i(account,id) AS (VALUES(1,1),(1,2),(1,3)) SELECT COUNT(*) FROM r JOIN i ON r.account=i.account",
+    "rows": [
+      [
+        6
+      ]
+    ]
+  },
+  {
+    "id": 50,
+    "query": "WITH invoice(id,amount) AS (VALUES(1,100)),payment(invoice_id,amount) AS (VALUES(1,40),(1,60)) SELECT SUM(i.amount),SUM(p.amount) FROM invoice i JOIN payment p ON p.invoice_id=i.id",
+    "rows": [
+      [
+        200,
+        100
+      ]
+    ]
+  },
+  {
+    "id": 53,
+    "query": "WITH x(id,g,v) AS (VALUES(1,'A',10),(2,'A',10),(3,'A',10)),r AS (SELECT *,ROW_NUMBER() OVER(PARTITION BY g ORDER BY v DESC,id) rn FROM x) SELECT id FROM r WHERE rn<=2 ORDER BY id",
+    "rows": [
+      [
+        1
+      ],
+      [
+        2
+      ]
+    ]
+  },
+  {
+    "id": 54,
+    "query": "CREATE TABLE parent(id INTEGER PRIMARY KEY); CREATE TABLE child(parent_id INTEGER REFERENCES parent(id)); SELECT [table],[from],[to] FROM pragma_foreign_key_list('child')",
+    "rows": [
+      [
+        "parent",
+        "parent_id",
+        "id"
+      ]
+    ]
+  },
+  {
+    "id": 55,
+    "query": "WITH x(g,v) AS (VALUES('A',1),('A',10)) SELECT g,SUM(v) FROM x WHERE v>1 GROUP BY g",
+    "rows": [
+      [
+        "A",
+        10
+      ]
+    ]
+  },
+  {
+    "id": 56,
+    "query": "SELECT 5+NULL,COALESCE(NULL,0)+5",
+    "rows": [
+      [
+        null,
+        5
+      ]
+    ]
+  },
+  {
+    "id": 57,
+    "query": "WITH x(id) AS (VALUES(1),(2),(3),(4),(5),(6)) SELECT NTILE(3) OVER(ORDER BY id) FROM x ORDER BY id",
+    "rows": [
+      [
+        1
+      ],
+      [
+        1
+      ],
+      [
+        2
+      ],
+      [
+        2
+      ],
+      [
+        3
+      ],
+      [
+        3
+      ]
+    ]
+  },
+  {
+    "id": 59,
+    "query": "CREATE TABLE x(id INTEGER,v INTEGER); INSERT INTO x VALUES(1,10),(2,20); UPDATE x SET v=99 WHERE id=1; SELECT id,v FROM x ORDER BY id",
+    "rows": [
+      [
+        1,
+        99
+      ],
+      [
+        2,
+        20
+      ]
+    ]
+  },
+  {
+    "id": 64,
+    "query": "CREATE TABLE x(id INTEGER); CREATE TABLE audit(id INTEGER); CREATE TRIGGER log_x AFTER INSERT ON x BEGIN INSERT INTO audit VALUES(NEW.id); END; INSERT INTO x VALUES(7); SELECT id FROM audit",
+    "rows": [
+      [
+        7
+      ]
+    ]
+  }
+]
