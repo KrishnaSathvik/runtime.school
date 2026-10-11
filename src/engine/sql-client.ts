@@ -23,6 +23,8 @@ export type ExecuteResponse = {
   grade?: GradeResult | null;
   expected?: SqlResult | null;
   error?: string;
+  /** Lab scripts only: where a multi-statement script stopped and what had already run. */
+  failure?: { statement: number; sql: string; completed: number; later: boolean; openTransaction: boolean };
   /** Set when a newer execution replaced this one before it finished. */
   superseded?: boolean;
   comparison?: Array<{

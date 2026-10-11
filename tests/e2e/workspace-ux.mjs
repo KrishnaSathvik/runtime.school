@@ -57,8 +57,11 @@ try {
   await page.locator('.results-panel table').waitFor();
   await page.getByRole('button', { name: 'Try a duplicate tag', exact: true }).click();
   await page.getByRole('button', { name: 'Run query', exact: true }).click();
-  await page.getByText('The sample script reached a constraint violation.', { exact: false }).waitFor();
+  await page.getByText('The script reached a constraint violation.', { exact: false }).waitFor();
   assert.match(await page.locator('.results-panel').innerText(), /UNIQUE|unique/);
+  // A partly-run script reports what ran instead of "the query did not run".
+  assert.match(await page.locator('.results-panel [data-outcome]').innerText(), /Stopped at statement \d+ · \d+ earlier statements? ran/);
+  assert.match(await page.locator('[aria-label="What ran"]').innerText(), /Ran[\s\S]*Failed[\s\S]*INSERT/);
   console.log('PASS valid constraint insert followed by explained duplicate rejection');
 
   await go('/settings');

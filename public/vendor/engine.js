@@ -8,10 +8,18 @@ function query(db,code){
  let count=0;for(const statement of db.iterateStatements(code)){count++;statement.free();}if(count!==1)throw Error('Run one SQL statement at a time outside the disposable lab.');
  const statement=db.prepare(code);try{const r=rows(statement);if(!r.columns.length)throw Error('The query must return one table.');return r;}finally{statement.free()}
 }
-function script(db,code,explain=false,capture=null){let result=null,count=0,lastSQL='';
+const stripSQL=t=>t.replace(/--[^\n]*|\/\*[\s\S]*?\*\//g,'').trim();
+function script(db,code,explain=false,capture=null){let result=null,count=0,lastSQL='',done=0,tx=false;
  // Preparation and execution are interleaved: later statements can use newly created objects.
  const iterator=db.iterateStatements(code);
- for(const statement of iterator){count++;if(count>60)throw Error('Limit lab scripts to 60 statements.');lastSQL=statement.getSQL();const r=rows(statement);if(r.columns.length)result=r;statement.free();}
+ try{for(const statement of iterator){count++;if(count>60)throw Error('Limit lab scripts to 60 statements.');lastSQL=statement.getSQL();let r;try{r=rows(statement)}catch(e){e.stepFailed=true;throw e}finally{statement.free()}if(r.columns.length)result=r;done++;
+  const head=stripSQL(lastSQL).toUpperCase();if(/^(BEGIN|SAVEPOINT)\b/.test(head))tx=true;else if(/^(COMMIT|END)\b/.test(head)||/^ROLLBACK\b(?!\s+(TRANSACTION\s+)?TO\b)/.test(head))tx=false;}}
+ catch(e){
+  // Report what actually ran: earlier statements are not undone unless a transaction was still open.
+  let failed=e.stepFailed?lastSQL:'',rest='';try{rest=iterator.getRemainingSQL()||''}catch{}
+  if(!e.stepFailed){const i=rest.indexOf(';');failed=i<0?rest:rest.slice(0,i+1);rest=i<0?'':rest.slice(i+1);}
+  if(/\bOR\s+ROLLBACK\b/i.test(failed))tx=false;
+  e.failure={statement:done+1,sql:stripSQL(failed).slice(0,300),completed:done,later:!!stripSQL(rest),openTransaction:tx};throw e;}
  if(capture)capture(lastSQL);
  if(!result)throw Error('End your lab script with a SELECT or EXPLAIN query so the result can be inspected.');
  if(explain){const final=lastSQL.trim();if(/^EXPLAIN\s+QUERY\s+PLAN\b/i.test(final))result=query(db,final);else{if(!/^(SELECT|WITH)\b/i.test(final))throw Error('For a query plan, end the lab script with SELECT, WITH, or EXPLAIN QUERY PLAN.');result=query(db,'EXPLAIN QUERY PLAN '+final);}}
@@ -42,7 +50,9 @@ onmessage = async ({ data }) => {
         : query(db, plan ? 'EXPLAIN QUERY PLAN ' + sql : sql);
     };
     const db = open(false);
-    const result = execute(db, code, data.explain);
+    let result;
+    try { result = execute(db, code, data.explain); }
+    catch (e) { if (data.allowWrites && e.failure) e.report = e.failure; throw e; }
     let grade = null, expected = null;
     const checks = [];
     const compareState = (actualDb, oracleDb) => {
@@ -103,6 +113,6 @@ onmessage = async ({ data }) => {
     let message = e.message;
     if (/no such column/i.test(message)) message += ' Check the schema and aliases.';
     if (/ambiguous column/i.test(message)) message += ' Qualify the column with its table alias.';
-    postMessage({ error: message });
+    postMessage(e.report ? { error: message, failure: e.report } : { error: message });
   } finally { databases.forEach(db => db.close()); }
 };

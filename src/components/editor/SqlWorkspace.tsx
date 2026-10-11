@@ -62,6 +62,8 @@ type Outcome = { tone: "ok" | "err" | "warn" | "info"; label: string };
 /** One visible verdict per run, so errors, wrong rows, unmet requirements and success never look alike. */
 export function resultOutcome(response: ExecuteResponse | null, guided: boolean): Outcome | null {
   if (!response) return null;
+  const f = response.failure;
+  if (response.error && f && f.completed > 0) return { tone: "err", label: `Stopped at statement ${f.statement} · ${f.completed} earlier statement${f.completed === 1 ? "" : "s"} ran` };
   if (response.error) return { tone: "err", label: "SQL error · the query did not run" };
   const g = response.grade;
   if (!g) {
@@ -72,6 +74,27 @@ export function resultOutcome(response: ExecuteResponse | null, guided: boolean)
   if (g.planFailed || /requires you to use/i.test(g.message)) return { tone: "warn", label: "Right rows · a requirement is not met" };
   if (/changed-data check failed/i.test(g.message) || g.variationFailed) return { tone: "warn", label: "Correct on sample data only" };
   return { tone: "err", label: "Not correct yet · compare with the expected output" };
+}
+
+/** States what a partly-run lab script actually did, instead of implying nothing ran. */
+function ScriptFailure({ failure: f }: { failure: NonNullable<ExecuteResponse["failure"]> }) {
+  const plain = !/\bOR\s+(FAIL|ROLLBACK|IGNORE|REPLACE)\b/i.test(f.sql);
+  return (
+    <section className="script-failure mb-3" aria-label="What ran">
+      <ol className="text-sm">
+        <li><span className="feedback-ok">Ran</span><span>Statement{f.completed === 1 ? " 1" : `s 1–${f.completed}`}</span></li>
+        <li><span className="feedback-err">Failed</span><span>Statement {f.statement}</span>{f.sql && <code className="sql-mono">{f.sql}</code>}</li>
+        {f.later && <li><span className="metadata">Not run</span><span>Every statement after {f.statement}</span></li>}
+      </ol>
+      <p className="metadata mt-2">
+        {plain ? `SQLite undid statement ${f.statement}'s own changes. ` : ""}
+        {f.openTransaction
+          ? "A transaction was still open, so none of its changes were committed."
+          : `Changes made by statement${f.completed === 1 ? " 1" : `s 1–${f.completed}`} were kept; nothing was rolled back.`}
+        {" "}Each run starts again from the original sample data.
+      </p>
+    </section>
+  );
 }
 
 const OUTCOME_ICON = { ok: CircleCheck, err: CircleX, warn: CircleAlert, info: Info } as const;
@@ -447,6 +470,7 @@ export function SqlWorkspace({
         {!busy && response && observation && <p className="metadata px-4 py-3"><strong>Observed result:</strong> {observation(response,ranSql)}</p>}
         {!busy && response?.error && (
           <div className="px-4 py-3">
+            {response.failure && response.failure.completed > 0 && <ScriptFailure failure={response.failure} />}
             <ExplanationView explanation={explainError(response.error, ranSql, tables)} />
           </div>
         )}

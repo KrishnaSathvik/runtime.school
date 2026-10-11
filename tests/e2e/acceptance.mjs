@@ -621,7 +621,8 @@ await test("Question: task, columns, example and tables visible; preview rows; w
   const pane = page.locator(".task-pane");
   for (const t of ["Task", "Return", "Expected output (example)", "Tables"]) assert.ok((await pane.innerText()).toUpperCase().includes(t.toUpperCase()), t);
   assert.match(await pane.innerText(), /shopper_id[\s\S]*order_count/);
-  await pane.getByRole("button", { name: /View sample data/ }).first().click();
+  // Sample rows are shown without a reveal control.
+  assert.equal(await pane.getByRole("button", { name: /View sample data/ }).count(), 0);
   await pane.locator("table.results-table").nth(1).waitFor();
   const editor = page.locator(".cm-content");
   assert.equal(await editor.innerText(), "SELECT \nFROM ");

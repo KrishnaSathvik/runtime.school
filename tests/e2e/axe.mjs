@@ -69,9 +69,6 @@ const states = [
     await p.getByRole("button", { name: /Show a hint/ }).click();
     await p.getByRole("button", { name: /Show the solution/ }).click();
     await p.getByRole("button", { name: "Show solution", exact: true }).click();
-    // Sample rows are usually shown already; open the on-demand preview only where it exists.
-    const sample = p.getByRole("button", { name: /View sample data/ });
-    if (await sample.count()) await sample.first().click();
     await p.waitForTimeout(300);
   }],
   ["practice-question-wrong", "/practice/repeat-shoppers", async (p) => {

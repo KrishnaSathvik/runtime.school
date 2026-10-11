@@ -5,7 +5,7 @@ import {BrowserNavigation} from "./BrowserNavigation";
 import {safeBrowserReturn} from "./browser";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ArrowRight, Eye, Lightbulb, RotateCcw, Table2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Eye, Lightbulb, RotateCcw } from "lucide-react";
 import { isBlankSql } from "@/content";
 import {
   bankBySlug,
@@ -23,7 +23,7 @@ import inputPreviews from "@/content/question-bank/input-previews.json";
 import examples from "@/content/question-bank/examples.json";
 import { SqlWorkspace } from "@/components/editor/SqlWorkspace";
 import { ResultsTable } from "@/components/editor/ResultsTable";
-import { executeSql, type ExecuteResponse } from "@/engine/sql-client";
+import type { ExecuteResponse } from "@/engine/sql-client";
 import { parseSchemaDetailed } from "@/engine/explain";
 import { MobileTaskBar } from "@/features/lesson/MobileTaskBar";
 import { questionStatus, useHydrated, useLearning } from "@/lib/learning-state";
@@ -86,12 +86,12 @@ function Workspace({ q, trackId }: { q: BankQuestion; trackId: string | null }) 
   const revealQuestion = useLearning((s) => s.revealQuestion);
   const freshQuestionAttempt = useLearning((s) => s.freshQuestionAttempt);
   const [confirmReveal, setConfirmReveal] = useState(false);
-  const [previews, setPreviews] = useState<Record<string, ExecuteResponse | null>>(() => {
+  const previews = useMemo<Record<string, ExecuteResponse | null>>(() => {
     const specific = (inputPreviews as Record<string, Record<string, ExecuteResponse>>)[q.id];
     if (specific) return specific;
     const samples = tablePreviews as Record<string, { result: NonNullable<ExecuteResponse["result"]>; total: number }>;
     return Object.fromEntries(q.tables.filter(t => samples[t]).map(t => [t, { result: samples[t].result, total: samples[t].total }]));
-  });
+  }, [q]);
 
   useEffect(() => openQuestion(q.slug), [q.slug, openQuestion]);
 
@@ -113,10 +113,6 @@ function Workspace({ q, trackId }: { q: BankQuestion; trackId: string | null }) 
   const caseStages = q.caseStudy ? bankQuestions.filter((item) => item.caseStudy?.id === q.caseStudy!.id) : [];
   const prev = bankQuestions[(index - 1 + bankQuestions.length) % bankQuestions.length];
 
-  const preview = async (table: string) => {
-    const res = await executeSql({ seed: bankSeed(q), query: `SELECT * FROM ${table} LIMIT 5` });
-    if (!res.superseded) setPreviews((p) => ({ ...p, [table]: res }));
-  };
 
   return (
     <div className="workspace-page flex min-h-full flex-col">
@@ -168,9 +164,11 @@ function Workspace({ q, trackId }: { q: BankQuestion; trackId: string | null }) 
             {q.task}
           </p>
           {q.exerciseType === "debug" && <p className="metadata mt-2">The query in the editor has a mistake. Change it to return the result described above, then choose Check your fix.</p>}
-          <nav className="data-jump items-center" aria-label="Tables for this question">
+          <nav className="data-jump items-center" aria-label="Jump to task details">
             <span className="metadata">Uses</span>
             {q.tables.map((t) => <a key={t} href={`#table-${t}`}>{t}</a>)}
+            {q.rules.length > 0 && <a className="jump-section" href="#task-rules">Rules ({q.rules.length})</a>}
+            {example && q.exerciseType !== "predict" && <a className="jump-section" href="#task-expected">Expected output</a>}
           </nav>
           {q.caseStudy && <p className="metadata mt-3" role="region" aria-label="Case study stages">Stage {q.caseStudy.stage} of {q.caseStudy.total}. Each stage starts with the original sample data; results from earlier stages are not carried forward.</p>}
           <div className="eyebrow mt-5">Columns to return</div>
@@ -187,24 +185,12 @@ function Workspace({ q, trackId }: { q: BankQuestion; trackId: string | null }) 
             {q.mode === "lab" ? " You can create or change tables here. Each run starts with the original sample data." : ""}
           </p>
 
-          {q.rules.length > 0 && (
-            <><div className="eyebrow mt-6">Rules to follow</div><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[var(--text-secondary)]">
-              {q.rules.map((r) => (
-                <li key={r}>{r}</li>
-              ))}
-            </ul></>
-          )}
 
           <div className="eyebrow mt-6">Tables and sample data</div>
           <div className="mt-2 space-y-4">
             {q.tables.map((t) => (
-              <div key={t} id={`table-${t}`} className="scroll-mt-4">
-                <div className="flex items-center justify-between gap-2">
-                  <code className="font-mono text-xs font-semibold">{t}</code>
-                  {!(q.id in inputPreviews) && <button type="button" className="btn ghost !min-h-[28px] !px-2 text-xs" onClick={() => preview(t)}>
-                    <Table2 size={13} aria-hidden /> View sample data
-                  </button>}
-                </div>
+              <div key={t} id={`table-${t}`} className="scroll-mt-14">
+                <code className="font-mono text-xs font-semibold">{t}</code>
                 <ul className="schema-columns mt-1 font-mono text-xs text-[var(--text-secondary)]">
                   {(schema()[t] ?? []).map((c) => (
                     <li key={c.name} title={c.references ? `references ${c.references}` : undefined}>
@@ -225,9 +211,17 @@ function Workspace({ q, trackId }: { q: BankQuestion; trackId: string | null }) 
             ))}
           </div>
           <p className="metadata mt-3">{dataset.description}</p>
+
+          {q.rules.length > 0 && (
+            <><div id="task-rules" className="eyebrow mt-6 scroll-mt-14">Rules to follow</div><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[var(--text-secondary)]">
+              {q.rules.map((r) => (
+                <li key={r}>{r}</li>
+              ))}
+            </ul></>
+          )}
           {example && q.exerciseType !== "predict" && (
             <>
-              <div className="eyebrow mt-6">Expected output (example)</div>
+              <div id="task-expected" className="eyebrow mt-6 scroll-mt-14">Expected output (example)</div>
               <p className="metadata mt-1">
                 First {example.rows.length} of {example.total} row{example.total === 1 ? "" : "s"} on this data.
               </p>

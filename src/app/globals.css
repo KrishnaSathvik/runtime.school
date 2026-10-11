@@ -635,10 +635,6 @@ h2 {
     color: var(--text);
   }
 
-  /* Reserve space at the sticky containing block start: off-screen actions
-     must not clamp over the separate editor toolbar. */
-  .editor-work-area { padding-top: 56px; }
-
   /* Run / Check stay reachable while scrolling the editor and results. */
   .editor-actions {
     position: sticky;
@@ -897,3 +893,17 @@ h2 {
 /* Settings shares the primary content grid; each section's controls and prose stay at a readable width. */
 .canvas.settings { max-width:calc(var(--page-overview-max) + 2 * var(--page-gutter)); }
 .canvas.settings > section > * { max-width:760px; }
+
+/* Partly-run lab scripts: which statements ran, failed, or were skipped. */
+.script-failure ol { display: grid; gap: 0.35rem; }
+.script-failure li { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); gap: 0.25rem 0.5rem; align-items: baseline; }
+.script-failure li > span:first-child { font-weight: 600; font-size: 12px; }
+.script-failure li code { grid-column: 2; display: block; overflow-x: auto; white-space: pre; font-size: 12px; padding: 0.35rem 0.5rem; border: 1px solid var(--border); border-radius: 4px; background: var(--editor); }
+
+/* Task-pane jump bar: tables, rules and expected output stay one click away while the pane scrolls. */
+.data-jump a.jump-section { font-family:var(--font-sans); }
+@container (min-width: 800px) {
+  @media (min-height: 600px) {
+    .workspace-page .task-pane .data-jump { position:sticky; top:-1.5rem; z-index:3; margin-inline:-1.5rem; padding:8px 1.5rem; background:var(--main); }
+  }
+}

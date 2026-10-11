@@ -1,5 +1,6 @@
 "use client";
 
+import { Fragment } from "react";
 import previews from "@/content/table-previews.json";
 import { ResultsTable } from "./ResultsTable";
 
@@ -37,9 +38,10 @@ export function TableInspector({ tables, relevantTables = tables.slice(0, 2), sh
       <span className="metadata">How the tables connect:</span>
       {relations.map(r => <code key={r}>{r}</code>)}
     </div>}
-    {ordered.map(table => {
+    {ordered.map((table, i) => {
       const p = data[table];
-      return <details key={table} open={relevant.has(table)} className="table-preview">
+      const firstOther = i > 0 && !relevant.has(table) && relevant.has(ordered[i - 1]);
+      return <Fragment key={table}>{firstOther && <p className="eyebrow mt-5">Other tables in this dataset · not needed for this task</p>}<details open={relevant.has(table)} className="table-preview">
         <summary><code>{table}</code><span className="metadata block mt-1">
           {p?.columns.map(c => c.name).join(" · ") || "Created by this task"}
         </span></summary>
@@ -52,7 +54,7 @@ export function TableInspector({ tables, relevantTables = tables.slice(0, 2), sh
             <ResultsTable result={p.result} compact />
           </div>
         </> : <p className="metadata mt-3">This table is created by the task. Run your script to inspect its rows.</p>}
-      </details>;
+      </details></Fragment>;
     })}
   </section>;
 }
