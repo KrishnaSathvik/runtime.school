@@ -12,8 +12,8 @@ const saved=async(p=page)=>p.evaluate(()=>JSON.parse(localStorage.getItem('sql-s
 const predict=async text=>{await page.getByLabel('Your predicted rows').fill(text);await page.getByRole('button',{name:'Check prediction',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('section[aria-label="Predict the result"] [aria-busy="true"]'));};
 const typeSql=async(sql)=>{await page.locator('.cm-content').click();await page.keyboard.press('ControlOrMeta+A');await page.keyboard.insertText(sql);};
 await test('type filter, direct link, filter restoration and independent prediction',async()=>{
- await go('/practice?type=predict');await page.getByLabel('Type',{exact:true}).waitFor();await page.getByRole('navigation',{name:'Question pages'}).waitFor();
- assert.equal(await page.locator('section[aria-label="Questions"] li').count(),6);
+ await go('/practice?type=predict');await page.getByLabel('Difficulty',{exact:true}).waitFor();await page.getByRole('navigation',{name:'Question pages'}).waitFor();
+ assert.equal(await page.locator('section[aria-label="Questions"] .index-row, section[aria-label="Questions"] li').count(),6);
  await page.getByRole('link',{name:/Predict: members with and without bookings/}).click();
  await page.getByLabel('Your predicted rows').waitFor();await page.getByRole('region',{name:'Result table: id, name, team, credits',exact:true}).waitFor();
  assert.equal(await page.getByText('Expected output (example)',{exact:true}).count(),0);
@@ -21,7 +21,7 @@ await test('type filter, direct link, filter restoration and independent predict
  assert.equal((await saved()).questions['qb-0072'].solved,true);assert.deepEqual((await saved()).stats,{});
  await page.reload();await page.getByText('Correct prediction.',{exact:false}).waitFor();assert.equal(await page.getByLabel('Your predicted rows').inputValue(),'[[1,20],[1,30],[2,null],[3,null],[4,null]]');
  await page.getByRole('link',{name:'Back to questions',exact:false}).first().click();await page.waitForURL('**/practice/questions?type=predict');assert.match(page.url(),/type=predict/);
- await page.getByLabel('Type',{exact:true}).selectOption('debug');await page.waitForURL(/type=debug/);assert.equal(await page.locator('section[aria-label="Questions"] li').count(),6);
+ await go('/practice/questions?type=debug');await page.waitForURL(/type=debug/);assert.equal(await page.locator('section[aria-label="Questions"] .index-row, section[aria-label="Questions"] li').count(),6);
 });
 await test('prediction malformed input, mismatch, reveal, guided solve and fresh independent solve',async()=>{
  await go('/practice/predict-null-comparison');await page.getByLabel('Your predicted rows').fill('[[true]]');await page.getByRole('button',{name:'Check prediction',exact:true}).click();await page.locator('.feedback-err').filter({hasText:'Use numbers'}).waitFor();

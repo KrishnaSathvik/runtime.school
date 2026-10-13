@@ -18,9 +18,9 @@ try {
   await go('/lesson/0?challenge=1');
   assert.match(await page.title(), /SQL Studio/);
   assert.match(await page.locator('[aria-label="Answer requirements"]').innerText(), /name, city/);
-  assert.equal(await page.locator('.table-preview[open] summary code').first().innerText(), 'customers');
+  assert.equal(await page.locator('.table-preview code').first().innerText(), 'customers');
   await page.getByRole('button', { name: 'Challenge 2', exact: true }).click();
-  assert.equal(await page.locator('.table-preview[open] summary code').first().innerText(), 'products');
+  assert.equal(await page.locator('.table-preview code').first().innerText(), 'products');
   assert.match(await page.locator('[aria-label="Answer requirements"]').innerText(), /name, price/);
   const size = await page.locator('.sql-editor-surface').boundingBox();
   assert.ok(size.height >= 350 && size.height <= 450);

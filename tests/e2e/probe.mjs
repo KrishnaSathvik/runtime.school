@@ -21,7 +21,8 @@ const shot = (name) => page.screenshot({ path: `${OUT}/${name}.png`, fullPage: t
 await page.goto(BASE);
 await page.waitForLoadState("networkidle");
 await shot("01-home-first-visit");
-await page.getByRole("link", { name: /Start learning/ }).click();
+await page.locator("#module-0").click();
+await page.locator(".module-start").click();
 await page.waitForURL(/lesson\/0/);
 await page.getByRole("button", { name: /Run example/ }).click();
 await page.waitForSelector("table.results-table");

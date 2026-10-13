@@ -24,6 +24,35 @@ describe("practice track definitions", () => {
     }
   });
 
+  it("promises no joins on SQL from Zero, not that SQL is unnecessary", () => {
+    const track = tracks.find((t) => t.id === "sql-from-zero");
+    expect(track?.startingPoint).toBe("No joins required. Every question uses one table.");
+    expect(track?.startingPoint).not.toMatch(/No SQL needed/);
+  });
+
+  it("SQL from Zero teaches WHERE before DISTINCT", () => {
+    const ids = tracks.find((t) => t.id === "sql-from-zero")!.questionIds;
+    expect(ids.indexOf("qb-0002")).toBeLessThan(ids.indexOf("lc-2-0"));
+    expect(ids.indexOf("qb-0003")).toBeLessThan(ids.indexOf("lc-2-0"));
+    expect(ids.slice(0, 3)).toEqual(["qb-0001", "lc-1-0", "qb-0002"]);
+  });
+
+  it("Data Engineers practice constraints before savepoints and history after loads", () => {
+    const ids = tracks.find((t) => t.id === "data-engineering")!.questionIds;
+    expect(ids.indexOf("lc-60-0")).toBeLessThan(ids.indexOf("lc-61-1"));
+    expect(ids.indexOf("lc-84-0")).toBeLessThan(ids.indexOf("lc-78-0"));
+    expect(ids.indexOf("lc-58-0")).toBeLessThan(ids.indexOf("lc-84-0"));
+  });
+
+  it("gives every track editorial sections that point at real question ids", () => {
+    for (const t of tracks) {
+      expect(t.sections && Object.keys(t.sections).length).toBeGreaterThan(1);
+      for (const id of Object.keys(t.sections ?? {})) {
+        expect(t.questionIds).toContain(id);
+      }
+    }
+  });
+
   it.each(tracks.map((t) => [t.id, t] as const))("%s: valid references, ordering and variety", (_id, t) => {
     expect(trackProblems(t)).toEqual([]);
     const topics = new Set(t.questionIds.map((id) => byId.get(id)!.primaryTopic));
@@ -167,8 +196,24 @@ it("resumes an unfinished saved track position and falls back after an independe
   useLearning.getState().resetProgress();
   const track = tracks[0];
   const state = useLearning.getState();
-  const later = track.questionIds[3];
+  // Prefer a later bank question so shared practice progress can clear the resume pin.
+  const later = track.questionIds.find((id) => id.startsWith("qb-") && id !== track.questionIds[0])!;
   expect(resumeInTrack(track, state, later)?.q.id).toBe(later);
   state.recordQuestionCheck(later, true);
   expect(resumeInTrack(track, useLearning.getState(), later)?.q.id).toBe(track.questionIds[0]);
+});
+
+it("moves the track pointer past a question solved with help", async () => {
+  const { resumeInTrack, trackProgress } = await import("@/features/practice/tracks");
+  const { useLearning } = await import("@/lib/learning-state");
+  useLearning.getState().resetProgress();
+  const track = tracks[0];
+  const helped = track.questionIds.find((id) => id.startsWith("qb-"))!;
+  const store = useLearning.getState();
+  store.questionHint(helped);
+  store.recordQuestionCheck(helped, true);
+  const state = useLearning.getState();
+  expect(trackProgress(track, state).solved).toBe(0);
+  expect(trackProgress(track, state).next?.q.id).not.toBe(helped);
+  expect(resumeInTrack(track, state, helped)?.q.id).not.toBe(helped);
 });

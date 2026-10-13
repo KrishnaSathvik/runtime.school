@@ -6,6 +6,7 @@ import {ResultsTable} from "@/components/editor/ResultsTable";
 import {SqlError} from "@/components/editor/Explanation";
 import {PageHeader} from "@/components/layout/PageHeader";
 import {formatSql} from "@/components/editor/format-sql";
+import {shownForChoice, type ShownComparison} from "@/lib/shown-comparison";
 
 type Observed=NonNullable<ExecuteResponse["comparison"]>[number];
 
@@ -33,30 +34,38 @@ function splitStatements(sql:string){
 export default function QueryPerformancePage(){
   const [choice,setChoice]=useState(0);
   const [busy,setBusy]=useState(false);
-  const [response,setResponse]=useState<ExecuteResponse|null>(null);
+  const [shown,setShown]=useState<ShownComparison<ExecuteResponse>|null>(null);
   const run=useRef(0);
   const comparison=planComparisons[choice];
   const compare=useCallback(async(index:number)=>{
     const id=++run.current;
-    setBusy(true);setResponse(null);
+    setBusy(true);setShown(null);
     try{
-      const res=await executeSql({seed,query:"SELECT 1",allowWrites:true,compare:planComparisons[index].cases});
-      if(id===run.current&&!res.superseded)setResponse(res);
+      // The engine runs one query at a time. If another run on the page interrupts
+      // this one, run it again rather than leaving the comparison empty.
+      for(let attempt=0;attempt<3;attempt++){
+        const res=await executeSql({seed,query:"SELECT 1",allowWrites:true,compare:planComparisons[index].cases});
+        if(id!==run.current)return;
+        if(!res.superseded){setShown({choice:index,value:res});return;}
+      }
     }finally{if(id===run.current)setBusy(false);}
   },[]);
-  // Open with real plans on screen; the comparison is the lesson.
+  // Choosing a comparison shows its real plans and output immediately; the page is read-only,
+  // so there is nothing to rerun. Choosing it again retries only if it could not run.
   useEffect(()=>{void compare(choice);},[choice,compare]);
+  const response=shownForChoice(choice,shown);
   const plans=response?.comparison?.map(readPlan);
 
   return <div className="canvas comparison-page">
-    <PageHeader title="Query Performance" description="Run two versions of the same query and compare how SQLite finds the rows. A query plan lists the steps the database chose."/>
-    <div className="flex flex-wrap items-end gap-4">
-      <div className="filter-field"><span id="example-label">Choose an example</span>
-        <div className="segmented" role="group" aria-labelledby="example-label">
-          {planComparisons.map((p,i)=><button key={p.title} type="button" aria-pressed={i===choice} onClick={()=>setChoice(i)}>{p.title}</button>)}
-        </div>
+    <PageHeader title="Why some SQL queries are faster" description="Compare real SQLite query plans side by side: watch a table scan turn into an index search, and see what changed. A query plan lists the steps the database chose."/>
+    <div role="group" aria-labelledby="comparison-label">
+      <p id="comparison-label" className="eyebrow">Choose a comparison</p>
+      <div className="comparison-choices mt-2">
+        {planComparisons.map((p,i)=><button key={p.title} type="button" aria-pressed={i===choice} onClick={()=>{if(i===choice){if(!busy&&!response?.comparison)void compare(i);return;}setShown(null);setChoice(i);}}>
+          <span className="comparison-choice-title">{p.title}</span>
+          <span className="metadata">{p.question}</span>
+        </button>)}
       </div>
-      <button className="btn" disabled={busy} onClick={()=>void compare(choice)}>{busy?"Comparing…":"Run comparison again"}</button>
     </div>
 
     <section className="perf-question mt-6" aria-live="polite" aria-busy={busy}>
@@ -74,6 +83,7 @@ export default function QueryPerformancePage(){
             <tr><th scope="row">Same output?</th><td colSpan={2}>{response?.equivalent===undefined?"Not checked for this example.":response.equivalent?"Yes. Both return identical rows, so only the access path differs.":"No. The queries answer different questions, so compare results before plans."}</td></tr>
           </tbody>
         </table>
+        {comparison.takeaway&&<p className="mt-3 text-sm"><strong>What to notice:</strong> {comparison.takeaway}</p>}
         <p className="metadata mt-3">{plans[0].access!==plans[1].access?`${plans[0].index&&plans[0].index===plans[1].index?`Both plans mention ${plans[0].index}, but only B can search it: A`:"A"} has to ${plans[0].access==="SCAN"?"visit every entry":"take another path"}, while B goes directly to the matching range. With millions of rows, that difference is what matters. On this small sample both finish instantly, so the plan is the evidence, not the timing.`:"Both approaches use the same access method here. Compare the plan steps below for smaller differences."}</p>
       </>}
     </section>

@@ -135,12 +135,12 @@ describe("progress import compatibility", () => {
   });
 
   it.each([
-    [null, "not a SQL Studio progress file"],
-    ["text", "not a SQL Studio progress file"],
-    [[], "not a SQL Studio progress file"],
+    [null, "not a Runtime progress file"],
+    ["text", "not a Runtime progress file"],
+    [[], "not a Runtime progress file"],
     [{ version: 9, stats: {} }, "Unsupported progress version"],
-    [{ version: 3 }, "not a SQL Studio progress file"],
-    [{ version: 3, stats: [] }, "not a SQL Studio progress file"],
+    [{ version: 3 }, "not a Runtime progress file"],
+    [{ version: 3, stats: [] }, "not a Runtime progress file"],
     [{ version: 3, stats: {}, drafts: [] }, "Invalid drafts records"],
     [{ version: 3, stats: {}, drafts: { a: 5 } }, "Invalid SQL drafts"],
     [{ version: 3, stats: {}, attempts: { a: {} } }, "Invalid guidance history"],

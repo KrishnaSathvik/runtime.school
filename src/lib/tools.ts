@@ -7,27 +7,27 @@ export const tools = [
     label: "SQL Playground",
     icon: Database,
     purpose:
-      "Try your own SQL on sample databases without grading.",
+      "Explore data. Try ideas. No grades.",
   },
   {
     href: "/database-lab",
     label: "Database Lab",
     icon: FlaskConical,
     purpose:
-      "Create tables, change rows, and try constraints and transactions. Each run starts with the original sample data.",
+      "Create tables, change data, and test constraints and transactions in a temporary database.",
   },
   {
     href: "/query-performance",
     label: "Query Performance",
     icon: Gauge,
     purpose:
-      "See how SQLite reads tables and uses indexes to find rows.",
+      "Why some queries are faster: real query plans, side by side.",
   },
   {
     href: "/sql-syntax",
     label: "Compare SQL Syntax",
     icon: GitCompare,
     purpose:
-      "The same idea written for SQLite, SQL Server and PostgreSQL, side by side.",
+      "One concept, three SQL dialects.",
   },
 ] as const;

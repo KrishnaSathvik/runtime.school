@@ -1,13 +1,24 @@
-# Design system — Editorial IDE
+# Design system — Course studio
 
-Typography: Geist Sans (UI), Geist Mono (SQL). Icons: Lucide 16–20px, ~1.75 stroke.
+Two surfaces, one product.
+
+Learning pages are a quiet black-and-white course: white or near-black canvas, Geist Sans for navigation and controls, Source Serif 4 for lesson prose and editorial headings. Subject color appears only on icon tiles, the current lesson step, and progress. Task panes separate Your task / Required output / Expected / Tables with hairline rules; table schemas stack one column per row (name, type, PK/FK).
+
+The coding workspace follows the app theme: light editor in light mode, dark editor in dark mode. Geist Mono for SQL. Toolbar, one `query.sql` buffer, line numbers, and a resizable results region. Semantic green, red, and amber are for real feedback only.
 
 ## Light
 
-bg `#FAFAF9`, sidebar `#F6F6F4`, main `#FFFFFF`, secondary `#F5F5F3`, text `#18181B`, secondary text `#65656D`, border `#E7E7E5`, accent `#4F5DF5`
+Canvas `#FFFFFF`, sidebar `#F6F6F6`, text `#111111`, secondary text `#3F3F3F`, border `#E6E6E6`. Primary button `#111111` on white.
 
 ## Dark
 
-bg `#101114`, sidebar `#141519`, main `#18191D`, secondary `#1D1F24`, text `#F1F1F2`, secondary text `#A0A0A9`, border `#292A30`, accent `#A0AAFF`
+Canvas `#0C0C0C`, surface `#141414`, text `#F4F4F4`, border `#2C2C2C`. Primary button `#F5F5F5` with near-black text.
 
-Connected surfaces, minimal borders, no dashboard card grids.
+## Editor
+
+Light: background `#FFFFFF`, chrome `#F6F6F6`, border `#E6E6E6`, text `#111111`.
+Dark: background `#1E1E1E`, chrome `#252526`, border `#3C3C3C`, text `#D4D4D4`.
+
+## Subject signal
+
+SQL `#1D4F91` (light) / `#9EB6E0` (dark), used for the current step and progress, not for buttons.

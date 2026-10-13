@@ -1,0 +1,153 @@
+%PDF-1.4
+1 0 obj<< /Type /Catalog /Pages 2 0 R >>endobj
+2 0 obj<< /Type /Pages /Kids [3 0 R 5 0 R] /Count 2 >>endobj
+3 0 obj<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 7 0 R >> >> >>endobj
+4 0 obj<< /Length 2256 >>stream
+BT
+/F1 10 Tf
+48 744 Td
+11 TL
+(# Video Product Analytics) Tj
+T* () Tj
+T* (_Draft report_) Tj
+T* () Tj
+T* (Move from watch events to daily engagement, rolling trends, and signup-cohort retention.) Tj
+T* () Tj
+T* (- Sample database: Streamly \(viewers, videos, watch_events, daily_metrics\)) Tj
+T* (- Milestones completed \(SQL + concept check\): 0 of 4) Tj
+T* (- Findings written: 1 of 4) Tj
+T* (- Verified checks \(Check answer passed\): 1) Tj
+T* (- Exported: 2026-10-12T16:48:53.729Z) Tj
+T* () Tj
+T* (Findings are the learner?s own interpretation. Passing a SQL check does not verify the wri) Tj
+T* (tten finding.) Tj
+T* () Tj
+T* (## Incomplete for a complete report) Tj
+T* () Tj
+T* (- Complete milestone SQL + concept check: Daily active users & engagement) Tj
+T* (- Complete milestone SQL + concept check: Rolling averages & missing dates) Tj
+T* (- Complete milestone SQL + concept check: Cohorts & exact-day retention) Tj
+T* (- Complete milestone SQL + concept check: Top N per group & ties) Tj
+T* () Tj
+T* (## Milestone 1: Daily active users & engagement) Tj
+T* () Tj
+T* (Status: In progress) Tj
+T* () Tj
+T* (**Findings**) Tj
+T* () Tj
+T* (Daily active viewers vary by day in the sample. Weekend peaks support prioritizing weekend) Tj
+T* ( content slots.) Tj
+T* () Tj
+T* (### 1.1 Return day \(YYYY-MM-DD\) and active_viewers \(distinct viewers\) for every observed w) Tj
+T* (atch date.) Tj
+T* () Tj
+T* (_solved without hints_) Tj
+T* () Tj
+T* (**Checked SQL** \(verified by Check answer\)) Tj
+T* () Tj
+T* (```sql) Tj
+T* (SELECT date\(watched_at\) AS day,COUNT\(DISTINCT viewer_id\) AS active_viewers FROM watch_even) Tj
+T* (ts GROUP BY day) Tj
+T* (```) Tj
+T* () Tj
+T* (| day | active_viewers |) Tj
+T* (| --- | --- |) Tj
+T* (| 2025-01-01 | 1 |) Tj
+T* (| 2025-01-02 | 3 |) Tj
+T* (| 2025-01-03 | 2 |) Tj
+T* (| 2025-01-04 | 3 |) Tj
+T* (| 2025-01-05 | 1 |) Tj
+T* (| 2025-01-06 | 3 |) Tj
+T* (| 2025-01-07 | 2 |) Tj
+T* (| 2025-01-08 | 1 |) Tj
+T* (| 2025-01-09 | 1 |) Tj
+T* (| 2025-01-10 | 2 |) Tj
+T* (| 2025-01-11 | 1 |) Tj
+T* (| 2025-01-12 | 1 |) Tj
+T* (| 2025-01-15 | 1 |) Tj
+T* (| 2025-02-01 | 1 |) Tj
+T* () Tj
+T* (### 1.2 Return day, active_viewers and minutes_per_active_viewer, rounded to 2 decimals, f) Tj
+T* (or each observed watch date.) Tj
+T* () Tj
+ET
+endstream
+endobj
+5 0 obj<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 6 0 R /Resources << /Font << /F1 7 0 R >> >> >>endobj
+6 0 obj<< /Length 1955 >>stream
+BT
+/F1 10 Tf
+48 744 Td
+11 TL
+(_not attempted_) Tj
+T* () Tj
+T* (## Milestone 2: Rolling averages & missing dates) Tj
+T* () Tj
+T* (Status: Not started) Tj
+T* () Tj
+T* (_No finding written yet._) Tj
+T* () Tj
+T* (### 2.1 Return day, watch_minutes and rolling_avg \(2 decimals\) for the current and previou) Tj
+T* (s 2 observed rows in daily_metrics, sorted by day. This task intentionally uses rows, not ) Tj
+T* (calendar days.) Tj
+T* () Tj
+T* (_not attempted_) Tj
+T* () Tj
+T* (### 2.2 Return day, watch_minutes and rolling_avg \(2 decimals\) for every day Jan 1?7 2025,) Tj
+T* ( treating absent daily_metrics days as zero. Average current and previous 2 calendar days;) Tj
+T* ( early windows use available days. Sort by day.) Tj
+T* () Tj
+T* (_not attempted_) Tj
+T* () Tj
+T* (## Milestone 3: Cohorts & exact-day retention) Tj
+T* () Tj
+T* (Status: Not started) Tj
+T* () Tj
+T* (_No finding written yet._) Tj
+T* () Tj
+T* (### 3.1 With observation cutoff Jan 15 2025, return cohort_day, cohort_size, retained_view) Tj
+T* (ers and retention_pct \(0?100, 2 decimals\) for exact-day D1 retention. Include only mature ) Tj
+T* (cohorts.) Tj
+T* () Tj
+T* (_not attempted_) Tj
+T* () Tj
+T* (### 3.2 Use the same output and cutoff for exact-day D7 retention \(signup date +7 days\); i) Tj
+T* (nclude only mature cohorts.) Tj
+T* () Tj
+T* (_not attempted_) Tj
+T* () Tj
+T* (## Milestone 4: Top N per group & ties) Tj
+T* () Tj
+T* (Status: Not started) Tj
+T* () Tj
+T* (_No finding written yet._) Tj
+T* () Tj
+T* (### 4.1 Return creator_id, video_id and watch_seconds for the top 2 watched videos per cre) Tj
+T* (ator, excluding videos with no events. Rank by total seconds descending, break ties by sma) Tj
+T* (llest video_id.) Tj
+T* () Tj
+T* (_not attempted_) Tj
+T* () Tj
+T* (### 4.2 Return creator_id, video_id and watch_seconds for each creator's most-watched vide) Tj
+T* (o\(s\), including ties. Exclude videos with no events.) Tj
+T* () Tj
+T* (_not attempted_) Tj
+T* () Tj
+ET
+endstream
+endobj
+7 0 obj<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000056 00000 n 
+0000000117 00000 n 
+0000000241 00000 n 
+0000002547 00000 n 
+0000002671 00000 n 
+0000004676 00000 n 
+trailer<< /Size 8 /Root 1 0 R >>
+startxref
+4742
+%%EOF

@@ -1,63 +1,57 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import {
-  BookOpen,
-  ChartNoAxesColumn,
-  Database,
-  FolderKanban,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Search,
-  Settings2,
-  SquareTerminal,
-} from "lucide-react";
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { tools } from "@/lib/tools";
-import { bankQuestions, DIFFICULTY_LABEL } from "@/content/question-bank";
-import { courseOrder, groups, lessons } from "@/content";
-import { useLearning } from "@/lib/learning-state";
+import { usePathname } from "next/navigation";
+import { BookOpen, FolderKanban, Search, Settings2, SquareTerminal } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Wordmark } from "@/components/brand/Wordmark";
+import { HeaderMenu } from "@/components/shell/HeaderMenu";
+import { searchResults } from "@/components/shell/search-index";
 import { useShortcutModifier } from "@/lib/keyboard-shortcuts";
 import { ThemeProvider } from "@/lib/theme";
+import { BRAND_NAME } from "@/platform/brand";
+import { formatDocumentTitle } from "@/platform/route-title";
+import { subjectById, subjectFromPath, subjects } from "@/platform/subjects";
 
 const mainNav = [
-  { href: "/learn", label: "Learn", icon: BookOpen },
+  { href: "/sql", label: "Learn", icon: BookOpen },
   { href: "/practice", label: "Practice", icon: SquareTerminal },
   { href: "/projects", label: "Projects", icon: FolderKanban },
-  { href: "/progress", label: "Progress", icon: ChartNoAxesColumn },
 ] as const;
 
-const exploreNav = tools;
-
-const phoneQuery = "(max-width: 640px)";
-function subscribePhone(onChange: () => void) {
-  const query = window.matchMedia(phoneQuery);
-  query.addEventListener("change", onChange);
-  return () => query.removeEventListener("change", onChange);
+function isLearnPath(pathname: string) {
+  return (
+    pathname === "/sql" ||
+    pathname === "/learn" ||
+    pathname.startsWith("/learn/") ||
+    pathname.startsWith("/lesson/") ||
+    pathname.startsWith("/review") ||
+    pathname === "/placement" ||
+    pathname.startsWith("/placement/")
+  );
 }
-const isPhoneScreen = () => window.matchMedia(phoneQuery).matches;
-const serverPhoneScreen = () => false;
 
 function isActive(pathname: string, href: string) {
-  if (href === "/") return pathname === "/";
+  if (href === "/sql") return isLearnPath(pathname);
+  if (href === "/practice") return pathname === "/practice" || pathname.startsWith("/practice/");
+  if (href === "/projects") return pathname === "/projects" || pathname.startsWith("/projects/");
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+/**
+ * Runtime shell: one quiet header (wordmark, subject, Learn · Practice · Projects, tools, search)
+ * instead of a dashboard sidebar. The public homepage at `/` has its own marketing header.
+ */
 export function AppShell({ children }: { children: React.ReactNode }) {
   const modifier = useShortcutModifier();
   const pathname = usePathname();
-  const router = useRouter();
-  const savedCollapsed = useLearning((s) => s.preferences.collapsed);
-  const isPhone = useSyncExternalStore(subscribePhone, isPhoneScreen, serverPhoneScreen);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const collapsed = isPhone ? !mobileOpen : savedCollapsed;
-  const sidebarToggle = useRef<HTMLButtonElement>(null);
-  const setCollapsed = useLearning((s) => s.setCollapsed);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const searchTrigger = useRef<HTMLElement | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
+
+  const subject = subjectById[subjectFromPath(pathname) ?? "sql"];
+  const home = pathname === "/";
 
   const openSearch = () => {
     searchTrigger.current = document.activeElement as HTMLElement | null;
@@ -69,20 +63,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     searchTrigger.current?.focus?.();
   };
 
-  // A phone disclosure does not overwrite the desktop/tablet preference.
   useEffect(() => {
-    if (!isPhone || !mobileOpen) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setMobileOpen(false);
-        sidebarToggle.current?.focus();
-      }
+    const title = formatDocumentTitle(pathname);
+    if (!title) return;
+    const apply = () => {
+      if (document.title !== title) document.title = title;
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [isPhone, mobileOpen]);
+    apply();
+    const observer = new MutationObserver(apply);
+    observer.observe(document.head, { childList: true, subtree: true, characterData: true });
+    return () => observer.disconnect();
+  }, [pathname]);
 
-  // Move focus to the page heading after client-side navigation.
   const firstPath = useRef(true);
   useEffect(() => {
     if (firstPath.current) {
@@ -107,193 +99,133 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const results = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const destinations = [
-      ...mainNav,
-      ...exploreNav,
-      { href: "/practice/questions", label: "Browse questions", icon: SquareTerminal },
-      { href: "/practice/tracks", label: "Practice tracks", icon: SquareTerminal },
-      { href: "/practice/cases", label: "Practice case studies", icon: SquareTerminal },
-      { href: "/explore", label: "Explore SQL", icon: Database },
-      { href: "/review", label: "Reviews", icon: Database },
-      { href: "/placement", label: "Find my level", icon: Database },
-      { href: "/settings", label: "Settings", icon: Settings2 },
-    ]
-      .filter((d) => !q || d.label.toLowerCase().includes(q))
-      .map((d) => ({ href: d.href, label: d.label, detail: "Page" }));
-    const moduleHits = groups
-      .map((label, i) => ({
-        href: `/learn/${i}`,
-        label,
-        detail: `Module ${i + 1}`,
-      }))
-      .filter((m) => !q || m.label.toLowerCase().includes(q));
-    const lessonHits = q
-      ? courseOrder
-          .map((id) => lessons[id])
-          .filter((l) =>
-            `${l.title} ${l.concept} ${groups[l.group]}`
-              .toLowerCase()
-              .includes(q),
-          )
-          .slice(0, 10)
-          .map((l) => ({
-            href: `/lesson/${l.id}`,
-            label: l.title,
-            detail: groups[l.group],
-          }))
-      : [];
-    const questionHits = q
-      ? bankQuestions
-          .filter((x) => `${x.title} ${x.task}`.toLowerCase().includes(q))
-          .slice(0, 6)
-          .map((x) => ({ href: `/practice/${x.slug}`, label: x.title, detail: `Practice · ${DIFFICULTY_LABEL[x.difficulty]}` }))
-      : [];
-    return [...destinations, ...moduleHits, ...lessonHits, ...questionHits].slice(0, 22);
-  }, [query]);
+  const results = useMemo(() => searchResults(query), [query]);
+
+  // Runtime UI at / and /sql/* brings its own shell.
+  if (pathname === "/" || pathname === "/sql" || pathname.startsWith("/sql/")) {
+    return <ThemeProvider>{children}</ThemeProvider>;
+  }
 
   return (
     <ThemeProvider>
       <a className="skip-link" href="#main-content">
         Skip to content
       </a>
-      <div className="app-shell">
-        <aside
-          className={`sidebar ${collapsed ? "collapsed" : ""}`}
-          aria-label="Primary"
-          data-mobile-open={isPhone && mobileOpen || undefined}
-          onClickCapture={(event) => {
-            if (isPhone && (event.target as HTMLElement).closest("a")) setMobileOpen(false);
-          }}
-        >
-          <div className="sidebar-header">
-            <Link href="/learn" className="sidebar-brand" aria-label="SQL Studio">
-              <Database className="text-[var(--accent)]" size={22} strokeWidth={1.85} aria-hidden="true" />
-              <span className="text-[15px] font-semibold tracking-tight">SQL Studio</span>
-            </Link>
-            <button
-              type="button"
-              className="sidebar-toggle"
-              ref={sidebarToggle}
-              onClick={() => isPhone ? setMobileOpen(!mobileOpen) : setCollapsed(!collapsed)}
-              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-              aria-expanded={!collapsed}
-            >
-              {collapsed ? (
-                <PanelLeftOpen size={18} strokeWidth={1.75} aria-hidden="true" />
-              ) : (
-                <PanelLeftClose size={18} strokeWidth={1.75} aria-hidden="true" />
-              )}
-            </button>
-          </div>
-          <button
-            type="button"
-            className="nav-item sidebar-search"
-            onClick={openSearch}
-            aria-label="Open search"
-            title={`Search (${modifier} + K)`}
-            aria-keyshortcuts="Meta+K Control+K"
-          >
-            <Search size={17} strokeWidth={1.75} aria-hidden="true" />
-            <span className="nav-text">Search</span>
-            <kbd className="nav-text sidebar-kbd">{modifier} + K</kbd>
-          </button>
-          <nav className="flex flex-col gap-0.5" aria-label="Main">
-            {mainNav.map(({ href, label, icon: Icon }) => (
-              <Link
-                key={href}
-                href={href}
-                className={`nav-item ${isActive(pathname, href) ? "active" : ""}`}
-                title={label}
-              >
-                <Icon size={17} strokeWidth={1.75} />
-                <span className="nav-text">{label}</span>
-              </Link>
-            ))}
-          </nav>
-          <div className="nav-section">Explore SQL</div>
-          <nav className="flex flex-col gap-0.5" aria-label="Explore SQL">
-            {exploreNav.map(({ href, label, icon: Icon }) => (
-              <Link
-                key={href}
-                href={href}
-                className={`nav-item ${isActive(pathname, href) ? "active" : ""}`}
-                title={label}
-              >
-                <Icon size={17} strokeWidth={1.75} />
-                <span className="nav-text">{label}</span>
-              </Link>
-            ))}
-          </nav>
-          <div className="mt-auto border-t border-[var(--border)] pt-3">
-            <Link
-              href="/settings"
-              className={`nav-item ${isActive(pathname, "/settings") ? "active" : ""}`}
-              title="Settings"
-            >
-              <Settings2 size={17} strokeWidth={1.75} />
-              <span className="nav-text">Settings</span>
-            </Link>
-            {!collapsed && (
-              <p className="side-note px-3 pt-3 text-xs leading-relaxed text-[var(--muted)]">
-                Learn SQL by writing SQL.
-              </p>
-            )}
-          </div>
-        </aside>
-
-        {isPhone && mobileOpen && (
-          <button
-            className="sidebar-backdrop"
-            aria-label="Close sidebar"
-            onClick={() => {
-              setMobileOpen(false);
-              sidebarToggle.current?.focus();
-            }}
-          />
-        )}
-        <div className="work" inert={isPhone && mobileOpen}>
-          <header className="topbar">
-            <div className="flex items-center gap-2 text-xs text-[var(--muted)]">
-              <span className="md:hidden font-semibold text-[var(--text)]">
-                SQL Studio
-              </span>
-
+      <div className="rt-shell">
+        {home ? (
+          <HomeHeader />
+        ) : (
+          <header className="rt-header">
+            <div className="rt-header-start">
+              <Wordmark />
+              <span className="rt-header-sep" aria-hidden="true">/</span>
+              <HeaderMenu label={subject.title} buttonLabel={`Subject: ${subject.title}. Change subject`}>
+                <p className="rt-menu-label">Subjects</p>
+                {subjects.map((s) =>
+                  s.availability === "available" ? (
+                    <Link
+                      key={s.id}
+                      href={s.courseHref ?? s.href}
+                      className="rt-menu-item"
+                      aria-current={s.id === subject.id ? "true" : undefined}
+                    >
+                      <span>{s.title}</span>
+                      <span className="rt-menu-hint">{s.id === subject.id ? "Current" : "Open"}</span>
+                    </Link>
+                  ) : (
+                    <span key={s.id} className="rt-menu-item disabled" aria-disabled="true">
+                      <span>{s.title}</span>
+                      <span className="rt-menu-hint">{s.availabilityLabel}</span>
+                    </span>
+                  ),
+                )}
+                <Link href="/" className="rt-menu-footer">
+                  All subjects →
+                </Link>
+              </HeaderMenu>
             </div>
-            <div className="flex items-center gap-2">
+
+            <nav className="rt-nav" aria-label="Main">
+              {mainNav.map(({ href, label }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`rt-nav-item ${isActive(pathname, href) ? "active" : ""}`}
+                  aria-current={isActive(pathname, href) ? "page" : undefined}
+                >
+                  {label}
+                </Link>
+              ))}
+            </nav>
+
+            <div className="rt-header-end">
+              {subject.tools.length > 0 && (
+                <HeaderMenu label="Tools" buttonLabel={`${subject.title} tools`} align="end" className="rt-tools-menu">
+                  <p className="rt-menu-label">{subject.title} tools</p>
+                  {subject.tools.map((t) => (
+                    <Link
+                      key={t.href}
+                      href={t.href}
+                      className="rt-menu-item stacked"
+                      aria-current={pathname === t.href ? "page" : undefined}
+                    >
+                      <span>{t.label}</span>
+                      {t.purpose && <span className="rt-menu-hint">{t.purpose}</span>}
+                    </Link>
+                  ))}
+                </HeaderMenu>
+              )}
               <button
                 type="button"
-                className="btn ghost"
+                className="rt-icon-button"
                 onClick={openSearch}
                 aria-label="Open search"
                 title={`Search (${modifier} + K)`}
                 aria-keyshortcuts="Meta+K Control+K"
               >
-                <Search size={16} strokeWidth={1.75} />
-
+                <Search size={17} strokeWidth={1.75} aria-hidden="true" />
               </button>
+              <Link
+                href="/settings"
+                className={`rt-icon-button ${pathname === "/settings" ? "active" : ""}`}
+                aria-label="Settings"
+                title="Settings"
+              >
+                <Settings2 size={17} strokeWidth={1.75} aria-hidden="true" />
+              </Link>
             </div>
           </header>
-          <main id="main-content" className="content" tabIndex={-1}>
-            {children}
-          </main>
-        </div>
+        )}
 
+        <main id="main-content" className={`content ${home ? "" : "has-mobile-nav"}`} tabIndex={-1}>
+          {children}
+        </main>
+
+        {!home && (
+          <nav className="mobile-bottom-nav" aria-label="Primary mobile">
+            {mainNav.map(({ href, label, icon: Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                className={`mobile-nav-item ${isActive(pathname, href) ? "active" : ""}`}
+                aria-current={isActive(pathname, href) ? "page" : undefined}
+              >
+                <Icon size={18} strokeWidth={1.75} aria-hidden="true" />
+                <span>{label}</span>
+              </Link>
+            ))}
+          </nav>
+        )}
       </div>
 
       {searchOpen && (
-        <div
-          className="fixed inset-0 z-50 bg-black/30 p-4"
-          onClick={closeSearch}
-        >
+        <div className="fixed inset-0 z-50 bg-black/30 p-4" onClick={closeSearch}>
           <div
             ref={dialogRef}
             role="dialog"
             aria-modal="true"
-            aria-label="Search SQL Studio"
-            className="mx-auto mt-[12vh] max-w-xl overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--main)] shadow-[var(--shadow)]"
+            aria-label={`Search ${BRAND_NAME}`}
+            className="mx-auto mt-[12vh] max-w-xl overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--main)] shadow-[var(--shadow)]"
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => {
               if (e.key === "Escape") {
@@ -302,7 +234,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 return;
               }
               if (e.key !== "Tab") return;
-              const items = dialogRef.current?.querySelectorAll<HTMLElement>("input, button");
+              const items = dialogRef.current?.querySelectorAll<HTMLElement>("input, button, a[href]");
               if (!items?.length) return;
               const first = items[0];
               const last = items[items.length - 1];
@@ -329,23 +261,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <ul className="max-h-80 overflow-auto py-2" aria-label="Results">
               {results.length === 0 && (
                 <li className="metadata px-4 py-2.5" role="status">
-                  No matches. Try a SQL keyword such as JOIN or GROUP BY.
+                  No matches. Try a skill or keyword such as JOIN or GROUP BY.
                 </li>
               )}
               {results.map((r) => (
                 <li key={r.href + r.label}>
-                  <button
-                    type="button"
+                  <Link
+                    href={r.href}
                     className="flex w-full items-center justify-between px-4 py-2.5 text-left hover:bg-[var(--hover)]"
-                    onClick={() => {
-                      setSearchOpen(false);
-                      setQuery("");
-                      router.push(r.href);
-                    }}
+                    onClick={() => closeSearch()}
                   >
                     <span>{r.label}</span>
                     <span className="text-xs text-[var(--muted)]">{r.detail}</span>
-                  </button>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -353,5 +281,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       )}
     </ThemeProvider>
+  );
+}
+
+/** Landing header: just the brand. Choosing a subject happens on the page. */
+function HomeHeader() {
+  return (
+    <header className="rt-header rt-home-header">
+      <div className="rt-header-start">
+        <Wordmark />
+      </div>
+    </header>
   );
 }

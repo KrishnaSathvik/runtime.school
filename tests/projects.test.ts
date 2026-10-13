@@ -50,7 +50,8 @@ describe("project deliverables export", () => {
       },
     }, new Date("2026-01-01T00:00:00Z"));
     expect(report).toContain(`# ${p.title}`);
-    expect(report).toContain("Milestones completed: 1 of 4");
+    expect(report).toContain("Milestones completed (SQL + concept check): 1 of 4");
+    expect(report).toMatch(/_Draft report_/);
     expect(report).toContain("Status: Completed · concept check passed");
     expect(report).toContain("```sql\nSELECT day FROM t\n```");
     expect(report).toContain("| day | n\\|x |");

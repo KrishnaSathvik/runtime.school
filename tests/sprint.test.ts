@@ -145,24 +145,27 @@ describe("spaced review", () => {
 });
 
 describe("placement", () => {
-  it("questions follow course order", () => {
-    const pos = PLACEMENT_IDS.map((id) => courseOrder.indexOf(id));
-    expect([...pos].sort((a, b) => a - b)).toEqual(pos);
+  it("keeps a fixed skill-ladder id list; slot indexes stay stable for saved answers", () => {
+    expect(PLACEMENT_IDS).toEqual([0, 3, 5, 10, 32, 14]);
+    for (const id of PLACEMENT_IDS) {
+      expect(courseOrder.indexOf(id)).toBeGreaterThanOrEqual(0);
+    }
   });
 
-  it("start = first missed question; all solved = lesson after the last; one advanced success can't skip basics", () => {
-    const run = (oks: boolean[]) => {
+  it("start = first missed question; all solved = lesson 15; ratio miss without join mastery = lesson 14", () => {
+    const run = (oks: boolean[], opts?: { joinMastered?: boolean }) => {
       store().restartPlacement();
       oks.forEach((ok, i) => {
         store().answerPlacement(i, ok);
         store().advancePlacement();
       });
-      return placementStart(store().placement);
+      return placementStart(store().placement, opts);
     };
     expect(run([false, true, true, true, true, true])).toBe(PLACEMENT_IDS[0]);
     expect(run([true, true, false, true, true, true])).toBe(PLACEMENT_IDS[2]);
-    const all = run([true, true, true, true, true, true])!;
-    expect(courseOrder.indexOf(all)).toBe(courseOrder.indexOf(PLACEMENT_IDS[5]) + 1);
+    expect(run([true, true, true, true, false, true])).toBe(14);
+    expect(run([true, true, true, true, false, true], { joinMastered: true })).toBe(32);
+    expect(run([true, true, true, true, true, true])).toBe(15);
     expect(store().placement?.done).toBe(true);
   });
 

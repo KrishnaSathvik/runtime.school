@@ -1,32 +1,51 @@
 "use client";
+import { PageHeader } from "@/components/layout/PageHeader";
 
-import {sourceLinks} from "@/content";
+import { BRAND_NAME } from "@/platform/brand";
+import { sourceLinks } from "@/content";
 import { useShortcutModifier } from "@/lib/keyboard-shortcuts";
 import { importFailureMessage } from "@/lib/feedback-copy";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLearning, type ThemePreference } from "@/lib/learning-state";
 
 export default function SettingsPage() {
   const modifier = useShortcutModifier();
   const preference = useLearning((s) => s.preferences.theme);
-  const collapsed = useLearning((s) => s.preferences.collapsed);
   const setTheme = useLearning((s) => s.setTheme);
-  const setCollapsed = useLearning((s) => s.setCollapsed);
   const exportProgress = useLearning((s) => s.exportProgress);
   const importProgress = useLearning((s) => s.importProgress);
   const resetProgress = useLearning((s) => s.resetProgress);
   const fileRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
+  const [deleteStep, setDeleteStep] = useState<"closed" | "describe" | "confirm">("closed");
+  const cancelRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (deleteStep === "closed") return;
+    cancelRef.current?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      setDeleteStep("closed");
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [deleteStep]);
+
+  const confirmDelete = () => {
+    if (deleteStep !== "confirm") return;
+    resetProgress();
+    setDeleteStep("closed");
+    setMessage("Saved progress and work have been deleted from this browser.");
+    setImportError(null);
+  };
 
   return (
     <div className="canvas settings">
 
-      <h1>Settings</h1>
-      <p className="lead">
-        Choose your appearance, see keyboard shortcuts, and back up or restore your progress.
-      </p>
-
+      <PageHeader title="Settings" description="Choose your appearance, see keyboard shortcuts, and back up or restore your progress." />
+      <div className="settings-grid">
       <section className="mt-10 border-t border-[var(--border)] pt-6">
         <h2>Appearance</h2>
         <div className="mt-4 flex gap-2">
@@ -42,18 +61,6 @@ export default function SettingsPage() {
             </button>
           ))}
         </div>
-      </section>
-
-      <section className="mt-8 border-t border-[var(--border)] pt-6">
-        <h2>Navigation preferences</h2>
-        <label className="mt-4 flex items-center gap-3 text-sm">
-          <input
-            type="checkbox"
-            checked={collapsed}
-            onChange={(e) => setCollapsed(e.target.checked)}
-          />
-          Collapse desktop sidebar by default
-        </label>
       </section>
 
       <section className="mt-8 border-t border-[var(--border)] pt-6">
@@ -111,17 +118,7 @@ export default function SettingsPage() {
           <button
             type="button"
             className="btn ghost feedback-err"
-            onClick={() => {
-              if (
-                window.confirm(
-                  "Delete all saved progress, SQL drafts, and project work in this browser? Download a backup first if you want to keep them.",
-                )
-              ) {
-                resetProgress();
-                setMessage("Saved progress and work have been deleted from this browser.");
-                setImportError(null);
-              }
-            }}
+            onClick={() => setDeleteStep("describe")}
           >
             Delete saved progress
           </button>
@@ -139,7 +136,7 @@ export default function SettingsPage() {
                 try {
                   data = JSON.parse(text);
                 } catch {
-                  throw new Error("This file could not be read. Choose a SQL Studio progress backup (.json).");
+                  throw new Error(`This file could not be read. Choose a ${BRAND_NAME} progress backup (.json).`);
                 }
                 importProgress(data);
                 setMessage("Progress restored from your backup.");
@@ -157,18 +154,74 @@ export default function SettingsPage() {
           {message}
         </p>
         {importError && <details className="mt-2 text-sm"><summary className="cursor-pointer">Technical details</summary><p className="mt-2">{importError}</p></details>}
-        <details className="mt-4 text-sm"><summary className="cursor-pointer">Backup compatibility</summary><p className="mt-2">SQL Studio can restore its earlier progress formats (versions 1–3). Progress is stored in this browser under <code>sql-studio-v1</code>.</p></details>
+        <details className="mt-4 text-sm"><summary className="cursor-pointer">Backup compatibility</summary><p className="mt-2">{BRAND_NAME} can restore backups saved by this app, including earlier formats. Progress stays in this browser until you delete it or restore a backup.</p></details>
       </section>
 
       <section className="mt-8 border-t border-[var(--border)] pt-6">
         <h2 id="about">About / Credits</h2>
         <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
-          SQL Studio runs in your browser without an account. It uses SQLite
+          {BRAND_NAME} runs in your browser without an account. It uses SQLite
           (via sql.js), Geist fonts, and Lucide icons.
         </p>
         <details className="mt-3 text-sm"><summary>SQL reference sources</summary><ul className="mt-3 space-y-3">{sourceLinks.map(([title,url])=><li key={url}><a className="text-[var(--accent)]" href={url} target="_blank" rel="noopener noreferrer">{title}</a></li>)}</ul></details>
-        <details className="mt-3 text-sm"><summary className="cursor-pointer">Technical credits and licenses</summary><p className="mt-2">Built from the original ChatGPT Sites SQL Studio. SQLite runs through sql.js (WebAssembly). License notices are in <code>/public/vendor</code> and <code>/public/fonts</code>.</p></details>
+        <details className="mt-3 text-sm"><summary className="cursor-pointer">Technical credits and licenses</summary><p className="mt-2">SQLite runs through sql.js (WebAssembly). License notices for the database engine and the fonts are included with the app.</p></details>
       </section>
+      </div>
+      {deleteStep !== "closed" && (
+        <div
+          className="delete-progress-backdrop fixed inset-0 z-50 bg-black/30 p-4"
+          onClick={() => setDeleteStep("closed")}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-progress-title"
+            className="mx-auto mt-[18vh] max-w-lg rounded-lg border border-[var(--border)] bg-[var(--main)] p-6 shadow-[var(--shadow)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {deleteStep === "describe" ? (
+              <>
+                <h2 id="delete-progress-title">Delete saved progress?</h2>
+                <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">
+                  This removes the following from this browser:
+                </p>
+                <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-[var(--text-secondary)]">
+                  <li>Lesson progress and concept checks</li>
+                  <li>SQL drafts</li>
+                  <li>Practice progress</li>
+                  <li>Project notes and checked results</li>
+                </ul>
+                <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">
+                  Download a backup first if you want to keep them. Without a backup, this browser’s copy cannot be restored. Your theme preference stays.
+                </p>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  <button ref={cancelRef} type="button" className="btn primary" onClick={() => setDeleteStep("closed")}>
+                    Cancel
+                  </button>
+                  <button type="button" className="btn" onClick={() => setDeleteStep("confirm")}>
+                    Continue
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h2 id="delete-progress-title">Delete everything saved in this browser?</h2>
+                <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">
+                  Cancel keeps your lessons, drafts, practice progress, and project notes. Deleting them cannot be undone without a backup.
+                </p>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  <button ref={cancelRef} type="button" className="btn primary" onClick={() => setDeleteStep("closed")}>
+                    Cancel
+                  </button>
+                  <button type="button" className="btn ghost feedback-err" onClick={confirmDelete}>
+                    Yes, delete saved progress
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,3 +1,5 @@
+import { BRAND_NAME } from "@/platform/brand";
+
 /** Presentation only: the SQL checker retains its original results and diagnostics. */
 export function checkLabel(label: string): string {
   if (label.startsWith("Required index:")) return "Required index";
@@ -8,5 +10,5 @@ export function checkLabel(label: string): string {
 }
 
 export function importFailureMessage(): string {
-  return "This backup could not be restored. Choose a SQL Studio progress backup (.json). Your existing progress was not changed.";
+  return `This backup could not be restored. Choose a ${BRAND_NAME} progress backup (.json). Your existing progress was not changed.`;
 }

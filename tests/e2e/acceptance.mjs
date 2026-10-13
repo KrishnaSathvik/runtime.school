@@ -53,12 +53,13 @@ console.log("First-time learner journey");
 const { page } = await freshPage();
 const first = courseOrder[0];
 
-await test("Root → Learn → Start learning opens the first lesson at Understand", async () => {
+await test("Root → Learn → first path opens the first lesson at Understand", async () => {
   await page.goto(BASE);
   await ready(page);
   assert.equal(await page.getByRole("link", { name: /Choose my level/ }).count(), 0, "misleading CTA removed");
-  await page.getByRole("link", { name: /Start learning/ }).click();
-  await page.waitForURL(new RegExp(`/lesson/${first}$`));
+  await page.locator("#module-0").click();
+  await page.locator(".module-start").click();
+  await page.waitForURL(/\/(lesson\/0|learn\/sql\/)/);
   await page.getByRole("heading", { name: /^Understand:/ }).waitFor();
   assert.match(await page.locator('[aria-current="step"]').innerText(), /Understand/);
   assert.match(await page.locator("main").innerText(), /Lesson 1 of 88/);
@@ -117,13 +118,12 @@ await test("Complete → Next lesson follows course order (not id+1)", async () 
   await page.getByRole("heading", { name: /^Understand:/ }).waitFor();
 });
 
-await test("Progress accurately shows mastered lessons and eligible solved questions", async () => {
+await test("Learn path shows mastered progress on the first module", async () => {
   await page.goto(BASE);
   await ready(page);
-  await page.goto(`${BASE}/progress`);
-  await page.locator(".metrics-row").waitFor();
-  assert.match(await page.locator(".metrics-row").innerText(), /1 \/ 88/);
-  assert.match(await page.locator(".metrics-row").innerText(), /2 \/ 249/);
+  await page.goto(`${BASE}/learn`);
+  await page.locator("#module-0").waitFor();
+  assert.match(await page.locator("#module-0").innerText(), /1 of 2/);
 });
 
 console.log("Returning learner");
@@ -170,19 +170,22 @@ await test("Fresh attempt clears guidance; independent solve then counts", async
   assert.deepEqual(s.stats[id].solved, [1]);
 });
 
-await test("Learn resumes the active lesson while Practice stays focused on practice", async () => {
+await test("Learn path resumes the active lesson while Practice stays focused on practice", async () => {
   await page.goto(`${BASE}/practice`);
-  await page.getByRole("link",{name:/Browse SQL questions/}).waitFor();
+  await page.getByRole("heading", { name: "Practice", exact: true }).waitFor();
+  assert.equal(new URL(page.url()).pathname, "/practice");
+  await page.getByRole("heading", { level: 1 }).waitFor();
   assert.equal(await page.getByRole("link",{name:/Continue your lesson/}).count(),0);
   await page.goto(BASE);
-  await page.getByRole("link",{name:"Continue lesson",exact:true}).click();
-  await page.waitForURL(new RegExp(`/lesson/${courseOrder[1]}$`));
+  await page.locator("#module-0").click();
+  await page.locator(".module-start").click();
+  await page.waitForURL(new RegExp(`/(lesson/${courseOrder[1]}|learn/sql/)`));
 });
 
-await test("Learn continuation describes the saved stage", async () => {
+await test("Learn marks the active path as current", async () => {
   await page.goto(BASE);
   await ready(page);
-  assert.match(await page.locator("main").innerText(), /Practice · Challenge 2 of 2/);
+  assert.ok(await page.locator("#module-0 .up-next-tag").count());
 });
 
 await test("Quiz before practice does not claim mastery", async () => {
@@ -255,7 +258,7 @@ await test("Project workflow: solve a milestone, deliverable saved, survives ref
   const id = p.milestoneIds[0];
   const l = lessons[id];
   await page.goto(`${BASE}/projects/${p.id}/milestone/${id}`);
-  await page.getByRole("navigation",{name:"Project steps"}).getByRole("button",{name:/Write and check SQL/}).click();
+  await page.getByRole("navigation",{name:"Project steps"}).getByRole("button",{name:/Write SQL/}).click();
   await typeSql(page, l.tasks[0].answer);
   assert.match(await checkAnswer(page), /Exactly right/);
   await page.getByRole("button", { name: /Next: Challenge 2/ }).click();
@@ -277,7 +280,7 @@ await test("Project workflow: solve a milestone, deliverable saved, survives ref
     page.getByRole("button", { name: /Download project summary/ }).click(),
   ]);
   const md = fs.readFileSync(await download.path(), "utf8");
-  assert.match(md, /Milestones completed: 1 of 4/);
+  assert.match(md, /Milestones completed \(SQL \+ concept check\): 1 of 4/);
   assert.ok(md.includes(l.tasks[0].answer.trim()), "exported SQL matches the checked query");
   assert.match(md, /solved without hints/);
   await page.screenshot({ path: `${SHOTS}/project-deliverables.png`, fullPage: true });
@@ -285,13 +288,13 @@ await test("Project workflow: solve a milestone, deliverable saved, survives ref
 });
 
 console.log("Advanced tools");
-await test("Tools are discoverable on mobile via the shared sidebar", async () => {
+await test("Tools are discoverable on mobile via the header Tools menu", async () => {
   const { page } = await freshPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
-  await page.goto(BASE);
+  await page.goto(`${BASE}/sql`);
   await ready(page);
-  await page.getByRole("button", { name: "Expand sidebar" }).click();
+  await page.getByRole("button", { name: "SQL tools" }).click();
   for (const name of ["SQL Playground", "Database Lab", "Query Performance", "Compare SQL Syntax"]) {
-    await page.locator(".sidebar").getByRole("link", { name, exact: true }).waitFor();
+    await page.locator(".rt-menu-panel").getByRole("link", { name: new RegExp(name) }).waitFor();
   }
   await page.screenshot({ path: `${SHOTS}/mobile-explore.png` });
   await page.context().close();
@@ -345,7 +348,7 @@ await test("Mobile: challenge prompt, tables, editor, run and results usable at 
   assert.equal(overflow, false, "no horizontal page scroll");
   await page.locator(".results-panel").scrollIntoViewIfNeeded();
   await page.screenshot({ path: `${SHOTS}/mobile-320-practice-result.png` });
-  const nav = await page.locator(".sidebar").boundingBox();
+  const nav = await page.locator(".rt-header").boundingBox();
   const btn = await page.getByRole("button", { name: "Check answer" }).boundingBox();
   assert.ok(nav && btn, "bounding boxes");
   await page.context().close();
@@ -458,8 +461,8 @@ await test("Spaced review: due review → recall + query → level and next date
   });
   await page.goto(BASE);
   await ready(page);
-  assert.match(await page.locator("main").innerText(), /2 lessons ready to review/);
-  await page.getByRole("link", { name: /2 lessons ready to review/ }).click();
+  assert.match(await page.locator("main").innerText(), /2\s*Reviews ready/);
+  await page.getByRole("link", { name: /2\s*Reviews ready/ }).click();
   await page.waitForURL(/\/review$/);
   assert.match(await page.locator("main").innerText(), /Ready for 3 days/);
   await page.screenshot({ path: `${SHOTS}/reviews-due.png`, fullPage: true });
@@ -496,8 +499,7 @@ await test("Spaced review: due review → recall + query → level and next date
 
 await test("Placement: answer, skip, result recommends the right lesson; nothing mastered", async () => {
   const { page } = await freshPage();
-  await page.goto(BASE);
-  await page.getByRole("link", { name: /Find my level/ }).click();
+  await page.goto(`${BASE}/placement`);
   await page.waitForURL(/\/placement$/);
   await page.getByRole("button", { name: /Start the check/ }).click();
   await typeSql(page, lessons[0].tasks[0].answer);
@@ -511,7 +513,8 @@ await test("Placement: answer, skip, result recommends the right lesson; nothing
   assert.equal(Object.keys(s.stats).length, 0);
   await page.goto(BASE);
   await ready(page);
-  assert.equal(await page.getByRole("link", {name:"Start learning", exact:true}).getAttribute("href"), "/lesson/3");
+  const path = `#module-${lessons[3].group}`;
+  assert.match(await page.locator(path).getAttribute("href") ?? "", /\/(lesson\/3|learn\/sql\/filter-with-where)$/);
   await page.context().close();
 });
 
@@ -525,11 +528,11 @@ await test("CRM + ERP project shows 5 phases in milestone order; findings saved 
   assert.deepEqual(nums, Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0")));
   await page.screenshot({ path: `${SHOTS}/project-phases.png`, fullPage: true });
   await page.goto(`${BASE}/projects/4/milestone/76`);
-  await page.getByRole("navigation",{name:"Project steps"}).getByRole("button",{name:/Write and check SQL/}).click();
-  await page.getByLabel("Your findings (optional)").fill("CRM landed all rows; ERP is short by one.");
+  await page.getByRole("navigation",{name:"Project steps"}).getByRole("button",{name:/Write SQL/}).click();
+  await page.getByLabel(/What did you find/).fill("CRM landed all rows; ERP is short by one.");
   await page.reload();
   await page.locator(".cm-content").waitFor();
-  assert.equal(await page.getByLabel("Your findings (optional)").inputValue(), "CRM landed all rows; ERP is short by one.");
+  assert.equal(await page.getByLabel(/What did you find/).inputValue(), "CRM landed all rows; ERP is short by one.");
   await page.goto(`${BASE}/projects/4`);
   await ready(page);
   const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: /Download project summary/ }).click()]);
@@ -537,7 +540,7 @@ await test("CRM + ERP project shows 5 phases in milestone order; findings saved 
   await page.context().close();
 });
 
-await test("Mobile practice: task bar appears when the prompt scrolls away; sidebar stays available while typing; actions stay on screen", async () => {
+await test("Mobile practice: task bar appears when the prompt scrolls away; header stays available while typing; actions stay on screen", async () => {
   const { page } = await freshPage({ viewport: { width: 375, height: 667 }, isMobile: true, hasTouch: true });
   await page.goto(`${BASE}/lesson/${courseOrder[4]}`);
   await page.getByRole("button", { name: /Try it yourself/ }).click();
@@ -552,7 +555,7 @@ await test("Mobile practice: task bar appears when the prompt scrolls away; side
   assert.equal(await bar.getByRole("button").getAttribute("aria-expanded"), "true");
   await page.screenshot({ path: `${SHOTS}/mobile-taskbar.png` });
   await page.locator(".cm-content").focus();
-  assert.equal(await page.locator(".sidebar").isVisible(), true, "sidebar remains available while editing");
+  assert.equal(await page.locator(".rt-header").count(), 1, "header remains available while editing");
   // Simulate the keyboard taking half the screen: actions must still be inside the visible area.
   await page.setViewportSize({ width: 375, height: 360 });
   await page.locator(".cm-content").scrollIntoViewIfNeeded();
@@ -584,29 +587,27 @@ await test("Editor suggestions appear only on request and list this exercise's c
 });
 
 console.log("Practice question bank");
-await test("Browse: difficulty and topic filters, search, unsolved filter, URL state", async () => {
+await test("Browse: difficulty and topic filters, URL state", async () => {
   const { page } = await freshPage();
   await page.goto(`${BASE}/practice/questions`);
   await ready(page);
   const countText = async () => Number((await page.getByRole("status").filter({ hasText: /questions?$/ }).innerText()).match(/of (\d+) questions/)[1]);
+  const independent = await countText();
+  assert.ok(independent >= 80 && independent < 120, `independent default listed ${independent}`);
+  assert.equal(await page.getByLabel("Source", { exact: true }).count(), 0);
+  assert.equal(await page.getByLabel("Type", { exact: true }).count(), 0);
+  assert.equal(await page.getByLabel("Search questions").count(), 0);
   const total = await countText();
-  assert.ok(total >= 200, `listed ${total}`);
   await page.getByLabel("Difficulty",{exact:true}).selectOption("hard");
   await page.waitForURL(/difficulty=hard/);
   const hard = await countText();
   assert.ok(hard > 0 && hard < total);
-  assert.equal(await page.locator(".question-row .difficulty").filter({ hasNotText: "Hard" }).count(), 0);
+  assert.equal(await page.locator(".index-row .difficulty").filter({ hasNotText: "Hard" }).count(), 0);
   await page.getByLabel("Topic",{exact:true}).selectOption("windows");
   await page.waitForURL(/topic=windows/);
-  await page.getByRole("button",{name:/More filters/}).click();
-  await page.getByLabel("Question source").selectOption("new");
-  const rows = await page.locator(".question-row h2").allInnerTexts();
-  assert.ok(rows.includes("Longest login streak"), rows.join(" | "));
+  await page.getByRole("link", { name: /Longest login streak/ }).waitFor();
   await page.screenshot({ path: `${SHOTS}/qb-hub-filtered.png`, fullPage: true });
-  await page.goto(`${BASE}/practice?q=median`);
-  await page.getByRole("link", { name: /Median order value by region/ }).waitFor();
-  await page.getByRole("button",{name:/More filters/}).click();
-  await page.getByLabel("Status").selectOption("unsolved");
+  await page.goto(`${BASE}/practice/questions?topic=analytics`);
   await page.getByRole("link", { name: /Median order value by region/ }).waitFor();
   await page.context().close();
 });
@@ -651,8 +652,7 @@ await test("Question: task, columns, example and tables visible; preview rows; w
   await page.waitForURL(/\/practice\/(?!repeat-shoppers)/);
   await page.goto(`${BASE}/practice`);
   await page.getByRole("link", { name: "Continue practice",exact:true }).waitFor();
-  await page.goto(`${BASE}/progress`);
-  assert.match(await page.locator(".metrics-row").innerText(), /1 \/ 249/);
+  assert.match(await page.locator('[aria-label="Practice summary"]').innerText(), /1 \/ 249/);
   await page.context().close();
 });
 
@@ -968,8 +968,11 @@ await test("Phase B: replay-safe engineering is checked through the real workspa
 await test("Phase B: case study is discoverable, stages work independently, and drafts survive navigation", async () => {
   const { page } = await freshPage();
   await page.goto(`${BASE}/practice`);
-  await page.getByRole("link", { name: /Solve a case study/ }).click();
+  await page.getByRole("link", { name: /Case studies/ }).click();
   await page.getByRole("link", { name: /Harbor Market/ }).click();
+  await page.waitForURL(/\/practice\/cases\/harbor-checkout-review$/);
+  assert.match(await page.locator("main").innerText(), /Before you write graded SQL|session baseline/i);
+  await page.getByRole("link", { name: /Start investigation/ }).click();
   await page.waitForURL(/checkout-case-session-baseline$/);
   const nav = page.getByRole("navigation", { name: "Case study navigation" });
   assert.equal(await nav.getByRole("link").count(), 5);

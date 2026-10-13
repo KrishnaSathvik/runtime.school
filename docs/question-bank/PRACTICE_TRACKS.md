@@ -41,9 +41,9 @@ Prerequisite knowledge is also supported by the ordering: each track's *starting
 
 **Objective.** Read a table, pick columns, filter rows, handle missing values and sort results with confidence.
 
-**Starting point.** No SQL needed. Every question uses one table.
+**Starting point.** No joins required. Every question uses one table.
 
-**Skills.** SELECT & aliases · DISTINCT · WHERE, AND/OR, LIKE · NULL · ORDER BY & LIMIT · date ranges
+**Skills.** SELECT & aliases · WHERE, AND/OR, LIKE · NULL · ORDER BY & LIMIT · DISTINCT · date ranges
 
 **Shape.** 13 questions · Warm-up 11, Easy 2, Medium 0, Hard 0 · 10 topics · 8 practice problems + 5 lesson challenges · rule check: passes
 
@@ -51,15 +51,15 @@ Prerequisite knowledge is also supported by the ordering: each track's *starting
 | --- | --- | --- | --- | --- | --- |
 | 1 | qb-0001 · Shopper contact list | Warm-up | SELECT columns | practice problem |  |
 | 2 | lc-1-0 · Aliases & calculated columns · Challenge 1 | Warm-up | Column aliases | lesson 1 |  |
-| 3 | lc-2-0 · Unique values with DISTINCT · Challenge 1 | Warm-up | DISTINCT | lesson 2 |  |
-| 4 | qb-0002 · Shoppers in the West region | Warm-up | WHERE | practice problem |  |
-| 5 | lc-5-1 · Combine conditions · Challenge 2 | Warm-up | AND / OR / NOT | lesson 5 |  |
-| 6 | lc-6-0 · Lists & text patterns · Challenge 1 | Warm-up | LIKE | lesson 6 |  |
-| 7 | qb-0004 · Orders with no delivery date | Warm-up | NULL handling | practice problem |  |
-| 8 | lc-7-1 · Understand NULL · Challenge 2 | Warm-up | NULL handling | lesson 7 |  |
-| 9 | qb-0003 · Catalog from most to least expensive | Warm-up | ORDER BY | practice problem |  |
-| 10 | qb-0005 · The three cheapest items | Warm-up | LIMIT | practice problem |  |
-| 11 | qb-0008 · Hired during 2023 | Warm-up | BETWEEN & ranges | practice problem |  |
+| 3 | qb-0002 · Shoppers in the West region | Warm-up | WHERE | practice problem |  |
+| 4 | lc-5-1 · Combine conditions · Challenge 2 | Warm-up | AND / OR / NOT | lesson 5 |  |
+| 5 | lc-6-0 · Lists & text patterns · Challenge 1 | Warm-up | LIKE | lesson 6 |  |
+| 6 | qb-0004 · Orders with no delivery date | Warm-up | NULL handling | practice problem |  |
+| 7 | lc-7-1 · Understand NULL · Challenge 2 | Warm-up | NULL handling | lesson 7 |  |
+| 8 | qb-0003 · Catalog from most to least expensive | Warm-up | ORDER BY | practice problem |  |
+| 9 | qb-0005 · The three cheapest items | Warm-up | LIMIT | practice problem |  |
+| 10 | qb-0008 · Hired during 2023 | Warm-up | BETWEEN & ranges | practice problem |  |
+| 11 | lc-2-0 · Unique values with DISTINCT · Challenge 1 | Warm-up | DISTINCT | lesson 2 |  |
 | 12 | qb-0017 · Find the lamps | Easy | LIKE | practice problem |  |
 | 13 | qb-0018 · Open orders in February and March | Easy | AND / OR / NOT | practice problem |  |
 
@@ -104,11 +104,11 @@ Prerequisite knowledge is also supported by the ordering: each track's *starting
 | --- | --- | --- | --- | --- | --- |
 | 1 | qb-0009 · Orders by status | Easy | GROUP BY | practice problem |  |
 | 2 | qb-0011 · Repeat shoppers | Easy | HAVING | practice problem |  |
-| 3 | lc-17-0 · Subqueries · Challenge 1 | Easy | Scalar subqueries | lesson 17 |  |
-| 4 | qb-0014 · Emails used more than once | Easy | TRIM / LOWER / SUBSTR / REPLACE | practice problem |  |
-| 5 | lc-18-1 · Ask whether a row exists · Challenge 2 | Easy | IN / EXISTS / NOT EXISTS | lesson 18 |  |
-| 6 | qb-0021 · Active buyers per month | Easy | Monthly / weekly buckets | practice problem |  |
-| 7 | qb-0012 · Delivered revenue by category | Easy | GROUP BY | practice problem |  |
+| 3 | qb-0012 · Delivered revenue by category | Easy | GROUP BY | practice problem |  |
+| 4 | qb-0021 · Active buyers per month | Easy | Monthly / weekly buckets | practice problem |  |
+| 5 | lc-17-0 · Subqueries · Challenge 1 | Easy | Scalar subqueries | lesson 17 |  |
+| 6 | qb-0014 · Emails used more than once | Easy | TRIM / LOWER / SUBSTR / REPLACE | practice problem |  |
+| 7 | lc-18-1 · Ask whether a row exists · Challenge 2 | Easy | IN / EXISTS / NOT EXISTS | lesson 18 |  |
 | 8 | lc-20-0 · Readable queries with CTEs · Challenge 1 | Medium | CTEs | lesson 20 |  |
 | 9 | qb-0025 · Big spenders for their region | Medium | Correlated subqueries | practice problem |  |
 | 10 | qb-0034 · Loyal shoppers who never needed a refund | Medium | IN / EXISTS / NOT EXISTS | practice problem |  |
@@ -175,7 +175,7 @@ Prerequisite knowledge is also supported by the ordering: each track's *starting
 
 **Starting point.** Know SELECT and JOIN; no database administration needed. Every run uses a throwaway database.
 
-**Skills.** CREATE & keys · INSERT/UPDATE/DELETE · transactions & savepoints · constraints · views & triggers · indexes · UPSERT · history validation · quality gates
+**Skills.** CREATE & keys · INSERT/UPDATE/DELETE · constraints · transactions & savepoints · views & triggers · indexes · UPSERT · history validation · quality gates
 
 **Shape.** 17 questions · Warm-up 0, Easy 6, Medium 7, Hard 4 · 11 topics · 6 practice problems + 11 lesson challenges · rule check: passes
 
@@ -185,14 +185,14 @@ Prerequisite knowledge is also supported by the ordering: each track's *starting
 | 2 | qb-0023 · Create a wishlist table | Easy | CREATE / ALTER | practice problem |  |
 | 3 | lc-59-0 · DML: INSERT, UPDATE & DELETE · Challenge 1 | Easy | INSERT / UPDATE / DELETE | lesson 59 |  |
 | 4 | qb-0024 · Reprice the garden range | Easy | INSERT / UPDATE / DELETE | practice problem |  |
-| 5 | lc-61-1 · Transactions & savepoint recovery · Challenge 2 | Easy | Transactions | lesson 61 |  |
-| 6 | lc-83-0 · Latest-state reporting versus SCD Type 2 · Challenge 1 | Easy | History, SCD & as-of | lesson 83 |  |
-| 7 | lc-60-0 · Constraints protect the data contract · Challenge 1 | Medium | Constraints | lesson 60 |  |
-| 8 | qb-0039 · A reusable shopper totals view | Medium | Views, temp tables & triggers | practice problem |  |
-| 9 | lc-64-0 · Triggers & visible audit effects · Challenge 1 | Medium | Views, temp tables & triggers | lesson 64 |  |
-| 10 | qb-0038 · A covering index for unit totals | Medium | Indexes | practice problem |  |
-| 11 | lc-84-0 · Idempotent incremental UPSERT & stale updates · Challenge 1 | Medium | Incremental & idempotent loads | lesson 84 |  |
-| 12 | lc-85-0 · Stage, validate & atomically promote a refresh · Challenge 1 | Medium | Transactions | lesson 85 |  |
+| 5 | lc-60-0 · Constraints protect the data contract · Challenge 1 | Medium | Constraints | lesson 60 |  |
+| 6 | lc-61-1 · Transactions & savepoint recovery · Challenge 2 | Easy | Transactions | lesson 61 |  |
+| 7 | qb-0039 · A reusable shopper totals view | Medium | Views, temp tables & triggers | practice problem |  |
+| 8 | lc-64-0 · Triggers & visible audit effects · Challenge 1 | Medium | Views, temp tables & triggers | lesson 64 |  |
+| 9 | qb-0038 · A covering index for unit totals | Medium | Indexes | practice problem |  |
+| 10 | lc-84-0 · Idempotent incremental UPSERT & stale updates · Challenge 1 | Medium | Incremental & idempotent loads | lesson 84 |  |
+| 11 | lc-85-0 · Stage, validate & atomically promote a refresh · Challenge 1 | Medium | Transactions | lesson 85 |  |
+| 12 | lc-83-0 · Latest-state reporting versus SCD Type 2 · Challenge 1 | Easy | History, SCD & as-of | lesson 83 |  |
 | 13 | lc-78-0 · Product validity with LEAD & half-open intervals · Challenge 1 | Medium | History, SCD & as-of | lesson 78 |  |
 | 14 | qb-0044 · Detect overlapping history periods | Hard | Validation & types | practice problem |  |
 | 15 | qb-0043 · Salary at the time of each review | Hard | History, SCD & as-of | practice problem |  |

@@ -10,7 +10,7 @@
 | basics.order-by | SQL basics › ORDER BY | 2 | 1 | 3 | 16 | Warm-up |
 | basics.limit | SQL basics › LIMIT | 0 | 1 | 1 | 3 | Warm-up |
 | basics.schema | SQL basics › Tables & keys | 2 | 0 | 2 | 2 | Warm-up, Easy |
-| filtering.where | Filtering › WHERE | 2 | 1 | 3 | 92 | Warm-up |
+| filtering.where | Filtering › WHERE | 2 | 1 | 3 | 91 | Warm-up |
 | filtering.logic | Filtering › AND / OR / NOT | 2 | 1 | 3 | 3 | Warm-up, Easy |
 | filtering.in | Filtering › IN | 0 | 0 | 0 | 4 |  |
 | filtering.between | Filtering › BETWEEN & ranges | 2 | 1 | 3 | 5 | Warm-up |
@@ -27,12 +27,12 @@
 | joins.multi | Joins › Multiple joins | 2 | 1 | 3 | 26 | Medium, Hard |
 | joins.anti | Joins › Missing relationships / anti-joins | 2 | 1 | 3 | 6 | Easy |
 | joins.fan-out | Joins › Join fan-out & cardinality | 4 | 2 | 6 | 17 | Hard, Medium |
-| joins.set-ops | Joins › UNION / INTERSECT / EXCEPT | 4 | 0 | 4 | 13 | Easy |
+| joins.set-ops | Joins › UNION / INTERSECT / EXCEPT | 4 | 0 | 4 | 11 | Easy |
 | subqueries.scalar | Subqueries & CTEs › Scalar subqueries | 2 | 0 | 2 | 45 | Easy |
 | subqueries.exists | Subqueries & CTEs › IN / EXISTS / NOT EXISTS | 2 | 2 | 4 | 11 | Easy, Medium, Hard |
 | subqueries.correlated | Subqueries & CTEs › Correlated subqueries | 0 | 1 | 1 | 3 | Medium |
-| subqueries.cte | Subqueries & CTEs › CTEs | 2 | 1 | 3 | 51 | Medium, Hard |
-| subqueries.recursive | Subqueries & CTEs › Recursive CTEs | 2 | 1 | 3 | 7 | Medium, Hard |
+| subqueries.cte | Subqueries & CTEs › CTEs | 2 | 1 | 3 | 49 | Medium, Hard |
+| subqueries.recursive | Subqueries & CTEs › Recursive CTEs | 2 | 1 | 3 | 5 | Medium, Hard |
 | windows.row-number | Window functions › ROW_NUMBER | 2 | 1 | 3 | 11 | Easy, Medium |
 | windows.rank | Window functions › RANK / DENSE_RANK | 4 | 4 | 8 | 25 | Medium, Easy |
 | windows.lag-lead | Window functions › LAG / LEAD | 4 | 1 | 5 | 15 | Medium, Easy |
@@ -40,7 +40,7 @@
 | windows.rolling | Window functions › Rolling windows & frames | 4 | 3 | 7 | 9 | Medium, Hard |
 | windows.top-n | Window functions › Top-N per group | 4 | 0 | 4 | 6 | Medium |
 | windows.gaps-islands | Window functions › Gaps & islands | 0 | 1 | 1 | 2 | Hard |
-| dates.filter | Dates & time › Date filtering | 2 | 2 | 4 | 40 | Easy |
+| dates.filter | Dates & time › Date filtering | 2 | 2 | 4 | 38 | Easy |
 | dates.buckets | Dates & time › Monthly / weekly buckets | 2 | 1 | 3 | 7 | Easy |
 | dates.diff | Dates & time › Date differences | 0 | 1 | 1 | 3 | Easy |
 | dates.series | Dates & time › Date series & missing days | 2 | 1 | 3 | 5 | Medium |

@@ -39,8 +39,8 @@ const LESSON_TOPIC: Record<number, TopicId> = {
  * the reasoning actually required.
  */
 export const DIFFICULTY_OVERRIDES: Record<string, { difficulty: Difficulty; why: string }> = {
-  "35/0": { difficulty: "medium", why: "Recursive date grid + CROSS JOIN is a mechanical pattern; scored high only because of the recursive CTE." },
-  "35/1": { difficulty: "medium", why: "Same date-grid pattern with one extra filter." },
+  "35/0": { difficulty: "medium", why: "Fixed VALUES date list plus CROSS JOIN; mechanical once the date source is given." },
+  "35/1": { difficulty: "medium", why: "Same date-grid pattern with one signup filter." },
   "53/0": { difficulty: "medium", why: "Aggregate-then-rank top-N with an explicit tie-breaker; a standard intermediate pattern." },
   "53/1": { difficulty: "medium", why: "Top-N with ties via DENSE_RANK; the prompt states the tie rule." },
   "32/1": { difficulty: "medium", why: "LEFT JOIN + NULLIF ratio; several features but one clear idea." },

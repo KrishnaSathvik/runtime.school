@@ -3,6 +3,8 @@
 import Link from "next/link";
 import taskContexts from "@/content/task-context.json";
 import {TableInspector} from "@/components/editor/TableInspector";
+import { ActivityHeader } from "@/components/layout/PageHeader";
+import { WorkspaceHeading, WorkspaceToolbar } from "@/components/layout/WorkspaceHeading";
 import { reviewReason } from "@/lib/review-copy";
 import { useEffect, useMemo, useRef } from "react";
 import { ArrowRight, Eye } from "lucide-react";
@@ -107,21 +109,23 @@ function Session({ lessonId }: { lessonId: number }) {
 
   return (
     <div className="flex min-h-full flex-col">
-      <div className="border-b border-[var(--border)] px-6 pt-6 pb-4 md:px-10">
-        <div className="mb-2 text-sm">
-          <Link href="/review" className="text-[var(--accent)]">← Reviews</Link>
-        </div>
-        <div className="eyebrow">
-          Spaced review · {groups[lesson.group]}
-        </div>
-        <h1 className="!my-2 !text-[1.7rem]">{lesson.title}</h1>
-        <p className="metadata">
-          {step === "done" ? "Review complete" : due
-            ? `Step ${step === "recall" ? 1 : 2} of 2`
-            : `Next review: ${new Date(review?.due ?? now).toLocaleDateString()}. You can practise now — it won’t change your schedule.`}
-        </p>
-        {review && step !== "done" && <p className="metadata mt-2">{reviewReason(review)}</p>}
-      </div>
+      <ActivityHeader>
+        <WorkspaceToolbar listHref="/review" listLabel="Reviews" />
+        <WorkspaceHeading
+          title={lesson.title}
+          meta={[
+            "Spaced review",
+            groups[lesson.group],
+            step === "done"
+              ? "Review complete"
+              : due
+                ? `Step ${step === "recall" ? 1 : 2} of 2`
+                : `Next review: ${new Date(review?.due ?? now).toLocaleDateString()}`,
+          ]}
+        >
+          {review && step !== "done" && <p className="metadata mt-2">{reviewReason(review)}</p>}
+        </WorkspaceHeading>
+      </ActivityHeader>
 
       {step === "recall" && (
         <article className="canvas reading">

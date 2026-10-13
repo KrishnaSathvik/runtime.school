@@ -8,10 +8,11 @@ class FakeWorker {
   listeners: Record<string, Listener[]> = { message: [], error: [] };
   queue: Array<{ query: string }> = [];
   terminated = false;
-  constructor(public behaviour: { bootFail?: boolean } = {}) {
+  constructor(public behaviour: { bootFail?: boolean; bootDelay?: number } = {}) {
     FakeWorker.instances.push(this);
     setTimeout(() =>
       this.emit(this.behaviour.bootFail ? { error: "The SQL engine could not load." } : { ready: true }),
+      this.behaviour.bootDelay ?? 0,
     );
   }
   addEventListener(type: string, fn: Listener) {
@@ -131,6 +132,14 @@ it("a worker that never announces readiness times out", async () => {
   vi.useFakeTimers();
   client.__setWorkerFactory(() => ({addEventListener(){},removeEventListener(){},postMessage(){},terminate(){}}) as unknown as Worker);
   const pending=client.executeSql({seed:"",query:"SELECT 1"});
-  await vi.advanceTimersByTimeAsync(client.TIMEOUT_MS+1);
-  expect((await pending).error).toMatch(/timed out/);
+  await vi.advanceTimersByTimeAsync(client.BOOT_TIMEOUT_MS+1);
+  expect((await pending).error).toMatch(/timed out while starting/);
+});
+it("a slow engine boot does not count against the 3s query limit", async () => {
+  vi.useFakeTimers();
+  client.__setWorkerFactory(() => new FakeWorker({ bootDelay: client.TIMEOUT_MS + 500 }) as unknown as Worker);
+  const pending=client.executeSql({seed:"",query:"SLOW BOOT"});
+  await vi.advanceTimersByTimeAsync(client.TIMEOUT_MS + 501);
+  FakeWorker.instances[0].respond();
+  expect((await pending).result?.values).toEqual([["SLOW BOOT"]]);
 });

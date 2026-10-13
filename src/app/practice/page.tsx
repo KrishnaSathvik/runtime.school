@@ -1,16 +1,13 @@
-import { Suspense } from "react";
-import { PracticeHub } from "@/features/practice/PracticeHub";
+import { redirect } from "next/navigation";
+import { availableSubjects } from "@/platform/subjects";
+import { PracticeSubjectsFallback } from "@/features/practice/PracticeSubjectsFallback";
 
-export default function PracticePage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="canvas">
-          <h1>Practice SQL.</h1>
-        </div>
-      }
-    >
-      <PracticeHub />
-    </Suspense>
-  );
+/**
+ * While one subject has practice, Practice opens straight to its question list
+ * (tracks and case studies are tabs there). When more subjects ship, show the subject picker.
+ */
+export default function GlobalPracticePage() {
+  const withPractice = availableSubjects.filter((s) => s.practiceHref);
+  if (withPractice.length === 1) redirect("/practice/questions");
+  return <PracticeSubjectsFallback />;
 }

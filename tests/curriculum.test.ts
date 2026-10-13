@@ -20,7 +20,8 @@ describe("curriculum completeness", () => {
     expect(counts.datasets).toBe(7);
     expect(counts.walkthroughStages).toBe(204);
     expect(counts.quizzes).toBe(88);
-    expect(counts.planComparisons).toBe(2);
+    expect(counts.planComparisons).toBe(planComparisons.length);
+    expect(planComparisons.length).toBeGreaterThanOrEqual(10);
   });
 
   it("has unique lesson ids and complete course order", () => {
@@ -58,7 +59,7 @@ describe("curriculum completeness", () => {
   });
 
   it("includes exploratory tool content", () => {
-    expect(planComparisons.length).toBe(2);
+    expect(planComparisons.every((p) => p.takeaway && p.cases.length === 2)).toBe(true);
     expect(dialectGuide.length).toBeGreaterThan(5);
     expect(labExperiments.length).toBeGreaterThan(5);
     expect(content.seed.length).toBeGreaterThan(1000);

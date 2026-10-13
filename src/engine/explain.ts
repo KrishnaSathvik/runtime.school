@@ -1,5 +1,6 @@
 import { seed } from "@/content";
 import { questionBankSeed } from "@/content/question-bank/datasets";
+import { BRAND_NAME } from "@/platform/brand";
 import type { SqlResult } from "./grading";
 
 /**
@@ -303,7 +304,7 @@ export function explainError(error: string, query: string, tables: string[] = []
       next = "Remove the comma after the last column in SELECT.";
     } else if (/^FROM$/i.test(token) && /\bSELECT\s*$/i.test(beforeFrom)) {
       detail = "SELECT has no columns listed before FROM.";
-      next = "List the columns you want after SELECT, e.g. `SELECT name, city`.";
+      next = "List the columns you want after SELECT, for example `SELECT column_a, column_b`.";
     } else if (/^[A-Za-z]+$/.test(token) && /^(SELEC|SELCT|SLECT|FORM|FRMO|WHER|WEHRE|GROPU|ODER|ORDR)$/i.test(token)) {
       detail = `\`${token}\` looks like a misspelled keyword.`;
       next = "Check the spelling of SQL keywords (SELECT, FROM, WHERE, GROUP BY, ORDER BY).";
@@ -441,7 +442,7 @@ export function explainError(error: string, query: string, tables: string[] = []
   if (/timed out/i.test(raw)) {
     return make(
       "The query took too long",
-      "SQL Studio stopped waiting for a result after 3 seconds.",
+      `${BRAND_NAME} stopped waiting for a result after 3 seconds.`,
       "Try again. If it keeps happening, check JOIN conditions and make sure recursive queries have a stopping condition.",
     );
   }

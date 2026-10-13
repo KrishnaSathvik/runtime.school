@@ -62,7 +62,7 @@ describe("plain feedback with precise diagnostics", () => {
     expect(importFailureMessage()).toContain("backup (.json)");
   });
   it("clarifies the known implementation sentence without altering SQL terminology", () => {
-    expect(learnerExplanation("In this app each worker creates an in-memory SQLite database.")).toBe("In SQL Studio, each run starts with the original sample data.");
+    expect(learnerExplanation("In this app each worker creates an in-memory SQLite database.")).toBe("In Runtime, each run starts with the original sample data.");
     const sqlConcept="JOIN, GROUP BY, HAVING, CTE, window functions, indexes, transactions, query plans and database schemas.";
     expect(learnerExplanation(sqlConcept)).toBe(sqlConcept);
   });

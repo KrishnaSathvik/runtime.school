@@ -44,7 +44,7 @@ export default function ReviewsPage() {
           <p className="mt-2 text-sm text-[var(--text-secondary)]">
             Reviews appear a day after you master a lesson.
           </p>
-          <Link href="/learn" className="btn primary mt-5">
+          <Link href="/sql" className="btn primary mt-5">
             Go to lessons <ArrowRight size={14} />
           </Link>
         </section>
@@ -53,21 +53,23 @@ export default function ReviewsPage() {
           <section className="mt-10">
             <h2>Ready to review {due.length > 0 && <span className="metadata">· {due.length}</span>}</h2>
             {due.length === 0 ? (
-              <p className="metadata mt-3">No reviews are ready yet. {upcoming[0] ? `Next review: ${when(reviews[upcoming[0].id].due, now).toLowerCase()}.` : ""}</p>
+              <p className="metadata mt-3">No reviews are ready yet. {upcoming[0] ? `Next review: ${when(reviews[upcoming[0].id].due, now)}.` : ""}</p>
             ) : (
               <div className="mt-4 border-t border-[var(--border)]">
                 {due.map((l) => (
                   <Link key={l.id} href={`/review/${l.id}`} className="index-row">
                     <span className="module-id">{String(l.group + 1).padStart(2, "0")}</span>
-                    <div>
-                      <div className="text-sm font-medium">{l.title}</div>
-                      <div className="metadata mt-1">{groups[l.group]}</div>
-                      <p className="metadata mt-1">{reviewReason(reviews[l.id])}</p>
+                    <div className="min-w-0">
+                      <div className="text-[15px] font-medium leading-snug">{l.title}</div>
+                      <div className="mt-1.5 text-xs leading-relaxed text-[var(--muted)]">{groups[l.group]}</div>
+                      <p className="metadata mt-1.5">{reviewReason(reviews[l.id])}</p>
                     </div>
-                    <span className="metadata">{when(reviews[l.id].due, now)}</span>
-                    <span className="btn primary">
-                      Review <ArrowRight size={14} />
-                    </span>
+                    <div className="index-aside">
+                      <span className="metadata">{when(reviews[l.id].due, now)}</span>
+                      <span className="btn primary">
+                        Review <ArrowRight size={14} />
+                      </span>
+                    </div>
                   </Link>
                 ))}
               </div>
@@ -81,15 +83,17 @@ export default function ReviewsPage() {
                 {upcoming.map((l) => (
                   <Link key={l.id} href={`/review/${l.id}`} className="index-row">
                     <span className="module-id">{String(l.group + 1).padStart(2, "0")}</span>
-                    <div>
-                      <div className="text-sm font-medium">{l.title}</div>
-                      <div className="metadata mt-1">
+                    <div className="min-w-0">
+                      <div className="text-[15px] font-medium leading-snug">{l.title}</div>
+                      <div className="mt-1.5 text-xs leading-relaxed text-[var(--muted)]">
                         Level {reviews[l.id].level + 1} of {REVIEW_DAYS.length} ·{" "}
                         {reviews[l.id].history.filter((h) => !h.early).length} completed review
                         {reviews[l.id].history.filter((h) => !h.early).length === 1 ? "" : "s"}
                       </div>
                     </div>
-                    <span className="metadata">{when(reviews[l.id].due, now)}</span>
+                    <div className="index-aside">
+                      <span className="index-progress">{when(reviews[l.id].due, now)}</span>
+                    </div>
                   </Link>
                 ))}
               </div>

@@ -17,13 +17,13 @@ Modules are *not* difficulty levels — this table shows how they differ.
 
 | Module | Warm-up | Easy | Medium | Hard |
 | --- | --- | --- | --- | --- |
-| 1. SQL foundations | 7 | 3 | 0 | 0 |
-| 2. Filtering & unique values | 13 | 1 | 0 | 0 |
-| 3. Calculations & data quality | 4 | 9 | 3 | 0 |
-| 4. Joins & aggregation | 0 | 9 | 7 | 0 |
-| 5. Dates, strings & subqueries | 2 | 8 | 2 | 0 |
-| 6. Window functions | 0 | 5 | 16 | 1 |
-| 7. Advanced product analysis | 2 | 4 | 6 | 14 |
+| 1. SQL foundations | 4 | 0 | 0 | 0 |
+| 2. Filtering & sorting | 12 | 0 | 0 | 0 |
+| 3. Calculations & data quality | 6 | 10 | 0 | 0 |
+| 4. Joins & sets | 1 | 12 | 9 | 0 |
+| 5. Dates, strings & subqueries | 3 | 9 | 2 | 0 |
+| 6. Window functions | 0 | 6 | 17 | 1 |
+| 7. Advanced product analysis | 2 | 2 | 6 | 14 |
 | 8. Database engineering | 2 | 7 | 7 | 0 |
 | 9. Performance & query plans | 1 | 5 | 2 | 0 |
 | 10. Warehouse & reporting projects | 0 | 7 | 15 | 14 |
@@ -40,7 +40,7 @@ Modules are *not* difficulty levels — this table shows how they differ.
 | SQL basics | basics.order-by | ORDER BY | 2 | 13 | 2 / 0 / 0 / 0 |
 | SQL basics | basics.limit | LIMIT | 0 | 2 | 0 / 0 / 0 / 0 |
 | SQL basics | basics.schema | Tables & keys | 2 | 2 | 1 / 1 / 0 / 0 |
-| Filtering | filtering.where | WHERE | 2 | 90 | 2 / 0 / 0 / 0 |
+| Filtering | filtering.where | WHERE | 2 | 89 | 2 / 0 / 0 / 0 |
 | Filtering | filtering.logic | AND / OR / NOT | 2 | 2 | 2 / 0 / 0 / 0 |
 | Filtering | filtering.in | IN | 0 | 3 | 0 / 0 / 0 / 0 |
 | Filtering | filtering.between | BETWEEN & ranges | 2 | 2 | 2 / 0 / 0 / 0 |
@@ -57,12 +57,12 @@ Modules are *not* difficulty levels — this table shows how they differ.
 | Joins | joins.multi | Multiple joins | 2 | 21 | 0 / 0 / 2 / 0 |
 | Joins | joins.anti | Missing relationships / anti-joins | 2 | 2 | 0 / 2 / 0 / 0 |
 | Joins | joins.fan-out | Join fan-out & cardinality | 4 | 4 | 0 / 0 / 2 / 2 |
-| Joins | joins.set-ops | UNION / INTERSECT / EXCEPT | 4 | 13 | 0 / 4 / 0 / 0 |
+| Joins | joins.set-ops | UNION / INTERSECT / EXCEPT | 4 | 11 | 0 / 4 / 0 / 0 |
 | Subqueries & CTEs | subqueries.scalar | Scalar subqueries | 2 | 45 | 0 / 2 / 0 / 0 |
 | Subqueries & CTEs | subqueries.exists | IN / EXISTS / NOT EXISTS | 2 | 7 | 0 / 2 / 0 / 0 |
 | Subqueries & CTEs | subqueries.correlated | Correlated subqueries | 0 | 0 | 0 / 0 / 0 / 0 |
-| Subqueries & CTEs | subqueries.cte | CTEs | 2 | 42 | 0 / 0 / 2 / 0 |
-| Subqueries & CTEs | subqueries.recursive | Recursive CTEs | 2 | 5 | 0 / 0 / 2 / 0 |
+| Subqueries & CTEs | subqueries.cte | CTEs | 2 | 40 | 0 / 0 / 2 / 0 |
+| Subqueries & CTEs | subqueries.recursive | Recursive CTEs | 2 | 3 | 0 / 0 / 2 / 0 |
 | Window functions | windows.row-number | ROW_NUMBER | 2 | 2 | 0 / 2 / 0 / 0 |
 | Window functions | windows.rank | RANK / DENSE_RANK | 4 | 20 | 0 / 2 / 2 / 0 |
 | Window functions | windows.lag-lead | LAG / LEAD | 4 | 11 | 0 / 1 / 3 / 0 |
@@ -70,7 +70,7 @@ Modules are *not* difficulty levels — this table shows how they differ.
 | Window functions | windows.rolling | Rolling windows & frames | 4 | 6 | 0 / 0 / 3 / 1 |
 | Window functions | windows.top-n | Top-N per group | 4 | 4 | 0 / 0 / 4 / 0 |
 | Window functions | windows.gaps-islands | Gaps & islands | 0 | 0 | 0 / 0 / 0 / 0 |
-| Dates & time | dates.filter | Date filtering | 2 | 29 | 0 / 2 / 0 / 0 |
+| Dates & time | dates.filter | Date filtering | 2 | 27 | 0 / 2 / 0 / 0 |
 | Dates & time | dates.buckets | Monthly / weekly buckets | 2 | 2 | 0 / 2 / 0 / 0 |
 | Dates & time | dates.diff | Date differences | 0 | 0 | 0 / 0 / 0 / 0 |
 | Dates & time | dates.series | Date series & missing days | 2 | 2 | 0 / 0 / 2 / 0 |
@@ -133,12 +133,12 @@ Modules are *not* difficulty levels — this table shows how they differ.
 | --- | --- | --- |
 | p-0-0 | lc-0-0, lc-0-1 | Meet your first SELECT |
 | p-1-0 | lc-1-0, lc-1-1 | Aliases & calculated columns |
-| p-2-0 | lc-2-0, lc-2-1 | Unique values with DISTINCT |
-| p-54-1 | lc-54-1, lc-34-1 | Databases, schemas, tables & keys; Self-joins & referral relationships |
 | p-3-0 | lc-3-0, lc-3-1, lc-28-1 | Filter with WHERE; Query plans & indexes |
+| p-2-0 | lc-2-0, lc-2-1 | Unique values with DISTINCT |
 | p-13-0 | lc-13-0, lc-13-1 | Conditional aggregation |
-| p-32-1 | lc-32-1, lc-75-1 | Ratios, ROUND & NULLIF; Review AI-generated SQL with evidence |
+| p-54-1 | lc-54-1, lc-34-1 | Databases, schemas, tables & keys; Self-joins & referral relationships |
 | p-14-0 | lc-14-0, lc-14-1 | Connect tables with JOIN |
+| p-32-1 | lc-32-1, lc-75-1 | Ratios, ROUND & NULLIF; Review AI-generated SQL with evidence |
 | p-16-0 | lc-16-0, lc-16-1 | Revenue across tables |
 | p-35-0 | lc-35-0, lc-35-1 | CROSS JOIN & a complete date grid |
 | p-37-0 | lc-37-0, lc-37-1 | ON versus WHERE in a LEFT JOIN |

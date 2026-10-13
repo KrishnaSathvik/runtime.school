@@ -1,14 +1,18 @@
 "use client";
+import { ActivityHeader } from "@/components/layout/PageHeader";
+import { WorkspaceHeading, WorkspaceToolbar } from "@/components/layout/WorkspaceHeading";
+import { WorkspaceSplit } from "@/components/editor/WorkspaceSplit";
 
 import Link from "next/link";
 import taskContexts from "@/content/task-context.json";
-import {TableInspector} from "@/components/editor/TableInspector";
+import { TableInspector } from "@/components/editor/TableInspector";
 import { useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { courseOrder, datasetCatalog, isBlankSql, lessons, starterFor } from "@/content";
 import { SqlWorkspace } from "@/components/editor/SqlWorkspace";
 import {
   PLACEMENT_IDS,
+  isMastered,
   placementStart,
   useHydrated,
   useLearning,
@@ -17,6 +21,7 @@ import {
 export default function PlacementPage() {
   const hydrated = useHydrated();
   const placement = useLearning((s) => s.placement);
+  const joinMastered = useLearning((s) => !!s.stats[14] && isMastered(s.stats[14]));
   const restart = useLearning((s) => s.restartPlacement);
   const answer = useLearning((s) => s.answerPlacement);
   const advance = useLearning((s) => s.advancePlacement);
@@ -60,7 +65,7 @@ export default function PlacementPage() {
   }
 
   if (placement.done) {
-    const start = placementStart(placement)!;
+    const start = placementStart(placement, { joinMastered })!;
     const solved = placement.answers.filter((a) => a?.ok).length;
     const firstMiss = placement.answers.findIndex((a) => !a?.ok);
     return (
@@ -90,7 +95,7 @@ export default function PlacementPage() {
           <Link href={`/lesson/${start}`} className="btn primary">
             Start here <ArrowRight size={14} />
           </Link>
-          <Link href="/learn" className="btn">Browse the course</Link>
+          <Link href="/sql" className="btn">Browse the course</Link>
           {firstMiss === -1 && <Link href="/practice/tracks/advanced-challenges" className="btn">Explore advanced practice</Link>}
           <button type="button" className="btn ghost" onClick={() => { restart(); setChecked(false); }}>
             Retake the check
@@ -104,68 +109,106 @@ export default function PlacementPage() {
   const lesson = lessons[PLACEMENT_IDS[index]];
   const task = lesson.tasks[0];
   const taskContext = (taskContexts as Record<string, { columns: string[]; tables: string[] }[]>)[lesson.id][0];
-  const tables = datasetCatalog[lesson.dataset]?.tables ?? [];
+  // Only tables this question uses — not the full dataset (avoids a useless “Additional tables” block).
+  const tables = taskContext.tables;
   const { sql: starter, cursor } = starterFor(lesson, 0);
   const dKey = `sql-placement-${index}`;
   const sql = isBlankSql(drafts[dKey]) && drafts[dKey] !== "" ? starter : drafts[dKey];
   const solved = placement.answers[index]?.ok === true;
   const last = index === PLACEMENT_IDS.length - 1;
+  const dataset = datasetCatalog[lesson.dataset];
 
   return (
-    <div className="flex min-h-full flex-col">
-      <div className="border-b border-[var(--border)] px-6 pt-6 pb-4 md:px-10">
-        <div className="eyebrow">Placement check · question {index + 1} of {PLACEMENT_IDS.length}</div>
-        <h1 className="!my-2 !text-[1.7rem]">{lesson.title}</h1>
-        <div
-          className="mt-2 h-[3px] w-full max-w-sm overflow-hidden bg-[var(--border)]"
-          role="progressbar"
-          aria-label="Placement progress"
-          aria-valuemin={0}
-          aria-valuemax={PLACEMENT_IDS.length}
-          aria-valuenow={index}
+    <div className="workspace-page flex min-h-full flex-col">
+      <ActivityHeader>
+        <WorkspaceToolbar
+          ariaLabel="Placement navigation"
+          listHref="/placement"
+          listLabel="Find my level"
+          indexLabel={`${index + 1} / ${PLACEMENT_IDS.length}`}
+          trailing={
+            !solved ? (
+              <button
+                type="button"
+                className="problem-toolbar-action"
+                onClick={() => {
+                  advance();
+                  setChecked(false);
+                }}
+              >
+                {last ? "Skip and finish" : "Skip"}
+              </button>
+            ) : null
+          }
+          next={
+            checked || solved
+              ? {
+                  onClick: () => {
+                    advance();
+                    setChecked(false);
+                  },
+                  label: last ? "See my starting point" : "Next question",
+                }
+              : null
+          }
+        />
+        <WorkspaceHeading
+          title={lesson.title}
+          meta={["Find my level", `Question ${index + 1} of ${PLACEMENT_IDS.length}`, dataset?.name, lesson.difficulty]}
         >
-          <div className="h-full bg-[var(--accent)]" style={{ width: `${(100 * index) / PLACEMENT_IDS.length}%` }} />
-        </div>
-      </div>
-      <div className="practice-layout">
-        <aside className="task-pane" aria-label="Question">
-          <h2 id="challenge-prompt" className="!text-[1.35rem] leading-snug">{task.prompt}</h2>
-          <div className="my-6 h-px bg-[var(--border)]" />
-          <div className="eyebrow">Tables you can use</div>
-          <p className="metadata mt-3">Required columns: <code>{taskContext.columns.join(", ")}</code>. {task.ordered ? "Row order is checked." : "Any row order is accepted."}</p>
-          <TableInspector key={`${lesson.id}:0`} tables={tables} relevantTables={taskContext.tables}/>
-          <div className="mt-8 flex flex-wrap gap-2">
-            {(checked || solved) && (
-              <button
-                type="button"
-                className="btn primary"
-                onClick={() => {
-                  advance();
-                  setChecked(false);
-                }}
-              >
-                {last ? "See my starting point" : "Next question"} <ArrowRight size={14} />
-              </button>
-            )}
-            {!solved && (
-              <button
-                type="button"
-                className="btn ghost"
-                onClick={() => {
-                  advance();
-                  setChecked(false);
-                }}
-              >
-                {last ? "Skip and finish" : "I don’t know this yet — skip"}
-              </button>
-            )}
-          </div>
-          <p className="metadata mt-4">This check never marks lessons as mastered.</p>
+          <div
+            className="course-progress mt-3 !mb-0 !w-full max-w-xs"
+            style={{ ["--progress" as string]: `${(100 * index) / PLACEMENT_IDS.length}%` }}
+            role="progressbar"
+            aria-label="Placement progress"
+            aria-valuemin={0}
+            aria-valuemax={PLACEMENT_IDS.length}
+            aria-valuenow={index}
+          />
+        </WorkspaceHeading>
+      </ActivityHeader>
+      <WorkspaceSplit>
+        <aside className={`task-pane ${taskContext.tables.length === 1 ? "compact-task" : ""}`} aria-label="Question">
+          <section className="task-section">
+            <div className="eyebrow">Your task</div>
+            <p id="challenge-prompt" className="mt-2 text-[15px] leading-relaxed">
+              {task.prompt}
+            </p>
+          </section>
+
+          <section className="task-section">
+            <div className="eyebrow">Required output</div>
+            <p className="metadata mt-1">Columns to return</p>
+            <p className="mt-2 text-sm">
+              {taskContext.columns.map((c, i) => (
+                <span key={c}>
+                  <code className="inline-code">{c}</code>
+                  {i < taskContext.columns.length - 1 ? ", " : ""}
+                </span>
+              ))}
+            </p>
+            <p className="metadata mt-1">
+              {task.ordered ? "Row order is checked." : "Rows can be in any order."}{" "}
+              Check answer grades this question for placement only. It never marks lessons as mastered.
+            </p>
+          </section>
+
+          <section className="task-section">
+            <div className="eyebrow">Tables and sample data</div>
+            <TableInspector
+              key={`${lesson.id}:0`}
+              tables={tables}
+              heading={false}
+            />
+            {dataset?.description && <p className="metadata mt-3">{dataset.description}</p>}
+          </section>
         </aside>
         <SqlWorkspace
           value={sql}
           onChange={(v) => setDraft(dKey, v)}
           graded
+          savesProgress={false}
+          progressNote="Check answer suggests a starting lesson. It does not mark any lesson as mastered."
           taskKey={dKey}
           starter={starter}
           starterCursor={cursor}
@@ -192,7 +235,7 @@ export default function PlacementPage() {
             </button>
           }
         />
-      </div>
+      </WorkspaceSplit>
     </div>
   );
 }

@@ -25,8 +25,13 @@ it("CTE scope ends at the statement",async()=>{
  const r=await send({seed:"",query:"WITH totals AS (SELECT 3 AS n) SELECT n FROM totals; SELECT n FROM totals;",allowWrites:true});expect(r.error).toMatch(/no such table: totals/);
 });
 it("reviewed checks align with their specific teaching objectives",()=>{
- expect(reviewedQuizIds).toHaveLength(42);
+ expect(reviewedQuizIds.length).toBeGreaterThanOrEqual(42);
+ expect(new Set(reviewedQuizIds).size).toBe(reviewedQuizIds.length);
  for(const id of reviewedQuizIds){const l=lessons[id];expect(l.quiz.correct).toBeGreaterThanOrEqual(0);expect(l.quiz.correct).toBeLessThan(l.quiz.options.length);}
  expect(lessons[69].quiz.why).toMatch(/traceable source records/);
  expect(lessons[9].quiz.q).not.toContain('LEFT JOIN');expect(lessons[17].quiz.q).not.toContain('January');
+ expect(lessons[16].quiz.q).toMatch(/quantity \* price|revenue/i);
+ expect(lessons[16].quiz.q).not.toMatch(/requests and three invoices/i);
+ expect(lessons[70].quiz.q).toMatch(/rn = 1|latest|Silver|natural key/i);
+ expect(lessons[70].quiz.q).not.toMatch(/surrogate keys with fresh ROW_NUMBER/i);
 });

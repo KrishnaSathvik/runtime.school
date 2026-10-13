@@ -11,7 +11,7 @@ Customers, order lines, and a product catalog. One row in orders is one product 
 - Role framing: Commerce analyst
 - Questions: 72 (Warm-up 25, Easy 27, Medium 18, Hard 2)
 - Topics: SQL basics, Filtering, Aggregation, Strings & data cleaning, Joins, Subqueries & CTEs, Dates & time, Window functions, Query optimization, Business analytics, Database engineering
-- Lessons: 0, 1, 2, 54, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 55, 14, 15, 16, 17, 18, 20, 26, 21, 22, 23, 24, 25, 19, 27, 28, 29, 62, 63, 65, 66
+- Lessons: 0, 1, 3, 4, 5, 6, 7, 8, 2, 9, 10, 11, 12, 13, 54, 14, 15, 16, 19, 17, 18, 20, 26, 21, 22, 23, 55, 24, 25, 27, 28, 29, 62, 63, 65, 66
 
 - `customers` (8 rows): id INTEGER PK, name TEXT, city TEXT, joined_at TEXT
 - `products` (6 rows): id INTEGER PK, name TEXT, category TEXT, price REAL
@@ -23,8 +23,8 @@ Viewer signups and watch events. Repeated views are intentional; daily_metrics h
 
 - Role framing: Video product analyst
 - Questions: 26 (Warm-up 1, Easy 13, Medium 9, Hard 3)
-- Topics: Aggregation, Filtering, Dates & time, Joins, Window functions, Business analytics, Query optimization
-- Lessons: 30, 31, 35, 38, 39, 40, 41, 42, 53, 57, 45, 47, 67
+- Topics: Aggregation, Dates & time, Joins, Filtering, Window functions, Business analytics, Query optimization
+- Lessons: 30, 35, 38, 31, 39, 40, 41, 42, 53, 57, 45, 47, 67
 - Projects: Video Product Analytics
 
 - `viewers` (8 rows): id INTEGER PK, country TEXT, signup_at TEXT, referred_by INTEGER

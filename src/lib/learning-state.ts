@@ -5,6 +5,7 @@ import { useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist, type StateStorage } from "zustand/middleware";
 import { courseOrder, lessons, projects } from "@/content";
+import { BRAND_NAME } from "@/platform/brand";
 
 const STAGES: Stage[] = ["understand", "practice", "review", "complete"];
 
@@ -158,15 +159,30 @@ export type Recommendation = {
 export const REVIEW_DAYS = [1, 3, 7, 21];
 const DAY = 86400000;
 
-/** Optional diagnostic: the first challenge of these lessons, in course order. */
+/**
+ * Optional diagnostic: first challenge of these lessons, in skill-ladder order.
+ * Slot indexes are stable for saved placement answers — do not reorder this array.
+ * Ratios (32) stay before the join question in the check even though the course
+ * now teaches joins before ratios.
+ */
 export const PLACEMENT_IDS = [0, 3, 5, 10, 32, 14];
 
-export function placementStart(p: Placement | null): number | null {
+/** All-correct start; pinned so a later courseOrder edit cannot move it. */
+const PLACEMENT_ALL_PASS_START = 15;
+/** Join lesson checked when the ratio slot is the first miss. */
+const PLACEMENT_JOIN_LESSON = 14;
+/** Index of the ratios lesson inside PLACEMENT_IDS. */
+const PLACEMENT_RATIO_SLOT = 4;
+
+export function placementStart(
+  p: Placement | null,
+  options?: { joinMastered?: boolean },
+): number | null {
   if (!p?.done) return null;
   const firstMiss = p.answers.findIndex((a) => !a?.ok);
-  if (firstMiss === -1) {
-    const last = PLACEMENT_IDS[PLACEMENT_IDS.length - 1];
-    return courseOrder[courseOrder.indexOf(last) + 1] ?? last;
+  if (firstMiss === -1) return PLACEMENT_ALL_PASS_START;
+  if (firstMiss === PLACEMENT_RATIO_SLOT && !options?.joinMastered) {
+    return PLACEMENT_JOIN_LESSON;
   }
   return PLACEMENT_IDS[firstMiss];
 }
@@ -493,17 +509,43 @@ export const useLearning = create<Store>()(
                 updated: 0,
               }),
             };
+            // Always record the last checked SQL draft. Verified evidence is only
+            // replaced when Check answer succeeds — a later failed check must not
+            // erase a previously verified result for the report.
             m.queries = { ...m.queries, [variant]: query };
-            m.results = {
-              ...m.results,
-              [variant]: {
-                ok,
-                guided,
-                columns: result?.columns ?? [],
-                values: result?.values?.slice(0, 20) ?? [],
-                time: Date.now(),
-              },
-            };
+            const prev = m.results[variant] as
+              | { ok?: boolean; sql?: string; columns?: string[]; values?: unknown[][]; guided?: boolean; time?: number; truncated?: boolean; rowCount?: number }
+              | undefined;
+            if (ok) {
+              const values = result?.values ?? [];
+              const cap = 100;
+              const truncated = values.length > cap;
+              m.results = {
+                ...m.results,
+                [variant]: {
+                  ok: true,
+                  guided,
+                  columns: result?.columns ?? [],
+                  values: truncated ? values.slice(0, cap) : values,
+                  time: Date.now(),
+                  sql: query,
+                  rowCount: values.length,
+                  ...(truncated ? { truncated: true } : {}),
+                },
+              };
+            } else if (!prev?.ok) {
+              m.results = {
+                ...m.results,
+                [variant]: {
+                  ok: false,
+                  guided,
+                  columns: result?.columns ?? [],
+                  values: (result?.values ?? []).slice(0, 20),
+                  time: Date.now(),
+                  sql: query,
+                },
+              };
+            }
             if (ok && !guided && !m.solved.includes(variant)) {
               m.solved = [...m.solved, variant];
             }
@@ -788,7 +830,9 @@ export const useLearning = create<Store>()(
             };
           }
         }
-        const start = placementStart(s.placement);
+        const start = placementStart(s.placement, {
+          joinMastered: isMastered(recordOf(s.stats, PLACEMENT_JOIN_LESSON)),
+        });
         const anyProgress = Object.values(s.stats).some((r) => r.attempts > 0);
         if (start !== null && !anyProgress) {
           return {
@@ -887,11 +931,11 @@ const isObj = (v: unknown): v is Raw =>
 
 /** Rejects files the original app rejected, with the same messages. */
 export function validateImport(data: unknown): Raw {
-  if (!isObj(data)) throw new Error("This is not a SQL Studio progress file.");
+  if (!isObj(data)) throw new Error(`This is not a ${BRAND_NAME} progress file.`);
   if (data.version !== undefined && ![1, 2, 3].includes(data.version as number)) {
     throw new Error("Unsupported progress version.");
   }
-  if (!isObj(data.stats)) throw new Error("This is not a SQL Studio progress file.");
+  if (!isObj(data.stats)) throw new Error(`This is not a ${BRAND_NAME} progress file.`);
   if (data.version === 3) {
     for (const key of ["drafts", "attempts", "sessions", "projects", "reviews", "reviewSessions", "questions", "tracks"]) {
       if (data[key] !== undefined && !isObj(data[key])) {

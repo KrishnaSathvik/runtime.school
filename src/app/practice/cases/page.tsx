@@ -1,8 +1,6 @@
-"use client";
-import Link from "next/link";
-import {ArrowRight} from "lucide-react";
-import {bankQuestions,practiceDatasets} from "@/content/question-bank";
-import {useHydrated,useLearning} from "@/lib/learning-state";
-import {PageHeader} from "@/components/layout/PageHeader";
-const cases=[...new Set(bankQuestions.flatMap(q=>q.caseStudy?[q.caseStudy.id]:[]))].map(id=>bankQuestions.filter(q=>q.caseStudy?.id===id).sort((a,b)=>a.caseStudy!.stage-b.caseStudy!.stage));
-export default function CasesPage(){const s=useLearning();const ready=useHydrated();return <div className="canvas"><Link href="/practice" className="metadata">← Practice</Link><PageHeader title="Practice case studies" description="Use one database to answer a connected set of business questions."/><div className="editorial-list mt-8">{cases.map(qs=>{const first=qs[0];const solved=ready?qs.filter(q=>s.questions[q.id]?.solved).length:0;const recent=[...qs].filter(q=>!s.questions[q.id]?.solved).sort((a,b)=>(s.questions[b.id]?.lastAt??0)-(s.questions[a.id]?.lastAt??0))[0];const next=ready?(recent??first):first;const started=ready&&qs.some(q=>s.questions[q.id]);return <Link key={first.caseStudy!.id} href={`/practice/${next.slug}`} className="discovery-row"><div><h2>{first.caseStudy!.title}</h2><p className="metadata mt-2">{first.caseStudy!.id.includes("capacity")?"Plan capacity across sites, deliveries and reporting dates.":"Investigate checkout drop-off, delays and customer recoveries."}</p><p className="metadata mt-2">{qs.length} stages · {practiceDatasets[first.datasetId]?.name}{ready?` · ${solved} solved without hints`:""}</p></div><span className="row-action">{solved===qs.length?"Review case":started?"Continue case":"Start case"}<ArrowRight size={14} aria-hidden/></span></Link>;})}</div></div>;}
+import { redirect } from "next/navigation";
+
+/** Practice is one question list; this old index now opens it. */
+export default function Page() {
+  redirect("/practice/questions");
+}

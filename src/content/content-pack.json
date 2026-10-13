@@ -7,16 +7,16 @@
     "projects": 5,
     "datasets": 7,
     "walkthroughStages": 204,
-    "planComparisons": 2,
+    "planComparisons": 12,
     "quizzes": 88
   },
   "seed": "CREATE TABLE customers(id INTEGER PRIMARY KEY,name TEXT,city TEXT,joined_at TEXT);CREATE TABLE products(id INTEGER PRIMARY KEY,name TEXT,category TEXT,price REAL);CREATE TABLE orders(id INTEGER PRIMARY KEY,customer_id INTEGER,product_id INTEGER,quantity INTEGER,status TEXT,ordered_at TEXT);\nINSERT INTO customers VALUES(1,'Alice','Chicago','2024-01-10'),(2,'Ben','Austin','2024-02-12'),(3,'Cara','Seattle','2024-03-05'),(4,'Dev','Chicago','2024-04-20'),(5,'Elena',NULL,'2024-05-01'),(6,'Finn','Austin','2024-06-15'),(7,'Grace','Seattle','2024-07-07'),(8,'Hugo','Boston','2024-08-09');\nINSERT INTO products VALUES(1,'Notebook','Stationery',12),(2,'Desk lamp','Home',45),(3,'Keyboard','Tech',80),(4,'Pen set','Stationery',8),(5,'Headphones','Tech',120),(6,'Plant pot','Home',20);\nINSERT INTO orders VALUES(101,1,1,2,'paid','2025-01-01'),(102,2,3,1,'paid','2025-01-02'),(103,1,2,1,'paid','2025-01-05'),(104,3,5,2,'pending','2025-01-08'),(105,4,4,5,'paid','2025-02-01'),(106,2,5,1,'cancelled','2025-02-03'),(107,5,6,3,'paid','2025-02-10'),(108,6,1,4,'paid','2025-02-15'),(109,3,3,1,'paid','2025-03-01'),(110,1,5,1,'paid','2025-03-03'),(111,7,2,2,'pending','2025-03-08'),(112,4,3,2,'paid','2025-03-15');\nCREATE TABLE viewers(id INTEGER PRIMARY KEY,country TEXT,signup_at TEXT,referred_by INTEGER);\nCREATE TABLE videos(id INTEGER PRIMARY KEY,creator_id INTEGER,title TEXT,duration_seconds INTEGER);\nCREATE TABLE watch_events(id INTEGER PRIMARY KEY,viewer_id INTEGER,video_id INTEGER,watched_at TEXT,watch_seconds INTEGER);\nCREATE TABLE daily_metrics(day TEXT PRIMARY KEY,watch_minutes INTEGER);\nINSERT INTO viewers VALUES(1,'US','2025-01-01',NULL),(2,'US','2025-01-02',1),(3,'GB','2025-01-02',1),(4,'IN','2025-01-03',2),(5,'GB','2025-01-04',NULL),(6,'US','2025-01-05',3),(7,'IN','2025-01-06',NULL),(8,'CA','2025-01-07',4);\nINSERT INTO videos VALUES(1,10,'SQL in ten minutes',600),(2,10,'Understanding joins',900),(3,11,'A day outdoors',300),(4,12,'Window functions',720),(5,12,'Build a project',1200);\nINSERT INTO watch_events VALUES(1,1,1,'2025-01-01 10:00:00',300),(2,1,2,'2025-01-01 11:00:00',450),(3,2,1,'2025-01-02 12:00:00',600),(4,3,3,'2025-01-02 13:00:00',120),(5,1,4,'2025-01-02 14:00:00',700),(6,4,1,'2025-01-03 10:00:00',200),(7,2,2,'2025-01-03 11:00:00',900),(8,5,3,'2025-01-04 10:00:00',300),(9,1,1,'2025-01-04 12:00:00',600),(10,3,2,'2025-01-04 14:00:00',300),(11,6,4,'2025-01-05 10:00:00',360),(12,7,5,'2025-01-06 10:00:00',600),(13,2,1,'2025-01-06 12:00:00',120),(14,4,3,'2025-01-06 14:00:00',240),(15,1,2,'2025-01-07 10:00:00',800),(16,3,4,'2025-01-07 11:00:00',400),(17,5,1,'2025-01-08 10:00:00',400),(18,2,5,'2025-01-09 12:00:00',1000),(19,1,1,'2025-01-10 10:00:00',300),(20,6,2,'2025-01-10 14:00:00',500),(21,7,1,'2025-01-11 10:00:00',600),(22,4,2,'2025-01-12 10:00:00',450),(23,1,4,'2025-01-15 10:00:00',700),(24,2,3,'2025-02-01 10:00:00',300);\nINSERT INTO daily_metrics VALUES('2025-01-01',30),('2025-01-02',60),('2025-01-04',90),('2025-01-05',120),('2025-01-07',60);\nCREATE TABLE members(id INTEGER PRIMARY KEY,email TEXT,country TEXT,joined_at TEXT,referrer_id INTEGER);\nCREATE TABLE social_events(id INTEGER PRIMARY KEY,event_key TEXT,member_id INTEGER,event_type TEXT,event_at TEXT,ingested_at TEXT);\nCREATE TABLE experiment_assignments(member_id INTEGER PRIMARY KEY,variant TEXT,assigned_at TEXT);\nINSERT INTO members VALUES(1,' ALICE@Example.com ','US','2025-01-01',NULL),(2,'ben@example.com','US','2025-01-02',1),(3,' Cara@example.com','GB','2025-01-03',1),(4,'dev@example.com ','IN','2025-01-04',2),(5,NULL,'CA','2025-01-05',NULL),(6,'finn@example.com','US','2025-01-06',3),(7,'grace@example.com','GB','2025-01-07',NULL),(8,'hugo@example.com','IN','2025-01-08',4);\nINSERT INTO social_events VALUES(1,'a',1,'view','2025-01-01 10:00:00','2025-01-01 10:00:01'),(2,'b',1,'signup','2025-01-01 10:03:00','2025-01-01 10:03:01'),(3,'c',1,'purchase','2025-01-01 10:05:00','2025-01-01 10:05:01'),(4,'a',1,'view','2025-01-01 10:00:00','2025-01-01 10:10:00'),(5,'d',2,'view','2025-01-02 09:00:00','2025-01-02 09:00:01'),(6,'e',2,'signup','2025-01-02 09:10:00','2025-01-02 09:10:01'),(7,'f',3,'purchase','2025-01-03 08:00:00','2025-01-03 08:00:01'),(8,'g',3,'view','2025-01-03 09:00:00','2025-01-03 09:00:01'),(9,'h',3,'signup','2025-01-03 09:10:00','2025-01-03 09:10:01'),(10,'i',3,'purchase','2025-01-03 09:15:00','2025-01-03 09:15:01'),(11,'j',4,'view','2025-01-04 10:00:00','2025-01-04 10:00:01'),(12,'k',1,'view','2025-01-01 10:40:00','2025-01-01 10:40:01'),(13,'l',1,'like','2025-01-01 10:50:00','2025-01-01 10:50:01'),(14,'m',5,'view','2025-01-05 11:00:00','2025-01-05 11:00:01'),(15,'n',5,'signup','2025-01-05 11:20:00','2025-01-05 11:20:01'),(16,'o',5,'purchase','2025-01-05 11:40:00','2025-01-05 11:40:01'),(17,'p',6,'view','2025-01-06 12:00:00','2025-01-06 12:00:01'),(18,'q',6,'signup','2025-01-06 12:05:00','2025-01-06 12:05:01'),(19,'r',6,'purchase','2025-01-06 12:20:00','2025-01-06 12:20:01'),(20,'s',7,'view','2025-01-07 13:00:00','2025-01-07 13:00:01'),(21,'t',2,'purchase','2025-01-08 11:00:00','2025-01-08 11:00:01');\nINSERT INTO experiment_assignments VALUES(1,'control','2025-01-01 09:00:00'),(2,'control','2025-01-02 08:00:00'),(3,'treatment','2025-01-03 08:30:00'),(4,'treatment','2025-01-04 09:00:00'),(5,'control','2025-01-05 10:00:00'),(6,'treatment','2025-01-06 11:00:00'),(7,'control','2025-01-07 12:00:00'),(8,'treatment','2025-01-08 09:00:00');\nCREATE TABLE ai_accounts(id INTEGER PRIMARY KEY,plan TEXT,region TEXT,signed_up_at TEXT);\nCREATE TABLE ai_requests(id INTEGER PRIMARY KEY,account_id INTEGER,model TEXT,requested_at TEXT,input_tokens INTEGER,output_tokens INTEGER,status TEXT);\nCREATE TABLE model_rates(model TEXT PRIMARY KEY,input_per_million REAL,output_per_million REAL);\nCREATE TABLE invoices(id INTEGER PRIMARY KEY,account_id INTEGER,period TEXT,billed_amount REAL);\nCREATE TABLE payments(id INTEGER PRIMARY KEY,invoice_id INTEGER,amount REAL);\nCREATE TABLE refunds(id INTEGER PRIMARY KEY,invoice_id INTEGER,amount REAL);\nINSERT INTO ai_accounts VALUES(1,'pro','US','2025-01-01'),(2,'free','US','2025-01-02'),(3,'team','EU','2025-01-02'),(4,'pro','IN','2025-01-03'),(5,'free','EU','2025-01-04'),(6,'team','US','2025-01-05');\nINSERT INTO model_rates VALUES('swift',1,4),('reason',3,12);\nINSERT INTO ai_requests VALUES(1,1,'swift','2025-01-01 10:00:00',1000,200,'success'),(2,1,'reason','2025-01-02 11:00:00',2000,600,'success'),(3,2,'swift','2025-01-02 12:00:00',500,0,'error'),(4,3,'reason','2025-01-02 13:00:00',8000,2000,'success'),(5,3,'swift','2025-01-03 14:00:00',4000,1000,'success'),(6,4,'swift','2025-01-03 15:00:00',2000,400,'success'),(7,1,'swift','2025-01-04 10:00:00',3000,500,'error'),(8,5,'swift','2025-01-04 11:00:00',500,100,'success'),(9,2,'swift','2025-01-05 10:00:00',1000,200,'success'),(10,3,'reason','2025-01-06 10:00:00',12000,4000,'success'),(11,4,'reason','2025-01-06 11:00:00',6000,1000,'success'),(12,1,'reason','2025-01-07 10:00:00',5000,900,'success');\nINSERT INTO invoices VALUES(1,1,'2025-01',20),(2,3,'2025-01',80),(3,4,'2025-01',20),(4,6,'2025-01',80),(5,1,'2025-02',20);\nINSERT INTO payments VALUES(1,1,10),(2,1,10),(3,2,80),(4,3,15),(5,4,80),(6,NULL,7),(7,5,20);\nINSERT INTO refunds VALUES(1,1,2),(2,1,3),(3,2,10),(4,4,5);\nINSERT INTO invoices VALUES(6,5,'2025-01',5);INSERT INTO videos VALUES(6,12,'Practice together',2400); INSERT INTO watch_events VALUES(25,6,6,'2025-01-10 15:00:00',1080),(26,7,6,'2025-01-11 11:00:00',1080);INSERT INTO social_events VALUES(22,'u',1,'view','2025-01-01 11:20:00','2025-01-01 11:20:01');\nCREATE TABLE bronze_customers(raw_id TEXT,name TEXT,country TEXT,updated_at TEXT);\nCREATE TABLE bronze_products(raw_id TEXT,name TEXT,category TEXT,price TEXT);\nCREATE TABLE bronze_sales(row_id INTEGER PRIMARY KEY,customer_id TEXT,product_id TEXT,quantity TEXT,sales TEXT,order_date TEXT);\nINSERT INTO bronze_customers VALUES(' C001 ',' Alice ','USA','2025-01-01'),('C001',' Alice Nguyen ','US','2025-01-05'),('C002','Ben','GB','2025-01-02'),('C003',' Cara ','UK','2025-01-03'),('C004','Dev','IND','2025-01-04'),('C005','Elena','CA','2025-01-05'),(NULL,'Missing key','US','2025-01-06');\nINSERT INTO bronze_products VALUES('P01',' Notebook ','Stationery','12'),(' P02 ','Desk lamp','Home','45'),('P03','Keyboard','Tech','80'),('P04','Headphones','Tech','120');\nINSERT INTO bronze_sales VALUES(1,'C001','P01','2','24','2025-01-01'),(2,' C002 ','P03','1','80','2025-01-02'),(3,'C001','P02','1','45','2025-01-15'),(4,'C003','P04','2','240','2025-02-01'),(5,'C004','P03','2','160','2025-02-05'),(6,'C001','P04','1','120','2025-02-15'),(7,'C002','P01','3','36','2025-03-01'),(8,'C003','P02','2','90','2025-03-03'),(9,'C004','P01','0','0','2025-03-05'),(10,'C001','P01','bad','999','2025-03-06'),(11,'C999','P01','1','12','2025-03-07'),(12,'C002','P03','1','80','not-a-date'),(13,'C001','P01','2','999','2025-03-08');\nCREATE TABLE dim_customer(customer_key INTEGER PRIMARY KEY,customer_id TEXT UNIQUE,name TEXT,country TEXT);\nINSERT INTO dim_customer VALUES(1,'C001','Alice Nguyen','United States'),(2,'C002','Ben','United Kingdom'),(3,'C003','Cara','United Kingdom'),(4,'C004','Dev','India'),(5,'C005','Elena','Canada');\nCREATE TABLE dim_product(product_key INTEGER PRIMARY KEY,product_id TEXT UNIQUE,name TEXT,category TEXT,price REAL);\nINSERT INTO dim_product VALUES(1,'P01','Notebook','Stationery',12),(2,'P02','Desk lamp','Home',45),(3,'P03','Keyboard','Tech',80),(4,'P04','Headphones','Tech',120);\nCREATE TABLE fact_sales(sale_key INTEGER PRIMARY KEY,customer_key INTEGER,product_key INTEGER,quantity INTEGER,sales REAL,order_date TEXT);\nINSERT INTO fact_sales SELECT b.row_id,c.customer_key,p.product_key,CAST(b.quantity AS INTEGER),CAST(b.quantity AS INTEGER)*p.price,b.order_date FROM bronze_sales b JOIN dim_customer c ON c.customer_id=TRIM(b.customer_id) JOIN dim_product p ON p.product_id=TRIM(b.product_id) WHERE TRIM(b.quantity)<>'' AND TRIM(b.quantity) NOT GLOB '*[^0-9]*' AND CAST(b.quantity AS INTEGER)>0 AND b.order_date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' AND date(b.order_date,'+0 days')=b.order_date;\nCREATE TABLE lab_items(id INTEGER PRIMARY KEY,name TEXT NOT NULL,price REAL NOT NULL CHECK(price>=0));\nINSERT INTO lab_items VALUES(1,'Notebook',12),(2,'Lamp',45),(3,'Keyboard',80);\nCREATE TABLE lab_audit(item_id INTEGER,old_price REAL,new_price REAL);\n\nCREATE TABLE crm_people(source_row INTEGER PRIMARY KEY,customer_id TEXT,name TEXT,gender TEXT,updated_at TEXT);\nINSERT INTO crm_people VALUES(1,' C001 ','Alice','F','2025-01-01'),(2,'C001','Alice Nguyen','F','2025-01-05'),(3,'C002','Ben','n/a','2025-01-02'),(4,'C003','Cara','F','2025-01-03'),(5,'C004','Dev',NULL,'2025-01-04'),(6,NULL,'Missing','M','2025-01-06');\nCREATE TABLE erp_people(erp_id TEXT,gender TEXT,birth_date TEXT);\nINSERT INTO erp_people VALUES('NASC001','Male','1990-05-12'),('NASC002','Male','1988-02-29'),('NASC003','Female','2028-01-01'),('NASC004','Other','1995-06-20'),('NASC999','Female','1980-01-01');\nCREATE TABLE erp_locations(erp_id TEXT,country_code TEXT);\nINSERT INTO erp_locations VALUES('C-001','USA'),('C-002','GB'),('C-003','UK'),('C-004','IND');\nCREATE TABLE product_versions(version_id INTEGER PRIMARY KEY,product_id TEXT,name TEXT,cost REAL,valid_from TEXT);\nINSERT INTO product_versions VALUES(1,'P01','Notebook',8,'2024-01-01'),(2,'P01','Notebook',9,'2025-02-01'),(3,'P02','Desk lamp',30,'2024-01-01'),(4,'P02','Desk lamp',32,'2025-03-01');\nCREATE TABLE raw_dates(row_id INTEGER PRIMARY KEY,raw_date TEXT);\nINSERT INTO raw_dates VALUES(1,'20250115'),(2,'20250230'),(3,'0'),(4,'20240229'),(5,'20251301'),(6,NULL),(7,'2025011'),(8,'abcdefgh');\nCREATE TABLE load_manifest(source_name TEXT PRIMARY KEY,expected_rows INTEGER);\nINSERT INTO load_manifest VALUES('CRM',6),('ERP',5);\nCREATE TABLE dq_sales(line_id INTEGER,customer_key INTEGER,product_key INTEGER,quantity INTEGER,sales REAL);\nINSERT INTO dq_sales VALUES(1,1,1,2,24),(2,999,1,1,12),(3,2,999,1,80),(4,2,3,0,0),(1,1,1,2,24);\nCREATE TABLE customer_history(version_key INTEGER PRIMARY KEY,customer_id TEXT,country TEXT,valid_from TEXT,valid_to TEXT);\nINSERT INTO customer_history VALUES(101,'C001','United States','2024-01-01','2025-02-01'),(102,'C001','Canada','2025-02-01',NULL),(103,'C002','United Kingdom','2024-01-01',NULL);\nCREATE TABLE incoming_people(customer_id TEXT PRIMARY KEY,name TEXT,updated_at TEXT);\nINSERT INTO incoming_people VALUES('C001','Alice New','2025-02-01'),('C002','Ben stale','2024-01-01'),('C006','Finn','2025-02-02');\nCREATE TABLE current_people(customer_key INTEGER PRIMARY KEY AUTOINCREMENT,customer_id TEXT NOT NULL UNIQUE,name TEXT,updated_at TEXT);\nINSERT INTO current_people(customer_id,name,updated_at) VALUES('C001','Alice Nguyen','2025-01-05'),('C002','Ben','2025-01-02');\nCREATE TABLE published_totals(customer_id TEXT PRIMARY KEY,total_sales REAL NOT NULL);\nINSERT INTO published_totals VALUES('C001',289),('C002',116);\nCREATE TABLE refresh_stage(customer_id TEXT,total_sales REAL);\nINSERT INTO refresh_stage VALUES('C001',300),('C002',120);\nCREATE TABLE warehouse_catalog(object_name TEXT,column_name TEXT,meaning TEXT,source_object TEXT,rule TEXT);\nINSERT INTO warehouse_catalog VALUES('integrated_customers','customer_id','Normalized natural customer identifier','crm_people.customer_id','Trim; latest updated_at then source_row'),('integrated_customers','gender','Customer gender under agreed source authority','crm_people.gender + erp_people.gender','Meaningful CRM first, ERP fallback, otherwise Unknown'),('integrated_customers','country','Country display name','erp_locations.country_code','Normalize ERP key and map codes'),('integrated_customers','birth_date','Validated birth date','erp_people.birth_date','Valid calendar date; no future dates at 2025-04-01'),('built_sales','sale_key','One source sales line','bronze_sales.row_id','Unique and not null'),('built_sales','customer_key','Stable dimension lookup key','dim_customer.customer_key','Trim natural key; matching dimension required'),('built_sales','sales','Exercise sales measure','bronze_sales.quantity + dim_product.price','Positive numeric quantity times catalog price; explicit exercise rule');\n",
   "fixtureMutation": "UPDATE products SET price=price+7 WHERE id=3; UPDATE orders SET quantity=quantity+1 WHERE id IN(101,105); UPDATE customers SET city='Boston' WHERE id=6; UPDATE watch_events SET watch_seconds=watch_seconds+60 WHERE id IN(1,7,10); UPDATE daily_metrics SET watch_minutes=watch_minutes+30 WHERE day='2025-01-04'; UPDATE ai_requests SET output_tokens=output_tokens+100 WHERE id IN(1,4,10); UPDATE payments SET amount=amount+1 WHERE id=3; UPDATE social_events SET event_type='like' WHERE id=20;UPDATE lab_items SET price=90 WHERE id=3; UPDATE bronze_customers SET name=' Alice N ' WHERE raw_id='C001'; UPDATE bronze_sales SET quantity='3' WHERE row_id=1; UPDATE fact_sales SET quantity=3,sales=36 WHERE sale_key=1; UPDATE dim_customer SET name='Alice N' WHERE customer_key=1;INSERT INTO crm_people VALUES(7,'C002','Ben Latest','M','2025-01-08'); UPDATE erp_locations SET country_code='US' WHERE erp_id='C-002'; UPDATE load_manifest SET expected_rows=7 WHERE source_name='CRM'; INSERT INTO raw_dates VALUES(9,'20250228'); UPDATE product_versions SET cost=11 WHERE version_id=2; INSERT INTO incoming_people VALUES('C007','Grace','2025-02-03'); UPDATE refresh_stage SET total_sales=333 WHERE customer_id='C001'; UPDATE customer_history SET country='Mexico' WHERE version_key=102; INSERT INTO dq_sales VALUES(5,1,1,-1,-12);",
   "groups": [
     "SQL foundations",
-    "Filtering & unique values",
+    "Filtering & sorting",
     "Calculations & data quality",
-    "Joins & aggregation",
+    "Joins & sets",
     "Dates, strings & subqueries",
     "Window functions",
     "Advanced product analysis",
@@ -25,10 +25,10 @@
     "Warehouse & reporting projects"
   ],
   "moduleDescriptions": [
-    "Read a table and shape a result.",
-    "Choose exactly the rows you mean.",
-    "Calculate useful metrics without hiding missing data.",
-    "Connect tables while protecting row counts.",
+    "Read tables, choose columns, and name calculated values.",
+    "Choose the rows you mean, handle missing values, and sort results.",
+    "Summarize with DISTINCT and aggregates, then shape metrics with CASE and CAST.",
+    "Connect related tables, keep unmatched rows, calculate ratios, and combine sets.",
     "Work with time, text, and staged queries.",
     "Compare rows without collapsing them.",
     "Answer business questions with explicit definitions.",
@@ -39,34 +39,34 @@
   "courseOrder": [
     0,
     1,
-    2,
-    30,
-    54,
     3,
     4,
     5,
     6,
     7,
     8,
-    31,
+    2,
     9,
     10,
+    30,
     11,
     12,
     13,
-    32,
-    55,
     56,
+    54,
     14,
     15,
+    32,
     16,
     34,
     35,
     36,
     37,
+    19,
     38,
     17,
     18,
+    31,
     20,
     26,
     33,
@@ -74,6 +74,7 @@
     21,
     22,
     23,
+    55,
     24,
     25,
     40,
@@ -82,7 +83,6 @@
     43,
     53,
     57,
-    19,
     27,
     28,
     29,
@@ -364,11 +364,65 @@
       "Preloaded teaching data here; no file import",
       "BULK INSERT · server file/access configuration",
       "COPY · server/client file access differs"
+    ],
+    [
+      "Concatenate text",
+      "'a' || 'b'",
+      "'a' + 'b' or CONCAT('a','b')",
+      "'a' || 'b' or CONCAT('a','b')"
+    ],
+    [
+      "Today's date",
+      "date('now')",
+      "CAST(GETDATE() AS date)",
+      "CURRENT_DATE"
+    ],
+    [
+      "Days between dates",
+      "julianday(b) - julianday(a)",
+      "DATEDIFF(day, a, b)",
+      "b - a (date - date)"
+    ],
+    [
+      "Case-insensitive match",
+      "LIKE (ASCII is case-insensitive)",
+      "LIKE (follows the collation)",
+      "ILIKE"
+    ],
+    [
+      "Combine values per group",
+      "group_concat(x, ', ' ORDER BY x)",
+      "STRING_AGG(x, ', ') WITHIN GROUP (ORDER BY x)",
+      "string_agg(x, ', ' ORDER BY x)"
+    ],
+    [
+      "Find text position",
+      "instr(text, '-')",
+      "CHARINDEX('-', text)",
+      "POSITION('-' IN text)"
+    ],
+    [
+      "Page through results",
+      "LIMIT 3 OFFSET 3",
+      "OFFSET 3 ROWS FETCH NEXT 3 ROWS ONLY",
+      "LIMIT 3 OFFSET 3"
+    ],
+    [
+      "Number series",
+      "WITH RECURSIVE n(x) AS (...)",
+      "WITH n(x) AS (...)",
+      "WITH RECURSIVE n(x) AS (...) or generate_series"
+    ],
+    [
+      "Auto-numbered ids",
+      "id INTEGER PRIMARY KEY",
+      "id INT IDENTITY(1,1)",
+      "id integer GENERATED ALWAYS AS IDENTITY"
     ]
   ],
   "sourceLinks": [
     [
-      "User-provided course notes",
+      "SQL course notes",
       "https://github.com/DataWithBaraa/sql-ultimate-course"
     ],
     [
@@ -388,7 +442,7 @@
       "https://learn.microsoft.com/en-us/sql/t-sql/queries/with-common-table-expression-transact-sql"
     ],
     [
-      "Warehouse project behind your notes",
+      "Data warehouse project notes",
       "https://github.com/DataWithBaraa/sql-data-warehouse-project"
     ],
     [
@@ -419,7 +473,9 @@
           "query": "CREATE INDEX idx_time ON watch_events(watched_at); SELECT id,watched_at FROM watch_events WHERE watched_at>='2025-01-01' AND watched_at<'2025-02-01';",
           "plan": "EXPLAIN QUERY PLAN SELECT id,watched_at FROM watch_events WHERE watched_at>='2025-01-01' AND watched_at<'2025-02-01';"
         }
-      ]
+      ],
+      "takeaway": "Wrapping an indexed column in a function hides it from the index, so SQLite reads every entry. A half-open range on the bare column lets it jump straight to January.",
+      "explain": "An index stores watched_at values in sorted order, like a phone book. SQLite can jump into that order only when the WHERE clause compares the bare column to a value. strftime('%Y-%m', watched_at) produces a new value for every row, and that value is not what the index stores, so SQLite has to compute it for every entry and check each one. Rewriting the filter as watched_at >= '2025-01-01' AND watched_at < '2025-02-01' asks for a slice of the sorted order, which the index can find directly."
     },
     {
       "title": "No supporting index versus an index",
@@ -435,7 +491,189 @@
           "query": "CREATE INDEX idx_customer ON orders(customer_id); SELECT id,quantity FROM orders WHERE customer_id=1;",
           "plan": "EXPLAIN QUERY PLAN SELECT id,quantity FROM orders WHERE customer_id=1;"
         }
-      ]
+      ],
+      "takeaway": "Without an index SQLite must read the whole table. An index on the filtered column turns the SCAN into a SEARCH that touches only matching rows.",
+      "explain": "Without an index, the only way to find orders for customer 1 is to read every row of the table and keep the matches: a SCAN. CREATE INDEX builds a separate sorted list of customer_id values, each pointing at its row. With it, SQLite looks up customer 1 in that list and visits only those rows: a SEARCH. The work grows with the number of matches instead of the size of the table."
+    },
+    {
+      "title": "Covering index",
+      "question": "Both search the same index. Which one never touches the table?",
+      "takeaway": "When every column the query needs is inside the index, SQLite answers from the index alone. The plan says COVERING INDEX and skips the extra lookup into the table.",
+      "cases": [
+        {
+          "label": "Index on the filter column only",
+          "query": "CREATE INDEX idx_cust ON orders(customer_id); SELECT customer_id,quantity FROM orders WHERE customer_id=1;",
+          "plan": "EXPLAIN QUERY PLAN SELECT customer_id,quantity FROM orders WHERE customer_id=1;"
+        },
+        {
+          "label": "Index that also holds quantity",
+          "query": "CREATE INDEX idx_cust_qty ON orders(customer_id,quantity); SELECT customer_id,quantity FROM orders WHERE customer_id=1;",
+          "plan": "EXPLAIN QUERY PLAN SELECT customer_id,quantity FROM orders WHERE customer_id=1;"
+        }
+      ],
+      "explain": "A normal index lookup is two steps: find the key in the index, then jump to the table row to fetch the other columns. If the index already contains every column the query asks for, the second step is unnecessary. Index (customer_id) holds only customer_id, so SQLite still visits the table for quantity. Index (customer_id, quantity) holds both, so the answer comes straight from the index."
+    },
+    {
+      "title": "Sorting with and without an index",
+      "question": "Same ORDER BY. Does SQLite have to sort?",
+      "takeaway": "With no suitable index, SQLite builds a temporary b-tree to sort the rows (USE TEMP B-TREE FOR ORDER BY). An index already in that order lets it read rows pre-sorted, so the sort step disappears.",
+      "cases": [
+        {
+          "label": "No index on the sort column",
+          "query": "SELECT id,ordered_at FROM orders ORDER BY ordered_at;",
+          "plan": "EXPLAIN QUERY PLAN SELECT id,ordered_at FROM orders ORDER BY ordered_at;"
+        },
+        {
+          "label": "Index in the sort order",
+          "query": "CREATE INDEX idx_ordered ON orders(ordered_at); SELECT id,ordered_at FROM orders ORDER BY ordered_at;",
+          "plan": "EXPLAIN QUERY PLAN SELECT id,ordered_at FROM orders ORDER BY ordered_at;"
+        }
+      ],
+      "explain": "To return rows in ordered_at order, SQLite either reads them in any order and sorts them afterwards, or reads them from something that is already sorted. With no index it must collect the rows into a temporary b-tree and sort them first, which costs extra time and memory as the table grows. An index on ordered_at is already sorted, so walking it returns rows in the right order and the sort step disappears."
+    },
+    {
+      "title": "Column order in a composite index",
+      "question": "Same filter on product_id, two indexes with the columns swapped.",
+      "takeaway": "A composite index can only be searched from its leftmost column. With customer_id first, a filter on product_id alone cannot use it and SQLite scans. Putting product_id first makes it searchable.",
+      "cases": [
+        {
+          "label": "Index (customer_id, product_id)",
+          "query": "CREATE INDEX idx_cp ON orders(customer_id,product_id); SELECT id,quantity FROM orders WHERE product_id=2;",
+          "plan": "EXPLAIN QUERY PLAN SELECT id,quantity FROM orders WHERE product_id=2;"
+        },
+        {
+          "label": "Index (product_id, customer_id)",
+          "query": "CREATE INDEX idx_pc ON orders(product_id,customer_id); SELECT id,quantity FROM orders WHERE product_id=2;",
+          "plan": "EXPLAIN QUERY PLAN SELECT id,quantity FROM orders WHERE product_id=2;"
+        }
+      ],
+      "explain": "A composite index is sorted by its first column, then by the second within each first-column value, like a phone book sorted by last name, then first name. You can find everyone named Smith quickly, but finding everyone named John means reading the whole book. Index (customer_id, product_id) is sorted by customer_id first, so a filter on product_id alone cannot use it. Index (product_id, customer_id) puts product_id first and can be searched."
+    },
+    {
+      "title": "Equality first, then a range",
+      "question": "Both indexes cover customer_id and ordered_at. Which uses both columns?",
+      "takeaway": "SQLite uses index columns left to right: any number of equality tests, then at most one range. Index (customer_id, ordered_at) uses both terms; index (ordered_at, customer_id) stops at the range and filters customer_id row by row.",
+      "cases": [
+        {
+          "label": "Index (customer_id, ordered_at)",
+          "query": "CREATE INDEX idx_cust_date ON orders(customer_id,ordered_at); SELECT id FROM orders WHERE customer_id=1 AND ordered_at>='2025-01-01';",
+          "plan": "EXPLAIN QUERY PLAN SELECT id FROM orders WHERE customer_id=1 AND ordered_at>='2025-01-01';"
+        },
+        {
+          "label": "Index (ordered_at, customer_id)",
+          "query": "CREATE INDEX idx_date_cust ON orders(ordered_at,customer_id); SELECT id FROM orders WHERE customer_id=1 AND ordered_at>='2025-01-01';",
+          "plan": "EXPLAIN QUERY PLAN SELECT id FROM orders WHERE customer_id=1 AND ordered_at>='2025-01-01';"
+        }
+      ],
+      "explain": "SQLite walks a composite index left to right. It can use any number of leading columns tested with =, then one more column tested with a range, and then it must stop. With (customer_id, ordered_at) it jumps to customer 1 and reads only that customer's dates after the cutoff. With (ordered_at, customer_id) it can only use the range on ordered_at; every order after the cutoff is read and customer_id is checked row by row."
+    },
+    {
+      "title": "LIKE with a leading wildcard",
+      "question": "Same index on name. Which pattern can use it?",
+      "takeaway": "A known prefix such as 'Be%' becomes a range (name>? AND name<?) that the index can search. A pattern starting with % could match anywhere, so every entry has to be checked. The index uses COLLATE NOCASE because SQLite's LIKE ignores case by default.",
+      "cases": [
+        {
+          "label": "Wildcard at the start ('%en')",
+          "query": "CREATE INDEX idx_name ON customers(name COLLATE NOCASE); SELECT id,name FROM customers WHERE name LIKE '%en';",
+          "plan": "EXPLAIN QUERY PLAN SELECT id,name FROM customers WHERE name LIKE '%en';"
+        },
+        {
+          "label": "Known prefix ('Be%')",
+          "query": "CREATE INDEX idx_name ON customers(name COLLATE NOCASE); SELECT id,name FROM customers WHERE name LIKE 'Be%';",
+          "plan": "EXPLAIN QUERY PLAN SELECT id,name FROM customers WHERE name LIKE 'Be%';"
+        }
+      ],
+      "explain": "A pattern that starts with known letters, such as 'Be%', describes one contiguous slice of a sorted index: everything from 'Be' up to just before 'Bf'. SQLite turns it into a range search. A pattern that starts with %, such as '%en', could match anywhere in the alphabet, so there is no slice to jump to and every entry must be checked. The index uses COLLATE NOCASE because SQLite's LIKE ignores case by default, and the index must sort the same way."
+    },
+    {
+      "title": "OR across two columns",
+      "question": "customer_id = 1 OR product_id = 2. What changes when both columns are indexed?",
+      "takeaway": "An OR is only as good as its weakest branch: if one side has no index, SQLite scans the table. When both columns are indexed it can search each index separately and combine the results (MULTI-INDEX OR).",
+      "cases": [
+        {
+          "label": "Only customer_id is indexed",
+          "query": "CREATE INDEX idx_cust ON orders(customer_id); SELECT id FROM orders WHERE customer_id=1 OR product_id=2;",
+          "plan": "EXPLAIN QUERY PLAN SELECT id FROM orders WHERE customer_id=1 OR product_id=2;"
+        },
+        {
+          "label": "Both columns are indexed",
+          "query": "CREATE INDEX idx_cust ON orders(customer_id); CREATE INDEX idx_prod ON orders(product_id); SELECT id FROM orders WHERE customer_id=1 OR product_id=2;",
+          "plan": "EXPLAIN QUERY PLAN SELECT id FROM orders WHERE customer_id=1 OR product_id=2;"
+        }
+      ],
+      "explain": "For customer_id = 1 OR product_id = 2, SQLite must find rows that match either side. If only customer_id is indexed, the product_id side can only be found by reading every row, and once it is reading every row anyway, it scans the table for both. When both columns are indexed, it searches each index separately and combines the two sets of rows, without reading the rest of the table."
+    },
+    {
+      "title": "OR versus IN on one column",
+      "question": "Three ORs on customer_id, or one IN list. Is one faster?",
+      "takeaway": "SQLite rewrites several ORs on the same column into an IN list, so both versions get the identical plan. Write whichever reads more clearly; the plan, not the spelling, decides the work.",
+      "cases": [
+        {
+          "label": "Several ORs on one column",
+          "query": "CREATE INDEX idx_cust ON orders(customer_id); SELECT id FROM orders WHERE customer_id=1 OR customer_id=2 OR customer_id=3;",
+          "plan": "EXPLAIN QUERY PLAN SELECT id FROM orders WHERE customer_id=1 OR customer_id=2 OR customer_id=3;"
+        },
+        {
+          "label": "The same test written with IN",
+          "query": "CREATE INDEX idx_cust ON orders(customer_id); SELECT id FROM orders WHERE customer_id IN (1,2,3);",
+          "plan": "EXPLAIN QUERY PLAN SELECT id FROM orders WHERE customer_id IN (1,2,3);"
+        }
+      ],
+      "explain": "Before planning, SQLite rewrites customer_id = 1 OR customer_id = 2 OR customer_id = 3 into customer_id IN (1, 2, 3). Both forms are then planned identically: one index search per value in the list. This comparison is a reminder that the database plans the meaning of a query, not its spelling, so choose whichever form reads more clearly."
+    },
+    {
+      "title": "Indexing a join key",
+      "question": "Count views per video. What does an index on the join key change?",
+      "takeaway": "Without an index on watch_events.video_id, SQLite scans every event and needs a temporary b-tree to group them. With the index it walks the videos and searches each one's events directly, and the grouping step disappears.",
+      "cases": [
+        {
+          "label": "Join key without an index",
+          "query": "SELECT v.title,COUNT(*) AS views FROM videos v JOIN watch_events w ON w.video_id=v.id GROUP BY v.id;",
+          "plan": "EXPLAIN QUERY PLAN SELECT v.title,COUNT(*) AS views FROM videos v JOIN watch_events w ON w.video_id=v.id GROUP BY v.id;"
+        },
+        {
+          "label": "Join key with an index",
+          "query": "CREATE INDEX idx_video ON watch_events(video_id); SELECT v.title,COUNT(*) AS views FROM videos v JOIN watch_events w ON w.video_id=v.id GROUP BY v.id;",
+          "plan": "EXPLAIN QUERY PLAN SELECT v.title,COUNT(*) AS views FROM videos v JOIN watch_events w ON w.video_id=v.id GROUP BY v.id;"
+        }
+      ],
+      "explain": "To count views per video, SQLite has to pair each video with its watch events. Without an index on watch_events.video_id it reads every event, looks up its video by primary key, and then sorts the pairs in a temporary b-tree to group them by video. With the index, it walks the videos in order and searches each video's events directly. The pairs come out already grouped, so the extra sort disappears."
+    },
+    {
+      "title": "Index on an expression",
+      "question": "Keep the strftime filter. Can an index still help?",
+      "takeaway": "An ordinary index on watched_at cannot serve strftime('%Y-%m', watched_at). An index built on that exact expression can: the plan searches it with <expr>=?. Use this when you cannot rewrite the filter as a range.",
+      "cases": [
+        {
+          "label": "Index on the column",
+          "query": "CREATE INDEX idx_time ON watch_events(watched_at); SELECT id FROM watch_events WHERE strftime('%Y-%m',watched_at)='2025-01';",
+          "plan": "EXPLAIN QUERY PLAN SELECT id FROM watch_events WHERE strftime('%Y-%m',watched_at)='2025-01';"
+        },
+        {
+          "label": "Index on the expression",
+          "query": "CREATE INDEX idx_month ON watch_events(strftime('%Y-%m',watched_at)); SELECT id FROM watch_events WHERE strftime('%Y-%m',watched_at)='2025-01';",
+          "plan": "EXPLAIN QUERY PLAN SELECT id FROM watch_events WHERE strftime('%Y-%m',watched_at)='2025-01';"
+        }
+      ],
+      "explain": "Sometimes you cannot rewrite a filter as a range, for example when the application always asks by month label. SQLite can index the result of an expression instead of a column. CREATE INDEX on strftime('%Y-%m', watched_at) stores that computed label for every row in sorted order, so the same function filter becomes an index search. The expression in the query must match the indexed expression exactly."
+    },
+    {
+      "title": "GROUP BY with and without an index",
+      "question": "Total units per customer. Does SQLite need a grouping step?",
+      "takeaway": "To group, SQLite needs rows that share a key next to each other. Without an index it builds a temporary b-tree (USE TEMP B-TREE FOR GROUP BY). An index on (customer_id, quantity) already holds rows in group order and covers the query.",
+      "cases": [
+        {
+          "label": "No index on the group key",
+          "query": "SELECT customer_id,SUM(quantity) AS units FROM orders GROUP BY customer_id;",
+          "plan": "EXPLAIN QUERY PLAN SELECT customer_id,SUM(quantity) AS units FROM orders GROUP BY customer_id;"
+        },
+        {
+          "label": "Index (customer_id, quantity)",
+          "query": "CREATE INDEX idx_cq ON orders(customer_id,quantity); SELECT customer_id,SUM(quantity) AS units FROM orders GROUP BY customer_id;",
+          "plan": "EXPLAIN QUERY PLAN SELECT customer_id,SUM(quantity) AS units FROM orders GROUP BY customer_id;"
+        }
+      ],
+      "explain": "To total quantity per customer, SQLite needs the rows of each customer next to each other. Without an index it reads the table and builds a temporary b-tree that sorts rows by customer_id before adding them up. An index on (customer_id, quantity) already stores rows in customer order and contains quantity too, so SQLite reads groups straight from the index with no sort and without touching the table."
     }
   ],
   "warehouseMap": {
@@ -691,7 +929,7 @@
       "group": 0,
       "concept": "AS gives an output column a readable name. You can calculate values for each row with arithmetic. The original table stays unchanged.",
       "example": "SELECT name, price * 2 AS double_price\nFROM products;",
-      "trap": "A quoted number is text. Use a numeric expression for arithmetic.",
+      "trap": "AS names the result. It does not update the stored column. A quoted number is text, so use a numeric expression for arithmetic.",
       "hints": [
         "Use multiplication in SELECT.",
         "Use AS to name the calculated column exactly as requested."
@@ -721,20 +959,20 @@
         }
       ],
       "quiz": {
-        "q": "SELECT name FROM customers returns what?",
+        "q": "What does price * 2 AS double_price do?",
         "options": [
-          "Every customer row, with only the name column",
-          "Only customers with unique names",
-          "One aggregate row"
+          "Updates the stored price in products",
+          "Returns a calculated column named double_price without changing products",
+          "Renames the products table"
         ],
-        "correct": 0,
-        "why": "SELECT chooses columns. DISTINCT, WHERE, and aggregates change other aspects of the result."
+        "correct": 1,
+        "why": "AS names the output column. Arithmetic in SELECT does not update the stored price."
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "Name a calculated column",
+          "description": "Read the stored price first. The next step multiplies it and names the result without changing the table.",
+          "query": "SELECT name, price FROM products;"
         },
         {
           "title": "Run the reference",
@@ -746,7 +984,7 @@
     {
       "id": 2,
       "title": "Unique values with DISTINCT",
-      "group": 0,
+      "group": 2,
       "concept": "DISTINCT removes duplicate output rows. It applies to the whole set of selected columns, not just the first column. NULL is kept once.",
       "example": "SELECT DISTINCT city\nFROM customers;",
       "trap": "Adding id makes every row unique, so it defeats this task.",
@@ -790,14 +1028,14 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "See duplicate cities first",
+          "description": "Many customers share a city. The raw list repeats Chicago and Austin. DISTINCT will keep one row per distinct value.",
+          "query": "SELECT city FROM customers ORDER BY city;"
         },
         {
-          "title": "Run the reference",
-          "description": "DISTINCT removes duplicate output rows. It applies to the whole set of selected columns, not just the first column. NULL is kept once.",
-          "query": "SELECT DISTINCT city\nFROM customers;"
+          "title": "Keep each city once",
+          "description": "DISTINCT removes duplicate output rows across the selected columns. NULL is kept once if it appears.",
+          "query": "SELECT DISTINCT city FROM customers;"
         }
       ]
     },
@@ -815,7 +1053,7 @@
       "dataset": "shop",
       "difficulty": "Beginner",
       "prereq": [
-        2
+        1
       ],
       "grain": "One row per entity or event requested by the task.",
       "mode": "query",
@@ -837,14 +1075,14 @@
         }
       ],
       "quiz": {
-        "q": "What happens when WHERE city = NULL is evaluated?",
+        "q": "What does WHERE city = 'Chicago' keep?",
         "options": [
-          "It finds missing cities",
-          "The comparison is unknown; those rows are not kept",
-          "It finds the text NULL"
+          "Customers whose name is Chicago",
+          "Customers whose city is Chicago",
+          "Every customer, with the city column renamed"
         ],
         "correct": 1,
-        "why": "Use IS NULL for missing values. Ordinary comparisons with NULL evaluate to unknown."
+        "why": "WHERE keeps rows whose condition is true. The quoted text is a city value, not a new column name."
       },
       "walkthrough": [
         {
@@ -895,20 +1133,20 @@
         }
       ],
       "quiz": {
-        "q": "What happens when WHERE city = NULL is evaluated?",
+        "q": "Which condition keeps products priced 45 and above?",
         "options": [
-          "It finds missing cities",
-          "The comparison is unknown; those rows are not kept",
-          "It finds the text NULL"
+          "WHERE price > 45",
+          "WHERE price >= 45",
+          "WHERE price = 45 OR price < 45"
         ],
         "correct": 1,
-        "why": "Use IS NULL for missing values. Ordinary comparisons with NULL evaluate to unknown."
+        "why": ">= includes the boundary. > drops a product whose price is exactly 45."
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "Include the boundary",
+          "description": "Look at the prices. A product at exactly 45 stays when the condition uses >=.",
+          "query": "SELECT name, price FROM products ORDER BY price;"
         },
         {
           "title": "Run the reference",
@@ -953,20 +1191,20 @@
         }
       ],
       "quiz": {
-        "q": "What happens when WHERE city = NULL is evaluated?",
+        "q": "Which rows does category = 'Tech' AND price < 100 keep?",
         "options": [
-          "It finds missing cities",
-          "The comparison is unknown; those rows are not kept",
-          "It finds the text NULL"
+          "Every Tech product, plus anything priced under 100",
+          "Products that are both Tech and priced under 100",
+          "Products that are Tech or priced under 100"
         ],
         "correct": 1,
-        "why": "Use IS NULL for missing values. Ordinary comparisons with NULL evaluate to unknown."
+        "why": "AND requires both conditions on the same row. OR would keep a row that meets either one."
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "Require both conditions",
+          "description": "Category and price are separate columns. AND keeps a row only when both are true.",
+          "query": "SELECT name, category, price FROM products;"
         },
         {
           "title": "Run the reference",
@@ -1011,20 +1249,20 @@
         }
       ],
       "quiz": {
-        "q": "What happens when WHERE city = NULL is evaluated?",
+        "q": "What does name LIKE 'A%' match?",
         "options": [
-          "It finds missing cities",
-          "The comparison is unknown; those rows are not kept",
-          "It finds the text NULL"
+          "Names that contain a percent sign",
+          "Names that start with A",
+          "Only the exact text A%"
         ],
         "correct": 1,
-        "why": "Use IS NULL for missing values. Ordinary comparisons with NULL evaluate to unknown."
+        "why": "In LIKE, % stands for any number of characters. An equality comparison would look for a literal percent sign."
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "Match the start of a name",
+          "description": "In LIKE, % stands for the rest of the name. It is not a character stored in the table.",
+          "query": "SELECT name FROM customers;"
         },
         {
           "title": "Run the reference",
@@ -1080,14 +1318,14 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "Find missing cities",
+          "description": "Some city values are blank in the sense of NULL. Equality to NULL never matches; IS NULL does.",
+          "query": "SELECT name, city FROM customers WHERE city IS NULL;"
         },
         {
-          "title": "Run the reference",
-          "description": "NULL means missing or unknown. NULL = NULL is unknown, not true. Use IS NULL and IS NOT NULL. COALESCE returns the first non-NULL argument.",
-          "query": "SELECT name, COALESCE(city, 'Unknown') AS city\nFROM customers;"
+          "title": "Replace NULL for display",
+          "description": "COALESCE returns the first non-NULL argument. Missing cities become the label Unknown without changing stored rows.",
+          "query": "SELECT name, COALESCE(city, 'Unknown') AS city FROM customers;"
         }
       ]
     },
@@ -1138,14 +1376,14 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "Sort prices before cutting",
+          "description": "ORDER BY decides which rows come first. LIMIT only makes sense after the sort, or you get an arbitrary cut.",
+          "query": "SELECT name, price FROM products ORDER BY price DESC, name ASC;"
         },
         {
-          "title": "Run the reference",
-          "description": "ORDER BY sorts the output; ASC is ascending and DESC descending. LIMIT keeps a number of rows after sorting. Use a secondary key when ties need deterministic ordering.",
-          "query": "SELECT name, price FROM products\nORDER BY price DESC, name ASC LIMIT 3;"
+          "title": "Keep the top of the sorted list",
+          "description": "DESC puts expensive products first. LIMIT 3 keeps only the first three after sorting.",
+          "query": "SELECT name, price FROM products ORDER BY price DESC, name ASC LIMIT 3;"
         }
       ]
     },
@@ -1196,14 +1434,14 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "Look at the rows being counted",
+          "description": "Each customer is one row. An aggregate without GROUP BY collapses the whole table into one summary.",
+          "query": "SELECT id, name FROM customers;"
         },
         {
-          "title": "Run the reference",
-          "description": "Aggregate functions collapse rows into a summary. COUNT(*) counts rows; COUNT(column) excludes NULL. SUM adds numeric values; AVG finds their mean.",
-          "query": "SELECT COUNT(*) AS customer_count\nFROM customers;"
+          "title": "Collapse to a single count",
+          "description": "COUNT(*) counts rows. SUM and AVG work the same way: many input rows become one summary value.",
+          "query": "SELECT COUNT(*) AS customer_count FROM customers;"
         }
       ]
     },
@@ -1312,14 +1550,14 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "Form groups first",
+          "description": "GROUP BY customer_id builds one row per customer with an order_count. HAVING will filter these groups next.",
+          "query": "SELECT customer_id, COUNT(*) AS order_count FROM orders GROUP BY customer_id ORDER BY customer_id;"
         },
         {
-          "title": "Run the reference",
-          "description": "WHERE filters rows before grouping. HAVING filters groups after aggregation. Think rows → groups → group filter → output.",
-          "query": "SELECT customer_id, COUNT(*) AS order_count\nFROM orders GROUP BY customer_id\nHAVING COUNT(*) >= 2;"
+          "title": "Keep only qualifying groups",
+          "description": "HAVING runs after aggregation. It removes groups whose aggregate fails the test, unlike WHERE which filters source rows.",
+          "query": "SELECT customer_id, COUNT(*) AS order_count FROM orders GROUP BY customer_id HAVING COUNT(*) >= 2;"
         }
       ]
     },
@@ -1370,14 +1608,14 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "Read the prices you will classify",
+          "description": "Each product has a price. CASE will label rows at or above 80 as Premium and the rest as Standard.",
+          "query": "SELECT name, price FROM products ORDER BY price;"
         },
         {
-          "title": "Run the reference",
-          "description": "CASE creates a value based on conditions. SQL checks WHEN branches in order and uses the first match. ELSE covers remaining rows.",
-          "query": "SELECT name, CASE WHEN price >= 80\nTHEN 'Premium' ELSE 'Standard' END AS tier\nFROM products;"
+          "title": "Assign a tier with CASE",
+          "description": "WHEN branches are checked in order. The first true branch wins; ELSE covers everything else.",
+          "query": "SELECT name, CASE WHEN price >= 80 THEN 'Premium' ELSE 'Standard' END AS tier FROM products;"
         }
       ]
     },
@@ -1428,14 +1666,14 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "See paid vs other statuses",
+          "description": "Orders mix paid and unpaid statuses. Conditional aggregation can count only the paid ones in one pass.",
+          "query": "SELECT id, status, quantity FROM orders ORDER BY id;"
         },
         {
-          "title": "Run the reference",
-          "description": "Put CASE inside SUM to count or add only matching rows. ELSE 0 prevents nonmatching rows from contributing. This can produce multiple summaries in one scan.",
-          "query": "SELECT SUM(CASE WHEN status = 'paid'\nTHEN 1 ELSE 0 END) AS paid_count FROM orders;"
+          "title": "Count only paid rows inside SUM",
+          "description": "CASE returns 1 for paid rows and 0 otherwise. SUM adds those values into paid_count.",
+          "query": "SELECT SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) AS paid_count FROM orders;"
         }
       ]
     },
@@ -1486,14 +1724,14 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "Find the matching keys",
+          "description": "orders.customer_id references customers.id. Read both columns so the JOIN condition is concrete before you write it.",
+          "query": "SELECT id AS order_id, customer_id FROM orders ORDER BY id LIMIT 8;"
         },
         {
-          "title": "Run the reference",
-          "description": "INNER JOIN pairs rows whose join condition matches. Aliases keep column references short. One customer can match several orders, so joins can increase row counts.",
-          "query": "SELECT o.id, c.name FROM orders o\nJOIN customers c ON c.id = o.customer_id;"
+          "title": "Combine matching rows with JOIN",
+          "description": "INNER JOIN keeps only pairs that satisfy the ON condition. Aliases keep the two id columns clear.",
+          "query": "SELECT o.id, c.name FROM orders o JOIN customers c ON c.id = o.customer_id;"
         }
       ]
     },
@@ -1596,20 +1834,20 @@
         }
       ],
       "quiz": {
-        "q": "Two requests and three invoices belong to one account. How many rows can a raw join produce?",
+        "q": "What does quantity * price compute for one paid order line?",
         "options": [
-          "Two",
-          "Three",
-          "Six"
+          "The customer's lifetime value across all orders",
+          "That line's revenue before you aggregate by customer or category",
+          "The number of products in the order"
         ],
-        "correct": 2,
-        "why": "Each request matches each invoice: 2 × 3. Aggregate both sides before joining if you need account totals."
+        "correct": 1,
+        "why": "Each order row is one product line. Multiplying quantity by price gives that line's revenue; SUM and GROUP BY then produce a total at the grain you choose."
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "Read an order line with its price",
+          "description": "Join one order line to its product so quantity and price sit on the same row. The next step multiplies them and aggregates paid revenue.",
+          "query": "SELECT o.id, o.quantity, p.price, o.status\nFROM orders o\nJOIN products p ON p.id = o.product_id\nLIMIT 8;"
         },
         {
           "title": "Run the reference",
@@ -1665,14 +1903,14 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "Compute the comparison value",
+          "description": "A subquery can produce the average price once. The outer query will compare each product to that single number.",
+          "query": "SELECT AVG(price) AS avg_price FROM products;"
         },
         {
-          "title": "Run the reference",
-          "description": "A subquery is a query inside another query. A scalar subquery produces one value, which can be used in a comparison. Parentheses separate the inner query.",
-          "query": "SELECT name, price FROM products\nWHERE price > (SELECT AVG(price) FROM products);"
+          "title": "Filter rows against the subquery",
+          "description": "The parenthesized SELECT runs as a scalar subquery. Rows with price above that average remain.",
+          "query": "SELECT name, price FROM products WHERE price > (SELECT AVG(price) FROM products);"
         }
       ]
     },
@@ -1723,21 +1961,21 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "Check for a matching paid order",
+          "description": "EXISTS asks whether at least one related row satisfies the inner filter. It does not multiply the outer customer rows.",
+          "query": "SELECT c.id, c.name, o.id AS order_id, o.status FROM customers c LEFT JOIN orders o ON o.customer_id = c.id AND o.status = 'paid' ORDER BY c.id LIMIT 12;"
         },
         {
-          "title": "Run the reference",
-          "description": "EXISTS is true when its subquery returns at least one row. A correlated subquery refers to the outer row. NOT EXISTS is useful for finding missing relationships.",
-          "query": "SELECT c.name FROM customers c\nWHERE EXISTS (SELECT 1 FROM orders o\nWHERE o.customer_id=c.id AND o.status='paid');"
+          "title": "Keep customers with a match",
+          "description": "EXISTS returns true when the correlated subquery finds one or more rows. The outer SELECT lists those customers once.",
+          "query": "SELECT c.name FROM customers c WHERE EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.id AND o.status = 'paid');"
         }
       ]
     },
     {
       "id": 19,
       "title": "Combine sets with UNION",
-      "group": 6,
+      "group": 3,
       "concept": "UNION stacks compatible query outputs and removes duplicate rows. UNION ALL retains duplicates. Both sides need the same number of columns in matching positions.",
       "example": "SELECT city FROM customers WHERE city='Chicago'\nUNION SELECT city FROM customers WHERE city='Austin';",
       "trap": "UNION combines rows vertically; JOIN combines columns horizontally.",
@@ -1748,7 +1986,7 @@
       "dataset": "shop",
       "difficulty": "Advanced",
       "prereq": [
-        18
+        3
       ],
       "grain": "Define the business unit before joining and counting.",
       "mode": "query",
@@ -1781,14 +2019,14 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "Build two compatible city lists",
+          "description": "Chicago and Austin rows each produce a city column. UNION stacks compatible selects and drops duplicates.",
+          "query": "SELECT city FROM customers WHERE city IN ('Chicago', 'Austin') ORDER BY city;"
         },
         {
-          "title": "Run the reference",
-          "description": "UNION stacks compatible query outputs and removes duplicate rows. UNION ALL retains duplicates. Both sides need the same number of columns in matching positions.",
-          "query": "SELECT city FROM customers WHERE city='Chicago'\nUNION SELECT city FROM customers WHERE city='Austin';"
+          "title": "Stack sets with UNION",
+          "description": "UNION removes duplicates across the stacked rows. UNION ALL would keep every duplicate.",
+          "query": "SELECT city FROM customers WHERE city = 'Chicago'\nUNION SELECT city FROM customers WHERE city = 'Austin';"
         }
       ]
     },
@@ -1806,7 +2044,7 @@
       "dataset": "shop",
       "difficulty": "Intermediate",
       "prereq": [
-        19
+        10
       ],
       "grain": "One row per entity or event requested by the task.",
       "mode": "query",
@@ -1839,14 +2077,14 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "Name an intermediate total",
+          "description": "WITH defines a temporary result you can read like a table. Here each customer gets a units total before filtering.",
+          "query": "SELECT customer_id, SUM(quantity) AS units FROM orders GROUP BY customer_id ORDER BY customer_id;"
         },
         {
-          "title": "Run the reference",
-          "description": "WITH names a temporary query result for this statement. Common table expressions help you separate a complicated question into understandable stages. They do not create permanent tables.",
-          "query": "WITH totals AS (\n SELECT customer_id, SUM(quantity) AS units\n FROM orders GROUP BY customer_id\n) SELECT customer_id, units FROM totals WHERE units > 3;"
+          "title": "Filter the named CTE",
+          "description": "The outer query reads totals as if it were a table. CTEs make multi-step logic easier to follow than nested subqueries.",
+          "query": "WITH totals AS (\n  SELECT customer_id, SUM(quantity) AS units\n  FROM orders GROUP BY customer_id\n) SELECT customer_id, units FROM totals WHERE units > 3;"
         }
       ]
     },
@@ -1897,14 +2135,14 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "Order a customer's orders",
+          "description": "ROW_NUMBER needs a clear order within each partition. Sort one customer's orders by time to see the sequence.",
+          "query": "SELECT id, customer_id, ordered_at FROM orders WHERE customer_id = 1 ORDER BY ordered_at, id;"
         },
         {
-          "title": "Run the reference",
-          "description": "Window functions calculate across related rows while keeping each row visible. ROW_NUMBER assigns 1, 2, 3 within a partition using its ORDER BY. Include a tie-breaker for repeatable results.",
-          "query": "SELECT id, customer_id, ROW_NUMBER() OVER(\n PARTITION BY customer_id ORDER BY ordered_at, id\n) AS order_number FROM orders;"
+          "title": "Number rows inside each partition",
+          "description": "PARTITION BY customer_id restarts the counter for each customer. ORDER BY decides which row is 1, 2, 3…",
+          "query": "SELECT id, customer_id, ROW_NUMBER() OVER(\n  PARTITION BY customer_id ORDER BY ordered_at, id\n) AS order_seq FROM orders;"
         }
       ]
     },
@@ -1955,13 +2193,13 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "Measure the value you will rank",
+          "description": "Ranking needs a sort key. Count orders per customer first; DENSE_RANK will order those counts.",
+          "query": "SELECT customer_id, COUNT(*) AS order_count FROM orders GROUP BY customer_id ORDER BY order_count DESC, customer_id;"
         },
         {
-          "title": "Run the reference",
-          "description": "RANK gives ties the same rank, then leaves a gap. DENSE_RANK gives ties the same rank without gaps. ROW_NUMBER always assigns distinct numbers.",
+          "title": "Assign dense ranks to groups",
+          "description": "DENSE_RANK gives the same rank to ties and does not skip the next rank. RANK would leave gaps after ties.",
           "query": "SELECT customer_id, COUNT(*) AS order_count,\nDENSE_RANK() OVER(ORDER BY COUNT(*) DESC) AS rank\nFROM orders GROUP BY customer_id;"
         }
       ]
@@ -2002,20 +2240,20 @@
         }
       ],
       "quiz": {
-        "q": "Does ROWS BETWEEN 2 PRECEDING AND CURRENT ROW always represent three calendar days?",
+        "q": "What does a running SUM with ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW include?",
         "options": [
-          "Yes, whenever there is ORDER BY",
-          "Only when there is one complete row per calendar day",
-          "No, it always includes all preceding rows"
+          "Only the current row",
+          "This row and every earlier row in the sort order",
+          "Exactly three calendar days"
         ],
         "correct": 1,
-        "why": "ROWS counts rows. Missing dates require a complete date spine for a calendar-day window."
+        "why": "UNBOUNDED PRECEDING through CURRENT ROW accumulates every row so far. It counts rows in the frame, not a fixed number of days."
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "Keep every order in order",
+          "description": "A running total still returns each order. The frame adds this row to the rows before it.",
+          "query": "SELECT id, quantity, ordered_at FROM orders ORDER BY ordered_at, id;"
         },
         {
           "title": "Run the reference",
@@ -2071,14 +2309,14 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "Line up a customer's quantities",
+          "description": "LAG looks at the previous row in the same partition. Sorting by time makes previous mean the prior order.",
+          "query": "SELECT id, customer_id, quantity, ordered_at FROM orders WHERE customer_id = 1 ORDER BY ordered_at, id;"
         },
         {
-          "title": "Run the reference",
-          "description": "LAG reads a value from a previous row within a window. The first row has no predecessor, so its result is NULL unless you supply a default.",
-          "query": "SELECT id, customer_id, LAG(quantity) OVER(\n PARTITION BY customer_id ORDER BY ordered_at,id\n) AS previous_quantity FROM orders;"
+          "title": "Read the previous quantity",
+          "description": "LAG(quantity) returns the prior order's quantity for that customer. The first order has NULL for previous.",
+          "query": "SELECT id, customer_id, LAG(quantity) OVER(\n  PARTITION BY customer_id ORDER BY ordered_at, id\n) AS previous_qty FROM orders;"
         }
       ]
     },
@@ -2129,14 +2367,14 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "See multiple rows per customer",
+          "description": "Customers can have several orders. Choosing the latest one needs an order and a way to keep only rank 1.",
+          "query": "SELECT id, customer_id, ordered_at FROM orders ORDER BY customer_id, ordered_at DESC, id DESC LIMIT 12;"
         },
         {
-          "title": "Run the reference",
-          "description": "Use a CTE with ROW_NUMBER sorted newest-first, then filter to row number 1. A window result cannot be filtered by WHERE in the same query block.",
-          "query": "WITH ranked AS (\n SELECT *, ROW_NUMBER() OVER(PARTITION BY customer_id\n ORDER BY ordered_at DESC,id DESC) AS rn FROM orders\n) SELECT id,customer_id,ordered_at FROM ranked WHERE rn=1;"
+          "title": "Keep the newest row per group",
+          "description": "ROW_NUMBER ordered by newest first marks the latest order as 1. Filtering rn = 1 keeps one row per customer.",
+          "query": "WITH ranked AS (\n  SELECT *, ROW_NUMBER() OVER(\n    PARTITION BY customer_id ORDER BY ordered_at DESC, id DESC\n  ) AS rn FROM orders\n) SELECT id, customer_id, ordered_at FROM ranked WHERE rn = 1;"
         }
       ]
     },
@@ -2154,7 +2392,7 @@
       "dataset": "shop",
       "difficulty": "Intermediate",
       "prereq": [
-        25
+        10
       ],
       "grain": "One row per entity or event requested by the task.",
       "mode": "query",
@@ -2176,20 +2414,20 @@
         }
       ],
       "quiz": {
-        "q": "Which range includes every January timestamp and excludes February?",
+        "q": "What does GROUP BY strftime('%Y-%m', ordered_at) produce?",
         "options": [
-          ">= '2025-01-01' AND < '2025-02-01'",
-          "BETWEEN '2025-01-01' AND '2025-01-31'",
-          "> '2025-01-01' AND <= '2025-02-01'"
+          "One row per calendar day",
+          "One row per calendar year and month",
+          "One row per year, ignoring the month"
         ],
-        "correct": 0,
-        "why": "A half-open interval handles the full last day and excludes the next boundary."
+        "correct": 1,
+        "why": "%Y-%m keeps the year and month together. Grouping by the month number alone would mix the same month from different years."
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "Read the order dates",
+          "description": "Each order has one timestamp. The next step groups those timestamps into year-month buckets.",
+          "query": "SELECT ordered_at FROM orders;"
         },
         {
           "title": "Run the reference",
@@ -2245,14 +2483,14 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "Start from a base row",
+          "description": "A recursive CTE needs an anchor member. Here the sequence begins at 1 before the recursive step adds 1.",
+          "query": "SELECT 1 AS n;"
         },
         {
-          "title": "Run the reference",
-          "description": "A recursive CTE has an anchor row and a recursive step joined by UNION ALL. The step uses the previous result until its stopping condition is false. Always include a termination condition.",
-          "query": "WITH RECURSIVE numbers(n) AS (\n SELECT 1 UNION ALL SELECT n+1 FROM numbers WHERE n<5\n) SELECT n FROM numbers;"
+          "title": "Grow the sequence recursively",
+          "description": "UNION ALL attaches rows produced from previous rows until the WHERE stop condition fails.",
+          "query": "WITH RECURSIVE numbers(n) AS (\n  SELECT 1\n  UNION ALL\n  SELECT n + 1 FROM numbers WHERE n < 5\n) SELECT n FROM numbers;"
         }
       ]
     },
@@ -2303,14 +2541,14 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "Run the filtered lookup",
+          "description": "This is the query whose plan you will inspect. Note the city predicate—indexes may later speed this path.",
+          "query": "SELECT name FROM customers WHERE city = 'Chicago';"
         },
         {
-          "title": "Run the reference",
-          "description": "An index can help SQLite find or order rows efficiently. EXPLAIN QUERY PLAN shows SCAN versus SEARCH and index use. Indexes cost storage and slow writes; the optimizer may still scan a tiny table.",
-          "query": "EXPLAIN QUERY PLAN\nSELECT name FROM customers WHERE city='Chicago';"
+          "title": "Read the query plan",
+          "description": "EXPLAIN QUERY PLAN names the access strategy (scan, search, and so on). Indexes change which path the engine picks.",
+          "query": "EXPLAIN QUERY PLAN SELECT name FROM customers WHERE city = 'Chicago';"
         }
       ]
     },
@@ -2361,21 +2599,21 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "Assemble paid revenue pieces",
+          "description": "Customer insights join customers, paid orders, and product prices before summing. Check the join keys first.",
+          "query": "SELECT c.name, o.quantity, p.price, o.status\nFROM customers c\nJOIN orders o ON o.customer_id = c.id\nJOIN products p ON p.id = o.product_id\nWHERE o.status = 'paid'\nLIMIT 8;"
         },
         {
-          "title": "Run the reference",
-          "description": "Combine filtering, joins, aggregation and ranking to answer a business question. First compute each customer's paid revenue, then rank those customer totals. Write one stage at a time.",
-          "query": "WITH revenue AS (\n SELECT c.name,SUM(o.quantity*p.price) AS paid_revenue\n FROM customers c JOIN orders o ON o.customer_id=c.id\n JOIN products p ON p.id=o.product_id\n WHERE o.status='paid' GROUP BY c.id,c.name\n) SELECT name,paid_revenue,DENSE_RANK() OVER(ORDER BY paid_revenue DESC) AS revenue_rank FROM revenue;"
+          "title": "Summarize paid revenue per customer",
+          "description": "The capstone CTE pattern computes paid_revenue, then the outer query ranks or filters those totals.",
+          "query": "WITH revenue AS (\n  SELECT c.name, SUM(o.quantity * p.price) AS paid_revenue\n  FROM customers c\n  JOIN orders o ON o.customer_id = c.id\n  JOIN products p ON p.id = o.product_id\n  WHERE o.status = 'paid'\n  GROUP BY c.name\n) SELECT name, paid_revenue FROM revenue ORDER BY paid_revenue DESC;"
         }
       ]
     },
     {
       "id": 30,
       "title": "MIN, MAX & the grain of a result",
-      "group": 0,
+      "group": 2,
       "concept": "MIN and MAX summarize the smallest and largest values. The grain describes what one output row means. Adding GROUP BY changes that grain from one overall row to one row per group.",
       "example": "SELECT MIN(watch_seconds) AS shortest_watch,\nMAX(watch_seconds) AS longest_watch FROM watch_events;",
       "trap": "A maximum value alone does not identify every other column from that row.",
@@ -2386,7 +2624,8 @@
       "dataset": "stream",
       "difficulty": "Beginner",
       "prereq": [
-        9
+        9,
+        10
       ],
       "grain": "One row per entity or event requested by the task.",
       "mode": "query",
@@ -2419,21 +2658,21 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Viewer signups and watch events. Repeated views are intentional; daily_metrics has missing days.",
-          "query": "SELECT * FROM viewers LIMIT 8;"
+          "title": "Scan the watch lengths",
+          "description": "Each event has watch_seconds. One overall MIN/MAX summarizes the whole table; GROUP BY later changes the grain.",
+          "query": "SELECT id, video_id, watch_seconds FROM watch_events ORDER BY id LIMIT 10;"
         },
         {
-          "title": "Run the reference",
-          "description": "MIN and MAX summarize the smallest and largest values. The grain describes what one output row means. Adding GROUP BY changes that grain from one overall row to one row per group.",
-          "query": "SELECT MIN(watch_seconds) AS shortest_watch,\nMAX(watch_seconds) AS longest_watch FROM watch_events;"
+          "title": "Summarize at the overall grain",
+          "description": "Without GROUP BY, MIN and MAX return one row for the entire result. That grain is “the whole table.”",
+          "query": "SELECT MIN(watch_seconds) AS shortest_watch, MAX(watch_seconds) AS longest_watch FROM watch_events;"
         }
       ]
     },
     {
       "id": 31,
       "title": "NOT IN and the NULL trap",
-      "group": 1,
+      "group": 4,
       "concept": "NOT reverses true and false, but unknown stays unknown. If a NOT IN list contains NULL, a nonmatching comparison can become unknown and disappear from WHERE. Prefer NOT EXISTS for nullable relationships.",
       "example": "SELECT id FROM viewers\nWHERE id NOT IN (SELECT referred_by FROM viewers\n                 WHERE referred_by IS NOT NULL);",
       "trap": "Filtering NULL out of the subquery or using NOT EXISTS avoids the unknown-value trap.",
@@ -2497,7 +2736,7 @@
     {
       "id": 32,
       "title": "Ratios, ROUND & NULLIF",
-      "group": 2,
+      "group": 3,
       "concept": "A rate is numerator divided by denominator. Use a real number (100.0) to avoid integer division. NULLIF(x,0) turns a zero denominator into NULL; ROUND controls displayed precision. Preserve that NULL instead of calling an undefined rate zero.",
       "example": "SELECT account_id,ROUND(100.0 * SUM(CASE WHEN status='success'\nTHEN 1 ELSE 0 END)/NULLIF(COUNT(*),0),2) AS success_pct\nFROM ai_requests GROUP BY account_id;",
       "trap": "COUNT(*) in a LEFT JOIN makes an account with no requests appear to have one request.",
@@ -2542,14 +2781,14 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Request usage, fictional model rates, invoices, payments, and refunds. Rates are invented for learning, not real provider prices.",
-          "query": "SELECT * FROM ai_accounts LIMIT 8;"
+          "title": "Count successes and attempts",
+          "description": "A success rate needs both numerator and denominator. NULLIF protects against dividing by zero.",
+          "query": "SELECT account_id,\n  SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) AS successes,\n  COUNT(*) AS attempts\nFROM ai_requests GROUP BY account_id;"
         },
         {
-          "title": "Run the reference",
-          "description": "A rate is numerator divided by denominator. Use a real number (100.0) to avoid integer division. NULLIF(x,0) turns a zero denominator into NULL; ROUND controls displayed precision. Preserve that NULL instead of calling an undefined rate zero.",
-          "query": "SELECT account_id,ROUND(100.0 * SUM(CASE WHEN status='success'\nTHEN 1 ELSE 0 END)/NULLIF(COUNT(*),0),2) AS success_pct\nFROM ai_requests GROUP BY account_id;"
+          "title": "Turn counts into a rounded percent",
+          "description": "Multiply by 100.0 for a real division, wrap the denominator in NULLIF(..., 0), then ROUND to two decimals.",
+          "query": "SELECT account_id, ROUND(100.0 * SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0), 2) AS success_pct\nFROM ai_requests GROUP BY account_id;"
         }
       ]
     },
@@ -2600,14 +2839,14 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Member events, referral links, and experiment assignments. Event retries create duplicate event_key values.",
-          "query": "SELECT * FROM members LIMIT 8;"
+          "title": "See messy emails before cleaning",
+          "description": "Whitespace and mixed case make the same address look different. Cleaning must happen before you compare or group.",
+          "query": "SELECT id, email FROM members ORDER BY id LIMIT 8;"
         },
         {
-          "title": "Run the reference",
-          "description": "TRIM removes outside spaces, LOWER normalizes case, SUBSTR extracts a portion, and CAST makes a conversion explicit. Keep NULL visible when the source is missing. SQLite uses SUBSTR; many engines also provide SUBSTRING.",
-          "query": "SELECT id,LOWER(TRIM(email)) AS clean_email FROM members;"
+          "title": "Normalize with TRIM and LOWER",
+          "description": "TRIM removes surrounding spaces; LOWER folds case. Together they produce a stable clean_email.",
+          "query": "SELECT id, LOWER(TRIM(email)) AS clean_email FROM members;"
         }
       ]
     },
@@ -2658,14 +2897,14 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Member events, referral links, and experiment assignments. Event retries create duplicate event_key values.",
-          "query": "SELECT * FROM members LIMIT 8;"
+          "title": "Read members and their referrer ids",
+          "description": "referrer_id points at another row in the same table. A self-join uses two aliases for those two roles.",
+          "query": "SELECT id, email, country, referrer_id FROM members ORDER BY id;"
         },
         {
-          "title": "Run the reference",
-          "description": "A self-join uses the same table in two roles. Use different aliases for the member and referrer. LEFT JOIN retains members who were not referred.",
-          "query": "SELECT m.id AS member_id,r.id AS referrer_id\nFROM members m LEFT JOIN members r ON r.id=m.referrer_id;"
+          "title": "Join the table to itself",
+          "description": "Alias m is the member and r is the referrer. LEFT JOIN keeps members who have no referrer.",
+          "query": "SELECT m.id AS member_id, r.id AS referrer_id\nFROM members m LEFT JOIN members r ON r.id = m.referrer_id;"
         }
       ]
     },
@@ -2673,17 +2912,17 @@
       "id": 35,
       "title": "CROSS JOIN & a complete date grid",
       "group": 3,
-      "concept": "CROSS JOIN creates every pair of rows. It is useful for a deliberate date × entity grid, but careless use multiplies data. A short recursive date spine supplies missing days.",
-      "example": "WITH RECURSIVE days(day) AS (\n SELECT '2025-01-01' UNION ALL\n SELECT date(day,'+1 day') FROM days WHERE day<'2025-01-03'\n) SELECT day,v.id AS viewer_id FROM days CROSS JOIN viewers v;",
+      "concept": "CROSS JOIN creates every pair of rows. It is useful for a deliberate date × entity grid, but careless use multiplies data. The three dates below are supplied setup data via a VALUES list—you are not being tested on UNION. Focus on CROSS JOIN (and optional signup filtering).",
+      "example": "SELECT day, v.id AS viewer_id\nFROM (SELECT column1 AS day FROM (VALUES ('2025-01-01'), ('2025-01-02'), ('2025-01-03'))) AS days\nCROSS JOIN viewers v;",
       "trap": "The expected grid size is dates × viewers before the signup filter.",
       "hints": [
-        "Generate one row per date, then pair it with each viewer.",
+        "Treat the VALUES date list as given setup data, then CROSS JOIN viewers.",
         "Filter day >= signup_at after creating the grid for the second task."
       ],
       "dataset": "stream",
       "difficulty": "Intermediate",
       "prereq": [
-        27
+        14
       ],
       "grain": "One row per entity or event requested by the task.",
       "mode": "query",
@@ -2691,14 +2930,14 @@
       "tasks": [
         {
           "prompt": "Return day and viewer_id for every day from 2025-01-01 through 2025-01-03 inclusive and every viewer, including pre-signup combinations.",
-          "answer": "WITH RECURSIVE days(day) AS(SELECT '2025-01-01' UNION ALL SELECT date(day,'+1 day') FROM days WHERE day<'2025-01-03') SELECT day,v.id AS viewer_id FROM days CROSS JOIN viewers v",
+          "answer": "SELECT day,v.id AS viewer_id FROM (SELECT column1 AS day FROM (VALUES ('2025-01-01'), ('2025-01-02'), ('2025-01-03'))) AS days CROSS JOIN viewers v",
           "ordered": false,
           "required": null,
           "validate": null
         },
         {
           "prompt": "Return day and viewer_id for the same date range, keeping only combinations on or after that viewer's signup_at.",
-          "answer": "WITH RECURSIVE days(day) AS(SELECT '2025-01-01' UNION ALL SELECT date(day,'+1 day') FROM days WHERE day<'2025-01-03') SELECT day,v.id AS viewer_id FROM days CROSS JOIN viewers v WHERE day>=v.signup_at",
+          "answer": "SELECT day,v.id AS viewer_id FROM (SELECT column1 AS day FROM (VALUES ('2025-01-01'), ('2025-01-02'), ('2025-01-03'))) AS days CROSS JOIN viewers v WHERE day>=v.signup_at",
           "ordered": false,
           "required": null,
           "validate": null
@@ -2716,14 +2955,14 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Viewer signups and watch events. Repeated views are intentional; daily_metrics has missing days.",
-          "query": "SELECT * FROM viewers LIMIT 8;"
+          "title": "Use the provided three dates",
+          "description": "These three day values are setup data (a VALUES list). You do not need UNION or recursion—your job is the CROSS JOIN next.",
+          "query": "SELECT column1 AS day FROM (VALUES ('2025-01-01'), ('2025-01-02'), ('2025-01-03'));"
         },
         {
-          "title": "Run the reference",
-          "description": "CROSS JOIN creates every pair of rows. It is useful for a deliberate date × entity grid, but careless use multiplies data. A short recursive date spine supplies missing days.",
-          "query": "WITH RECURSIVE days(day) AS (\n SELECT '2025-01-01' UNION ALL\n SELECT date(day,'+1 day') FROM days WHERE day<'2025-01-03'\n) SELECT day,v.id AS viewer_id FROM days CROSS JOIN viewers v;"
+          "title": "Pair every date with every viewer",
+          "description": "CROSS JOIN multiplies the date list by the viewers. Filter by signup_at only after the grid exists when the task asks for that.",
+          "query": "SELECT day, v.id AS viewer_id\nFROM (SELECT column1 AS day FROM (VALUES ('2025-01-01'), ('2025-01-02'), ('2025-01-03'))) AS days\nCROSS JOIN viewers v;"
         }
       ]
     },
@@ -2774,14 +3013,14 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Request usage, fictional model rates, invoices, payments, and refunds. Rates are invented for learning, not real provider prices.",
-          "query": "SELECT * FROM ai_accounts LIMIT 8;"
+          "title": "See invoice and payment keys",
+          "description": "Some invoices lack payments and some payments lack invoices. FULL OUTER JOIN keeps unmatched rows from both sides.",
+          "query": "SELECT i.id AS invoice_id, p.id AS payment_id\nFROM invoices i LEFT JOIN payments p ON p.invoice_id = i.id\nORDER BY i.id, p.id;"
         },
         {
-          "title": "Run the reference",
-          "description": "FULL OUTER JOIN keeps unmatched rows from both sides. Reconciliation often needs this to find missing records. This SQLite version supports FULL OUTER JOIN; older SQLite versions did not.",
-          "query": "SELECT i.id AS invoice_id,p.id AS payment_id\nFROM invoices i FULL OUTER JOIN payments p ON p.invoice_id=i.id;"
+          "title": "Retain unmatched rows on both sides",
+          "description": "FULL OUTER JOIN returns matches plus leftovers from either table. Missing matches show NULL on the empty side.",
+          "query": "SELECT i.id AS invoice_id, p.id AS payment_id\nFROM invoices i FULL OUTER JOIN payments p ON p.invoice_id = i.id;"
         }
       ]
     },
@@ -2890,14 +3129,14 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Viewer signups and watch events. Repeated views are intentional; daily_metrics has missing days.",
-          "query": "SELECT * FROM viewers LIMIT 8;"
+          "title": "List viewers of video 1",
+          "description": "INTERSECT will keep viewers who also watched video 2. EXCEPT would keep viewers of video 1 who never watched video 2.",
+          "query": "SELECT viewer_id FROM watch_events WHERE video_id = 1 ORDER BY viewer_id;"
         },
         {
-          "title": "Run the reference",
-          "description": "INTERSECT keeps distinct rows appearing in both results. EXCEPT keeps distinct rows from the first result that are absent from the second. Column positions and types should align.",
-          "query": "SELECT viewer_id FROM watch_events WHERE video_id=1\nINTERSECT SELECT viewer_id FROM watch_events WHERE video_id=2;"
+          "title": "Keep viewers in both sets",
+          "description": "INTERSECT returns distinct rows present in both SELECT results. Column positions must align.",
+          "query": "SELECT viewer_id FROM watch_events WHERE video_id = 1\nINTERSECT SELECT viewer_id FROM watch_events WHERE video_id = 2;"
         }
       ]
     },
@@ -2948,14 +3187,14 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Viewer signups and watch events. Repeated views are intentional; daily_metrics has missing days.",
-          "query": "SELECT * FROM viewers LIMIT 8;"
+          "title": "Bound January with half-open dates",
+          "description": "Timestamps need a clear start and end. Use >= month start and < next month start so the boundary stays unambiguous.",
+          "query": "SELECT id, watched_at FROM watch_events WHERE watched_at >= '2025-01-01' AND watched_at < '2025-02-01' ORDER BY watched_at LIMIT 8;"
         },
         {
-          "title": "Run the reference",
-          "description": "For timestamps, use a half-open interval: >= start and < next boundary. This includes every time on the last day without guessing the final second. SQLite uses strftime/date; PostgreSQL uses DATE_TRUNC and INTERVAL. All teaching timestamps are UTC.",
-          "query": "SELECT id,watched_at FROM watch_events\nWHERE watched_at >= '2025-01-01' AND watched_at < '2025-02-01';"
+          "title": "Select the January window",
+          "description": "The half-open range includes midnight on January 1 and excludes midnight on February 1.",
+          "query": "SELECT id, watched_at FROM watch_events WHERE watched_at >= '2025-01-01' AND watched_at < '2025-02-01';"
         }
       ]
     },
@@ -3006,14 +3245,14 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Viewer signups and watch events. Repeated views are intentional; daily_metrics has missing days.",
-          "query": "SELECT * FROM viewers LIMIT 8;"
+          "title": "Order a viewer's watch timeline",
+          "description": "LEAD looks forward in the same partition. Sort one viewer's events by time to see what “next” means.",
+          "query": "SELECT id, viewer_id, watched_at FROM watch_events WHERE viewer_id = 1 ORDER BY watched_at, id;"
         },
         {
-          "title": "Run the reference",
-          "description": "LEAD looks forward within a partition. Use it to see the next event or compute a gap. The last row has no next event and returns NULL. Deterministic ordering needs a tie-breaker.",
-          "query": "SELECT id,viewer_id,LEAD(watched_at) OVER(\n PARTITION BY viewer_id ORDER BY watched_at,id\n) AS next_watch_at FROM watch_events;"
+          "title": "Read the next event time",
+          "description": "LEAD(watched_at) returns the following event's timestamp for that viewer. The last event has NULL for next.",
+          "query": "SELECT id, viewer_id, LEAD(watched_at) OVER(\n  PARTITION BY viewer_id ORDER BY watched_at, id\n) AS next_watched_at FROM watch_events;"
         }
       ]
     },
@@ -3064,14 +3303,14 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Viewer signups and watch events. Repeated views are intentional; daily_metrics has missing days.",
-          "query": "SELECT * FROM viewers LIMIT 8;"
+          "title": "Follow one viewer's video sequence",
+          "description": "LAST_VALUE needs an explicit frame to see the end of the partition as rows accumulate.",
+          "query": "SELECT id, viewer_id, video_id, watched_at FROM watch_events WHERE viewer_id = 1 ORDER BY watched_at, id;"
         },
         {
-          "title": "Run the reference",
-          "description": "FIRST_VALUE and LAST_VALUE read endpoints of a window frame. LAST_VALUE with the default ordered frame often returns the current row. Use UNBOUNDED FOLLOWING to reach the final row in the partition.",
-          "query": "SELECT id,viewer_id,LAST_VALUE(video_id) OVER(\n PARTITION BY viewer_id ORDER BY watched_at,id\n ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING\n) AS last_video FROM watch_events;"
+          "title": "Carry the last video with a frame",
+          "description": "ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING lets LAST_VALUE see the whole partition for each row.",
+          "query": "SELECT id, viewer_id, LAST_VALUE(video_id) OVER(\n  PARTITION BY viewer_id ORDER BY watched_at, id\n  ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING\n) AS last_video FROM watch_events;"
         }
       ]
     },
@@ -3192,14 +3431,14 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Request usage, fictional model rates, invoices, payments, and refunds. Rates are invented for learning, not real provider prices.",
-          "query": "SELECT * FROM ai_accounts LIMIT 8;"
+          "title": "Count requests per model",
+          "description": "A share of total needs each group's count and the grand total. Start from the per-model counts.",
+          "query": "SELECT model, COUNT(*) AS request_count FROM ai_requests GROUP BY model ORDER BY model;"
         },
         {
-          "title": "Run the reference",
-          "description": "An aggregate window without GROUP BY can put a grand total alongside each group. Aggregate per model first, then use SUM(request_count) OVER() as the denominator.",
-          "query": "WITH counts AS(SELECT model,COUNT(*) AS request_count\nFROM ai_requests GROUP BY model)\nSELECT model,request_count,ROUND(100.0*request_count/\nSUM(request_count) OVER(),2) AS share_pct FROM counts;"
+          "title": "Divide each count by the window total",
+          "description": "A window SUM over the model counts supplies the denominator so each row can show its share.",
+          "query": "WITH counts AS (\n  SELECT model, COUNT(*) AS request_count FROM ai_requests GROUP BY model\n) SELECT model, request_count,\n  ROUND(1.0 * request_count / SUM(request_count) OVER (), 3) AS share\nFROM counts;"
         }
       ]
     },
@@ -3314,14 +3553,14 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Viewer signups and watch events. Repeated views are intentional; daily_metrics has missing days.",
-          "query": "SELECT * FROM viewers LIMIT 8;"
+          "title": "Bucket watches by calendar day",
+          "description": "Daily active users need a day grain. date(watched_at) turns timestamps into calendar days before counting viewers.",
+          "query": "SELECT date(watched_at) AS day, viewer_id FROM watch_events ORDER BY day, viewer_id LIMIT 12;"
         },
         {
-          "title": "Run the reference",
-          "description": "DAU counts distinct people with activity on a calendar day, not event rows. Define engagement separately: here it is total seconds divided by active viewers. This result includes observed dates only.",
-          "query": "SELECT date(watched_at) AS day,COUNT(DISTINCT viewer_id)\nAS active_viewers FROM watch_events GROUP BY day;"
+          "title": "Count distinct viewers per day",
+          "description": "COUNT(DISTINCT viewer_id) counts people, not events. Grouping by day produces the DAU series.",
+          "query": "SELECT date(watched_at) AS day, COUNT(DISTINCT viewer_id) AS active_viewers\nFROM watch_events GROUP BY date(watched_at);"
         }
       ]
     },
@@ -3761,13 +4000,13 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Member events, referral links, and experiment assignments. Event retries create duplicate event_key values.",
-          "query": "SELECT * FROM members LIMIT 8;"
+          "title": "See assignment and conversion pieces",
+          "description": "Experiment math needs a clear denominator: assigned members per variant. Conversion checks for a later success event.",
+          "query": "SELECT member_id, variant, assigned_at FROM experiment_assignments ORDER BY variant, member_id;"
         },
         {
-          "title": "Run the reference",
-          "description": "Compare assigned members, including people who do nothing. A conversion is at least one purchase on or after assignment, through Jan 31. Counting purchases instead of members or using only active members biases the denominator. This query estimates rates, not statistical significance.",
+          "title": "Keep the assignment denominator",
+          "description": "Count assigned members first, then mark who converted. Filtering to converters before counting shrinks the denominator incorrectly.",
           "query": "WITH results AS(SELECT a.member_id,a.variant,CASE WHEN EXISTS(\n SELECT 1 FROM social_events e WHERE e.member_id=a.member_id\n AND e.event_type='purchase' AND e.event_at>=a.assigned_at\n AND e.event_at<'2025-02-01') THEN 1 ELSE 0 END AS converted\nFROM experiment_assignments a)\nSELECT variant,COUNT(*) AS assigned,SUM(converted) AS converted,\nROUND(100.0*SUM(converted)/COUNT(*),2) AS conversion_pct\nFROM results GROUP BY variant;"
         }
       ]
@@ -3820,13 +4059,13 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Viewer signups and watch events. Repeated views are intentional; daily_metrics has missing days.",
-          "query": "SELECT * FROM viewers LIMIT 8;"
+          "title": "Rank videos inside each creator",
+          "description": "Top-N per group needs a partition. Aggregate watch time per video, then number videos within each creator.",
+          "query": "SELECT v.creator_id, v.id AS video_id, SUM(w.watch_seconds) AS watch_seconds\nFROM videos v JOIN watch_events w ON w.video_id = v.id\nGROUP BY v.creator_id, v.id\nORDER BY v.creator_id, watch_seconds DESC;"
         },
         {
-          "title": "Run the reference",
-          "description": "Aggregate watched seconds per video, then rank videos within creator. ROW_NUMBER gives an exact N with a tie-breaker; DENSE_RANK includes ties and may return more than N. Make the tie policy explicit.",
+          "title": "Keep the top rows per group",
+          "description": "ROW_NUMBER or RANK inside the creator partition selects the top videos. Ties need an explicit rule.",
           "query": "WITH totals AS(SELECT v.creator_id,v.id AS video_id,\nSUM(w.watch_seconds) AS watch_seconds FROM videos v\nJOIN watch_events w ON w.video_id=v.id GROUP BY v.id,v.creator_id),\nranked AS(SELECT *,ROW_NUMBER() OVER(PARTITION BY creator_id\nORDER BY watch_seconds DESC,video_id) AS rn FROM totals)\nSELECT creator_id,video_id,watch_seconds FROM ranked WHERE rn<=2;"
         }
       ]
@@ -3834,13 +4073,13 @@
     {
       "id": 54,
       "title": "Databases, schemas, tables & keys",
-      "group": 0,
-      "concept": "SQL is the language; the database engine executes it. Tables contain rows and typed columns. A primary key identifies one row; a foreign key points to another table. SQLite catalogs differ from SQL Server schemas. In this app each worker creates an in-memory SQLite database.",
+      "group": 3,
+      "concept": "SQL is the language; the database engine executes it. Tables contain rows and typed columns. A primary key identifies one row; a foreign key points to another table — for example, orders.customer_id points at customers.id. To read columns from both tables in one result, match those keys with JOIN: SELECT o.id AS order_id, c.name AS customer_name FROM orders o JOIN customers c ON c.id = o.customer_id. The next lesson practices joins in depth; here you use the pattern once so the key relationship is concrete. SQLite catalogs differ from SQL Server schemas. In this app each worker creates an in-memory SQLite database.",
       "example": "SELECT name,type FROM sqlite_schema\nWHERE type='table' AND name IN('customers','products','orders');",
       "trap": "A matching-looking name is not a reliable join key; use the defined identifiers.",
       "hints": [
-        "Metadata describes the database objects.",
-        "sqlite_schema is SQLite’s catalog; table relationships use the schema’s id fields."
+        "Metadata describes the database objects. sqlite_schema lists tables.",
+        "For challenge 2, JOIN orders to customers on orders.customer_id = customers.id and alias the columns order_id and customer_name."
       ],
       "dataset": "shop",
       "difficulty": "Beginner",
@@ -3878,21 +4117,21 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "Find the tables and their keys",
+          "description": "sqlite_schema lists table names. In this shop database, customers.id is a primary key and orders.customer_id is the foreign key that points to it.",
+          "query": "SELECT name, type FROM sqlite_schema\nWHERE type = 'table' AND name IN ('customers', 'products', 'orders');"
         },
         {
-          "title": "Run the reference",
-          "description": "SQL is the language; the database engine executes it. Tables contain rows and typed columns. A primary key identifies one row; a foreign key points to another table. SQLite catalogs differ from SQL Server schemas. In this app each worker creates an in-memory SQLite database.",
-          "query": "SELECT name,type FROM sqlite_schema\nWHERE type='table' AND name IN('customers','products','orders');"
+          "title": "Match related rows with JOIN",
+          "description": "JOIN pairs each order with the customer whose id equals orders.customer_id. That is how a foreign key becomes a readable result. Challenge 2 asks for this shape.",
+          "query": "SELECT o.id AS order_id, c.name AS customer_name\nFROM orders o\nJOIN customers c ON c.id = o.customer_id\nLIMIT 8;"
         }
       ]
     },
     {
       "id": 55,
       "title": "Logical query processing & row grain",
-      "group": 2,
+      "group": 5,
       "concept": "Think FROM/JOIN → WHERE → GROUP BY → HAVING → SELECT → ORDER BY. This is a logical model, not a promise about physical execution. Row expressions preserve rows, aggregates collapse them, and windows add context without collapsing.",
       "example": "SELECT customer_id,SUM(quantity) AS units\nFROM orders WHERE status='paid' GROUP BY customer_id\nHAVING SUM(quantity)>2 ORDER BY units DESC;",
       "trap": "SQLite accepts some alias usages other engines reject. Prefer clear expressions or an outer query for portable SQL.",
@@ -4006,14 +4245,14 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "A fresh in-memory database for each run. Write a complete script ending in SELECT. Changes never leave this run; repeat all setup in the same script.",
-          "query": "SELECT * FROM lab_items LIMIT 8;"
+          "title": "Read numeric prices as stored",
+          "description": "CAST changes how a value is represented in the result. The stored price stays numeric until you cast it.",
+          "query": "SELECT id, price FROM lab_items ORDER BY id;"
         },
         {
-          "title": "Run the reference",
-          "description": "CAST changes a value’s representation. SQLite uses type affinity rather than SQL Server’s strict column-type model. CAST alone is not validation: nonnumeric text can become zero. NULL propagates through arithmetic unless a business rule replaces it.",
-          "query": "SELECT id,CAST(price AS TEXT) AS price_text FROM lab_items;"
+          "title": "Cast price to text",
+          "description": "CAST(price AS TEXT) returns a text form for display or concatenation. It is not validation by itself.",
+          "query": "SELECT id, CAST(price AS TEXT) AS price_text FROM lab_items;"
         }
       ]
     },
@@ -4064,14 +4303,14 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Viewer signups and watch events. Repeated views are intentional; daily_metrics has missing days.",
-          "query": "SELECT * FROM viewers LIMIT 8;"
+          "title": "Sort the values you will bucket",
+          "description": "NTILE splits an ordered list into roughly equal buckets. Sort watch_seconds so bucket 1 holds the longest watches.",
+          "query": "SELECT id, watch_seconds FROM watch_events ORDER BY watch_seconds DESC, id LIMIT 12;"
         },
         {
-          "title": "Run the reference",
-          "description": "NTILE divides an ordered partition into a requested number of buckets. Bucket row counts differ by at most one, with larger buckets first. It may separate equal values; use a deterministic tie-breaker if that is acceptable.",
-          "query": "SELECT id,watch_seconds,NTILE(4) OVER(\nORDER BY watch_seconds DESC,id) AS bucket FROM watch_events;"
+          "title": "Assign quartile buckets",
+          "description": "NTILE(4) labels rows 1–4 over the ordered window. Bucket edges can differ slightly when counts do not divide evenly.",
+          "query": "SELECT id, watch_seconds, NTILE(4) OVER(ORDER BY watch_seconds DESC, id) AS bucket FROM watch_events;"
         }
       ]
     },
@@ -4135,13 +4374,13 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the starting state",
-          "description": "A fresh in-memory database for each run. Write a complete script ending in SELECT. Changes never leave this run; repeat all setup in the same script.",
-          "query": "SELECT * FROM lab_items LIMIT 8;"
+          "title": "Inspect the empty practice surface",
+          "description": "DDL builds structure. Start from the lab items you already have, then create a separate practice table in the next step.",
+          "query": "SELECT id, name, price FROM lab_items ORDER BY id;"
         },
         {
-          "title": "Execute a complete script",
-          "description": "All setup and the final result run together in one disposable database.",
+          "title": "Create and alter a table",
+          "description": "CREATE TABLE defines columns; ALTER TABLE ADD COLUMN extends the contract. Inspect with a SELECT afterward.",
           "query": "CREATE TABLE practice_people(id INTEGER PRIMARY KEY,name TEXT);\nALTER TABLE practice_people ADD COLUMN city TEXT;\nSELECT name,type FROM pragma_table_info('practice_people');"
         }
       ]
@@ -4200,13 +4439,13 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the starting state",
-          "description": "A fresh in-memory database for each run. Write a complete script ending in SELECT. Changes never leave this run; repeat all setup in the same script.",
-          "query": "SELECT * FROM lab_items LIMIT 8;"
+          "title": "Read rows before mutation",
+          "description": "DML changes data. Note the current lab_items rows so you can see inserts, updates, and deletes afterward.",
+          "query": "SELECT id, name, price FROM lab_items ORDER BY id;"
         },
         {
-          "title": "Execute a complete script",
-          "description": "All setup and the final result run together in one disposable database.",
+          "title": "Insert, update, then delete",
+          "description": "INSERT adds rows, UPDATE changes matching rows, DELETE removes them. Run the full script to see the net effect.",
           "query": "INSERT INTO lab_items VALUES(4,'Pen',8);\nUPDATE lab_items SET price=price+5 WHERE id=1;\nDELETE FROM lab_items WHERE id=2;\nSELECT id,name,price FROM lab_items;"
         }
       ]
@@ -4292,13 +4531,13 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the starting state",
-          "description": "A fresh in-memory database for each run. Write a complete script ending in SELECT. Changes never leave this run; repeat all setup in the same script.",
-          "query": "SELECT * FROM lab_items LIMIT 8;"
+          "title": "See data that constraints will protect",
+          "description": "Constraints reject invalid writes. Think about NOT NULL, PRIMARY KEY, and CHECK before creating inventory.",
+          "query": "SELECT id, name, price FROM lab_items ORDER BY id;"
         },
         {
-          "title": "Execute a complete script",
-          "description": "All setup and the final result run together in one disposable database.",
+          "title": "Declare constraints on create",
+          "description": "PRIMARY KEY, NOT NULL, and CHECK(quantity >= 0) encode the data contract at write time.",
           "query": "CREATE TABLE inventory(sku TEXT PRIMARY KEY NOT NULL,\nquantity INTEGER NOT NULL CHECK(quantity>=0));\nINSERT INTO inventory VALUES('A',2);\nSELECT sku,quantity FROM inventory;"
         }
       ]
@@ -4361,13 +4600,13 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the starting state",
-          "description": "A fresh in-memory database for each run. Write a complete script ending in SELECT. Changes never leave this run; repeat all setup in the same script.",
-          "query": "SELECT * FROM lab_items LIMIT 8;"
+          "title": "Note prices before a transaction",
+          "description": "A transaction groups changes. ROLLBACK undoes them; COMMIT would keep them until this disposable database ends.",
+          "query": "SELECT id, price FROM lab_items ORDER BY id;"
         },
         {
-          "title": "Execute a complete script",
-          "description": "All setup and the final result run together in one disposable database.",
+          "title": "Roll back a grouped change",
+          "description": "BEGIN starts a transaction. After UPDATE, ROLLBACK restores the prior prices visible in the final SELECT.",
           "query": "BEGIN;\nUPDATE lab_items SET price=price+10;\nROLLBACK;\nSELECT id,price FROM lab_items;"
         }
       ]
@@ -4418,20 +4657,20 @@
         }
       ],
       "quiz": {
-        "q": "Which object materializes its result for the current connection?",
+        "q": "What does a normal view store?",
         "options": [
-          "A normal view",
-          "A temporary table created AS SELECT",
-          "A SQL Server CTE"
+          "A snapshot of the rows at the moment you create it",
+          "A named query that runs when you select from it",
+          "Rows that exist only for the current connection"
         ],
         "correct": 1,
-        "why": "A temp table stores intermediate rows. A view stores a query definition; SQL Server CTEs are not materialized results."
+        "why": "A view stores a query definition. Selecting from it runs that query against the current tables. It does not save a copy of the rows."
       },
       "walkthrough": [
         {
-          "title": "Inspect the starting state",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "Look at the rows a view will read",
+          "description": "A view does not copy these rows. It saves a query, and selecting the view reads the current orders.",
+          "query": "SELECT id, customer_id, quantity, status FROM orders;"
         },
         {
           "title": "Execute a complete script",
@@ -4497,13 +4736,13 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the starting state",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "Compute units you will materialize",
+          "description": "CTAS and TEMP tables store a query result. Build the customer_units shape in your head before writing CREATE TEMP TABLE.",
+          "query": "SELECT customer_id, SUM(quantity) AS units FROM orders GROUP BY customer_id ORDER BY customer_id;"
         },
         {
-          "title": "Execute a complete script",
-          "description": "All setup and the final result run together in one disposable database.",
+          "title": "Materialize with CTAS",
+          "description": "CREATE TEMP TABLE … AS SELECT stores the result for later queries in the same session.",
           "query": "CREATE TEMP TABLE customer_units AS\nSELECT customer_id,SUM(quantity) AS units FROM orders GROUP BY customer_id;\nSELECT customer_id,units FROM customer_units WHERE units>3;"
         }
       ]
@@ -4565,13 +4804,13 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the starting state",
-          "description": "A fresh in-memory database for each run. Write a complete script ending in SELECT. Changes never leave this run; repeat all setup in the same script.",
-          "query": "SELECT * FROM lab_items LIMIT 8;"
+          "title": "Read prices the trigger will watch",
+          "description": "A trigger fires on a data change. Note current prices; an UPDATE that changes price should write an audit row.",
+          "query": "SELECT id, name, price FROM lab_items ORDER BY id;"
         },
         {
-          "title": "Execute a complete script",
-          "description": "All setup and the final result run together in one disposable database.",
+          "title": "Define a trigger and see its effect",
+          "description": "AFTER UPDATE OF price inserts into an audit table when OLD.price differs from NEW.price.",
           "query": "CREATE TRIGGER price_audit AFTER UPDATE OF price ON lab_items\nWHEN OLD.price<>NEW.price BEGIN\nINSERT INTO lab_audit VALUES(NEW.id,OLD.price,NEW.price); END;\nUPDATE lab_items SET price=price+5 WHERE id=1;\nSELECT item_id,old_price,new_price FROM lab_audit;"
         }
       ]
@@ -4623,14 +4862,14 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "Call out the parameter boundary",
+          "description": "Procedures package a contract: inputs in, result set out. Here the “parameter” is customer_id = 1 in the filter.",
+          "query": "SELECT DISTINCT customer_id FROM orders ORDER BY customer_id;"
         },
         {
-          "title": "Run the reference",
-          "description": "A SQL Server stored procedure can expose parameters, transactions, and error handling. SQLite has no CREATE PROCEDURE. Here you practice the retrieval contract in SQLite; the separate T-SQL reference shows its SQL Server wrapper. Choose procedures or external orchestration based on the system, not a blanket preference.",
-          "query": "SELECT id,customer_id,quantity FROM orders WHERE customer_id=1;"
+          "title": "Return rows for one parameter value",
+          "description": "Filtering to a single customer_id models a parameterized lookup. Keep the contract explicit and narrow.",
+          "query": "SELECT id, customer_id, quantity FROM orders WHERE customer_id = 1;"
         }
       ]
     },
@@ -4695,13 +4934,13 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the starting state",
-          "description": "Customers, order lines, and a product catalog. One row in orders is one product line, not a multi-line order.",
-          "query": "SELECT * FROM customers LIMIT 8;"
+          "title": "Plan a lookup before indexing",
+          "description": "Without an index, filtering orders by customer_id may scan. EXPLAIN QUERY PLAN shows the current path.",
+          "query": "EXPLAIN QUERY PLAN SELECT id, quantity FROM orders WHERE customer_id = 1;"
         },
         {
-          "title": "Execute a complete script",
-          "description": "All setup and the final result run together in one disposable database.",
+          "title": "Add an index and re-check the plan",
+          "description": "CREATE INDEX can change the access path. Compare the new plan to the scan you saw before.",
           "query": "CREATE INDEX idx_orders_customer ON orders(customer_id);\nEXPLAIN QUERY PLAN SELECT id,quantity FROM orders WHERE customer_id=1;"
         }
       ]
@@ -4753,20 +4992,20 @@
         }
       ],
       "quiz": {
-        "q": "An index changes SCAN to SEARCH on a tiny example. What can you conclude?",
+        "q": "Which filter can search an index on watched_at?",
         "options": [
-          "Production latency improved by a known percentage",
-          "The optimizer chose a different access path; measure the real workload next",
-          "Every query needs this index"
+          "A half-open range written on watched_at itself",
+          "A function wrapped around watched_at, such as date(watched_at)",
+          "A comparison that never mentions watched_at"
         ],
-        "correct": 1,
-        "why": "A plan provides strategy evidence. Timing, reads, selectivity, and write overhead require workload measurement."
+        "correct": 0,
+        "why": "A range on the bare column can SEARCH an index. Wrapping the column in a function often forces a scan unless you add an expression index."
       },
       "walkthrough": [
         {
-          "title": "Inspect the starting state",
-          "description": "Viewer signups and watch events. Repeated views are intentional; daily_metrics has missing days.",
-          "query": "SELECT * FROM viewers LIMIT 8;"
+          "title": "Filter the timestamp column directly",
+          "description": "watched_at is the column an index can search. Wrapping it in a function is a different question.",
+          "query": "SELECT id, watched_at FROM watch_events ORDER BY watched_at LIMIT 8;"
         },
         {
           "title": "Execute a complete script",
@@ -4822,13 +5061,13 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Fictional CRM/catalog/sales extracts and curated star-schema tables. Raw keys, dates, quantities, and sales need validation. One fact row is one sales line.",
-          "query": "SELECT * FROM bronze_customers LIMIT 8;"
+          "title": "Filter a date slice of the fact",
+          "description": "Partitioning ideas show up as pruning a date range. Narrow fact_sales to one month before aggregating.",
+          "query": "SELECT sale_key, order_date, sales FROM fact_sales\nWHERE order_date >= '2025-02-01' AND order_date < '2025-03-01'\nORDER BY order_date LIMIT 8;"
         },
         {
-          "title": "Run the reference",
-          "description": "Partitioning splits a large table by a defined key. It can aid pruning and lifecycle management, but is not a universal query accelerator. SQLite has no SQL Server partition function/scheme. Practice time-aligned filtering here; use the reference notes to understand native warehouse partitioning.",
+          "title": "Query within the partition window",
+          "description": "Date predicates that match partition boundaries let engines skip irrelevant slices. Keep the range half-open.",
           "query": "SELECT sale_key,order_date,sales FROM fact_sales\nWHERE order_date>='2025-02-01' AND order_date<'2025-03-01';"
         }
       ]
@@ -4944,20 +5183,20 @@
         }
       ],
       "quiz": {
-        "q": "Should a warehouse assign customer surrogate keys with fresh ROW_NUMBER on every load?",
+        "q": "After TRIM and ROW_NUMBER per raw_id ordered by updated_at descending, why keep only rn = 1?",
         "options": [
-          "Yes, keys should change as row order changes",
-          "No; persist stable keys or use an existing dimension lookup",
-          "Only if a view is used"
+          "To invent a new surrogate warehouse key on every load",
+          "To keep the latest cleaned version of each natural key",
+          "To drop every row that ever had a duplicate"
         ],
         "correct": 1,
-        "why": "Re-numbering can break historical fact relationships. The project uses established dimension lookup keys."
+        "why": "Silver normalizes and deduplicates source versions. Ordering newest-first and keeping rn = 1 retains one current row per trimmed key. Surrogate keys belong to later Gold modeling."
       },
       "walkthrough": [
         {
-          "title": "Inspect the starting state",
-          "description": "Fictional CRM/catalog/sales extracts and curated star-schema tables. Raw keys, dates, quantities, and sales need validation. One fact row is one sales line.",
-          "query": "SELECT * FROM bronze_customers LIMIT 8;"
+          "title": "Profile duplicate natural keys",
+          "description": "Bronze keeps every source version. Silver will trim keys, map countries, and keep the latest updated_at per key.",
+          "query": "SELECT TRIM(raw_id) AS customer_id, COUNT(*) AS versions\nFROM bronze_customers\nWHERE raw_id IS NOT NULL\nGROUP BY TRIM(raw_id)\nHAVING COUNT(*) > 1;"
         },
         {
           "title": "Execute a complete script",
@@ -5024,13 +5263,13 @@
       },
       "walkthrough": [
         {
-          "title": "Inspect the starting state",
-          "description": "Fictional CRM/catalog/sales extracts and curated star-schema tables. Raw keys, dates, quantities, and sales need validation. One fact row is one sales line.",
-          "query": "SELECT * FROM bronze_customers LIMIT 8;"
+          "title": "Inspect Bronze sales before Gold",
+          "description": "Gold maps cleaned keys into dimensions and facts. Read bronze_sales fields that will become fact grain and measures.",
+          "query": "SELECT row_id, customer_id, product_id, quantity, order_date FROM bronze_sales ORDER BY row_id LIMIT 8;"
         },
         {
-          "title": "Execute a complete script",
-          "description": "All setup and the final result run together in one disposable database.",
+          "title": "Assemble a fact with dimension keys",
+          "description": "Join Bronze rows to dimension surrogates, cast measures, and materialize the fact. Quality gates check counts and orphans.",
           "query": "CREATE TEMP TABLE built_fact AS SELECT b.row_id AS sale_key,c.customer_key,p.product_key,CAST(b.quantity AS INTEGER) AS quantity,CAST(b.quantity AS INTEGER)*p.price AS sales,b.order_date FROM bronze_sales b JOIN dim_customer c ON c.customer_id=TRIM(b.customer_id) JOIN dim_product p ON p.product_id=TRIM(b.product_id) WHERE TRIM(b.quantity)<>'' AND TRIM(b.quantity) NOT GLOB '*[^0-9]*' AND CAST(b.quantity AS INTEGER)>0 AND b.order_date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' AND date(b.order_date,'+0 days')=b.order_date;\nSELECT * FROM built_fact;"
         }
       ]
@@ -5071,20 +5310,20 @@
         }
       ],
       "quiz": {
-        "q": "What is the grain of Northstar’s fact_sales?",
+        "q": "Before summarizing fact_sales, what should you decide?",
         "options": [
-          "One customer",
-          "One sales line",
-          "One calendar month"
+          "Which chart color to use",
+          "What one row represents and what the metric counts",
+          "That COUNT(*) is always the number of customers"
         ],
         "correct": 1,
-        "why": "Each sale_key identifies one line. Aggregate only after deciding the reporting grain."
+        "why": "Exploration starts with grain. A count of sales lines is not a count of customers or of orders."
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Fictional CRM/catalog/sales extracts and curated star-schema tables. Raw keys, dates, quantities, and sales need validation. One fact row is one sales line.",
-          "query": "SELECT * FROM bronze_customers LIMIT 8;"
+          "title": "Look at one sales line",
+          "description": "Each fact_sales row is one sales line. Decide that before you count or sum.",
+          "query": "SELECT sale_key, customer_key, quantity, sales, order_date FROM fact_sales LIMIT 8;"
         },
         {
           "title": "Run the reference",
@@ -5130,20 +5369,20 @@
         }
       ],
       "quiz": {
-        "q": "What is the grain of Northstar’s fact_sales?",
+        "q": "A report must list every customer, including those with no sales. Where do you start?",
         "options": [
-          "One customer",
-          "One sales line",
-          "One calendar month"
+          "From the customer list, keeping customers with no matching sales",
+          "From fact_sales, which contains only customers who bought something",
+          "From a count of sale_key, which is already one row per customer"
         ],
-        "correct": 1,
-        "why": "Each sale_key identifies one line. Aggregate only after deciding the reporting grain."
+        "correct": 0,
+        "why": "An inner join to sales drops customers who never bought. Start from the customer list when the report has to keep them."
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Fictional CRM/catalog/sales extracts and curated star-schema tables. Raw keys, dates, quantities, and sales need validation. One fact row is one sales line.",
-          "query": "SELECT * FROM bronze_customers LIMIT 8;"
+          "title": "Start from the customer",
+          "description": "Customers with no sales still belong on this report. The sales table alone cannot list them.",
+          "query": "SELECT customer_key, customer_id, name FROM dim_customer;"
         },
         {
           "title": "Run the reference",
@@ -5190,14 +5429,14 @@
         }
       ],
       "quiz": {
-        "q": "What is the grain of Northstar’s fact_sales?",
+        "q": "Before LAG or a running SUM of monthly sales, what grain do you need?",
         "options": [
-          "One customer",
-          "One sales line",
-          "One calendar month"
+          "One row per month",
+          "One row per sales line, with the window applied directly",
+          "One row per customer"
         ],
-        "correct": 1,
-        "why": "Each sale_key identifies one line. Aggregate only after deciding the reporting grain."
+        "correct": 0,
+        "why": "Aggregate to one row per month first. The first month has no prior month, so its change is missing rather than zero."
       },
       "walkthrough": [
         {
@@ -5254,20 +5493,20 @@
         }
       ],
       "quiz": {
-        "q": "An index changes SCAN to SEARCH on a tiny example. What can you conclude?",
+        "q": "A generated query’s plan says SEARCH. What still needs checking?",
         "options": [
-          "Production latency improved by a known percentage",
-          "The optimizer chose a different access path; measure the real workload next",
-          "Every query needs this index"
+          "Nothing. SEARCH means the metric is correct.",
+          "The metric definition, the edge cases, and the actual result",
+          "Only whether the SQL text mentions an index"
         ],
         "correct": 1,
-        "why": "A plan provides strategy evidence. Timing, reads, selectivity, and write overhead require workload measurement."
+        "why": "A SEARCH plan is evidence about access, not proof the metric is right. Check the grain, the filters, and the rows that come back."
       },
       "walkthrough": [
         {
-          "title": "Inspect the source",
-          "description": "Request usage, fictional model rates, invoices, payments, and refunds. Rates are invented for learning, not real provider prices.",
-          "query": "SELECT * FROM ai_accounts LIMIT 8;"
+          "title": "Read the accounts before trusting a query",
+          "description": "Check who is in the table, including accounts that may have no requests. A plan does not prove the metric.",
+          "query": "SELECT id, plan, region FROM ai_accounts;"
         },
         {
           "title": "Run the reference",

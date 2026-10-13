@@ -20,12 +20,13 @@ try {
     page.on('pageerror', error => errors.push(error.message));
     await page.goto(BASE);
     await page.waitForLoadState('networkidle');
-    assert.equal(await page.locator('.sidebar-search kbd').innerText(), `${modifier} + K`);
+    await page.goto(BASE + '/sql');
+    await page.waitForFunction(t => document.querySelector('button[aria-label="Open search"]')?.title === t, `Search (${modifier} + K)`);
     assert.equal(await page.getByRole('heading', { name: 'Explore on your own' }).count(), 0);
     assert.equal(await page.locator('main a[href="/playground"]').count(), 0);
-    assert.equal(await page.locator('.sidebar a[href="/playground"]').count(), 1);
+    assert.equal(await page.locator('.rt-header a[href="/playground"]').count(), 0, 'tools live inside the Tools menu');
     await page.keyboard.press(`${key}+k`);
-    await page.getByRole('dialog', { name: 'Search SQL Studio' }).waitFor();
+    await page.getByRole('dialog', { name: 'Search Runtime' }).waitFor();
     await page.keyboard.press('Escape');
     assert.equal(await page.getByRole('dialog').count(), 0);
 

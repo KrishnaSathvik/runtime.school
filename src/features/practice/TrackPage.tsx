@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { DIFFICULTY_LABEL, practiceDatasets, topicLabel } from "@/content/question-bank";
+import { practiceDatasets, topicLabel } from "@/content/question-bank";
 import { trackById } from "@/content/question-bank/tracks";
 import { useHydrated, useLearning } from "@/lib/learning-state";
-import { DifficultyBadge, StatusMark } from "./Badges";
+import { DifficultyBadge } from "./Badges";
 import { questionStatusText } from "./status";
 import { itemLabel, resumeInTrack, trackHref, trackProgress, trackRange } from "./tracks";
 
@@ -29,30 +29,39 @@ export function TrackPage({ trackId }: { trackId: string }) {
     return (
       <div className="canvas">
         <h1>Track not found</h1>
-        <Link href="/practice" className="btn mt-4">Back to Practice</Link>
+        <Link href="/practice/questions" className="btn mt-4">Back to Practice</Link>
       </div>
     );
   }
 
   const next = resumeInTrack(track, { questions, stats, attempts, history }, started?.lastQuestionId);
   const pct = Math.round((100 * progress.solved) / progress.total);
+  const bankCount = progress.items.filter((item) => item.q.sourceType === "bank").length;
+  const learnCount = progress.total - bankCount;
 
   return (
     <div className="canvas">
-      <Link href="/practice" className="inline-flex items-center gap-1 text-sm text-[var(--accent)]">
-        <ArrowLeft size={14} aria-hidden /> Practice
+      <Link href="/practice/questions" className="inline-flex items-center gap-1 text-sm text-[var(--accent)]">
+        <ArrowLeft size={14} aria-hidden /> All questions
       </Link>
       <div className="eyebrow mt-6">Practice track · {trackRange(track)}</div>
       <h1>{track.title}</h1>
       <p className="lead">{track.objective}</p>
-      <p className="metadata mt-3">{track.startingPoint}</p>
+      <p className="metadata mt-3">
+        <strong className="text-[var(--text)]">Prerequisites:</strong> {track.startingPoint}
+      </p>
       <p className="metadata mt-1">Skills: {track.skills.join(" · ")}</p>
+      <p className="metadata mt-1">
+        {progress.total} questions · {bankCount} independent · {learnCount} From Learn
+      </p>
 
       <section className="mt-8 border-y border-[var(--border)] py-5">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="min-w-[220px] flex-1">
             <p className="text-sm" role="status">
-              {hydrated ? `${progress.solved} of ${progress.total} solved without hints` : `${progress.total} questions`}
+              {hydrated
+                ? `${progress.solved} of ${progress.total} solved without hints`
+                : `${progress.total} questions`}
             </p>
             <div
               className="mt-2 h-[3px] w-full max-w-sm overflow-hidden bg-[var(--border)]"
@@ -64,6 +73,12 @@ export function TrackPage({ trackId }: { trackId: string }) {
             >
               <div className="h-full bg-[var(--accent)]" style={{ width: `${hydrated ? pct : 0}%` }} />
             </div>
+            {hydrated && next && (
+              <p className="metadata mt-3">
+                Next up: {next.position}. {itemLabel(next.q)}
+                {next.q.sourceType === "bank" ? "" : " (From Learn · review)"}
+              </p>
+            )}
           </div>
           {hydrated &&
             (next ? (
@@ -75,54 +90,63 @@ export function TrackPage({ trackId }: { trackId: string }) {
                 {started ? "Continue" : "Start track"}: {next.position}. {itemLabel(next.q)}{" "}
                 <ArrowRight size={14} />
               </Link>
-            ) : (
+            ) : progress.complete ? (
               <div>
                 <p className="feedback-ok text-sm">Track complete — every question solved without hints.</p>
-                <Link href="/practice?status=unsolved" className="btn mt-3">
-                  Find another unsolved question <ArrowRight size={14} />
+                <Link href="/practice/questions" className="btn mt-3">
+                  Find another independent question <ArrowRight size={14} />
                 </Link>
               </div>
+            ) : (
+              <p className="text-sm">
+                These questions were solved with help. Open one below and try again without hints to count it.
+              </p>
             ))}
         </div>
       </section>
 
-      <ol className="mt-6" aria-label="Questions in this track">
-        {progress.items.map((item, i) => {
-          const prev = progress.items[i - 1];
-          const stageStart = !prev || prev.q.difficulty !== item.q.difficulty;
+      <div className="learning-path mt-6 border-t border-[var(--border)]" aria-label="Questions in this track">
+        {progress.items.map((item) => {
+          const section = track.sections?.[item.q.id];
+          const status = hydrated
+            ? questionStatusText(item.q, { questions, stats, attempts, history })
+            : "—";
+          const current = next?.q.id === item.q.id;
           return (
-            <li key={item.q.id}>
-              {stageStart && (
-                <div className="eyebrow mt-6 mb-2">{track.consolidation?.[item.q.id] ? "Put it together · " : ""}{DIFFICULTY_LABEL[item.q.difficulty]}</div>
+            <div key={item.q.id}>
+              {section && <div className="eyebrow mt-6 mb-2 px-0.5">{section}</div>}
+              {track.consolidation?.[item.q.id] && (
+                <p className="metadata mb-2 px-0.5">{track.consolidation[item.q.id]}</p>
               )}
-              {track.consolidation?.[item.q.id] && <p className="metadata mb-2">{track.consolidation[item.q.id]}</p>}
               <Link
                 href={trackHref(item.q, track.id)}
-                className={`question-row !grid-cols-[28px_24px_minmax(0,1fr)_auto] ${next?.q.id === item.q.id ? "bg-[var(--secondary)]" : ""}`}
+                className={`index-row ${current ? "current-module" : ""}`}
                 onClick={() => touchTrack(track.id, item.q.id)}
-                aria-current={next?.q.id === item.q.id ? "step" : undefined}
+                aria-current={current ? "step" : undefined}
               >
                 <span className="module-id">{String(item.position).padStart(2, "0")}</span>
-                <StatusMark status={hydrated ? item.status : "not-attempted"} label={hydrated ? questionStatusText(item.q, { questions, stats, attempts, history }) : undefined} />
                 <div className="min-w-0">
-                  <div className="line-clamp-2 text-sm font-medium">
-                    {item.q.title}
-                  </div>
-                  <div className="metadata mt-0.5 truncate">
-                    {topicLabel[item.q.primaryTopic]} · {practiceDatasets[item.q.datasetId]?.name}
-                    {item.q.sourceType === "bank" ? "" : " · lesson challenge"}
-                    {next?.q.id === item.q.id ? " · next up" : ""}
+                  <div className="text-[15px] font-medium leading-snug">{item.q.title}</div>
+                  <div className="mt-1.5 max-w-xl text-xs leading-relaxed text-[var(--muted)]">
+                    {topicLabel[item.q.primaryTopic]} ·{" "}
+                    {practiceDatasets[item.q.datasetId]?.name}
+                    {item.q.sourceType === "bank" ? " · Independent" : " · From Learn · review"}
+                    {current ? " · next up" : ""}
                   </div>
                 </div>
-                <DifficultyBadge difficulty={item.q.difficulty} />
+                <div className="index-aside">
+                  <DifficultyBadge difficulty={item.q.difficulty} />
+                  <span className="index-progress">{status}</span>
+                </div>
               </Link>
-            </li>
+            </div>
           );
         })}
-      </ol>
+      </div>
       <p className="metadata mt-6">
-        Your progress on a question is shared wherever that question appears.
-        Completing this track does not automatically complete lessons or project milestones.
+        Solving a question updates that question wherever it appears — browser, track, or lesson.
+        Assisted solves stay marked as solved with help. Completing this track does not automatically
+        complete Learn lessons or project milestones.
       </p>
     </div>
   );

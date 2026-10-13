@@ -20,6 +20,7 @@ import { explainError, explainGrade, teachingSchema } from "@/engine/explain";
 import { ExplanationView } from "@/components/editor/Explanation";
 
 type Props = {
+  help?: React.ReactNode;
   checkLabel?: string;
   value: string;
   onChange: (sql: string) => void;
@@ -49,6 +50,10 @@ type Props = {
   header?: React.ReactNode;
   /** Tables of the active dataset, used to explain missing-table errors. */
   tables?: string[];
+  /** Replaces the default “saves your progress” sentence. */
+  progressNote?: string;
+  /** Graded work that should not be described as saved lesson progress. */
+  savesProgress?: boolean;
   /** Database for this workspace (defaults to the curriculum seed). */
   seedSql?: string;
   /** Changed-data fixture for checks (defaults to the curriculum fixture). */
@@ -60,7 +65,7 @@ type Props = {
 type Outcome = { tone: "ok" | "err" | "warn" | "info"; label: string };
 
 /** One visible verdict per run, so errors, wrong rows, unmet requirements and success never look alike. */
-export function resultOutcome(response: ExecuteResponse | null, guided: boolean): Outcome | null {
+export function resultOutcome(response: ExecuteResponse | null, guided: boolean, savesProgress = true): Outcome | null {
   if (!response) return null;
   const f = response.failure;
   if (response.error && f && f.completed > 0) return { tone: "err", label: `Stopped at statement ${f.statement} · ${f.completed} earlier statement${f.completed === 1 ? "" : "s"} ran` };
@@ -70,10 +75,10 @@ export function resultOutcome(response: ExecuteResponse | null, guided: boolean)
     const n = response.total ?? response.result?.values.length;
     return { tone: "info", label: n === undefined ? "Ran · not graded" : `Ran · ${n} row${n === 1 ? "" : "s"} · not graded` };
   }
-  if (g.ok) return { tone: "ok", label: guided ? "Correct · hints or answer used" : "Correct · progress saved" };
+  if (g.ok) return { tone: "ok", label: guided ? "Correct · hints or answer used" : savesProgress ? "Correct · progress saved" : "Correct" };
   if (g.planFailed || /requires you to use/i.test(g.message)) return { tone: "warn", label: "Right rows · a requirement is not met" };
   if (/changed-data check failed/i.test(g.message) || g.variationFailed) return { tone: "warn", label: "Correct on sample data only" };
-  return { tone: "err", label: "Not correct yet · compare with the expected output" };
+  return { tone: "err", label: "Not correct yet" };
 }
 
 /** States what a partly-run lab script actually did, instead of implying nothing ran. */
@@ -102,8 +107,11 @@ const OUTCOME_ICON = { ok: CircleCheck, err: CircleX, warn: CircleAlert, info: I
 const SPLIT_KEY = "sqlstudio:editor-share";
 const MIN_EDITOR = 160;
 const MIN_RESULTS = 140;
+/** Height kept for the Results heading and hint before anything has run. */
+const EMPTY_RESULTS = 96;
 
 export function SqlWorkspace({
+  help,
   checkLabel = "Check answer",
   value,
   onChange,
@@ -131,8 +139,12 @@ export function SqlWorkspace({
   seedSql = seed,
   mutationSql = fixtureMutation,
   autoRun = false,
+  progressNote,
+  savesProgress = true,
 }: Props) {
   const modifier = useShortcutModifier();
+  const [helpOpen, setHelpOpen] = useState(false);
+  const helpButtonRef = useRef<HTMLButtonElement>(null);
   const [busy, setBusy] = useState(false);
   const [response, setResponse] = useState<ExecuteResponse | null>(null);
   // The SQL that produced `response` (the editor may have changed since).
@@ -161,11 +173,16 @@ export function SqlWorkspace({
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
+    if (actionsRef.current) ro.observe(actionsRef.current);
     return () => ro.disconnect();
   }, []);
   const maxEditor = Math.max(MIN_EDITOR, space - MIN_RESULTS);
+  // Before the first run the editor takes the room; Results expand once there is output.
+  const resultsEmpty = !busy && !response;
   const editorHeight = framed
-    ? Math.round(Math.min(maxEditor, Math.max(MIN_EDITOR, share !== null ? space * share : Math.min(450, Math.max(260, space * 0.58)))))
+    ? resultsEmpty && share === null
+      ? Math.round(Math.max(MIN_EDITOR, space - EMPTY_RESULTS))
+      : Math.round(Math.min(maxEditor, Math.max(MIN_EDITOR, share !== null ? space * share : Math.min(360, Math.max(300, Math.min(380, space * 0.4))))))
     : undefined;
   const setEditorHeight = useCallback((h: number) => {
     if (!space) return;
@@ -183,9 +200,17 @@ export function SqlWorkspace({
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", up);
   };
-  // Completion offers only this exercise's tables and columns, and only on
-  // request (Ctrl+Space) — automatic pop-ups covered typing on phones.
+  // Completion offers this exercise's tables/columns. Typing opens the list on
+  // pointer devices; on phones only Ctrl/Cmd-Space (popups cover the keyboard).
   const tableKey = tables.join(",");
+  const [activateOnTyping, setActivateOnTyping] = useState(true);
+  useEffect(() => {
+    const mq = window.matchMedia("(hover: none) and (pointer: coarse)");
+    const apply = () => setActivateOnTyping(!mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
   const sqlLanguage = useMemo(() => {
     const all = teachingSchema();
     const schema = Object.fromEntries(
@@ -233,6 +258,7 @@ export function SqlWorkspace({
   useEffect(() => {
     runId.current += 1;
     setResponse(null);
+    setHelpOpen(false);
     setBusy(false);
     return () => { runId.current += 1; };
   }, [taskKey]);
@@ -309,14 +335,14 @@ export function SqlWorkspace({
     return () => window.removeEventListener("keydown", onKey, true);
   }, [run, busy, graded, format]);
 
-  const outcome = resultOutcome(response, guided);
+  const outcome = resultOutcome(response, guided, savesProgress);
 
   return (
     <div className="editor-pane">
       {header}
-      <div className="flex min-h-11 shrink-0 flex-wrap items-center justify-between gap-2 py-2 border-b border-[var(--border)] bg-[var(--main)] px-4">
-        <span className="font-mono text-xs">query.sql</span>
-        <div className="flex flex-wrap items-center gap-2 text-[var(--muted)]">
+      <div className="ide-toolbar flex min-h-11 shrink-0 flex-wrap items-end justify-between gap-2 border-b border-[var(--border)] bg-[var(--main)] px-3">
+        <span className="editor-tab">query.sql</span>
+        <div className="ide-actions mb-1.5 flex flex-wrap items-center gap-1 text-[var(--muted)]">
           <span className="metadata">
             SQLite{allowWrites ? " · sample data resets each run" : ""}
           </span>
@@ -390,7 +416,7 @@ export function SqlWorkspace({
           theme="none"
           extensions={[
             sqlLanguage,
-            autocompletion({ activateOnTyping: false }),
+            autocompletion({ activateOnTyping }),
             EditorView.lineWrapping,
             editorTheme,
             EditorView.contentAttributes.of({ "aria-label": editorLabel }),
@@ -425,13 +451,33 @@ export function SqlWorkspace({
           }}
         />
       )}
-      <div ref={actionsRef} className="editor-actions flex items-center justify-between gap-3 border-y border-[var(--border)] bg-[var(--main)] px-4 py-2.5">
-        <span className="metadata hidden sm:inline">
-          {graded
-            ? <>Run query shows your output · {checkLabel} grades it and saves progress</>
-            : <>{modifier} + Enter to run · Nothing here is graded</>}
-        </span>
-        <div className="flex gap-2">
+      <div ref={actionsRef} className="editor-actions border-y border-[var(--border)] bg-[var(--main)]">
+        {helpOpen && help && (
+          <section
+            id="workspace-help"
+            className="help-panel"
+            aria-label="Help and hints"
+            onKeyDown={(event) => {
+              if (event.key === "Escape") {
+                setHelpOpen(false);
+                helpButtonRef.current?.focus();
+              }
+            }}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <h3>Help and hints</h3>
+              <button className="btn" onClick={() => { setHelpOpen(false); helpButtonRef.current?.focus(); }}>Close help</button>
+            </div>
+            {help}
+          </section>
+        )}
+        <div className="editor-actions-row flex flex-wrap items-center justify-between gap-3 px-4 py-2.5">
+        {help && (
+          <button ref={helpButtonRef} type="button" className="btn" aria-expanded={helpOpen} aria-controls="workspace-help" onClick={() => setHelpOpen(!helpOpen)}>
+            Help / hints
+          </button>
+        )}
+        <div className="ml-auto flex flex-wrap gap-2">
           <button
             type="button"
             className={`btn ${graded ? "" : "primary"}`}
@@ -453,8 +499,9 @@ export function SqlWorkspace({
             </button>
           )}
         </div>
+        </div>
       </div>
-      <div className="results-panel" role="region" aria-label="Query results" tabIndex={0} aria-live="polite" aria-busy={busy}>
+      <div className={`results-panel${resultsEmpty ? " is-empty" : ""}`} role="region" aria-label="Query results" tabIndex={0} aria-live="polite" aria-busy={busy}>
         <div className="results-heading">
           <h2>Results</h2>
           {!busy && outcome && (() => { const Icon = OUTCOME_ICON[outcome.tone]; return (
@@ -502,6 +549,20 @@ export function SqlWorkspace({
                 ordered,
               })}
             />
+            {response.expected && response.expected.values.length > 0 && !response.grade.planFailed && !response.grade.variationFailed && (
+              <div className="mt-4">
+                <p className="metadata mb-2">Expected output</p>
+                <div className="table-scroll" tabIndex={0} role="region" aria-label="Expected output">
+                  <ResultsTable
+                    compact
+                    result={{ ...response.expected, values: response.expected.values.slice(0, 8) }}
+                  />
+                </div>
+                {response.expected.values.length > 8 && (
+                  <p className="metadata mt-2">Showing 8 of {response.expected.values.length} expected rows.</p>
+                )}
+              </div>
+            )}
           </div>
         )}
         {!busy && response?.grade?.ok && (
@@ -520,7 +581,11 @@ export function SqlWorkspace({
         )}
         {!busy && !response && (
           <p className="metadata px-4 py-3">
-            Run your query to see the output here. {graded ? `${checkLabel} checks your solution and saves your progress.` : "Your work here is not graded."}
+            {progressNote
+              ? progressNote
+              : graded
+                ? "Output appears here after you run a query."
+                : "Output appears here after you run a query. Nothing here is graded."}
           </p>
         )}
       </div>

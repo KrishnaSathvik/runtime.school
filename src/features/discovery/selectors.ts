@@ -5,8 +5,29 @@ import {isMastered, isReviewDue, milestoneDone, placementStart, sessionKey, type
 import {statusOf} from "@/features/practice/status";
 import {resumeInTrack, trackHref} from "@/features/practice/tracks";
 import {hrefFor} from "@/lib/routes";
+import {seoLessonPath} from "@/platform/sql-slugs";
 export const practiceQuestions = [...new Map(allQuestions().filter(q=>q.practiceEligible).map(q=>[q.id,q])).values()];
 export const mastered = (s:LearningState,id:number)=>!!s.stats[id]&&isMastered(s.stats[id]);
+
+/** Opening a lesson writes a session before any graded attempt. That is already in progress. */
+export function lessonTouched(s: Pick<LearningState, "stats" | "sessions" | "active">, id: number) {
+  const record = s.stats[id];
+  return (record?.attempts ?? 0) > 0
+    || (record?.solved.length ?? 0) > 0
+    || (record?.quizAttempts ?? 0) > 0
+    || !!s.sessions[sessionKey(id, null)]
+    || (s.active?.project === null && s.active.id === id);
+}
+
+export function moduleStatusLabel(
+  s: Pick<LearningState, "stats" | "sessions" | "active">,
+  ids: number[],
+): "Mastered" | "In progress" | "Not started" {
+  const done = ids.filter((id) => s.stats[id] && isMastered(s.stats[id])).length;
+  if (ids.length > 0 && done === ids.length) return "Mastered";
+  if (done > 0 || ids.some((id) => lessonTouched(s, id))) return "In progress";
+  return "Not started";
+}
 export function practiceProgress(s:LearningState) {return {solved:practiceQuestions.filter(q=>statusOf(q,s)==="solved").length,total:practiceQuestions.length};}
 export function dueLessons(s:LearningState,now=Date.now()) {return lessons.filter(l=>mastered(s,l.id)&&isReviewDue(s.reviews[l.id],now)).sort((a,b)=>s.reviews[a.id].due-s.reviews[b.id].due);}
 export function nextCourse(s:LearningState) {return courseOrder.find(id=>!mastered(s,id));}
@@ -16,7 +37,8 @@ export function practiceContinuation(s:LearningState):Continuation|null {
  const next=t?resumeInTrack(t,s,s.tracks[t.id]?.lastQuestionId):null;
  const q=s.lastQuestion?bankBySlug.get(s.lastQuestion):undefined;
  const qi=bankQuestions.findIndex(x=>x.id===q?.id);
- const candidate=q&&!s.questions[q.id]?.solved?q:q?[...bankQuestions.slice(qi+1),...bankQuestions.slice(0,qi)].find(x=>!s.questions[x.id]?.solved):undefined;
+ const open=(id:string)=>{const p=s.questions[id];return !p?.solved&&!p?.guidedSolved;};
+ const candidate=q&&open(q.id)?q:q?[...bankQuestions.slice(qi+1),...bankQuestions.slice(0,qi)].find(x=>open(x.id)):undefined;
  if(t&&next&&(s.tracks[t.id]?.lastAt??0)>=s.lastQuestionAt) return {href:trackHref(next.q,t.id),title:t.title,kind:"Practice track",reason:next.q.title,at:s.tracks[t.id]?.lastAt??0};
  return candidate?{href:`/practice/${candidate.slug}`,title:candidate.title,kind:"Practice question",reason:"Continue with your saved SQL and progress.",at:s.lastQuestionAt}:null;
 }
@@ -25,7 +47,7 @@ export function continuation(s:LearningState,rec:Recommendation):Continuation {
  const activeValid=a&&lessons[a.id]&&(a.project===null?!mastered(s,a.id):projects.some(p=>p.id===a.project&&p.milestoneIds.includes(a.id))&&!milestoneDone(s.projects[a.project]?.milestones[a.id]));
  const inTrack=!!a&&a.project===null&&!!s.lastTrack&&s.tracks[s.lastTrack]?.lastQuestionId===`lc-${a.id}-${a.variant}`;
  if(practice&&(!activeValid||practice.at>s.lastLessonAt||inTrack))return practice;
- if(a&&activeValid)return {href:a.project===null?`/lesson/${a.id}`:`/projects/${a.project}/milestone/${a.id}`,title:lessons[a.id].title,kind:a.project===null?"Lesson":"Project milestone",reason:a.project===null?(a.stage==="practice"?`Practice · Challenge ${a.variant+1} of 2`:a.stage==="review"?"Concept check":"Reading the concept"):projects.find(p=>p.id===a.project)!.title,at:s.lastLessonAt};
+ if(a&&activeValid)return {href:a.project===null?(seoLessonPath(a.id)??`/lesson/${a.id}`):`/projects/${a.project}/milestone/${a.id}`,title:lessons[a.id].title,kind:a.project===null?"Lesson":"Project milestone",reason:a.project===null?(a.stage==="practice"?`Practice · Challenge ${a.variant+1} of 2`:a.stage==="review"?"Concept check":"Reading the concept"):projects.find(p=>p.id===a.project)!.title,at:s.lastLessonAt};
  if(courseOrder.every(id=>mastered(s,id))&&rec.kind==="lesson")return {href:"/practice/questions",title:"Every lesson mastered",kind:"Practice",reason:"Keep your skills sharp with a new problem or project.",at:0};
  return {href:hrefFor(rec),title:lessons[rec.id].title,kind:rec.kind==="review"?"Review":rec.project!==null?"Project milestone":"Lesson",reason:rec.reason,at:0};
 }
@@ -44,9 +66,32 @@ export function courseContinuation(s: LearningState) {
  const recent = [...s.history].filter(h => h.project == null && unfinished(h.id)).sort((a,b) => b.time-a.time)[0]?.id;
  const saved = courseOrder.filter(id => unfinished(id) && s.sessions[sessionKey(id,null)]).sort((a,b) => (s.stats[b]?.last ?? 0)-(s.stats[a]?.last ?? 0))[0];
  const started = courseOrder.some(id => s.sessions[sessionKey(id,null)] || s.stats[id]?.attempts || mastered(s,id));
- const placed = !started ? placementStart(s.placement) : null;
+ const placed = !started ? placementStart(s.placement, {joinMastered: mastered(s, 14)}) : null;
  const id = active ?? recent ?? saved ?? (placed !== null && unfinished(placed) ? placed : nextCourse(s));
  if (id === undefined) return null;
  const session = active === id ? s.active : s.sessions[sessionKey(id,null)];
- return {id, href:`/lesson/${id}`, returning:started || active !== undefined, stage:session?.stage ?? "understand", variant:session?.variant ?? 0};
+ return {id, href:seoLessonPath(id) ?? `/lesson/${id}`, returning:started || active !== undefined, stage:session?.stage ?? "understand", variant:session?.variant ?? 0};
+}
+
+/**
+ * Where Learn starts: the first unfinished lesson in course order (or the placement result before
+ * anything is started). Unlike courseContinuation, opening a lesson challenge from Practice does not
+ * move it, so Learn never skips ahead to a lesson you only visited.
+ */
+export function learnEntry(s: LearningState) {
+ const started = courseOrder.some(id => s.sessions[sessionKey(id,null)] || s.stats[id]?.attempts || mastered(s,id));
+ const placed = !started ? placementStart(s.placement, {joinMastered: mastered(s, 14)}) : null;
+ const id = placed !== null && !mastered(s, placed) ? placed : nextCourse(s);
+ if (id === undefined) return null;
+ const session = s.sessions[sessionKey(id,null)];
+ const touched = !!session || !!s.stats[id]?.attempts;
+ return {id, href:seoLessonPath(id) ?? `/lesson/${id}`, returning:touched, stage:session?.stage ?? "understand", variant:session?.variant ?? 0};
+}
+
+/** A different unfinished lesson the learner was last working in, shown beside learnEntry. */
+export function otherLessonInProgress(s: LearningState) {
+ const entry = learnEntry(s);
+ const recent = courseContinuation(s);
+ const worked = (id: number) => !!s.stats[id]?.attempts || !!s.sessions[sessionKey(id,null)] || s.history.some(h => h.id === id && h.project == null);
+ return recent && recent.returning && recent.id !== entry?.id && worked(recent.id) ? recent : null;
 }

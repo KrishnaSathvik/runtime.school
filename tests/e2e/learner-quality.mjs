@@ -17,7 +17,7 @@ async function type(p,sql){await p.locator('.cm-content').click();await p.keyboa
 async function check(p){await p.getByRole('button',{name:'Check answer',exact:true}).click();await p.waitForTimeout(150);await p.locator('.results-panel[aria-busy="false"] .feedback-ok,.results-panel[aria-busy="false"] .explanation,article[aria-live="polite"] h2').first().waitFor();}
 const saved=p=>p.evaluate(()=>JSON.parse(localStorage.getItem('sql-studio-v1')).state);
 const stat={attempts:2,correct:2,solved:[0,1],check:true,last:1,masteredAt:1,errors:0,legacy:false,categories:{},quizAttempts:1};
-async function seed(p,s){await p.goto(BASE+'/progress');await p.locator('main h1').waitFor();await p.evaluate(s=>localStorage.setItem('sql-studio-v1',JSON.stringify({version:3,state:{version:3,...s}})),s);}
+async function seed(p,s){await p.goto(BASE+'/learn');await p.locator('main h1').waitFor();await p.evaluate(s=>localStorage.setItem('sql-studio-v1',JSON.stringify({version:3,state:{version:3,...s}})),s);}
 await test('Interrupted review restores write stage, recall, failed checks, draft and reveal confirmation',async()=>{
  const p=await fresh();await seed(p,{stats:{0:stat},reviews:{0:{level:0,due:Date.now()-1000,history:[]}}});await p.goto(BASE+'/review/0');
  await p.getByRole('button',{name:pack.lessons[0].quiz.options[pack.lessons[0].quiz.correct],exact:true}).click();await p.getByRole('button',{name:/Next: write/}).click();
@@ -29,8 +29,8 @@ await test('Interrupted review restores write stage, recall, failed checks, draf
  s=await saved(p);assert.equal(s.reviews[0].history.length,1);await p.reload();await p.getByText('Still remembered.').waitFor();assert.equal((await saved(p)).reviews[0].history.length,1);await p.context().close();
 });
 await test('Progress resumes a practice-only learner',async()=>{
- const p=await fresh();await p.goto(BASE+'/practice/'+bank[0].slug);await type(p,'SELECT name');await p.goto(BASE+'/progress');await p.screenshot({path:OUT+'/home-practice.png'});
- assert.match(await p.locator('main h1').innerText(),/Your SQL progress/);const resume=p.locator('main').getByRole('link',{name:/Continue/}).first();assert.equal(await resume.getAttribute('href'),'/practice/'+bank[0].slug);await resume.click();assert.match(await p.locator('.cm-content').innerText(),/SELECT name/);await p.context().close();
+ const p=await fresh();await p.goto(BASE+'/practice/'+bank[0].slug);await type(p,'SELECT name');await p.goto(BASE+'/practice');await p.screenshot({path:OUT+'/home-practice.png'});
+ assert.match(await p.locator('main h1').innerText(),/Practice SQL/);const resume=p.locator('main').getByRole('link',{name:/Continue/}).first();assert.equal(await resume.getAttribute('href'),'/practice/'+bank[0].slug);await resume.click();assert.match(await p.locator('.cm-content').innerText(),/SELECT name/);await p.context().close();
 });
 await test('Separate tabs preserve both question drafts and shared solves',async()=>{
  const p=await fresh();await p.goto(BASE+'/practice/'+bank[0].slug);await p.locator('.cm-content').waitFor();const second=await p.context().newPage();await second.goto(BASE+'/practice/'+bank[1].slug);await second.locator('.cm-content').waitFor();
@@ -58,9 +58,9 @@ await test('Tracks resume the actual interrupted position even when earlier ques
  }await p.context().close();
 });
 await test('Progress prioritizes the most recent activity and skips solved questions',async()=>{
- const p=await fresh();await p.goto(BASE+'/lesson/0?challenge=1');await type(p,'SELECT name');await p.goto(BASE+'/practice/shopper-contact-list');await type(p,'SELECT email');await p.goto(BASE+'/progress');assert.equal(await p.locator('main').getByRole('link',{name:'Continue practice',exact:true}).getAttribute('href'),'/practice/shopper-contact-list');
- await p.goto(BASE+'/lesson/0');await p.locator('.cm-content').waitFor();await p.goto(BASE+'/progress');assert.equal(await p.locator('main').getByRole('link',{name:'Continue',exact:true}).getAttribute('href'),'/lesson/0');
- await p.goto(BASE+'/practice/shopper-contact-list');await type(p,bank[0].solution);await check(p);await p.goto(BASE+'/progress');assert.equal((await saved(p)).questions[bank[0].id].solved,true);const link=p.locator('main').getByRole('link',{name:'Continue practice',exact:true});assert.notEqual(await link.getAttribute('href'),'/practice/shopper-contact-list');await p.context().close();
+ const p=await fresh();await p.goto(BASE+'/lesson/0?challenge=1');await type(p,'SELECT name');await p.goto(BASE+'/practice/shopper-contact-list');await type(p,'SELECT email');await p.goto(BASE+'/practice');assert.equal(await p.locator('main').getByRole('link',{name:'Continue practice',exact:true}).getAttribute('href'),'/practice/shopper-contact-list');
+ await p.goto(BASE+'/lesson/0');await p.locator('.cm-content').waitFor();await p.goto(BASE+'/learn');assert.equal(await p.locator('main').getByRole('link',{name:'Continue lesson',exact:true}).getAttribute('href'),'/lesson/0');
+ await p.goto(BASE+'/practice/shopper-contact-list');await type(p,bank[0].solution);await check(p);await p.goto(BASE+'/practice');assert.equal((await saved(p)).questions[bank[0].id].solved,true);const link=p.locator('main').getByRole('link',{name:'Continue practice',exact:true});assert.notEqual(await link.getAttribute('href'),'/practice/shopper-contact-list');await p.context().close();
 });
 // Every module and requested concept: read visible teaching, run examples, make an
 // incorrect attempt, solve both tasks, pass recall and verify actual mastery.
@@ -84,8 +84,8 @@ for(const project of pack.projects)await test(`Project ${project.id}: two milest
  const p=await fresh();await p.goto(BASE+'/projects/'+project.id);await p.getByRole('link',{name:'Start project',exact:true}).click();
  for(const [idx,id] of project.milestoneIds.slice(0,2).entries()){
   if(idx)await p.goto(`${BASE}/projects/${project.id}/milestone/${id}`);
-  const l=pack.lessons[id];await p.getByRole('navigation',{name:'Project steps'}).getByRole('button',{name:/Write and check SQL/}).click();
-  await p.getByLabel('Your findings (optional)').fill('Validated the business result against the sample and changed data.');
+  const l=pack.lessons[id];await p.getByRole('navigation',{name:'Project steps'}).getByRole('button',{name:/Write SQL/}).click();
+  await p.getByLabel(/What did you find/).fill('Validated the business result against the sample and changed data.');
   for(const v of [0,1]){if(v)await p.getByRole('button',{name:/Next: Challenge 2/}).click();await type(p,l.tasks[v].answer);await check(p);await p.locator('.results-panel .feedback-ok').first().waitFor();}
   await p.locator('.results-panel').getByRole('button',{name:/Continue to concept check/}).click();await p.getByRole('button',{name:l.quiz.options[l.quiz.correct],exact:true}).click();await p.getByRole('heading',{name:/Milestone complete/}).waitFor();
   await p.reload();assert.equal((await saved(p)).projects[project.id].milestones[id].check,true);

@@ -64,6 +64,10 @@ export type DatasetInfo = {
 export type PlanComparison = {
   title: string;
   question: string;
+  /** What the learner should notice in the two plans. */
+  takeaway?: string;
+  /** How it works: the mechanism behind the difference, in plain language. */
+  explain?: string;
   cases: Array<{ label: string; query: string; plan: string }>;
 };
 

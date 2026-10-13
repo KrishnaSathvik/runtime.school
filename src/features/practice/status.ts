@@ -14,8 +14,8 @@ export function statusOf(q: QuestionRecord, s: Pick<LearningState, "questions" |
 }
 
 export const STATUS_LABEL: Record<QuestionStatus, string> = {
-  "not-attempted": "Not attempted",
-  attempted: "Attempted",
+  "not-attempted": "Not started",
+  attempted: "In progress",
   guided: "With help",
   solved: "Solved without hints",
 };

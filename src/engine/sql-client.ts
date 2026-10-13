@@ -36,6 +36,12 @@ export type ExecuteResponse = {
 };
 
 export const TIMEOUT_MS = 3000;
+/**
+ * Loading sql.js and its wasm on a cold page can take longer than a query is
+ * allowed to run. Booting gets its own, longer limit so a first run is not
+ * reported as a slow query (Query Performance and auto-run tools hit this).
+ */
+export const BOOT_TIMEOUT_MS = 20000;
 
 type WorkerLike = Pick<
   Worker,
@@ -122,11 +128,11 @@ export async function executeSql(
     settle(r);
   };
 
-  const timer = setTimeout(() => {
+  let timer = setTimeout(() => {
     if (pending !== token) return;
     discardWorker();
-    finish({ error: "Query timed out after 3 seconds. Simplify the query or add a LIMIT." });
-  }, TIMEOUT_MS);
+    finish({ error: "The SQL engine timed out while starting. Reload the page and run again." });
+  }, BOOT_TIMEOUT_MS);
   try {
     // Cancellation must settle even when a terminated worker never announces ready.
     const started = await Promise.race([ensureWorker().then(() => true), result.then(() => false)]);
@@ -136,6 +142,14 @@ export async function executeSql(
     return result;
   }
   if (pending !== token) return result; // superseded while booting
+
+  // The query limit starts once the engine is ready.
+  clearTimeout(timer);
+  timer = setTimeout(() => {
+    if (pending !== token) return;
+    discardWorker();
+    finish({ error: "Query timed out after 3 seconds. Simplify the query or add a LIMIT." });
+  }, TIMEOUT_MS);
 
   const w = worker!;
 

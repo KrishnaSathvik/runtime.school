@@ -62,6 +62,8 @@ describe("explaining real SQLite errors", () => {
   it("syntax: SELECT with no columns (the editor scaffold) is explained", async () => {
     const e = await explainRun("SELECT \nFROM customers;");
     expect(e.detail).toMatch(/no columns/);
+    expect(e.next).toMatch(/column_a, column_b/);
+    expect(e.next).not.toMatch(/name, city/);
   });
 
   it("syntax: misspelled keyword", async () => {

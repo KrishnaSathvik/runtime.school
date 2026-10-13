@@ -1,0 +1,100 @@
+import {chromium} from 'playwright';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const base='http://localhost:3040';
+const out='docs/acceptance/structural-ux';
+const pack=JSON.parse(fs.readFileSync('src/content/content-pack.json','utf8'));
+const browser=await chromium.launch();
+const context=await browser.newContext({viewport:{width:1440,height:900},colorScheme:'light'});
+const page=await context.newPage();
+const errors=[];page.on('pageerror',error=>errors.push(error.message));
+const go=async path=>{await page.goto(base+path);await page.locator('main h1').waitFor();await page.getByText('Loading your saved work…',{exact:true}).waitFor({state:'hidden'});};
+const shot=async name=>{await page.screenshot({path:`${out}/${name}.png`});};
+const type=async sql=>{await page.locator('.cm-content').click();await page.keyboard.press('ControlOrMeta+A');await page.keyboard.insertText(sql);};
+const check=async sql=>{await type(sql);await page.getByRole('button',{name:'Check answer',exact:true}).click();await page.locator('.outcome-ok').waitFor();};
+try {
+ await go('/lesson/0?stage=understand');
+ await page.locator('.lesson-prose .results-table').waitFor();
+ assert.match(await page.locator('.lesson-prose').innerText(),/Alice/);
+ assert.equal(await page.locator('details').filter({has:page.getByText('Build it step by step',{exact:true})}).count(),0);
+ await shot('after-lesson');
+ await page.locator('.stage').filter({hasText:'Practice'}).click();
+ const divider=page.getByRole('separator',{name:'Resize task and editor'});
+ const original=await page.locator('.task-pane').boundingBox();
+ await divider.focus();await page.keyboard.press('ArrowRight');
+ assert.ok((await page.locator('.task-pane').boundingBox()).width>original.width+20);
+ const box=await divider.boundingBox();await page.mouse.move(box.x+4,box.y+80);await page.mouse.down();await page.mouse.move(box.x+60,box.y+80);await page.mouse.up();
+ assert.ok((await page.locator('.task-pane').boundingBox()).width>original.width+45);
+ await check(pack.lessons[0].tasks[0].answer);
+ await shot('after-lesson-practice');
+ await page.getByRole('button',{name:'Challenge 2',exact:true}).click();
+ await check(pack.lessons[0].tasks[1].answer);
+ await page.getByRole('button',{name:'Continue to concept check',exact:true}).click();
+ await page.getByRole('button',{name:'Every customer row, with only the name column',exact:true}).click();
+ await page.getByText('Lesson mastered',{exact:true}).waitFor();
+ console.log('PASS lesson: real example, open walkthrough, keyboard/pointer resize, two independent checks, concept check and completion');
+ await go('/practice/shopper-contact-list');
+ await type('SELECT name, email FROM shoppers;');await page.reload();await page.locator('.cm-content').waitFor();
+ assert.match(await page.locator('.cm-content').innerText(),/name, email/);
+ await check('SELECT name, email FROM shoppers;');await shot('after-practice');
+ await page.getByRole('button',{name:'Help / hints',exact:true}).click();
+ await page.getByRole('button',{name:'Show a hint',exact:true}).click();
+ await page.getByRole('button',{name:'Close help',exact:true}).click();
+ await page.getByRole('button',{name:'Check answer',exact:true}).click();
+ await page.getByText('Correct · hints or answer used',{exact:true}).waitFor();
+ await page.getByRole('button',{name:'Help / hints',exact:true}).click();
+ await page.getByRole('button',{name:'Show the solution',exact:true}).click();
+ assert.equal(await page.getByRole('button',{name:'Put it in the editor',exact:true}).count(),0);
+ await page.getByRole('button',{name:'Keep trying',exact:true}).click();
+ await page.getByRole('button',{name:'Close help',exact:true}).click();
+ const scroll=page.getByRole('region',{name:/Result table: id, name, email/});
+ assert.ok(await scroll.evaluate(el=>el.scrollWidth>el.clientWidth));await scroll.evaluate(el=>el.scrollLeft=el.scrollWidth);
+ assert.ok(await scroll.evaluate(el=>el.scrollLeft>0));
+ console.log('PASS practice: reload preserves SQL, grading, deliberate assistance and horizontally scrollable sample columns');
+ await go('/projects/0');
+ assert.ok((await page.getByRole('link',{name:'Start project',exact:true}).boundingBox()).y<350);
+ await page.getByRole('link',{name:'Start project',exact:true}).click();
+ await page.locator('.cm-content').waitFor();assert.equal(await page.locator('#milestone-notes').count(),0);
+ await check(pack.lessons[45].tasks[0].answer);await shot('after-milestone');
+ await page.getByRole('button',{name:'Challenge 2',exact:true}).click();await check(pack.lessons[45].tasks[1].answer);
+ await page.getByRole('button',{name:'Finish',exact:true}).click();
+ assert.equal(await page.locator('#milestone-notes').count(),1);
+ await page.locator('#milestone-notes').fill('Daily active viewers count each viewer once per day; watch time is a separate engagement measure.');
+ await page.getByRole('button',{name:'One active viewer',exact:true}).click();
+ await page.getByText('Milestone completed',{exact:true}).waitFor();
+ await page.reload();await page.getByText('Milestone completed',{exact:true}).waitFor();
+ assert.match(await page.locator('#milestone-notes').inputValue(),/Daily active viewers/);
+ await shot('after-milestone-finish');
+ console.log('PASS project: action above data, opens SQL, no duplicate findings, two checks + concept complete, evidence and finding survive reload');
+ await go('/placement');await page.getByRole('button',{name:'Start the check',exact:true}).click();
+ assert.ok((await page.getByRole('button',{name:'I don’t know this yet — skip',exact:true}).boundingBox()).y<300);
+ await page.getByRole('button',{name:'I don’t know this yet — skip',exact:true}).click();
+ await page.getByText('Placement check · question 2 of 6',{exact:true}).waitFor();
+ console.log('PASS placement: visible skip advances without mastery');
+ await go('/playground');await page.locator('.results-panel table').waitFor();await shot('after-playground');
+ await go('/database-lab');await page.getByRole('button',{name:'Add constraints',exact:true}).click();
+ await page.getByRole('button',{name:'Run query',exact:true}).click();await page.locator('.results-panel table').waitFor();
+ await page.getByRole('button',{name:'Try a duplicate tag',exact:true}).click();await page.getByRole('button',{name:'Run query',exact:true}).click();
+ await page.getByRole('region',{name:'Query results'}).getByText(/The script reached a constraint violation/).waitFor();await shot('after-lab');
+ await go('/query-performance');await page.locator('table').first().waitFor();await shot('after-performance');
+ await go('/sql-syntax');await page.getByRole('region',{name:'SQLite example output'}).locator('table').waitFor();await shot('after-syntax');
+ console.log('PASS tools: real playground output, constraint error explanation, plan comparison and full-width syntax output');
+ // Both themes at desktop, short desktop and mobile, using actual populated results.
+ for(const theme of ['light','dark']) {
+  await go('/settings');await page.getByRole('button',{name:theme==='light'?'Light':'Dark',exact:true}).click();await shot(`after-settings-${theme}`);
+  for(const [size,viewport] of [['desktop',{width:1440,height:900}],['short',{width:1440,height:560}],['mobile',{width:390,height:844}]]) {
+   await page.setViewportSize(viewport);await go('/practice/shopper-contact-list');await check('SELECT name, email FROM shoppers;');
+   if(size==='mobile') await page.locator('.editor-actions').scrollIntoViewIfNeeded();
+   await shot(`after-practice-${theme}-${size}`);
+   await page.getByRole('button',{name:'Help / hints',exact:true}).click();
+   const helpBounds=await page.locator('.help-panel').boundingBox();const editorBounds=await page.locator('.editor-pane').boundingBox();
+   assert.ok(helpBounds.y>=Math.max(0,editorBounds.y),`${size}: Help stays inside the visible editor`);
+   await page.getByRole('button',{name:'Close help',exact:true}).click();
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`${theme}/${size} document overflow`);
+   if(size!=='mobile') {const actions=await page.locator('.editor-actions').boundingBox();assert.ok(actions.y+actions.height<=viewport.height+1,`${size}: Run/Check visible`);const results=await page.locator('.results-panel').boundingBox();assert.ok(results.y<viewport.height-80,`${size}: results visible`);}
+  }
+ }
+ await page.setViewportSize({width:390,height:844});
+ for(const path of ['/learn','/lesson/0?stage=understand','/projects/0','/sql-syntax','/settings']) {await go(path);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`mobile overflow: ${path}`);await shot('after-mobile-'+path.split('?')[0].replaceAll('/','-'));}
+ assert.deepEqual(errors,[]);console.log('PASS 1440 desktop, 1440×560 short desktop and 390px mobile in light/dark; no page errors');
+} catch(error) {await shot('verification-failure'); throw error;} finally {await browser.close();}

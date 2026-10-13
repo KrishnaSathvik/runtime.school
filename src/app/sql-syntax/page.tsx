@@ -2,12 +2,15 @@
 import Link from "next/link";
 import {Suspense,useEffect,useState} from "react";
 import {useSearchParams} from "next/navigation";
-import {syntaxNotes} from "@/content/syntax-notes";
+import {REFERENCE_ONLY_CONCEPTS,syntaxNotes} from "@/content/syntax-notes";
 import {dialectGuide,seed} from "@/content";
-import {PageHeader} from "@/components/layout/PageHeader";
+import { BRAND_NAME } from "@/platform/brand";
+import { PageHeader } from "@/components/layout/PageHeader";
 import {executeSql,type ExecuteResponse} from "@/engine/sql-client";
 import {ResultsTable} from "@/components/editor/ResultsTable";
 const conceptId=(title:string)=>title.toLowerCase().replace(/[^a-z0-9]+/g,"-");
+/** Navigation names; the concept id and detail title stay as written in the guide. */
+const NAV_LABEL:Record<string,string>={"Stored procedure":"Stored procedures"};
 const DIALECTS=[["SQLite","runs here",1],["PostgreSQL","reference",3],["SQL Server / T-SQL","reference",2]] as const;
 
 /** Runs the SQLite version for real, so the comparison shows an actual result, not only code. */
@@ -20,21 +23,20 @@ function SqliteOutput({sql,writes}:{sql:string;writes:boolean}){
 }
 
 function SyntaxBrowser(){
-  const [search,setSearch]=useState("");
   const params=useSearchParams();
-  const filtered=dialectGuide.filter(row=>row.join(" ").toLowerCase().includes(search.trim().toLowerCase()));
-  const selected=filtered.find(row=>conceptId(row[0])===params.get("concept"))??filtered[0];
+  const selected=dialectGuide.find(row=>conceptId(row[0])===params.get("concept"))??dialectGuide[0];
+  const referenceOnly=selected?REFERENCE_ONLY_CONCEPTS.has(selected[0]):false;
   const note=selected?syntaxNotes[selected[0]]:undefined;
   return <div className="canvas comparison-page">
-    <PageHeader title="Compare SQL syntax" description="See one idea written for SQLite, PostgreSQL and SQL Server. Everything you run in SQL Studio uses SQLite; the other two are for reference."/>
+    <PageHeader title="Compare SQL syntax" description={`One concept, three SQL dialects. Everything you run in ${BRAND_NAME} uses SQLite; PostgreSQL and SQL Server are shown for reference.`}/>
     <div className="syntax-layout">
       <nav className="syntax-rail" aria-label="SQL concepts">
-        <label className="filter-field">Search {dialectGuide.length} concepts<input className="filter-select" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Dates, NULL, temp tables…"/></label>
-        <ul className="mt-3">{filtered.map(row=>{const id=conceptId(row[0]);const active=selected?.[0]===row[0];return <li key={id}><Link href={`/sql-syntax?concept=${id}`} scroll={false} aria-current={active?"page":undefined} className={active?"active":""}>{row[0]}</Link></li>;})}</ul>
-        {filtered.length===0&&<p className="metadata mt-3" role="status">No concepts match. <button className="btn mt-2" onClick={()=>setSearch("")}>Clear search</button></p>}
+        <p className="eyebrow">{dialectGuide.length} concepts</p>
+        <ul className="mt-3">{dialectGuide.map(row=>{const id=conceptId(row[0]);const active=selected?.[0]===row[0];return <li key={id}><Link href={`/sql-syntax?concept=${id}`} scroll={false} aria-current={active?"page":undefined} className={active?"active":""}>{NAV_LABEL[row[0]]??row[0]}</Link></li>;})}</ul>
       </nav>
       {selected&&<section className="min-w-0" aria-labelledby="concept-title">
         <h2 id="concept-title">{selected[0]}</h2>
+        {referenceOnly&&<p className="mt-2"><span className="reference-badge">Reference</span></p>}
         <p className="mt-2 text-[var(--text-secondary)]">{note?.purpose}</p>
         <div className="key-difference mt-5" aria-label="Key difference">
           <h3>What is different</h3>
@@ -43,9 +45,10 @@ function SyntaxBrowser(){
         <div className="dialect-panels mt-6">{DIALECTS.map(([label,tag,index])=><section key={label} className="dialect-panel">
           <h3>{label} <span className="metadata font-normal">· {tag}</span></h3>
           <pre tabIndex={0} className="sql-mono mt-3">{note?.examples?.[index-1]??selected[index]}</pre>
-          {index===1&&(note?.sqlite?<SqliteOutput sql={note.examples?.[0]??selected[1]} writes={note.sqlite==="lab"}/>:<p className="metadata mt-3">SQLite has no direct equivalent, so there is nothing to run here.</p>)}
-          {index===1&&note?.sqlite&&<Link className="metadata mt-3 inline-block text-[var(--accent)]" href={note.sqlite==="lab"?"/database-lab":"/playground"}>Try it in {note.sqlite==="lab"?"Database Lab":"SQL Playground"} →</Link>}
+
         </section>)}</div>
+        {note?.sqlite ? <section className="mt-6" aria-label="SQLite example output"><h3 className="text-sm font-semibold">Actual SQLite output</h3><SqliteOutput sql={note.examples?.[0] ?? selected[1]} writes={note.sqlite === "lab"} /><Link className="btn mt-3" href={note.sqlite === "lab" ? "/database-lab" : "/playground"}>Try it in {note.sqlite === "lab" ? "Database Lab" : "SQL Playground"} →</Link></section> : <p className="metadata mt-4">SQLite has no direct equivalent, so there is nothing to run here.</p>}
+
       </section>}
     </div>
     <p className="metadata mt-8">Database capabilities differ. These examples do not enable other database engines here. <Link href="/settings#about" className="text-[var(--accent)]">Sources and credits</Link></p>

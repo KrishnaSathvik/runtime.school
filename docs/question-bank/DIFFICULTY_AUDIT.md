@@ -39,16 +39,16 @@ The rubric is a first pass. A reviewer then checks each question against the qua
 | Difficulty | Rubric | After review |
 | --- | --- | --- |
 | Warm-up | 35 | 31 |
-| Easy | 54 | 58 |
+| Easy | 56 | 58 |
 | Medium | 50 | 58 |
-| Hard | 37 | 29 |
+| Hard | 35 | 29 |
 
 ### Reviewer overrides (12)
 
 | Challenge | Lesson | Final | Why |
 | --- | --- | --- | --- |
-| lc-35-0 | CROSS JOIN & a complete date grid | Medium | Recursive date grid + CROSS JOIN is a mechanical pattern; scored high only because of the recursive CTE. |
-| lc-35-1 | CROSS JOIN & a complete date grid | Medium | Same date-grid pattern with one extra filter. |
+| lc-35-0 | CROSS JOIN & a complete date grid | Medium | Fixed VALUES date list plus CROSS JOIN; mechanical once the date source is given. |
+| lc-35-1 | CROSS JOIN & a complete date grid | Medium | Same date-grid pattern with one signup filter. |
 | lc-53-0 | Top N per group & ties | Medium | Aggregate-then-rank top-N with an explicit tie-breaker; a standard intermediate pattern. |
 | lc-53-1 | Top N per group & ties | Medium | Top-N with ties via DENSE_RANK; the prompt states the tie rule. |
 | lc-32-1 | Ratios, ROUND & NULLIF | Medium | LEFT JOIN + NULLIF ratio; several features but one clear idea. |
