@@ -54,7 +54,12 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} />
-        <script id="google-analytics" src="/google-tag.js" />
+        <script id="google-analytics">
+          {`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '${GA_MEASUREMENT_ID}');`}
+        </script>
         <meta name="theme-color" content="#ffffff" />
         <link
           rel="preload"
