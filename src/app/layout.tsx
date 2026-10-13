@@ -6,7 +6,7 @@ import { BRAND_DESCRIPTION, BRAND_NAME, BRAND_TAGLINE, SITE_URL } from "@/platfo
 import "./globals.css";
 import "./runtime.css";
 
-const GA_MEASUREMENT_ID = "G-TEZ5LZ1PPY";
+const GA_MEASUREMENT_ID = "G-TEZSLZ1PPY";
 
 export const metadata: Metadata = {
   title: {
