@@ -6,6 +6,8 @@ import { BRAND_DESCRIPTION, BRAND_NAME, BRAND_TAGLINE, SITE_URL } from "@/platfo
 import "./globals.css";
 import "./runtime.css";
 
+const GA_MEASUREMENT_ID = "G-TEZ5LZ1PPY";
+
 export const metadata: Metadata = {
   title: {
     default: `${BRAND_NAME} — ${BRAND_TAGLINE}`,
@@ -51,6 +53,18 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA_MEASUREMENT_ID}');
+          `}
+        </Script>
         <meta name="theme-color" content="#ffffff" />
         <link
           rel="preload"
