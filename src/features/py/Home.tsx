@@ -22,7 +22,7 @@ export function PythonHome() {
         <p className="py-links"><Link href="/python/practice">Practice independently</Link><Link href="/python/projects">Build a project</Link><Link href="/python/playground">Open Python playground</Link></p>
         <section className="py-learning-loop" aria-labelledby="learning-loop-title">
           <h2 id="learning-loop-title">Make time to use what you learn</h2>
-          <ol><li><b>Learn one idea.</b> Read a lesson and predict an example before running it.</li><li><b>Try it yourself.</b> Solve a practice question, then inspect what went wrong.</li><li><b>Build something useful.</b> Choose a project when its preparation lessons feel familiar.</li></ol>
+          <ol><li><b>Learn one idea.</b> Read a lesson and predict an example before running it.</li><li><b>Try it yourself.</b> Solve a practice question, then inspect what went wrong.</li><li><b>Build something useful.</b> Apply the skills you have practiced to a project.</li></ol>
           <p>A short practice session counts. You do not need to finish a whole module in one sitting.</p>
         </section>
         {pythonModules.map((m) => (

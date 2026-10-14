@@ -217,7 +217,7 @@ function ChallengePanel({ lesson, challenge, index, onNext }: { lesson: PyLesson
 
   return (
     <div className="py-challenge">
-      <section className="rx-question" aria-labelledby={`${cid}-title`}>
+      <section className="rx-question" tabIndex={0} aria-labelledby={`${cid}-title`}>
         <div className="rx-question-head">
           <p className="rx-label">challenge {index + 1}</p>
           {record?.solved ? (

@@ -6,7 +6,6 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, List, X } from 'lucide-react';
 import { pythonProjects, journeyHref, type PyJourney } from '@/content/python/journeys';
 import { projectGuides } from '@/content/python/journeys/catalog';
-import { getPythonLesson, pythonLessonHref } from '@/content/python';
 import { usePyProgress, usePyProgressReady, type PyLessonRecord } from '@/lib/python-progress';
 import { Shell } from '@/features/rt/Shell';
 import { Exercise, FileData } from './Study';
@@ -63,7 +62,6 @@ function ProjectBrief({project,rec}:{project:PyJourney;rec:PyLessonRecord|undefi
     <dl className="rx-dl"><dt>you deliver</dt><dd>{guide.deliverables.join(', ')}. Export a report with your checked Python and written findings.</dd><dt>skills</dt><dd>{guide.skills.join(' · ')}</dd><dt>scope</dt><dd>{project.stages.length} milestones · {Object.keys(project.files).length} input files · {guide.level}</dd></dl>
     <div className="py-project-actions"><Link className="rx-btn amber" href={href(project,next)}>{next==='export'?'Review the completed project':rec?'Continue with the next milestone':'Start the first milestone'}<ArrowRight size={15} /></Link><Link className="rx-btn ghost" href={href(project,'export')}>Open the report<ArrowRight size={15} /></Link></div>
     <p className="rx-label">milestones</p><ol className="rx-ms-list">{project.stages.map((s,i)=><li key={s.id}><Link href={href(project,s.id)}><span className={`mono g ${rec?.challenges[s.id]?.passes?'ok':''}`}>{rec?.challenges[s.id]?.passes?'✓':pad(i+1)}</span><span className="t">{s.title}<span className="d">{s.prompt}</span></span></Link></li>)}</ol>
-    <details className="py-preparation"><summary>Preparation lessons</summary><ul>{guide.preparation.map(slug=><li key={slug}><Link className="rx-link" href={pythonLessonHref(slug)}>{getPythonLesson(slug)!.title}</Link></li>)}</ul></details>
   </article><section className="rx-work rx-lesson-work" aria-label="Project data"><p className="rx-prompt-line" style={{marginTop:0}}><b>data</b> {Object.keys(project.files).length} input files</p><p className="rx-prose" style={{margin:'0 0 10px',fontSize:15}}>Use these files throughout the project. Each milestone builds on your previous program.</p><FileData files={project.files} /></section></div></div>;
 }
 

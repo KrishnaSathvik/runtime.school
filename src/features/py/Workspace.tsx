@@ -43,7 +43,7 @@ export function PythonWorkspace({
         direction="columns"
         storageKey="runtime-python-split-task"
         label="Resize task and code"
-        initial={0.38}
+        initial={0.5}
         min={0.24}
         max={0.6}
         className="py-ws-split"

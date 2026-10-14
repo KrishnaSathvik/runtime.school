@@ -40,3 +40,13 @@ The Python execution gate, content/grading definitions, stable refs, SQL source 
 - Screenshots and browser results: `docs/python/screens/sql-parity/`.
 
 Local changes only; no push or deployment.
+
+## Editor balance follow-up
+
+The outer columns were already equal, but the task card and editor minimum height pushed Learn's Run/Check row below the viewport. Python learning workspaces now fit within the visible right column. Long lesson task cards scroll independently, leaving room for the editor and its controls.
+
+As clarified by the user, the internal 50/50 requirement means code above and output below. When output is open, each receives an equal grid row; hiding/closing results gives the space back to code. Output remains keyboard-scrollable. Desktop pages retain equal left/right columns; narrow mobile pages stack naturally.
+
+Removed Preparation lessons from project briefs and the legacy project renderer, together with obsolete preparation copy. The playground and standalone workspace also default to equal columns/panes. The resizable split now subtracts its divider before calculating shares, so a nominal 50% is actually equal; user-adjusted saved ratios remain adjustable/resettable.
+
+Validation: `tests/e2e/python-editor-balance.mjs` measures equal page columns, equal code/output height, visible controls, and accessibility for Learn, Practice, and Projects at 1440px and 1024px widths. Results and screenshots are in `screens/editor-balance/`. The real-Python design/workflow suite also passed again, including grading, saved findings, report export, and mobile layouts.

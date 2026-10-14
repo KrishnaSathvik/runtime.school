@@ -54,7 +54,7 @@ export function Split({
     } catch {}
   };
   const cols = direction === "columns";
-  const style = { "--py-share": `${(share * 100).toFixed(2)}%` } as CSSProperties;
+  const style = { "--py-share": `calc(${(share * 100).toFixed(2)}% - ${(share * 9).toFixed(2)}px)` } as CSSProperties;
   return (
     <div ref={ref} className={`py-split ${cols ? "cols" : "rows"} ${className}`} style={style}>
       <div className="py-split-a">{first}</div>

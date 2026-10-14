@@ -27,8 +27,7 @@ for(const mobile of [false,true]) for(const colorScheme of ['light','dark']) {
  assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
  await p.evaluate(()=>scrollTo(0,0)); await p.screenshot({path:`${DIR}/${name}-projects.png`,fullPage:true});
  await p.getByRole('link',{name:'Retail Order Engine',exact:true}).click();
- await p.getByText('Preparation lessons',{exact:true}).click();
- assert.equal(await p.locator('.py-preparation li').count(),4);
+ assert.equal(await p.getByText('Preparation lessons',{exact:true}).count(),0);
  assert.equal(await p.locator('.py-task-cell').count(),0);
  assert.equal(await p.locator('.py-file-data table').count(),2);
  assert.deepEqual((await new AxeBuilder({page:p}).analyze()).violations.map(v=>v.id),[]);

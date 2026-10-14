@@ -3,8 +3,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { pythonJourneys, pythonProjects, journeyHref } from '@/content/python/journeys';
 import { projectGuides, projectLevels, projectSkills } from '@/content/python/journeys/catalog';
-import { getPythonLesson, pythonLessonHref } from '@/content/python';
-import { isPyLessonMastered, usePyProgress, usePyProgressReady } from '@/lib/python-progress';
+import { usePyProgress, usePyProgressReady } from '@/lib/python-progress';
 import { Shell } from '@/features/rt/Shell';
 import { BrowserBar } from './BrowserBar';
 import { Exercise } from './Study';
@@ -23,7 +22,7 @@ export function ProjectIndex() {
   });
   return <Shell subject="python" section="projects" path={[{label:'python',href:'/python'},{label:'projects'}]}><div className="rx-page py-catalog">
     <h1 className="rx-title">Python projects</h1><p className="rx-lead">Pick one useful program. Build it a milestone at a time, test your decisions, and keep the code and results.</p>
-    <p>Every project here runs in your browser with supplied data. Difficulty describes the programming involved; preparation links show what to learn first. Session estimates include time to try, debug, and check your work.</p>
+    <p>Every project here runs in your browser with supplied data. Difficulty describes the programming involved. Session estimates include time to try, debug, and check your work.</p>
     <div className="py-filters">
       <label>Search projects<input type="search" value={query} onChange={e => setQuery(e.target.value)} /></label>
       <div className="py-filter-control"><label htmlFor="project-level">Difficulty</label><select id="project-level" value={level} onChange={e => setLevel(e.target.value)}><option value="">All difficulties</option>{projectLevels.map(l => <option key={l} value={l}>{l[0].toUpperCase()+l.slice(1)}</option>)}</select></div>
@@ -53,24 +52,6 @@ export function ProjectIndex() {
   </div></Shell>;
 }
 
-function ProjectPreparation({ slug }: { slug: string }) {
-  const guide = projectGuides[slug];
-  const ready = usePyProgressReady();
-  const lessons = usePyProgress(s => s.lessons);
-  if (!guide) return null;
-  return <div className="py-project-preparation">
-    <p><b>{guide.level[0].toUpperCase()+guide.level.slice(1)}</b> · {guide.sessions} (estimate). You can stop after a milestone; your draft is saved.</p>
-    <h2>Before you start</h2><p>Review these lessons if the skills are new. You can still try the project at any time.</p>
-    <ul>{guide.preparation.map(slug => {
-      const l = getPythonLesson(slug)!;
-      const mastered = ready && isPyLessonMastered(lessons[l.ref], l.challenges.map(c => c.id));
-      return <li key={slug}><Link href={pythonLessonHref(slug)}>{l.title}</Link><span>{!ready ? ' · Loading progress…' : mastered ? ' · Mastered' : ' · Available to review'}</span></li>;
-    })}</ul>
-    <h2>What you will deliver</h2><p>Your Python source, {guide.deliverables.join(', ')}, and a summary of the code that passed the checks.</p>
-    <details><summary>Explain your work</summary><p>{guide.reflection}</p><p>This reflection is for your own project write-up; it is not automatically graded.</p></details>
-  </div>;
-}
-
 export function Journey({ slug, initialStage }: { slug: string; initialStage?: string }) {
   const j = pythonJourneys.find(j => j.slug === slug)!;
   const ready = usePyProgressReady();
@@ -90,13 +71,12 @@ export function Journey({ slug, initialStage }: { slug: string; initialStage?: s
   };
   const inheritedHelp = j.stages.slice(0,index).some(s => !!rec?.attempts[s.id]?.guided);
   return <Shell subject="python" section={j.kind === 'case' ? 'practice' : 'projects'} path={[{label:'python',href:'/python'},{label:j.kind === 'case' ? 'practice' : 'projects',href:j.kind === 'case' ? '/python/practice' : '/python/projects'},{label:j.title}]}>
-    {j.kind === 'project' && <BrowserBar label="All projects" current={journeyHref(j)} browseHref="/python/projects?browse=1" browseLabel="Project filters and preparation" items={pythonProjects.map(p => ({href:journeyHref(p), label:p.title}))} />}
+    {j.kind === 'project' && <BrowserBar label="All projects" current={journeyHref(j)} browseHref="/python/projects?browse=1" browseLabel="Project filters" items={pythonProjects.map(p => ({href:journeyHref(p), label:p.title}))} />}
     <section className="rx-page py-journey-intro">
       {stage && j.kind === 'project' && <button className="rx-btn ghost" onClick={() => setSelected(null)}>Project brief</button>}
       {(!stage || j.kind === 'case') && <>
       <h1 className="rx-title">{j.title}</h1><p className="rx-lead">{j.overview}</p>
       <p>{j.packages.length ? 'Uses pandas in your browser.' : 'Uses the Python standard library.'} Run code to inspect outputs and download generated files. Check answer records progress. Earlier milestone checks remain active.</p>
-      {j.kind === 'project' && <ProjectPreparation slug={j.slug} />}
       <details><summary>Explore the source data</summary>{Object.entries(j.files).map(([name,text]) => <div key={name}><h2>{name}</h2><pre>{text}</pre><Download name={name} text={text} /></div>)}</details>
       </>}
       <ol className="py-stage-list" aria-label="Milestones">{j.stages.map((s,n) => <li key={s.id}><button className="rx-btn" disabled={!ready || !available(n)} aria-current={stage?.id === s.id ? 'step' : undefined} onClick={() => open(n)}>{n+1}. {s.title}</button><span>{rec?.challenges[s.id]?.solved ? 'Independent' : rec?.challenges[s.id]?.assisted ? 'With help' : !available(n) ? 'Complete earlier stages first' : 'Ready'}</span></li>)}</ol>
