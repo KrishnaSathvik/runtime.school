@@ -146,7 +146,7 @@ describe("gradePython: variables and output", () => {
   it("wrong type is distinguished from wrong value", () => {
     const r = gradePython(totalTask, ok({ vars: { price: v(actualStr("12")), total: v(py.int(36)) } }, "48\n"));
     expect(r.checks[0]).toMatchObject({ category: "wrong-type", actual: "'12'", expected: "12" });
-    expect(r.checks[0].detail).toMatch(/is a str/);
+    expect(r.checks[0].detail).toBe("price is a str ('12'), but this task needs an int (12).");
     expect(r.checks[1]).toMatchObject({ category: "wrong-value", actual: "36" });
   });
 
@@ -282,5 +282,19 @@ describe("gradePython: nothing passes unless the program ran and every check pas
   it("each report depends only on its own run: correct then wrong", () => {
     expect(gradePython(totalTask, allGood).ok).toBe(true);
     expect(gradePython(totalTask, ok({ vars: { price: v(py.int(12)), total: v(py.int(47)) } }, "47\n")).ok).toBe(false);
+  });
+});
+
+describe("gradePython: author tips", () => {
+  it("are attached only to failed checks and never change the verdict", () => {
+    const task: PyTask = { checks: [{ kind: "variable", name: "total", expected: py.int(75), tip: "Recalculate total after changing quantity." }] };
+    const bad = gradePython(task, ok({ vars: { total: v(py.int(30)) } }));
+    expect(bad.ok).toBe(false);
+    expect(bad.checks[0].tip).toBe("Recalculate total after changing quantity.");
+    const good = gradePython(task, ok({ vars: { total: v(py.int(75)) } }));
+    expect(good.ok).toBe(true);
+    expect(good.checks[0].tip).toBeUndefined();
+    const notRun = gradePython(task, { stdout: "", stderr: "", output: [], status: "timeout", limitMs: 5000 });
+    expect(notRun.checks[0].tip).toBeUndefined();
   });
 });

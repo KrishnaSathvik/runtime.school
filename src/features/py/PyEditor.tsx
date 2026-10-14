@@ -63,6 +63,7 @@ export const PyEditor = forwardRef<PyEditorHandle, {
     () => [
       python(),
       indentUnit.of("    "),
+      EditorView.lineWrapping,
       editorTheme,
       errorLineField,
       EditorView.contentAttributes.of({ "aria-label": label, "aria-multiline": "true", spellcheck: "false", autocorrect: "off", autocapitalize: "off" }),

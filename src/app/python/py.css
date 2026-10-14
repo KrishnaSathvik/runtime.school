@@ -123,3 +123,76 @@
   .py-out { height: auto; margin-top: 12px; }
   .py-panel { overflow: visible; min-height: 120px; }
 }
+
+/* ── Lessons ─────────────────────────────────────────────────────────── */
+.py-lesson .rx-brief code, .py-prose code, .py-ch-prompt code, .py-looks-list code, .py-fix code, .rx-hints code, .rx-feedback code, .rx-quiz code {
+  font-family: var(--rx-mono); font-size: 0.9em; color: var(--rx-amber-ink);
+}
+.py-lesson .rx-brief h2.rx-label { font-size: 12px; }
+.py-prose { margin: 10px 0; }
+.py-static-code { margin: 10px 0 14px; max-width: 44rem; padding: 12px 14px; border: 1px solid var(--rx-line); border-radius: 8px; background: var(--ide-bg); font-family: var(--rx-mono); font-size: 14px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--rx-ink); }
+.py-run-cell .rx-cell-in pre { color: var(--rx-ink); }
+.py-cell-out { padding: 10px 14px 12px; border-top: 1px dashed var(--rx-line-strong); background: var(--rx-surface); }
+.py-cell-out .py-meta:first-child, .py-cell-out .py-err:first-child { margin-top: 0; }
+.py-line-text { margin-left: 4px; font-family: var(--rx-mono); font-size: 12px; color: var(--rx-dim); }
+.py-mistake { max-width: 46rem; margin: 16px 0 26px; }
+.py-mistake-title { margin: 0; font-weight: 650; font-size: 15.5px; }
+.py-fix { margin: 4px 0 0; font-size: 14.5px; color: var(--rx-dim); }
+.py-fix::before { content: "Fix › "; font-family: var(--rx-mono); font-size: 12.5px; color: var(--rx-ok); }
+
+/* The work column: one challenge card, the help row, then the code pane. */
+.py-ch-title { margin: 4px 0 0; font-size: 1.2rem; font-weight: 650; letter-spacing: -0.015em; }
+.py-ch-prompt { margin: 6px 0 0; font-size: 15.5px; line-height: 1.6; }
+.py-looks { margin: 12px 0 4px; font-family: var(--rx-mono); font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--rx-dim); }
+.py-looks-list { font-size: 14.5px; }
+.py-help { display: flex; flex-wrap: wrap; gap: 4px; margin: 10px -8px -6px; }
+.py-lesson-code .py-work-split { height: clamp(440px, calc(100dvh - 300px), 720px); }
+.py-lesson-work .rx-cell { margin: 12px 0; }
+.py-banner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 14px; margin: 0 0 10px; padding: 10px 12px; border: 1px solid var(--rx-line-strong); border-left: 3px solid var(--rx-ok); border-radius: 8px; background: color-mix(in srgb, var(--rx-ok) 6%, var(--rx-surface)); font-size: 14px; }
+.py-banner p { margin: 0; flex: 1 1 16rem; }
+.py-banner b { color: var(--rx-ok); }
+.py-banner.assisted { border-left-color: var(--rx-amber); background: color-mix(in srgb, var(--rx-amber) 8%, var(--rx-surface)); }
+.py-banner.assisted b { color: var(--rx-amber-ink); }
+.py-tip { color: var(--rx-ink) !important; }
+.py-tip b { font-weight: 650; }
+.py-link { color: var(--rx-amber-ink); text-decoration: underline; text-underline-offset: 2px; font-size: inherit; }
+.py-quiz-q .rx-question-text { margin: 6px 0 0; font-size: 15.5px; }
+.py-quiz-q .py-static-code { margin: 10px 0 4px; }
+.py-quiz-q .rx-quiz { margin-bottom: 4px; }
+.py-quiz .py-banner { margin-top: 6px; }
+.rx-tabs button[aria-disabled="true"] { color: var(--rx-dim); cursor: not-allowed; }
+.py-complete { padding: 18px 18px 20px; border: 1px solid var(--rx-line-strong); border-left: 3px solid var(--rx-ok); border-radius: 10px; background: var(--rx-surface); }
+.py-complete-title { margin: 0; font-size: 1.45rem; font-weight: 650; letter-spacing: -0.02em; color: var(--rx-ok); }
+.py-complete-sub { margin: 8px 0 0; font-size: 15.5px; }
+.py-complete-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+
+/* ── Python home ─────────────────────────────────────────────────────── */
+.py-home { max-width: 980px; }
+.py-home .rx-lead { margin-bottom: 8px; }
+.py-module { margin-top: 34px; }
+.py-module-title { margin: 0; font-size: 1.45rem; font-weight: 650; letter-spacing: -0.02em; }
+.py-module-sum { margin: 4px 0 14px; color: var(--rx-dim); }
+.py-lessons { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rx-line); }
+.py-lesson-row { display: grid; grid-template-columns: 2.4rem minmax(0, 1fr) auto auto; align-items: center; gap: 6px 18px; padding: 14px 6px; border-bottom: 1px solid var(--rx-line); }
+.py-lesson-row:hover { background: color-mix(in srgb, var(--rx-amber-soft) 45%, transparent); }
+.py-lesson-row .n { color: var(--rx-amber-ink); }
+.py-lesson-row .name { display: block; font-weight: 650; font-size: 16px; }
+.py-lesson-row .sum { display: block; font-size: 14px; color: var(--rx-dim); }
+.py-lesson-row .s { font-size: 12.5px; color: var(--rx-dim); white-space: nowrap; }
+.py-lesson-row .s.ok { color: var(--rx-ok); }
+.py-lesson-row .go { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 14px; white-space: nowrap; }
+.py-home .rx-small { color: var(--rx-dim); }
+.py-lesson .rx-small, .py-lesson .rx-cap, .py-quiz .rx-small { color: var(--rx-dim); }
+
+@media (max-width: 700px) {
+  .py-lesson-code .py-work-split { height: auto; }
+  .py-lesson-row { grid-template-columns: 2rem minmax(0, 1fr); }
+  .py-lesson-row .s, .py-lesson-row .go { grid-column: 2; }
+}
+.py-hint-esc { display: inline-flex; align-items: center; gap: 4px; }
+.py-lesson-code .py-hint-esc { display: none; }
+/* Keeps the visually hidden "(done)"/"(locked)" text inside the scrollable tab row. */
+.py-lesson-work .rx-tabs button { position: relative; }
+.py-home .rx-prompt-line, .py-lesson .rx-prompt-line, .py-lesson .rx-task-bar .rx-small { color: var(--rx-dim); }
+.py-run-cell .rx-cell-head .rx-btn { color: var(--rx-ink); }
+.py-lesson-bar .rx-small { color: var(--rx-dim); }

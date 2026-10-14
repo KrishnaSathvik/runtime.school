@@ -14,13 +14,14 @@ export type PyCheck =
       kind: "output";
       id?: string;
       label?: string;
+      tip?: string;
       /** The full expected stdout, including the newline print() adds. */
       expected: string;
       /** "exact" (default), or "trailing": ignore trailing spaces on each line and trailing blank lines. */
       whitespace?: "exact" | "trailing";
     }
-  | { kind: "variable"; id?: string; label?: string; name: string; expected: PyValue; compare?: ComparePolicy }
-  | { kind: "function"; id?: string; label?: string; name: string; compare?: ComparePolicy; cases: PyFunctionCase[] };
+  | { kind: "variable"; id?: string; label?: string; tip?: string; name: string; expected: PyValue; compare?: ComparePolicy }
+  | { kind: "function"; id?: string; label?: string; tip?: string; name: string; compare?: ComparePolicy; cases: PyFunctionCase[] };
 
 export type PyFunctionCase = {
   args: PyValue[];
@@ -75,6 +76,8 @@ export type PyCheckOutcome = {
   actual?: string;
   line?: number | null;
   cases?: PyCaseOutcome[];
+  /** The task author's teaching tip, present only when this check failed. Presentation only. */
+  tip?: string;
 };
 
 export type PyGradeOutcome =
@@ -137,6 +140,9 @@ export async function checkPython(task: PyTask, code: string): Promise<PyGradeRe
 const checkId = (c: PyCheck, i: number) => c.id ?? `${c.kind}-${i + 1}`;
 const callText = (name: string, k: PyFunctionCase) =>
   `${name}(${[...k.args.map(formatPy), ...Object.entries(k.kwargs ?? {}).map(([n, v]) => `${n}=${formatPy(v)}`)].join(", ")})`;
+
+/** "an int", "a str": the article that reads correctly before a Python type name. */
+const aType = (v: PyValue) => `${/^[aeiou]/i.test(pyTypeName(v)) ? "an" : "a"} ${pyTypeName(v)}`;
 
 function defaultLabel(c: PyCheck): string {
   if (c.label) return c.label;
@@ -208,7 +214,7 @@ function judgeVariable(c: Extract<PyCheck, { kind: "variable" }>, probe: PyProbe
       category: "wrong-type",
       expected,
       actual: formatPy(actual),
-      detail: `${c.name} is a ${pyTypeName(actual)} (${formatPy(actual)}), but this task needs a ${pyTypeName(c.expected)} (${expected}).`,
+      detail: `${c.name} is ${aType(actual)} (${formatPy(actual)}), but this task needs ${aType(c.expected)} (${expected}).`,
     };
   }
   return { status: "fail", category: "wrong-value", expected, actual: formatPy(actual), detail: `${c.name} is ${formatPy(actual)}, but it should be ${expected}.` };
@@ -249,8 +255,8 @@ function judgeCase(name: string, k: PyFunctionCase, index: number, got: PyCallCa
       ...shown,
       category: "wrong-type",
       detail: hidden
-        ? `For another input, the function returned a ${pyTypeName(actual)} instead of a ${pyTypeName(k.expected)}.`
-        : `${what} returned a ${pyTypeName(actual)} (${formatPy(actual)}), but should return a ${pyTypeName(k.expected)} (${formatPy(k.expected)}).`,
+        ? `For another input, the function returned ${aType(actual)} instead of ${aType(k.expected)}.`
+        : `${what} returned ${aType(actual)} (${formatPy(actual)}), but should return ${aType(k.expected)} (${formatPy(k.expected)}).`,
     };
   }
   return {
@@ -274,7 +280,7 @@ function judgeFunction(c: Extract<PyCheck, { kind: "function" }>, probe: PyProbe
     };
   }
   if ("notCallable" in found) {
-    return { status: "fail", category: "not-callable", detail: `${c.name} is a ${found.type}, not a function. Define it with def ${c.name}(…):` };
+    return { status: "fail", category: "not-callable", detail: `${c.name} is ${/^[aeiou]/i.test(found.type) ? "an" : "a"} ${found.type}, not a function. Define it with def ${c.name}(…):` };
   }
   const cases = c.cases.map((k, i) => judgeCase(c.name, k, i, found.cases[i], c.compare));
   if (cases.length > 0 && cases.every((k) => k.ok)) return { status: "pass", cases };
@@ -372,9 +378,8 @@ export function gradePython(task: PyTask, r: PyRunResult): PyGradeReport {
   const probe: PyProbeResult = r.probe ?? { names: [], vars: {}, calls: {} };
   const checks = task.checks.map((c, i): PyCheckOutcome => {
     const base = { id: checkId(c, i), kind: c.kind, label: defaultLabel(c) };
-    if (c.kind === "output") return { ...base, ...judgeOutput(c, r.stdout) };
-    if (c.kind === "variable") return { ...base, ...judgeVariable(c, probe) };
-    return { ...base, ...judgeFunction(c, probe) };
+    const judged = c.kind === "output" ? judgeOutput(c, r.stdout) : c.kind === "variable" ? judgeVariable(c, probe) : judgeFunction(c, probe);
+    return { ...base, ...judged, ...(judged.status === "fail" && c.tip ? { tip: c.tip } : {}) };
   });
   const passed = checks.filter((c) => c.status === "pass").length;
   const ok = total > 0 && passed === total;
