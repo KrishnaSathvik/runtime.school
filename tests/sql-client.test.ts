@@ -45,6 +45,12 @@ class FakeWorker {
 let client: typeof import("@/engine/sql-client");
 const flush = () => new Promise((r) => setTimeout(r, 0));
 
+/** Wall-clock for all boot attempts + backoffs (matches sql-client outer ceiling). */
+function bootBudgetMs() {
+  // backoffs are 400*1 + 400*2 for three attempts
+  return client.BOOT_TIMEOUT_MS * client.BOOT_ATTEMPTS + 400 * (1 + 2) + 50;
+}
+
 beforeAll(async () => {
   (globalThis as unknown as { window: unknown }).window = globalThis;
   client = await import("@/engine/sql-client");
@@ -110,15 +116,26 @@ describe("sql-client execution safety", () => {
     expect((await next).result?.values).toEqual([["Y"]]);
   });
 
-  it("a failed engine boot is reported and retried on the next run (not cached forever)", async () => {
+  it("a transient failed boot is retried automatically within the same run", async () => {
     let n = 0;
     client.__setWorkerFactory(() => new FakeWorker({ bootFail: n++ === 0 }) as unknown as Worker);
-    expect((await client.executeSql({ seed: "", query: "X" })).error).toMatch(/could not load/);
-    const next = client.executeSql({ seed: "", query: "Y" });
-    await flush();
-    await flush();
-    FakeWorker.instances[1].respond();
-    expect((await next).result?.values).toEqual([["Y"]]);
+    const p = client.executeSql({ seed: "", query: "X" });
+    // First boot fails immediately; backoff ~400ms; second boots and accepts the query.
+    await vi.waitFor(() => {
+      const live = FakeWorker.instances.find((w) => !w.terminated && w.queue.length > 0);
+      expect(live).toBeTruthy();
+      live!.respond();
+    });
+    expect((await p).result?.values).toEqual([["X"]]);
+    expect(FakeWorker.instances.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("persistent boot failures exhaust retries then surface the error", async () => {
+    client.__setWorkerFactory(() => new FakeWorker({ bootFail: true }) as unknown as Worker);
+    const p = client.executeSql({ seed: "", query: "X" });
+    // Three failing boots + backoffs (400ms + 800ms) ≈ 1.2s of waiting.
+    expect((await p).error).toMatch(/could not load/);
+    expect(FakeWorker.instances.length).toBe(client.BOOT_ATTEMPTS);
   });
 });
 
@@ -128,13 +145,15 @@ it("cancellation before worker readiness settles immediately", async () => {
   client.cancelSql();
   expect(await pending).toEqual({superseded:true});
 });
-it("a worker that never announces readiness times out", async () => {
+
+it("a worker that never announces readiness times out after retries", async () => {
   vi.useFakeTimers();
   client.__setWorkerFactory(() => ({addEventListener(){},removeEventListener(){},postMessage(){},terminate(){}}) as unknown as Worker);
   const pending=client.executeSql({seed:"",query:"SELECT 1"});
-  await vi.advanceTimersByTimeAsync(client.BOOT_TIMEOUT_MS+1);
-  expect((await pending).error).toMatch(/timed out while starting/);
+  await vi.advanceTimersByTimeAsync(bootBudgetMs());
+  expect((await pending).error).toMatch(/timed out while starting|Press Retry/);
 });
+
 it("a slow engine boot does not count against the 3s query limit", async () => {
   vi.useFakeTimers();
   client.__setWorkerFactory(() => new FakeWorker({ bootDelay: client.TIMEOUT_MS + 500 }) as unknown as Worker);
@@ -142,4 +161,9 @@ it("a slow engine boot does not count against the 3s query limit", async () => {
   await vi.advanceTimersByTimeAsync(client.TIMEOUT_MS + 501);
   FakeWorker.instances[0].respond();
   expect((await pending).result?.values).toEqual([["SLOW BOOT"]]);
+});
+
+it("isEngineBootError detects startup failures", () => {
+  expect(client.isEngineBootError("The SQL engine timed out while starting. Press Retry to try again.")).toBe(true);
+  expect(client.isEngineBootError("Query timed out after 3 seconds.")).toBe(false);
 });

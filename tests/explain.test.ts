@@ -179,6 +179,12 @@ describe("explaining real SQLite errors", () => {
     expect(e.title).toMatch(/UNION/);
   });
 
+  it("engine startup timeout asks for Retry, not a page reload", () => {
+    const e = explainError("The SQL engine timed out while starting. Press Retry to try again.", "SELECT 1");
+    expect(e.title).toBe("SQL is still starting");
+    expect(e.next).toBe("Press Retry to start it again.");
+  });
+
   it("unknown errors fall back without inventing a cause", () => {
     const e = explainError("something unusual happened", "SELECT 1");
     expect(e.title).toBe("Your SQL couldn't run");

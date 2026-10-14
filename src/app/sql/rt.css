@@ -580,11 +580,16 @@ html[data-theme="dark"] .rx {
 .rx-task-rules { margin: 0 0 10px; font-size: 13.5px; color: var(--rx-dim); }
 .rx-next { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 18px; }
 .rx h1[tabindex="-1"]:focus { outline: none; }
-/* The task in one card: label, question, then what to return on one line. */
-.rx-question { margin: 0 0 14px; padding: 14px 16px; border: 1px solid var(--rx-line); border-left: 3px solid var(--rx-amber); border-radius: 8px; background: var(--rx-surface); }
+/* The task in one card: label, prompt, then a labeled “what to return” spec. */
+.rx-question { margin: 0 0 14px; padding: 14px 16px 16px; border: 1px solid var(--rx-line); border-left: 3px solid var(--rx-amber); border-radius: 8px; background: var(--rx-surface); }
 .rx-question-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 22px; }
 .rx-question-head .rx-label { margin: 0; }
-.rx-question-text { margin: 6px 0 0; font-size: 1.1rem; line-height: 1.45; font-weight: 550; color: var(--rx-ink); }
+.rx-question-body { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; max-width: 42rem; }
+.rx-question-body .rx-question-text { margin: 0; }
+.rx-question-text { margin: 10px 0 0; font-size: 1.05rem; line-height: 1.55; font-weight: 500; color: var(--rx-ink); max-width: 42rem; }
+.rx-question-spec { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--rx-line); }
+.rx-question-spec .rx-label { margin: 0 0 8px; }
+.rx-question-spec .rx-spec { max-width: none; }
 .rx-question-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 0; margin: 10px 0 0; font-size: 13.5px; color: var(--rx-dim); }
 .rx-question-meta > span { display: inline-flex; align-items: center; gap: 6px; }
 .rx-question-meta > span + span::before { content: "·"; margin: 0 10px; color: var(--rx-faint); }

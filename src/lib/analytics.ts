@@ -52,6 +52,8 @@ export function attemptContext(key: string): {
 /** Coarse SQLite / grader error kind for funnels (no message text). */
 export function errorKind(message: string | undefined | null): string {
   if (!message) return "unknown";
+  if (/timed out while starting|engine (could not load|worker failed)/i.test(message)) return "engine_boot";
+  if (/Query timed out|took too long/i.test(message)) return "query_timeout";
   if (/no such column/i.test(message)) return "unknown_column";
   if (/no such table/i.test(message)) return "unknown_table";
   if (/syntax error/i.test(message)) return "syntax";

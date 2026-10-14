@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Eye, Lightbulb, RotateCcw } from "lucide-react";
 import taskContexts from "@/content/task-context.json";
 import { getLesson, isBlankSql, seed, starterFor } from "@/content";
@@ -12,11 +12,24 @@ import {
 } from "@/lib/learning-state";
 import { TaskCell } from "./Cells";
 import { CHALLENGE_EDITOR_HEIGHT } from "./editor-height";
-import { Cols } from "./Spec";
+import { Cols, Spec } from "./Spec";
 import { prettySql } from "@/components/editor/pretty-sql";
 import { SqlCode } from "./SqlCode";
 
 type TaskContext = { columns: string[]; tables: string[] };
+
+/** Long prompts read clearer as short paragraphs (build vs return). */
+function PromptText({ text }: { text: string }) {
+  const parts = text.split(/(?<=\.)\s+/).map((p) => p.trim()).filter(Boolean);
+  if (parts.length < 2) return <p className="rx-question-text">{text}</p>;
+  return (
+    <div className="rx-question-body">
+      {parts.map((part) => (
+        <p key={part} className="rx-question-text">{part}</p>
+      ))}
+    </div>
+  );
+}
 
 /**
  * One graded challenge (lesson or project milestone), with the same rules as the current app:
@@ -56,6 +69,21 @@ export function Challenge({
   const revealed = !!attempt?.revealed;
   const [confirm, setConfirm] = useState<null | "hint" | "reveal">(null);
 
+  const specRows: [string, ReactNode][] = [];
+  if (ctx?.columns.length) {
+    specRows.push([
+      "Columns",
+      <>
+        <Cols names={ctx.columns} />{" "}
+        <span className="rx-dim">{ctx.columns.length > 1 ? "in this order" : ""}</span>
+      </>,
+    ]);
+  }
+  specRows.push(["Rows", task.ordered ? "in the order asked" : "any order"]);
+  if (lesson.mode === "lab") {
+    specRows.push(["Also checked", "TEMP / table changes from your script"]);
+  }
+
   return (
     <div>
       <section className="rx-question" aria-label={`Challenge ${variant + 1}`}>
@@ -64,12 +92,11 @@ export function Challenge({
           {solved && <span className="rx-tag ok">✓ solved without help</span>}
           {!solved && guided && <span className="rx-tag amber">using help</span>}
         </div>
-        <p className="rx-question-text">{task.prompt}</p>
-        <p className="rx-question-meta">
-          {ctx?.columns.length ? <span>Return <Cols names={ctx.columns} /></span> : null}
-          <span>{task.ordered ? "rows in the order asked" : "any row order"}</span>
-          {lesson.mode === "lab" && <span>table changes are checked too</span>}
-        </p>
+        <PromptText text={task.prompt} />
+        <div className="rx-question-spec">
+          <p className="rx-label">what to return</p>
+          <Spec rows={specRows} />
+        </div>
       </section>
       <TaskCell
         name={`challenge-${variant + 1}.sql`}

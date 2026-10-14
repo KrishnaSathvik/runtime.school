@@ -132,7 +132,7 @@ export function PythonLesson({ slug }: { slug: string }) {
                   {mastered ? (
                     <>✓ Lesson mastered. <button type="button" className="py-link" onClick={() => pick("complete")}>See what you completed</button></>
                   ) : (
-                    <>To master this lesson, solve both challenges without help and pass the concept check. <b>{left} of 3 to go.</b></>
+                    <>To master this lesson, solve both challenges without help and pass the concept check.{" "}<b>{`${left} of 3 to go.`}</b></>
                   )}
                 </span>
               </div>

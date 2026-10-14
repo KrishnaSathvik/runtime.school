@@ -24,6 +24,8 @@ describe("analytics helpers", () => {
     expect(errorKind("near \"SELCT\": syntax error")).toBe("syntax");
     expect(errorKind("ambiguous column name: id")).toBe("ambiguous_column");
     expect(errorKind("UNIQUE constraint failed")).toBe("constraint");
+    expect(errorKind("The SQL engine timed out while starting. Press Retry to try again.")).toBe("engine_boot");
+    expect(errorKind("Query timed out after 3 seconds.")).toBe("query_timeout");
     expect(errorKind("something else")).toBe("runtime");
     expect(errorKind(null)).toBe("unknown");
   });

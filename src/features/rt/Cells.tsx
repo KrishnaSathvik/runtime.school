@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Check, ChevronDown, ChevronRight, Play, RotateCcw, X } from "lucide-react";
 import { seed as lessonSeed, fixtureMutation } from "@/content";
-import { executeSql, type ExecuteRequest, type ExecuteResponse } from "@/engine/sql-client";
+import { executeSql, isEngineBootError, type ExecuteRequest, type ExecuteResponse } from "@/engine/sql-client";
 import { errorKind, track, type AnalyticsProps } from "@/lib/analytics";
 import { Editor } from "./Editor";
 import { Output } from "./Output";
@@ -70,9 +70,16 @@ export function RunCell({
             res={res}
             query={query}
             actions={
-              <button type="button" className="rx-btn ghost" onClick={() => setRes(null)} aria-label="Close output">
-                <X size={13} /> Close
-              </button>
+              <>
+                {isEngineBootError(res.error) && (
+                  <button type="button" className="rx-btn" onClick={() => void run()} disabled={busy}>
+                    <RotateCcw size={13} /> Retry
+                  </button>
+                )}
+                <button type="button" className="rx-btn ghost" onClick={() => setRes(null)} aria-label="Close output">
+                  <X size={13} /> Close
+                </button>
+              </>
             }
           />
           {children}
@@ -231,6 +238,11 @@ export function TaskCell({
             query={ran}
             actions={
               <>
+                {isEngineBootError(res.error) && (
+                  <button type="button" className="rx-btn" disabled={busy !== null} onClick={() => void exec(mode === "check")}>
+                    <RotateCcw size={13} /> Retry
+                  </button>
+                )}
                 <button type="button" className="rx-btn ghost" onClick={() => setOpen(false)}>Hide</button>
                 <button type="button" className="rx-btn ghost" onClick={() => setRes(null)} aria-label="Close output"><X size={13} /> Close</button>
               </>

@@ -61,6 +61,21 @@ describe("inventory integrity", () => {
     });
   });
 
+  it("spec Columns list matches examples.json for every bank question (no silent drift)", () => {
+    const examples = JSON.parse(fs.readFileSync("src/content/question-bank/examples.json", "utf8")) as Record<
+      string,
+      { columns: string[] }
+    >;
+    for (const q of bankQuestions) {
+      expect(examples[q.id]?.columns, `${q.id} (${q.slug}) Columns vs examples`).toEqual(q.columns);
+    }
+  });
+
+  it("monthly-signup-cohorts lists retained with the other three required columns", () => {
+    const q = bankQuestions.find((x) => x.slug === "monthly-signup-cohorts");
+    expect(q?.columns).toEqual(["cohort_month", "cohort_size", "retained", "retention_pct"]);
+  });
+
   it("matches the planned first batch: 8 warm-up, 16 easy, 16 medium, 8 hard", () => {
     const count = (d: string) => bankQuestions.slice(0, 48).filter((q) => q.difficulty === d).length;
     expect([count("warmup"), count("easy"), count("medium"), count("hard")]).toEqual([8, 16, 16, 8]);

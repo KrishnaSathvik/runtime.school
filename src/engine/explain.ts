@@ -464,6 +464,14 @@ export function explainError(error: string, query: string, tables: string[] = []
     return make("The editor is empty", "There's no SQL to run yet.", "Type a query, then press Run query.");
   }
 
+  if (/timed out while starting/i.test(raw) || /engine worker failed/i.test(raw)) {
+    return make(
+      "SQL is still starting",
+      "The in-browser database took too long to load (common on a cold first run).",
+      "Press Retry to start it again.",
+    );
+  }
+
   if (/timed out/i.test(raw)) {
     return make(
       "The query took too long",
@@ -476,7 +484,7 @@ export function explainError(error: string, query: string, tables: string[] = []
     return make(
       "SQL is temporarily unavailable",
       "The in-browser database stopped responding.",
-      "Run the query again; reload the page if it keeps happening.",
+      "Press Retry to start it again.",
     );
   }
 

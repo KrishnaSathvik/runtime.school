@@ -175,9 +175,14 @@ function Brief({ projectId }: { projectId: number }) {
             <dt>skills</dt><dd>{outcome.skills}</dd>
             <dt>scope</dt><dd>{project.milestoneIds.length} milestones · {tables.length} tables · {getLesson(project.milestoneIds[0])?.difficulty.toLowerCase()}</dd>
           </dl>
-          <Link href={hrefFor(projectId, { kind: "milestone", id: next })} className="rx-btn amber" style={{ marginTop: 22 }}>
-            {rec ? "Continue with the next milestone" : "Start the first milestone"} <ArrowRight size={15} />
-          </Link>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 22 }}>
+            <Link href={hrefFor(projectId, { kind: "milestone", id: next })} className="rx-btn amber">
+              {rec ? "Continue with the next milestone" : "Start the first milestone"} <ArrowRight size={15} />
+            </Link>
+            <Link href={hrefFor(projectId, { kind: "report" })} className="rx-btn ghost">
+              Open the report <ArrowRight size={15} />
+            </Link>
+          </div>
           <p className="rx-label">milestones</p>
           <ol className="rx-ms-list">
             {project.milestoneIds.map((id, i) => {
@@ -310,9 +315,16 @@ function Milestone({ projectId, lessonId }: { projectId: number; lessonId: numbe
                 ? hasFinding ? "✓ milestone complete · finding saved" : "✓ milestone complete · add a finding for the report"
                 : `${required} step${required === 1 ? "" : "s"} left · check both queries and pass the concept check`}
             </span>
-            <Link href={nextHref} className={`rx-btn ${complete ? "amber" : "ghost"}`}>
-              {nextId !== undefined ? "Next milestone" : "Open the report"} <ArrowRight size={14} />
-            </Link>
+            <span style={{ display: "inline-flex", flexWrap: "wrap", gap: 8 }}>
+              {nextId !== undefined && (
+                <Link href={hrefFor(projectId, { kind: "report" })} className="rx-btn ghost">
+                  Open the report
+                </Link>
+              )}
+              <Link href={nextHref} className={`rx-btn ${complete ? "amber" : "ghost"}`}>
+                {nextId !== undefined ? "Next milestone" : "Open the report"} <ArrowRight size={14} />
+              </Link>
+            </span>
           </div>
         </section>
       </div>

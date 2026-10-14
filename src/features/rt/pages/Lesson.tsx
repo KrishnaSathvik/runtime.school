@@ -225,7 +225,7 @@ function Session({ lessonId }: { lessonId: number }) {
               <span>
                 {mastered
                   ? "✓ Lesson mastered."
-                  : <>To master this lesson, solve both challenges without hints and pass the concept check. <b>{left} of 3 to go.</b></>}
+                  : <>To master this lesson, solve both challenges without hints and pass the concept check.{" "}<b>{`${left} of 3 to go.`}</b></>}
               </span>
             </div>
           </section>
