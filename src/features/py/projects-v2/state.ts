@@ -5,7 +5,7 @@ export type ProjectEvidence={snapshot:string;passed:boolean;time:number;checks:{
 export type ProjectDraft={files:Record<string,string>;selected:string;milestone:number;interpretation:string;evidence?:ProjectEvidence;milestones:Record<string,{snapshot:string;passed:boolean}>};
 export type ProjectStorage={version:2;projects:Record<string,Record<string,ProjectDraft>>};
 export const snapshot=(files:Record<string,string>)=>JSON.stringify(Object.entries(files).sort(([a],[b])=>a.localeCompare(b)));
-export function freshDraft(project:ProjectV2):ProjectDraft{return {files:{...project.starters},selected:Object.keys(project.starters)[1]??'main.py',milestone:0,interpretation:'',milestones:{}};}
+export function freshDraft(project:ProjectV2):ProjectDraft{return {files:{...project.starters},selected:Object.keys(project.starters).find(name=>name!=='main.py'&&name!=='charts.py')??'main.py',milestone:0,interpretation:'',milestones:{}};}
 export function readDraft(raw:string|null,project:ProjectV2):ProjectDraft {
  try{const parsed=JSON.parse(raw??'null');const saved=parsed?.projects?.[project.ref]?.[project.revision];if(!saved||typeof saved.files!=='object')return freshDraft(project);
  const files={...project.starters};for(const name of Object.keys(files))if(typeof saved.files[name]==='string')files[name]=saved.files[name];
