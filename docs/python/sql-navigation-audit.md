@@ -71,3 +71,10 @@ Python project milestones now use SQL's division of teaching context on the left
 SQL Learn table values now wrap within the available width, including column metadata, without nested table scrolling or clipped values. Python project data cards likewise show their complete supplied rows and wrap raw text inputs.
 
 Validation: application TypeScript and diff checks; `tests/e2e/project-context.mjs` checks six project screens at desktop and phone widths, guidance coverage for every milestone, data visibility, finding interaction, accessibility on the retail screen, SQL table wrapping, and a real passing Python milestone. A separate seven-column SQL lesson check passed at 1440, 600 and 390px. Screenshots are in `screens/project-context/`.
+
+
+## Table preview layout correction
+
+The forced equal-width cells made dates, field names and ordinary words wrap awkwardly, especially when two cards shared the lesson column. Lesson previews now occupy the full column and use content-sized table columns. At narrow container widths they become labeled records; dense tables switch earlier. Every sample value and its type remain visible, without a table scrollbar. This follows the data-width guidance in Carbon's table usage documentation while retaining the existing runtime styling.
+
+Validation: `tests/e2e/learn-table-layout.mjs` checks standard and seven-column lesson previews at 1440, 768, 600, 390 and 360px, including phone accessibility, unclipped values and no page overflow. Screenshots are in `screens/learn-table-layout/`.

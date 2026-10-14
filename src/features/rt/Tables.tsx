@@ -29,7 +29,7 @@ export function Tables({ tables, open = false }: { tables: string[]; open?: bool
         const p = data[t];
         const byName = new Map(p?.columns.map((c) => [c.name, c]));
         return (
-          <details key={t} className="rx-schema-table" open={open}>
+          <details key={t} className={`rx-schema-table${p && p.columns.length > 5 ? " rx-schema-dense" : ""}`} open={open}>
             <summary>
               <b>{t}</b>
               <span>{p ? `${p.columns.length} columns · ${p.total} rows` : "created by the task"}</span>
@@ -50,6 +50,14 @@ export function Tables({ tables, open = false }: { tables: string[]; open?: bool
                     </thead>
                     <tbody>{p.result.values.map((r, i) => <tr key={i}>{r.map(cell)}</tr>)}</tbody>
                   </table>
+                </div>
+                <div className="rx-table-records" aria-label={`${t} sample records`}>
+                  {p.result.values.map((row, i) => <dl className="rx-table-record" key={i}>
+                    {p.result.columns.map((column, j) => <div key={column}>
+                      <dt>{column}<span>{describe(byName.get(column))}</span></dt>
+                      <dd>{row[j] === null ? <span className="null">NULL</span> : String(row[j])}</dd>
+                    </div>)}
+                  </dl>)}
                 </div>
                 <p className="rx-table-foot">
                   {p.result.values.length < p.total ? `showing ${p.result.values.length} of ${p.total} rows` : `all ${p.total} rows`}

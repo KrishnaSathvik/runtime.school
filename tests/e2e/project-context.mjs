@@ -28,7 +28,7 @@ try {
    await p.screenshot({path:`${dir}/${width}-${project.slug}.png`});
    console.log('PASS',width,project.slug,'guidance, data, task, finding and layout');
   }
-  await p.goto(`${base}/sql/lesson/0`);await p.locator('.rx-learn-tables .rx-schema-table .rx-table').first().waitFor();
+  await p.goto(`${base}/sql/lesson/0`);await p.locator('.rx-learn-tables .rx-schema-table').first().waitFor();
   const tables=await p.locator('.rx-learn-tables .rx-schema-table .rx-table-wrap').evaluateAll(es=>es.map(e=>({overflow:getComputedStyle(e).overflowX,scroll:e.scrollWidth,client:e.clientWidth,cells:[...e.querySelectorAll('th,td')].every(c=>c.scrollWidth<=c.clientWidth+1)})));
   assert.ok(tables.length);for(const t of tables){assert.equal(t.overflow,'visible');assert.ok(t.scroll<=t.client+1);assert.ok(t.cells);}
   assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));

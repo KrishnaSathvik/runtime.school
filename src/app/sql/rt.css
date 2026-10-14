@@ -684,13 +684,29 @@ html[data-theme="dark"] .rx {
   .rx-lesson .rx-cell-head .acts[aria-hidden="true"] { display: none; }
 }
 
-/* Learn previews expose every displayed value instead of requiring table scrolling. */
+/* Give lesson data the full reading column; reflow narrow previews into records. */
+.rx-table-records { display: none; }
+.rx-learn-tables .rx-schema { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.rx-learn-tables .rx-schema-table { container-type: inline-size; padding: 14px 16px; }
+.rx-learn-tables .rx-schema-table summary { align-items: baseline; flex-wrap: wrap; gap: 4px 12px; }
 .rx-learn-tables .rx-table-wrap { overflow: visible; padding-inline: 0; }
-.rx-learn-tables .rx-table { width: 100%; min-width: 0; table-layout: fixed; }
+.rx-learn-tables .rx-table { width: 100%; min-width: 0; table-layout: auto; }
 .rx-learn-tables .rx-table th,
-.rx-learn-tables .rx-table td,
-.rx-learn-tables .rx-data th .t {
-  white-space: normal; overflow-wrap: anywhere; overflow: visible; text-overflow: clip;
+.rx-learn-tables .rx-table td { white-space: normal; overflow-wrap: normal; overflow: visible; text-overflow: clip; padding: 9px 12px 9px 0; vertical-align: top; }
+.rx-learn-tables .rx-data th .t { white-space: nowrap; overflow: visible; text-overflow: clip; font-size: 10.5px; }
+.rx-learn-tables .rx-table th:last-child,
+.rx-learn-tables .rx-table td:last-child { padding-right: 0; }
+.rx-learn-tables .rx-table-record { margin: 0; padding: 12px 0; border-bottom: 1px solid var(--rx-line); }
+.rx-learn-tables .rx-table-record > div { display: grid; grid-template-columns: minmax(100px, 2fr) minmax(0, 3fr); gap: 16px; padding: 6px 0; }
+.rx-learn-tables .rx-table-record dt { font-weight: 500; overflow-wrap: anywhere; }
+.rx-learn-tables .rx-table-record dt span { display: block; font-size: 10.5px; font-weight: 400; color: var(--rx-dim); margin-top: 2px; }
+.rx-learn-tables .rx-table-record dd { margin: 0; overflow-wrap: anywhere; }
+.rx-learn-tables .rx-table-record .null { color: var(--rx-faint); font-style: italic; }
+@container (max-width: 440px) {
+  .rx-learn-tables .rx-schema-table .rx-table-wrap { display: none; }
+  .rx-learn-tables .rx-schema-table .rx-table-records { display: block; }
 }
-.rx-learn-tables .rx-table th,
-.rx-learn-tables .rx-table td { padding-right: 8px; }
+@container (max-width: 700px) {
+  .rx-learn-tables .rx-schema-dense .rx-table-wrap { display: none; }
+  .rx-learn-tables .rx-schema-dense .rx-table-records { display: block; }
+}
