@@ -306,3 +306,11 @@ Verification: application TypeScript passed; Chromium Customer Data Quality and 
 ## Editor scrolling correction
 
 Removed fixed editor/output heights, the Results height slider and the duplicate Go to Test & deliver button. Code and read-only source views expand with their contents, and results occupy only their content height. The page provides scrolling rather than nested editor/results scrollbars. The editor retains a modest minimum writing area for short files. Milestone count is shown only in Build; Overview and Test & deliver omit it. Layout verification now checks these conditions alongside the existing equal-column and responsive checks.
+
+## Delivery clarity and file ordering
+
+Project files now precede the current milestone in Build. Test & deliver groups project-level checks and the delivery package into equal desktop panels, stacked on mobile. Required outputs have individual generated/missing/incomplete/stale statuses beside their downloads. Milestone notices no longer leak into delivery's project-check summary. Verification: TypeScript and all six responsive workspace checks passed; Customer Data Quality also passed cumulative milestone execution, acceptance, actual ZIP delivery, saved progress, reload and incorrect-solution rejection.
+
+## Project entry and selection
+
+The Projects route opens the first project's Overview directly. A compact All projects control in the project header lists the six project names and links each to its Overview, following SQL's project-selection pattern. The catalog detour is removed; individual project URLs and saved work remain unchanged. The Python runtime route gate is preserved. Browser checks cover the entry redirect and switching through every project from this menu.

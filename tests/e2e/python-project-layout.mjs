@@ -7,9 +7,17 @@ const browser=await chromium.launch();
 try{
  const context=await browser.newContext({viewport:{width:1365,height:1000}});
  const page=await context.newPage();
+ await page.goto('http://127.0.0.1:3052/python/projects');
+ await page.getByRole('heading',{name:'Before you start',exact:true}).waitFor();
+ assert.equal(new URL(page.url()).pathname,`/python/projects/${projects[0].slug}`);
+ assert.equal(new URL(page.url()).hash,'#overview');
  for(const project of projects){
   await page.setViewportSize({width:1365,height:1000});
-  await page.goto(`http://127.0.0.1:3052/python/projects/${project.slug}`);
+  await page.locator('.pv-project-picker summary').click();
+  assert.equal(await page.getByRole('navigation',{name:'Python projects',exact:true}).getByRole('link').count(),projects.length);
+  await page.getByRole('navigation',{name:'Python projects',exact:true}).getByRole('link',{name:project.title,exact:true}).click();
+  await page.waitForURL(url=>url.pathname===`/python/projects/${project.slug}`);
+  await page.getByRole('heading',{name:project.title,exact:true}).waitFor();
   await page.getByRole('heading',{name:'Before you start',exact:true}).waitFor();
   assert.equal(await page.locator('.pv-stage-nav > span').count(),0);
   assert.equal(await page.getByRole('button',{name:'Start project',exact:true}).count(),0);
@@ -24,6 +32,7 @@ try{
   assert.ok(await right.locator('.pv-results').evaluate(el=>getComputedStyle(el).overflowY==='visible'&&el.clientHeight<140));
   const taskBox=await left.boundingBox(),editorBox=await right.boundingBox();assert.ok(Math.abs(taskBox.width-editorBox.width)<2,'default equal columns');
   assert.equal(await left.getByRole('group',{name:'File explorer'}).count(),1);
+  const filesBox=await left.locator('.pv-files').boundingBox(),milestoneBox=await left.getByLabel('Current milestone',{exact:true}).boundingBox();assert.ok(filesBox.y+filesBox.height<=milestoneBox.y,'files above milestone');
   assert.equal(await page.getByRole('button',{name:'Check complete project',exact:true}).count(),0);
   assert.equal(await right.locator('.pv-explorer,.pv-delivery').count(),0);
   assert.equal(await page.getByText(/Dataset generation rules|V1 history|Revision 2\.0/).count(),0);
@@ -58,6 +67,7 @@ try{
   assert.equal(await page.getByRole('button',{name:'Download verified project',exact:true}).isEnabled(),false);
   assert.ok(await page.getByRole('heading',{name:'Still to do',exact:true}).isVisible());
   assert.equal(await page.locator('.pv-stage-nav > span').count(),0);
+  if(project.slug==='customer-data-quality'){await page.setViewportSize({width:1365,height:1000});await page.screenshot({path:'docs/python/projects-v2/screens/current-delivery-desktop.png'});}
   const finish=await page.locator('.pv-finish').boundingBox();const stageNav=await page.locator('.pv-stage-nav').boundingBox();assert.ok(Math.abs(finish.width-stageNav.width)<2);
   console.log('PASS',project.slug,'stage flow, task/data, full files, editor, resize, responsive layout');
  }
