@@ -325,10 +325,15 @@ function Report({ projectId }: { projectId: number }) {
   const rec = useLearning((s) => s.projects[projectId]);
   const readiness = reportReadiness(project, rec);
   const save = (kind: "md" | "pdf") => {
-    const blob =
-      kind === "md"
-        ? new Blob([projectReport(project, rec)], { type: "text/markdown;charset=utf-8" })
-        : new Blob([projectReportPdf(project, rec)], { type: "application/pdf" });
+    let blob: Blob;
+    if (kind === "md") {
+      blob = new Blob([projectReport(project, rec)], { type: "text/markdown;charset=utf-8" });
+    } else {
+      const bytes = projectReportPdf(project, rec);
+      const copy = new Uint8Array(bytes.byteLength);
+      copy.set(bytes);
+      blob = new Blob([copy], { type: "application/pdf" });
+    }
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
