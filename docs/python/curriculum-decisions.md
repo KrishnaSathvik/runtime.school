@@ -92,3 +92,50 @@ Foundations one. None of the 120 briefs is a ready question (no full prompt, tes
 4. Browser journey (`tests/e2e/python-lesson-2.mjs` pattern): wrong answers, independent and assisted solves,
    reload persistence, desktop/mobile, light/dark screenshots.
 5. Owner review before the next lesson.
+
+## 7. Completed subject build — 2026-10-14
+
+This section supersedes the earlier planning statuses. The implemented inventory is in
+[`inventory.json`](inventory.json); the final verification report is in [`subject-report.md`](subject-report.md).
+
+- Foundations has five lessons. Augmented assignment and swapping were folded into the relevant lessons;
+  the omitted identity remains reserved. The course now has 79 lessons across all 12 modules, 158 graded
+  challenges and 158 concept questions.
+- The 120 practice briefs became executable questions: 78 write, 24 debug and 18 predict. PY02-03 now
+  combines slicing, fixed-width alignment and thousands separators, rather than repeating the lesson's
+  receipt exercise. The file-log exercise explicitly audits malformed lines and retains zero-count keys.
+- Six tracks reference canonical bank IDs. Opening a question through another track does not create a
+  new progress record or achievement.
+- Two cases have four ordered investigation stages each. Six projects have 4/5/5/5/5/6 cumulative
+  milestones. Each later reference starter is the preceding solution; in the UI the learner's own saved
+  code carries forward. Earlier checks remain active. Inherited help keeps later attempts assisted.
+- Cases and projects open with context and inspectable fixture data. Fixtures are synthetic, small and
+  deterministic. Findings are deliberately bounded to those extracts. Automatic checks verify specified
+  evidence and caveat keywords, not the quality of arbitrary prose or production readiness.
+- `runtime-python-v1` remains version 1. A separate `items` map holds bank, case, project and playground
+  drafts and progress. Old lesson-only saves normalize to an empty item map. SQL storage is unchanged.
+- Tables from `display()` render as semantic tables; consecutive table messages remain separate. The
+  console downloads complete text output files. Truncated file previews cannot be downloaded as if complete.
+  Projects also export source and a summary tied to the exact code that passed the latest checks.
+- Python navigation now exposes Learn, Practice and Projects. Search includes all Python lessons,
+  questions, tracks, cases, projects and the playground. The playground offers standard library,
+  NumPy/pandas/matplotlib and DuckDB, with no grading or learning credit.
+- scikit-learn stays reserved for ML. DuckDB remains DuckDB; its Spark-style compatibility API is not
+  represented as Apache Spark. The runtime.school production execution gate remains intact.
+
+### UI decisions
+
+The Python pages extend Runtime's existing visual system: white `#ffffff` and ink `#1b1913` in light
+mode, black `#000000` and white in dark mode, with amber `#e3a03a` / `#f0b44c` for controls. Geist Sans
+carries prose; Geist Mono carries code. Practice uses searchable lists. Projects place the investigation
+brief and ordered milestone controls before the editor, then pair task and code in two columns that
+stack on mobile. Editor string and line-number contrast adjustments are scoped to Python.
+
+### Verification workflow
+
+Use `npx vitest run tests/python-*.test.ts` for the Python-only runtime and progress checks. It includes
+all lesson blocks, practice predictions, graded reference answers, failing starters and deliberate
+mistakes in real Pyodide. Use `node tests/e2e/python-subject.mjs` against a local development server for
+browser journeys and accessibility; `python-navigation.mjs` covers cases/tracks, and `python-tables.mjs`
+checks table index alignment in all four modes. Do not run the full SQL regression suite for this work. The user
+has authorized verified local batches; no push or deployment is part of this build.
