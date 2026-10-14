@@ -12,6 +12,7 @@ for(const engine of browsers){const b=await ({chromium,firefox,webkit}[engine]).
  if(!localStorage.getItem('runtime-python-v1'))localStorage.setItem('runtime-python-v1',legacy);
  },{project,legacy});
  await p.goto(`${base}/python/projects/${project.slug}`);await p.getByRole('button',{name:'Check complete project',exact:true}).waitFor();
+ assert.equal(await p.getByText(/V1 history|Revision 2\.0|Projects · V2/).count(),0,'internal versioning stays out of product UI');
  assert.equal(await p.getByRole('button',{name:'Download verified project',exact:true}).isEnabled(),false);
  if(project.slug==='customer-data-quality'){
   for(let i=0;i<project.milestones.length;i++){
@@ -23,6 +24,7 @@ for(const engine of browsers){const b=await ({chromium,firefox,webkit}[engine]).
 
  await p.getByRole('button',{name:'Check complete project',exact:true}).click();
  await p.waitForFunction(()=>!document.querySelector('.pv-actions button')?.disabled,{},{timeout:120000});
+ await p.waitForFunction(ref=>JSON.parse(localStorage.getItem('runtime-python-projects-v2')).projects[ref]['2.0.0'].evidence!==undefined,project.ref);
  const evidence=await p.evaluate(ref=>JSON.parse(localStorage.getItem('runtime-python-projects-v2')).projects[ref]['2.0.0'].evidence,project.ref);
  assert.ok(evidence?.passed,JSON.stringify({project:project.slug,evidence,body:(await p.locator('.pv-output').innerText()).slice(-3000)}));
  for(const path of project.artifacts)assert.ok(evidence.artifacts.some(f=>f.path===path&&!f.truncated&&f.text.length>0),path);
@@ -34,6 +36,7 @@ for(const engine of browsers){const b=await ({chromium,firefox,webkit}[engine]).
  await p.setViewportSize({width:390,height:844});assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await p.screenshot({path:`${dir}/${engine}-${project.slug}-mobile.png`});
  const editor=p.locator('.cm-content');await editor.click();await p.keyboard.press(`${process.platform==='darwin'?'Meta':'Control'}+a`);await p.keyboard.insertText('# unfinished implementation\n');assert.equal(await p.getByRole('button',{name:'Download verified project',exact:true}).isEnabled(),false,'editing invalidates delivery');
  await p.getByRole('button',{name:'Check complete project',exact:true}).click();await p.waitForFunction(()=>!document.querySelector('.pv-actions button')?.disabled,{},{timeout:120000});
+ await p.waitForFunction(ref=>JSON.parse(localStorage.getItem('runtime-python-projects-v2')).projects[ref]['2.0.0'].evidence?.passed===false,project.ref);
  const failed=await p.evaluate(ref=>JSON.parse(localStorage.getItem('runtime-python-projects-v2')).projects[ref]['2.0.0'].evidence,project.ref);assert.equal(failed.passed,false,'incorrect solution fails');
  assert.deepEqual(errors,[]);console.log('PASS',engine,project.slug,'reference, artifacts, archive, history, persistence, mobile, stale evidence, incorrect solution');await context.close();
 }}finally{await b.close();}}

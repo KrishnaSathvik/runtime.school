@@ -1,0 +1,293 @@
+{
+  "projects": [
+    {
+      "project": "customer-data-quality",
+      "reference": "passed",
+      "mutated_function": "rejected",
+      "starter": "unfinished",
+      "milestones": 4,
+      "datasets": [
+        {
+          "path": "customers_a.json",
+          "rows": 300,
+          "schema": "email, id, region"
+        },
+        {
+          "path": "customers_b.json",
+          "rows": 300,
+          "schema": "email, id, name, region"
+        },
+        {
+          "path": "rules.json",
+          "rows": 1,
+          "schema": "blocked_domains, required"
+        }
+      ],
+      "invariants": {
+        "quality.json": {
+          "accepted": 443,
+          "accounted_for": true,
+          "input": 600,
+          "reasons": {
+            "blocked domain": 42,
+            "duplicate email": 36,
+            "duplicate id": 13,
+            "invalid email": 34,
+            "missing field": 32
+          },
+          "rejected": 157
+        }
+      }
+    },
+    {
+      "project": "retail-order-engine",
+      "reference": "passed",
+      "mutated_function": "rejected",
+      "starter": "unfinished",
+      "milestones": 4,
+      "datasets": [
+        {
+          "path": "catalog.json",
+          "rows": 64,
+          "schema": "category, name, price_cents, sku"
+        },
+        {
+          "path": "carts.json",
+          "rows": 48,
+          "schema": "id, items, status"
+        },
+        {
+          "path": "pricing_rules.json",
+          "rows": 1,
+          "schema": "discount_percent, tax_percent, threshold_cents"
+        }
+      ],
+      "invariants": {
+        "summary.json": {
+          "accepted": 38,
+          "accounted_for": true,
+          "gross_cents": 905659,
+          "input": 48,
+          "net_cents": 745377,
+          "refunded_cents": 160282,
+          "rejected": 10
+        }
+      }
+    },
+    {
+      "project": "csv-sales-analyst",
+      "reference": "passed",
+      "mutated_function": "rejected",
+      "starter": "unfinished",
+      "milestones": 5,
+      "datasets": [
+        {
+          "path": "orders.csv",
+          "rows": 1200,
+          "schema": "id, date, product, cents, status"
+        },
+        {
+          "path": "products.csv",
+          "rows": 24,
+          "schema": "product, category"
+        },
+        {
+          "path": "payments.csv",
+          "rows": 1067,
+          "schema": "order_id, cents"
+        },
+        {
+          "path": "returns.csv",
+          "rows": 82,
+          "schema": "order_id, cents"
+        }
+      ],
+      "invariants": {
+        "quality.json": {
+          "accounted_for": true,
+          "balanced": true,
+          "clean": 1118,
+          "gross_cents": 7461700,
+          "input": 1200,
+          "net_cents": 7123450,
+          "refund_cents": 338250,
+          "rejected": 82
+        }
+      }
+    },
+    {
+      "project": "product-event-investigation",
+      "reference": "passed",
+      "mutated_function": "rejected",
+      "starter": "unfinished",
+      "milestones": 5,
+      "datasets": [
+        {
+          "path": "events.jsonl",
+          "rows": 3025,
+          "schema": "id: string, user: string, type: view/cart/buy, at: timezone-aware ISO timestamp"
+        },
+        {
+          "path": "event_schema.json",
+          "rows": 1,
+          "schema": "required"
+        }
+      ],
+      "invariants": {
+        "quality.json": {
+          "accepted": 2943,
+          "accounted_for": true,
+          "input": 3025,
+          "reasons": {
+            "duplicate": 42,
+            "invalid": 40
+          },
+          "rejected": 82
+        },
+        "summary.json": {
+          "abandoned_sessions": 309,
+          "converted_sessions": 504,
+          "events": 2943,
+          "sessions": 813,
+          "users": 140,
+          "viewed_sessions": 813,
+          "weekly": [
+            {
+              "active_users": 47,
+              "events": 141,
+              "week": "2026-01-05"
+            },
+            {
+              "active_users": 85,
+              "events": 335,
+              "week": "2026-01-12"
+            },
+            {
+              "active_users": 121,
+              "events": 440,
+              "week": "2026-01-19"
+            },
+            {
+              "active_users": 112,
+              "events": 405,
+              "week": "2026-01-26"
+            },
+            {
+              "active_users": 112,
+              "events": 406,
+              "week": "2026-02-02"
+            },
+            {
+              "active_users": 112,
+              "events": 405,
+              "week": "2026-02-09"
+            },
+            {
+              "active_users": 112,
+              "events": 405,
+              "week": "2026-02-16"
+            },
+            {
+              "active_users": 112,
+              "events": 406,
+              "week": "2026-02-23"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "project": "marketplace-eda",
+      "reference": "passed",
+      "mutated_function": "rejected",
+      "starter": "unfinished",
+      "milestones": 5,
+      "datasets": [
+        {
+          "path": "orders.csv",
+          "rows": 2441,
+          "schema": "order_id, customer_id, product_id, date, cents"
+        },
+        {
+          "path": "customers.csv",
+          "rows": 240,
+          "schema": "customer_id, cohort"
+        },
+        {
+          "path": "products.csv",
+          "rows": 32,
+          "schema": "product_id, category"
+        }
+      ],
+      "invariants": {
+        "findings.json": {
+          "customers": 238,
+          "median_order_cents": 10200.0,
+          "orders": 2278,
+          "repeat_customers": 181,
+          "revenue_cents": 22749800,
+          "unknown_customer_orders": 43,
+          "unknown_product_orders": 35
+        }
+      }
+    },
+    {
+      "project": "reliable-mini-etl",
+      "reference": "passed",
+      "mutated_function": "rejected",
+      "starter": "unfinished",
+      "milestones": 5,
+      "datasets": [
+        {
+          "path": "batch_a.jsonl",
+          "rows": 500,
+          "schema": "id: nonempty string, version: integer >= 1, cents: integer >= 0; intentionally malformed rows included"
+        },
+        {
+          "path": "batch_b.jsonl",
+          "rows": 500,
+          "schema": "id: nonempty string, version: integer >= 1, cents: integer >= 0; intentionally malformed rows included"
+        },
+        {
+          "path": "batch_c.jsonl",
+          "rows": 500,
+          "schema": "id: nonempty string, version: integer >= 1, cents: integer >= 0; intentionally malformed rows included"
+        },
+        {
+          "path": "existing.csv",
+          "rows": 200,
+          "schema": "id, version, cents"
+        },
+        {
+          "path": "schema.json",
+          "rows": 1,
+          "schema": "min_cents, min_version, required, version"
+        }
+      ],
+      "invariants": {
+        "manifest.json": {
+          "accepted": 1331,
+          "accounted_for": true,
+          "output_rows": 420,
+          "rejected": 169,
+          "replay_ok": true,
+          "schema_version": 1,
+          "source_lines": 1500,
+          "total_cents": 2144555
+        }
+      }
+    }
+  ],
+  "verified_browser_archives": [
+    "chromium-csv-sales-analyst.zip",
+    "chromium-customer-data-quality.zip",
+    "chromium-marketplace-eda.zip",
+    "chromium-product-event-investigation.zip",
+    "chromium-reliable-mini-etl.zip",
+    "chromium-retail-order-engine.zip",
+    "firefox-customer-data-quality.zip",
+    "firefox-marketplace-eda.zip",
+    "webkit-customer-data-quality.zip",
+    "webkit-marketplace-eda.zip"
+  ]
+}

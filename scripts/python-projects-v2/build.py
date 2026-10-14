@@ -69,7 +69,7 @@ def build_project(config, files):
             value=json.loads(text);parsed=value if isinstance(value,list) else [value];schema=', '.join(parsed[0]) if parsed and isinstance(parsed[0],dict) else 'JSON values';sample=jt(parsed[:5] if isinstance(value,list) else value)
         datasets.append({'path':name,'format':name.rsplit('.',1)[-1],'rows':len(parsed),'schema':schema,'purpose':config['purposes'].get(name,''),'sample':sample})
     protected={**files,'_acceptance.py':checks,'_expected.json':jt(expected),'test_project.py':unittest_code}
-    readme=f"# {config['title']}\n\n{config['objective']}\n\nRevision: 2.0.0; deterministic seed: {config['seed']}.\n\n{config['generation']}\n\nRun `python main.py`, then `python test_project.py`.\nDependencies: {', '.join(config['packages']) or 'Python standard library'}.\nInput files are read-only in Runtime. Edit the Python source files.\n"
+    readme=f"# {config['title']}\n\n{config['objective']}\n\nDeterministic dataset seed: {config['seed']}.\n\n{config['generation']}\n\nRun `python main.py`, then `python test_project.py`.\nDependencies: {', '.join(config['packages']) or 'Python standard library'}.\nInput files are read-only in Runtime. Edit the Python source files.\n"
     protected['README.md']=readme
     return {**{k:v for k,v in config.items() if k not in ['purposes','jsonl_schema']},'revision':'2.0.0','ref':'python:project:'+slug,'files':protected,'starters':editable,'reference':reference,'datasets':datasets,'invariants':invariants,'acceptance':[c for m in config['milestones'] for c in m['checks']]}
 
