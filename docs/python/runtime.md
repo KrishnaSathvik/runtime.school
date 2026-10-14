@@ -213,6 +213,11 @@ normal path or raised with the owner. It is never routed around.
   real Pyodide in Chromium, Firefox and WebKit. `npm run test:python-workspace` drives the workspace UI (set
   `BASELINE=<server on the previous commit>` to compare the SQL shell byte for byte), and `npm run test:python-lesson`
   walks the whole learner journey (including hint/assisted credit and `sql-studio-v1` staying unchanged).
+  `npm run test:python-lesson-2` walks Lesson 2 the same way (screenshots in `docs/python/screens/lesson-2/`).
+  `npx vitest run tests/python-content.test.ts` runs every lesson's examples, walkthrough steps, mistakes and
+  reference answers in real Pyodide (Node, using the worker's own harness and `gradePython`), and checks that
+  realistic wrong answers fail on the intended check. Curriculum scope and authoring steps:
+  `docs/python/curriculum-decisions.md`.
   `npm run test:python-packages` covers the data libraries: results, figures, DuckDB, pyspark, scikit-learn,
   per-run isolation, timeout/Stop recovery, and that unrequested libraries can't be imported. For a
   production build: `NEXT_PUBLIC_PYTHON_RUNNER=1 npm run build && npx next start`.

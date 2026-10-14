@@ -1,8 +1,9 @@
 import type { PyLesson, PyModule } from "./types";
+import { printCommentsAndExecutionOrder } from "./print-comments-and-execution-order";
 import { variablesAndValues } from "./variables-and-values";
 
 /** Only lessons that genuinely exist are listed. */
-export const pythonLessons: PyLesson[] = [variablesAndValues];
+export const pythonLessons: PyLesson[] = [variablesAndValues, printCommentsAndExecutionOrder];
 
 export const pythonModules: PyModule[] = [
   {

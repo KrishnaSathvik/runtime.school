@@ -248,6 +248,12 @@ function ChallengePanel({ lesson, challenge, index, onNext }: { lesson: PyLesson
         </div>
         <h2 id={`${cid}-title`} className="py-ch-title">{challenge.title}</h2>
         <p className="py-ch-prompt"><Rich text={challenge.prompt} /></p>
+        {challenge.expectedOutput && (
+          <>
+            <p className="py-looks" id={`${cid}-expected`}>Your program should print</p>
+            <pre className="py-expected" aria-labelledby={`${cid}-expected`} tabIndex={0}>{challenge.expectedOutput}</pre>
+          </>
+        )}
         <p className="py-looks">Check answer looks for</p>
         <ul className="py-list py-looks-list">
           {challenge.looksFor.map((t) => <li key={t}><Rich text={t} /></li>)}
@@ -402,7 +408,7 @@ function CompletePanel({ lesson }: { lesson: PyLesson }) {
           <Link href="/python" className="rx-btn primary">Back to Python Foundations <ArrowRight size={14} /></Link>
         )}
       </div>
-      {!next && <p className="rx-small">This is the first Python lesson. The next Foundations lessons are being written.</p>}
+      {!next && <p className="rx-small">This is the latest Python lesson. The next Foundations lessons are being written.</p>}
     </section>
   );
 }

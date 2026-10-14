@@ -73,10 +73,10 @@ for (const name of BROWSERS) {
     await test("1–2. Python home lists Python Foundations; the lesson opens from it", async () => {
       await page.goto(`${BASE}/python`);
       await page.getByRole("heading", { name: "Python Foundations" }).waitFor();
-      await page.locator(".py-lesson-row .s", { hasText: "not started" }).waitFor({ timeout: 10000 });
-      assert.equal(await page.locator(".py-lesson-row").count(), 1);
-      assert.match(await page.locator(".py-lesson-row").innerText(), /Variables and values[\s\S]*not started[\s\S]*Start/);
-      await page.locator(".py-lesson-row").click();
+      await page.locator(".py-lesson-row .s", { hasText: "not started" }).first().waitFor({ timeout: 10000 });
+      assert.equal(await page.locator(".py-lesson-row").count(), 2);
+      assert.match(await page.locator(".py-lesson-row").first().innerText(), /Variables and values[\s\S]*not started[\s\S]*Start/);
+      await page.locator(".py-lesson-row").first().click();
       await page.waitForURL(`**${LESSON}`);
       assert.equal(await page.getByRole("heading", { level: 1 }).count(), 1);
       assert.equal(await page.getByRole("heading", { level: 1 }).innerText(), "Variables and values");
@@ -244,7 +244,8 @@ for (const name of BROWSERS) {
       await panel.waitFor();
       assert.match(await panel.innerText(), /Variables and values: mastered/);
       assert.match(await panel.innerText(), /solved both challenges on your own and passed the concept check/);
-      assert.match(await panel.innerText(), /Back to Python Foundations/);
+      assert.match(await panel.innerText(), /Next lesson/);
+      assert.equal(await panel.getByRole("link", { name: /Next lesson/ }).getAttribute("href"), "/python/lesson/print-comments-and-execution-order");
       const rec = await lessonRec(page);
       assert.ok(rec.masteredAt > 0);
       assert.match(await page.locator(".rx-status").innerText(), /✓ mastered/);
@@ -258,7 +259,7 @@ for (const name of BROWSERS) {
       assert.match(await page.locator(".rx-question-head").innerText(), /solved without help/);
       await page.goto(`${BASE}/python`);
       await page.locator(".py-lesson-row .s.ok").waitFor({ timeout: 10000 });
-      assert.match(await page.locator(".py-lesson-row").innerText(), /✓ mastered[\s\S]*Review/);
+      assert.match(await page.locator(".py-lesson-row").first().innerText(), /✓ mastered[\s\S]*Review/);
     });
 
     await test("Reset restores the starter without touching mastery or the other draft", async () => {
@@ -412,7 +413,7 @@ for (const name of BROWSERS) {
         await p.getByRole("button", { name: /See your completed lesson/ }).click();
         await shot("5-complete");
         await p.goto(`${BASE}/python`);
-        await p.locator(".py-lesson-row").waitFor();
+        await p.locator(".py-lesson-row").first().waitFor();
         await shot("0-python-home");
       } finally {
         await c.close();

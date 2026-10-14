@@ -170,6 +170,14 @@ describe("gradePython: variables and output", () => {
     expect(gradePython(exact, ok({}, "48")).ok).toBe(false);
     expect(gradePython(exact, ok({}, "")).checks[0].detail).toBe("Your program didn't print anything.");
     expect(gradePython(exact, ok({}, "48.0\n")).checks[0].detail).toBe('Line 1: expected "48", but your program printed "48.0".');
+    // Same words, different spacing inside the line: said explicitly, since it is easy to miss.
+    const label = { checks: [{ kind: "output" as const, expected: "Item: notebook\n" }] };
+    expect(gradePython(label, ok({}, "Item:  notebook\n")).checks[0].detail).toBe(
+      'Line 1: expected "Item: notebook", but your program printed "Item:  notebook". The words match; only the spaces differ.',
+    );
+    const blank = { checks: [{ kind: "output" as const, expected: "Title\n\nBody\n" }] };
+    expect(gradePython(blank, ok({}, "Title\nBody\n")).checks[0].detail).toBe('Line 2: expected an empty line, but your program printed "Body".');
+    expect(gradePython(blank, ok({}, "Title\n\n\nBody\n")).checks[0].detail).toBe('Line 3: expected "Body", but your program printed an empty line.');
     expect(gradePython(exact, ok({}, "48\n49\n")).checks[0].detail).toMatch(/more lines than expected/);
     const relaxed: PyTask = { checks: [{ kind: "output", expected: "48\n", whitespace: "trailing" }] };
     expect(gradePython(relaxed, ok({}, "48  \n\n")).ok).toBe(true);

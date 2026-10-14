@@ -197,7 +197,11 @@ function outputDiff(actual: string, expected: string): string {
     }
     if (e[i] === undefined || (e[i] === "" && i === e.length - 1)) return `Your program printed more lines than expected, starting at line ${i + 1}: ${JSON.stringify(a[i])}.`;
     if (a[i] === undefined || (a[i] === "" && i === a.length - 1)) return `Your program stopped printing before line ${i + 1}: expected ${JSON.stringify(e[i])}.`;
-    return `Line ${i + 1}: expected ${JSON.stringify(e[i])}, but your program printed ${JSON.stringify(a[i])}.`;
+    const words = (s: string) => s.trim().split(/\s+/).join(" ");
+    const spacing = words(a[i]) === words(e[i]) ? " The words match; only the spaces differ." : "";
+    // An empty line reads as "", which beginners can't see; name it instead.
+    const show = (line: string) => (line === "" ? "an empty line" : JSON.stringify(line));
+    return `Line ${i + 1}: expected ${show(e[i])}, but your program printed ${show(a[i])}.${spacing}`;
   }
   return "The output differs from what was expected.";
 }

@@ -22,6 +22,8 @@ export type PyChallenge = {
   title: string;
   /** What to build, in the learner's terms. */
   prompt: string;
+  /** Exact stdout the program must produce, shown as a block when the layout of the output is the point. */
+  expectedOutput?: string;
   /** What Check answer looks for: the requirements, stated once. */
   looksFor: string[];
   starter: string;

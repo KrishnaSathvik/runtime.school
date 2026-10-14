@@ -94,6 +94,8 @@
 .py-verdict.ok { color: var(--rx-ok); }
 .py-verdict.bad { color: var(--rx-bad); }
 .rx-checks.py-checks { padding: 0; }
+/* Feedback quotes the learner's output: keep its spaces, so "Item:  notebook" doesn't look like "Item: notebook". */
+.py-keep-spaces { white-space: pre-wrap; }
 .py-checks .not-run .g, .py-checks .not-run { color: var(--rx-dim); }
 .py-checks code, .py-cases code { font-family: var(--rx-mono); font-size: 12.5px; }
 .py-cases { list-style: none; margin: 6px 0 2px; padding: 0; }
@@ -147,6 +149,8 @@
 .py-ch-prompt { margin: 6px 0 0; font-size: 15.5px; line-height: 1.6; }
 .py-looks { margin: 12px 0 4px; font-family: var(--rx-mono); font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--rx-dim); }
 .py-looks-list { font-size: 14.5px; }
+/* Exact expected output: blank lines matter, so it keeps its own lines and a visible box. */
+.py-expected { margin: 0 0 4px; padding: 8px 12px; font-family: var(--rx-mono); font-size: 13.5px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; background: var(--rx-cell); border: 1px solid var(--rx-line); border-radius: 6px; color: var(--rx-ink); }
 .py-help { display: flex; flex-wrap: wrap; gap: 4px; margin: 10px -8px -6px; }
 .py-lesson-code .py-work-split { height: clamp(440px, calc(100dvh - 300px), 720px); }
 .py-lesson-work .rx-cell { margin: 12px 0; }

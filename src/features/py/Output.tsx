@@ -141,7 +141,7 @@ export function CheckItem({ c, onLine }: { c: PyCheckOutcome; onLine?: (n: numbe
       <span>
         <span className="sr-only">{SR[c.status]}</span>
         {c.label}
-        {c.detail && <span className="detail">{c.detail} <LineButton line={c.line} onLine={onLine} /></span>}
+        {c.detail && <span className="detail"><span className="py-keep-spaces">{c.detail}</span> <LineButton line={c.line} onLine={onLine} /></span>}
         {c.tip && <span className="detail py-tip"><b>Tip:</b> {c.tip}</span>}
         {c.cases && c.cases.length > 0 && (
           <ul className="py-cases" aria-label={`Test inputs for ${c.label}`}>
@@ -245,7 +245,7 @@ export function CheckSummary({
       <p className="py-summary-verdict" ref={headingRef} tabIndex={-1}>{verdictText(report)}</p>
       {!report.ok && report.outcome === "failed" && first && (
         <p className="py-summary-first">
-          <span className="k">First to fix:</span> <b>{first.label}</b>. {first.detail} <LineButton line={first.line} onLine={onLine} />
+          <span className="k">First to fix:</span> <b>{first.label}</b>. <span className="py-keep-spaces">{first.detail}</span> <LineButton line={first.line} onLine={onLine} />
           {first.tip && <span className="py-summary-tip"><b>Tip:</b> {first.tip}</span>}
         </p>
       )}

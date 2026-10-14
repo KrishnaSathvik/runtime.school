@@ -94,10 +94,12 @@ describe("python progress: storage", () => {
 describe("python content: Variables and values", () => {
   const lesson = getPythonLesson("variables-and-values")!;
 
-  it("is the only lesson, listed in Python Foundations, with a stable ref", () => {
-    expect(pythonLessons.map((l) => l.slug)).toEqual(["variables-and-values"]);
-    expect(pythonModules[0]).toMatchObject({ id: "foundations", title: "Python Foundations", lessons: ["variables-and-values"] });
+  it("is the first lesson in Python Foundations, with a stable ref", () => {
+    const order = ["variables-and-values", "print-comments-and-execution-order"];
+    expect(pythonLessons.map((l) => l.slug)).toEqual(order);
+    expect(pythonModules[0]).toMatchObject({ id: "foundations", title: "Python Foundations", lessons: order });
     expect(lesson.ref).toBe(REF);
+    expect(new Set(pythonLessons.map((l) => l.ref)).size).toBe(pythonLessons.length);
   });
 
   it("has two challenges graded by variables and output only (no functions yet)", () => {
