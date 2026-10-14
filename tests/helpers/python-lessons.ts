@@ -48,7 +48,8 @@ export function describeModule(id: PyModuleId) {
           for (const [i, s] of lesson.walkthrough.entries()) await snap.run(`${lesson.ref}#step-${i + 1}`, s.code, ctx);
           for (const [i, m] of lesson.mistakes.entries()) {
             const r = await snap.run(`${lesson.ref}#mistake-${i + 1}`, m.code, ctx);
-            if (m.raises) {
+            if (m.raises === "timeout") expect(r.status, `${lesson.ref} mistake ${i + 1} should never finish`).toBe("timeout");
+            else if (m.raises) {
               expect(r.status, `${lesson.ref} mistake ${i + 1} should raise ${m.raises}`).toMatch(/error/);
               if (r.status === "runtime-error" || r.status === "syntax-error") expect(r.error.type, `${lesson.ref} mistake ${i + 1}`).toBe(m.raises);
             } else expect(r.status, `${lesson.ref} mistake ${i + 1} should run (its problem is the result)`).toBe("ok");

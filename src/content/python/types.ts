@@ -19,7 +19,10 @@ export type PyRunnable = { title: string; text: string; code: string };
 
 export type PyMistake = PyRunnable & {
   fix: string;
-  /** The exception this code really raises ("NameError", "SyntaxError", …). Omit when it runs but gives a wrong result. */
+  /**
+   * The exception this code really raises ("NameError", "SyntaxError", …), or "timeout" for a loop that never
+   * ends (Run stops it). Omit when it runs but gives a wrong result.
+   */
   raises?: string;
 };
 

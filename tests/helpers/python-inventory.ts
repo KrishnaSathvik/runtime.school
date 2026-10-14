@@ -21,7 +21,9 @@ const DUMP_DIR = process.env.PY_DUMP_DIR ?? ".py-dump";
 
 export function record(r: PyRunResult): RunRecord {
   if (!("stdout" in r)) return { status: r.status, stdout: "" };
-  const rec: RunRecord = { status: r.status, stdout: r.stdout.length > 6000 ? r.stdout.slice(0, 6000) + "…[truncated]" : r.stdout };
+  // How much a never-ending program prints before it's stopped depends on timing, so it isn't recorded.
+  const stdout = r.status === "timeout" ? "" : r.stdout;
+  const rec: RunRecord = { status: r.status, stdout: stdout.length > 6000 ? stdout.slice(0, 6000) + "…[truncated]" : stdout };
   if (r.status === "syntax-error" || r.status === "runtime-error") rec.error = { type: r.error.type, line: r.error.line };
   const figures = r.output.filter((c) => c.stream === "figure").length;
   const tables = r.output.filter((c) => c.stream === "table").length;
@@ -42,7 +44,8 @@ export class Snapshot {
   }
   /** Run `code`, compare with the reviewed record (or record it in update mode), and return the result. */
   async run(key: string, code: string, opts: { packages?: readonly PyPackage[]; files?: Record<string, string> } = {}): Promise<PyRunResult> {
-    const r = await runFast(code, opts);
+    // The browser stops a run after 5 seconds; content never needs longer.
+    const r = await runFast(code, { ...opts, timeoutS: 5 });
     const rec = record(r);
     this.now[key] = rec;
     if (DUMP) this.dump.push(`### ${key}\n\n\`\`\`python\n${code}\n\`\`\`\n\n\`\`\`text\n${rec.stdout}${rec.error ? `!! ${rec.status} ${rec.error.type} line ${rec.error.line}` : rec.status !== "ok" ? `!! ${rec.status}` : ""}${rec.figures ? `\n[${rec.figures} figure(s)]` : ""}${rec.tables ? `\n[${rec.tables} table(s)]` : ""}${rec.files ? `\n[files: ${rec.files.join(", ")}]` : ""}\n\`\`\`\n`);

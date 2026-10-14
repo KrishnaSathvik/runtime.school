@@ -134,7 +134,7 @@ export async function runFast(code: string, opts: FastRunOptions = {}): Promise<
   const emit = (kind: string, json: string) => {
     if (kind === "table") it.out.output.push({ stream: "table", text: String(json) });
   };
-  it.begin(opts.timeoutS ?? 10);
+  it.begin(opts.timeoutS ?? 5);
   let r: Record<string, unknown>;
   try {
     const proxy = it.run(code, probe, () => {}, figure, files ? JSON.stringify(files) : undefined, emit);
@@ -145,12 +145,12 @@ export async function runFast(code: string, opts: FastRunOptions = {}): Promise<
   }
   const out = { stdout: it.out.stdout, stderr: it.out.stderr, output: it.out.output.map((c) => ({ ...c })), ...(r.files ? { files: r.files as PyFile[] } : {}) };
   const durationMs = 0;
-  if (r.status === "runtime-error" && r.type === "_Deadline") return { ...out, status: "timeout", limitMs: (opts.timeoutS ?? 10) * 1000 };
+  if (r.status === "runtime-error" && r.type === "_Deadline") return { ...out, status: "timeout", limitMs: (opts.timeoutS ?? 5) * 1000 };
   if (r.status === "ok") {
     const probeResult = r.probe as Record<string, unknown> | undefined;
     // A deadline inside a variant or expression check also means the program didn't finish.
     const stuck = JSON.stringify(probeResult ?? {}).includes('"_Deadline"');
-    if (stuck) return { ...out, status: "timeout", limitMs: (opts.timeoutS ?? 10) * 1000 };
+    if (stuck) return { ...out, status: "timeout", limitMs: (opts.timeoutS ?? 5) * 1000 };
     return { ...out, status: "ok", durationMs, ...(probeResult ? { probe: probeResult as never } : {}) };
   }
   if (r.status === "syntax-error")
