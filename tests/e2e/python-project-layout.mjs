@@ -37,7 +37,9 @@ try{
   assert.equal(await right.locator('.pv-explorer,.pv-delivery').count(),0);
   assert.equal(await page.getByText(/Dataset generation rules|V1 history|Revision 2\.0/).count(),0);
   assert.equal(await page.locator('#project-milestone').count(),0);
-  assert.equal(await page.getByRole('button',{name:'Continue to next milestone',exact:true}).isEnabled(),false);
+  assert.equal(await page.getByRole('button',{name:/Continue to/}).count(),0);
+  assert.equal(await page.getByRole('navigation',{name:'Milestone progress'}).count(),0);
+  assert.equal(await page.getByText(/Current function:|Earlier code stays saved/).count(),0);
   await left.getByRole('button',{name:/^Open .*\(\) in /}).click();
   const original=await page.evaluate(ref=>JSON.stringify(JSON.parse(localStorage.getItem('runtime-python-projects-v2')).projects[ref]['2.0.0'].files),project.ref);
   const codeFile=await right.locator('.pv-file-head b').innerText();
@@ -54,13 +56,12 @@ try{
   for(const width of [1365,600,390,360]){
    await page.setViewportSize({width,height:1000});
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`${project.slug}: ${width}`);
+   assert.equal(await page.getByRole('navigation',{name:'Workspace shortcuts'}).count(),0);
   }
   if(project.slug==='customer-data-quality'){
    await page.setViewportSize({width:1365,height:1000});await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:'docs/python/projects-v2/screens/current-project-desktop.png'});
    await left.getByRole('button',{name:'Data',exact:true}).click();await page.screenshot({path:'docs/python/projects-v2/screens/current-inputs-desktop.png'});
    await page.setViewportSize({width:390,height:844});await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:'docs/python/projects-v2/screens/current-project-mobile.png'});
-   await page.getByRole('navigation',{name:'Workspace shortcuts'}).getByRole('button',{name:'Editor',exact:true}).click();assert.ok(await right.locator('.cm-content').isVisible());
-   await page.getByRole('navigation',{name:'Workspace shortcuts'}).getByRole('button',{name:'Tests',exact:true}).click();assert.equal(await page.getByRole('group',{name:'Output views'}).getByRole('button',{name:'Tests',exact:true}).getAttribute('aria-pressed'),'true');
    const a11y=await new AxeBuilder({page}).include('.py-project-v2').analyze();
    assert.deepEqual(a11y.violations.filter(v=>['serious','critical'].includes(v.impact)).map(v=>v.id),[]);
   }

@@ -127,11 +127,8 @@
  .pv-build .pv-explorer button { width:auto; border:1px solid var(--rx-line); }
  .pv-tab-bar button,.pv-stage-nav button { padding:10px; }
 }
-.pv-mobile-nav { display:none; }
 @media(max-width:700px){
- .pv-mobile-nav { display:flex; position:sticky; top:48px; z-index:10; background:var(--rx-bg); border-bottom:1px solid var(--rx-line); margin-bottom:16px; }
- .pv-mobile-nav button { flex:1; padding:12px 6px; font-size:13px; }
- .pv-build .pv-brief,.pv-build .pv-files,.pv-build .pv-work,.pv-build .pv-output { scroll-margin-top:108px; }
+ .pv-build .pv-brief,.pv-build .pv-files,.pv-build .pv-work,.pv-build .pv-output { scroll-margin-top:64px; }
 }
 /* All stages share the same full-width page frame. */
 .pv-overview,.pv-finish { max-width:none; width:100%; margin:0; }
@@ -190,14 +187,8 @@
 .pv-explorer summary { cursor:pointer; padding:7px 0; font-size:13px; font-weight:600; }
 .pv-explorer summary span { color:var(--rx-dim); font-weight:400; }
 .pv-milestone-status { display:inline-block; margin-left:8px; font-size:12px; color:var(--rx-dim); }
-.pv-function-label { width:100%; }
 .pv-run-help { font-size:12px; color:var(--rx-dim); margin:0 0 8px; }
 .pv-finish-grid { align-items:start; }
 .pv-criteria li { margin:8px 0; }
 .pv-current-step h2 { font-size:18px; margin:6px 0 12px; }
 .pv-current-step p { margin:0; }
-.pv-step-progress { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 18px; }
-.pv-step-progress button { min-width:36px; padding:7px 10px; border:1px solid var(--rx-line); border-radius:4px; font-size:13px; }
-.pv-step-progress [aria-current=step] { border-color:var(--rx-ink); font-weight:600; background:var(--rx-cell); }
-.pv-step-progress button:disabled { opacity:.45; cursor:not-allowed; }
-.pv-step-note { font-size:13px; margin:0 0 12px; }

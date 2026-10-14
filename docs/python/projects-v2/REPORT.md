@@ -322,3 +322,10 @@ Build now presents only the active milestone's function in the editor. Function 
 The dropdown is replaced by milestone progress buttons and a gated Continue action. Future steps unlock only after passing the current cumulative check. Earlier steps remain revisitable; edits invalidate the affected step and later progress without deleting code. A successful cumulative check records the prerequisites it proved. Full-program execution remains available in Test & deliver. Overview's Start/Continue action resumes the first unfinished step. File references and supplied tests are grouped separately, and final acceptance criteria appear before running checks.
 
 Validation: Customer Data Quality was built through all four function editors in a browser, with passing milestone checks, saved earlier code, reload during the workflow, and final full-project acceptance. A separate case with missing milestone-1 behavior was rejected at milestone 2 despite a previously saved milestone-1 pass. Responsive checks pass for all six projects; unit tests cover isolated replacement, later-range adjustment, empty/invalid saved snippets, cross-file isolation and assembly of every project's milestone functions.
+
+## Automatic milestone progression
+
+Removed the small-screen Task/Files/Editor/Tests shortcut bar, numbered milestone buttons, Continue buttons and repeated function heading/instructions above the editor. Build shows the current function and one Check milestone action. A passing cumulative check automatically opens the next function while preserving earlier source. Failed checks stay on the current milestone; edits made during a check prevent stale results from advancing progress. Passing the last milestone opens Test & deliver, where full-project acceptance is still required for a verified download.
+
+Validation: the four-step Customer Data Quality browser workflow passed automatic progression, reload preservation, full acceptance and rejection of missing prerequisite behavior. Application TypeScript passed.
+Responsive browser checks passed for all six projects at desktop, small-tablet and phone widths, including absence of the removed controls.

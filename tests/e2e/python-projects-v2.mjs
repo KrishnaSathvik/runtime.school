@@ -16,7 +16,6 @@ for(const engine of browsers){const b=await ({chromium,firefox,webkit}[engine]).
  await p.getByRole('navigation',{name:'Project stages'}).getByRole('button',{name:'Build',exact:true}).click();
  if(project.slug==='customer-data-quality'){
   for(let i=0;i<project.milestones.length;i++){
-   if(i>0)await p.getByRole('button',{name:'Continue to next milestone',exact:true}).click();
    await p.getByRole('button',{name:'Check milestone',exact:true}).click();await p.waitForFunction(()=>!document.querySelector('.pv-actions button')?.disabled,{},{timeout:120000});
    const passed=await p.evaluate(({ref,id})=>JSON.parse(localStorage.getItem('runtime-python-projects-v2')).projects[ref]['2.0.0'].milestones[id]?.passed,{ref:project.ref,id:project.milestones[i].id});assert.equal(passed,true,'cumulative milestone check');
   }
