@@ -2,6 +2,9 @@
 
 2026-10-14. Local `main`; no push or deployment. This report distinguishes executable inventory, runtime tests, and browser evidence.
 
+Follow-up: [reference-driven project discovery and learning guidance](reference-improvements.md) adds
+filters, preparation links, session estimates, deliverable previews, and module-to-practice navigation.
+
 ## Inventory
 
 79 lessons, 158 graded lesson challenges, 158 concept questions, and 567 lesson grading checks.

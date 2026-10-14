@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { projectGuides } from '@/content/python/journeys/catalog';
+import { getPythonLesson } from '@/content/python';
 import { pythonJourneys, pythonCases, pythonProjects } from '@/content/python/journeys';
 import { validateGraded } from './helpers/python-inventory';
 import { runFast } from './helpers/python-fast';
@@ -20,5 +22,18 @@ for (const j of pythonJourneys) describe(j.title, () => {
     const r = await runFast(j.stages.at(-1)!.answer, { files: j.files, packages: j.packages });
     expect(r.status).toBe('ok');
     expect('files' in r && r.files?.some(f => /\.(json|csv|txt)$/.test(f.path) && !f.truncated)).toBe(true);
+    if (j.kind === 'project') {
+      for (const name of projectGuides[j.slug].deliverables) {
+        expect('files' in r && r.files?.some(f => f.path === name && !f.truncated), `${j.slug} promises ${name}`).toBe(true);
+      }
+    }
   }, 600000);
+});
+
+
+it('project preparation links resolve to taught lessons without changing project identities', () => {
+  expect(Object.keys(projectGuides).sort()).toEqual(pythonProjects.map(j => j.slug).sort());
+  for (const guide of Object.values(projectGuides)) {
+    for (const slug of guide.preparation) expect(getPythonLesson(slug), slug).toBeDefined();
+  }
 });

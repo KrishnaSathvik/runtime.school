@@ -9,11 +9,11 @@ import { usePyProgress, usePyProgressReady } from '@/lib/python-progress';
 import { Shell } from '@/features/rt/Shell';
 import { Exercise } from './Study';
 
-export function PracticeIndex({ trackSlug }: { trackSlug?: string }) {
+export function PracticeIndex({ trackSlug, initialModule = '' }: { trackSlug?: string; initialModule?: string }) {
   const ready = usePyProgressReady();
   const items = usePyProgress(s => s.items);
   const [query, setQuery] = useState('');
-  const [module, setModule] = useState('');
+  const [module, setModule] = useState(initialModule);
   const track = trackSlug ? getPythonTrack(trackSlug) : undefined;
   const questions = track ? track.questions.map(getPythonQuestionByRef).filter((q): q is PyQuestion => !!q) : pythonQuestions;
   const shown = questions.filter(q => (!module || q.module === module) && `${q.title} ${q.topics.join(' ')}`.toLowerCase().includes(query.toLowerCase()));
@@ -25,8 +25,8 @@ export function PracticeIndex({ trackSlug }: { trackSlug?: string }) {
         <h2>Learning tracks</h2><ul className="py-catalog-list">{pythonTracks.map(t => <li key={t.id}><Link href={pythonTrackHref(t.slug)}>{t.title}</Link><p>{t.goal} · {t.questions.length} questions</p></li>)}</ul>
         <h2>Case studies</h2><ul className="py-catalog-list">{pythonCases.map(j => <li key={j.ref}><Link href={journeyHref(j)}>{j.title}</Link><p>{j.stages.length} investigation stages · standard library</p></li>)}</ul>
       </>}
-      <h2>{track ? 'Your route through practice' : 'Question bank'}</h2>
-      <div className="py-filters"><label>Search questions<input value={query} onChange={e => setQuery(e.target.value)} type="search" /></label><label>Module<select value={module} onChange={e => setModule(e.target.value)}><option value="">All modules</option>{pythonModules.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}</select></label></div>
+      <h2 id="questions">{track ? 'Your route through practice' : 'Question bank'}</h2>
+      <div className="py-filters"><label>Search questions<input value={query} onChange={e => setQuery(e.target.value)} type="search" /></label><div className="py-filter-control"><label htmlFor="practice-module">Module</label><select id="practice-module" value={module} onChange={e => setModule(e.target.value)}><option value="">All modules</option>{pythonModules.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}</select></div></div>
       <p role="status">{shown.length} questions{!ready ? ' · Loading saved progress…' : ''}</p>
       <ol className="py-catalog-list">{shown.map(q => {
         const rec = items[q.ref]?.challenges.answer;

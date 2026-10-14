@@ -20,6 +20,11 @@ export function PythonHome() {
         <p className="rx-lead">Learn Python by writing real programs. Every example and exercise runs in a real Python interpreter, right here in your browser.</p>
 
         <p className="py-links"><Link href="/python/practice">Practice independently</Link><Link href="/python/projects">Build a project</Link><Link href="/python/playground">Open Python playground</Link></p>
+        <section className="py-learning-loop" aria-labelledby="learning-loop-title">
+          <h2 id="learning-loop-title">Make time to use what you learn</h2>
+          <ol><li><b>Learn one idea.</b> Read a lesson and predict an example before running it.</li><li><b>Try it yourself.</b> Solve a practice question, then inspect what went wrong.</li><li><b>Build something useful.</b> Choose a project when its preparation lessons feel familiar.</li></ol>
+          <p>A short practice session counts. You do not need to finish a whole module in one sitting.</p>
+        </section>
         {pythonModules.map((m) => (
           <section key={m.id} className="py-module" aria-labelledby={`module-${m.id}`}>
             <p className="rx-label">module {pad(m.number)}</p>
@@ -49,6 +54,7 @@ export function PythonHome() {
                 );
               })}
             </ol>
+            <p className="py-links"><Link href={`/python/practice?module=${m.id}#questions`}>Practice {m.title.toLowerCase()}</Link></p>
 
           </section>
         ))}
