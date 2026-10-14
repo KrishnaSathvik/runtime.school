@@ -314,28 +314,21 @@
 .py-prediction-input { border: 0; border-radius: 0; font-family: var(--rx-mono); min-height: clamp(280px, calc(100dvh - 340px), 820px); background: var(--ide-bg); }
 .py-report-preview { white-space: pre-wrap; overflow-wrap: anywhere; font: 13px/1.7 var(--rx-mono); }
 
-/* Keep the work and its controls inside the visible right column. The page remains 50/50;
-   long lesson instructions scroll within their card so code and results stay usable. */
-@media (min-width: 701px) {
-  .py-lesson-work, .py-task-work {
-    height: calc(100dvh - 129px);
-    max-height: calc(100dvh - 129px);
-    padding-bottom: 16px;
-    overflow: hidden;
-  }
-  .py-lesson-work > [role="tabpanel"] { overflow: hidden; }
-  .py-challenge { height: 100%; min-height: 0; display: flex; flex-direction: column; overflow: auto; }
-  .py-challenge > .rx-question { flex: 0 1 auto; max-height: 35%; min-height: 0; overflow: auto; }
-  .py-challenge > .py-task-cell { flex: 1 0 60%; min-height: 220px; margin: 0; }
-  .py-task-panel { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: auto; }
-  .py-task-panel > .py-task-cell { flex: 1 0 280px; min-height: 280px; margin-bottom: 0; }
-  .py-task-cell { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
-  .py-task-cell.has-output { grid-template-rows: auto minmax(0, 1fr) auto minmax(0, 1fr); }
-  .py-task-cell .py-editor, .py-task-cell .py-editor > div { height: 100%; min-height: 0; overflow: hidden; }
-  .py-task-cell .py-editor .cm-editor { height: 100%; min-height: 0 !important; max-height: none; }
-  .py-task-cell .py-editor .cm-scroller { min-height: 0 !important; height: 100%; overflow: auto; }
-  .py-task-cell .py-cell-output { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
-  .py-task-cell .py-cell-results { flex: 1; min-height: 0; overflow: auto; }
+/* The editor grows with its code/results. Only the document and left brief scroll. */
+.py-lesson-work, .py-task-work, .py-challenge, .py-task-panel {
+  height: auto; max-height: none; overflow: visible;
+}
+.py-challenge > .rx-question { max-height: none; overflow: visible; }
+.py-task-cell { display: grid; grid-template-rows: auto minmax(280px, 1fr) auto; }
+.py-task-cell.has-output { grid-template-rows: auto minmax(280px, 1fr) auto minmax(280px, 1fr); }
+.py-task-cell .py-editor, .py-task-cell .py-editor > div {
+  display: flex; flex-direction: column; height: auto; min-height: 0; overflow: visible;
+}
+.py-task-cell .py-editor > div, .py-task-cell .py-editor .cm-editor { flex: 1; }
+.py-task-cell .py-editor .cm-editor { height: auto; min-height: 280px !important; max-height: none; }
+.py-task-cell .py-editor .cm-scroller { height: auto; max-height: none; overflow: visible; }
+.py-task-cell .py-cell-output, .py-task-cell .py-cell-results {
+  height: auto; max-height: none; overflow: visible;
 }
 
 .py-task-cell .py-panel-note { display: none; }

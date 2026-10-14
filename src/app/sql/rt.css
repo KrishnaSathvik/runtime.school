@@ -621,3 +621,48 @@ html[data-theme="dark"] .rx {
 .rx-pager a:focus-visible { outline-offset: -2px; }
 .rx-pager [aria-disabled="true"] { color: var(--rx-faint); font-weight: 500; cursor: default; }
 @media (max-width: 480px) { .rx-pager a, .rx-pager span { min-width: 0; padding: 0 10px; } }
+
+/* Learn, Practice and Projects: equal columns at every width, one document scroll
+   for the work. The left brief is the only independently scrolling content pane. */
+.rx-lesson .rx-task-split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+.rx-lesson .rx-brief {
+  position: sticky; top: 48px; align-self: start;
+  max-height: calc(100dvh - 74px); overflow: auto;
+  border-right: 1px solid var(--rx-line); border-bottom: 0;
+}
+.rx-lesson .rx-lesson-work,
+.rx-lesson .rx-lesson-work:has(> .rx-tabs),
+.rx-lesson .rx-lesson-work > [role="tabpanel"] {
+  position: static; height: auto; max-height: none; overflow: visible;
+}
+.rx-lesson .rx-lesson-work { display: block; }
+.rx-lesson .rx-work .rx-cell { overflow: visible; }
+.rx-lesson .rx-work .rx-editor,
+.rx-lesson .rx-work .cm-editor,
+.rx-lesson .rx-work .cm-scroller {
+  height: auto; max-height: none; overflow: visible;
+}
+.rx-lesson .rx-tabs { flex-wrap: wrap; overflow: visible; }
+.rx-lesson .rx-work { overflow-wrap: anywhere; }
+@media (max-width: 700px) {
+  .rx-lesson .rx-brief, .rx-lesson .rx-work { padding: 14px 8px 24px; }
+  .rx-lesson .rx-task-title { font-size: clamp(1.15rem, 4vw, 1.6rem); }
+  .rx-lesson .rx-cell-head { flex-wrap: wrap; gap: 4px; padding: 7px; }
+  .rx-lesson .rx-cell-head .acts { flex-wrap: wrap; }
+  .rx-lesson .rx-cell-foot { gap: 4px; padding: 6px; }
+  .rx-lesson .rx-cell-foot .hint { flex-basis: 100%; }
+  .rx-lesson .rx-tabs button { white-space: normal; padding: 8px 4px; font-size: 12px; }
+  .rx-lesson .rx-question { padding: 10px 8px; }
+  .rx-lesson .rx-spec > div { padding: 8px; }
+  .rx-lesson .rx-question-text, .rx-lesson .rx-ask { font-size: 14px; }
+  .rx-lesson .rx-dl { grid-template-columns: minmax(0, 1fr); }
+  .rx-lesson .rx-ms-list a { grid-template-columns: 20px minmax(0, 1fr); gap: 4px; }
+}
+.rx-lesson .rx-work textarea { field-sizing: content; height: auto; max-height: none; overflow: visible; }
+@media (max-width: 420px) {
+  .rx-bar .rx-brand { font-size: 0; gap: 0; }
+  .rx-bar .rx-brand .rx-caret { display: none; }
+}
+@media (max-width: 700px) {
+  .rx-lesson .rx-cell-head .acts[aria-hidden="true"] { display: none; }
+}

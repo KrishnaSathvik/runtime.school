@@ -17,11 +17,11 @@ try {for(const width of [1440,1024]){
   });
   assert.ok(Math.abs(geometry.columns[0]-geometry.columns[1])<1);
   assert.ok(Math.abs(geometry.code-geometry.output)<1);
-  assert.ok(geometry.footer<=geometry.viewport-26 && geometry.bottom<=geometry.viewport-26,JSON.stringify(geometry));
+  assert.equal(await p.locator(".py-task-cell .cm-scroller").evaluate(e => getComputedStyle(e).overflowY), "visible");
   assert.deepEqual((await new AxeBuilder({page:p}).analyze()).violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)})),[]);
   await p.screenshot({path:`${dir}/${width}-${section}.png`});
   await p.getByRole('button',{name:'Hide',exact:true}).click();await p.getByRole('button',{name:'Show',exact:true}).click();
-  results.push({width,section,...geometry});console.log('PASS',width,section,'50/50 columns and editor/results; controls visible');
+  results.push({width,section,...geometry});console.log('PASS',width,section,'50/50 columns and editor/results; page scroll');
  }
  await p.goto(base+'/python/projects');await p.getByRole('heading',{level:1}).waitFor();assert.equal(await p.getByText('Preparation lessons',{exact:true}).count(),0);await c.close();
 }fs.writeFileSync(`${dir}/results.json`,JSON.stringify(results,null,2)+'\n');}finally{await b.close();}

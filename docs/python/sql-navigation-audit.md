@@ -50,3 +50,15 @@ As clarified by the user, the internal 50/50 requirement means code above and ou
 Removed Preparation lessons from project briefs and the legacy project renderer, together with obsolete preparation copy. The playground and standalone workspace also default to equal columns/panes. The resizable split now subtracts its divider before calculating shares, so a nominal 50% is actually equal; user-adjusted saved ratios remain adjustable/resettable.
 
 Validation: `tests/e2e/python-editor-balance.mjs` measures equal page columns, equal code/output height, visible controls, and accessibility for Learn, Practice, and Projects at 1440px and 1024px widths. Results and screenshots are in `screens/editor-balance/`. The real-Python design/workflow suite also passed again, including grading, saved findings, report export, and mobile layouts.
+
+## Narrow screens and page scrolling (latest request)
+
+This supersedes the viewport-constrained editor layout above. The user explicitly requested the same change in SQL and Python.
+
+- Learn, Practice and Projects retain two equal columns at 600px, 390px and 360px, as well as desktop/tablet widths.
+- The left brief remains independently scrollable and sticky. The right work area, task panels, editor and results grow with their content and use the document scroll; their nested vertical scroll areas and fixed-height clipping were removed.
+- Python keeps equal code/results grid rows when output is open. Both rows can grow, so long programs are fully accessible without an editor scrollbar.
+- Small-screen spacing and wrapping preserve usable controls; the phone header shows the brand icon to keep SQL's additional Tools control from overflowing.
+- Prediction/finding text areas grow with their contents. Data tables may still scroll horizontally to preserve columns.
+
+Validation: `tests/e2e/learning-page-scroll.mjs` exercises both languages and all three sections with 80-line programs at 1440, 768, 600, 390 and 360px. It checks equal columns, no page horizontal overflow, page growth and absence of nested editor scrollbars. Phone runs also check equal Python code/results height. Screenshots are in `screens/page-scroll/`. Separate phone checks cover accessibility, real SQL/Python challenge grading, left-brief scrolling and long prediction inputs. Only shared presentation CSS and Python presentation CSS changed; SQL grading and stored progress logic did not change.
