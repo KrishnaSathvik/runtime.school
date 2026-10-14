@@ -10,8 +10,8 @@ import { subjects } from "@/platform/subjects";
 import { NotifyInterest } from "../NotifyInterest";
 import { Shell } from "../Shell";
 
-/** Landing: one question and the subjects, all as equal cards. SQL is available; the rest are planned. */
-export function Landing() {
+/** Python is offered only where its existing runtime gate permits execution. */
+export function Landing({ pythonAvailable = false }: { pythonAvailable?: boolean }) {
   const router = useRouter();
   const ready = useHydrated();
   const state = useLearning();
@@ -42,10 +42,12 @@ export function Landing() {
         <ul className="rx-home-grid" aria-label="Subjects">
           {subjects.map((s) => {
             const Icon = s.icon;
-            const available = s.availability === "available";
+            const available = s.availability === "available" || (s.id === "python" && pythonAvailable);
+            const subjectHref = s.id === "python" ? "/python" : startHref;
+            const subjectLabel = s.id === "python" ? "Start Python" : startLabel;
             return (
               <li key={s.id} className={`rx-subject ${available ? "on" : "off"}`}>
-                {available && <Link href={startHref} className="rx-home-cover" aria-label={`${startLabel}: ${s.title}`} />}
+                {available && <Link href={subjectHref} className="rx-home-cover" aria-label={`${subjectLabel}: ${s.title}`} />}
                 <div className="rx-subject-top">
                   <span className="rx-subject-icon" aria-hidden="true"><Icon size={18} strokeWidth={1.75} /></span>
                   <span className={`rx-tag ${available ? "ok" : s.availability === "next" ? "amber" : ""}`}>
@@ -57,7 +59,7 @@ export function Landing() {
                 <p className="rx-subject-sum">{s.summary}</p>
                 <div className="rx-subject-foot">
                   {available ? (
-                    <span className="rx-subject-go">{startLabel} <ArrowRight size={14} aria-hidden="true" /></span>
+                    <span className="rx-subject-go">{subjectLabel} <ArrowRight size={14} aria-hidden="true" /></span>
                   ) : (
                     <NotifyInterest subjectId={s.id} subjectTitle={s.title} />
                   )}
