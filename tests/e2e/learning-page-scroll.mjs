@@ -11,9 +11,9 @@ try{for(const width of (process.env.WIDTHS??"1440,768,600,390,360").split(",").m
   await p.goto(base+route);await p.locator('.rx-task-split').waitFor();
   if(subject==='sql'&&section==='projects'){await p.getByRole('link',{name:'Start the first milestone',exact:false}).click();}
   const editor=p.locator('.rx-work .cm-content').first();await editor.waitFor();
-  const measure=()=>p.evaluate(()=>{const split=document.querySelector('.rx-task-split');const cells=[...split.children].map(e=>e.getBoundingClientRect());const work=document.querySelector('.rx-work');const nested=[work,...work.querySelectorAll('*')].filter(e=>e.scrollHeight>e.clientHeight+2&&['auto','scroll','hidden'].includes(getComputedStyle(e).overflowY)&&e.clientHeight>0).map(e=>e.className);return {widths:cells.map(r=>r.width),positions:cells.map(r=>r.x),nested,overflow:document.documentElement.scrollWidth>innerWidth+1,editorHeight:work.querySelector('.cm-editor').getBoundingClientRect().height};});
-  let m=await measure();assert.ok(Math.abs(m.widths[0]-m.widths[1])<1,JSON.stringify(m));assert.ok(m.positions[1]>m.positions[0]);assert.equal(m.overflow,false,`${width} ${subject} ${section}`);
-  if(section==='learn') {const moved=await p.locator('.rx-brief').evaluate(e=>{e.scrollTop=100;const y=e.scrollTop;e.scrollTop=0;return y;});assert.ok(moved>0,'left brief remains independently scrollable');}
+  const measure=()=>p.evaluate(()=>{const split=document.querySelector('.rx-task-split');const cells=[...split.children].map(e=>e.getBoundingClientRect());const work=document.querySelector('.rx-work');const nested=[work,...work.querySelectorAll('*')].filter(e=>e.scrollHeight>e.clientHeight+2&&['auto','scroll','hidden'].includes(getComputedStyle(e).overflowY)&&e.clientHeight>0).map(e=>e.className);return {widths:cells.map(r=>r.width),positions:cells.map(r=>r.x),tops:cells.map(r=>r.y),heights:cells.map(r=>r.height),nested,overflow:document.documentElement.scrollWidth>innerWidth+1,editorHeight:work.querySelector('.cm-editor').getBoundingClientRect().height};});
+  let m=await measure();assert.ok(Math.abs(m.widths[0]-m.widths[1])<1,JSON.stringify(m));if(width<=700){assert.equal(m.positions[0],m.positions[1]);assert.ok(m.tops[1]>m.tops[0]);assert.ok(Math.abs(m.heights[0]-m.heights[1])<1,JSON.stringify(m));}else{assert.ok(m.positions[1]>m.positions[0]);}assert.equal(m.overflow,false,`${width} ${subject} ${section}`);
+  if(section==='learn'&&width>700) {const moved=await p.locator('.rx-brief').evaluate(e=>{e.scrollTop=100;const y=e.scrollTop;e.scrollTop=0;return y;});assert.ok(moved>0,'left brief remains independently scrollable');}
   await p.screenshot({path:`${dir}/${width}-${subject}-${section}.png`});
   await editor.click();await p.keyboard.press(`${mod}+a`);await p.keyboard.insertText(Array.from({length:80},(_,i)=>`${subject==='python'?'#':'--'} line ${i+1} — editing should grow the page`).join('\n'));
   await p.waitForTimeout(150);m=await measure();assert.ok(m.editorHeight>1000,JSON.stringify(m));assert.deepEqual(m.nested,[],`${width} ${subject} ${section} nested scroll`);assert.equal(m.overflow,false);
@@ -22,7 +22,7 @@ try{for(const width of (process.env.WIDTHS??"1440,768,600,390,360").split(",").m
    await p.locator('.py-task-cell').getByRole('button',{name:'Run',exact:true}).click();await p.locator('.py-cell-output').waitFor();await p.locator('.py-task-cell').getByRole('button',{name:'Run',exact:true}).waitFor({timeout:60000});
    const heights=await p.evaluate(()=>[document.querySelector('.py-task-cell .py-editor'),document.querySelector('.py-cell-output')].map(e=>e.getBoundingClientRect().height));assert.ok(Math.abs(heights[0]-heights[1])<1,JSON.stringify(heights));assert.deepEqual((await measure()).nested,[]);
   }
-  results.push({width,subject,section,...m});console.log('PASS',width,subject,section,'equal columns, long code grows page, no nested editor scroll');
+  results.push({width,subject,section,...m});console.log('PASS',width,subject,section,width<=700?'equal stacked halves, page scroll':'equal columns, page scroll');
  }
  await c.close();
 }fs.writeFileSync(`${dir}/results.json`,JSON.stringify(results,null,2)+'\n');}finally{await b.close();}
