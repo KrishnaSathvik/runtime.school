@@ -11,6 +11,7 @@ import {
   useLearning,
 } from "@/lib/learning-state";
 import { TaskCell } from "./Cells";
+import { CHALLENGE_EDITOR_HEIGHT } from "./editor-height";
 import { Cols } from "./Spec";
 import { prettySql } from "@/components/editor/pretty-sql";
 import { SqlCode } from "./SqlCode";
@@ -72,7 +73,7 @@ export function Challenge({
       </section>
       <TaskCell
         name={`challenge-${variant + 1}.sql`}
-        minHeight="clamp(160px, calc(100dvh - 640px), 360px)"
+        minHeight={CHALLENGE_EDITOR_HEIGHT}
         value={value}
         onChange={(v) => {
           setDraft(dKey, v);

@@ -21,6 +21,7 @@ import examples from "@/content/question-bank/examples.json";
 import { Shell } from "../Shell";
 import { Pager } from "../Pager";
 import { TaskCell } from "../Cells";
+import { PRACTICE_EDITOR_HEIGHT } from "../editor-height";
 import { ExpectedResult, Tables } from "../Tables";
 import { Cols, Spec } from "../Spec";
 import { prettySql } from "@/components/editor/pretty-sql";
@@ -175,7 +176,7 @@ export function PracticeTask({ slug }: { slug: string }) {
                 onChange={(v) => s.setDraft(dKey, v)}
                 tables={q.tables}
                 analytics={{ subject: "sql", surface: "practice", question: q.id }}
-                minHeight={hints > 0 || revealed ? "220px" : "clamp(180px, calc(100dvh - 560px), 420px)"}
+                minHeight={PRACTICE_EDITOR_HEIGHT}
                 checkLabel={q.exerciseType === "debug" ? "Check fix" : "Check"}
                 task={{
                   seedSql: bankSeed(q),

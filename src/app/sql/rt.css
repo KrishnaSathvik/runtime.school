@@ -274,7 +274,7 @@ html[data-theme="dark"] .rx {
 .rx-task { position: relative; max-width: 1400px; margin: 0 auto; width: 100%; }
 .rx-task-bar { display: flex; align-items: center; gap: 8px; padding: 10px clamp(14px, 2.5vw, 28px); border-bottom: 1px solid var(--rx-line); }
 .rx-task-bar .push { flex: 1; }
-.rx-task-split { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); }
+.rx-task-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 .rx-brief { padding: 28px clamp(16px, 3vw, 36px) 48px; border-right: 1px solid var(--rx-line); min-width: 0; }
 .rx-work { padding: 20px clamp(14px, 2.5vw, 28px) 48px; min-width: 0; }
 .rx-work .rx-cell { margin-top: 0; }
@@ -378,7 +378,9 @@ html[data-theme="dark"] .rx {
 .rx-lesson .rx-task-split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 .rx-lesson .rx-brief { padding-bottom: 80px; }
 .rx-lesson .rx-brief .rx-prose { max-width: 44rem; }
-.rx-lesson-work { position: sticky; top: 48px; align-self: start; max-height: calc(100dvh - 48px - 26px); overflow: auto; }
+.rx-lesson-work { position: sticky; top: 48px; align-self: start; max-height: calc(100dvh - 48px - 26px); overflow: auto; display: flex; flex-direction: column; }
+.rx-lesson-work > .rx-cell { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+.rx-lesson-work > .rx-cell .cm-editor { flex: 1 1 auto; }
 .rx-lesson-work .rx-out { scroll-margin-bottom: 16px; }
 .rx-tabs { display: flex; gap: 2px; margin: 0 0 16px; border-bottom: 1px solid var(--rx-line); overflow-x: auto; }
 .rx-tabs button { display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; margin-bottom: -1px; font-size: 14px; font-weight: 550; color: var(--rx-dim); border-bottom: 2px solid transparent; white-space: nowrap; }

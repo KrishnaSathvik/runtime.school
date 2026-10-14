@@ -9,6 +9,7 @@ import { labObservations, labToRun } from "@/content/lab-guides";
 import { useLearning } from "@/lib/learning-state";
 import { Shell } from "../Shell";
 import { TaskCell } from "../Cells";
+import { LAB_EDITOR_HEIGHT } from "../editor-height";
 import { prettySql } from "@/components/editor/pretty-sql";
 import { Select } from "../Select";
 
@@ -114,7 +115,7 @@ export function Lab() {
               value={value}
               onChange={(v) => setDraft(key, v)}
               graded={false}
-              minHeight="clamp(300px, calc(100dvh - 330px), 820px)"
+              minHeight={LAB_EDITOR_HEIGHT}
               task={{ allowWrites: true }}
               observe={(res, ran) =>
                 res.error

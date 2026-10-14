@@ -6,11 +6,10 @@ import { practiceDatasets, practiceSeed } from "@/content/question-bank";
 import { useLearning } from "@/lib/learning-state";
 import { Shell } from "../Shell";
 import { TaskCell } from "../Cells";
+import { PLAYGROUND_EDITOR_HEIGHT } from "../editor-height";
 import { Tables } from "../Tables";
 import { Select } from "../Select";
 import { prettySql } from "@/components/editor/pretty-sql";
-
-const EDITOR = "clamp(300px, calc(100dvh - 300px), 820px)";
 
 /** Free querying on sample databases. No grades, no progress, real results. */
 export function Playground() {
@@ -86,7 +85,7 @@ export function Playground() {
                 </div>
               </div>
             )}
-            <TaskCell key={dataset} name="query.sql" value={value} onChange={(v) => setDraft(key, v)} graded={false} minHeight={EDITOR} tables={tables} task={{ seedSql: practiceSeed, allowWrites: dataset === "lab" }} />
+            <TaskCell key={dataset} name="query.sql" value={value} onChange={(v) => setDraft(key, v)} graded={false} minHeight={PLAYGROUND_EDITOR_HEIGHT} tables={tables} task={{ seedSql: practiceSeed, allowWrites: dataset === "lab" }} />
             <p className="rx-small">Runs one SELECT or WITH query at a time. Results show up to 200 rows.</p>
           </section>
         </div>
