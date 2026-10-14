@@ -1,0 +1,125 @@
+/*
+ * Python workspace. Builds on the .rx tokens from ../sql/rt.css (light and dark).
+ * Every selector is py-*, so nothing here reaches SQL pages.
+ */
+
+/* Desktop: the workspace fills the window between the header (48px) and status band (26px). */
+.py-ws { height: calc(100dvh - 48px - 26px); min-height: 520px; display: flex; }
+.py-ws-split { flex: 1; }
+
+.py-split { display: grid; min-width: 0; min-height: 0; height: 100%; }
+.py-split.cols { grid-template-columns: var(--py-share) 9px minmax(0, 1fr); }
+.py-split.rows { grid-template-rows: var(--py-share) 9px minmax(0, 1fr); }
+.py-split-a, .py-split-b { min-width: 0; min-height: 0; overflow: hidden; }
+.py-divider { position: relative; touch-action: none; outline: none; }
+.py-split.cols > .py-divider { cursor: col-resize; }
+.py-split.rows > .py-divider { cursor: row-resize; }
+.py-divider::after { content: ""; position: absolute; background: var(--rx-line); }
+.py-split.cols > .py-divider::after { top: 0; bottom: 0; left: 4px; width: 1px; }
+.py-split.rows > .py-divider::after { left: 0; right: 0; top: 4px; height: 1px; }
+.py-divider:hover::after, .py-divider:focus-visible::after { background: var(--rx-amber); }
+.py-split.cols > .py-divider:hover::after, .py-split.cols > .py-divider:focus-visible::after { left: 3px; width: 3px; }
+.py-split.rows > .py-divider:hover::after, .py-split.rows > .py-divider:focus-visible::after { top: 3px; height: 3px; }
+
+/* Text uses --rx-dim rather than the lighter --rx-faint, which is below 4.5:1 contrast on white. */
+.py-task .rx-prompt-line, .py-preview-note { color: var(--rx-dim); }
+
+/* Task */
+.py-task { height: 100%; overflow: auto; padding: 24px clamp(16px, 2.5vw, 32px) 40px; }
+.py-task-title { margin: 0; font-size: clamp(1.5rem, 2.6vw, 2rem); font-weight: 650; letter-spacing: -0.03em; line-height: 1.15; }
+.py-task .rx-label.sec { margin-top: 26px; }
+.py-prompt { max-width: 40rem; font-size: 16px; line-height: 1.65; }
+.py-prompt p { margin: 0 0 10px; }
+.py-task code, .py-prompt code { font-family: var(--rx-mono); font-size: 0.9em; color: var(--rx-amber-ink); }
+.py-list { margin: 0; padding-left: 1.15em; max-width: 40rem; font-size: 15px; line-height: 1.55; }
+.py-list li { margin: 5px 0; }
+
+/* Code */
+.py-work { height: 100%; display: flex; flex-direction: column; padding: 14px clamp(12px, 2vw, 22px); }
+.py-work-split { flex: 1; }
+.py-code { height: 100%; display: flex; flex-direction: column; border: 1px solid var(--rx-line); border-radius: 8px; background: var(--rx-cell); overflow: hidden; }
+.py-code-head { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--rx-line); font-family: var(--rx-mono); font-size: 12.5px; min-height: 37px; }
+.py-file { align-self: stretch; display: inline-flex; align-items: center; padding: 0 16px; background: var(--rx-surface); border-right: 1px solid var(--rx-line); box-shadow: inset 0 -2px 0 var(--rx-amber); color: var(--rx-ink); }
+.py-state { margin-left: auto; padding-right: 12px; display: inline-flex; align-items: center; gap: 7px; color: var(--rx-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.py-state .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--rx-line-strong); flex: none; }
+.py-state:not(.busy):not(.bad) .dot { background: var(--rx-ok); }
+.py-state.busy .dot { background: var(--rx-amber); animation: py-pulse 1s ease-in-out infinite; }
+.py-state.bad { color: var(--rx-bad); }
+.py-state.bad .dot { background: var(--rx-bad); }
+.py-code-head .rx-btn { height: 28px; margin-right: 8px; }
+@keyframes py-pulse { 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) { .py-state.busy .dot { animation: none; } }
+
+.py-editor { flex: 1; min-height: 0; overflow: hidden; }
+.py-editor > div { height: 100%; }
+.py-editor .cm-editor { height: 100%; background: var(--ide-bg); }
+.py-editor .cm-gutters { background: var(--ide-bg); }
+.py-editor .cm-scroller { overflow: auto; }
+.py-editor .cm-py-error-line { background: color-mix(in srgb, var(--rx-bad) 13%, transparent) !important; box-shadow: inset 3px 0 0 var(--rx-bad); }
+
+.py-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 10px; border-top: 1px solid var(--rx-line); background: var(--rx-cell); }
+.py-hint { margin-right: auto; font-family: var(--rx-mono); font-size: 11.5px; color: var(--rx-dim); display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.py-undo-note, .py-fail { margin: 0; padding: 6px 12px 8px; font-size: 13px; color: var(--rx-dim); border-top: 1px solid var(--rx-line); }
+.py-fail { color: var(--rx-bad); }
+
+/* Output: Console (what the program did) and Checks (does it meet the exercise) */
+.py-out { height: 100%; display: flex; flex-direction: column; border: 1px solid var(--rx-line); border-radius: 8px; background: var(--rx-surface); overflow: hidden; }
+.py-out-tabs { display: flex; gap: 2px; padding: 0 6px; border-bottom: 1px solid var(--rx-line); flex: none; }
+.py-out-tabs button { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; margin-bottom: -1px; font-size: 13.5px; font-weight: 550; color: var(--rx-dim); border-bottom: 2px solid transparent; }
+.py-out-tabs button:hover { color: var(--rx-ink); }
+.py-out-tabs button[aria-selected="true"] { color: var(--rx-ink); border-bottom-color: var(--rx-amber); }
+.py-count { font-family: var(--rx-mono); font-size: 11.5px; font-weight: 600; }
+.py-count.ok { color: var(--rx-ok); }
+.py-count.bad { color: var(--rx-bad); }
+.py-panel { flex: 1; min-height: 0; overflow: auto; padding: 10px 14px 14px; }
+.py-panel[hidden] { display: none; }
+.py-panel-note { margin: 0 0 10px; font-size: 12.5px; line-height: 1.45; color: var(--rx-dim); }
+.py-empty { margin: 0; font-size: 14px; color: var(--rx-dim); }
+.py-stream { margin: 0; font-family: var(--rx-mono); font-size: 13.5px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--rx-ink); }
+.py-stream .stderr { color: var(--rx-bad); }
+.py-meta { margin: 10px 0 0; font-family: var(--rx-mono); font-size: 12.5px; line-height: 1.5; color: var(--rx-dim); }
+.py-meta.ok { color: var(--rx-ok); }
+.py-meta.bad { color: var(--rx-bad); }
+.py-err { margin: 10px 0 0; padding: 6px 0 6px 12px; border-left: 3px solid var(--rx-bad); }
+.py-err-head { margin: 0; font-family: var(--rx-mono); font-size: 13.5px; line-height: 1.5; overflow-wrap: anywhere; }
+.py-err-head b { color: var(--rx-bad); font-weight: 650; }
+.py-err-src { margin: 6px 0 0; font-family: var(--rx-mono); font-size: 13px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--rx-dim); }
+.py-err-src .caret { color: var(--rx-bad); font-weight: 700; }
+.py-err-note { margin: 6px 0 0; font-size: 13px; color: var(--rx-dim); }
+.py-line { margin-left: 4px; font-family: var(--rx-mono); font-size: 12px; color: var(--rx-amber-ink); text-decoration: underline; text-underline-offset: 2px; }
+.py-line:hover { color: var(--rx-ink); }
+.py-verdict { margin: 0 0 4px; font-family: var(--rx-mono); font-size: 14px; font-weight: 600; }
+.py-verdict.ok { color: var(--rx-ok); }
+.py-verdict.bad { color: var(--rx-bad); }
+.rx-checks.py-checks { padding: 0; }
+.py-checks .not-run .g, .py-checks .not-run { color: var(--rx-dim); }
+.py-checks code, .py-cases code { font-family: var(--rx-mono); font-size: 12.5px; }
+.py-cases { list-style: none; margin: 6px 0 2px; padding: 0; }
+.py-cases li { display: flex; gap: 6px; padding: 2px 0; border: 0; font-size: 12.5px; color: var(--rx-dim); }
+.py-cases .pass .g { color: var(--rx-ok); }
+.py-cases .fail .g { color: var(--rx-bad); }
+.py-checkout { margin-top: 12px; }
+.py-checkout summary { cursor: pointer; font-size: 13px; color: var(--rx-dim); }
+.py-checkout .py-stream { margin-top: 6px; }
+
+.py-preview-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px clamp(14px, 2.5vw, 28px); border-bottom: 1px solid var(--rx-line); font-size: 13px; color: var(--rx-dim); }
+.py-preview-bar .push { flex: 1; }
+.py-preview-bar [aria-pressed="true"] { border-color: var(--rx-ink); color: var(--rx-ink); }
+.py-preview-bar + .py-ws { height: calc(100dvh - 48px - 26px - 51px); }
+
+/* Phones and narrow tablets: one column, no fixed heights, nothing sticky over the keyboard. */
+@media (max-width: 760px) {
+  .py-ws, .py-preview-bar + .py-ws { height: auto; min-height: 0; display: block; }
+  .py-split { display: block; height: auto; }
+  .py-divider { display: none; }
+  .py-split-a, .py-split-b { overflow: visible; }
+  .py-task { height: auto; overflow: visible; padding: 18px 16px 6px; }
+  .py-work { height: auto; padding: 10px 12px 28px; }
+  .py-code { height: auto; }
+  .py-editor { height: auto; }
+  .py-editor .cm-editor { height: auto; min-height: 210px; max-height: 60dvh; }
+  .py-actions .rx-btn { flex: 1 1 auto; justify-content: center; }
+  .py-hint { display: none; }
+  .py-out { height: auto; margin-top: 12px; }
+  .py-panel { overflow: visible; min-height: 120px; }
+}

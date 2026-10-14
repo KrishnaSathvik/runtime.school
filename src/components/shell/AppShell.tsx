@@ -102,7 +102,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const results = useMemo(() => searchResults(query), [query]);
 
   // Runtime UI at / and /sql/* brings its own shell.
-  if (pathname === "/" || pathname === "/sql" || pathname.startsWith("/sql/")) {
+  // Runtime-shell routes render their own header.
+  if (pathname === "/" || pathname === "/sql" || pathname.startsWith("/sql/") || pathname === "/python" || pathname.startsWith("/python/")) {
     return <ThemeProvider>{children}</ThemeProvider>;
   }
 

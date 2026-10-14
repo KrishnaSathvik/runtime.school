@@ -13,11 +13,21 @@ import { Keys } from "./Keys";
 
 export type Crumb = { label: string; href?: string };
 type Section = "learn" | "practice" | "projects" | "tools";
+/** Which subject's navigation, tools and search the shell shows. SQL is the default. */
+export type ShellSubject = "sql" | "python";
 
 const NAV_FALLBACK: { id: Exclude<Section, "tools">; label: string; href: string }[] = [
   { id: "learn", label: "Learn", href: "/sql" },
   { id: "practice", label: "Practice", href: "/sql/practice" },
   { id: "projects", label: "Projects", href: "/sql/projects" },
+];
+
+/**
+ * Python shows only destinations that exist. Practice, Projects and Python tools appear
+ * when they are real; until then Python has no Tools menu.
+ */
+const PYTHON_NAV: { id: Exclude<Section, "tools">; label: string; href: string }[] = [
+  { id: "learn", label: "Learn", href: "/python/workspace" },
 ];
 
 export const TOOLS = [
@@ -37,6 +47,7 @@ export function Shell({
   status,
   children,
   bare = false,
+  subject = "sql",
 }: {
   path: Crumb[];
   section?: Section;
@@ -44,6 +55,7 @@ export function Shell({
   children: ReactNode;
   /** Landing page: brand only, no subject navigation. */
   bare?: boolean;
+  subject?: ShellSubject;
 }) {
   const ready = useHydrated();
   // String slices only — avoid re-rendering the shell on every draft keystroke.
@@ -51,10 +63,12 @@ export function Shell({
   const practiceHref = useLearning((s) => rtSectionHrefs(s).practice);
   const projectsHref = useLearning((s) => rtSectionHrefs(s).projects);
   const nav = useMemo(() => {
+    if (subject === "python") return PYTHON_NAV;
     if (!ready) return NAV_FALLBACK;
     const hrefs = { learn: learnHref, practice: practiceHref, projects: projectsHref };
     return NAV_FALLBACK.map((n) => ({ ...n, href: hrefs[n.id] }));
-  }, [ready, learnHref, practiceHref, projectsHref]);
+  }, [subject, ready, learnHref, practiceHref, projectsHref]);
+  const showTools = subject === "sql";
   const [palette, setPalette] = useState(false);
   const [tools, setTools] = useState(false);
   const toolsRef = useRef<HTMLDivElement>(null);
@@ -104,12 +118,14 @@ export function Shell({
               {nav.map((n) => (
                 <Link key={n.id} href={n.href} aria-current={section === n.id ? "page" : undefined}>{n.label}</Link>
               ))}
-              <div className="rx-tools" ref={toolsRef}>
-                <button type="button" className={`rx-tools-btn ${section === "tools" ? "on" : ""}`} aria-expanded={tools} aria-haspopup="true" onClick={() => setTools((t) => !t)}>
-                  Tools <ChevronDown size={13} aria-hidden="true" />
-                </button>
-                {tools && <ToolList onPick={() => setTools(false)} className="rx-tools-menu" />}
-              </div>
+              {showTools && (
+                <div className="rx-tools" ref={toolsRef}>
+                  <button type="button" className={`rx-tools-btn ${section === "tools" ? "on" : ""}`} aria-expanded={tools} aria-haspopup="true" onClick={() => setTools((t) => !t)}>
+                    Tools <ChevronDown size={13} aria-hidden="true" />
+                  </button>
+                  {tools && <ToolList onPick={() => setTools(false)} className="rx-tools-menu" />}
+                </div>
+              )}
             </nav>
           )}
           {!bare && (
@@ -134,7 +150,7 @@ export function Shell({
           {status.map((s, i) => <span key={i} className={i === status.length - 1 && status.length > 2 ? "push" : undefined}>{s}</span>)}
         </footer>
       )}
-      {palette && <Palette onClose={() => setPalette(false)} />}
+      {palette && (subject === "python" ? <PythonPalette onClose={() => setPalette(false)} /> : <Palette onClose={() => setPalette(false)} />)}
     </div>
   );
 }
@@ -156,15 +172,21 @@ function ToolList({ onPick, className = "" }: { onPick: () => void; className?: 
 
 type Item = { label: string; href: string; kind: string };
 
+/** Search on Python pages: Python destinations that exist, plus the way back to other subjects. No SQL tools. */
+function PythonPalette({ onClose }: { onClose: () => void }) {
+  const all: Item[] = [
+    ...PYTHON_NAV.map((n) => ({ label: `Python · ${n.label}`, href: n.href, kind: "go" })),
+    { label: "Choose a subject", href: "/", kind: "go" },
+    { label: "SQL course", href: "/sql", kind: "subject" },
+  ];
+  return <PaletteDialog all={all} onClose={onClose} />;
+}
+
 function Palette({ onClose }: { onClose: () => void }) {
-  const router = useRouter();
   const ready = useHydrated();
   const learnHref = useLearning((s) => rtSectionHrefs(s).learn);
   const practiceHref = useLearning((s) => rtSectionHrefs(s).practice);
   const projectsHref = useLearning((s) => rtSectionHrefs(s).projects);
-  const [q, setQ] = useState("");
-  const [sel, setSel] = useState(0);
-  const listRef = useRef<HTMLUListElement>(null);
   const items = useMemo<Item[]>(() => {
     const continueTo = ready
       ? { learn: learnHref, practice: practiceHref, projects: projectsHref }
@@ -179,9 +201,20 @@ function Palette({ onClose }: { onClose: () => void }) {
       ...projects.map((p) => ({ label: p.title, href: `/sql/projects/${p.id}`, kind: "project" })),
       ...bankQuestions.map((b) => ({ label: b.title, href: `/sql/practice/${b.slug}`, kind: "practice" })),
     ];
+    return all;
+  }, [ready, learnHref, practiceHref, projectsHref]);
+  return <PaletteDialog all={items} onClose={onClose} />;
+}
+
+function PaletteDialog({ all, onClose }: { all: Item[]; onClose: () => void }) {
+  const router = useRouter();
+  const [q, setQ] = useState("");
+  const [sel, setSel] = useState(0);
+  const listRef = useRef<HTMLUListElement>(null);
+  const items = useMemo(() => {
     const needle = q.trim().toLowerCase();
     return (needle ? all.filter((i) => i.label.toLowerCase().includes(needle) || i.kind.includes(needle)) : all).slice(0, 60);
-  }, [q, ready, learnHref, practiceHref, projectsHref]);
+  }, [q, all]);
 
   useEffect(() => setSel(0), [q]);
   useEffect(() => {

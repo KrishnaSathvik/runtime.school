@@ -52,7 +52,7 @@ export function RuntimeCheck() {
   const output = result && "output" in result ? result.output : live;
 
   return (
-    <Shell path={[{ label: "python" }, { label: "runtime" }]} bare>
+    <Shell subject="python" path={[{ label: "python" }, { label: "runtime" }]} bare>
       <div className="rx-page">
         <h1 className="rx-title">Python runtime check</h1>
         <p className="rx-small mono" data-testid="py-status">

@@ -1,4 +1,4 @@
-# Python runtime and grading (Milestones 1–2)
+# Python runtime, grading and workspace (Milestones 1–3)
 
 How learner Python executes and is graded in Runtime: what the boundary is, what it guarantees, and what it doesn't.
 
@@ -65,6 +65,30 @@ replaced `js.postMessage`, are ignored (e2e). This is still the learner's own in
 (e.g. `gc`, frame objects) can reach the harness and fake results, and anyone can edit the page itself. **Browser-side
 grading is educational feedback, not tamper-proof certification.**
 
+## Workspace (Milestone 3)
+
+`src/features/py/Workspace.tsx` (`PythonWorkspace`) is the learner-facing surface. It takes an exercise (prompt,
+requirements, what Check verifies, starter code, M2 task) plus a controlled `value`/`onChange`, so Milestone 4 can
+connect drafts and progress without changing it. `onGraded(report)` fires after every finished Check; only
+`report.ok` means the exercise was met.
+
+- **Run code → Console**: real stdout/stderr (streamed), syntax errors with a caret, tracebacks trimmed to `main.py`,
+  timeout/overflow/stop messages. Run never grades.
+- **Check answer → Checks**: the M2 report, with pass/fail/not-run per check, the failure explanation, a link to the
+  error line, visible cases with call/expected/actual, and hidden cases shown only as "hidden test input".
+- **Editor** (`PyEditor.tsx`): CodeMirror + `@codemirror/lang-python@6.2.1`, 4-space indent, line numbers,
+  current-line and bracket highlighting, and the error line marked until the next edit. Mod+Enter runs and
+  Shift+Mod+Enter checks. Tab indents; Escape then Tab leaves the editor.
+- **Stop** replaces Run while code is running. **Reset** puts the starter back, with **Undo reset** until the next
+  edit. Reset/Undo replace the document through the editor itself, because a changed `value` prop is deferred by
+  `@uiw/react-codemirror` while the learner types and could otherwise land later, over newer typing.
+- If Python fails to load, the workspace says so, keeps the code, and **Retry** loads a fresh interpreter.
+- Layout: resizable task/code and code/output dividers (pointer and keyboard); one column below 760px with
+  nothing sticky except the site header.
+- The shell is subject-aware (`<Shell subject="python">`): Python shows only Learn, has no Tools menu, and searches
+  Python destinations only. SQL rendering is unchanged.
+- Preview route: `/python/workspace` (gated like `/python/runtime`; 404 wherever the runner is off).
+
 ## Measured (local, headless, production build, 2026-10-13)
 
 | | Chromium | WebKit | Firefox |
@@ -124,4 +148,5 @@ normal path or raised with the owner. It is never routed around.
 - `npx vitest run tests/python-client.test.ts tests/python-grading.test.ts`: client state machine (fake worker), nonce,
   probe, gate, pinned version and hashes; comparison policies, display, every grading path.
 - `npm run dev -- -p 3041`, then `BASE=http://localhost:3041 npm run test:python-runtime` and `npm run test:python-grading`:
-  real Pyodide in Chromium, Firefox and WebKit. For a production build: `NEXT_PUBLIC_PYTHON_RUNNER=1 npm run build && npx next start`.
+  real Pyodide in Chromium, Firefox and WebKit. `npm run test:python-workspace` drives the workspace UI (set
+  `BASELINE=<server on the previous commit>` to compare the SQL shell byte for byte). For a production build: `NEXT_PUBLIC_PYTHON_RUNNER=1 npm run build && npx next start`.
