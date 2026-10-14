@@ -1,0 +1,1876 @@
+{
+  "version": "0.1-research",
+  "target": 80,
+  "modules": [
+    {
+      "id": "PY01",
+      "title": "Foundations",
+      "phase": 1,
+      "lesson_count": 6,
+      "prerequisite_module": null,
+      "summary": "Learn foundations through real Python execution and concept-appropriate exercises."
+    },
+    {
+      "id": "PY02",
+      "title": "Strings and Text",
+      "phase": 1,
+      "lesson_count": 6,
+      "prerequisite_module": "PY01",
+      "summary": "Learn strings and text through real Python execution and concept-appropriate exercises."
+    },
+    {
+      "id": "PY03",
+      "title": "Conditions and Logic",
+      "phase": 1,
+      "lesson_count": 6,
+      "prerequisite_module": "PY02",
+      "summary": "Learn conditions and logic through real Python execution and concept-appropriate exercises."
+    },
+    {
+      "id": "PY04",
+      "title": "Loops and Iteration",
+      "phase": 1,
+      "lesson_count": 7,
+      "prerequisite_module": "PY03",
+      "summary": "Learn loops and iteration through real Python execution and concept-appropriate exercises."
+    },
+    {
+      "id": "PY05",
+      "title": "Collections and Records",
+      "phase": 2,
+      "lesson_count": 8,
+      "prerequisite_module": "PY04",
+      "summary": "Learn collections and records through real Python execution and concept-appropriate exercises."
+    },
+    {
+      "id": "PY06",
+      "title": "Functions and Modules",
+      "phase": 2,
+      "lesson_count": 8,
+      "prerequisite_module": "PY05",
+      "summary": "Learn functions and modules through real Python execution and concept-appropriate exercises."
+    },
+    {
+      "id": "PY07",
+      "title": "Debugging and Testing",
+      "phase": 2,
+      "lesson_count": 6,
+      "prerequisite_module": "PY06",
+      "summary": "Learn debugging and testing through real Python execution and concept-appropriate exercises."
+    },
+    {
+      "id": "PY08",
+      "title": "Files and Structured Data",
+      "phase": 2,
+      "lesson_count": 8,
+      "prerequisite_module": "PY07",
+      "summary": "Learn files and structured data through real Python execution and concept-appropriate exercises."
+    },
+    {
+      "id": "PY09",
+      "title": "Practical Python Patterns",
+      "phase": 3,
+      "lesson_count": 6,
+      "prerequisite_module": "PY08",
+      "summary": "Learn practical python patterns through real Python execution and concept-appropriate exercises."
+    },
+    {
+      "id": "PY10",
+      "title": "NumPy Fundamentals",
+      "phase": 3,
+      "lesson_count": 5,
+      "prerequisite_module": "PY09",
+      "summary": "Learn numpy fundamentals through real Python execution and concept-appropriate exercises."
+    },
+    {
+      "id": "PY11",
+      "title": "pandas for Data Work",
+      "phase": 3,
+      "lesson_count": 8,
+      "prerequisite_module": "PY10",
+      "summary": "Learn pandas for data work through real Python execution and concept-appropriate exercises."
+    },
+    {
+      "id": "PY12",
+      "title": "Reliable Data Pipelines",
+      "phase": 3,
+      "lesson_count": 6,
+      "prerequisite_module": "PY11",
+      "summary": "Learn reliable data pipelines through real Python execution and concept-appropriate exercises."
+    }
+  ],
+  "lessons": [
+    {
+      "id": "python:variables-and-values",
+      "module_id": "PY01",
+      "position": 1,
+      "title": "Variables and Values",
+      "slug": "variables-and-values",
+      "level": "beginner",
+      "prerequisites": [],
+      "learning_goal": "Demonstrate variables and values by running Python and explaining the observed behavior.",
+      "skills": [
+        "variables",
+        "types",
+        "expressions",
+        "print"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "implemented-pilot",
+      "runtime": "stdlib",
+      "estimated_minutes": 18
+    },
+    {
+      "id": "python:print-comments-and-execution-order",
+      "module_id": "PY01",
+      "position": 2,
+      "title": "Print, Comments, and Execution Order",
+      "slug": "print-comments-and-execution-order",
+      "level": "beginner",
+      "prerequisites": [
+        "python:variables-and-values"
+      ],
+      "learning_goal": "Demonstrate print, comments, and execution order by running Python and explaining the observed behavior.",
+      "skills": [
+        "variables",
+        "types",
+        "expressions",
+        "print"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 18
+    },
+    {
+      "id": "python:numbers-and-arithmetic",
+      "module_id": "PY01",
+      "position": 3,
+      "title": "Numbers and Arithmetic",
+      "slug": "numbers-and-arithmetic",
+      "level": "beginner",
+      "prerequisites": [
+        "python:print-comments-and-execution-order"
+      ],
+      "learning_goal": "Demonstrate numbers and arithmetic by running Python and explaining the observed behavior.",
+      "skills": [
+        "variables",
+        "types",
+        "expressions",
+        "print"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 18
+    },
+    {
+      "id": "python:types-and-type-conversion",
+      "module_id": "PY01",
+      "position": 4,
+      "title": "Types and Type Conversion",
+      "slug": "types-and-type-conversion",
+      "level": "beginner",
+      "prerequisites": [
+        "python:numbers-and-arithmetic"
+      ],
+      "learning_goal": "Demonstrate types and type conversion by running Python and explaining the observed behavior.",
+      "skills": [
+        "variables",
+        "types",
+        "expressions",
+        "print"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 18
+    },
+    {
+      "id": "python:names-reassignment-and-augmented-assignment",
+      "module_id": "PY01",
+      "position": 5,
+      "title": "Names, Reassignment, and Augmented Assignment",
+      "slug": "names-reassignment-and-augmented-assignment",
+      "level": "beginner",
+      "prerequisites": [
+        "python:types-and-type-conversion"
+      ],
+      "learning_goal": "Demonstrate names, reassignment, and augmented assignment by running Python and explaining the observed behavior.",
+      "skills": [
+        "variables",
+        "types",
+        "expressions",
+        "print"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 18
+    },
+    {
+      "id": "python:expressions-and-a-first-program",
+      "module_id": "PY01",
+      "position": 6,
+      "title": "Expressions and a First Program",
+      "slug": "expressions-and-a-first-program",
+      "level": "beginner",
+      "prerequisites": [
+        "python:names-reassignment-and-augmented-assignment"
+      ],
+      "learning_goal": "Demonstrate expressions and a first program by running Python and explaining the observed behavior.",
+      "skills": [
+        "variables",
+        "types",
+        "expressions",
+        "print"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 18
+    },
+    {
+      "id": "python:creating-and-combining-strings",
+      "module_id": "PY02",
+      "position": 1,
+      "title": "Creating and Combining Strings",
+      "slug": "creating-and-combining-strings",
+      "level": "beginner",
+      "prerequisites": [
+        "python:expressions-and-a-first-program"
+      ],
+      "learning_goal": "Demonstrate creating and combining strings by running Python and explaining the observed behavior.",
+      "skills": [
+        "strings",
+        "slicing",
+        "normalization"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 18
+    },
+    {
+      "id": "python:string-indexing-and-slicing",
+      "module_id": "PY02",
+      "position": 2,
+      "title": "String Indexing and Slicing",
+      "slug": "string-indexing-and-slicing",
+      "level": "beginner",
+      "prerequisites": [
+        "python:creating-and-combining-strings"
+      ],
+      "learning_goal": "Demonstrate string indexing and slicing by running Python and explaining the observed behavior.",
+      "skills": [
+        "strings",
+        "slicing",
+        "normalization"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 18
+    },
+    {
+      "id": "python:string-methods-for-cleaning-text",
+      "module_id": "PY02",
+      "position": 3,
+      "title": "String Methods for Cleaning Text",
+      "slug": "string-methods-for-cleaning-text",
+      "level": "beginner",
+      "prerequisites": [
+        "python:string-indexing-and-slicing"
+      ],
+      "learning_goal": "Demonstrate string methods for cleaning text by running Python and explaining the observed behavior.",
+      "skills": [
+        "strings",
+        "slicing",
+        "normalization"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 18
+    },
+    {
+      "id": "python:splitting-and-joining-text",
+      "module_id": "PY02",
+      "position": 4,
+      "title": "Splitting and Joining Text",
+      "slug": "splitting-and-joining-text",
+      "level": "beginner",
+      "prerequisites": [
+        "python:string-methods-for-cleaning-text"
+      ],
+      "learning_goal": "Demonstrate splitting and joining text by running Python and explaining the observed behavior.",
+      "skills": [
+        "strings",
+        "slicing",
+        "normalization"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 18
+    },
+    {
+      "id": "python:f-strings-and-formatting",
+      "module_id": "PY02",
+      "position": 5,
+      "title": "f-Strings and Formatting",
+      "slug": "f-strings-and-formatting",
+      "level": "beginner",
+      "prerequisites": [
+        "python:splitting-and-joining-text"
+      ],
+      "learning_goal": "Demonstrate f-strings and formatting by running Python and explaining the observed behavior.",
+      "skills": [
+        "strings",
+        "slicing",
+        "normalization"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 18
+    },
+    {
+      "id": "python:text-validation-and-unicode-basics",
+      "module_id": "PY02",
+      "position": 6,
+      "title": "Text Validation and Unicode Basics",
+      "slug": "text-validation-and-unicode-basics",
+      "level": "beginner",
+      "prerequisites": [
+        "python:f-strings-and-formatting"
+      ],
+      "learning_goal": "Demonstrate text validation and unicode basics by running Python and explaining the observed behavior.",
+      "skills": [
+        "strings",
+        "slicing",
+        "normalization"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 18
+    },
+    {
+      "id": "python:comparisons-and-boolean-values",
+      "module_id": "PY03",
+      "position": 1,
+      "title": "Comparisons and Boolean Values",
+      "slug": "comparisons-and-boolean-values",
+      "level": "beginner",
+      "prerequisites": [
+        "python:text-validation-and-unicode-basics"
+      ],
+      "learning_goal": "Demonstrate comparisons and boolean values by running Python and explaining the observed behavior.",
+      "skills": [
+        "logic",
+        "conditions",
+        "truthiness"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 18
+    },
+    {
+      "id": "python:if-else-and-indentation",
+      "module_id": "PY03",
+      "position": 2,
+      "title": "if, else, and Indentation",
+      "slug": "if-else-and-indentation",
+      "level": "beginner",
+      "prerequisites": [
+        "python:comparisons-and-boolean-values"
+      ],
+      "learning_goal": "Demonstrate if, else, and indentation by running Python and explaining the observed behavior.",
+      "skills": [
+        "logic",
+        "conditions",
+        "truthiness"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 18
+    },
+    {
+      "id": "python:elif-and-multiway-decisions",
+      "module_id": "PY03",
+      "position": 3,
+      "title": "elif and Multiway Decisions",
+      "slug": "elif-and-multiway-decisions",
+      "level": "beginner",
+      "prerequisites": [
+        "python:if-else-and-indentation"
+      ],
+      "learning_goal": "Demonstrate elif and multiway decisions by running Python and explaining the observed behavior.",
+      "skills": [
+        "logic",
+        "conditions",
+        "truthiness"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 18
+    },
+    {
+      "id": "python:and-or-not-and-truthiness",
+      "module_id": "PY03",
+      "position": 4,
+      "title": "and, or, not, and Truthiness",
+      "slug": "and-or-not-and-truthiness",
+      "level": "beginner",
+      "prerequisites": [
+        "python:elif-and-multiway-decisions"
+      ],
+      "learning_goal": "Demonstrate and, or, not, and truthiness by running Python and explaining the observed behavior.",
+      "skills": [
+        "logic",
+        "conditions",
+        "truthiness"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 18
+    },
+    {
+      "id": "python:membership-and-none-checks",
+      "module_id": "PY03",
+      "position": 5,
+      "title": "Membership and None Checks",
+      "slug": "membership-and-none-checks",
+      "level": "beginner",
+      "prerequisites": [
+        "python:and-or-not-and-truthiness"
+      ],
+      "learning_goal": "Demonstrate membership and none checks by running Python and explaining the observed behavior.",
+      "skills": [
+        "logic",
+        "conditions",
+        "truthiness"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 18
+    },
+    {
+      "id": "python:nested-decisions-and-guard-conditions",
+      "module_id": "PY03",
+      "position": 6,
+      "title": "Nested Decisions and Guard Conditions",
+      "slug": "nested-decisions-and-guard-conditions",
+      "level": "beginner",
+      "prerequisites": [
+        "python:membership-and-none-checks"
+      ],
+      "learning_goal": "Demonstrate nested decisions and guard conditions by running Python and explaining the observed behavior.",
+      "skills": [
+        "logic",
+        "conditions",
+        "truthiness"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 18
+    },
+    {
+      "id": "python:for-loops-and-range",
+      "module_id": "PY04",
+      "position": 1,
+      "title": "for Loops and range",
+      "slug": "for-loops-and-range",
+      "level": "beginner",
+      "prerequisites": [
+        "python:nested-decisions-and-guard-conditions"
+      ],
+      "learning_goal": "Demonstrate for loops and range by running Python and explaining the observed behavior.",
+      "skills": [
+        "loops",
+        "iteration",
+        "state"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 18
+    },
+    {
+      "id": "python:counting-and-running-totals",
+      "module_id": "PY04",
+      "position": 2,
+      "title": "Counting and Running Totals",
+      "slug": "counting-and-running-totals",
+      "level": "beginner",
+      "prerequisites": [
+        "python:for-loops-and-range"
+      ],
+      "learning_goal": "Demonstrate counting and running totals by running Python and explaining the observed behavior.",
+      "skills": [
+        "loops",
+        "iteration",
+        "state"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 18
+    },
+    {
+      "id": "python:iterating-over-strings-and-lists",
+      "module_id": "PY04",
+      "position": 3,
+      "title": "Iterating over Strings and Lists",
+      "slug": "iterating-over-strings-and-lists",
+      "level": "beginner",
+      "prerequisites": [
+        "python:counting-and-running-totals"
+      ],
+      "learning_goal": "Demonstrate iterating over strings and lists by running Python and explaining the observed behavior.",
+      "skills": [
+        "loops",
+        "iteration",
+        "state"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 18
+    },
+    {
+      "id": "python:while-loops-and-state",
+      "module_id": "PY04",
+      "position": 4,
+      "title": "while Loops and State",
+      "slug": "while-loops-and-state",
+      "level": "beginner",
+      "prerequisites": [
+        "python:iterating-over-strings-and-lists"
+      ],
+      "learning_goal": "Demonstrate while loops and state by running Python and explaining the observed behavior.",
+      "skills": [
+        "loops",
+        "iteration",
+        "state"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 18
+    },
+    {
+      "id": "python:break-continue-and-loop-else",
+      "module_id": "PY04",
+      "position": 5,
+      "title": "break, continue, and Loop else",
+      "slug": "break-continue-and-loop-else",
+      "level": "beginner",
+      "prerequisites": [
+        "python:while-loops-and-state"
+      ],
+      "learning_goal": "Demonstrate break, continue, and loop else by running Python and explaining the observed behavior.",
+      "skills": [
+        "loops",
+        "iteration",
+        "state"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 18
+    },
+    {
+      "id": "python:enumerate-and-zip",
+      "module_id": "PY04",
+      "position": 6,
+      "title": "enumerate and zip",
+      "slug": "enumerate-and-zip",
+      "level": "beginner",
+      "prerequisites": [
+        "python:break-continue-and-loop-else"
+      ],
+      "learning_goal": "Demonstrate enumerate and zip by running Python and explaining the observed behavior.",
+      "skills": [
+        "loops",
+        "iteration",
+        "state"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 18
+    },
+    {
+      "id": "python:nested-loops-and-simple-patterns",
+      "module_id": "PY04",
+      "position": 7,
+      "title": "Nested Loops and Simple Patterns",
+      "slug": "nested-loops-and-simple-patterns",
+      "level": "beginner",
+      "prerequisites": [
+        "python:enumerate-and-zip"
+      ],
+      "learning_goal": "Demonstrate nested loops and simple patterns by running Python and explaining the observed behavior.",
+      "skills": [
+        "loops",
+        "iteration",
+        "state"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 18
+    },
+    {
+      "id": "python:lists-create-read-and-update",
+      "module_id": "PY05",
+      "position": 1,
+      "title": "Lists: Create, Read, and Update",
+      "slug": "lists-create-read-and-update",
+      "level": "intermediate",
+      "prerequisites": [
+        "python:nested-loops-and-simple-patterns"
+      ],
+      "learning_goal": "Demonstrate lists: create, read, and update by running Python and explaining the observed behavior.",
+      "skills": [
+        "collections",
+        "records",
+        "mutation"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 24
+    },
+    {
+      "id": "python:list-slicing-copying-and-sorting",
+      "module_id": "PY05",
+      "position": 2,
+      "title": "List Slicing, Copying, and Sorting",
+      "slug": "list-slicing-copying-and-sorting",
+      "level": "intermediate",
+      "prerequisites": [
+        "python:lists-create-read-and-update"
+      ],
+      "learning_goal": "Demonstrate list slicing, copying, and sorting by running Python and explaining the observed behavior.",
+      "skills": [
+        "collections",
+        "records",
+        "mutation"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 24
+    },
+    {
+      "id": "python:tuples-and-unpacking",
+      "module_id": "PY05",
+      "position": 3,
+      "title": "Tuples and Unpacking",
+      "slug": "tuples-and-unpacking",
+      "level": "intermediate",
+      "prerequisites": [
+        "python:list-slicing-copying-and-sorting"
+      ],
+      "learning_goal": "Demonstrate tuples and unpacking by running Python and explaining the observed behavior.",
+      "skills": [
+        "collections",
+        "records",
+        "mutation"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 24
+    },
+    {
+      "id": "python:sets-membership-and-deduplication",
+      "module_id": "PY05",
+      "position": 4,
+      "title": "Sets, Membership, and Deduplication",
+      "slug": "sets-membership-and-deduplication",
+      "level": "intermediate",
+      "prerequisites": [
+        "python:tuples-and-unpacking"
+      ],
+      "learning_goal": "Demonstrate sets, membership, and deduplication by running Python and explaining the observed behavior.",
+      "skills": [
+        "collections",
+        "records",
+        "mutation"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 24
+    },
+    {
+      "id": "python:dictionaries-keys-and-values",
+      "module_id": "PY05",
+      "position": 5,
+      "title": "Dictionaries: Keys and Values",
+      "slug": "dictionaries-keys-and-values",
+      "level": "intermediate",
+      "prerequisites": [
+        "python:sets-membership-and-deduplication"
+      ],
+      "learning_goal": "Demonstrate dictionaries: keys and values by running Python and explaining the observed behavior.",
+      "skills": [
+        "collections",
+        "records",
+        "mutation"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 24
+    },
+    {
+      "id": "python:dictionary-iteration-and-safe-lookup",
+      "module_id": "PY05",
+      "position": 6,
+      "title": "Dictionary Iteration and Safe Lookup",
+      "slug": "dictionary-iteration-and-safe-lookup",
+      "level": "intermediate",
+      "prerequisites": [
+        "python:dictionaries-keys-and-values"
+      ],
+      "learning_goal": "Demonstrate dictionary iteration and safe lookup by running Python and explaining the observed behavior.",
+      "skills": [
+        "collections",
+        "records",
+        "mutation"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 24
+    },
+    {
+      "id": "python:nested-records-and-collections",
+      "module_id": "PY05",
+      "position": 7,
+      "title": "Nested Records and Collections",
+      "slug": "nested-records-and-collections",
+      "level": "intermediate",
+      "prerequisites": [
+        "python:dictionary-iteration-and-safe-lookup"
+      ],
+      "learning_goal": "Demonstrate nested records and collections by running Python and explaining the observed behavior.",
+      "skills": [
+        "collections",
+        "records",
+        "mutation"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 24
+    },
+    {
+      "id": "python:comprehensions-without-mystery",
+      "module_id": "PY05",
+      "position": 8,
+      "title": "Comprehensions Without Mystery",
+      "slug": "comprehensions-without-mystery",
+      "level": "intermediate",
+      "prerequisites": [
+        "python:nested-records-and-collections"
+      ],
+      "learning_goal": "Demonstrate comprehensions without mystery by running Python and explaining the observed behavior.",
+      "skills": [
+        "collections",
+        "records",
+        "mutation"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 24
+    },
+    {
+      "id": "python:defining-and-calling-functions",
+      "module_id": "PY06",
+      "position": 1,
+      "title": "Defining and Calling Functions",
+      "slug": "defining-and-calling-functions",
+      "level": "intermediate",
+      "prerequisites": [
+        "python:comprehensions-without-mystery"
+      ],
+      "learning_goal": "Demonstrate defining and calling functions by running Python and explaining the observed behavior.",
+      "skills": [
+        "functions",
+        "modules",
+        "contracts"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 24
+    },
+    {
+      "id": "python:parameters-and-return-values",
+      "module_id": "PY06",
+      "position": 2,
+      "title": "Parameters and Return Values",
+      "slug": "parameters-and-return-values",
+      "level": "intermediate",
+      "prerequisites": [
+        "python:defining-and-calling-functions"
+      ],
+      "learning_goal": "Demonstrate parameters and return values by running Python and explaining the observed behavior.",
+      "skills": [
+        "functions",
+        "modules",
+        "contracts"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 24
+    },
+    {
+      "id": "python:function-contracts-and-edge-cases",
+      "module_id": "PY06",
+      "position": 3,
+      "title": "Function Contracts and Edge Cases",
+      "slug": "function-contracts-and-edge-cases",
+      "level": "intermediate",
+      "prerequisites": [
+        "python:parameters-and-return-values"
+      ],
+      "learning_goal": "Demonstrate function contracts and edge cases by running Python and explaining the observed behavior.",
+      "skills": [
+        "functions",
+        "modules",
+        "contracts"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 24
+    },
+    {
+      "id": "python:defaults-and-keyword-arguments",
+      "module_id": "PY06",
+      "position": 4,
+      "title": "Defaults and Keyword Arguments",
+      "slug": "defaults-and-keyword-arguments",
+      "level": "intermediate",
+      "prerequisites": [
+        "python:function-contracts-and-edge-cases"
+      ],
+      "learning_goal": "Demonstrate defaults and keyword arguments by running Python and explaining the observed behavior.",
+      "skills": [
+        "functions",
+        "modules",
+        "contracts"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 24
+    },
+    {
+      "id": "python:scope-and-mutable-arguments",
+      "module_id": "PY06",
+      "position": 5,
+      "title": "Scope and Mutable Arguments",
+      "slug": "scope-and-mutable-arguments",
+      "level": "intermediate",
+      "prerequisites": [
+        "python:defaults-and-keyword-arguments"
+      ],
+      "learning_goal": "Demonstrate scope and mutable arguments by running Python and explaining the observed behavior.",
+      "skills": [
+        "functions",
+        "modules",
+        "contracts"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 24
+    },
+    {
+      "id": "python:importing-and-using-modules",
+      "module_id": "PY06",
+      "position": 6,
+      "title": "Importing and Using Modules",
+      "slug": "importing-and-using-modules",
+      "level": "intermediate",
+      "prerequisites": [
+        "python:scope-and-mutable-arguments"
+      ],
+      "learning_goal": "Demonstrate importing and using modules by running Python and explaining the observed behavior.",
+      "skills": [
+        "functions",
+        "modules",
+        "contracts"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 24
+    },
+    {
+      "id": "python:writing-small-reusable-modules",
+      "module_id": "PY06",
+      "position": 7,
+      "title": "Writing Small Reusable Modules",
+      "slug": "writing-small-reusable-modules",
+      "level": "intermediate",
+      "prerequisites": [
+        "python:importing-and-using-modules"
+      ],
+      "learning_goal": "Demonstrate writing small reusable modules by running Python and explaining the observed behavior.",
+      "skills": [
+        "functions",
+        "modules",
+        "contracts"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 24
+    },
+    {
+      "id": "python:lambda-sorting-keys-and-useful-built-ins",
+      "module_id": "PY06",
+      "position": 8,
+      "title": "Lambda, Sorting Keys, and Useful Built-ins",
+      "slug": "lambda-sorting-keys-and-useful-built-ins",
+      "level": "intermediate",
+      "prerequisites": [
+        "python:writing-small-reusable-modules"
+      ],
+      "learning_goal": "Demonstrate lambda, sorting keys, and useful built-ins by running Python and explaining the observed behavior.",
+      "skills": [
+        "functions",
+        "modules",
+        "contracts"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 24
+    },
+    {
+      "id": "python:reading-tracebacks-and-locating-errors",
+      "module_id": "PY07",
+      "position": 1,
+      "title": "Reading Tracebacks and Locating Errors",
+      "slug": "reading-tracebacks-and-locating-errors",
+      "level": "intermediate",
+      "prerequisites": [
+        "python:lambda-sorting-keys-and-useful-built-ins"
+      ],
+      "learning_goal": "Demonstrate reading tracebacks and locating errors by running Python and explaining the observed behavior.",
+      "skills": [
+        "exceptions",
+        "tests",
+        "debugging"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 24
+    },
+    {
+      "id": "python:common-exceptions-and-defensive-checks",
+      "module_id": "PY07",
+      "position": 2,
+      "title": "Common Exceptions and Defensive Checks",
+      "slug": "common-exceptions-and-defensive-checks",
+      "level": "intermediate",
+      "prerequisites": [
+        "python:reading-tracebacks-and-locating-errors"
+      ],
+      "learning_goal": "Demonstrate common exceptions and defensive checks by running Python and explaining the observed behavior.",
+      "skills": [
+        "exceptions",
+        "tests",
+        "debugging"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 24
+    },
+    {
+      "id": "python:try-except-else-and-finally",
+      "module_id": "PY07",
+      "position": 3,
+      "title": "try, except, else, and finally",
+      "slug": "try-except-else-and-finally",
+      "level": "intermediate",
+      "prerequisites": [
+        "python:common-exceptions-and-defensive-checks"
+      ],
+      "learning_goal": "Demonstrate try, except, else, and finally by running Python and explaining the observed behavior.",
+      "skills": [
+        "exceptions",
+        "tests",
+        "debugging"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 24
+    },
+    {
+      "id": "python:raising-useful-errors",
+      "module_id": "PY07",
+      "position": 4,
+      "title": "Raising Useful Errors",
+      "slug": "raising-useful-errors",
+      "level": "intermediate",
+      "prerequisites": [
+        "python:try-except-else-and-finally"
+      ],
+      "learning_goal": "Demonstrate raising useful errors by running Python and explaining the observed behavior.",
+      "skills": [
+        "exceptions",
+        "tests",
+        "debugging"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 24
+    },
+    {
+      "id": "python:assertions-and-unit-test-thinking",
+      "module_id": "PY07",
+      "position": 5,
+      "title": "Assertions and Unit-Test Thinking",
+      "slug": "assertions-and-unit-test-thinking",
+      "level": "intermediate",
+      "prerequisites": [
+        "python:raising-useful-errors"
+      ],
+      "learning_goal": "Demonstrate assertions and unit-test thinking by running Python and explaining the observed behavior.",
+      "skills": [
+        "exceptions",
+        "tests",
+        "debugging"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 24
+    },
+    {
+      "id": "python:testing-edge-cases-and-avoiding-brittle-code",
+      "module_id": "PY07",
+      "position": 6,
+      "title": "Testing Edge Cases and Avoiding Brittle Code",
+      "slug": "testing-edge-cases-and-avoiding-brittle-code",
+      "level": "intermediate",
+      "prerequisites": [
+        "python:assertions-and-unit-test-thinking"
+      ],
+      "learning_goal": "Demonstrate testing edge cases and avoiding brittle code by running Python and explaining the observed behavior.",
+      "skills": [
+        "exceptions",
+        "tests",
+        "debugging"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 24
+    },
+    {
+      "id": "python:working-with-text-files-safely",
+      "module_id": "PY08",
+      "position": 1,
+      "title": "Working with Text Files Safely",
+      "slug": "working-with-text-files-safely",
+      "level": "intermediate",
+      "prerequisites": [
+        "python:testing-edge-cases-and-avoiding-brittle-code"
+      ],
+      "learning_goal": "Demonstrate working with text files safely by running Python and explaining the observed behavior.",
+      "skills": [
+        "csv",
+        "json",
+        "files",
+        "dates"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 24
+    },
+    {
+      "id": "python:csv-rows-and-headers",
+      "module_id": "PY08",
+      "position": 2,
+      "title": "CSV Rows and Headers",
+      "slug": "csv-rows-and-headers",
+      "level": "intermediate",
+      "prerequisites": [
+        "python:working-with-text-files-safely"
+      ],
+      "learning_goal": "Demonstrate csv rows and headers by running Python and explaining the observed behavior.",
+      "skills": [
+        "csv",
+        "json",
+        "files",
+        "dates"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 24
+    },
+    {
+      "id": "python:json-data-and-nested-objects",
+      "module_id": "PY08",
+      "position": 3,
+      "title": "JSON Data and Nested Objects",
+      "slug": "json-data-and-nested-objects",
+      "level": "intermediate",
+      "prerequisites": [
+        "python:csv-rows-and-headers"
+      ],
+      "learning_goal": "Demonstrate json data and nested objects by running Python and explaining the observed behavior.",
+      "skills": [
+        "csv",
+        "json",
+        "files",
+        "dates"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 24
+    },
+    {
+      "id": "python:dates-times-and-time-zones",
+      "module_id": "PY08",
+      "position": 4,
+      "title": "Dates, Times, and Time Zones",
+      "slug": "dates-times-and-time-zones",
+      "level": "intermediate",
+      "prerequisites": [
+        "python:json-data-and-nested-objects"
+      ],
+      "learning_goal": "Demonstrate dates, times, and time zones by running Python and explaining the observed behavior.",
+      "skills": [
+        "csv",
+        "json",
+        "files",
+        "dates"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 24
+    },
+    {
+      "id": "python:regular-expressions-for-validation",
+      "module_id": "PY08",
+      "position": 5,
+      "title": "Regular Expressions for Validation",
+      "slug": "regular-expressions-for-validation",
+      "level": "intermediate",
+      "prerequisites": [
+        "python:dates-times-and-time-zones"
+      ],
+      "learning_goal": "Demonstrate regular expressions for validation by running Python and explaining the observed behavior.",
+      "skills": [
+        "csv",
+        "json",
+        "files",
+        "dates"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 24
+    },
+    {
+      "id": "python:working-with-file-paths-and-multiple-files",
+      "module_id": "PY08",
+      "position": 6,
+      "title": "Working with File Paths and Multiple Files",
+      "slug": "working-with-file-paths-and-multiple-files",
+      "level": "intermediate",
+      "prerequisites": [
+        "python:regular-expressions-for-validation"
+      ],
+      "learning_goal": "Demonstrate working with file paths and multiple files by running Python and explaining the observed behavior.",
+      "skills": [
+        "csv",
+        "json",
+        "files",
+        "dates"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 24
+    },
+    {
+      "id": "python:writing-data-exports",
+      "module_id": "PY08",
+      "position": 7,
+      "title": "Writing Data Exports",
+      "slug": "writing-data-exports",
+      "level": "intermediate",
+      "prerequisites": [
+        "python:working-with-file-paths-and-multiple-files"
+      ],
+      "learning_goal": "Demonstrate writing data exports by running Python and explaining the observed behavior.",
+      "skills": [
+        "csv",
+        "json",
+        "files",
+        "dates"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 24
+    },
+    {
+      "id": "python:consuming-api-shaped-responses-offline",
+      "module_id": "PY08",
+      "position": 8,
+      "title": "Consuming API-Shaped Responses Offline",
+      "slug": "consuming-api-shaped-responses-offline",
+      "level": "intermediate",
+      "prerequisites": [
+        "python:writing-data-exports"
+      ],
+      "learning_goal": "Demonstrate consuming api-shaped responses offline by running Python and explaining the observed behavior.",
+      "skills": [
+        "csv",
+        "json",
+        "files",
+        "dates"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 24
+    },
+    {
+      "id": "python:classes-and-data-models",
+      "module_id": "PY09",
+      "position": 1,
+      "title": "Classes and Data Models",
+      "slug": "classes-and-data-models",
+      "level": "advanced",
+      "prerequisites": [
+        "python:consuming-api-shaped-responses-offline"
+      ],
+      "learning_goal": "Demonstrate classes and data models by running Python and explaining the observed behavior.",
+      "skills": [
+        "classes",
+        "typing",
+        "generators"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 30
+    },
+    {
+      "id": "python:methods-and-object-state",
+      "module_id": "PY09",
+      "position": 2,
+      "title": "Methods and Object State",
+      "slug": "methods-and-object-state",
+      "level": "advanced",
+      "prerequisites": [
+        "python:classes-and-data-models"
+      ],
+      "learning_goal": "Demonstrate methods and object state by running Python and explaining the observed behavior.",
+      "skills": [
+        "classes",
+        "typing",
+        "generators"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 30
+    },
+    {
+      "id": "python:dataclasses-and-type-hints",
+      "module_id": "PY09",
+      "position": 3,
+      "title": "Dataclasses and Type Hints",
+      "slug": "dataclasses-and-type-hints",
+      "level": "advanced",
+      "prerequisites": [
+        "python:methods-and-object-state"
+      ],
+      "learning_goal": "Demonstrate dataclasses and type hints by running Python and explaining the observed behavior.",
+      "skills": [
+        "classes",
+        "typing",
+        "generators"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 30
+    },
+    {
+      "id": "python:iterators-and-generators",
+      "module_id": "PY09",
+      "position": 4,
+      "title": "Iterators and Generators",
+      "slug": "iterators-and-generators",
+      "level": "advanced",
+      "prerequisites": [
+        "python:dataclasses-and-type-hints"
+      ],
+      "learning_goal": "Demonstrate iterators and generators by running Python and explaining the observed behavior.",
+      "skills": [
+        "classes",
+        "typing",
+        "generators"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 30
+    },
+    {
+      "id": "python:context-managers-and-resource-safety",
+      "module_id": "PY09",
+      "position": 5,
+      "title": "Context Managers and Resource Safety",
+      "slug": "context-managers-and-resource-safety",
+      "level": "advanced",
+      "prerequisites": [
+        "python:iterators-and-generators"
+      ],
+      "learning_goal": "Demonstrate context managers and resource safety by running Python and explaining the observed behavior.",
+      "skills": [
+        "classes",
+        "typing",
+        "generators"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 30
+    },
+    {
+      "id": "python:logging-configuration-and-project-structure",
+      "module_id": "PY09",
+      "position": 6,
+      "title": "Logging, Configuration, and Project Structure",
+      "slug": "logging-configuration-and-project-structure",
+      "level": "advanced",
+      "prerequisites": [
+        "python:context-managers-and-resource-safety"
+      ],
+      "learning_goal": "Demonstrate logging, configuration, and project structure by running Python and explaining the observed behavior.",
+      "skills": [
+        "classes",
+        "typing",
+        "generators"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 30
+    },
+    {
+      "id": "python:arrays-shapes-and-dtypes",
+      "module_id": "PY10",
+      "position": 1,
+      "title": "Arrays, Shapes, and dtypes",
+      "slug": "arrays-shapes-and-dtypes",
+      "level": "advanced",
+      "prerequisites": [
+        "python:logging-configuration-and-project-structure"
+      ],
+      "learning_goal": "Demonstrate arrays, shapes, and dtypes by running Python and explaining the observed behavior.",
+      "skills": [
+        "numpy",
+        "arrays",
+        "vectorization"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "numpy",
+      "estimated_minutes": 30
+    },
+    {
+      "id": "python:vectorized-arithmetic-and-broadcasting",
+      "module_id": "PY10",
+      "position": 2,
+      "title": "Vectorized Arithmetic and Broadcasting",
+      "slug": "vectorized-arithmetic-and-broadcasting",
+      "level": "advanced",
+      "prerequisites": [
+        "python:arrays-shapes-and-dtypes"
+      ],
+      "learning_goal": "Demonstrate vectorized arithmetic and broadcasting by running Python and explaining the observed behavior.",
+      "skills": [
+        "numpy",
+        "arrays",
+        "vectorization"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "numpy",
+      "estimated_minutes": 30
+    },
+    {
+      "id": "python:indexing-masks-and-views",
+      "module_id": "PY10",
+      "position": 3,
+      "title": "Indexing, Masks, and Views",
+      "slug": "indexing-masks-and-views",
+      "level": "advanced",
+      "prerequisites": [
+        "python:vectorized-arithmetic-and-broadcasting"
+      ],
+      "learning_goal": "Demonstrate indexing, masks, and views by running Python and explaining the observed behavior.",
+      "skills": [
+        "numpy",
+        "arrays",
+        "vectorization"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "numpy",
+      "estimated_minutes": 30
+    },
+    {
+      "id": "python:reshaping-and-aggregating",
+      "module_id": "PY10",
+      "position": 4,
+      "title": "Reshaping and Aggregating",
+      "slug": "reshaping-and-aggregating",
+      "level": "advanced",
+      "prerequisites": [
+        "python:indexing-masks-and-views"
+      ],
+      "learning_goal": "Demonstrate reshaping and aggregating by running Python and explaining the observed behavior.",
+      "skills": [
+        "numpy",
+        "arrays",
+        "vectorization"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "numpy",
+      "estimated_minutes": 30
+    },
+    {
+      "id": "python:nans-and-numerical-reliability",
+      "module_id": "PY10",
+      "position": 5,
+      "title": "NaNs and Numerical Reliability",
+      "slug": "nans-and-numerical-reliability",
+      "level": "advanced",
+      "prerequisites": [
+        "python:reshaping-and-aggregating"
+      ],
+      "learning_goal": "Demonstrate nans and numerical reliability by running Python and explaining the observed behavior.",
+      "skills": [
+        "numpy",
+        "arrays",
+        "vectorization"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "numpy",
+      "estimated_minutes": 30
+    },
+    {
+      "id": "python:series-and-dataframes",
+      "module_id": "PY11",
+      "position": 1,
+      "title": "Series and DataFrames",
+      "slug": "series-and-dataframes",
+      "level": "advanced",
+      "prerequisites": [
+        "python:nans-and-numerical-reliability"
+      ],
+      "learning_goal": "Demonstrate series and dataframes by running Python and explaining the observed behavior.",
+      "skills": [
+        "pandas",
+        "cleaning",
+        "eda"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "pandas",
+      "estimated_minutes": 30
+    },
+    {
+      "id": "python:reading-and-inspecting-data",
+      "module_id": "PY11",
+      "position": 2,
+      "title": "Reading and Inspecting Data",
+      "slug": "reading-and-inspecting-data",
+      "level": "advanced",
+      "prerequisites": [
+        "python:series-and-dataframes"
+      ],
+      "learning_goal": "Demonstrate reading and inspecting data by running Python and explaining the observed behavior.",
+      "skills": [
+        "pandas",
+        "cleaning",
+        "eda"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "pandas",
+      "estimated_minutes": 30
+    },
+    {
+      "id": "python:selecting-and-filtering-rows",
+      "module_id": "PY11",
+      "position": 3,
+      "title": "Selecting and Filtering Rows",
+      "slug": "selecting-and-filtering-rows",
+      "level": "advanced",
+      "prerequisites": [
+        "python:reading-and-inspecting-data"
+      ],
+      "learning_goal": "Demonstrate selecting and filtering rows by running Python and explaining the observed behavior.",
+      "skills": [
+        "pandas",
+        "cleaning",
+        "eda"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "pandas",
+      "estimated_minutes": 30
+    },
+    {
+      "id": "python:missing-values-and-data-types",
+      "module_id": "PY11",
+      "position": 4,
+      "title": "Missing Values and Data Types",
+      "slug": "missing-values-and-data-types",
+      "level": "advanced",
+      "prerequisites": [
+        "python:selecting-and-filtering-rows"
+      ],
+      "learning_goal": "Demonstrate missing values and data types by running Python and explaining the observed behavior.",
+      "skills": [
+        "pandas",
+        "cleaning",
+        "eda"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "pandas",
+      "estimated_minutes": 30
+    },
+    {
+      "id": "python:cleaning-strings-dates-and-duplicates",
+      "module_id": "PY11",
+      "position": 5,
+      "title": "Cleaning Strings, Dates, and Duplicates",
+      "slug": "cleaning-strings-dates-and-duplicates",
+      "level": "advanced",
+      "prerequisites": [
+        "python:missing-values-and-data-types"
+      ],
+      "learning_goal": "Demonstrate cleaning strings, dates, and duplicates by running Python and explaining the observed behavior.",
+      "skills": [
+        "pandas",
+        "cleaning",
+        "eda"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "pandas",
+      "estimated_minutes": 30
+    },
+    {
+      "id": "python:groupby-and-aggregation",
+      "module_id": "PY11",
+      "position": 6,
+      "title": "GroupBy and Aggregation",
+      "slug": "groupby-and-aggregation",
+      "level": "advanced",
+      "prerequisites": [
+        "python:cleaning-strings-dates-and-duplicates"
+      ],
+      "learning_goal": "Demonstrate groupby and aggregation by running Python and explaining the observed behavior.",
+      "skills": [
+        "pandas",
+        "cleaning",
+        "eda"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "pandas",
+      "estimated_minutes": 30
+    },
+    {
+      "id": "python:merging-and-reshaping-data",
+      "module_id": "PY11",
+      "position": 7,
+      "title": "Merging and Reshaping Data",
+      "slug": "merging-and-reshaping-data",
+      "level": "advanced",
+      "prerequisites": [
+        "python:groupby-and-aggregation"
+      ],
+      "learning_goal": "Demonstrate merging and reshaping data by running Python and explaining the observed behavior.",
+      "skills": [
+        "pandas",
+        "cleaning",
+        "eda"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "pandas",
+      "estimated_minutes": 30
+    },
+    {
+      "id": "python:exploratory-data-analysis-and-exports",
+      "module_id": "PY11",
+      "position": 8,
+      "title": "Exploratory Data Analysis and Exports",
+      "slug": "exploratory-data-analysis-and-exports",
+      "level": "advanced",
+      "prerequisites": [
+        "python:merging-and-reshaping-data"
+      ],
+      "learning_goal": "Demonstrate exploratory data analysis and exports by running Python and explaining the observed behavior.",
+      "skills": [
+        "pandas",
+        "cleaning",
+        "eda"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "pandas",
+      "estimated_minutes": 30
+    },
+    {
+      "id": "python:define-input-and-output-contracts",
+      "module_id": "PY12",
+      "position": 1,
+      "title": "Define Input and Output Contracts",
+      "slug": "define-input-and-output-contracts",
+      "level": "advanced",
+      "prerequisites": [
+        "python:exploratory-data-analysis-and-exports"
+      ],
+      "learning_goal": "Demonstrate define input and output contracts by running Python and explaining the observed behavior.",
+      "skills": [
+        "etl",
+        "quality",
+        "idempotence"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 30
+    },
+    {
+      "id": "python:parse-and-normalize-raw-records",
+      "module_id": "PY12",
+      "position": 2,
+      "title": "Parse and Normalize Raw Records",
+      "slug": "parse-and-normalize-raw-records",
+      "level": "advanced",
+      "prerequisites": [
+        "python:define-input-and-output-contracts"
+      ],
+      "learning_goal": "Demonstrate parse and normalize raw records by running Python and explaining the observed behavior.",
+      "skills": [
+        "etl",
+        "quality",
+        "idempotence"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 30
+    },
+    {
+      "id": "python:data-quality-rules-and-rejections",
+      "module_id": "PY12",
+      "position": 3,
+      "title": "Data Quality Rules and Rejections",
+      "slug": "data-quality-rules-and-rejections",
+      "level": "advanced",
+      "prerequisites": [
+        "python:parse-and-normalize-raw-records"
+      ],
+      "learning_goal": "Demonstrate data quality rules and rejections by running Python and explaining the observed behavior.",
+      "skills": [
+        "etl",
+        "quality",
+        "idempotence"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 30
+    },
+    {
+      "id": "python:incremental-processing-and-idempotence",
+      "module_id": "PY12",
+      "position": 4,
+      "title": "Incremental Processing and Idempotence",
+      "slug": "incremental-processing-and-idempotence",
+      "level": "advanced",
+      "prerequisites": [
+        "python:data-quality-rules-and-rejections"
+      ],
+      "learning_goal": "Demonstrate incremental processing and idempotence by running Python and explaining the observed behavior.",
+      "skills": [
+        "etl",
+        "quality",
+        "idempotence"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 30
+    },
+    {
+      "id": "python:pipeline-tests-and-observability",
+      "module_id": "PY12",
+      "position": 5,
+      "title": "Pipeline Tests and Observability",
+      "slug": "pipeline-tests-and-observability",
+      "level": "advanced",
+      "prerequisites": [
+        "python:incremental-processing-and-idempotence"
+      ],
+      "learning_goal": "Demonstrate pipeline tests and observability by running Python and explaining the observed behavior.",
+      "skills": [
+        "etl",
+        "quality",
+        "idempotence"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 30
+    },
+    {
+      "id": "python:build-a-reproducible-data-deliverable",
+      "module_id": "PY12",
+      "position": 6,
+      "title": "Build a Reproducible Data Deliverable",
+      "slug": "build-a-reproducible-data-deliverable",
+      "level": "advanced",
+      "prerequisites": [
+        "python:pipeline-tests-and-observability"
+      ],
+      "learning_goal": "Demonstrate build a reproducible data deliverable by running Python and explaining the observed behavior.",
+      "skills": [
+        "etl",
+        "quality",
+        "idempotence"
+      ],
+      "guided_challenges": 2,
+      "concept_checks": 2,
+      "status": "planned",
+      "runtime": "stdlib",
+      "estimated_minutes": 30
+    }
+  ]
+}

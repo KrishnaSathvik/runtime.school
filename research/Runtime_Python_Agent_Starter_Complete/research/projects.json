@@ -1,0 +1,160 @@
+{
+  "version": "0.1-research",
+  "target": 6,
+  "projects": [
+    {
+      "id": "python:project:retail-order-engine",
+      "title": "Retail Order Engine",
+      "phase": 1,
+      "difficulty": "beginner",
+      "milestones": [
+        "Calculate cart totals from price and quantity",
+        "Apply explicit discount and tax policies",
+        "Generate a formatted receipt",
+        "Validate edge cases and package a downloadable Python file"
+      ],
+      "datasets": [
+        "cart.json (small deterministic fixtures)",
+        "pricing_rules.json"
+      ],
+      "skills": [
+        "variables",
+        "arithmetic",
+        "conditions",
+        "functions"
+      ],
+      "runtime": "stdlib",
+      "report": "working script, readable receipt, passed checks"
+    },
+    {
+      "id": "python:project:customer-data-quality",
+      "title": "Customer Data Quality Toolkit",
+      "phase": 2,
+      "difficulty": "intermediate",
+      "milestones": [
+        "Inspect raw customer records",
+        "Normalize names and emails",
+        "Detect duplicates and invalid records",
+        "Produce cleaned and rejected datasets",
+        "Summarize quality findings"
+      ],
+      "datasets": [
+        "customers_raw.json",
+        "email_rules.json"
+      ],
+      "skills": [
+        "strings",
+        "dictionaries",
+        "functions",
+        "validation",
+        "json"
+      ],
+      "runtime": "stdlib",
+      "report": "cleaned JSON, rejected rows with reasons, validation summary"
+    },
+    {
+      "id": "python:project:product-event-investigation",
+      "title": "Product Event Investigation",
+      "phase": 2,
+      "difficulty": "intermediate",
+      "milestones": [
+        "Parse events from JSON lines",
+        "Identify valid sessions and unique users",
+        "Calculate simple funnels and action counts",
+        "Find anomalies in event order and timestamps",
+        "Write an evidence-backed summary"
+      ],
+      "datasets": [
+        "product_events.jsonl",
+        "event_schema.json"
+      ],
+      "skills": [
+        "loops",
+        "records",
+        "dates",
+        "aggregation"
+      ],
+      "runtime": "stdlib",
+      "report": "event metrics and checked Python, notes"
+    },
+    {
+      "id": "python:project:csv-sales-analyst",
+      "title": "CSV Sales Analyst",
+      "phase": 2,
+      "difficulty": "intermediate",
+      "milestones": [
+        "Read and validate order rows",
+        "Normalize prices, dates, and statuses",
+        "Calculate daily and category metrics",
+        "Reconcile totals and rejected rows",
+        "Export a report-ready CSV"
+      ],
+      "datasets": [
+        "orders.csv",
+        "products.csv"
+      ],
+      "skills": [
+        "csv",
+        "dates",
+        "functions",
+        "tests"
+      ],
+      "runtime": "stdlib",
+      "report": "clean CSV, metrics CSV, quality log"
+    },
+    {
+      "id": "python:project:marketplace-eda",
+      "title": "Marketplace EDA Lab",
+      "phase": 3,
+      "difficulty": "advanced",
+      "milestones": [
+        "Inspect and profile a marketplace dataset",
+        "Clean missing and duplicated records",
+        "Join orders and customer dimensions",
+        "Summarize revenue and cohort trends",
+        "Explain caveats and export evidence"
+      ],
+      "datasets": [
+        "marketplace_orders.csv",
+        "marketplace_customers.csv"
+      ],
+      "skills": [
+        "pandas",
+        "dataframes",
+        "merge",
+        "groupby",
+        "eda"
+      ],
+      "runtime": "pandas",
+      "report": "cleaned dataset, metric tables, original interpretation"
+    },
+    {
+      "id": "python:project:reliable-mini-etl",
+      "title": "Reliable Mini ETL Pipeline",
+      "phase": 3,
+      "difficulty": "advanced",
+      "milestones": [
+        "Define source/target schemas and version",
+        "Parse incremental event batches",
+        "Quarantine invalid rows and log errors",
+        "Make upserts idempotent",
+        "Reconcile and verify outputs",
+        "Export executable code and a run manifest"
+      ],
+      "datasets": [
+        "daily_events_a.jsonl",
+        "daily_events_b.jsonl",
+        "existing_output.csv"
+      ],
+      "skills": [
+        "etl",
+        "idempotence",
+        "validation",
+        "tests",
+        "observability"
+      ],
+      "runtime": "stdlib",
+      "report": "reusable code, normalized output, rejected rows, reproducible manifest"
+    }
+  ]
+}
