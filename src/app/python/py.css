@@ -335,6 +335,22 @@
 
 .py-file-data-full pre { max-height: none; overflow: visible; white-space: pre-wrap; overflow-wrap: anywhere; }
 .py-file-data-full .rx-table-wrap { overflow: visible; padding-inline: 0; }
-.py-file-data-full .rx-table { table-layout: fixed; width: 100%; min-width: 0; }
-.py-file-data-full .rx-table th, .py-file-data-full .rx-table td { white-space: pre-wrap; overflow-wrap: anywhere; padding-right: 8px; }
+.py-file-data-full .rx-table { table-layout: auto; width: 100%; min-width: 0; }
+.py-file-data .rx-table th, .py-file-data .rx-table td { white-space: normal; overflow-wrap: anywhere; padding: 9px 16px 9px 0; vertical-align: top; }
 .py-file-data-full summary { flex-wrap: wrap; }
+
+.py-file-data .rx-schema-table { container-type: inline-size; }
+.py-file-data summary { align-items: baseline; flex-wrap: wrap; gap: 4px 12px; }
+.py-file-data summary span { font-weight: 400; }
+.py-file-data .rx-table .py-data-id { width: 1%; min-width: 3ch; white-space: nowrap; padding-right: 28px; }
+.py-file-data .rx-table th:last-child, .py-file-data .rx-table td:last-child { padding-right: 0; }
+.py-data-note { display: block; margin-top: 4px; font-family: var(--rx-sans); color: var(--rx-dim); }
+.py-file-records { display: none; }
+.py-file-records dl { margin: 0; padding: 10px 0; border-bottom: 1px solid var(--rx-line); }
+.py-file-records dl > div { display: grid; grid-template-columns: minmax(90px, 2fr) minmax(0, 3fr); gap: 12px; padding: 6px 0; }
+.py-file-records dt { color: var(--rx-dim); overflow-wrap: anywhere; }
+.py-file-records dd { margin: 0; overflow-wrap: anywhere; }
+@container (max-width: 440px) {
+  .py-file-data-full .rx-table-wrap { display: none; }
+  .py-file-data-full .py-file-records { display: block; }
+}

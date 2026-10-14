@@ -11,12 +11,30 @@ import { CodePane, type CodePaneHandle } from './CodePane';
 import { filePreview } from './file-preview';
 import { Rich } from './Rich';
 
+/** Preserve raw values while making padding whitespace explicit instead of misaligning cells. */
+function DataValue({ value }: { value: unknown }) {
+  if (value == null) return <span className="rx-dim">—</span>;
+  if (typeof value === 'string' && value.trim() !== value) return <span title="Quotes show leading or trailing whitespace">{JSON.stringify(value)}</span>;
+  return <>{typeof value === 'object' ? JSON.stringify(value) : String(value)}</>;
+}
+
 /** Source fixtures use the same card treatment as SQL's data tables. */
 export function FileData({ files, full = false }: { files: Record<string,string>; full?: boolean }) {
   return <div className={`py-file-data${full ? " py-file-data-full" : ""}`}>{Object.entries(files).map(([name,text]) => {
     const preview = filePreview(name,text);
-    return <details key={name} className="rx-schema-table" open><summary className="mono">{name}{preview && <span>{preview.columns.length} columns · {preview.rows.length} rows</span>}</summary>
-      {preview ? <><div className="rx-table-wrap" tabIndex={0} role="region" aria-label={`${name} preview`}><table className="rx-table rx-data"><thead><tr>{preview.columns.map((c,i)=><th key={i}>{c}</th>)}</tr></thead><tbody>{(full ? preview.rows : preview.rows.slice(0,5)).map((row,i)=><tr key={i}>{preview.columns.map((_,c)=><td key={c}>{row[c] == null ? <span className="rx-dim">—</span> : typeof row[c] === 'object' ? JSON.stringify(row[c]) : String(row[c])}</td>)}</tr>)}</tbody></table></div><p className="rx-table-foot">{!full && preview.rows.length>5?`showing 5 of ${preview.rows.length} rows`:`all ${preview.rows.length} rows`}</p></> : <pre tabIndex={0} aria-label={name}>{text}</pre>}
+    const rows = preview ? (full ? preview.rows : preview.rows.slice(0,5)) : [];
+    const hasWhitespace = rows.some(row => row.some(value => typeof value === 'string' && value.trim() !== value));
+    return <details key={name} className="rx-schema-table" open>
+      <summary className="mono"><b>{name}</b>{preview && <span>{preview.columns.length} columns · {preview.rows.length} rows</span>}</summary>
+      {preview ? <>
+        <div className="rx-table-wrap" tabIndex={0} role="region" aria-label={`${name} preview`}>
+          <table className="rx-table rx-data"><thead><tr>{preview.columns.map(c => <th key={c} scope="col" className={c === 'id' ? 'py-data-id' : undefined}>{c}</th>)}</tr></thead>
+            <tbody>{rows.map((row,i) => <tr key={i}>{preview.columns.map((column,c) => <td key={column} className={column === 'id' ? 'py-data-id' : undefined}><DataValue value={row[c]} /></td>)}</tr>)}</tbody>
+          </table>
+        </div>
+        <div className="py-file-records" aria-label={`${name} records`}>{rows.map((row,i) => <dl key={i}>{preview.columns.map((column,c) => <div key={column}><dt>{column}</dt><dd><DataValue value={row[c]} /></dd></div>)}</dl>)}</div>
+        <p className="rx-table-foot">{!full && preview.rows.length>5 ? `showing 5 of ${preview.rows.length} rows` : `all ${preview.rows.length} rows`}{hasWhitespace && <span className="py-data-note">Quoted values contain leading or trailing whitespace.</span>}</p>
+      </> : <pre tabIndex={0} aria-label={name}>{text}</pre>}
     </details>;
   })}</div>;
 }
