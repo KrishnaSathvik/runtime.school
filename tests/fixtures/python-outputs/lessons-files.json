@@ -1,0 +1,329 @@
+{
+ "python:consuming-api-shaped-responses-offline#example": {
+  "status": "ok",
+  "stdout": "page 1: 2 orders\npage 2: 2 orders\npage 3: 1 orders\n{'id': 'ORD-1', 'customer': 'Ada', 'amount': 40.0}\n{'id': 'ORD-2', 'customer': 'Ben', 'amount': 15.5}\n{'id': 'ORD-3', 'customer': 'Ada', 'amount': None}\n{'id': 'ORD-4', 'customer': None, 'amount': 60.0}\n{'id': 'ORD-5', 'customer': 'Ben', 'amount': 9.99}\n"
+ },
+ "python:consuming-api-shaped-responses-offline#mistake-1": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "KeyError",
+   "line": 4
+  }
+ },
+ "python:consuming-api-shaped-responses-offline#mistake-2": {
+  "status": "runtime-error",
+  "stdout": "Ada\n",
+  "error": {
+   "type": "TypeError",
+   "line": 4
+  }
+ },
+ "python:consuming-api-shaped-responses-offline#step-1": {
+  "status": "ok",
+  "stdout": "error False\nAPI error: rate_limited - Too many requests, retry later\n"
+ },
+ "python:consuming-api-shaped-responses-offline#step-2": {
+  "status": "ok",
+  "stdout": "ORD-3 Ada None\nORD-4 unknown 60.0\n"
+ },
+ "python:consuming-api-shaped-responses-offline#step-3": {
+  "status": "ok",
+  "stdout": "1 ['ORD-1', 'ORD-2']\n2 ['ORD-3', 'ORD-4']\n3 ['ORD-5']\n"
+ },
+ "python:consuming-api-shaped-responses-offline#step-4": {
+  "status": "ok",
+  "stdout": "{'GBP': 40.0, 'EUR': 9.99}\n"
+ },
+ "python:csv-rows-and-headers#example": {
+  "status": "ok",
+  "stdout": "1001  Desk lamp     49.00\n1002  Desk, oak    120.00\n1004  Desk lamp     24.50\nCompleted revenue: 193.50\n"
+ },
+ "python:csv-rows-and-headers#mistake-1": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "TypeError",
+   "line": 4
+  }
+ },
+ "python:csv-rows-and-headers#mistake-2": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "ValueError",
+   "line": 3
+  }
+ },
+ "python:csv-rows-and-headers#step-1": {
+  "status": "ok",
+  "stdout": "['1002', 'ben', '\"Desk', ' oak\"', '1', '120.00', 'completed']\n['1002', 'ben', 'Desk, oak', '1', '120.00', 'completed']\n"
+ },
+ "python:csv-rows-and-headers#step-2": {
+  "status": "ok",
+  "stdout": "['sku', 'name', 'price']\n['A1', 'Desk lamp', '24.50']\n['B2', 'Desk, oak', '120.00']\n['C3', 'Notebook', '3.25']\n"
+ },
+ "python:csv-rows-and-headers#step-3": {
+  "status": "ok",
+  "stdout": "['sku', 'name', 'price']\nA1 24.5\nB2 120.0\nC3 3.25\n"
+ },
+ "python:csv-rows-and-headers#step-4": {
+  "status": "ok",
+  "stdout": "1001 '24.50' 24.5\n1002 '120.00' 120.0\n1003 '3.25' 3.25\n1004 '24.50' 24.5\n1005 '' None\n"
+ },
+ "python:dates-times-and-time-zones#example": {
+  "status": "ok",
+  "stdout": "14/10/2026 Wednesday\nDue: 2026-11-13\nDays to 25 Dec: 72\n2026-10-14 local -> 2026-10-15 UTC 04:30\n"
+ },
+ "python:dates-times-and-time-zones#mistake-1": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "TypeError",
+   "line": 4
+  }
+ },
+ "python:dates-times-and-time-zones#mistake-2": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "ValueError",
+   "line": 2
+  }
+ },
+ "python:dates-times-and-time-zones#mistake-3": {
+  "status": "ok",
+  "stdout": "2026-04-10\n"
+ },
+ "python:dates-times-and-time-zones#quiz-delta": {
+  "status": "ok",
+  "stdout": "28\n"
+ },
+ "python:dates-times-and-time-zones#step-1": {
+  "status": "ok",
+  "stdout": "['10/1/2026', '11/1/2026', '9/1/2026']\n[datetime.date(2026, 9, 1), datetime.date(2026, 10, 1), datetime.date(2026, 11, 1)]\n"
+ },
+ "python:dates-times-and-time-zones#step-2": {
+  "status": "ok",
+  "stdout": "2026-10-14\n14 Oct 2026 20261014 Wed\n"
+ },
+ "python:dates-times-and-time-zones#step-3": {
+  "status": "ok",
+  "stdout": "2026-03-01\n2024-02-29\n59\n"
+ },
+ "python:dates-times-and-time-zones#step-4": {
+  "status": "ok",
+  "stdout": "2026-10-14T23:30:00-05:00\n2026-10-15T04:30:00+00:00\n2026-10-14 2026-10-15\n"
+ },
+ "python:json-data-and-nested-objects#example": {
+  "status": "ok",
+  "stdout": "Exported: 2026-10-14T09:00:00Z\nAda Lovelace   London      62.50  ada@example.com\nBen Okafor     Lagos        0.00  (no email)\nChen Wei       Shanghai    60.00  chen@example.cn\n"
+ },
+ "python:json-data-and-nested-objects#mistake-1": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "JSONDecodeError",
+   "line": 2
+  }
+ },
+ "python:json-data-and-nested-objects#mistake-2": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "TypeError",
+   "line": 4
+  }
+ },
+ "python:json-data-and-nested-objects#step-1": {
+  "status": "ok",
+  "stdout": "active True bool\nscore 9.5 float\ntags ['a', 'b'] list\nnote None NoneType\n"
+ },
+ "python:json-data-and-nested-objects#step-2": {
+  "status": "ok",
+  "stdout": "list 3\n['address', 'email', 'id', 'name', 'orders', 'tags']\nUK 22.5\n"
+ },
+ "python:json-data-and-nested-objects#step-3": {
+  "status": "ok",
+  "stdout": "Ada Lovelace 'ada@example.com' 'none'\nBen Okafor None 'none'\nChen Wei 'chen@example.cn' 'none'\n"
+ },
+ "python:json-data-and-nested-objects#step-4": {
+  "status": "ok",
+  "stdout": "{\"name\": \"Zo\\u00eb\", \"city\": \"Montr\\u00e9al\", \"id\": 7}\n{\n  \"city\": \"Montréal\",\n  \"id\": 7,\n  \"name\": \"Zoë\"\n}\n"
+ },
+ "python:regular-expressions-for-validation#example": {
+  "status": "ok",
+  "stdout": "09:00:01 INFO  ORD-10021  valid=True\n09:00:07 WARN  ORD-10021  valid=True\n09:01:15 ERROR ORD-10022  valid=True\n09:02:00 INFO  ORD-10023  valid=True\nskipped: garbled line without a timestamp\n09:03:44 ERROR ORD-1002   valid=False\n"
+ },
+ "python:regular-expressions-for-validation#mistake-1": {
+  "status": "ok",
+  "stdout": "True\n"
+ },
+ "python:regular-expressions-for-validation#mistake-2": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "AttributeError",
+   "line": 3
+  }
+ },
+ "python:regular-expressions-for-validation#step-1": {
+  "status": "ok",
+  "stdout": "ORD-10021 True\nORD-1002 False\nORD-100210 False\nord-10021 False\n"
+ },
+ "python:regular-expressions-for-validation#step-2": {
+  "status": "ok",
+  "stdout": "ORD-12345\n['ORD-12345', 'ORD-67890', 'ORD-54321']\n['ORD-12345', 'ORD-67890']\n"
+ },
+ "python:regular-expressions-for-validation#step-3": {
+  "status": "ok",
+  "stdout": "('2026', '10', '14') 2026\n[('ana', 'example.com'), ('ben', 'site.org')]\n"
+ },
+ "python:regular-expressions-for-validation#step-4": {
+  "status": "ok",
+  "stdout": "too many spaces\nCard #### #### #### 1234\n"
+ },
+ "python:working-with-file-paths-and-multiple-files#example": {
+  "status": "ok",
+  "stdout": "2026-10-01: 200.50\n2026-10-02: 144.75\n2026-10-03: 60.00\nEverything in the folder: ['2026-10-01.csv', '2026-10-02.csv', '2026-10-03.csv', 'README.txt', 'archive']\n"
+ },
+ "python:working-with-file-paths-and-multiple-files#mistake-1": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "FileNotFoundError",
+   "line": 2
+  }
+ },
+ "python:working-with-file-paths-and-multiple-files#mistake-2": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "FileNotFoundError",
+   "line": 1
+  }
+ },
+ "python:working-with-file-paths-and-multiple-files#step-1": {
+  "status": "ok",
+  "stdout": "sales/archive/2026-09-30.csv\n2026-09-30.csv 2026-09-30 .csv\nsales/archive sales\n"
+ },
+ "python:working-with-file-paths-and-multiple-files#step-2": {
+  "status": "ok",
+  "stdout": "['2026-10-01.csv', '2026-10-02.csv', '2026-10-03.csv']\n['sales/2026-10-01.csv', 'sales/2026-10-02.csv', 'sales/2026-10-03.csv', 'sales/archive/2026-09-30.csv']\n"
+ },
+ "python:working-with-file-paths-and-multiple-files#step-3": {
+  "status": "ok",
+  "stdout": "sales True False True\nsales/README.txt True True False\nsales/2026-10-04.csv False False False\n"
+ },
+ "python:working-with-file-paths-and-multiple-files#step-4": {
+  "status": "ok",
+  "stdout": "['reports/summary.txt']\n",
+  "files": [
+   "reports/summary.txt"
+  ]
+ },
+ "python:working-with-text-files-safely#example": {
+  "status": "ok",
+  "stdout": "Order 1001 shipped\nOrder 1002 delayed: waiting for stock\nOrder 1003 shipped\nOrder 1004 cancelled by customer\nShipped orders: 2\n\n",
+  "files": [
+   "summary.txt"
+  ]
+ },
+ "python:working-with-text-files-safely#mistake-1": {
+  "status": "ok",
+  "stdout": "''\n",
+  "files": [
+   "stock.txt"
+  ]
+ },
+ "python:working-with-text-files-safely#mistake-2": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "FileNotFoundError",
+   "line": 1
+  }
+ },
+ "python:working-with-text-files-safely#mistake-3": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "TypeError",
+   "line": 2
+  },
+  "files": [
+   "count.txt"
+  ]
+ },
+ "python:working-with-text-files-safely#quiz-modes": {
+  "status": "ok",
+  "stdout": "",
+  "files": [
+   "report.txt"
+  ]
+ },
+ "python:working-with-text-files-safely#step-1": {
+  "status": "ok",
+  "stdout": "'desk,4\\nlamp,0\\nchair,7\\nshelf,2\\n'\n4 lines\n"
+ },
+ "python:working-with-text-files-safely#step-2": {
+  "status": "ok",
+  "stdout": "'desk,4\\n' -> 'desk,4'\n'lamp,0\\n' -> 'lamp,0'\n'chair,7\\n' -> 'chair,7'\n'shelf,2\\n' -> 'shelf,2'\n"
+ },
+ "python:working-with-text-files-safely#step-3": {
+  "status": "ok",
+  "stdout": "['first', 'second', 'third']\n",
+  "files": [
+   "log.txt"
+  ]
+ },
+ "python:working-with-text-files-safely#step-4": {
+  "status": "ok",
+  "stdout": "No missing.txt yet: starting empty\n"
+ },
+ "python:writing-data-exports#example": {
+  "status": "ok",
+  "stdout": "[{'store': 'hull', 'revenue': '45.25'}, {'store': 'leeds', 'revenue': '220.00'}, {'store': 'york', 'revenue': '140.00'}]\n",
+  "files": [
+   "revenue.csv",
+   "summary.json"
+  ]
+ },
+ "python:writing-data-exports#mistake-1": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "ValueError",
+   "line": 5
+  },
+  "files": [
+   "out.csv"
+  ]
+ },
+ "python:writing-data-exports#mistake-2": {
+  "status": "ok",
+  "stdout": "sku,name\nB2,Desk, oak\nA1,Lamp\n[2, 3, 2]\n"
+ },
+ "python:writing-data-exports#step-1": {
+  "status": "ok",
+  "stdout": "'sku,name\\r\\nB2,\"Desk, oak\"\\r\\nA1,Lamp\\r\\n'\n",
+  "files": [
+   "out.csv"
+  ]
+ },
+ "python:writing-data-exports#step-2": {
+  "status": "ok",
+  "stdout": "id,city\n1,Leeds\n2,York\n\n"
+ },
+ "python:writing-data-exports#step-3": {
+  "status": "ok",
+  "stdout": "False\nTrue\n"
+ },
+ "python:writing-data-exports#step-4": {
+  "status": "ok",
+  "stdout": "['store', 'revenue'] 2 data rows\n",
+  "files": [
+   "check.csv"
+  ]
+ }
+}
