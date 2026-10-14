@@ -107,6 +107,7 @@ export const PyEditor = forwardRef<PyEditorHandle, {
         value={value}
         onChange={onChange}
         extensions={extensions}
+        onCreateEditor={(view) => { view.scrollDOM.tabIndex = 0; view.scrollDOM.setAttribute("aria-label", "Scroll Python code"); }}
         theme="none"
         height={height}
         minHeight={minHeight}

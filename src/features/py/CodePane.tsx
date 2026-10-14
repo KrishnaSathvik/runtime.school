@@ -74,6 +74,7 @@ export type CodePaneHandle = {
  */
 export const CodePane = forwardRef<CodePaneHandle, {
   task: PyTask;
+  ungraded?: boolean;
   starter: string;
   value: string;
   onChange: (code: string) => void;
@@ -85,7 +86,7 @@ export const CodePane = forwardRef<CodePaneHandle, {
   splitKey?: string;
   /** Initial share of the editor, 0–1. */
   editorShare?: number;
-}>(function CodePane({ task, starter, value, onChange, onGraded, checkBanner, splitKey = "runtime-python-split-console", editorShare = 0.58 }, ref) {
+}>(function CodePane({ task, ungraded = false, starter, value, onChange, onGraded, checkBanner, splitKey = "runtime-python-split-console", editorShare = 0.58 }, ref) {
   const status = useSyncExternalStore(subscribePythonStatus, getPythonStatus, () => "idle" as const);
   const failure = useSyncExternalStore(subscribePythonStatus, getPythonFailure, () => null);
   const version = useSyncExternalStore(subscribePythonStatus, getPythonVersion, () => null);
@@ -157,6 +158,7 @@ export const CodePane = forwardRef<CodePaneHandle, {
   };
 
   const check = async () => {
+    if (ungraded) return;
     if (busyRef.current) return;
     const code = value;
     setBusy("check");
@@ -250,7 +252,7 @@ export const CodePane = forwardRef<CodePaneHandle, {
           <div className="py-actions">
             <MacOnly>
               <span className="py-hint" aria-hidden="true">
-                <Keys keys={["mod", "enter"]} /> run · <Keys keys={["mod", "shift", "enter"]} /> check<span className="py-hint-esc"> · <Keys keys={["esc"]} /> then Tab leaves the editor</span>
+                <Keys keys={["mod", "enter"]} /> run{!ungraded && <> · <Keys keys={["mod", "shift", "enter"]} /> check</>}<span className="py-hint-esc"> · <Keys keys={["esc"]} /> then Tab leaves the editor</span>
               </span>
             </MacOnly>
             {undo !== null ? (
@@ -271,9 +273,9 @@ export const CodePane = forwardRef<CodePaneHandle, {
                 <Play size={13} /> Run code
               </button>
             )}
-            <button type="button" className="rx-btn primary" onClick={() => void check()} disabled={busy !== null || status === "failed"}>
+            {!ungraded && <button type="button" className="rx-btn primary" onClick={() => void check()} disabled={busy !== null || status === "failed"}>
               <Check size={14} /> {busy === "check" ? "Checking…" : "Check answer"}
-            </button>
+            </button>}
           </div>
           <div ref={summaryRef} className="py-summary-wrap" aria-live="polite" aria-atomic="true">
             {last === "check" && busy === "check" && <p className="py-summary-busy">Checking your program from a fresh start…</p>}
@@ -298,10 +300,10 @@ export const CodePane = forwardRef<CodePaneHandle, {
             <button type="button" role="tab" id="py-tab-console" aria-controls="py-panel-console" aria-selected={panel === "console"} onClick={() => setPanel("console")}>
               Console
             </button>
-            <button type="button" role="tab" id="py-tab-checks" aria-controls="py-panel-checks" aria-selected={panel === "checks"} onClick={() => setPanel("checks")}>
+            {!ungraded && <button type="button" role="tab" id="py-tab-checks" aria-controls="py-panel-checks" aria-selected={panel === "checks"} onClick={() => setPanel("checks")}>
               Checks
               {checked && <span className={`py-count ${checked.report.ok ? "ok" : "bad"}`}>{checked.report.passed}/{checked.report.total}</span>}
-            </button>
+            </button>}
           </div>
           <div id="py-panel-console" role="tabpanel" aria-labelledby="py-tab-console" hidden={panel !== "console"} className="py-panel">
             {interrupted === "run" && <p className="py-meta">Another program on this page started, so this run was stopped. Run it again when you&apos;re ready.</p>}

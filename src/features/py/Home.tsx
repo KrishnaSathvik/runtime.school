@@ -19,6 +19,7 @@ export function PythonHome() {
         <h1 className="rx-title">Python</h1>
         <p className="rx-lead">Learn Python by writing real programs. Every example and exercise runs in a real Python interpreter, right here in your browser.</p>
 
+        <p className="py-links"><Link href="/python/practice">Practice independently</Link><Link href="/python/projects">Build a project</Link><Link href="/python/playground">Open Python playground</Link></p>
         {pythonModules.map((m) => (
           <section key={m.id} className="py-module" aria-labelledby={`module-${m.id}`}>
             <p className="rx-label">module {pad(m.number)}</p>
@@ -48,7 +49,7 @@ export function PythonHome() {
                 );
               })}
             </ol>
-            <p className="rx-small">More Foundations lessons are being written. Only finished lessons are listed here.</p>
+
           </section>
         ))}
       </div>

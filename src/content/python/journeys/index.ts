@@ -12,6 +12,7 @@ export type PyJourney = {
 
 /** Stages extend the previous solution and retain its checks: later work cannot silently regress earlier work. */
 export const pythonJourneys: PyJourney[] = specs.map((spec) => {
+  const files: Record<string, string> = Object.fromEntries(Object.entries(spec.files).filter((entry): entry is [string, string] => typeof entry[1] === "string"));
   let answer = '';
   const checks: PyCheck[] = [];
   const stages = spec.steps.map((step, i): PyStage => {
@@ -23,11 +24,11 @@ export const pythonJourneys: PyJourney[] = specs.map((spec) => {
       id: `stage-${i + 1}`, ref: `${spec.ref}:stage-${i + 1}`, title: step.title,
       prompt: step.prompt, looksFor: step.checks.map(c => c.label), starter,
       answer, hints: step.hints,
-      task: { checks: [...checks], files: spec.files as Record<string, string>, packages: spec.packages as PyPackage[] },
+      task: { checks: [...checks], files: files, packages: spec.packages as PyPackage[] },
       wrong: [{ code: `${answer}\n${step.wrong}\n`, fails: [newChecks[0].id!] }],
     };
   });
-  return { ...spec, kind: spec.kind as 'case' | 'project', packages: spec.packages as PyPackage[], files: spec.files as Record<string, string>, stages };
+  return { ...spec, kind: spec.kind as 'case' | 'project', packages: spec.packages as PyPackage[], files: files, stages };
 });
 export const pythonCases = pythonJourneys.filter(j => j.kind === 'case');
 export const pythonProjects = pythonJourneys.filter(j => j.kind === 'project');

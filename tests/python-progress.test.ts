@@ -8,7 +8,7 @@ const s = () => usePyProgress.getState();
 const rec = () => s().lessons[REF];
 
 beforeEach(() => {
-  usePyProgress.setState({ lessons: {}, lastLesson: null });
+  usePyProgress.setState({ lessons: {}, items: {}, lastLesson: null });
 });
 
 describe("python progress: mastery rules", () => {
@@ -77,7 +77,7 @@ describe("python progress: storage", () => {
   });
 
   it("normalises corrupt or foreign data instead of crashing", () => {
-    expect(normalizePyProgress(null)).toEqual({ version: 1, lessons: {}, lastLesson: null });
+    expect(normalizePyProgress(null)).toEqual({ version: 1, lessons: {}, items: {}, lastLesson: null });
     expect(normalizePyProgress({ lessons: { "sql:3": { drafts: { a: "x" } } } }).lessons).toEqual({});
     const n = normalizePyProgress({
       lessons: { [REF]: { drafts: { "challenge-1": "x = 1", bad: 3 }, challenges: { "challenge-1": { solved: "yes", passes: 2 } }, quiz: { passed: true, answers: { predict: 0, x: "a" } }, tab: 5 } },
@@ -126,5 +126,36 @@ describe("python content: Variables and values", () => {
       expect(q.options.filter((o) => o.correct)).toHaveLength(1);
       expect(q.options.every((o) => o.why.length > 20)).toBe(true);
     }
+  });
+});
+
+
+describe("independent item progress", () => {
+  const ref = "python:bank:py01-01";
+  it("loads old v1 saves without changing lesson identity", () => {
+    s().setDraft(REF, "challenge-1", "print(7)");
+    const old = {version:1, lessons:s().lessons, lastLesson:REF};
+    const migrated = normalizePyProgress(old);
+    expect(migrated.items).toEqual({});
+    expect(migrated.lessons).toEqual(old.lessons);
+    expect(migrated.lastLesson).toBe(REF);
+  });
+  it("keeps question drafts and assisted credit outside lessons", () => {
+    s().setDraft(ref, "answer", "print(3)");
+    s().takeHelp(ref, "answer", "hint");
+    s().recordCheck(ref, "answer", true, ["answer"]);
+    expect(s().items[ref].challenges.answer).toMatchObject({assisted:true,solved:false});
+    expect(s().lessons[ref]).toBeUndefined();
+    expect(s().lastLesson).toBeNull();
+    const restored = normalizePyProgress(s());
+    expect(restored.items[ref].drafts.answer).toBe("print(3)");
+    s().freshAttempt(ref, "answer");
+    s().recordCheck(ref, "answer", true, ["answer"]);
+    expect(s().items[ref].challenges.answer.solved).toBe(true);
+  });
+  it("normalizes malformed item data safely", () => {
+    const restored = normalizePyProgress({items:{[ref]:{drafts:{answer:7},attempts:{answer:null}},bad:4}});
+    expect(restored.items[ref].drafts).toEqual({});
+    expect(restored.items.bad).toBeUndefined();
   });
 });

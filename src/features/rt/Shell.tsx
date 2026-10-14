@@ -8,6 +8,8 @@ import { ChevronDown, Moon, Search, Sun } from "lucide-react";
 import { courseOrder, getLesson, projects } from "@/content";
 import { bankQuestions } from "@/content/question-bank";
 import { rtSectionHrefs } from "@/features/rt/entry";
+import { pythonQuestions, pythonTracks, pythonQuestionHref, pythonTrackHref } from "@/content/python/practice";
+import { pythonJourneys, journeyHref } from "@/content/python/journeys";
 import { pythonLessonHref, pythonLessons } from "@/content/python";
 import { useHydrated, useLearning } from "@/lib/learning-state";
 import { projectHref } from "@/platform/project-paths";
@@ -26,11 +28,12 @@ const NAV_FALLBACK: { id: Exclude<Section, "tools">; label: string; href: string
 ];
 
 /**
- * Python shows only destinations that exist. Practice, Projects and Python tools appear
- * when they are real; until then Python has no Tools menu.
+ * Python navigation stays within its own subject. Its playground is available from home and search.
  */
 const PYTHON_NAV: { id: Exclude<Section, "tools">; label: string; href: string }[] = [
   { id: "learn", label: "Learn", href: "/python" },
+  { id: "practice", label: "Practice", href: "/python/practice" },
+  { id: "projects", label: "Projects", href: "/python/projects" },
 ];
 
 export const TOOLS = [
@@ -180,6 +183,10 @@ type Item = { label: string; href: string; kind: string };
 function PythonPalette({ onClose }: { onClose: () => void }) {
   const all: Item[] = [
     ...PYTHON_NAV.map((n) => ({ label: `Python · ${n.label}`, href: n.href, kind: "go" })),
+    { label: "Python playground", href: "/python/playground", kind: "tool" },
+    ...pythonQuestions.map(q => ({ label: q.title, href: pythonQuestionHref(q.slug), kind: "practice" })),
+    ...pythonTracks.map(t => ({ label: t.title, href: pythonTrackHref(t.slug), kind: "track" })),
+    ...pythonJourneys.map(j => ({ label: j.title, href: journeyHref(j), kind: j.kind })),
     ...pythonLessons.map((l) => ({ label: `${String(l.number).padStart(2, "0")} ${l.title}`, href: pythonLessonHref(l.slug), kind: "lesson" })),
     { label: "Choose a subject", href: "/", kind: "go" },
     { label: "SQL course", href: "/sql", kind: "subject" },

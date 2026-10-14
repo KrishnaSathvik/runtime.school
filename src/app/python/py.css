@@ -231,3 +231,55 @@
   .py-lesson-code .py-editor { height: auto; }
   .py-lesson-code .py-out { height: auto; }
 }
+
+/* Practice and project notebooks share the existing Runtime palette and editor. */
+.py-catalog { max-width: 1060px; }
+.py-catalog h2 { margin: 30px 0 12px; font-size: 1.35rem; font-weight: 650; }
+.py-catalog-list { padding: 0; list-style: none; }
+.py-catalog-list li { padding: 16px 0; border-bottom: 1px solid var(--rx-line); }
+.py-catalog-list a { font-size: 1.1rem; font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }
+.py-catalog-list p { margin: 8px 0 0; max-width: 75ch; line-height: 1.6; }
+.py-catalog-list h2 { margin: 0; }
+.py-filters, .py-links { display: flex; flex-wrap: wrap; gap: 16px; margin: 20px 0; }
+.py-links a, .py-next a { text-decoration: underline; text-underline-offset: 4px; }
+.py-filters label, .py-brief label { display: flex; flex-direction: column; gap: 6px; }
+.py-filters input, .py-filters select, .py-brief select, .py-prediction textarea { border: 1px solid var(--rx-line-strong); border-radius: 5px; padding: 10px; background: var(--rx-surface); color: var(--rx-ink); }
+.py-study { display: grid; grid-template-columns: minmax(280px, .8fr) minmax(0, 1.2fr); min-height: calc(100dvh - 74px); }
+.py-brief { padding: 28px; min-width: 0; line-height: 1.65; }
+.py-brief h1 { font-size: 1.7rem; line-height: 1.2; font-weight: 650; }
+.py-brief h2 { font-size: 1.1rem; font-weight: 650; margin: 24px 0 8px; }
+.py-brief p { margin: 14px 0; max-width: 70ch; }
+.py-brief ul { list-style: disc; padding-left: 22px; }
+.py-brief pre, .py-prediction pre, .py-journey-intro pre { white-space: pre-wrap; overflow-wrap: anywhere; padding: 16px; background: var(--rx-cell); border: 1px solid var(--rx-line); font-size: 13px; }
+.py-study-code { height: max(720px, calc(100dvh - 74px)); padding: 18px; min-width: 0; display: flex; flex-direction: column; }
+.py-prediction { padding: 20px; line-height: 1.65; }
+.py-prediction h2 { font-size: 1.25rem; margin-bottom: 16px; }
+.py-prediction label { display: block; margin-top: 20px; }
+.py-prediction textarea { display: block; width: 100%; margin: 10px 0; font-family: var(--rx-mono); }
+.py-journey-intro { padding-bottom: 20px; }
+.py-journey-intro p { max-width: 78ch; line-height: 1.65; margin: 14px 0; }
+.py-stage-list { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 24px; list-style: none; padding: 0; }
+.py-stage-list li { display: flex; flex-direction: column; gap: 5px; font-size: 13px; }
+.py-stage-list .rx-btn { white-space: normal; height: auto; min-height: 40px; text-align: left; padding: 10px; }
+.py-stage-list [aria-current="step"] { outline: 2px solid var(--rx-amber); }
+.py-stream { white-space: pre-wrap; }
+.py-table-scroll { overflow-x: auto; max-width: 100%; white-space: normal; margin: 12px 0; }
+.py-table-scroll table { border-collapse: collapse; font-size: 13px; }
+.py-table-scroll caption { text-align: left; padding: 8px; }
+.py-table-scroll th, .py-table-scroll td { padding: 8px 12px; border: 1px solid var(--rx-line); text-align: left; white-space: nowrap; }
+.py-table-scroll small { display: block; font-weight: 400; }
+@media (max-width: 800px) {
+  .py-study { display: block; }
+  .py-brief { padding: 20px 16px; }
+  .py-study-code { height: 760px; padding: 12px; }
+  .py-filters label { width: 100%; }
+  .py-stage-list { display: grid; }
+}
+
+.py-editor .cm-gutters { color: var(--ide-text); }
+.py-editor .cm-scroller:focus-visible { outline: 2px solid var(--rx-amber); outline-offset: -2px; }
+.py-editor { --ide-line-number: var(--ide-text); --ide-str: #5d43a6; }
+[data-theme="dark"] .py-editor { --ide-str: #e394dc; }
+
+.py-table-scroll table { min-width: 240px; }
+.py-table-scroll caption { white-space: nowrap; }

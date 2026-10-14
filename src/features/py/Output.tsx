@@ -1,14 +1,15 @@
 "use client";
 
-import type { PyOutputChunk, PyRunResult, PySyntaxError } from "@/engine/python/client";
+import type { PyOutputChunk, PyRunResult, PySyntaxError, PyTable } from "@/engine/python/client";
 import type React from "react";
+import { Download } from "./Downloads";
 import type { PyCheckOutcome, PyGradeReport } from "@/engine/python/grading";
 
 /* Console and Checks rendering shared by the workspace, lesson challenges and example cells. */
 
 export function appendChunk(list: PyOutputChunk[], c: PyOutputChunk): PyOutputChunk[] {
   const last = list.at(-1);
-  if (last && last.stream === c.stream && c.stream !== "figure") return [...list.slice(0, -1), { ...last, text: last.text + c.text }];
+  if (last && last.stream === c.stream && (c.stream === "stdout" || c.stream === "stderr")) return [...list.slice(0, -1), { ...last, text: last.text + c.text }];
   return [...list, c];
 }
 
@@ -63,16 +64,18 @@ export function RuntimeBlock({ type, message, line, traceback, onLine }: { type:
 
 export function Stream({ chunks }: { chunks: PyOutputChunk[] }) {
   return (
-    <pre className="py-stream">
+    <div className="py-stream">
       {chunks.map((c, i) =>
         c.stream === "figure" ? (
           // eslint-disable-next-line @next/next/no-img-element -- a PNG data URL drawn by the learner's own program
           <img key={i} className="py-figure" src={c.text} alt={`Figure ${chunks.slice(0, i + 1).filter((k) => k.stream === "figure").length} drawn by your program`} />
+        ) : c.stream === "table" ? (
+          <TableOutput key={i} text={c.text} number={chunks.slice(0, i + 1).filter(k => k.stream === "table").length} />
         ) : (
           <span key={i} className={c.stream}>{c.text}</span>
         ),
       )}
-    </pre>
+    </div>
   );
 }
 
@@ -98,6 +101,7 @@ export function ConsoleView({
       {(chunks.length > 0 || busy) && <Stream chunks={chunks} />}
       {busy && <p className="py-meta">running…</p>}
       {r && <RunEnd r={r} onLine={onLine} empty={chunks.length === 0} />}
+      {r && "files" in r && r.files?.map(f => <div key={f.path}>{f.truncated ? <p>{f.path}: preview truncated; download unavailable.</p> : <Download name={f.path} text={f.text} />}</div>)}
       {r && edited && <p className="py-meta">You&apos;ve edited the code since this run.</p>}
     </div>
   );
@@ -261,4 +265,15 @@ export function CheckSummary({
       </p>
     </div>
   );
+}
+
+function TableOutput({ text, number }: { text: string; number: number }) {
+  let table: PyTable;
+  try { table = JSON.parse(text); if (!Array.isArray(table.columns) || !Array.isArray(table.rows)) throw new Error(); }
+  catch { return <p>Table output could not be read.</p>; }
+  return <div className="py-table-scroll" tabIndex={0} role="region" aria-label={`Data table ${number}`}><table>
+    <caption>{table.shape[0]} rows × {table.shape[1]} columns{table.rows.length < table.shape[0] ? `; showing first ${table.rows.length} rows` : ''}</caption>
+    <thead><tr><th scope="col">{table.index || "index"}</th>{table.columns.map((c, i) => <th key={i} scope="col">{c}<small>{table.dtypes[i]}</small></th>)}</tr></thead>
+    <tbody>{table.rows.map((row, i) => <tr key={i}><th scope="row">{row[0] ?? '—'}</th>{row.slice(1).map((cell, n) => <td key={n}>{cell ?? '—'}</td>)}</tr>)}</tbody>
+  </table></div>;
 }

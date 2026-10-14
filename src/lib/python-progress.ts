@@ -36,7 +36,7 @@ export type PyLessonRecord = {
   masteredAt: number;
   updatedAt: number;
 };
-export type PyProgress = { version: 1; lessons: Record<string, PyLessonRecord>; lastLesson: string | null };
+export type PyProgress = { version: 1; lessons: Record<string, PyLessonRecord>; items: Record<string, PyLessonRecord>; lastLesson: string | null };
 
 export const emptyAttempt = (): PyAttempt => ({ guided: false, hints: 0, revealed: false, exposures: [] });
 const emptyChallenge = (): PyChallengeRecord => ({ solved: false, solvedAt: 0, assisted: false, checks: 0, passes: 0, lastCheckAt: 0 });
@@ -49,7 +49,7 @@ export const emptyLesson = (): PyLessonRecord => ({
   masteredAt: 0,
   updatedAt: 0,
 });
-const emptyProgress = (): PyProgress => ({ version: 1, lessons: {}, lastLesson: null });
+const emptyProgress = (): PyProgress => ({ version: 1, lessons: {}, items: {}, lastLesson: null });
 
 /** Mastery: every listed challenge solved without help, and the concept check passed. */
 export function isPyLessonMastered(rec: PyLessonRecord | undefined, challengeIds: string[]): boolean {
@@ -63,7 +63,9 @@ const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : 0
 /** Normalise saved data so a corrupt or partial record never crashes the app. */
 export function normalizePyProgress(raw: unknown): PyProgress {
   const out = emptyProgress();
-  if (!obj(raw) || !obj(raw.lessons)) return out;
+  if (!obj(raw)) return out;
+  if (obj(raw.items)) out.items = normalizePyProgress({ lessons: raw.items }).lessons;
+  if (!obj(raw.lessons)) return out;
   for (const [ref, r] of Object.entries(raw.lessons)) {
     if (!ref.startsWith("python:") || !obj(r)) continue;
     const rec = emptyLesson();
@@ -132,9 +134,10 @@ type Actions = {
 };
 
 function withLesson(s: PyProgress, ref: string, change: (rec: PyLessonRecord) => PyLessonRecord): Partial<PyProgress> {
-  const rec = change(structuredClone(s.lessons[ref] ?? emptyLesson()));
+  const key = /^python:(bank|case|project|tool):/.test(ref) ? "items" : "lessons";
+  const rec = change(structuredClone(s[key][ref] ?? emptyLesson()));
   rec.updatedAt = Date.now();
-  return { lessons: { ...s.lessons, [ref]: rec }, lastLesson: ref };
+  return key === "items" ? { items: { ...s.items, [ref]: rec } } : { lessons: { ...s.lessons, [ref]: rec }, lastLesson: ref };
 }
 
 function settleMastery(rec: PyLessonRecord, challengeIds: string[]): PyLessonRecord {
@@ -202,7 +205,7 @@ export const usePyProgress = create<PyProgress & Actions>()(
       version: 1,
       skipHydration: true,
       storage: createJSONStorage(() => guarded),
-      partialize: (s): PyProgress => ({ version: 1, lessons: s.lessons, lastLesson: s.lastLesson }),
+      partialize: (s): PyProgress => ({ version: 1, lessons: s.lessons, items: s.items, lastLesson: s.lastLesson }),
       merge: (persisted, current) => ({ ...current, ...normalizePyProgress(persisted) }),
     },
   ),

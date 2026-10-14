@@ -20,7 +20,7 @@ type QuestionBase = {
   minutes: number;
   /** The last lesson this question relies on: everything it needs is taught up to there. */
   after: string;
-  packages?: PyPackage[];
+  packages?: readonly PyPackage[];
   /** Files placed next to main.py for every run and check. */
   files?: Record<string, string>;
 };

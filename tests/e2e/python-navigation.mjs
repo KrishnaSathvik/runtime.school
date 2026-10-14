@@ -1,0 +1,51 @@
+import { chromium } from 'playwright';
+import { AxeBuilder } from '@axe-core/playwright';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const BASE=process.env.BASE??'http://127.0.0.1:3052';
+const browser=await chromium.launch();
+const context=await browser.newContext({viewport:{width:1280,height:900}});
+const page=await context.newPage();
+const mod=process.platform==='darwin'?'Meta':'Control';
+const read=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('runtime-python-v1')).state);
+try {
+ await page.goto(`${BASE}/python/practice`);
+ await page.getByLabel('Search questions').fill('Fixed-width report');
+ assert.equal(await page.locator('.py-catalog-list').last().getByRole('link').count(),1);
+ await page.getByRole('link',{name:'Fixed-width report row',exact:true}).click();
+ await page.getByRole('button',{name:'Reveal answer',exact:true}).click();
+ await page.getByRole('button',{name:'Put answer in editor'}).click();
+ await page.getByRole('button',{name:'Check answer',exact:true}).click();
+ await page.getByText('✓ All 4 checks passed',{exact:true}).first().waitFor({timeout:60000});
+ const before=(await read()).items['python:bank:py02-03'];
+ await page.goto(`${BASE}/python/practice/tracks/from-zero`);
+ await page.getByRole('link',{name:'Fixed-width report row',exact:true}).click();
+ await page.getByText('Solved with help · This attempt uses help.',{exact:true}).waitFor();
+ assert.deepEqual((await read()).items['python:bank:py02-03'],before);
+ await page.getByRole('button',{name:'Open command palette'}).click();
+ await page.getByRole('textbox',{name:'Search Runtime'}).fill('Broken Customer Feed');
+ await page.getByRole('option').click();
+ await page.getByRole('heading',{name:'Broken Customer Feed',exact:true}).waitFor();
+ assert.equal(await page.locator('.cm-content').count(),0);
+ assert.equal(await page.getByRole('button',{name:'2. Normalize safely',exact:true}).isDisabled(),true);
+ await page.getByRole('button',{name:'1. Inspect incoming records',exact:true}).click();
+ for(let i=1;i<=4;i++) {
+  if(i>1) await page.getByRole('button',{name:`Continue to milestone ${i}`,exact:true}).click();
+  await page.getByRole('button',{name:'Reveal answer',exact:true}).click();
+  await page.getByRole('button',{name:'Put answer in editor'}).click();
+  await page.getByRole('button',{name:'Check answer',exact:true}).click();
+  await page.locator('.py-summary-verdict').waitFor({timeout:60000});
+  assert.match(await page.locator('.py-summary-verdict').innerText(),/All \d+ checks passed/);
+ }
+ const rec=(await read()).items['python:case:broken-customer-feed'];
+ assert.equal(Object.values(rec.challenges).filter(c=>c.assisted&&!c.solved).length,4);
+ await page.reload();
+ await page.getByRole('heading',{name:'Reprocess and report',exact:true}).waitFor();
+ assert.deepEqual((await read()).items['python:case:broken-customer-feed'].drafts,rec.drafts);
+ await page.locator('.cm-content').click(); await page.keyboard.press('Escape'); await page.keyboard.press('Tab');
+ assert.equal(await page.evaluate(()=>!!document.activeElement.closest('.cm-content')),false);
+ assert.deepEqual((await new AxeBuilder({page}).analyze()).violations.map(v=>v.id),[]);
+ await page.screenshot({path:'docs/python/screens/subject/case-navigation.png',fullPage:true});
+ fs.writeFileSync('docs/python/screens/subject/navigation-results.json',JSON.stringify({passed:['question search','track canonical progress','palette case navigation','overview before stage','stage ordering','four case stages graded','assisted credit inherited','reload drafts and stage','keyboard escape','axe accessibility']},null,2)+'\n');
+ console.log('PASS Python navigation, cases, progress and keyboard checks');
+} finally {await browser.close();}
