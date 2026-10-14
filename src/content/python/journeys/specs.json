@@ -1,0 +1,739 @@
+[
+  {
+    "slug": "broken-customer-feed",
+    "ref": "python:case:broken-customer-feed",
+    "title": "Broken Customer Feed",
+    "kind": "case",
+    "overview": "A daily customer feed stopped loading. Investigate the supplied records before changing them. Preserve source IDs, distinguish safe whitespace/case repairs from invalid addresses, and prove that processing the same feed twice is deterministic. These synthetic records support a feed-quality finding, not a claim about all customers.",
+    "files": {
+      "customers.json": "[{\"id\": 1, \"name\": \" ADA \", \"email\": \" ADA@EXAMPLE.COM \"}, {\"id\": 2, \"name\": \"Bo\", \"email\": \"bad\"}, {\"id\": 3, \"name\": \"Cy\", \"email\": \"ada@example.com\"}, {\"id\": 4, \"name\": \"Di\", \"email\": \"di@example.com\"}]"
+    },
+    "packages": [],
+    "steps": [
+      {
+        "title": "Inspect incoming records",
+        "prompt": "Load customers.json into rows. Store a profile with row count and the IDs whose email lacks @.",
+        "code": "import json\nfrom pathlib import Path\nrows = json.loads(Path(\"customers.json\").read_text())\nprofile = {\"rows\": len(rows), \"missing_at\": [r[\"id\"] for r in rows if \"@\" not in r[\"email\"]]}\n",
+        "checks": [
+          {
+            "label": "Counts rows and locates malformed email",
+            "expr": "profile == {'rows': 4, 'missing_at': [2]}"
+          }
+        ],
+        "wrong": "profile['missing_at'] = []",
+        "hints": [
+          "Load the JSON array before inspecting it.",
+          "Keep source IDs rather than list positions."
+        ]
+      },
+      {
+        "title": "Normalize safely",
+        "prompt": "Create normalized, preserving IDs and row order. Strip and title-case names; strip and lowercase emails. Do not drop any rows yet.",
+        "code": "normalized = [{**r, \"name\": r[\"name\"].strip().title(), \"email\": r[\"email\"].strip().lower()} for r in rows]\n",
+        "checks": [
+          {
+            "label": "Repairs text without dropping records",
+            "expr": "len(normalized) == 4 and normalized[0] == {'id': 1, 'name': 'Ada', 'email': 'ada@example.com'} and normalized[1]['email'] == 'bad'"
+          }
+        ],
+        "wrong": "normalized[0]['id'] = 0",
+        "hints": [
+          "Use a new dictionary for each row.",
+          "Unpacking **r retains the source identity."
+        ]
+      },
+      {
+        "title": "Quarantine with reasons",
+        "prompt": "Write split_feed(records), returning (clean, rejected). A valid email has exactly one @ and nonempty parts. Keep the first valid email; reject later duplicates. Rejections retain the record and add reason: invalid email or duplicate email. Apply it to normalized.",
+        "code": "def split_feed(records):\n    clean, rejected, seen = [], [], set()\n    for r in records:\n        parts = r[\"email\"].split(\"@\")\n        reason = \"invalid email\" if len(parts) != 2 or not all(parts) else \"duplicate email\" if r[\"email\"] in seen else None\n        if reason:\n            rejected.append({**r, \"reason\": reason})\n        else:\n            clean.append(dict(r))\n            seen.add(r[\"email\"])\n    return clean, rejected\nclean, rejected = split_feed(normalized)\n",
+        "checks": [
+          {
+            "label": "Keeps first valid identities and explains rejections",
+            "expr": "[r['id'] for r in clean] == [1,4] and [r['reason'] for r in rejected] == ['invalid email','duplicate email']"
+          },
+          {
+            "label": "Handles empty and malformed addresses",
+            "expr": "split_feed([]) == ([], []) and len(split_feed([{'id': 9, 'email':'@'}])[1]) == 1"
+          }
+        ],
+        "wrong": "clean.reverse()",
+        "hints": [
+          "Validate before adding an email to seen.",
+          "Use a set for accepted emails and keep rejected records with reasons."
+        ]
+      },
+      {
+        "title": "Reprocess and report",
+        "prompt": "Set reproducible by comparing a second split_feed(normalized) with the first result. Write feed_report.json with input, accepted, rejected counts and reproducible. No input rows may disappear.",
+        "code": "reproducible = split_feed(normalized) == (clean, rejected)\nfeed_report = {\"input\": len(rows), \"accepted\": len(clean), \"rejected\": len(rejected), \"reproducible\": reproducible}\nPath(\"feed_report.json\").write_text(json.dumps(feed_report, indent=2))\n",
+        "checks": [
+          {
+            "label": "Report reconciles and reprocessing is deterministic",
+            "expr": "json.loads(Path('feed_report.json').read_text()) == {'input':4,'accepted':2,'rejected':2,'reproducible':True}"
+          }
+        ],
+        "wrong": "Path('feed_report.json').write_text('{}')",
+        "hints": [
+          "Compare the complete clean and rejected lists.",
+          "Accepted plus rejected must equal input."
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "subscription-events",
+    "ref": "python:case:subscription-events",
+    "title": "Subscription Event Health",
+    "kind": "case",
+    "overview": "A subscription dashboard reports unexpected cancellations. Inspect this bounded event extract, remove duplicate event IDs, and find cancellations without a preceding start in this extract. Missing history is a limitation: an unmatched cancellation does not prove the customer never subscribed.",
+    "files": {
+      "events.json": "[{\"id\": \"e1\", \"user\": \"a\", \"day\": \"2026-10-01\", \"type\": \"start\"}, {\"id\": \"e1\", \"user\": \"a\", \"day\": \"2026-10-01\", \"type\": \"start\"}, {\"id\": \"e2\", \"user\": \"a\", \"day\": \"2026-10-02\", \"type\": \"cancel\"}, {\"id\": \"e3\", \"user\": \"b\", \"day\": \"2026-10-02\", \"type\": \"cancel\"}]"
+    },
+    "packages": [],
+    "steps": [
+      {
+        "title": "Inspect the extract",
+        "prompt": "Read events.json into events. Store event_count and sorted event_types.",
+        "code": "import json\nfrom pathlib import Path\nevents = json.loads(Path(\"events.json\").read_text())\nevent_count = len(events)\nevent_types = sorted({e[\"type\"] for e in events})\n",
+        "checks": [
+          {
+            "label": "Profiles the supplied extract",
+            "expr": "event_count == 4 and event_types == ['cancel','start']"
+          }
+        ],
+        "wrong": "event_count = 3",
+        "hints": [
+          "Load the list with json.loads.",
+          "A set removes repeated event types."
+        ]
+      },
+      {
+        "title": "Find duplicates and missing transitions",
+        "prompt": "Keep the first occurrence of each event ID in unique. Scan unique in order: a start adds an active user; a cancel removes one if present, otherwise append its event ID to unmatched. Store duplicate_count.",
+        "code": "unique, seen = [], set()\nfor e in events:\n    if e[\"id\"] not in seen:\n        unique.append(e)\n        seen.add(e[\"id\"])\nduplicate_count = len(events) - len(unique)\nactive, unmatched = set(), []\nfor e in unique:\n    if e[\"type\"] == \"start\":\n        active.add(e[\"user\"])\n    elif e[\"user\"] in active:\n        active.remove(e[\"user\"])\n    else:\n        unmatched.append(e[\"id\"])\n",
+        "checks": [
+          {
+            "label": "Deduplicates and identifies unmatched cancellation",
+            "expr": "duplicate_count == 1 and len(unique) == 3 and unmatched == ['e3'] and active == set()"
+          }
+        ],
+        "wrong": "unmatched = []",
+        "hints": [
+          "Deduplicate before reconstructing transitions.",
+          "Only report a missing start within this extract."
+        ]
+      },
+      {
+        "title": "Calculate daily counts",
+        "prompt": "Build daily with keys day + : + type, counting unique events only.",
+        "code": "daily = {}\nfor e in unique:\n    key = e[\"day\"] + \":\" + e[\"type\"]\n    daily[key] = daily.get(key, 0) + 1\n",
+        "checks": [
+          {
+            "label": "Daily counts exclude duplicate deliveries",
+            "expr": "daily == {'2026-10-01:start':1,'2026-10-02:cancel':2}"
+          }
+        ],
+        "wrong": "daily['2026-10-01:start'] = 2",
+        "hints": [
+          "Count unique, not events.",
+          "Use get(key, 0) for a new group."
+        ]
+      },
+      {
+        "title": "Bound the conclusion",
+        "prompt": "Write health.json with duplicate_count, unmatched, daily, and a caveat string containing missing history. The report should explain why unmatched events cannot establish lifetime subscription status.",
+        "code": "health = {\"duplicate_count\": duplicate_count, \"unmatched\": unmatched, \"daily\": daily, \"caveat\": \"Missing history before this extract can explain an unmatched cancellation.\"}\nPath(\"health.json\").write_text(json.dumps(health, indent=2))\n",
+        "checks": [
+          {
+            "label": "Exports evidence and a history limitation",
+            "expr": "(lambda r: r['duplicate_count'] == 1 and r['unmatched'] == ['e3'] and r['daily'] == daily and 'missing history' in r['caveat'].lower())(json.loads(Path('health.json').read_text()))"
+          }
+        ],
+        "wrong": "Path('health.json').write_text('{}')",
+        "hints": [
+          "Export the calculated evidence, not a manually typed claim.",
+          "A bounded extract may omit earlier starts."
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "retail-order-engine",
+    "ref": "python:project:retail-order-engine",
+    "title": "Retail Order Engine",
+    "kind": "project",
+    "overview": "Build a small receipt engine using explicit pricing rules. Prices are integer cents, discounts apply at the subtotal threshold, and tax rounds half up after the discount. Keep the calculation reusable and export a receipt and machine-readable totals.",
+    "files": {
+      "cart.json": "[{\"item\": \"Lamp\", \"price\": 2500, \"quantity\": 2}, {\"item\": \"Pen\", \"price\": 300, \"quantity\": 3}]",
+      "pricing_rules.json": "{\"threshold\": 5000, \"discount_percent\": 10, \"tax_percent\": 8}"
+    },
+    "packages": [],
+    "steps": [
+      {
+        "title": "Calculate cart totals",
+        "prompt": "Load cart and rules from their JSON files. Define subtotal(cart) to sum price \u00d7 quantity in cents; store base for the fixture.",
+        "code": "import json\nfrom pathlib import Path\ncart = json.loads(Path(\"cart.json\").read_text())\nrules = json.loads(Path(\"pricing_rules.json\").read_text())\ndef subtotal(cart):\n    return sum(row[\"price\"] * row[\"quantity\"] for row in cart)\nbase = subtotal(cart)\n",
+        "checks": [
+          {
+            "label": "Calculates quantities and handles an empty cart",
+            "expr": "base == 5900 and subtotal([]) == 0 and subtotal([{'price':7,'quantity':3}]) == 21"
+          }
+        ],
+        "wrong": "base = 2800",
+        "hints": [
+          "Use integer cents to avoid fractional-cent inputs.",
+          "sum over an empty cart gives zero."
+        ]
+      },
+      {
+        "title": "Apply discount and tax",
+        "prompt": "Define price_cart(cart, rules). Return subtotal, discount, tax, total in cents. Discount applies when subtotal >= threshold; round both discount and tax half up to cents, with tax applied after discount. Store totals.",
+        "code": "def price_cart(cart, rules):\n    base = subtotal(cart)\n    discount = (base * rules[\"discount_percent\"] + 50) // 100 if base >= rules[\"threshold\"] else 0\n    tax = ((base - discount) * rules[\"tax_percent\"] + 50) // 100\n    return {\"subtotal\": base, \"discount\": discount, \"tax\": tax, \"total\": base - discount + tax}\ntotals = price_cart(cart, rules)\n",
+        "checks": [
+          {
+            "label": "Applies tax after discount",
+            "expr": "totals == {'subtotal':5900,'discount':590,'tax':425,'total':5735}"
+          },
+          {
+            "label": "Checks threshold boundary and no discount",
+            "expr": "price_cart([{'price':5000,'quantity':1}], rules)['total'] == 4860 and price_cart([{'price':100,'quantity':1}], rules)['total'] == 108"
+          }
+        ],
+        "wrong": "totals['tax'] = 472",
+        "hints": [
+          "Compute the taxable amount after discount.",
+          "For nonnegative integer cents, (amount * percent + 50) // 100 rounds half up."
+        ]
+      },
+      {
+        "title": "Generate a receipt",
+        "prompt": "Create receipt containing one line per item as Item xquantity, followed by Total: $57.35 for this cart. Write receipt.txt and totals.json from calculated values.",
+        "code": "receipt = \"\\n\".join(f\"{r['item']} x{r['quantity']}\" for r in cart) + f\"\\nTotal: ${totals['total']/100:.2f}\\n\"\nPath(\"receipt.txt\").write_text(receipt)\nPath(\"totals.json\").write_text(json.dumps(totals, indent=2))\n",
+        "checks": [
+          {
+            "label": "Exports readable and machine-readable totals",
+            "expr": "Path('receipt.txt').read_text() == 'Lamp x2\\nPen x3\\nTotal: $57.35\\n' and json.loads(Path('totals.json').read_text()) == totals"
+          }
+        ],
+        "wrong": "Path('receipt.txt').write_text('Total: $59.00')",
+        "hints": [
+          "Build item lines with join.",
+          "Format cents divided by 100 with two decimal places."
+        ]
+      },
+      {
+        "title": "Validate invalid quantities",
+        "prompt": "Add validate_cart(cart), returning False for negative prices, negative quantities, or non-integer quantities (including booleans); True for an empty or valid cart. Store valid and write validation.json with valid and empty_total.",
+        "code": "def validate_cart(cart):\n    return all(type(r[\"quantity\"]) is int and r[\"quantity\"] >= 0 and r[\"price\"] >= 0 for r in cart)\nvalid = validate_cart(cart)\nPath(\"validation.json\").write_text(json.dumps({\"valid\": valid, \"empty_total\": price_cart([], rules)[\"total\"]}))\n",
+        "checks": [
+          {
+            "label": "Rejects invalid carts and accepts empty input",
+            "expr": "valid and validate_cart([]) and not validate_cart([{'price':1,'quantity':-1}]) and not validate_cart([{'price':1,'quantity':True}]) and not validate_cart([{'price':-1,'quantity':1}]) and not validate_cart([{'price':1,'quantity':1.5}])"
+          },
+          {
+            "label": "Exports validation evidence",
+            "expr": "json.loads(Path('validation.json').read_text()) == {'valid':True,'empty_total':0}"
+          }
+        ],
+        "wrong": "valid = False",
+        "hints": [
+          "Use type(quantity) is int to exclude booleans.",
+          "Empty carts are valid and total zero."
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "customer-data-quality",
+    "ref": "python:project:customer-data-quality",
+    "title": "Customer Data Quality Toolkit",
+    "kind": "project",
+    "overview": "Turn a raw customer export into clean and quarantined JSON. Keep source IDs, make validation rules explicit, retain rejection reasons, and reconcile every input row. This exercise validates only the stated email shape; it does not verify deliverability.",
+    "files": {
+      "customers_raw.json": "[{\"id\": 10, \"name\": \" ANA \", \"email\": \" ANA@SHOP.COM \"}, {\"id\": 11, \"name\": \"Bo\", \"email\": \"bad\"}, {\"id\": 12, \"name\": \"Cy\", \"email\": \"ana@shop.com\"}, {\"id\": 13, \"name\": \"Di\", \"email\": \"di@shop.com\"}]",
+      "email_rules.json": "{\"required_separator\": \"@\"}"
+    },
+    "packages": [],
+    "steps": [
+      {
+        "title": "Inspect raw records",
+        "prompt": "Read customers_raw.json as raw and email_rules.json as rules. Store raw_count and sorted fields from the first record.",
+        "code": "import json\nfrom pathlib import Path\nraw = json.loads(Path(\"customers_raw.json\").read_text())\nrules = json.loads(Path(\"email_rules.json\").read_text())\nraw_count = len(raw)\nfields = sorted(raw[0])\n",
+        "checks": [
+          {
+            "label": "Inspects source shape",
+            "expr": "raw_count == 4 and fields == ['email','id','name'] and rules['required_separator'] == '@'"
+          }
+        ],
+        "wrong": "raw_count = 0",
+        "hints": [
+          "JSON supplies a list of dictionaries.",
+          "Inspect keys before transforming values."
+        ]
+      },
+      {
+        "title": "Normalize names and emails",
+        "prompt": "Define normalize(row), returning a new record with stripped, title-cased name and stripped lowercase email. Preserve id and other keys. Build normalized from raw.",
+        "code": "def normalize(row):\n    return {**row, \"name\": row[\"name\"].strip().title(), \"email\": row[\"email\"].strip().lower()}\nnormalized = [normalize(r) for r in raw]\n",
+        "checks": [
+          {
+            "label": "Normalizes without mutating source",
+            "expr": "normalized[0] == {'id':10,'name':'Ana','email':'ana@shop.com'} and raw[0]['name'] == ' ANA ' and normalize({'id':8,'name':' x ','email':' X@Y '})['email'] == 'x@y'"
+          }
+        ],
+        "wrong": "normalized[0]['id'] = 0",
+        "hints": [
+          "Return a new dictionary.",
+          "Retain all original keys with **row."
+        ]
+      },
+      {
+        "title": "Validate and deduplicate",
+        "prompt": "Build clean and rejected. Require exactly one separator from rules and nonempty email parts. Reject invalid rows with reason invalid; reject later valid duplicates with reason duplicate. Keep the first occurrence.",
+        "code": "clean, rejected, seen = [], [], set()\nfor r in normalized:\n    parts = r[\"email\"].split(rules[\"required_separator\"])\n    reason = \"invalid\" if len(parts) != 2 or not all(parts) else \"duplicate\" if r[\"email\"] in seen else None\n    if reason:\n        rejected.append({**r, \"reason\": reason})\n    else:\n        clean.append(r)\n        seen.add(r[\"email\"])\n",
+        "checks": [
+          {
+            "label": "Keeps source identities and rejection reasons",
+            "expr": "[r['id'] for r in clean] == [10,13] and [(r['id'],r['reason']) for r in rejected] == [(11,'invalid'),(12,'duplicate')]"
+          }
+        ],
+        "wrong": "rejected[0]['reason'] = 'duplicate'",
+        "hints": [
+          "Validate before deduplicating.",
+          "Retain each rejected row plus its reason."
+        ]
+      },
+      {
+        "title": "Export both datasets",
+        "prompt": "Write clean.json and rejected.json containing the complete lists with their source IDs and reasons.",
+        "code": "Path(\"clean.json\").write_text(json.dumps(clean, indent=2))\nPath(\"rejected.json\").write_text(json.dumps(rejected, indent=2))\n",
+        "checks": [
+          {
+            "label": "Exports accepted and rejected records",
+            "expr": "json.loads(Path('clean.json').read_text()) == clean and json.loads(Path('rejected.json').read_text()) == rejected"
+          }
+        ],
+        "wrong": "Path('rejected.json').write_text('[]')",
+        "hints": [
+          "Use json.dumps for structured data.",
+          "Export rejected records as well as clean ones."
+        ]
+      },
+      {
+        "title": "Reconcile the quality report",
+        "prompt": "Write quality.json with input, clean, rejected and accounted_for. accounted_for compares the combined source IDs with all original IDs.",
+        "code": "quality = {\"input\": raw_count, \"clean\": len(clean), \"rejected\": len(rejected), \"accounted_for\": sorted(r[\"id\"] for r in clean + rejected) == sorted(r[\"id\"] for r in raw)}\nPath(\"quality.json\").write_text(json.dumps(quality, indent=2))\n",
+        "checks": [
+          {
+            "label": "Reconciles all identities",
+            "expr": "json.loads(Path('quality.json').read_text()) == {'input':4,'clean':2,'rejected':2,'accounted_for':True}"
+          }
+        ],
+        "wrong": "Path('quality.json').write_text('{}')",
+        "hints": [
+          "Compare IDs, not only row counts.",
+          "A count can balance even if one row was duplicated and another lost."
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "product-event-investigation",
+    "ref": "python:project:product-event-investigation",
+    "title": "Product Event Investigation",
+    "kind": "project",
+    "overview": "Investigate a small product-event extract. Parse JSON lines, group sessions, calculate a session funnel, and flag timestamps that move backward in source order. Funnel counts are descriptive and cannot establish why users did not purchase.",
+    "files": {
+      "product_events.jsonl": "{\"id\": \"a\", \"session\": \"s1\", \"user\": \"u1\", \"type\": \"view\", \"at\": \"2026-10-01T10:00:00+00:00\"}\n{\"id\": \"b\", \"session\": \"s1\", \"user\": \"u1\", \"type\": \"buy\", \"at\": \"2026-10-01T10:02:00+00:00\"}\n{\"id\": \"c\", \"session\": \"s2\", \"user\": \"u2\", \"type\": \"view\", \"at\": \"2026-10-01T11:00:00+00:00\"}\n{\"id\": \"d\", \"session\": \"s2\", \"user\": \"u2\", \"type\": \"buy\", \"at\": \"2026-10-01T10:59:00+00:00\"}",
+      "event_schema.json": "{\"required\": [\"id\", \"session\", \"user\", \"type\", \"at\"]}"
+    },
+    "packages": [],
+    "steps": [
+      {
+        "title": "Parse JSON lines",
+        "prompt": "Load the required fields from event_schema.json and parse nonblank lines into events. Keep records containing every required field.",
+        "code": "import json\nfrom pathlib import Path\nfrom datetime import datetime\nrequired = json.loads(Path(\"event_schema.json\").read_text())[\"required\"]\nevents = [json.loads(line) for line in Path(\"product_events.jsonl\").read_text().splitlines() if line.strip()]\nevents = [e for e in events if all(k in e for k in required)]\n",
+        "checks": [
+          {
+            "label": "Parses the complete extract",
+            "expr": "len(events) == 4 and events[0]['id'] == 'a' and events[-1]['id'] == 'd'"
+          }
+        ],
+        "wrong": "events = events[:3]",
+        "hints": [
+          "Parse each nonblank line separately.",
+          "Check required keys before later stages use them."
+        ]
+      },
+      {
+        "title": "Identify sessions and users",
+        "prompt": "Build sessions mapping each session ID to its events in input order. Store users as the set of unique user IDs.",
+        "code": "sessions = {}\nfor e in events:\n    sessions.setdefault(e[\"session\"], []).append(e)\nusers = {e[\"user\"] for e in events}\n",
+        "checks": [
+          {
+            "label": "Groups records without losing events",
+            "expr": "sorted(sessions) == ['s1','s2'] and [len(v) for v in sessions.values()] == [2,2] and users == {'u1','u2'}"
+          }
+        ],
+        "wrong": "users = {'u1'}",
+        "hints": [
+          "setdefault can initialize a list.",
+          "Count distinct user identities with a set."
+        ]
+      },
+      {
+        "title": "Calculate a session funnel",
+        "prompt": "Build action_counts for each event type. Define funnel as sessions with a view and sessions with both view and buy (keys viewed and bought). Do not imply chronological validity yet.",
+        "code": "action_counts = {}\nfor e in events:\n    action_counts[e[\"type\"]] = action_counts.get(e[\"type\"], 0) + 1\nfunnel = {\"viewed\": 0, \"bought\": 0}\nfor group in sessions.values():\n    kinds = {e[\"type\"] for e in group}\n    funnel[\"viewed\"] += int(\"view\" in kinds)\n    funnel[\"bought\"] += int({\"view\", \"buy\"} <= kinds)\n",
+        "checks": [
+          {
+            "label": "Counts events separately from sessions",
+            "expr": "action_counts == {'view':2,'buy':2} and funnel == {'viewed':2,'bought':2}"
+          }
+        ],
+        "wrong": "funnel['bought'] = 1",
+        "hints": [
+          "Use event counts for actions and set membership for sessions.",
+          "The funnel is presence-based at this stage."
+        ]
+      },
+      {
+        "title": "Find timestamp anomalies",
+        "prompt": "Store anomalies as event IDs whose timestamp is earlier than the preceding event in the same session, comparing parsed ISO timestamps in input order.",
+        "code": "anomalies = []\nfor group in sessions.values():\n    for previous, current in zip(group, group[1:]):\n        if datetime.fromisoformat(current[\"at\"]) < datetime.fromisoformat(previous[\"at\"]):\n            anomalies.append(current[\"id\"])\n",
+        "checks": [
+          {
+            "label": "Flags the backward timestamp",
+            "expr": "anomalies == ['d']"
+          }
+        ],
+        "wrong": "anomalies = []",
+        "hints": [
+          "Do not sort before detecting source-order anomalies.",
+          "datetime.fromisoformat understands the fixed UTC offset."
+        ]
+      },
+      {
+        "title": "Export evidence and caveats",
+        "prompt": "Write investigation.json with users count, funnel, action_counts, anomalies and caveat mentioning timestamp. Explain why presence-based conversion does not prove a valid event sequence.",
+        "code": "report = {\"users\": len(users), \"funnel\": funnel, \"action_counts\": action_counts, \"anomalies\": anomalies, \"caveat\": \"Timestamp anomalies mean the presence-based funnel does not establish valid chronological conversion.\"}\nPath(\"investigation.json\").write_text(json.dumps(report, indent=2))\n",
+        "checks": [
+          {
+            "label": "Exports calculated evidence and limitation",
+            "expr": "(lambda r: r['users'] == 2 and r['funnel'] == funnel and r['action_counts'] == action_counts and r['anomalies'] == ['d'] and 'timestamp' in r['caveat'].lower())(json.loads(Path('investigation.json').read_text()))"
+          }
+        ],
+        "wrong": "Path('investigation.json').write_text('{}')",
+        "hints": [
+          "Include anomaly IDs so the finding can be traced.",
+          "A funnel based on presence alone ignores event ordering."
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "csv-sales-analyst",
+    "ref": "python:project:csv-sales-analyst",
+    "title": "CSV Sales Analyst",
+    "kind": "project",
+    "overview": "Build a standard-library sales report. Validate IDs, dates, amounts and statuses, join products, group paid revenue, and reconcile rejected records. Amounts are integer cents. Cancelled orders remain clean but contribute no paid revenue.",
+    "files": {
+      "orders.csv": "id,date,product,cents,status\n1,2026-10-01,p1,1200, PAID \n2,2026-10-01,p2,500,paid\n3,bad,p1,900,paid\n4,2026-10-02,p1,700,cancelled\n",
+      "products.csv": "product,category\np1,home\np2,office\n"
+    },
+    "packages": [],
+    "steps": [
+      {
+        "title": "Read order rows",
+        "prompt": "Read orders.csv into rows and products.csv into a product-to-category dictionary called categories.",
+        "code": "import csv, json\nfrom pathlib import Path\nfrom datetime import date\nwith open(\"orders.csv\", newline=\"\") as f:\n    rows = list(csv.DictReader(f))\nwith open(\"products.csv\", newline=\"\") as f:\n    categories = {r[\"product\"]: r[\"category\"] for r in csv.DictReader(f)}\n",
+        "checks": [
+          {
+            "label": "Reads both sources",
+            "expr": "len(rows) == 4 and categories == {'p1':'home','p2':'office'}"
+          }
+        ],
+        "wrong": "rows = rows[:2]",
+        "hints": [
+          "DictReader uses the header as keys.",
+          "Build the dimension lookup once."
+        ]
+      },
+      {
+        "title": "Normalize and validate",
+        "prompt": "Build clean and rejected. Parse ISO dates, integer nonnegative cents, known product, and stripped lowercase status paid or cancelled. Clean rows add category; rejected rows retain ID and reason invalid row.",
+        "code": "clean, rejected = [], []\nfor r in rows:\n    try:\n        day = date.fromisoformat(r[\"date\"]).isoformat()\n        cents = int(r[\"cents\"])\n        status = r[\"status\"].strip().lower()\n        if cents < 0 or status not in {\"paid\", \"cancelled\"}:\n            raise ValueError(\"invalid\")\n        clean.append({**r, \"date\": day, \"cents\": cents, \"status\": status, \"category\": categories[r[\"product\"]]})\n    except (ValueError, KeyError):\n        rejected.append({\"id\": r[\"id\"], \"reason\": \"invalid row\"})\n",
+        "checks": [
+          {
+            "label": "Normalizes paid status and quarantines invalid date",
+            "expr": "[r['id'] for r in clean] == ['1','2','4'] and clean[0]['status'] == 'paid' and clean[0]['cents'] == 1200 and rejected == [{'id':'3','reason':'invalid row'}]"
+          }
+        ],
+        "wrong": "clean[0]['status'] = ' PAID '",
+        "hints": [
+          "Catch parsing failures around each individual row.",
+          "Cancelled is valid, but not paid revenue."
+        ]
+      },
+      {
+        "title": "Calculate daily category revenue",
+        "prompt": "Build metrics keyed by (date, category), adding cents only for paid orders.",
+        "code": "metrics = {}\nfor r in clean:\n    if r[\"status\"] == \"paid\":\n        key = (r[\"date\"], r[\"category\"])\n        metrics[key] = metrics.get(key, 0) + r[\"cents\"]\n",
+        "checks": [
+          {
+            "label": "Excludes cancelled revenue",
+            "expr": "metrics == {('2026-10-01','home'):1200,('2026-10-01','office'):500}"
+          }
+        ],
+        "wrong": "metrics[('2026-10-02','home')] = 700",
+        "hints": [
+          "Filter by normalized status.",
+          "A tuple groups by day and category together."
+        ]
+      },
+      {
+        "title": "Reconcile totals and rejects",
+        "prompt": "Write quality.json with input, clean, rejected counts and paid_cents. Store reconciled by checking all input IDs are represented and metrics sum equals paid cents.",
+        "code": "paid_cents = sum(r[\"cents\"] for r in clean if r[\"status\"] == \"paid\")\nreconciled = sorted(r[\"id\"] for r in clean + rejected) == sorted(r[\"id\"] for r in rows) and sum(metrics.values()) == paid_cents\nPath(\"quality.json\").write_text(json.dumps({\"input\":len(rows),\"clean\":len(clean),\"rejected\":len(rejected),\"paid_cents\":paid_cents}))\n",
+        "checks": [
+          {
+            "label": "Balances rows and paid revenue",
+            "expr": "reconciled and json.loads(Path('quality.json').read_text()) == {'input':4,'clean':3,'rejected':1,'paid_cents':1700}"
+          }
+        ],
+        "wrong": "reconciled = False",
+        "hints": [
+          "Compare source IDs for row reconciliation.",
+          "Compare grouped revenue with a separate row-level total."
+        ]
+      },
+      {
+        "title": "Export report-ready CSVs",
+        "prompt": "Write clean.csv with all clean rows, metrics.csv with date,category,cents sorted by group key, and rejected.json with rejection reasons.",
+        "code": "with open(\"clean.csv\", \"w\", newline=\"\") as f:\n    writer = csv.DictWriter(f, fieldnames=list(clean[0]))\n    writer.writeheader()\n    writer.writerows(clean)\nwith open(\"metrics.csv\", \"w\", newline=\"\") as f:\n    writer = csv.writer(f)\n    writer.writerow([\"date\", \"category\", \"cents\"])\n    for (day, category), cents in sorted(metrics.items()):\n        writer.writerow([day, category, cents])\nPath(\"rejected.json\").write_text(json.dumps(rejected))\n",
+        "checks": [
+          {
+            "label": "Exports complete evidence",
+            "expr": "len(list(csv.DictReader(open('clean.csv')))) == 3 and list(csv.DictReader(open('metrics.csv'))) == [{'date':'2026-10-01','category':'home','cents':'1200'},{'date':'2026-10-01','category':'office','cents':'500'}] and json.loads(Path('rejected.json').read_text()) == rejected"
+          }
+        ],
+        "wrong": "Path('metrics.csv').write_text('date,category,cents\\n')",
+        "hints": [
+          "Use newline=\"\" with the csv module.",
+          "Sort metric keys for reproducible output."
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "marketplace-eda",
+    "ref": "python:project:marketplace-eda",
+    "title": "Marketplace EDA Lab",
+    "kind": "project",
+    "overview": "Profile a synthetic marketplace extract with pandas, clean duplicate orders and missing amounts, join customer cohorts, and explain revenue coverage. An unmatched customer is retained as unknown. This small sample cannot establish a marketplace-wide trend.",
+    "files": {
+      "marketplace_orders.csv": "order,customer,cents\no1,c1,1200\no1,c1,1200\no2,c2,800\no3,c9,500\no4,c1,\n",
+      "marketplace_customers.csv": "customer,cohort\nc1,2026-01\nc2,2026-02\n"
+    },
+    "packages": [
+      "pandas"
+    ],
+    "steps": [
+      {
+        "title": "Profile orders",
+        "prompt": "Read both CSVs into orders and customers. Store profile with rows, duplicate_orders (duplicated order IDs after the first), and missing_amounts.",
+        "code": "import pandas as pd\nimport json\nfrom pathlib import Path\norders = pd.read_csv(\"marketplace_orders.csv\")\ncustomers = pd.read_csv(\"marketplace_customers.csv\")\nprofile = {\"rows\":len(orders),\"duplicate_orders\":int(orders.duplicated(\"order\").sum()),\"missing_amounts\":int(orders[\"cents\"].isna().sum())}\n",
+        "checks": [
+          {
+            "label": "Profiles duplicates and missing values",
+            "expr": "profile == {'rows':5,'duplicate_orders':1,'missing_amounts':1}"
+          }
+        ],
+        "wrong": "profile['duplicate_orders'] = 0",
+        "hints": [
+          "duplicated marks occurrences after the first.",
+          "Use isna to count missing amounts."
+        ]
+      },
+      {
+        "title": "Clean orders",
+        "prompt": "Create clean by keeping the first order ID, dropping missing cents, copying the frame, and converting cents to integer. Keep the source frame unchanged.",
+        "code": "clean = orders.drop_duplicates(\"order\").dropna(subset=[\"cents\"]).copy()\nclean[\"cents\"] = clean[\"cents\"].astype(int)\n",
+        "checks": [
+          {
+            "label": "Cleans without altering the source",
+            "expr": "clean['order'].tolist() == ['o1','o2','o3'] and clean['cents'].tolist() == [1200,800,500] and len(orders) == 5"
+          }
+        ],
+        "wrong": "clean = clean.iloc[:2].copy()",
+        "hints": [
+          "Drop duplicates before aggregation.",
+          "A copy makes the cleaning boundary explicit."
+        ]
+      },
+      {
+        "title": "Join customer cohorts",
+        "prompt": "Left-join clean and customers on customer with many_to_one validation. Fill unmatched cohort with unknown. Store joined and unmatched customer count.",
+        "code": "joined = clean.merge(customers, on=\"customer\", how=\"left\", validate=\"many_to_one\")\nunmatched = int(joined[\"cohort\"].isna().sum())\njoined[\"cohort\"] = joined[\"cohort\"].fillna(\"unknown\")\n",
+        "checks": [
+          {
+            "label": "Retains unmatched revenue without multiplying rows",
+            "expr": "len(joined) == 3 and unmatched == 1 and joined['cohort'].tolist() == ['2026-01','2026-02','unknown']"
+          }
+        ],
+        "wrong": "unmatched = 0",
+        "hints": [
+          "A left join retains orders lacking a dimension row.",
+          "Validate dimension cardinality to catch duplicate customer keys."
+        ]
+      },
+      {
+        "title": "Summarize cohort revenue",
+        "prompt": "Store cohort_revenue as a sorted Series summing cents by cohort. Store revenue as its integer sum. Display the summary table.",
+        "code": "cohort_revenue = joined.groupby(\"cohort\")[\"cents\"].sum().sort_index()\nrevenue = int(cohort_revenue.sum())\ndisplay(cohort_revenue.to_frame())\n",
+        "checks": [
+          {
+            "label": "Reconciles cohort totals including unknown",
+            "expr": "cohort_revenue.to_dict() == {'2026-01':1200,'2026-02':800,'unknown':500} and revenue == 2500"
+          }
+        ],
+        "wrong": "revenue = 2000",
+        "hints": [
+          "Include the unknown cohort in totals.",
+          "A Series can become a one-column frame for display."
+        ]
+      },
+      {
+        "title": "Export evidence and caveats",
+        "prompt": "Export joined to cleaned.csv and cohort_revenue to cohorts.csv. Write findings.json with revenue, unmatched, and caveat mentioning sample. Explain that missing amounts and unmatched customers limit interpretation.",
+        "code": "joined.to_csv(\"cleaned.csv\", index=False)\ncohort_revenue.to_csv(\"cohorts.csv\")\nPath(\"findings.json\").write_text(json.dumps({\"revenue\":revenue,\"unmatched\":unmatched,\"caveat\":\"This small sample excludes missing amounts and includes unknown customer cohorts; it does not establish a population trend.\"}))\n",
+        "checks": [
+          {
+            "label": "Exports tables and a bounded interpretation",
+            "expr": "pd.read_csv('cleaned.csv')['cents'].sum() == 2500 and pd.read_csv('cohorts.csv')['cents'].sum() == 2500 and (lambda r: r['revenue'] == 2500 and r['unmatched'] == 1 and 'sample' in r['caveat'].lower())(json.loads(Path('findings.json').read_text()))"
+          }
+        ],
+        "wrong": "Path('findings.json').write_text('{}')",
+        "hints": [
+          "Export both row-level and aggregated evidence.",
+          "State the limits of a small, incomplete sample."
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "reliable-mini-etl",
+    "ref": "python:project:reliable-mini-etl",
+    "title": "Reliable Mini ETL Pipeline",
+    "kind": "project",
+    "overview": "Build a deterministic incremental upsert pipeline. Source events contain id, version, and integer cents. Keep the highest version per ID; on equal versions retain the existing value. Quarantine invalid rows, verify replay idempotence, and export a versioned manifest.",
+    "files": {
+      "daily_events_a.jsonl": "{\"id\":\"a\",\"version\":2,\"cents\":120}\n{\"id\":\"b\",\"version\":1,\"cents\":70}\n{\"id\":\"x\",\"version\":1,\"cents\":-5}\n",
+      "daily_events_b.jsonl": "{\"id\":\"a\",\"version\":1,\"cents\":90}\n{\"id\":\"b\",\"version\":2,\"cents\":80}\nnot-json\n",
+      "existing_output.csv": "id,version,cents\na,1,100\n"
+    },
+    "packages": [],
+    "steps": [
+      {
+        "title": "Define source and target schemas",
+        "prompt": "Set schema_version to 1 and required to id,version,cents in that order. Read existing_output.csv as existing, converting version and cents to integers.",
+        "code": "import csv, json\nfrom pathlib import Path\nschema_version = 1\nrequired = [\"id\", \"version\", \"cents\"]\nwith open(\"existing_output.csv\", newline=\"\") as f:\n    existing = [{\"id\":r[\"id\"],\"version\":int(r[\"version\"]),\"cents\":int(r[\"cents\"])} for r in csv.DictReader(f)]\n",
+        "checks": [
+          {
+            "label": "Loads typed target schema",
+            "expr": "schema_version == 1 and required == ['id','version','cents'] and existing == [{'id':'a','version':1,'cents':100}]"
+          }
+        ],
+        "wrong": "schema_version = 0",
+        "hints": [
+          "CSV fields arrive as strings.",
+          "Declare the schema before processing increments."
+        ]
+      },
+      {
+        "title": "Parse incremental batches",
+        "prompt": "Read both batches in a then b order. Store parsed JSON values in parsed; preserve invalid JSON in parse_errors with file and 1-based line number.",
+        "code": "parsed, parse_errors = [], []\nfor filename in [\"daily_events_a.jsonl\", \"daily_events_b.jsonl\"]:\n    for line_number, line in enumerate(Path(filename).read_text().splitlines(), 1):\n        try:\n            parsed.append(json.loads(line))\n        except json.JSONDecodeError:\n            parse_errors.append({\"file\":filename,\"line\":line_number,\"reason\":\"invalid JSON\"})\n",
+        "checks": [
+          {
+            "label": "Parses valid JSON and locates bad input",
+            "expr": "len(parsed) == 5 and parse_errors == [{'file':'daily_events_b.jsonl','line':3,'reason':'invalid JSON'}]"
+          }
+        ],
+        "wrong": "parse_errors = []",
+        "hints": [
+          "Handle JSON errors per line, not per file.",
+          "enumerate(lines, 1) preserves human-readable line numbers."
+        ]
+      },
+      {
+        "title": "Quarantine invalid values",
+        "prompt": "Define valid_event(r): require a dictionary, nonempty string id, integer version >= 1 and integer cents >= 0 (no booleans). Build accepted and quarantined from parsed; quarantined records contain row and reason invalid schema.",
+        "code": "def valid_event(r):\n    return isinstance(r, dict) and isinstance(r.get(\"id\"), str) and bool(r[\"id\"]) and type(r.get(\"version\")) is int and r[\"version\"] >= 1 and type(r.get(\"cents\")) is int and r[\"cents\"] >= 0\naccepted = [r for r in parsed if valid_event(r)]\nquarantined = [{\"row\":r,\"reason\":\"invalid schema\"} for r in parsed if not valid_event(r)]\n",
+        "checks": [
+          {
+            "label": "Quarantines negative amount and rejects malformed shapes",
+            "expr": "len(accepted) == 4 and quarantined == [{'row':{'id':'x','version':1,'cents':-5},'reason':'invalid schema'}] and not valid_event(None) and not valid_event({'id':'','version':1,'cents':0}) and not valid_event({'id':'a','version':True,'cents':0})"
+          }
+        ],
+        "wrong": "quarantined = []",
+        "hints": [
+          "Validate types before comparing values.",
+          "Booleans are int subclasses, so use exact type checks."
+        ]
+      },
+      {
+        "title": "Make upserts idempotent",
+        "prompt": "Define upsert(base, incoming) returning records sorted by ID. Keep highest version, retain existing on ties, and do not mutate either input. Store output for existing plus accepted.",
+        "code": "def upsert(base, incoming):\n    state = {r[\"id\"]: dict(r) for r in base}\n    for r in incoming:\n        old = state.get(r[\"id\"])\n        if old is None or r[\"version\"] > old[\"version\"]:\n            state[r[\"id\"]] = dict(r)\n    return [state[key] for key in sorted(state)]\noutput = upsert(existing, accepted)\n",
+        "checks": [
+          {
+            "label": "Keeps latest versions and deterministic order",
+            "expr": "output == [{'id':'a','version':2,'cents':120},{'id':'b','version':2,'cents':80}] and existing == [{'id':'a','version':1,'cents':100}]"
+          },
+          {
+            "label": "Equal versions retain existing value",
+            "expr": "upsert([{'id':'z','version':2,'cents':3}],[{'id':'z','version':2,'cents':9}]) == [{'id':'z','version':2,'cents':3}]"
+          }
+        ],
+        "wrong": "output.reverse()",
+        "hints": [
+          "Replace only when incoming version is strictly greater.",
+          "Return sorted copies for deterministic output."
+        ]
+      },
+      {
+        "title": "Reconcile and verify replay",
+        "prompt": "Store replay_ok by reapplying accepted to output. Store reconciled when accepted, quarantined and parse_errors total six source lines. Write rejected.json with schema and parse rejections.",
+        "code": "replay_ok = upsert(output, accepted) == output\nreconciled = len(accepted) + len(quarantined) + len(parse_errors) == 6\nPath(\"rejected.json\").write_text(json.dumps({\"schema\":quarantined,\"parse\":parse_errors}, indent=2))\n",
+        "checks": [
+          {
+            "label": "Verifies replay and accounts for source lines",
+            "expr": "replay_ok and reconciled and json.loads(Path('rejected.json').read_text()) == {'schema':quarantined,'parse':parse_errors}"
+          }
+        ],
+        "wrong": "replay_ok = False",
+        "hints": [
+          "Replay should not change values or order.",
+          "Count parse failures as well as schema failures."
+        ]
+      },
+      {
+        "title": "Export output and run manifest",
+        "prompt": "Write output.csv with required columns. Write manifest.json with schema_version, input_lines=6, accepted count, rejected count, output_rows, total_cents and replay_ok, all derived where possible.",
+        "code": "with open(\"output.csv\", \"w\", newline=\"\") as f:\n    writer = csv.DictWriter(f, fieldnames=required)\n    writer.writeheader()\n    writer.writerows(output)\nmanifest = {\"schema_version\":schema_version,\"input_lines\":len(parsed)+len(parse_errors),\"accepted\":len(accepted),\"rejected\":len(quarantined)+len(parse_errors),\"output_rows\":len(output),\"total_cents\":sum(r[\"cents\"] for r in output),\"replay_ok\":replay_ok}\nPath(\"manifest.json\").write_text(json.dumps(manifest, indent=2))\n",
+        "checks": [
+          {
+            "label": "Exports reproducible target and manifest",
+            "expr": "list(csv.DictReader(open('output.csv'))) == [{'id':'a','version':'2','cents':'120'},{'id':'b','version':'2','cents':'80'}] and json.loads(Path('manifest.json').read_text()) == {'schema_version':1,'input_lines':6,'accepted':4,'rejected':2,'output_rows':2,'total_cents':200,'replay_ok':True}"
+          }
+        ],
+        "wrong": "Path('manifest.json').write_text('{}')",
+        "hints": [
+          "A manifest records schema and reconciliation evidence.",
+          "Use stable row ordering and explicit field order."
+        ]
+      }
+    ]
+  }
+]
