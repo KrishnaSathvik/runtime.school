@@ -98,7 +98,7 @@ for (const name of BROWSERS) {
     await test("types are exact: '12' is not 12, 12.0 is not 12, True is not 1", async () => {
       const r = await grade(page, notebookTask, "price = '12'\nquantity = 4.0\ntotal = 48\nprint(total)\n");
       assert.equal(r.checks[0].category, "wrong-type");
-      assert.match(r.checks[0].detail, /price is a str \('12'\), but this task needs a int \(12\)|price is a str \('12'\)/);
+      assert.match(r.checks[0].detail, /price is a str \('12'\), but this task needs an int \(12\)|price is a str \('12'\)/);
       assert.equal(r.checks[1].category, "wrong-type");
       assert.equal(r.checks[1].actual, "4.0");
       const b = await grade(page, { checks: [{ kind: "variable", name: "in_stock", expected: bool(true) }] }, "in_stock = 1\n");
@@ -171,7 +171,7 @@ for (const name of BROWSERS) {
       assert.equal(m.checks[0].category, "missing-name");
       const n = await grade(page, totalFnTask, "calculate_total = 48\n");
       assert.equal(n.checks[0].category, "not-callable");
-      assert.match(n.checks[0].detail, /calculate_total is a int, not a function/);
+      assert.match(n.checks[0].detail, /calculate_total is an int, not a function/);
     });
 
     await test("each case gets fresh argument objects", async () => {

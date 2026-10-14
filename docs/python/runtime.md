@@ -1,4 +1,4 @@
-# Python runtime, grading and workspace (Milestones 1–3)
+# Python runtime, grading, workspace and first lesson (Milestones 1–4)
 
 How learner Python executes and is graded in Runtime: what the boundary is, what it guarantees, and what it doesn't.
 
@@ -89,6 +89,32 @@ connect drafts and progress without changing it. `onGraded(report)` fires after 
   Python destinations only. SQL rendering is unchanged.
 - Preview route: `/python/workspace` (gated like `/python/runtime`; 404 wherever the runner is off).
 
+## First lesson and progress (Milestone 4)
+
+- Routes: `/python` (Python home: Python Foundations, one lesson) and `/python/lesson/variables-and-values`.
+  Both are behind the runner gate, so they return 404 wherever Python can't run. `/python/workspace` remains as the
+  M3 preview.
+- Content: `src/content/python/` (typed data; prose supports `code` and **bold**). Only lessons that exist are listed.
+- Lesson flow: Understand (explanation, runnable example, step-by-step walkthrough, common mistakes, all executed for
+  real) → Challenge 1 (order total) → Challenge 2 (reassign and recalculate) → Concept check (two questions:
+  reading vs changing vs printing a value) → Complete.
+- Progress: `src/lib/python-progress.ts`, localStorage key **`runtime-python-v1`**, lessons keyed `python:<slug>`.
+  Never reads or writes `sql-studio-v1`. It stores drafts per challenge, help used (hints/answer), independent vs
+  assisted solves, concept-check result, the last open step, and `masteredAt`.
+- Mastery: both challenges solved **without help**, plus the concept check. A hint or the revealed answer makes a
+  correct check "solved with help". "Try again without help" starts a fresh attempt from the starter code. Run never
+  records anything; Reset changes only the draft.
+- Checks can carry an author `tip`, shown only when that check fails. It is presentation only and grading is unchanged.
+- After Check answer, a summary appears directly under the controls: the verdict and the first failing check (or
+  the syntax/runtime error), with its tip and a link to the line. It is announced through a polite live region.
+  Only its own scroll container scrolls, just enough to show it: the lesson work column on desktop (the page doesn't
+  move), the page on phones. Focus stays where it was, unless the browser dropped it to the page.
+- `uses-variables` (Challenge 1 only): a learning-objective check that the final top-level assignment to `total`
+  (plus any `+=`-style updates after it) uses `price` and `quantity`. It is read from Python's parsed syntax tree
+  before the program runs, so any expression using them is accepted (`quantity * price`, `(price) * (quantity)`…),
+  and `total = 21` or `total = price * 7` fail with a reason and the line number. It is opt-in per check, not a
+  comparison with a reference solution, and not tamper-proof.
+
 ## Measured (local, headless, production build, 2026-10-13)
 
 | | Chromium | WebKit | Firefox |
@@ -145,8 +171,10 @@ normal path or raised with the owner. It is never routed around.
 
 ## Tests
 
-- `npx vitest run tests/python-client.test.ts tests/python-grading.test.ts`: client state machine (fake worker), nonce,
+- `npx vitest run tests/python-client.test.ts tests/python-grading.test.ts tests/python-progress.test.ts`: client state machine (fake worker), nonce,
   probe, gate, pinned version and hashes; comparison policies, display, every grading path.
 - `npm run dev -- -p 3041`, then `BASE=http://localhost:3041 npm run test:python-runtime` and `npm run test:python-grading`:
   real Pyodide in Chromium, Firefox and WebKit. `npm run test:python-workspace` drives the workspace UI (set
-  `BASELINE=<server on the previous commit>` to compare the SQL shell byte for byte). For a production build: `NEXT_PUBLIC_PYTHON_RUNNER=1 npm run build && npx next start`.
+  `BASELINE=<server on the previous commit>` to compare the SQL shell byte for byte), and `npm run test:python-lesson`
+  walks the whole learner journey (including hint/assisted credit and `sql-studio-v1` staying unchanged). For a
+  production build: `NEXT_PUBLIC_PYTHON_RUNNER=1 npm run build && npx next start`.

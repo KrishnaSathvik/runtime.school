@@ -146,7 +146,7 @@ describe("gradePython: variables and output", () => {
   it("wrong type is distinguished from wrong value", () => {
     const r = gradePython(totalTask, ok({ vars: { price: v(actualStr("12")), total: v(py.int(36)) } }, "48\n"));
     expect(r.checks[0]).toMatchObject({ category: "wrong-type", actual: "'12'", expected: "12" });
-    expect(r.checks[0].detail).toMatch(/is a str/);
+    expect(r.checks[0].detail).toBe("price is a str ('12'), but this task needs an int (12).");
     expect(r.checks[1]).toMatchObject({ category: "wrong-value", actual: "36" });
   });
 
@@ -282,5 +282,66 @@ describe("gradePython: nothing passes unless the program ran and every check pas
   it("each report depends only on its own run: correct then wrong", () => {
     expect(gradePython(totalTask, allGood).ok).toBe(true);
     expect(gradePython(totalTask, ok({ vars: { price: v(py.int(12)), total: v(py.int(47)) } }, "47\n")).ok).toBe(false);
+  });
+});
+
+describe("gradePython: author tips", () => {
+  it("are attached only to failed checks and never change the verdict", () => {
+    const task: PyTask = { checks: [{ kind: "variable", name: "total", expected: py.int(75), tip: "Recalculate total after changing quantity." }] };
+    const bad = gradePython(task, ok({ vars: { total: v(py.int(30)) } }));
+    expect(bad.ok).toBe(false);
+    expect(bad.checks[0].tip).toBe("Recalculate total after changing quantity.");
+    const good = gradePython(task, ok({ vars: { total: v(py.int(75)) } }));
+    expect(good.ok).toBe(true);
+    expect(good.checks[0].tip).toBeUndefined();
+    const notRun = gradePython(task, { stdout: "", stderr: "", output: [], status: "timeout", limitMs: 5000 });
+    expect(notRun.checks[0].tip).toBeUndefined();
+  });
+});
+
+describe("gradePython: uses-variables (learning-objective check)", () => {
+  const task: PyTask = {
+    checks: [
+      { kind: "variable", name: "total", expected: py.int(21) },
+      { kind: "uses-variables", name: "total", uses: ["price", "quantity"] },
+    ],
+  };
+  const a = (line: number, uses: string[], aug = false) => ({ line, uses, aug });
+  const run = (assignments: Record<string, { line: number; uses: string[]; aug: boolean }[]>) =>
+    gradePython(task, ok({ vars: { total: v(py.int(21)) }, assignments }));
+
+  it("asks the interpreter for assignment facts only when a task uses the check", () => {
+    expect(probeFor(task)).toEqual({ vars: ["total"], calls: [], assignments: ["total"] });
+    expect(probeFor(totalTask)).not.toHaveProperty("assignments");
+  });
+
+  it("passes for any expression that uses both variables", () => {
+    expect(run({ total: [a(3, ["price", "quantity"])] }).ok).toBe(true);
+    expect(run({ total: [a(3, ["price", "quantity", "sum"])] }).ok).toBe(true);
+    // total = price, then total *= quantity
+    expect(run({ total: [a(3, ["price"]), a(4, ["quantity", "total"], true)] }).ok).toBe(true);
+  });
+
+  it("a typed-in result fails with a beginner-friendly reason and the line", () => {
+    const r = run({ total: [a(3, [])] });
+    expect(r.ok).toBe(false);
+    expect(r.checks[1]).toMatchObject({ status: "fail", category: "not-calculated", line: 3, label: "total is calculated from price and quantity" });
+    expect(r.checks[1].detail).toBe("total is set to a fixed value on line 3. Calculate it from price and quantity instead of typing the result, so the program still works if those values change.");
+    // The value check still passes on its own: the two requirements are reported separately.
+    expect(r.checks[0].status).toBe("pass");
+  });
+
+  it("names the variable that wasn't used", () => {
+    const r = run({ total: [a(3, ["price"])] });
+    expect(r.checks[1].detail).toBe("total is calculated on line 3 without using quantity. Use the variable instead of typing its value.");
+  });
+
+  it("judges the final assignment: a later typed-in value overrides an earlier calculation", () => {
+    expect(run({ total: [a(3, ["price", "quantity"]), a(5, [])] }).checks[1].category).toBe("not-calculated");
+  });
+
+  it("missing assignment and missing facts never pass", () => {
+    expect(run({ total: [] }).checks[1].category).toBe("missing-name");
+    expect(gradePython(task, ok({ vars: { total: v(py.int(21)) } })).checks[1]).toMatchObject({ status: "fail", category: "not-run" });
   });
 });

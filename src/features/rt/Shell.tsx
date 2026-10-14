@@ -8,6 +8,7 @@ import { ChevronDown, Moon, Search, Sun } from "lucide-react";
 import { courseOrder, getLesson, projects } from "@/content";
 import { bankQuestions } from "@/content/question-bank";
 import { rtSectionHrefs } from "@/features/rt/entry";
+import { pythonLessonHref, pythonLessons } from "@/content/python";
 import { useHydrated, useLearning } from "@/lib/learning-state";
 import { projectHref } from "@/platform/project-paths";
 import { useTheme } from "@/lib/theme";
@@ -29,7 +30,7 @@ const NAV_FALLBACK: { id: Exclude<Section, "tools">; label: string; href: string
  * when they are real; until then Python has no Tools menu.
  */
 const PYTHON_NAV: { id: Exclude<Section, "tools">; label: string; href: string }[] = [
-  { id: "learn", label: "Learn", href: "/python/workspace" },
+  { id: "learn", label: "Learn", href: "/python" },
 ];
 
 export const TOOLS = [
@@ -179,6 +180,7 @@ type Item = { label: string; href: string; kind: string };
 function PythonPalette({ onClose }: { onClose: () => void }) {
   const all: Item[] = [
     ...PYTHON_NAV.map((n) => ({ label: `Python · ${n.label}`, href: n.href, kind: "go" })),
+    ...pythonLessons.map((l) => ({ label: `${String(l.number).padStart(2, "0")} ${l.title}`, href: pythonLessonHref(l.slug), kind: "lesson" })),
     { label: "Choose a subject", href: "/", kind: "go" },
     { label: "SQL course", href: "/sql", kind: "subject" },
   ];

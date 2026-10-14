@@ -17,7 +17,7 @@ const now = performance.now.bind(performance);
 // builtins cannot change how values are read. Values are returned as type-tagged data and judged
 // on the main thread; expected answers never enter this interpreter.
 const HARNESS = String.raw`
-import builtins, io, json, linecache, sys, traceback
+import ast, builtins, io, json, linecache, sys, traceback
 
 _type = type; _len = len; _str = str; _int = int; _float = float; _bool = bool
 _list = list; _tuple = tuple; _dict = dict; _set = set; _frozenset = frozenset
@@ -27,6 +27,8 @@ _dict_items = dict.items; _name_desc = type.__dict__["__name__"]
 _loads = json.loads; _extract_tb = traceback.extract_tb
 _format_list = traceback.format_list; _format_only = traceback.format_exception_only
 _sys = sys; _builtins = builtins; _Module = type(sys); _lines = linecache.cache
+_ast_parse = ast.parse; _ast_walk = ast.walk
+_Assign = ast.Assign; _AugAssign = ast.AugAssign; _AnnAssign = ast.AnnAssign; _Name = ast.Name; _Tuple = ast.Tuple; _List = ast.List
 _out0 = sys.stdout; _err0 = sys.stderr
 MAX_DEPTH = 12; MAX_ITEMS = 500; MAX_STR = 5000; MAX_CALL_OUT = 5000; MAX_NAMES = 100
 
@@ -163,6 +165,33 @@ def _de(x):
     raise ValueError("unsupported test value")
 
 
+def _assignments(source, names):
+    # Learning-objective facts from the parsed source (read before the program runs): for each
+    # requested name, its top-level assignments in order and the variable names each one uses.
+    found = {n: [] for n in names}
+    if not names:
+        return found
+    try:
+        tree = _ast_parse(source)
+    except BaseException:
+        return found
+    for node in tree.body:
+        if isinstance(node, _Assign):
+            targets, value = node.targets, node.value
+        elif isinstance(node, _AugAssign):
+            targets, value = [node.target], node.value
+        elif isinstance(node, _AnnAssign) and node.value is not None:
+            targets, value = [node.target], node.value
+        else:
+            continue
+        used = sorted({n.id for n in _ast_walk(value) if isinstance(n, _Name)})
+        for t in targets:
+            for tn in (t.elts if isinstance(t, (_Tuple, _List)) else [t]):
+                if isinstance(tn, _Name) and tn.id in found:
+                    found[tn.id].append({"line": node.lineno, "uses": used, "aug": isinstance(node, _AugAssign)})
+    return found
+
+
 def _probe(ns, probe, progress):
     names = []
     for k in _list(ns):
@@ -206,7 +235,7 @@ def _probe(ns, probe, progress):
             entry["stdout"] = cap.text()
             cases.append(entry)
         calls[name] = {"cases": cases}
-    return {"names": names, "vars": found, "calls": calls}
+    return {"names": names, "vars": found, "calls": calls, "assignments": probe.get("_assignments", {})}
 
 
 def run(source, probe_json, progress):
@@ -228,6 +257,8 @@ def run(source, probe_json, progress):
         }
     except ValueError as e:
         return {"status": "syntax-error", "type": "ValueError", "message": _str(e), "line": None, "column": None, "text": ""}
+    if probe is not None:
+        probe["_assignments"] = _assignments(source, probe.get("assignments", []))
     ns = {"__name__": "__main__", "__builtins__": _builtins}
     try:
         exec(code, ns)
