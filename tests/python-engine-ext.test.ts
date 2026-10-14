@@ -57,6 +57,19 @@ describe("python runner extensions", () => {
     expect(bad.checks[1].category).toBe("wrong-exception");
   }, SLOW);
 
+  it("two function checks on the same function each judge their own cases", async () => {
+    const task: PyTask = {
+      checks: [
+        { kind: "function", id: "values", name: "area", cases: [{ args: [py.int(2), py.int(3)], expected: py.int(6) }] },
+        { kind: "function", id: "errors", name: "area", cases: [{ args: [py.int(-1), py.int(3)], raises: "ValueError" }, { args: [py.int(1), py.int(-1)], raises: "ValueError" }] },
+      ],
+    };
+    const good = "def area(w, h):\n    if w < 0 or h < 0:\n        raise ValueError('negative')\n    return w * h\n";
+    expect((await checkFast(task, good)).ok).toBe(true);
+    const bad = await checkFast(task, "def area(w, h):\n    return w * h\n");
+    expect(bad.checks.map((c) => c.status)).toEqual(["pass", "fail"]);
+  }, SLOW);
+
   it("numpy scalars compare as Python numbers; display() sends a table", async () => {
     const task: PyTask = { packages: ["numpy"], checks: [{ kind: "variable", name: "m", expected: py.float(2) }, { kind: "expr", label: "shape", expr: "a.shape", expected: py.tuple(py.int(3)) }] };
     expect((await checkFast(task, "import numpy as np\na = np.array([1, 2, 3])\nm = a.mean()\n")).ok).toBe(true);

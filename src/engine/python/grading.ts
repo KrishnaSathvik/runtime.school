@@ -178,15 +178,21 @@ export type PyGradeReport = {
 export function probeFor(task: PyTask): PyProbe {
   const vars = task.checks.filter((c) => c.kind === "variable").map((c) => c.name);
   const assignments = task.checks.filter((c) => c.kind === "uses-variables").map((c) => c.name);
-  const calls = task.checks
-    .filter((c) => c.kind === "function")
-    .map((c) => ({
-      name: c.name,
-      cases: c.cases.map((k) => ({
+  // Several checks may call the same function (say, valid inputs and rejected ones): the interpreter reports
+  // calls by name, so their cases go in one list, in check order. judgeFunction reads its slice back by offset.
+  const byName = new Map<string, NonNullable<PyProbe["calls"]>[number]["cases"]>();
+  for (const c of task.checks) {
+    if (c.kind !== "function") continue;
+    const list = byName.get(c.name) ?? [];
+    list.push(
+      ...c.cases.map((k) => ({
         args: k.args.map(toWire),
         ...(k.kwargs ? { kwargs: Object.fromEntries(Object.entries(k.kwargs).map(([n, v]) => [n, toWire(v)])) } : {}),
       })),
-    }));
+    );
+    byName.set(c.name, list);
+  }
+  const calls = [...byName].map(([name, cases]) => ({ name, cases }));
   const exprs = task.checks.filter((c) => c.kind === "expr").map((c) => ({ code: c.expr }));
   const variants = task.checks
     .filter((c) => c.kind === "variant")
@@ -362,7 +368,7 @@ function judgeCase(name: string, k: PyFunctionCase, index: number, got: PyCallCa
   };
 }
 
-function judgeFunction(c: Extract<PyCheck, { kind: "function" }>, probe: PyProbeResult): Omit<PyCheckOutcome, "id" | "kind" | "label"> {
+function judgeFunction(c: Extract<PyCheck, { kind: "function" }>, probe: PyProbeResult, offset = 0): Omit<PyCheckOutcome, "id" | "kind" | "label"> {
   const found = probe.calls[c.name];
   if (!found || "missing" in found) {
     const hint = didYouMean(c.name, probe.names);
@@ -377,7 +383,7 @@ function judgeFunction(c: Extract<PyCheck, { kind: "function" }>, probe: PyProbe
   if ("notCallable" in found) {
     return { status: "fail", category: "not-callable", detail: `${c.name} is ${/^[aeiou]/i.test(found.type) ? "an" : "a"} ${found.type}, not a function. Define it with def ${c.name}(…):` };
   }
-  const cases = c.cases.map((k, i) => judgeCase(c.name, k, i, found.cases[i], c.compare));
+  const cases = c.cases.map((k, i) => judgeCase(c.name, k, i, found.cases[offset + i], c.compare));
   if (cases.length > 0 && cases.every((k) => k.ok)) return { status: "pass", cases };
   const visibleFail = cases.find((k) => !k.ok && !k.hidden);
   if (visibleFail) return { status: "fail", category: visibleFail.category, detail: visibleFail.detail, line: visibleFail.line, cases };
@@ -571,6 +577,12 @@ export function gradePython(task: PyTask, r: PyRunResult): PyGradeReport {
   const probe: PyProbeResult = r.probe ?? { names: [], vars: {}, calls: {} };
   let exprIndex = 0;
   let variantIndex = 0;
+  const callOffsets = new Map<string, number>();
+  const offsetFor = (c: Extract<PyCheck, { kind: "function" }>) => {
+    const at = callOffsets.get(c.name) ?? 0;
+    callOffsets.set(c.name, at + c.cases.length);
+    return at;
+  };
   const checks = task.checks.map((c, i): PyCheckOutcome => {
     const base = { id: checkId(c, i), kind: c.kind, label: defaultLabel(c) };
     const judged =
@@ -579,7 +591,7 @@ export function gradePython(task: PyTask, r: PyRunResult): PyGradeReport {
       : c.kind === "uses-variables" ? judgeUses(c, probe)
       : c.kind === "expr" ? judgeExpr(c, probe.exprs?.[exprIndex++])
       : c.kind === "variant" ? judgeVariant(c, probe.variants?.[variantIndex++])
-      : judgeFunction(c, probe);
+      : judgeFunction(c, probe, offsetFor(c));
     return { ...base, ...judged, ...(judged.status === "fail" && c.tip ? { tip: c.tip } : {}) };
   });
   const passed = checks.filter((c) => c.status === "pass").length;
