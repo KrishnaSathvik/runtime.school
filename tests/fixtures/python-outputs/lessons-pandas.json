@@ -1,0 +1,293 @@
+{
+ "python:cleaning-strings-dates-and-duplicates#example": {
+  "status": "ok",
+  "stdout": "{'Desk Lamp ': 2, ' Desk lamp': 1, 'Oak desk': 1, 'notebook': 1, 'Chair': 1, 'Pen set': 1, 'Floor lamp': 1, 'Notebook': 1}\n{'Desk lamp': 3, 'Notebook': 2, 'Oak desk': 1, 'Chair': 1, 'Pen set': 1, 'Floor lamp': 1}\nUnreadable dates: 1\nDuplicated rows: 1\n9 -> 8 rows\n"
+ },
+ "python:cleaning-strings-dates-and-duplicates#mistake-1": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "AttributeError",
+   "line": 3
+  }
+ },
+ "python:cleaning-strings-dates-and-duplicates#mistake-2": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "ValueError",
+   "line": 3
+  }
+ },
+ "python:cleaning-strings-dates-and-duplicates#step-1": {
+  "status": "ok",
+  "stdout": "[' Desk lamp', 'Oak desk', 'notebook', 'Desk Lamp ']\n{'desk lamp': 3, 'notebook': 2, 'oak desk': 1, 'chair': 1, 'pen set': 1, 'floor lamp': 1}\n"
+ },
+ "python:cleaning-strings-dates-and-duplicates#step-2": {
+  "status": "ok",
+  "stdout": "1 ['not a date']\n['Tuesday', 'Wednesday', 'Thursday', 'Friday']\n"
+ },
+ "python:cleaning-strings-dates-and-duplicates#step-3": {
+  "status": "ok",
+  "stdout": "1 [1004]\n[1004, 1004]\n"
+ },
+ "python:cleaning-strings-dates-and-duplicates#step-4": {
+  "status": "ok",
+  "stdout": "[{'order_id': 7, 'status': 'shipped'}, {'order_id': 8, 'status': 'completed'}]\n"
+ },
+ "python:exploratory-data-analysis-and-exports#example": {
+  "status": "ok",
+  "stdout": "Rows: 12 | duplicates: 0 | missing: 0\ncategory\nfurniture     240.0\nlighting      212.0\nstationery     62.5\nName: line_total, dtype: float64\ncategory,line_total\nfurniture,240.0\nlighting,212.0\nstationery,62.5\n\n",
+  "figures": 1,
+  "files": [
+   "revenue_by_category.csv"
+  ]
+ },
+ "python:exploratory-data-analysis-and-exports#mistake-1": {
+  "status": "ok",
+  "stdout": ",category,revenue\n0,furniture,240.0\n1,lighting,212.0\n\n",
+  "files": [
+   "summary.csv"
+  ]
+ },
+ "python:exploratory-data-analysis-and-exports#mistake-2": {
+  "status": "ok",
+  "stdout": "title: '' | y label: ''\n",
+  "figures": 1
+ },
+ "python:exploratory-data-analysis-and-exports#step-1": {
+  "status": "ok",
+  "stdout": "(12, 8) 0 0\n{'completed': 9, 'refunded': 1, 'pending': 1, 'cancelled': 1}\n{'min': 1.0, 'max': 10.0}\n"
+ },
+ "python:exploratory-data-analysis-and-exports#step-2": {
+  "status": "ok",
+  "stdout": "{'01 Sep': 169.0, '02 Sep': 24.5, '03 Sep': 18.0, '04 Sep': 97.5, '05 Sep': 73.5, '06 Sep': 132.0}\n",
+  "figures": 1
+ },
+ "python:exploratory-data-analysis-and-exports#step-3": {
+  "status": "ok",
+  "stdout": "mean: 66.48 | median: 57.0\n",
+  "figures": 1
+ },
+ "python:exploratory-data-analysis-and-exports#step-4": {
+  "status": "ok",
+  "stdout": "category,revenue\nfurniture,240.0\nlighting,212.0\n\n[\n  {\n    \"category\":\"furniture\",\n    \"revenue\":240.0\n  },\n  {\n    \"category\":\"lighting\",\n    \"revenue\":212.0\n  }\n]\n",
+  "files": [
+   "summary.csv",
+   "summary.json"
+  ]
+ },
+ "python:groupby-and-aggregation#example": {
+  "status": "ok",
+  "stdout": "category\nfurniture     240.0\nlighting      212.0\nstationery     62.5\nName: line_total, dtype: float64\n",
+  "tables": 1
+ },
+ "python:groupby-and-aggregation#mistake-1": {
+  "status": "ok",
+  "stdout": "{'furniture': 507.0, 'lighting': 212.0, 'stationery': 78.75}\n"
+ },
+ "python:groupby-and-aggregation#mistake-2": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "KeyError",
+   "line": 3
+  }
+ },
+ "python:groupby-and-aggregation#step-1": {
+  "status": "ok",
+  "stdout": "status\ncancelled    1\ncompleted    9\npending      1\nrefunded     1\nName: order_id, dtype: int64\n"
+ },
+ "python:groupby-and-aggregation#step-2": {
+  "status": "ok",
+  "stdout": "{'a': 2, 'b': 1} {'a': 1, 'b': 1}\n"
+ },
+ "python:groupby-and-aggregation#step-3": {
+  "status": "ok",
+  "stdout": "  customer_id  orders   spent\n0         C01       3  154.25\n1         C02       2  138.00\n2         C03       2   57.00\n3         C04       2  298.00\n4         C05       2   77.00\n5         C06       1   73.50\n"
+ },
+ "python:groupby-and-aggregation#step-4": {
+  "status": "ok",
+  "stdout": "     category     status  orders\n0   furniture  cancelled       1\n1   furniture  completed       2\n2   furniture    pending       1\n3    lighting  completed       4\n4  stationery  completed       3\n5  stationery   refunded       1\n"
+ },
+ "python:merging-and-reshaping-data#example": {
+  "status": "ok",
+  "stdout": "12 orders -> 12 rows; {'both': 12, 'left_only': 0, 'right_only': 0}\n",
+  "tables": 1
+ },
+ "python:merging-and-reshaping-data#mistake-1": {
+  "status": "ok",
+  "stdout": "3 95.0\n"
+ },
+ "python:merging-and-reshaping-data#mistake-2": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "KeyError",
+   "line": 4
+  }
+ },
+ "python:merging-and-reshaping-data#step-1": {
+  "status": "ok",
+  "stdout": "   order_id customer_id name\n0         1          C1  Ada\n1         2          C2  Ben\n2         3          C9  NaN\n2 rows with an inner join\n"
+ },
+ "python:merging-and-reshaping-data#step-2": {
+  "status": "ok",
+  "stdout": "2\nMergeError: Merge keys are not unique in right dataset; not a many-to-one merge\n\nDuplicates in right:\n customer_id\n         C1 ...\n"
+ },
+ "python:merging-and-reshaping-data#step-3": {
+  "status": "ok",
+  "stdout": "     month  revenue\n0  2026-09    514.5\n1  2026-10    602.0\n"
+ },
+ "python:merging-and-reshaping-data#step-4": {
+  "status": "ok",
+  "stdout": "category  furniture  lighting\ncity                         \nLeeds         120.0      50.0\nYork            0.0      30.0\n    city   category  revenue\n0  Leeds  furniture    120.0\n1   York  furniture      0.0\n2  Leeds   lighting     50.0\n3   York   lighting     30.0\n"
+ },
+ "python:missing-values-and-data-types#example": {
+  "status": "ok",
+  "stdout": "order_id       int64\norder_date       str\ncustomer_id      str\nproduct          str\nquantity         str\nunit_price       str\nstatus           str\ndtype: object\norder_id       0\norder_date     0\ncustomer_id    1\nproduct        0\nquantity       0\nunit_price     1\nstatus         0\ndtype: int64\nUnreadable quantities: 1 | missing prices: 1\n[2, 1, 5, 1, 1, 2, 3, <NA>, 10]\n"
+ },
+ "python:missing-values-and-data-types#mistake-1": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "ValueError",
+   "line": 3
+  }
+ },
+ "python:missing-values-and-data-types#mistake-2": {
+  "status": "ok",
+  "stdout": "33.88 30.11\n"
+ },
+ "python:missing-values-and-data-types#quiz-mean": {
+  "status": "ok",
+  "stdout": "15.0\n"
+ },
+ "python:missing-values-and-data-types#step-1": {
+  "status": "ok",
+  "stdout": "order_id       0\norder_date     0\ncustomer_id    1\nproduct        0\nquantity       0\nunit_price     1\nstatus         0\ndtype: int64\n[1008]\n"
+ },
+ "python:missing-values-and-data-types#step-2": {
+  "status": "ok",
+  "stdout": "str\nfloat64 [2.0, 1.0, 5.0, 1.0, 1.0, 2.0, 3.0, nan, 10.0]\n"
+ },
+ "python:missing-values-and-data-types#step-3": {
+  "status": "ok",
+  "stdout": "9 8\n['C05', 'UNKNOWN']\n1 orders without a customer, kept and reported\n"
+ },
+ "python:missing-values-and-data-types#step-4": {
+  "status": "ok",
+  "stdout": "[2.0, nan, 5.0] float64\n[2, <NA>, 5] Int64\n"
+ },
+ "python:reading-and-inspecting-data#example": {
+  "status": "ok",
+  "stdout": "(12, 8)\norder_id                int64\norder_date     datetime64[us]\ncustomer_id               str\nproduct                   str\ncategory                  str\nquantity                int64\nunit_price            float64\nstatus                    str\ndtype: object\nstatus\ncompleted    9\nrefunded     1\npending      1\ncancelled    1\nName: count, dtype: int64\nCustomers: 6 | Date range: 2026-09-01 to 2026-09-06\n",
+  "tables": 1
+ },
+ "python:reading-and-inspecting-data#mistake-1": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "FileNotFoundError",
+   "line": 2
+  }
+ },
+ "python:reading-and-inspecting-data#mistake-2": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "AttributeError",
+   "line": 3
+  }
+ },
+ "python:reading-and-inspecting-data#step-1": {
+  "status": "ok",
+  "stdout": "order_id         int64\norder_date         str\ncustomer_id        str\nproduct            str\ncategory           str\nquantity         int64\nunit_price     float64\nstatus             str\ndtype: object\n"
+ },
+ "python:reading-and-inspecting-data#step-2": {
+  "status": "ok",
+  "stdout": "datetime64[us] 2026-09-01 00:00:00\n['Tuesday', 'Tuesday', 'Wednesday']\n"
+ },
+ "python:reading-and-inspecting-data#step-3": {
+  "status": "ok",
+  "stdout": "       quantity  unit_price\ncount     12.00       12.00\nmean       2.67       47.92\nstd        2.61       45.93\nmin        1.00        3.25\n25%        1.00        6.00\n50%        2.00       24.50\n75%        3.00       89.00\nmax       10.00      120.00\n"
+ },
+ "python:reading-and-inspecting-data#step-4": {
+  "status": "ok",
+  "stdout": "status\ncompleted    9\nrefunded     1\npending      1\ncancelled    1\nName: count, dtype: int64\n3 categories\n0 missing values\n"
+ },
+ "python:selecting-and-filtering-rows#example": {
+  "status": "ok",
+  "stdout": "12 orders, 9 completed\n    order_id  line_total\n1       1002       120.0\n4       1005       178.0\n10      1011       120.0\nFirst order: 1001 | Last: 1012\n",
+  "tables": 1
+ },
+ "python:selecting-and-filtering-rows#mistake-1": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "ValueError",
+   "line": 3
+  }
+ },
+ "python:selecting-and-filtering-rows#mistake-2": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "TypeError",
+   "line": 3
+  }
+ },
+ "python:selecting-and-filtering-rows#step-1": {
+  "status": "ok",
+  "stdout": "[True, True, False, True] 9\n[1001, 1002, 1004, 1006, 1007, 1008, 1010, 1011, 1012]\n"
+ },
+ "python:selecting-and-filtering-rows#step-2": {
+  "status": "ok",
+  "stdout": "[1001, 1010]\n[1003, 1009]\n['Desk lamp', 'Floor lamp']\n"
+ },
+ "python:selecting-and-filtering-rows#step-3": {
+  "status": "ok",
+  "stdout": "[0, 3, 6, 9]\n1004 1004\n[0, 1, 2, 3]\n"
+ },
+ "python:selecting-and-filtering-rows#step-4": {
+  "status": "ok",
+  "stdout": "0\n1\n"
+ },
+ "python:series-and-dataframes#example": {
+  "status": "ok",
+  "stdout": "(3, 4)\norder_id      int64\ncustomer        str\nproduct         str\namount      float64\ndtype: object\nTotal: 185.25 | Mean: 61.75\n",
+  "tables": 1
+ },
+ "python:series-and-dataframes#mistake-1": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "KeyError",
+   "line": 3
+  }
+ },
+ "python:series-and-dataframes#mistake-2": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "ValueError",
+   "line": 2
+  }
+ },
+ "python:series-and-dataframes#step-1": {
+  "status": "ok",
+  "stdout": "tea          2.5\ncake         4.0\nsandwich    10.0\ndtype: float64\n4.0 10.0 sandwich\n"
+ },
+ "python:series-and-dataframes#step-2": {
+  "status": "ok",
+  "stdout": "    city  stores\n0  Leeds       4\n1   York       2\n2   Hull       1\n(3, 2) ['city', 'stores'] [0, 1, 2]\n"
+ },
+ "python:series-and-dataframes#step-3": {
+  "status": "ok",
+  "stdout": "Series [40.0, 15.5]\nDataFrame\n  customer  amount\n0      ana    40.0\n1      ben    15.5\n"
+ },
+ "python:series-and-dataframes#step-4": {
+  "status": "ok",
+  "stdout": "   qty  unit_price  line_total\n0    2       24.50       49.00\n1    1      120.00      120.00\n2    5        3.25       16.25\n185.25\n"
+ }
+}
