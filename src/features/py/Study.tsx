@@ -12,18 +12,19 @@ import { filePreview } from './file-preview';
 import { Rich } from './Rich';
 
 /** Source fixtures use the same card treatment as SQL's data tables. */
-export function FileData({ files }: { files: Record<string,string> }) {
-  return <div className="py-file-data">{Object.entries(files).map(([name,text]) => {
+export function FileData({ files, full = false }: { files: Record<string,string>; full?: boolean }) {
+  return <div className={`py-file-data${full ? " py-file-data-full" : ""}`}>{Object.entries(files).map(([name,text]) => {
     const preview = filePreview(name,text);
-    return <details key={name} className="rx-schema-table" open><summary className="mono">{name}</summary>
-      {preview ? <><div className="rx-table-wrap" tabIndex={0} role="region" aria-label={`${name} preview`}><table className="rx-table rx-data"><thead><tr>{preview.columns.map((c,i)=><th key={i}>{c}</th>)}</tr></thead><tbody>{preview.rows.slice(0,5).map((row,i)=><tr key={i}>{preview.columns.map((_,c)=><td key={c}>{row[c] == null ? <span className="rx-dim">—</span> : typeof row[c] === 'object' ? JSON.stringify(row[c]) : String(row[c])}</td>)}</tr>)}</tbody></table></div><p className="rx-table-foot">{preview.rows.length>5?`showing 5 of ${preview.rows.length} rows`:`all ${preview.rows.length} rows`}</p></> : <pre tabIndex={0} aria-label={name}>{text}</pre>}
+    return <details key={name} className="rx-schema-table" open><summary className="mono">{name}{preview && <span>{preview.columns.length} columns · {preview.rows.length} rows</span>}</summary>
+      {preview ? <><div className="rx-table-wrap" tabIndex={0} role="region" aria-label={`${name} preview`}><table className="rx-table rx-data"><thead><tr>{preview.columns.map((c,i)=><th key={i}>{c}</th>)}</tr></thead><tbody>{(full ? preview.rows : preview.rows.slice(0,5)).map((row,i)=><tr key={i}>{preview.columns.map((_,c)=><td key={c}>{row[c] == null ? <span className="rx-dim">—</span> : typeof row[c] === 'object' ? JSON.stringify(row[c]) : String(row[c])}</td>)}</tr>)}</tbody></table></div><p className="rx-table-foot">{!full && preview.rows.length>5?`showing 5 of ${preview.rows.length} rows`:`all ${preview.rows.length} rows`}</p></> : <pre tabIndex={0} aria-label={name}>{text}</pre>}
     </details>;
   })}</div>;
 }
 
-export function Exercise({ itemRef, id, title, question, starterOverride, next, inheritedHelp = false, onPassed, context, project = false }: {
+export function Exercise({ itemRef, id, title, question, starterOverride, next, inheritedHelp = false, onPassed, context, project = false, guidance }: {
   itemRef: string; id: string; title: string; question: PyQuestion | PyGraded;
   starterOverride?: string; next?: ReactNode; inheritedHelp?: boolean; onPassed?: () => void; context?: string; project?: boolean;
+  guidance?: { overview: string; approach: string; data: string; example: string; output: string; reflection: string };
 }) {
   const pane = useRef<CodePaneHandle>(null);
   const rec = usePyProgress(s => s.items[itemRef]);
@@ -53,15 +54,17 @@ export function Exercise({ itemRef, id, title, question, starterOverride, next, 
     <article className="rx-brief" aria-labelledby="study-title">
       <p className="rx-prompt-line"><b>{project ? 'milestone' : 'task'}</b> {context ?? ('module' in question ? `${question.module} · ${question.difficulty}` : '')}</p>
       <h1 id="study-title" className="rx-task-title">{title}</h1>
-      <p className="rx-lead rx-ask"><Rich text={question.prompt} /></p>
-      {graded && <><p className="rx-label">what to return</p><Spec rows={graded.looksFor.map((t,i) => [i === 0 ? 'Result' : 'Watch for', <Rich key={t} text={t} />])} />{graded.expectedOutput && <><p className="rx-label sec">expected output</p><div className="rx-expected"><pre className="py-static-code">{graded.expectedOutput}</pre></div></>}</>}
+      {guidance && <><p className="rx-small">{guidance.overview}</p><h2 className="rx-h"><b>approach</b></h2><p className="rx-prose">{guidance.approach}</p><h2 className="rx-h"><b>worked example</b></h2><p className="rx-cap">A small example of the technique, using separate data.</p><div className="rx-cell"><div className="rx-cell-head"><span className="name">worked-example.py</span></div><div className="rx-cell-in"><pre>{guidance.example}</pre></div><div className="rx-out"><div className="rx-out-meta">Expected output</div><pre className="py-stream" style={{padding:14}}>{guidance.output}</pre></div></div></>}
+      {!project && <p className="rx-lead rx-ask"><Rich text={question.prompt} /></p>}
+      {!project && graded && <><p className="rx-label">what to return</p><Spec rows={graded.looksFor.map((t,i) => [i === 0 ? 'Result' : 'Watch for', <Rich key={t} text={t} />])} />{graded.expectedOutput && <><p className="rx-label sec">expected output</p><div className="rx-expected"><pre className="py-static-code">{graded.expectedOutput}</pre></div></>}</>}
       {predict && <><p className="rx-label sec">read the program</p><div className="rx-cell"><div className="rx-cell-head"><span className="name">example.py</span></div><div className="rx-cell-in"><pre>{predict.code}</pre></div></div></>}
-      {Object.keys(files).length > 0 && <><p className="rx-label sec">data for this {project ? 'milestone' : 'question'}</p><FileData files={files} /></>}
+      {Object.keys(files).length > 0 && <><p className="rx-label sec">data for this {project ? 'milestone' : 'question'}</p>{guidance && <p className="rx-cap">{guidance.data}</p>}<FileData files={files} full={project} /></>}
     </article>
     <section className="rx-work rx-lesson-work py-task-work" aria-label="Your solution">
       {project && <div className="rx-tabs" role="tablist" aria-label="Milestone steps"><button role="tab" id="program-tab" aria-controls="program-panel" aria-selected={tab === 'program'} onClick={() => setTab('program')}>Program{result?.passes ? ' ✓' : ''}</button><button role="tab" id="finding-tab" aria-controls="finding-panel" aria-selected={tab === 'finding'} onClick={() => setTab('finding')}>Finding{rec?.drafts[`finding:${id}`]?.trim() ? ' ✓' : ''}</button></div>}
       <div className="py-task-panel" id={tab === 'program' ? 'program-panel' : 'finding-panel'} role={project ? 'tabpanel' : undefined} aria-labelledby={project ? `${tab}-tab` : undefined}>
-      {tab === 'finding' ? <><section className="rx-question"><p className="rx-question-text">What did you find?</p><p className="rx-cap">Explain the result, the assumptions you made, and one input you checked.</p></section><label className="sr-only" htmlFor="finding">Your finding</label><textarea id="finding" className="py-finding" rows={8} value={rec?.drafts[`finding:${id}`] ?? ''} onChange={e => actions.setDraft(itemRef, `finding:${id}`, e.target.value)} /><p className="rx-small">Saved in this browser. Included in your project report.</p></> : <>
+      {tab === 'finding' ? <><section className="rx-question"><p className="rx-question-text">What did you find?</p><p className="rx-cap">{guidance?.reflection ?? 'Explain the result, the assumptions you made, and one input you checked.'}</p></section><label className="sr-only" htmlFor="finding">Your finding</label><textarea id="finding" className="py-finding" rows={8} value={rec?.drafts[`finding:${id}`] ?? ''} onChange={e => actions.setDraft(itemRef, `finding:${id}`, e.target.value)} /><p className="rx-small">Saved in this browser. Included in your project report.</p></> : <>
+      {project && graded && <section className="rx-question"><p className="rx-question-text"><Rich text={question.prompt} /></p><p className="rx-label">what to return</p><Spec rows={graded.looksFor.map((t,i) => [i === 0 ? 'Result' : 'Watch for', <Rich key={t} text={t} />])} /><p className="rx-cap">{id === 'stage-1' ? 'Start with the supplied input data. Check verifies this milestone’s requirements.' : 'Build on your previous program. Check runs this milestone’s requirements and the earlier milestones’ checks.'}</p></section>}
       {predict ? <div className="rx-cell"><div className="rx-cell-head"><span className="name">your prediction</span></div><label className="sr-only" htmlFor="prediction">What does it print?</label><textarea className="py-prediction-input" id="prediction" value={code} onChange={e => setCode(e.target.value)} spellCheck={false} rows={12} /><div className="rx-cell-foot"><span className="hint" />{footer}<button className="rx-btn primary" onClick={() => { const r = gradePrediction(predict.output, code); setPredictionResult({ok:r.ok,code}); mark(r.ok); }}><Check size={14} />Check</button></div>{predictionResult && <p role="status" className={`rx-feedback ${predictionResult.ok ? 'ok' : 'bad'}`}>{predictionResult.ok ? '✓ Correct prediction.' : 'Not quite. Check each line, including spaces and punctuation.'}{predictionResult.code !== code ? ' Edited since this check.' : ''}</p>}</div> : <CodePane layout="cell" ref={pane} task={{ ...graded!.task, files, packages: graded!.task.packages ?? ('packages' in question ? question.packages : undefined) }} starter={starter} value={code} onChange={setCode} footer={footer} onGraded={r => {
         if (['unavailable','stopped','crashed','superseded'].includes(r.outcome)) return;
         mark(r.ok);

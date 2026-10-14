@@ -119,7 +119,7 @@ function Session({ lessonId }: { lessonId: number }) {
       status={["SQL", `lesson ${position + 1}/${courseOrder.length}`, `sqlite · ${datasetCatalog[lesson.dataset]?.name ?? lesson.dataset}`, mastered ? "✓ mastered" : "drafts save as you type"]}
     >
       <LessonBar lessonId={lessonId} />
-      <div className="rx-task rx-lesson">
+      <div className="rx-task rx-lesson rx-learn-tables">
         <div className="rx-task-split">
           {/* Left: read and run. */}
           <article className="rx-brief" aria-labelledby="lesson-title">

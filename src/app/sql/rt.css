@@ -683,3 +683,14 @@ html[data-theme="dark"] .rx {
 @media (max-width: 700px) {
   .rx-lesson .rx-cell-head .acts[aria-hidden="true"] { display: none; }
 }
+
+/* Learn previews expose every displayed value instead of requiring table scrolling. */
+.rx-learn-tables .rx-table-wrap { overflow: visible; padding-inline: 0; }
+.rx-learn-tables .rx-table { width: 100%; min-width: 0; table-layout: fixed; }
+.rx-learn-tables .rx-table th,
+.rx-learn-tables .rx-table td,
+.rx-learn-tables .rx-data th .t {
+  white-space: normal; overflow-wrap: anywhere; overflow: visible; text-overflow: clip;
+}
+.rx-learn-tables .rx-table th,
+.rx-learn-tables .rx-table td { padding-right: 8px; }

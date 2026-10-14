@@ -62,3 +62,12 @@ This supersedes the viewport-constrained editor layout above. The user explicitl
 - Prediction/finding text areas grow with their contents. Data tables may still scroll horizontally to preserve columns.
 
 Validation: `tests/e2e/learning-page-scroll.mjs` exercises both languages and all three sections with 80-line programs at 1440, 768, 600, 390 and 360px. It checks equal desktop columns and equal mobile stacked rows, no page horizontal overflow, page growth and absence of nested editor scrollbars. Wheel input over either pane moves the document. Desktop checks verify that a long question does not stretch the editor and that the editor stays pinned; mobile checks verify both stacked panes move with the document. Phone runs also check equal Python code/results height. Screenshots are in `screens/page-scroll/`. Separate phone checks cover accessibility, real SQL/Python challenge grading, long prediction inputs. Only shared presentation CSS and Python presentation CSS changed; SQL grading and stored progress logic did not change.
+
+
+## Milestone teaching context and readable tables
+
+Python project milestones now use SQL's division of teaching context on the left and the task beside the editor. All six projects have authored approaches for each of their 30 milestones, a small worked example with expected output, descriptions of the input files, complete supplied data previews, and relevant finding prompts. These are teaching additions; fixture data, milestone identities, grading checks, and saved progress remain unchanged. The first milestone explains how to start; subsequent milestones explain cumulative checks.
+
+SQL Learn table values now wrap within the available width, including column metadata, without nested table scrolling or clipped values. Python project data cards likewise show their complete supplied rows and wrap raw text inputs.
+
+Validation: application TypeScript and diff checks; `tests/e2e/project-context.mjs` checks six project screens at desktop and phone widths, guidance coverage for every milestone, data visibility, finding interaction, accessibility on the retail screen, SQL table wrapping, and a real passing Python milestone. A separate seven-column SQL lesson check passed at 1440, 600 and 390px. Screenshots are in `screens/project-context/`.
