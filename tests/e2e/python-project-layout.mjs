@@ -11,11 +11,17 @@ try{
   await page.setViewportSize({width:1365,height:1000});
   await page.goto(`http://127.0.0.1:3052/python/projects/${project.slug}`);
   await page.getByRole('heading',{name:'Before you start',exact:true}).waitFor();
+  assert.equal(await page.locator('.pv-stage-nav > span').count(),0);
   assert.equal(await page.getByRole('button',{name:'Start project',exact:true}).count(),0);
   const overview=await page.locator('.pv-overview').boundingBox();const container=await page.locator('.pv-stage-nav').boundingBox();assert.ok(Math.abs(overview.width-container.width)<2);
   await page.getByRole('navigation',{name:'Project stages'}).getByRole('button',{name:'Build',exact:true}).click();
   const left=page.locator('.pv-brief'),right=page.locator('.pv-work');
   await right.locator('.cm-content').waitFor();
+  assert.equal(await page.locator('.pv-stage-nav > span').count(),1);
+  assert.equal(await page.getByLabel('Results height').count(),0);
+  assert.equal(await page.getByRole('button',{name:'Go to Test & deliver',exact:true}).count(),0);
+  assert.ok(await right.locator('.cm-scroller').evaluate(el=>getComputedStyle(el).overflowY==='visible'&&el.scrollHeight<=el.clientHeight+2));
+  assert.ok(await right.locator('.pv-results').evaluate(el=>getComputedStyle(el).overflowY==='visible'&&el.clientHeight<140));
   const taskBox=await left.boundingBox(),editorBox=await right.boundingBox();assert.ok(Math.abs(taskBox.width-editorBox.width)<2,'default equal columns');
   assert.equal(await left.getByRole('group',{name:'File explorer'}).count(),1);
   assert.equal(await page.getByRole('button',{name:'Check complete project',exact:true}).count(),0);
@@ -27,8 +33,8 @@ try{
   await left.getByRole('button',{name:'Data',exact:true}).click();
   assert.ok(await left.locator('.pv-inputs').isVisible());
   await left.getByRole('button',{name:'Open full input',exact:true}).click();
-  assert.equal(await right.getByRole('textbox').inputValue(),project.files[project.datasets[0].path]);
-  assert.ok(await right.getByRole('textbox').getAttribute('readonly')!==null);
+  assert.equal(await right.getByRole('textbox').textContent(),project.files[project.datasets[0].path]);
+  assert.ok(await right.getByRole('textbox').getAttribute('aria-readonly')==='true');
   await left.getByRole('button',{name:codeFile,exact:true}).click();
   assert.equal(await page.evaluate(ref=>JSON.stringify(JSON.parse(localStorage.getItem('runtime-python-projects-v2')).projects[ref]['2.0.0'].files),project.ref),original);
   assert.equal(await right.locator('.pv-file-head b').innerText(),codeFile);
@@ -51,6 +57,7 @@ try{
   assert.ok(await page.getByRole('button',{name:'Check complete project',exact:true}).isVisible());
   assert.equal(await page.getByRole('button',{name:'Download verified project',exact:true}).isEnabled(),false);
   assert.ok(await page.getByRole('heading',{name:'Still to do',exact:true}).isVisible());
+  assert.equal(await page.locator('.pv-stage-nav > span').count(),0);
   const finish=await page.locator('.pv-finish').boundingBox();const stageNav=await page.locator('.pv-stage-nav').boundingBox();assert.ok(Math.abs(finish.width-stageNav.width)<2);
   console.log('PASS',project.slug,'stage flow, task/data, full files, editor, resize, responsive layout');
  }

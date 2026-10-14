@@ -92,7 +92,7 @@
 .pv-overview > .rx-btn { margin-top:16px; }
 .pv-build { display:grid; grid-template-columns:minmax(0,var(--pv-task-width)) 12px minmax(0,1fr); align-items:start; }
 .pv-build .pv-brief { padding:0 18px 0 0; border:0; }
-.pv-build .pv-work { position:sticky; top:64px; min-width:0; padding:0 0 0 18px; }
+.pv-build .pv-work { position:static; min-width:0; padding:0 0 0 18px; }
 .pv-build select { display:block; width:100%; padding:10px; border:1px solid var(--rx-line); border-radius:4px; background:var(--rx-bg); font-size:13px; color:var(--rx-ink); margin:6px 0 16px; }
 .pv-milestone-label { font-weight:600; font-size:13px; }
 .pv-build .pv-task { padding:0; border:0; margin:20px 0; }
@@ -108,15 +108,12 @@
 .pv-build .pv-file-head { margin:0; min-height:40px; padding:0 0 10px; border:0; }
 .pv-divider { height:100%; min-height:600px; cursor:col-resize; touch-action:none; border-left:1px solid var(--rx-line); border-right:1px solid var(--rx-line); background:var(--rx-cell); }
 .pv-divider:focus-visible { outline:2px solid var(--rx-ink); outline-offset:2px; }
-.py-project-v2 .pv-build .cm-editor { height:440px; }
-.py-project-v2 .pv-build .cm-scroller { height:100%; overflow:auto; }
-.py-project-v2 .pv-full-source { height:440px; resize:vertical; overflow:auto; white-space:pre; font:12px/1.6 var(--rx-mono); }
+.py-project-v2 .pv-build .cm-editor { height:auto; max-height:none; }
+.py-project-v2 .pv-build .cm-scroller { height:auto; max-height:none; overflow:visible; }
+.py-project-v2 .pv-full-source { margin:0; padding:12px; border:1px solid var(--rx-line); height:auto; overflow:visible; white-space:pre-wrap; overflow-wrap:anywhere; font:12px/1.6 var(--rx-mono); }
 .pv-build .pv-output { margin-top:0; padding-top:0; }
-.pv-results { overflow:auto; min-height:160px; padding:12px 4px; }
-.pv-results-size { display:flex; justify-content:flex-end; align-items:center; gap:12px; font-size:11px; color:var(--rx-dim); padding-top:8px; }
-.pv-results-size input { width:100px; }
+.pv-results { height:auto; overflow:visible; padding:12px 4px; }
 .pv-status { font-size:12px; margin:4px 0 12px; min-height:20px; }
-.pv-finish-link { margin:18px 0; }
 .pv-finish .pv-output { margin-bottom:24px; }
 .pv-finish .pv-artifacts { margin-bottom:20px; }
 @media(max-width:700px){
@@ -129,7 +126,6 @@
  .pv-build .pv-explorer p { width:100%; }
  .pv-build .pv-explorer button { width:auto; border:1px solid var(--rx-line); }
  .pv-tab-bar button,.pv-stage-nav button { padding:10px; }
- .py-project-v2 .pv-build .cm-editor,.py-project-v2 .pv-full-source { height:360px; }
 }
 .pv-mobile-nav { display:none; }
 @media(max-width:700px){
