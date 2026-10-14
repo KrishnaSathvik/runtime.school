@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Download, List, X } from "lucide-react";
+import { ArrowRight, Download, List, X } from "lucide-react";
 import taskContexts from "@/content/task-context.json";
 import { datasetCatalog, getLesson, getProject, projects } from "@/content";
 import { lessonSummaries, projectOutcomes } from "@/content/ux-summaries";
@@ -87,14 +87,11 @@ function statusFor(projectId: number) {
   return ["SQL", project.title, `${done}/${project.milestoneIds.length} milestones`, `${findings} findings`, `sqlite · ${datasetCatalog[project.dataset]?.name ?? project.dataset}`];
 }
 
-/** Same bar as Learn and Practice: all projects in a drawer, position, and previous. */
+/** Same bar as Learn and Practice: all projects in a drawer and the current position. */
 function ProjectBar({ projectId, stop }: { projectId: number; stop: Stop }) {
   const state = useLearning();
   const [open, setOpen] = useState(false);
   const project = getProject(projectId)!;
-  const stops = stopsFor(projectId);
-  const at = stops.findIndex((s) => sameStop(s, stop));
-  const prev = stops[at - 1];
   const label = (s: Stop) =>
     s.kind === "brief" ? "brief" : s.kind === "report" ? "export" : `milestone ${pad(project.milestoneIds.indexOf(s.id) + 1)} / ${pad(project.milestoneIds.length)}`;
 
@@ -113,13 +110,7 @@ function ProjectBar({ projectId, stop }: { projectId: number; stop: Stop }) {
         </button>
         <span className="mono rx-small" style={{ margin: 0 }}>{project.title} · {label(stop)}</span>
         <span className="push" />
-        {prev && (
-          <nav className="rx-pager" aria-label="Previous">
-            <Link href={hrefFor(projectId, prev)} aria-label={`Previous: ${label(prev)}`} title={label(prev)}>
-              <ArrowLeft size={14} aria-hidden="true" /> Prev
-            </Link>
-          </nav>
-        )}
+
       </div>
       {open && (
         <div className="rx-drawer" role="dialog" aria-label="All projects">

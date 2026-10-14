@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, List, X } from 'lucide-react';
+import { ArrowRight, List, X } from 'lucide-react';
 import { pythonProjects, journeyHref, type PyJourney } from '@/content/python/journeys';
 import { projectGuides } from '@/content/python/journeys/catalog';
 import { usePyProgress, usePyProgressReady, type PyLessonRecord } from '@/lib/python-progress';
@@ -49,7 +49,7 @@ function ProjectBar({project,stop}:{project:PyJourney;stop:string}) {
   const position = stops.indexOf(stop);
   const close = () => {setOpen(false);button.current?.focus();};
   useEffect(() => {if(!open)return; const escape=(e:KeyboardEvent)=>{if(e.key==='Escape'){setOpen(false);button.current?.focus();}};window.addEventListener('keydown',escape);return()=>window.removeEventListener('keydown',escape);},[open]);
-  return <div className="rx-task rx-lesson"><div className="rx-task-bar"><button ref={button} className="rx-btn ghost" aria-expanded={open} onClick={()=>setOpen(!open)}><List size={14} />All projects</button><span className="mono rx-small" style={{margin:0}}>{project.title} · {stop.startsWith('stage-') ? `milestone ${pad(position)} / ${pad(project.stages.length)}` : stop}</span><span className="push" />{position>0 && <nav className="rx-pager" aria-label="Previous"><Link href={href(project,stops[position-1])}><ArrowLeft size={14} />Prev</Link></nav>}</div>
+  return <div className="rx-task rx-lesson"><div className="rx-task-bar"><button ref={button} className="rx-btn ghost" aria-expanded={open} onClick={()=>setOpen(!open)}><List size={14} />All projects</button><span className="mono rx-small" style={{margin:0}}>{project.title} · {stop.startsWith('stage-') ? `milestone ${pad(position)} / ${pad(project.stages.length)}` : stop}</span><span className="push" /></div>
     {open && <div className="rx-drawer" role="dialog" aria-label="All projects"><div className="rx-drawer-head"><span className="rx-small" style={{flex:1}}>6 projects</span><button className="rx-btn ghost" aria-label="Close list" onClick={close}><X size={14} /></button></div><p><Link className="rx-link" style={{display:"block"}} href="/python/projects?browse=1">Browse project filters</Link></p><ol>{pythonProjects.map(p=><li key={p.ref}><p className="rx-drawer-group mono">{pad(pythonProjects.indexOf(p)+1)} {p.title}</p>{[{id:'brief',title:'Brief'},...p.stages,{id:'export',title:'Export'}].map(s=><Link key={s.id} href={href(p,s.id)} aria-current={p.ref===project.ref&&s.id===stop?'page':undefined} onClick={()=>setOpen(false)}><span className="mono g">{items[p.ref]?.challenges[s.id]?.passes?'✓':''}</span><span>{s.title}</span></Link>)}</li>)}</ol></div>}
   </div>;
 }
