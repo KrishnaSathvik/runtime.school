@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { ArrowRight } from "lucide-react";
-import { lessons } from "@/content";
 import { learnEntry } from "@/features/discovery/selectors";
 import { useHydrated, useLearning } from "@/lib/learning-state";
 import { subjects } from "@/platform/subjects";
@@ -58,10 +57,7 @@ export function Landing() {
                 <p className="rx-subject-sum">{s.summary}</p>
                 <div className="rx-subject-foot">
                   {available ? (
-                    <>
-                      <span className="rx-subject-go">{startLabel} <ArrowRight size={14} aria-hidden="true" /></span>
-                      {returning && entry && <span className="rx-subject-note mono">next · {lessons[entry.id]?.title}</span>}
-                    </>
+                    <span className="rx-subject-go">{startLabel} <ArrowRight size={14} aria-hidden="true" /></span>
                   ) : (
                     <NotifyInterest subjectId={s.id} subjectTitle={s.title} />
                   )}
