@@ -1,4 +1,4 @@
-/** Small read-only preview of curriculum fixtures; source text remains available in the UI. */
+/** Small read-only preview of curriculum fixtures for the data cards. */
 export function filePreview(name: string, text: string): { columns:string[]; rows:unknown[][] } | null {
   if (name.endsWith('.json')) {
     try {

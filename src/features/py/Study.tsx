@@ -16,7 +16,7 @@ export function FileData({ files }: { files: Record<string,string> }) {
   return <div className="py-file-data">{Object.entries(files).map(([name,text]) => {
     const preview = filePreview(name,text);
     return <details key={name} className="rx-schema-table" open><summary className="mono">{name}</summary>
-      {preview ? <><div className="rx-table-wrap" tabIndex={0} role="region" aria-label={`${name} preview`}><table className="rx-table rx-data"><thead><tr>{preview.columns.map((c,i)=><th key={i}>{c}</th>)}</tr></thead><tbody>{preview.rows.slice(0,5).map((row,i)=><tr key={i}>{preview.columns.map((_,c)=><td key={c}>{row[c] == null ? <span className="rx-dim">—</span> : typeof row[c] === 'object' ? JSON.stringify(row[c]) : String(row[c])}</td>)}</tr>)}</tbody></table></div><p className="rx-table-foot">{preview.rows.length>5?`showing 5 of ${preview.rows.length} rows`:`all ${preview.rows.length} rows`}</p><details><summary>Source file</summary><pre tabIndex={0}>{text}</pre></details></> : <pre tabIndex={0} aria-label={name}>{text}</pre>}
+      {preview ? <><div className="rx-table-wrap" tabIndex={0} role="region" aria-label={`${name} preview`}><table className="rx-table rx-data"><thead><tr>{preview.columns.map((c,i)=><th key={i}>{c}</th>)}</tr></thead><tbody>{preview.rows.slice(0,5).map((row,i)=><tr key={i}>{preview.columns.map((_,c)=><td key={c}>{row[c] == null ? <span className="rx-dim">—</span> : typeof row[c] === 'object' ? JSON.stringify(row[c]) : String(row[c])}</td>)}</tr>)}</tbody></table></div><p className="rx-table-foot">{preview.rows.length>5?`showing 5 of ${preview.rows.length} rows`:`all ${preview.rows.length} rows`}</p></> : <pre tabIndex={0} aria-label={name}>{text}</pre>}
     </details>;
   })}</div>;
 }
