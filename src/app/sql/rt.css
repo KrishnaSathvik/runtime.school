@@ -488,6 +488,27 @@ html[data-theme="dark"] .rx {
 .rx-subject-go { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 650; color: var(--rx-amber-ink); }
 .rx-subject.on:hover .rx-subject-go { text-decoration: underline; text-underline-offset: 3px; }
 .rx-subject-note { font-size: 11.5px; color: var(--rx-faint); }
+.rx-notify-btn {
+  position: relative; z-index: 2;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border-radius: 6px;
+  border: 1px solid var(--rx-line-strong); background: var(--rx-surface);
+  font-size: 13px; font-weight: 600; color: var(--rx-ink);
+}
+.rx-notify-btn:hover { border-color: var(--rx-ink); }
+.rx-notify {
+  position: relative; z-index: 2;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  width: 100%;
+}
+.rx-notify input {
+  flex: 1 1 10rem; min-width: 0; height: 34px; padding: 0 10px;
+  border: 1px solid var(--rx-line-strong); border-radius: 6px;
+  background: var(--rx-bg); color: var(--rx-ink);
+  font-family: var(--rx-sans); font-size: 13.5px;
+}
+.rx-notify .rx-btn { height: 34px; padding: 0 10px; font-size: 13px; }
+.rx-notify-err { flex: 1 1 100%; margin: 0; font-size: 12.5px; color: var(--rx-bad); }
 .rx-home-cover { position: absolute; inset: 0; z-index: 1; border-radius: inherit; }
 .rx-home-cover:focus-visible { outline: 2px solid var(--rx-amber); outline-offset: 3px; }
 @media (max-width: 960px) { .rx-home-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

@@ -8,6 +8,7 @@ import { lessons } from "@/content";
 import { learnEntry } from "@/features/discovery/selectors";
 import { useHydrated, useLearning } from "@/lib/learning-state";
 import { subjects } from "@/platform/subjects";
+import { NotifyInterest } from "../NotifyInterest";
 import { Shell } from "../Shell";
 
 /** Landing: one question and the subjects, all as equal cards. SQL is available; the rest are planned. */
@@ -62,7 +63,7 @@ export function Landing() {
                       {returning && entry && <span className="rx-subject-note mono">next · {lessons[entry.id]?.title}</span>}
                     </>
                   ) : (
-                    <span className="rx-subject-note mono">not available yet</span>
+                    <NotifyInterest subjectId={s.id} subjectTitle={s.title} />
                   )}
                 </div>
               </li>
