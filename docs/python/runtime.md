@@ -105,6 +105,15 @@ connect drafts and progress without changing it. `onGraded(report)` fires after 
   correct check "solved with help". "Try again without help" starts a fresh attempt from the starter code. Run never
   records anything; Reset changes only the draft.
 - Checks can carry an author `tip`, shown only when that check fails. It is presentation only and grading is unchanged.
+- After Check answer, a summary appears directly under the controls: the verdict and the first failing check (or
+  the syntax/runtime error), with its tip and a link to the line. It is announced through a polite live region.
+  Only its own scroll container scrolls, just enough to show it: the lesson work column on desktop (the page doesn't
+  move), the page on phones. Focus stays where it was, unless the browser dropped it to the page.
+- `uses-variables` (Challenge 1 only): a learning-objective check that the final top-level assignment to `total`
+  (plus any `+=`-style updates after it) uses `price` and `quantity`. It is read from Python's parsed syntax tree
+  before the program runs, so any expression using them is accepted (`quantity * price`, `(price) * (quantity)`…),
+  and `total = 21` or `total = price * 7` fail with a reason and the line number. It is opt-in per check, not a
+  comparison with a reference solution, and not tamper-proof.
 
 ## Measured (local, headless, production build, 2026-10-13)
 

@@ -38,6 +38,8 @@ type Output = { stdout: string; stderr: string; output: PyOutputChunk[] };
 /** What a Check asks the interpreter to report after the program runs. Never contains expected values. */
 export type PyProbe = {
   vars?: string[];
+  /** Names whose top-level assignments should be described from the parsed source (learning-objective checks). */
+  assignments?: string[];
   calls?: { name: string; cases: { args: WireValue[]; kwargs?: Record<string, WireValue> }[] }[];
 };
 export type PyCallCase =
@@ -48,7 +50,10 @@ export type PyProbeResult = {
   names: string[];
   vars: Record<string, { value: PyValue } | { missing: true }>;
   calls: Record<string, { missing: true } | { notCallable: true; type: string } | { cases: PyCallCase[] }>;
+  /** Top-level assignments to the requested names, in source order, with the variable names each uses. */
+  assignments?: Record<string, PyAssignment[]>;
 };
+export type PyAssignment = { line: number; uses: string[]; aug: boolean };
 /** The test input being evaluated when a check was cut short. */
 export type PyCaseRef = { call: string; index: number };
 

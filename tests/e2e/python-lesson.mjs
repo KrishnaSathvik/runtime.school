@@ -124,7 +124,7 @@ for (const name of BROWSERS) {
       await setCode(page, 'price = "3"\nquantity = 7\ntotal = price * quantity\nprint(total)\n');
       await check(page);
       const t = await page.locator("#py-panel-checks").innerText();
-      assert.match(t, /2 of 4 checks passed|1 of 4 checks passed/);
+      assert.match(t, /\d of 5 checks passed/);
       assert.match(t, /price is a str \('3'\), but this task needs an int \(3\)/);
       assert.match(t, /Tip: Store the price as a whole number without quotes/);
       assert.match(t, /Line 1: expected "21", but your program printed "3333333"/);
@@ -132,10 +132,70 @@ for (const name of BROWSERS) {
       assert.equal(rec.challenges["challenge-1"].solved, false);
     });
 
+    await test("Challenge 1 requires calculating total from the variables (parsed syntax, real Pyodide)", async () => {
+      await setCode(page, "price = 3\nquantity = 7\ntotal = 21\nprint(total)\n");
+      await check(page);
+      const t = await page.locator("#py-panel-checks").innerText();
+      assert.match(t, /4 of 5 checks passed/);
+      assert.match(t, /total is 21/, "the value itself is right");
+      assert.match(t, /total is set to a fixed value on line 3\. Calculate it from price and quantity instead of typing the result/);
+      assert.equal((await lessonRec(page)).challenges["challenge-1"].solved, false);
+      await setCode(page, "price = 3\nquantity = 7\ntotal = price * 7\nprint(total)\n");
+      await check(page);
+      assert.match(await page.locator("#py-panel-checks").innerText(), /total is calculated on line 3 without using quantity/);
+      // Equivalent expressions are accepted; they still have to be correct.
+      for (const expr of ["quantity * price", "(price) * (quantity)", "price * quantity + 0"]) {
+        await setCode(page, `price = 3\nquantity = 7\ntotal = ${expr}\nprint(total)\n`);
+        await check(page);
+        assert.match(await page.locator(".py-verdict").innerText(), /All 5 checks passed/, expr);
+        await page.evaluate(() => {
+          const raw = JSON.parse(localStorage.getItem("runtime-python-v1"));
+          raw.state.lessons["python:variables-and-values"].challenges = {};
+          localStorage.setItem("runtime-python-v1", JSON.stringify(raw));
+        });
+      }
+      await page.reload();
+      await tab(page, "Challenge 1").click();
+    });
+
+    await test("Check feedback appears right under the controls, in view, announced, with a working line link", async () => {
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await setCode(page, "price = 3\nquantity = 7\ntotal = 21\nprint(total)\n");
+      const pageY = await page.evaluate(() => window.scrollY);
+      await check(page);
+      await page.waitForTimeout(500); // let the smooth scroll settle
+      const summary = page.locator(".py-summary");
+      await summary.waitFor();
+      assert.equal(await page.getByRole("tab", { name: /^Checks/ }).getAttribute("aria-selected"), "true");
+      assert.match(await summary.innerText(), /✕ 4 of 5 checks passed[\s\S]*First to fix: total is calculated from price and quantity\. total is set to a fixed value on line 3/i);
+      assert.match(await summary.innerText(), /Tip: Write the calculation with the variable names/);
+      const box = await summary.boundingBox();
+      const band = await page.locator(".rx-status").boundingBox();
+      assert.ok(box && box.y >= 48 && box.y + box.height <= band.y, `summary fully visible above the status band: ${JSON.stringify(box)} / ${band.y}`);
+      assert.equal(await page.evaluate(() => window.scrollY), pageY, "the page itself doesn't jump; only the work column scrolls");
+      const actions = await page.locator(".py-actions").boundingBox();
+      assert.ok(box.y >= actions.y + actions.height - 1 && box.y - (actions.y + actions.height) < 4, "directly under the controls");
+      assert.equal(await page.locator(".py-summary-wrap").getAttribute("aria-live"), "polite");
+      assert.notEqual(await page.evaluate(() => document.activeElement?.tagName), "BODY", "focus is never dropped to the page");
+      await summary.getByRole("button", { name: "line 3" }).click();
+      assert.equal(await page.locator(".cm-activeLineGutter").innerText(), "3");
+      // A runtime exception: the summary names it and links its line.
+      await setCode(page, "price = 3\nquantity = 7\ntotal = price * quanity\nprint(total)\n");
+      await check(page);
+      assert.match(await page.locator(".py-summary").innerText(), /Not checked[\s\S]*NameError on line 3: name 'quanity' is not defined/);
+      await page.locator(".py-summary").getByRole("button", { name: "line 3" }).click();
+      assert.equal(await page.locator(".cm-activeLineGutter").innerText(), "3");
+      // Run replaces the check summary with the Console; the full checks stay in their tab.
+      await idle(page);
+      await page.getByRole("button", { name: "Run code" }).click();
+      await page.locator("#py-panel-console .py-err, #py-panel-console .py-meta.ok").first().waitFor({ timeout: 30000 });
+      assert.equal(await page.locator(".py-summary").count(), 0);
+    });
+
     await test("6. corrected code passes Challenge 1 independently", async () => {
       await setCode(page, C1);
       await check(page);
-      assert.match(await page.locator(".py-verdict").innerText(), /All 4 checks passed/);
+      assert.match(await page.locator(".py-verdict").innerText(), /All 5 checks passed/);
       assert.match(await page.locator(".py-banner.ok").innerText(), /Solved without help/);
       assert.equal((await lessonRec(page)).challenges["challenge-1"].solved, true);
       assert.match(await tab(page, "Challenge 1").innerText(), /done/);
@@ -300,8 +360,11 @@ for (const name of BROWSERS) {
         await m.getByRole("button", { name: "Check answer" }).scrollIntoViewIfNeeded();
         await m.getByRole("button", { name: "Check answer" }).click();
         await m.locator(".py-verdict").waitFor({ timeout: 30000 });
+        await m.waitForTimeout(500);
+        const sb = await m.locator(".py-summary").boundingBox();
+        assert.ok(sb && sb.y >= 48 && sb.y + sb.height <= 420, `summary visible above the simulated keyboard: ${JSON.stringify(sb)}`);
         await m.locator(".py-verdict").scrollIntoViewIfNeeded();
-        assert.match(await m.locator(".py-verdict").innerText(), /All 4 checks passed/);
+        assert.match(await m.locator(".py-verdict").innerText(), /All 5 checks passed/);
         await m.setViewportSize({ width: 390, height: 844 });
         for (const theme of ["light", "dark"]) {
           await m.evaluate((t) => { document.documentElement.dataset.theme = t; }, theme);

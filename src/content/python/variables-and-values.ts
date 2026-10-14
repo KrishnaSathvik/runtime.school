@@ -111,6 +111,8 @@ export const variablesAndValues: PyLesson = {
           { kind: "variable", id: "price", name: "price", expected: py.int(3), tip: "Store the price as a whole number without quotes: price = 3." },
           { kind: "variable", id: "quantity", name: "quantity", expected: py.int(7) },
           { kind: "variable", id: "total", name: "total", expected: py.int(21), tip: "Calculate total from the other two variables with *, the multiplication operator." },
+          // The point of this challenge is calculating with variables, so typing total = 21 isn't enough.
+          { kind: "uses-variables", id: "total-calculated", name: "total", uses: ["price", "quantity"], tip: "Write the calculation with the variable names, for example total = price * quantity." },
           { kind: "output", id: "output", label: "Prints 21", expected: "21\n", tip: "Print only the total: print(total)." },
         ],
       },

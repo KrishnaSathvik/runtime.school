@@ -103,13 +103,16 @@ describe("python content: Variables and values", () => {
   it("has two challenges graded by variables and output only (no functions yet)", () => {
     expect(lesson.challenges.map((c) => c.id)).toEqual(IDS);
     for (const c of lesson.challenges) {
-      expect(c.task.checks.every((k) => k.kind === "variable" || k.kind === "output")).toBe(true);
+      expect(c.task.checks.every((k) => k.kind === "variable" || k.kind === "output" || k.kind === "uses-variables")).toBe(true);
       expect(c.task.checks.some((k) => k.kind === "output")).toBe(true);
       expect(c.hints.length).toBeGreaterThan(0);
       // Starters never contain the solution.
       expect(c.starter).not.toMatch(/=|print/);
       expect(c.answer).not.toMatch(/\bdef\b|\bfor\b|\bwhile\b|\{|\[/);
     }
+    // Only Challenge 1, where calculating with variables is the objective, checks how total is computed.
+    expect(lesson.challenges[0].task.checks.find((k) => k.kind === "uses-variables")).toMatchObject({ name: "total", uses: ["price", "quantity"] });
+    expect(lesson.challenges[1].task.checks.some((k) => k.kind === "uses-variables")).toBe(false);
     // Challenge 2 is about reassignment: two printed totals, final state checked.
     expect(lesson.challenges[1].task.checks.find((k) => k.kind === "output")).toMatchObject({ expected: "30\n75\n" });
   });

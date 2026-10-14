@@ -1,6 +1,7 @@
 "use client";
 
 import type { PyOutputChunk, PyRunResult, PySyntaxError } from "@/engine/python/client";
+import type React from "react";
 import type { PyCheckOutcome, PyGradeReport } from "@/engine/python/grading";
 
 /* Console and Checks rendering shared by the workspace, lesson challenges and example cells. */
@@ -170,14 +171,14 @@ export function ChecksView({
 }) {
   const r = checked?.report;
   return (
-    <div className="py-checksview" aria-live="polite" aria-label="Checks">
+    <div className="py-checksview" aria-label="Checks">
       <p className="py-panel-note">Whether your program meets this exercise. Check answer runs your code again from a fresh start, then tests it.</p>
       {!r && !busy && <p className="py-empty">Press Check answer when you think your program is ready.</p>}
       {busy && <p className="py-meta">checking…</p>}
       {r && (
         <>
-          <p className={`py-verdict ${r.ok ? "ok" : "bad"}`} role="status">
-            {r.ok ? `✓ All ${r.total} checks passed` : r.outcome === "failed" ? `${r.passed} of ${r.total} checks passed` : "Not checked: your program didn't finish"}
+          <p className={`py-verdict ${r.ok ? "ok" : "bad"}`}>
+            {verdictText(r)}
           </p>
           {r.outcome === "syntax-error" && r.error && (
             <SyntaxBlock e={{ type: r.error.type ?? "SyntaxError", message: r.error.message, line: r.error.line ?? null, column: r.error.column ?? null, text: r.error.text ?? "" }} onLine={onLine} />
@@ -203,6 +204,54 @@ export function ChecksView({
           {edited && <p className="py-meta">You&apos;ve edited the code since this check.</p>}
         </>
       )}
+    </div>
+  );
+}
+
+/** Verdict line shared by the summary and the Checks panel. */
+export function verdictText(r: PyGradeReport): string {
+  return r.ok ? `✓ All ${r.total} checks passed` : r.outcome === "failed" ? `✕ ${r.passed} of ${r.total} checks passed` : "✕ Not checked: your program didn't finish";
+}
+
+/**
+ * The result of Check answer, shown directly under the controls: the verdict and the first thing
+ * to fix (with its line), so the learner never has to hunt for it. The full list stays in Checks.
+ */
+export function CheckSummary({
+  report,
+  edited,
+  onLine,
+  onAll,
+  banner,
+  headingRef,
+}: {
+  report: PyGradeReport;
+  edited: boolean;
+  onLine?: (n: number) => void;
+  onAll: () => void;
+  banner?: React.ReactNode;
+  headingRef?: React.Ref<HTMLParagraphElement>;
+}) {
+  const first = report.checks.find((c) => c.status === "fail");
+  return (
+    <div className={`py-summary ${report.ok ? "ok" : "bad"}`}>
+      <p className="py-summary-verdict" ref={headingRef} tabIndex={-1}>{verdictText(report)}</p>
+      {!report.ok && report.outcome === "failed" && first && (
+        <p className="py-summary-first">
+          <span className="k">First to fix:</span> <b>{first.label}</b>. {first.detail} <LineButton line={first.line} onLine={onLine} />
+          {first.tip && <span className="py-summary-tip"><b>Tip:</b> {first.tip}</span>}
+        </p>
+      )}
+      {!report.ok && report.outcome !== "failed" && (
+        <p className="py-summary-first">
+          {report.summary} <LineButton line={report.error?.line} onLine={onLine} />
+        </p>
+      )}
+      {banner}
+      <p className="py-summary-foot">
+        {!report.ok && <button type="button" className="py-link" onClick={onAll}>See all {report.total} checks</button>}
+        {edited && <span>You&apos;ve edited the code since this check.</span>}
+      </p>
     </div>
   );
 }

@@ -196,3 +196,32 @@
 .py-home .rx-prompt-line, .py-lesson .rx-prompt-line, .py-lesson .rx-task-bar .rx-small { color: var(--rx-dim); }
 .py-run-cell .rx-cell-head .rx-btn { color: var(--rx-ink); }
 .py-lesson-bar .rx-small { color: var(--rx-dim); }
+
+/* Check result right under the controls (M4 review): verdict + first thing to fix. */
+.py-summary-wrap:empty { display: none; }
+.py-summary-wrap { border-top: 1px solid var(--rx-line); background: var(--rx-surface); scroll-margin: 12px; }
+.py-summary-busy { margin: 0; padding: 10px 12px; font-family: var(--rx-mono); font-size: 12.5px; color: var(--rx-dim); }
+.py-summary { padding: 10px 12px 10px 14px; border-left: 3px solid var(--rx-bad); }
+.py-summary.ok { border-left-color: var(--rx-ok); }
+.py-summary-verdict { margin: 0; font-family: var(--rx-mono); font-size: 14px; font-weight: 650; color: var(--rx-bad); outline: none; }
+.py-summary.ok .py-summary-verdict { color: var(--rx-ok); }
+.py-summary-first { margin: 6px 0 0; font-size: 14.5px; line-height: 1.55; overflow-wrap: anywhere; }
+.py-summary-first .k { font-family: var(--rx-mono); font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--rx-dim); }
+.py-summary-tip { display: block; margin-top: 4px; }
+.py-summary-tip b { font-weight: 650; }
+.py-summary-foot { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 6px 0 0; font-size: 13px; color: var(--rx-dim); }
+.py-summary-foot:empty { display: none; }
+.py-summary .py-banner { margin: 10px 0 0; }
+
+/* Lessons: the code pane uses natural heights (editor, controls, check summary, output), so a check
+   result never squeezes the editor. The work column scrolls; the summary scrolls into view if needed. */
+.py-lesson-code .py-work-split { display: block; height: auto; }
+.py-lesson-code .py-work-split > .py-divider { display: none; }
+.py-lesson-code .py-split-a, .py-lesson-code .py-split-b { overflow: visible; }
+.py-lesson-code .py-code { height: auto; }
+.py-lesson-code .py-editor { flex: none; height: clamp(200px, 32dvh, 380px); }
+.py-lesson-code .py-out { height: clamp(220px, 36dvh, 440px); margin-top: 12px; }
+@media (max-width: 760px) {
+  .py-lesson-code .py-editor { height: auto; }
+  .py-lesson-code .py-out { height: auto; }
+}

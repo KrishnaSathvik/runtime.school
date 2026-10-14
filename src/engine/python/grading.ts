@@ -21,7 +21,14 @@ export type PyCheck =
       whitespace?: "exact" | "trailing";
     }
   | { kind: "variable"; id?: string; label?: string; tip?: string; name: string; expected: PyValue; compare?: ComparePolicy }
-  | { kind: "function"; id?: string; label?: string; tip?: string; name: string; compare?: ComparePolicy; cases: PyFunctionCase[] };
+  | { kind: "function"; id?: string; label?: string; tip?: string; name: string; compare?: ComparePolicy; cases: PyFunctionCase[] }
+  /**
+   * A narrow learning-objective check: the final top-level assignment to `name` (together with any
+   * augmented assignments like `+=` that follow it) must use every variable in `uses`. Read from
+   * Python's parsed syntax tree, so any expression that uses them counts; it is not a source comparison.
+   * Use it only where calculating from variables is the point of the exercise.
+   */
+  | { kind: "uses-variables"; id?: string; label?: string; tip?: string; name: string; uses: string[] };
 
 export type PyFunctionCase = {
   args: PyValue[];
@@ -50,7 +57,8 @@ export type PyFailure =
   | "wrong-value"
   | "call-error"
   | "returned-none-printed"
-  | "fails-hidden-cases";
+  | "fails-hidden-cases"
+  | "not-calculated";
 
 export type PyCaseOutcome = {
   index: number;
@@ -117,6 +125,7 @@ export type PyGradeReport = {
 
 export function probeFor(task: PyTask): PyProbe {
   const vars = task.checks.filter((c) => c.kind === "variable").map((c) => c.name);
+  const assignments = task.checks.filter((c) => c.kind === "uses-variables").map((c) => c.name);
   const calls = task.checks
     .filter((c) => c.kind === "function")
     .map((c) => ({
@@ -126,7 +135,7 @@ export function probeFor(task: PyTask): PyProbe {
         ...(k.kwargs ? { kwargs: Object.fromEntries(Object.entries(k.kwargs).map(([n, v]) => [n, toWire(v)])) } : {}),
       })),
     }));
-  return { vars: [...new Set(vars)], calls };
+  return { vars: [...new Set(vars)], calls, ...(assignments.length ? { assignments: [...new Set(assignments)] } : {}) };
 }
 
 /** Check Answer: one fresh interpreter, then judgement on this side. */
@@ -148,6 +157,7 @@ function defaultLabel(c: PyCheck): string {
   if (c.label) return c.label;
   if (c.kind === "output") return "Prints the expected output";
   if (c.kind === "variable") return `${c.name} is ${formatPy(c.expected)}`;
+  if (c.kind === "uses-variables") return `${c.name} is calculated from ${c.uses.join(" and ")}`;
   return `${c.name}() returns the right result for every input`;
 }
 
@@ -302,6 +312,32 @@ function judgeFunction(c: Extract<PyCheck, { kind: "function" }>, probe: PyProbe
   };
 }
 
+const listNames = (names: string[]) => names.length <= 1 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
+
+function judgeUses(c: Extract<PyCheck, { kind: "uses-variables" }>, probe: PyProbeResult): Omit<PyCheckOutcome, "id" | "kind" | "label"> {
+  const list = probe.assignments?.[c.name];
+  if (!list) return { status: "fail", category: "not-run", detail: `How ${c.name} is calculated was not checked.` };
+  if (list.length === 0) {
+    return { status: "fail", category: "missing-name", detail: `There is no line that assigns ${c.name}. Create it with ${c.name} = …, using ${listNames(c.uses)}.` };
+  }
+  // The final value comes from the last plain assignment plus any += style updates after it.
+  let i = list.length - 1;
+  while (i > 0 && list[i].aug) i--;
+  const used = new Set(list.slice(i).flatMap((a) => a.uses));
+  const missing = c.uses.filter((u) => !used.has(u));
+  if (missing.length === 0) return { status: "pass" };
+  const line = list.at(-1)!.line;
+  const none = c.uses.every((u) => !used.has(u));
+  return {
+    status: "fail",
+    category: "not-calculated",
+    line,
+    detail: none
+      ? `${c.name} is set to a fixed value on line ${line}. Calculate it from ${listNames(c.uses)} instead of typing the result, so the program still works if those values change.`
+      : `${c.name} is calculated on line ${line} without using ${listNames(missing)}. Use the variable${missing.length === 1 ? "" : "s"} instead of typing ${missing.length === 1 ? "its value" : "their values"}.`,
+  };
+}
+
 function caseLabel(task: PyTask, ref: { call: string; index: number } | undefined): { checkIndex: number; text: string } | null {
   if (!ref) return null;
   const checkIndex = task.checks.findIndex((c) => c.kind === "function" && c.name === ref.call);
@@ -378,7 +414,11 @@ export function gradePython(task: PyTask, r: PyRunResult): PyGradeReport {
   const probe: PyProbeResult = r.probe ?? { names: [], vars: {}, calls: {} };
   const checks = task.checks.map((c, i): PyCheckOutcome => {
     const base = { id: checkId(c, i), kind: c.kind, label: defaultLabel(c) };
-    const judged = c.kind === "output" ? judgeOutput(c, r.stdout) : c.kind === "variable" ? judgeVariable(c, probe) : judgeFunction(c, probe);
+    const judged =
+      c.kind === "output" ? judgeOutput(c, r.stdout)
+      : c.kind === "variable" ? judgeVariable(c, probe)
+      : c.kind === "uses-variables" ? judgeUses(c, probe)
+      : judgeFunction(c, probe);
     return { ...base, ...judged, ...(judged.status === "fail" && c.tip ? { tip: c.tip } : {}) };
   });
   const passed = checks.filter((c) => c.status === "pass").length;
