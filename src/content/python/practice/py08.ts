@@ -142,7 +142,7 @@ export const py08: PyQuestion[] = [
     module: "files",
     kind: "write",
     difficulty: "medium",
-    title: "Count log levels",
+    title: "Audit malformed log entries",
     topics: ["text files", "split", "malformed lines"],
     minutes: 7,
     after: "python:working-with-text-files-safely",

@@ -10,9 +10,10 @@ import { py08 } from "./py08";
 import { py09 } from "./py09";
 import { py10 } from "./py10";
 import { py11 } from "./py11";
+import { py12 } from "./py12";
 
 /** Every independent practice question, in module order. */
-export const pythonQuestions: PyQuestion[] = [...py01, ...py02, ...py03, ...py04, ...py05, ...py06, ...py07, ...py08, ...py09, ...py10, ...py11];
+export const pythonQuestions: PyQuestion[] = [...py01, ...py02, ...py03, ...py04, ...py05, ...py06, ...py07, ...py08, ...py09, ...py10, ...py11, ...py12];
 
 export function getPythonQuestion(slug: string): PyQuestion | undefined {
   return pythonQuestions.find((q) => q.slug === slug);
@@ -25,3 +26,4 @@ export function getPythonQuestionByRef(ref: string): PyQuestion | undefined {
 export const pythonQuestionHref = (slug: string) => `/python/practice/${slug}`;
 
 export type { PyCodeQuestion, PyDifficulty, PyPredictQuestion, PyQuestion, PyTrack } from "./types";
+export { getPythonTrack, pythonTrackHref, pythonTracks } from "./tracks";
