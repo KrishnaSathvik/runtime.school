@@ -1,0 +1,258 @@
+{
+ "python:assertions-and-unit-test-thinking#example": {
+  "status": "ok",
+  "stdout": "passed: test_discount\npassed: test_no_discount\n"
+ },
+ "python:assertions-and-unit-test-thinking#mistake-1": {
+  "status": "ok",
+  "stdout": "passed, but discount(100, 10) is 10.0\n"
+ },
+ "python:assertions-and-unit-test-thinking#mistake-2": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "AssertionError",
+   "line": 4
+  }
+ },
+ "python:assertions-and-unit-test-thinking#step-1": {
+  "status": "runtime-error",
+  "stdout": "first assertion passed\n",
+  "error": {
+   "type": "AssertionError",
+   "line": 4
+  }
+ },
+ "python:assertions-and-unit-test-thinking#step-2": {
+  "status": "runtime-error",
+  "stdout": "ordinary case passed\n",
+  "error": {
+   "type": "AssertionError",
+   "line": 6
+  }
+ },
+ "python:assertions-and-unit-test-thinking#step-3": {
+  "status": "ok",
+  "stdout": "passed\n"
+ },
+ "python:assertions-and-unit-test-thinking#step-4": {
+  "status": "ok",
+  "stdout": "PASS test_positive\nPASS test_zero\nFAIL test_wrong - this test itself is wrong\n"
+ },
+ "python:common-exceptions-and-defensive-checks#example": {
+  "status": "runtime-error",
+  "stdout": "{'qty': 3} -> 3\n{'qty': ' 12 '} -> 12\n{} -> 0\n{'qty': None} -> 0\n",
+  "error": {
+   "type": "ValueError",
+   "line": 8
+  }
+ },
+ "python:common-exceptions-and-defensive-checks#mistake-1": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "AttributeError",
+   "line": 3
+  }
+ },
+ "python:common-exceptions-and-defensive-checks#mistake-2": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "ZeroDivisionError",
+   "line": 3
+  }
+ },
+ "python:common-exceptions-and-defensive-checks#step-1": {
+  "status": "ok",
+  "stdout": "TypeError: can only concatenate str (not \"int\") to str\nValueError: invalid literal for int() with base 10: 'abc'\nKeyError: 'b'\nIndexError: list index out of range\nAttributeError: 'NoneType' object has no attribute 'strip'\n"
+ },
+ "python:common-exceptions-and-defensive-checks#step-2": {
+  "status": "runtime-error",
+  "stdout": "None\n",
+  "error": {
+   "type": "AttributeError",
+   "line": 8
+  }
+ },
+ "python:common-exceptions-and-defensive-checks#step-3": {
+  "status": "ok",
+  "stdout": "2.5\nNone\nNone\n"
+ },
+ "python:common-exceptions-and-defensive-checks#step-4": {
+  "status": "ok",
+  "stdout": "3 True False\n2.5 True False\n'3' False True\nNone False False\nTrue True False\n"
+ },
+ "python:raising-useful-errors#example": {
+  "status": "ok",
+  "stdout": "{'lamp': 1}\nValueError: quantity must be positive, got 0\nTypeError: quantity must be an int, got str\nOutOfStockError: only 1 lamp left, 5 requested\n"
+ },
+ "python:raising-useful-errors#mistake-1": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "ValueError",
+   "line": 3
+  }
+ },
+ "python:raising-useful-errors#mistake-2": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "TypeError",
+   "line": 1
+  }
+ },
+ "python:raising-useful-errors#step-1": {
+  "status": "runtime-error",
+  "stdout": "discount set to 0.2\n",
+  "error": {
+   "type": "ValueError",
+   "line": 3
+  }
+ },
+ "python:raising-useful-errors#step-2": {
+  "status": "ok",
+  "stdout": "invalid code: \ninvalid code: ''\ninvalid code: AB \ninvalid code: 'AB '\ninvalid code: A1\ninvalid code: 'A1'\n"
+ },
+ "python:raising-useful-errors#step-3": {
+  "status": "ok",
+  "stdout": "Sorry: only 2 left\n"
+ },
+ "python:raising-useful-errors#step-4": {
+  "status": "runtime-error",
+  "stdout": "41\n",
+  "error": {
+   "type": "ValueError",
+   "line": 5
+  }
+ },
+ "python:reading-tracebacks-and-locating-errors#example": {
+  "status": "runtime-error",
+  "stdout": "5.0\n",
+  "error": {
+   "type": "ValueError",
+   "line": 2
+  }
+ },
+ "python:reading-tracebacks-and-locating-errors#mistake-1": {
+  "status": "runtime-error",
+  "stdout": "A\n",
+  "error": {
+   "type": "IndexError",
+   "line": 2
+  }
+ },
+ "python:reading-tracebacks-and-locating-errors#mistake-2": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "KeyError",
+   "line": 2
+  }
+ },
+ "python:reading-tracebacks-and-locating-errors#quiz-where": {
+  "status": "syntax-error",
+  "stdout": "",
+  "error": {
+   "type": "SyntaxError",
+   "line": 1
+  }
+ },
+ "python:reading-tracebacks-and-locating-errors#step-1": {
+  "status": "runtime-error",
+  "stdout": "2.5\n",
+  "error": {
+   "type": "ValueError",
+   "line": 2
+  }
+ },
+ "python:reading-tracebacks-and-locating-errors#step-2": {
+  "status": "ok",
+  "stdout": " 2\n\n' 2\\n'\n2\n"
+ },
+ "python:reading-tracebacks-and-locating-errors#step-3": {
+  "status": "runtime-error",
+  "stdout": "3.5\n",
+  "error": {
+   "type": "TypeError",
+   "line": 2
+  }
+ },
+ "python:reading-tracebacks-and-locating-errors#step-4": {
+  "status": "ok",
+  "stdout": "5.0\n3.75\n"
+ },
+ "python:testing-edge-cases-and-avoiding-brittle-code#example": {
+  "status": "ok",
+  "stdout": "7 band cases passed\n[3.34, 3.33, 3.33]\ncontract holds\n"
+ },
+ "python:testing-edge-cases-and-avoiding-brittle-code#mistake-1": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "AssertionError",
+   "line": 7
+  }
+ },
+ "python:testing-edge-cases-and-avoiding-brittle-code#mistake-2": {
+  "status": "ok",
+  "stdout": "all passed, but shipping_band(1) is medium\n"
+ },
+ "python:testing-edge-cases-and-avoiding-brittle-code#step-1": {
+  "status": "ok",
+  "stdout": "small medium\nmedium\n"
+ },
+ "python:testing-edge-cases-and-avoiding-brittle-code#step-2": {
+  "status": "ok",
+  "stdout": "0.19999999999999998 False True\n"
+ },
+ "python:testing-edge-cases-and-avoiding-brittle-code#step-3": {
+  "status": "ok",
+  "stdout": "False True\n"
+ },
+ "python:testing-edge-cases-and-avoiding-brittle-code#step-4": {
+  "status": "ok",
+  "stdout": "[17, 72, 97] True\n"
+ },
+ "python:try-except-else-and-finally#example": {
+  "status": "ok",
+  "stdout": "Total: 22.75\nRejected: ['abc', '']\n"
+ },
+ "python:try-except-else-and-finally#mistake-1": {
+  "status": "ok",
+  "stdout": "Please enter a number\n"
+ },
+ "python:try-except-else-and-finally#mistake-2": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "KeyError",
+   "line": 3
+  }
+ },
+ "python:try-except-else-and-finally#quiz-flow": {
+  "status": "ok",
+  "stdout": "B\nC\nD\n"
+ },
+ "python:try-except-else-and-finally#step-1": {
+  "status": "ok",
+  "stdout": "parsed 42\nnot a number: 'forty-two'\n"
+ },
+ "python:try-except-else-and-finally#step-2": {
+  "status": "ok",
+  "stdout": "KeyError 'b'\n"
+ },
+ "python:try-except-else-and-finally#step-3": {
+  "status": "ok",
+  "stdout": "8 -> doubled: 16\nchecked 8\nx -> invalid\nchecked x\n"
+ },
+ "python:try-except-else-and-finally#step-4": {
+  "status": "runtime-error",
+  "stdout": "['start', 'end']\n",
+  "error": {
+   "type": "ZeroDivisionError",
+   "line": 4
+  }
+ }
+}

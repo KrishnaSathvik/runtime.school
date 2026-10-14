@@ -1,8 +1,7 @@
 import { py } from "@/engine/python/values";
 import type { PyLesson } from "../../types";
+import { printedBy as printed } from "../../checks";
 
-/** Check snippet: call `call` and capture what it prints. */
-const printed = (call: string) => `import io, contextlib\n_buf = io.StringIO()\nwith contextlib.redirect_stdout(_buf):\n    ${call}\nresult = _buf.getvalue()`;
 
 export const definingAndCallingFunctions: PyLesson = {
   slug: "defining-and-calling-functions",
