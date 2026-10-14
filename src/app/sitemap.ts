@@ -1,6 +1,7 @@
 import { SITE_URL } from "@/platform/brand";
 import type { MetadataRoute } from "next";
 import { projects } from "@/content";
+import { projectHref } from "@/platform/project-paths";
 import { lessonIds, practiceSlugs } from "@/platform/seo";
 
 const BASE = SITE_URL;
@@ -22,7 +23,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     entry("", 1, "weekly"),
     ...lessonIds().map((id, i) => entry(`/sql/lesson/${id}`, i === 0 ? 0.9 : 0.7)),
     ...practiceSlugs().map((slug) => entry(`/sql/practice/${slug}`, 0.6)),
-    ...projects.map((p) => entry(`/sql/projects/${p.id}`, 0.6)),
+    ...projects.map((p) => entry(projectHref(p.id), 0.6)),
     entry("/sql/playground", 0.5),
     entry("/sql/lab", 0.5),
     entry("/sql/query-plans", 0.5),

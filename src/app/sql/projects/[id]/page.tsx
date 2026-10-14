@@ -1,21 +1,24 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { projects } from "@/content";
 import { ProjectPage } from "@/features/rt/pages/Project";
+import { projectHref, projectSlug, resolveProjectParam } from "@/platform/project-paths";
 import { projectMetadata } from "@/platform/seo";
 
 type Props = { params: Promise<{ id: string }> };
 
 export function generateStaticParams() {
-  return projects.map((p) => ({ id: String(p.id) }));
+  return projects.map((p) => ({ id: projectSlug(p.title) }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  return projectMetadata(Number((await params).id)) ?? { title: "Project not found" };
+  const found = resolveProjectParam((await params).id);
+  return (found && projectMetadata(found.project.id)) || { title: "Project not found" };
 }
 
 export default async function Page({ params }: Props) {
-  const id = Number((await params).id);
-  if (!projectMetadata(id)) notFound();
-  return <ProjectPage projectId={id} stop={{ kind: "brief" }} />;
+  const found = resolveProjectParam((await params).id);
+  if (!found) notFound();
+  if (found.legacy) permanentRedirect(projectHref(found.project.id));
+  return <ProjectPage projectId={found.project.id} stop={{ kind: "brief" }} />;
 }

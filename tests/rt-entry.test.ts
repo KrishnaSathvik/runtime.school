@@ -15,7 +15,7 @@ describe("rt section entry hrefs", () => {
     const hrefs = rtSectionHrefs(s);
     expect(hrefs.learn).toBe(`/sql/lesson/${courseOrder[0]}`);
     expect(hrefs.practice).toBe(`/sql/practice/${bankQuestions[0].slug}`);
-    expect(hrefs.projects).toBe(`/sql/projects/${projects[0].id}`);
+    expect(hrefs.projects).toBe("/sql/projects/video-product-analytics");
   });
 
   it("resumes practice on the last unsolved question", () => {
@@ -42,6 +42,6 @@ describe("rt section entry hrefs", () => {
         },
       },
     };
-    expect(projectsEntryHref(s)).toBe(`/sql/projects/${p.id}/m/${p.milestoneIds[1]}`);
+    expect(projectsEntryHref(s)).toBe(`/sql/projects/video-product-analytics/m/${p.milestoneIds[1]}`);
   });
 });

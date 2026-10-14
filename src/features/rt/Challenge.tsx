@@ -13,6 +13,7 @@ import {
 import { TaskCell } from "./Cells";
 import { Cols } from "./Spec";
 import { prettySql } from "@/components/editor/pretty-sql";
+import { SqlCode } from "./SqlCode";
 
 type TaskContext = { columns: string[]; tables: string[] };
 
@@ -71,13 +72,19 @@ export function Challenge({
       </section>
       <TaskCell
         name={`challenge-${variant + 1}.sql`}
-        minHeight="clamp(260px, calc(100dvh - 500px), 760px)"
+        minHeight="clamp(160px, calc(100dvh - 640px), 360px)"
         value={value}
         onChange={(v) => {
           setDraft(dKey, v);
           setSession(lessonId, projectId, "practice", variant);
         }}
         tables={ctx?.tables}
+        analytics={{
+          subject: "sql",
+          lesson: lessonId,
+          challenge: variant + 1,
+          project: projectId,
+        }}
         task={{
           seedSql: seed,
           answer: task.answer,
@@ -143,7 +150,7 @@ export function Challenge({
           <div className="rx-cell-head"><span className="name">one correct answer</span>
             <span className="acts"><button type="button" className="rx-btn ghost" onClick={() => setDraft(dKey, prettySql(task.answer))}>Put in editor</button></span>
           </div>
-          <div className="rx-cell-in"><span className="p">sql›</span><pre tabIndex={0}>{prettySql(task.answer)}</pre></div>
+          <div className="rx-cell-in"><span className="p">sql›</span><SqlCode source={prettySql(task.answer)} label="One correct answer" /></div>
         </div>
       )}
     </div>

@@ -39,8 +39,8 @@
   --bg-subtle: #f6f6f6;
   --bg-hover: #efefef;
   --text-primary: #111111;
-  --text-secondary-token: #3f3f3f;
-  --text-tertiary: #5c5c5c;
+  --text-secondary-token: #111111;
+  --text-tertiary: #111111;
   --border-default: #e6e6e6;
   --accent-token: #111111;
   --accent-subtle: #f3f3f3;
@@ -69,7 +69,7 @@
   --on-accent: #ffffff;
   --kw: #1d4f91;
   --str: #0c6b3c;
-  --com: #5c5c5c;
+  --com: #111111;
   --num: #7a4e00;
   --shadow: none;
   --font-sans: "Geist Sans", ui-sans-serif, system-ui, sans-serif;
@@ -81,10 +81,10 @@
   --ide-elevated: #efefef;
   --ide-border: #e6e6e6;
   --ide-text: #111111;
-  --ide-muted: #5c5c5c;
+  --ide-muted: #111111;
   --ide-kw: #1d4f91;
   --ide-str: #0c6b3c;
-  --ide-com: #6a737d;
+  --ide-com: #111111;
   --ide-num: #8a5a00;
   --ide-active: #f0f0f0;
   --ide-selection: #cce0f5;
@@ -106,9 +106,9 @@ html[data-theme="dark"] {
   --bg-surface: #0a0a0a;
   --bg-subtle: #111111;
   --bg-hover: #1a1a1a;
-  --text-primary: #f4f4f4;
-  --text-secondary-token: #c8c8c8;
-  --text-tertiary: #9a9a9a;
+  --text-primary: #ffffff;
+  --text-secondary-token: #ffffff;
+  --text-tertiary: #ffffff;
   --border-default: #2c2c2c;
   --accent-token: #f5f5f5;
   --accent-subtle: #222222;
@@ -132,22 +132,22 @@ html[data-theme="dark"] {
   --warning: #e3b15a;
   --warning-text: #e3b15a;
   --editor: var(--ide-bg);
-  --code: #f4f4f4;
+  --code: #ffffff;
   --on-accent: #111111;
   --kw: #9eb6e0;
   --str: #6dcaa0;
-  --com: #9a9a9a;
+  --com: #ffffff;
   --num: #e3b15a;
   --shadow: none;
   --ide-bg: #1e1e1e;
   --ide-chrome: #252526;
   --ide-elevated: #2d2d2d;
   --ide-border: #3c3c3c;
-  --ide-text: #d4d4d4;
-  --ide-muted: #a0a0a0;
+  --ide-text: #ffffff;
+  --ide-muted: #ffffff;
   --ide-kw: #569cd6;
   --ide-str: #ce9178;
-  --ide-com: #6a9955;
+  --ide-com: #ffffff;
   --ide-num: #b5cea8;
   --ide-active: #2a2d2e;
   --ide-selection: #264f78;
@@ -164,6 +164,22 @@ html[data-theme="dark"] {
   box-sizing: border-box;
 }
 
+/* System dark, before a saved theme is on the document: don't paint the light paper. */
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) {
+    --bg-canvas: #000000;
+    --bg: #000000;
+    --main: #000000;
+    background: #000000;
+    color-scheme: dark;
+  }
+  html:not([data-theme="light"]) body,
+  html:not([data-theme="light"]) .rt-shell,
+  html:not([data-theme="light"]) .rx {
+    background: #000000;
+    color: #ffffff;
+  }
+}
 html,
 body {
   height: 100%;

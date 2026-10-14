@@ -3,21 +3,34 @@ import { courseOrder, getLesson, groups, projects } from "@/content";
 import { lessonSummaries } from "@/content/ux-summaries";
 import { bankBySlug, bankQuestions, DIFFICULTY_LABEL, topicLabel } from "@/content/question-bank";
 import { BRAND_NAME, SITE_URL } from "@/platform/brand";
+import { projectHref } from "@/platform/project-paths";
 
 /** Search-engine metadata for the public SQL pages (/sql/…). One canonical URL per page. */
 
-const SHARE_IMAGE = { url: "/og-sql.png", width: 1200, height: 630, alt: "Runtime SQL — Learn SQL by doing." };
-
 const clip = (s: string, n = 158) => (s.length <= n ? s : `${s.slice(0, n - 1).replace(/\s+\S*$/, "")}…`);
 
-function page(title: string, description: string, path: string): Metadata {
+type ShareCard = { url: string; width: number; height: number; alt: string };
+
+const card = (file: string, alt: string): ShareCard => ({ url: `/${file}`, width: 1200, height: 630, alt });
+
+const SHARE = {
+  learn: card("og-sql-learn.png", "Learn SQL. Read the idea, run the query, then solve it."),
+  practice: card("og-sql-practice.png", "SQL Practice. Write the query and check it on real data."),
+  projects: card("og-sql-projects.png", "SQL Projects. A brief, milestones, and a report."),
+  playground: card("og-sql-playground.png", "SQL Playground. Explore a sample database. Nothing is graded."),
+  lab: card("og-sql-lab.png", "Database Lab. Create, change, and roll back a temporary database."),
+  queryPlans: card("og-sql-query-plans.png", "Query Performance. See why a SQL query is faster."),
+  syntax: card("og-sql-syntax.png", "SQL Syntax. One idea in SQLite, PostgreSQL, and SQL Server."),
+};
+
+function page(title: string, description: string, path: string, image: ShareCard): Metadata {
   return {
     title,
     description: clip(description),
     alternates: { canonical: path },
     // A page's own openGraph replaces the root one, so the shared card image is named again here.
-    openGraph: { title: `${title} · ${BRAND_NAME}`, description: clip(description), url: path, siteName: BRAND_NAME, type: "website", images: [SHARE_IMAGE] },
-    twitter: { card: "summary_large_image", title: `${title} · ${BRAND_NAME}`, description: clip(description), images: [SHARE_IMAGE.url] },
+    openGraph: { title: `${title} · ${BRAND_NAME}`, description: clip(description), url: path, siteName: BRAND_NAME, type: "website", images: [image] },
+    twitter: { card: "summary_large_image", title: `${title} · ${BRAND_NAME}`, description: clip(description), images: [image.url] },
   };
 }
 
@@ -35,6 +48,7 @@ export function lessonMetadata(id: number): Metadata | null {
     `${lesson.title} — SQL lesson ${n}`,
     `${summary} ${groups[lesson.group]}, ${lesson.difficulty.toLowerCase()}. Read the idea, run real SQL in your browser, then solve two challenges.`.trim(),
     `/sql/lesson/${id}`,
+    SHARE.learn,
   );
 }
 
@@ -45,20 +59,21 @@ export function questionMetadata(slug: string): Metadata | null {
     `${q.title} — SQL practice`,
     `${q.task} ${DIFFICULTY_LABEL[q.difficulty]} SQL question on ${topicLabel[q.primaryTopic]}. Write the query, run it on real data, and check it instantly.`,
     `/sql/practice/${q.slug}`,
+    SHARE.practice,
   );
 }
 
 export function projectMetadata(id: number): Metadata | null {
   const p = projects.find((x) => x.id === id);
   if (!p) return null;
-  return page(`${p.title} — SQL project`, `${p.description} A guided SQL project with real data that runs in your browser.`, `/sql/projects/${id}`);
+  return page(`${p.title} — SQL project`, `${p.description} A guided SQL project with real data that runs in your browser.`, projectHref(id), SHARE.projects);
 }
 
 export const toolMetadata = {
-  playground: page("SQL Playground", "Write any SELECT query against sample databases and see the results instantly in your browser. No sign-up, nothing graded.", "/sql/playground"),
-  lab: page("Database Lab", "Create tables, insert and update data, and test transactions in a safe temporary SQLite database that resets whenever you want.", "/sql/lab"),
-  queryPlans: page("SQL Query Performance", "See why some SQL queries are faster: compare real EXPLAIN QUERY PLAN output for indexes, covering indexes, sorting and joins.", "/sql/query-plans"),
-  syntax: page("Compare SQL Syntax", "One concept in three SQL dialects: SQLite, PostgreSQL and SQL Server side by side, with runnable SQLite examples.", "/sql/syntax"),
+  playground: page("SQL Playground", "Write any SELECT query against sample databases and see the results instantly in your browser. No sign-up, nothing graded.", "/sql/playground", SHARE.playground),
+  lab: page("Database Lab", "Create tables, insert and update data, and test transactions in a safe temporary SQLite database that resets whenever you want.", "/sql/lab", SHARE.lab),
+  queryPlans: page("SQL Query Performance", "See why some SQL queries are faster: compare real EXPLAIN QUERY PLAN output for indexes, covering indexes, sorting and joins.", "/sql/query-plans", SHARE.queryPlans),
+  syntax: page("Compare SQL Syntax", "One concept in three SQL dialects: SQLite, PostgreSQL and SQL Server side by side, with runnable SQLite examples.", "/sql/syntax", SHARE.syntax),
 };
 
 /** schema.org data for the course, embedded on lesson pages. */

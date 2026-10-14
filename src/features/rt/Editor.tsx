@@ -7,6 +7,7 @@ import { EditorView, keymap } from "@codemirror/view";
 import { Prec } from "@codemirror/state";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { editorTheme } from "@/components/editor/editor-theme";
+import { sqlFunctionHighlight } from "@/components/editor/sql-function-highlight";
 import { teachingSchema } from "@/engine/explain";
 
 /** True on desktop/trackpad; false on phones so the popup does not cover typing. */
@@ -71,6 +72,7 @@ export function Editor({
       autocompletion({ activateOnTyping }),
       EditorView.lineWrapping,
       editorTheme,
+      sqlFunctionHighlight,
       EditorView.contentAttributes.of({ "aria-label": label }),
       Prec.highest(
         keymap.of([

@@ -72,6 +72,14 @@ describe("explaining real SQLite errors", () => {
     expect(e.detail).toMatch(/FORM|customers/);
   });
 
+  it("syntax: misspelled SELECT is not treated as a write", async () => {
+    const e = await explainRun("SELEC name FROM customers");
+    expect(e.title).toBe("SQL syntax error");
+    expect(e.detail).toMatch(/SELEC/);
+    expect(e.next).toMatch(/SELECT/);
+    expect(e.detail + e.next).not.toMatch(/Database Lab/);
+  });
+
   it("incomplete input after FROM", async () => {
     const e = await explainRun("SELECT name\nFROM ");
     expect(e.title).toMatch(/ends too early/);

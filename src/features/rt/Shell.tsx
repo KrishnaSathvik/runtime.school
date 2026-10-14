@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -8,6 +9,7 @@ import { courseOrder, getLesson, projects } from "@/content";
 import { bankQuestions } from "@/content/question-bank";
 import { rtSectionHrefs } from "@/features/rt/entry";
 import { useHydrated, useLearning } from "@/lib/learning-state";
+import { projectHref } from "@/platform/project-paths";
 import { useTheme } from "@/lib/theme";
 import { Keys } from "./Keys";
 
@@ -99,6 +101,7 @@ export function Shell({
     <div className="rx">
       <header className="rx-bar">
         <Link href="/" className="rx-brand" aria-label="Runtime home">
+          <Image src="/logo.png" alt="" width={26} height={26} className="rx-brand-mark" priority />
           runtime<span className="rx-caret" aria-hidden="true" />
         </Link>
         {path.length > 0 && (
@@ -198,7 +201,7 @@ function Palette({ onClose }: { onClose: () => void }) {
       ...TOOLS.map((t) => ({ label: t.label, href: t.href, kind: "tool" })),
       { label: "Choose a subject", href: "/", kind: "go" },
       ...courseOrder.map((id, i) => ({ label: `${String(i + 1).padStart(2, "0")} ${getLesson(id)?.title ?? ""}`, href: `/sql/lesson/${id}`, kind: "lesson" })),
-      ...projects.map((p) => ({ label: p.title, href: `/sql/projects/${p.id}`, kind: "project" })),
+      ...projects.map((p) => ({ label: p.title, href: projectHref(p.id), kind: "project" })),
       ...bankQuestions.map((b) => ({ label: b.title, href: `/sql/practice/${b.slug}`, kind: "practice" })),
     ];
     return all;

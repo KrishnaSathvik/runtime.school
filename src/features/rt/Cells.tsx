@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Check, ChevronDown, ChevronRight, Play, RotateCcw, X } from "lucide-react";
 import { seed as lessonSeed, fixtureMutation } from "@/content";
 import { executeSql, type ExecuteRequest, type ExecuteResponse } from "@/engine/sql-client";
+import { errorKind, track, type AnalyticsProps } from "@/lib/analytics";
 import { Editor } from "./Editor";
 import { Output } from "./Output";
 import { visibleChecks } from "./checks";
 import { prettySql } from "@/components/editor/pretty-sql";
-import { Keys } from "./Keys";
+import { Keys, MacOnly } from "./Keys";
+import { SqlCode } from "./SqlCode";
 
 /**
  * A read-only cell: SQL you can run. The output opens underneath.
@@ -60,7 +62,7 @@ export function RunCell({
       </div>
       <div className="rx-cell-in">
         <span className="p" aria-hidden="true">sql›</span>
-        <pre tabIndex={0}>{prettySql(query)}</pre>
+        <SqlCode source={prettySql(query)} label={name} />
       </div>
       {res && open && (
         <>
@@ -102,6 +104,7 @@ export function TaskCell({
   minHeight,
   observe,
   tables,
+  analytics,
 }: {
   name: string;
   value: string;
@@ -118,15 +121,24 @@ export function TaskCell({
   observe?: (res: ExecuteResponse, ran: string) => string | null;
   /** Tables to prefer in SQL autocomplete for this task. */
   tables?: string[];
+  /** Coarse ids for product analytics (never include SQL). */
+  analytics?: AnalyticsProps;
 }) {
   const [res, setRes] = useState<ExecuteResponse | null>(null);
   const [mode, setMode] = useState<"run" | "check">("run");
   const [ran, setRan] = useState("");
   const [open, setOpen] = useState(true);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<"run" | "check" | null>(null);
+  const runGen = useRef(0);
+  const resultRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (res && open) resultRef.current?.scrollIntoView({ block: "nearest" });
+  }, [res, open]);
 
   const exec = async (check: boolean) => {
-    setBusy(true);
+    const id = ++runGen.current;
+    setBusy(check ? "check" : "run");
     try {
       const r = await executeSql({
         seed: task.seedSql ?? lessonSeed,
@@ -141,14 +153,18 @@ export function TaskCell({
         validate: check ? task.validate : null,
         required: check ? task.required : null,
       });
-      if (r.superseded) return;
+      if (id !== runGen.current || r.superseded) return;
       setRes(r);
       setRan(value);
       setMode(check ? "check" : "run");
       setOpen(true);
+      if (analytics) {
+        track("query_run", { ...analytics, check, ok: !r.error && (!check || !!r.grade?.ok) });
+        if (r.error) track("query_error", { ...analytics, kind: errorKind(r.error), check });
+      }
       if (check) onGraded?.(r, !!r.grade?.ok);
     } finally {
-      setBusy(false);
+      if (id === runGen.current) setBusy(null);
     }
   };
 
@@ -161,8 +177,10 @@ export function TaskCell({
       <div className="rx-cell-head">
         <span className="name">{name}</span>
         <span className="acts" aria-hidden="true">
-          <Keys keys={["mod", "enter"]} /> <span>run</span>
-          {graded && <><Keys keys={["mod", "shift", "enter"]} /> <span>check</span></>}
+          <MacOnly>
+            <Keys keys={["mod", "enter"]} /> <span>run</span>
+            {graded && <><Keys keys={["mod", "shift", "enter"]} /> <span>check</span></>}
+          </MacOnly>
         </span>
       </div>
       <Editor
@@ -177,17 +195,17 @@ export function TaskCell({
       <div className="rx-cell-foot">
         <span className="hint">{res && value !== ran ? "edited since the last run" : " "}</span>
         {footer}
-        <button type="button" className="rx-btn" disabled={busy} onClick={() => void exec(false)}>
-          <Play size={13} /> Run
+        <button type="button" className="rx-btn" disabled={busy !== null} onClick={() => void exec(false)}>
+          <Play size={13} /> {busy === "run" ? "Running…" : "Run"}
         </button>
         {graded && (
-          <button type="button" className="rx-btn primary" disabled={busy} onClick={() => void exec(true)}>
-            <Check size={14} /> {busy ? "Checking…" : checkLabel}
+          <button type="button" className="rx-btn primary" disabled={busy !== null} onClick={() => void exec(true)}>
+            <Check size={14} /> {busy === "check" ? "Checking…" : checkLabel}
           </button>
         )}
       </div>
       {res && open && (
-        <>
+        <div ref={resultRef}>
           {checks && (
             <>
               <p className={`rx-verdict ${ok ? "ok" : "bad"}`} role="status">
@@ -218,7 +236,7 @@ export function TaskCell({
               </>
             }
           />
-        </>
+        </div>
       )}
       {res && !open && (
         <div className="rx-out-meta">

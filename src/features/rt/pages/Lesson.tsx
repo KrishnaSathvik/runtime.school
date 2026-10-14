@@ -9,6 +9,7 @@ import { courseOrder, datasetCatalog, getLesson, groups } from "@/content";
 import { mastered as isLessonMastered } from "@/features/discovery/selectors";
 import { lessonSummaries } from "@/content/ux-summaries";
 import { learnerExplanation } from "@/lib/content-copy";
+import { track } from "@/lib/analytics";
 import { isMastered, sessionKey, useHydrated, useLearning, type LessonStats } from "@/lib/learning-state";
 import { Shell } from "../Shell";
 import { Pager } from "../Pager";
@@ -91,6 +92,14 @@ function Session({ lessonId }: { lessonId: number }) {
     const saved = useLearning.getState().sessions[sessionKey(lessonId, null)];
     setSession(lessonId, null, saved?.stage ?? "understand", saved?.variant ?? 0);
   }, [lessonId, setSession, ready]);
+
+  useEffect(() => {
+    track("lesson_started", {
+      subject: "sql",
+      lesson: lessonId,
+      position: courseOrder.indexOf(lessonId) + 1,
+    });
+  }, [lessonId]);
 
   const pick = (t: Tab) => {
     setTab(t);

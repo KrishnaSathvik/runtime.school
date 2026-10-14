@@ -4,7 +4,7 @@ const ready=initSqlJs({locateFile:f=>f}).then(s=>{SQL=s;postMessage({ready:true}
 function rows(statement){const columns=statement.getColumnNames(),values=[];while(statement.step())if(columns.length)values.push(statement.get());return {columns,values};}
 function query(db,code){
  const clean=code.replace(/--[^\n]*|\/\*[\s\S]*?\*\//g,'').trim();
- if(!/^(SELECT|WITH|EXPLAIN)\b/i.test(clean))throw Error('Use a read-only SELECT, WITH, or EXPLAIN query, or open an Engineering Lab lesson for writes.');
+ if(/^(INSERT|REPLACE|UPDATE|DELETE|CREATE|DROP|ALTER|ATTACH|DETACH|REINDEX|VACUUM|BEGIN|COMMIT|END|ROLLBACK|SAVEPOINT|RELEASE|ANALYZE)\b/i.test(clean))throw Error('Use a read-only SELECT, WITH, or EXPLAIN query, or open an Engineering Lab lesson for writes.');
  let count=0;for(const statement of db.iterateStatements(code)){count++;statement.free();}if(count!==1)throw Error('Run one SQL statement at a time outside the disposable lab.');
  const statement=db.prepare(code);try{const r=rows(statement);if(!r.columns.length)throw Error('The query must return one table.');return r;}finally{statement.free()}
 }

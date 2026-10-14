@@ -4,7 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
 } from "react";
@@ -26,25 +26,43 @@ function resolveTheme(preference: ThemePreference): "light" | "dark" {
     : "light";
 }
 
+function paintTheme(next: "light" | "dark") {
+  const root = document.documentElement;
+  root.dataset.theme = next;
+  root.style.colorScheme = next;
+  root.style.backgroundColor = next === "dark" ? "#000000" : "#ffffff";
+  document
+    .querySelector('meta[name="theme-color"]')
+    ?.setAttribute("content", next === "dark" ? "#000000" : "#ffffff");
+}
+
+function writeThemeCookie(preference: ThemePreference) {
+  document.cookie = `rt-theme=${preference};path=/;max-age=31536000;SameSite=Lax`;
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const preference = useLearning((s) => s.preferences.theme);
   const setTheme = useLearning((s) => s.setTheme);
   const hydrated = useHydrated();
   const [resolved, setResolved] = useState<"light" | "dark">("light");
 
-  useEffect(() => {
-    // theme-boot.js already applied the saved theme; don't flash the default first.
+  useLayoutEffect(() => {
+    // Saved theme is painted by the inline boot script. Don't replace it with the
+    // default "system" preference before local progress has loaded.
     if (!hydrated) {
-      setResolved(document.documentElement.dataset.theme === "dark" ? "dark" : "light");
+      const current = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+      setResolved(current);
+      paintTheme(current);
       return;
     }
     const apply = () => {
       const next = resolveTheme(preference);
       setResolved(next);
-      document.documentElement.dataset.theme = next;
-      document
-        .querySelector('meta[name="theme-color"]')
-        ?.setAttribute("content", next === "dark" ? "#101114" : "#FAFAF9");
+      paintTheme(next);
+      // Don't replace a saved dark/light cookie with the default "system"
+      // preference if saved progress has not actually loaded yet.
+      const painted = document.documentElement.dataset.theme;
+      if (preference !== "system" || painted === next) writeThemeCookie(preference);
     };
     apply();
     if (preference !== "system") return;

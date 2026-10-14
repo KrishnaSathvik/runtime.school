@@ -2,15 +2,9 @@ import { courseOrder, projects } from "@/content";
 import { learnEntry } from "@/features/discovery/selectors";
 import { practiceEntrySlug } from "@/features/practice/browser";
 import { milestoneDone, type LearningState } from "@/lib/learning-state";
+import { projectHref, type ProjectStop } from "@/platform/project-paths";
 
-type Stop = { kind: "brief" } | { kind: "milestone"; id: number } | { kind: "report" };
-
-const hrefFor = (projectId: number, s: Stop) =>
-  s.kind === "brief"
-    ? `/sql/projects/${projectId}`
-    : s.kind === "report"
-      ? `/sql/projects/${projectId}/report`
-      : `/sql/projects/${projectId}/m/${s.id}`;
+const hrefFor = (projectId: number, s: ProjectStop) => projectHref(projectId, s);
 
 /** Where Projects opens: last worked project at its next unfinished milestone; else Project 01 brief. */
 export function projectsEntryHref(s: LearningState): string {

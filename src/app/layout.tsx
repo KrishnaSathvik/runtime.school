@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
-import Script from "next/script";
+import { cookies } from "next/headers";
 import { AppShell } from "@/components/shell/AppShell";
 import { Hydration } from "@/components/providers/Hydration";
+import { PostHogProvider } from "@/components/providers/PostHogProvider";
 import { BRAND_DESCRIPTION, BRAND_NAME, BRAND_TAGLINE, SITE_URL } from "@/platform/brand";
 import "./globals.css";
 import "./runtime.css";
 
 const GA_MEASUREMENT_ID = "G-TEZSLZ1PPY";
+const THEME_BOOT = `(function(){try{var p=localStorage.getItem("sql-studio-v1");var theme="system";if(p){var j=JSON.parse(p);theme=(j&&j.state&&j.state.preferences&&j.state.preferences.theme)||(j&&j.preferences&&j.preferences.theme)||"system";}document.cookie="rt-theme="+theme+";path=/;max-age=31536000;SameSite=Lax";var dark=theme==="dark"||(theme==="system"&&matchMedia("(prefers-color-scheme: dark)").matches);var root=document.documentElement;root.dataset.theme=dark?"dark":"light";root.style.colorScheme=dark?"dark":"light";root.style.backgroundColor=dark?"#000000":"#ffffff";var meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.setAttribute("content",dark?"#000000":"#ffffff");}catch(e){}})();`;
 
 export const metadata: Metadata = {
   title: {
@@ -45,14 +47,30 @@ export const metadata: Metadata = {
   manifest: "/site.webmanifest",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const saved = cookieStore.get("rt-theme")?.value;
+  const theme = saved === "dark" || saved === "light" ? saved : undefined;
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      data-theme={theme}
+      style={
+        theme === "dark"
+          ? { colorScheme: "dark", backgroundColor: "#000000" }
+          : theme === "light"
+            ? { colorScheme: "light", backgroundColor: "#ffffff" }
+            : undefined
+      }
+    >
       <head>
+        <meta name="theme-color" content={theme === "dark" ? "#000000" : "#ffffff"} />
+        <script id="theme-boot">{THEME_BOOT}</script>
         <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} />
         <script id="google-analytics">
           {`window.dataLayer = window.dataLayer || [];
@@ -60,7 +78,6 @@ function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
 gtag('config', '${GA_MEASUREMENT_ID}');`}
         </script>
-        <meta name="theme-color" content="#ffffff" />
         <link
           rel="preload"
           href="/fonts/geist-sans.woff2"
@@ -82,12 +99,13 @@ gtag('config', '${GA_MEASUREMENT_ID}');`}
           type="font/woff2"
           crossOrigin="anonymous"
         />
-        <Script src="/theme-boot.js" strategy="beforeInteractive" />
       </head>
       <body className="antialiased">
-        <Hydration>
-          <AppShell>{children}</AppShell>
-        </Hydration>
+        <PostHogProvider>
+          <Hydration>
+            <AppShell>{children}</AppShell>
+          </Hydration>
+        </PostHogProvider>
       </body>
     </html>
   );

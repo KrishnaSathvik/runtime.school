@@ -24,6 +24,10 @@ import { TaskCell } from "../Cells";
 import { ExpectedResult, Tables } from "../Tables";
 import { Cols, Spec } from "../Spec";
 import { prettySql } from "@/components/editor/pretty-sql";
+import { SqlCode } from "../SqlCode";
+
+/** Brief pause so “✓ all checks passed” is readable before the next question opens. */
+const NEXT_QUESTION_MS = 900;
 
 /** /sql/practice: open the next question straight away. */
 export function PracticeEntry() {
@@ -45,12 +49,22 @@ export function PracticeEntry() {
 
 /** One practice question as a focused task: brief and data on the left, editor and checks on the right. */
 export function PracticeTask({ slug }: { slug: string }) {
+  const router = useRouter();
   const ready = useHydrated();
   const q = bankBySlug.get(slug);
   const s = useLearning();
   const [listOpen, setListOpen] = useState(false);
   const [filter, setFilter] = useState("");
+  const [leaving, setLeaving] = useState(false);
+  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const openQuestion = s.openQuestion;
+
+  useEffect(() => {
+    setLeaving(false);
+    return () => {
+      if (advanceTimer.current) clearTimeout(advanceTimer.current);
+    };
+  }, [slug]);
 
   useEffect(() => {
     if (q) openQuestion(q.slug);
@@ -160,7 +174,8 @@ export function PracticeTask({ slug }: { slug: string }) {
                 value={value}
                 onChange={(v) => s.setDraft(dKey, v)}
                 tables={q.tables}
-                minHeight={hints > 0 || revealed ? "260px" : "clamp(300px, calc(100dvh - 300px), 820px)"}
+                analytics={{ subject: "sql", surface: "practice", question: q.id }}
+                minHeight={hints > 0 || revealed ? "220px" : "clamp(180px, calc(100dvh - 560px), 420px)"}
                 checkLabel={q.exerciseType === "debug" ? "Check fix" : "Check"}
                 task={{
                   seedSql: bankSeed(q),
@@ -174,9 +189,18 @@ export function PracticeTask({ slug }: { slug: string }) {
                   required: q.required ?? null,
                   allowWrites: q.mode === "lab",
                 }}
-                onGraded={(res, ok) =>
-                  s.recordQuestionCheck(q.id, ok, { input: value, version: q.version, epoch: progress?.epoch ?? 0, message: res.grade?.message ?? res.error ?? "Checked" })
-                }
+                onGraded={(res, ok) => {
+                  s.recordQuestionCheck(q.id, ok, { input: value, version: q.version, epoch: progress?.epoch ?? 0, message: res.grade?.message ?? res.error ?? "Checked" });
+                  if (advanceTimer.current) clearTimeout(advanceTimer.current);
+                  if (ok && next) {
+                    setLeaving(true);
+                    advanceTimer.current = setTimeout(() => {
+                      router.push(`/sql/practice/${next.slug}`);
+                    }, NEXT_QUESTION_MS);
+                  } else {
+                    setLeaving(false);
+                  }
+                }}
                 footer={
                   <>
                     {hints < q.hints.length && (
@@ -200,7 +224,7 @@ export function PracticeTask({ slug }: { slug: string }) {
                 <div className="rx-cell-head"><span className="name">one correct answer</span>
                   <span className="acts"><button type="button" className="rx-btn ghost" onClick={() => s.setDraft(dKey, prettySql(q.solution))}>Put in editor</button></span>
                 </div>
-                <div className="rx-cell-in"><span className="p">sql›</span><pre tabIndex={0}>{prettySql(q.solution)}</pre></div>
+                <div className="rx-cell-in"><span className="p">sql›</span><SqlCode source={prettySql(q.solution)} label="One correct answer" /></div>
               </div>
             )}
             {(revealed || (ready && (progress?.solved || progress?.guidedSolved))) && (
@@ -209,6 +233,7 @@ export function PracticeTask({ slug }: { slug: string }) {
                 <p>{q.explanation}</p>
               </div>
             )}
+            {leaving && <p className="rx-feedback ok" role="status">Opening the next question…</p>}
             {hints === 0 && !revealed && <p className="rx-small">Hints and the answer are always available. Using them counts the question as solved with help.</p>}
           </section>
         </div>

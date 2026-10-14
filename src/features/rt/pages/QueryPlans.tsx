@@ -7,6 +7,7 @@ import { prettySql as formatSql } from "@/components/editor/pretty-sql";
 import { Shell } from "../Shell";
 import { Output } from "../Output";
 import { Select } from "../Select";
+import { SqlCode } from "../SqlCode";
 
 type Observed = NonNullable<ExecuteResponse["comparison"]>[number];
 
@@ -115,8 +116,8 @@ export function QueryPlans() {
               return (
                 <section key={k.label} className="rx-cell" aria-label={`Approach ${i === 0 ? "A" : "B"}`} style={i === 0 ? { marginTop: 0 } : undefined}>
                   <div className="rx-cell-head"><span className="name">{i === 0 ? "a" : "b"}.sql · {k.label}</span></div>
-                  {setup.length > 0 && <div className="rx-cell-in" style={{ paddingBottom: 0 }}><span className="p">setup›</span><pre>{setup.map((s) => formatSql(s) + ";").join("\n")}</pre></div>}
-                  <div className="rx-cell-in"><span className="p">sql›</span><pre>{formatSql(query)};</pre></div>
+                  {setup.length > 0 && <div className="rx-cell-in" style={{ paddingBottom: 0 }}><span className="p">setup›</span><SqlCode source={setup.map((s) => formatSql(s) + ";").join("\n")} label="Setup SQL" /></div>}
+                  <div className="rx-cell-in"><span className="p">sql›</span><SqlCode source={`${formatSql(query)};`} label="Query" /></div>
                   {o ? (
                     <>
                       <div className="rx-out">

@@ -50,12 +50,13 @@ export const editorTheme = [
   }),
   syntaxHighlighting(
     HighlightStyle.define([
-      { tag: [t.keyword, t.operatorKeyword, t.modifier], color: "var(--ide-kw)", fontWeight: "600" },
-      { tag: [t.string, t.special(t.string)], color: "var(--ide-str)" },
+      { tag: [t.keyword, t.operatorKeyword, t.modifier, t.typeName], color: "var(--ide-kw)", fontWeight: "600" },
+      { tag: [t.function(t.variableName), t.function(t.name), t.standard(t.name)], color: "var(--ide-fn)" },
+      { tag: t.string, color: "var(--ide-str)" },
+      { tag: t.special(t.string), color: "var(--ide-text)" },
       { tag: [t.comment, t.lineComment, t.blockComment], color: "var(--ide-com)", fontStyle: "italic" },
       { tag: [t.number, t.bool, t.null], color: "var(--ide-num)" },
-      { tag: [t.typeName, t.standard(t.name)], color: "var(--ide-kw)" },
-      { tag: [t.operator, t.punctuation, t.paren, t.bracket], color: "var(--ide-text)" },
+      { tag: [t.operator, t.punctuation, t.paren, t.bracket, t.squareBracket], color: "var(--ide-text)" },
       { tag: [t.name, t.propertyName, t.variableName, t.special(t.name)], color: "var(--ide-text)" },
     ]),
   ),

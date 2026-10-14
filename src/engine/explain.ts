@@ -296,6 +296,16 @@ export function explainError(error: string, query: string, tables: string[] = []
 
   if ((m = raw.match(/^near "(.*)": syntax error/i))) {
     const token = m[1];
+    const first = clean.match(/^[A-Za-z_][A-Za-z0-9_]*/)?.[0] ?? "";
+    // SELEC … never gets as far as a column error. Say so before the generic "near this token" line.
+    if (first && !/^(SELECT|WITH|EXPLAIN)$/i.test(first)) {
+      const meant = closest(first, ["SELECT", "WITH", "EXPLAIN", "FROM", "WHERE"]);
+      return make(
+        "SQL syntax error",
+        `\`${first}\` isn't a SQL command.`,
+        meant ? `Did you mean \`${meant}\`?` : "Start with SELECT, or WITH.",
+      );
+    }
     const beforeFrom = clean.split(/\bFROM\b/i)[0] ?? "";
     let detail = `SQLite stopped understanding the query at \`${token}\`. The mistake is usually just before that point.`;
     let next = `Look right before \`${token}\` for a missing comma, a misspelled keyword, or an unclosed parenthesis.`;
@@ -409,6 +419,21 @@ export function explainError(error: string, query: string, tables: string[] = []
       `A subquery used as a single value (or with IN) must return one column; this one returns ${m[1]}.`,
       "Select just one column inside the subquery.",
     );
+  }
+
+  if (/Use a read-only SELECT, WITH, or EXPLAIN query/i.test(raw)) {
+    const first = clean.match(/^[A-Za-z_][A-Za-z0-9_]*/)?.[0] ?? "";
+    const write = /^(INSERT|REPLACE|UPDATE|DELETE|CREATE|DROP|ALTER|ATTACH|DETACH|REINDEX|VACUUM|BEGIN|COMMIT|END|ROLLBACK|SAVEPOINT|RELEASE|ANALYZE)$/i.test(first);
+    // The worker rejects anything that does not start with SELECT, WITH, or EXPLAIN, including a typo like SELEC.
+    if (!write) {
+      const meant = closest(first, ["SELECT", "WITH", "EXPLAIN", "FROM", "WHERE"]);
+      return {
+        title: "SQL syntax error",
+        detail: first ? `\`${first}\` isn't a SQL command.` : "This isn't a query SQLite can run.",
+        next: meant ? `Did you mean \`${meant}\`?` : "Start with SELECT, or WITH.",
+        kind: "error",
+      };
+    }
   }
 
   if (/Use a read-only SELECT, WITH, or EXPLAIN query/i.test(raw) || /readonly database/i.test(raw)) {

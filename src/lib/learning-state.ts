@@ -1,6 +1,7 @@
 "use client";
 
 import { mergeStorageWrite } from "./storage-merge";
+import { attemptContext, track } from "./analytics";
 import { useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist, type StateStorage } from "zustand/middleware";
@@ -448,7 +449,7 @@ export const useLearning = create<Store>()(
             },
           };
         }),
-      markGuided: (key, kind) =>
+      markGuided: (key, kind) => {
         set((s) => {
           const current = s.attempts[key] ?? {
             guided: false,
@@ -469,8 +470,22 @@ export const useLearning = create<Store>()(
             ],
           };
           return { attempts: { ...s.attempts, [key]: next } };
-        }),
-      recordCheck: ({ lessonId, variant, project, ok, guided, query, result, category }) =>
+        });
+        if (kind === "hint") {
+          const ctx = attemptContext(key);
+          if (ctx) {
+            track("hint_used", {
+              subject: ctx.subject,
+              lesson: ctx.lessonId,
+              challenge: ctx.challenge,
+              project: ctx.projectId,
+            });
+          }
+        }
+      },
+      recordCheck: ({ lessonId, variant, project, ok, guided, query, result, category }) => {
+        const prior = get().stats[lessonId];
+        const wasMastered = prior ? isMastered(prior) : false;
         set((s) => {
           const stats = { ...s.stats };
           const r = { ...recordOf(stats, lessonId), solved: [...recordOf(stats, lessonId).solved] };
@@ -575,7 +590,25 @@ export const useLearning = create<Store>()(
             projects: projectsState,
             lastProject: project ?? s.lastProject,
           };
-        }),
+        });
+        if (ok) {
+          track("challenge_passed", {
+            subject: "sql",
+            lesson: lessonId,
+            challenge: variant + 1,
+            project,
+            guided,
+          });
+        }
+        const after = get().stats[lessonId];
+        if (after && isMastered(after) && !wasMastered) {
+          track("lesson_completed", {
+            subject: "sql",
+            lesson: lessonId,
+            project,
+          });
+        }
+      },
       freshAttempt: (key, draft, starter) =>
         set((s) => {
           const current = s.attempts[key];
@@ -608,6 +641,7 @@ export const useLearning = create<Store>()(
         const quiz = lessons[lessonId]?.quiz;
         if (!quiz) return { ok: false, complete: false };
         const ok = choice === quiz.correct;
+        const wasMastered = isMastered(recordOf(get().stats, lessonId));
         let complete = false;
         set((s) => {
           const stats = { ...s.stats };
@@ -642,6 +676,13 @@ export const useLearning = create<Store>()(
           }
           return { stats, reviews, projects: projectsState };
         });
+        if (complete && !wasMastered) {
+          track("lesson_completed", {
+            subject: "sql",
+            lesson: lessonId,
+            project,
+          });
+        }
         return { ok, complete };
       },
       exportProgress: () => ({
@@ -734,28 +775,41 @@ export const useLearning = create<Store>()(
             lastTrack: trackId,
           };
         }),
-      recordQuestionCheck: (id, ok, detail) =>
+      recordQuestionCheck: (id, ok, detail) => {
+        const prior = get().questions[id];
+        const guided = !!(prior && (prior.hints > 0 || prior.revealed));
         set((s) => {
           const p = latestQuestion(id,s.questions[id] ?? emptyQuestion());
           if(detail && detail.epoch !== (p.epoch??0)) return {};
-          const guided = p.hints > 0 || p.revealed;
+          const wasGuided = p.hints > 0 || p.revealed;
           const now = Date.now();
           const next: QuestionProgress = {
             ...p,
-            ...(detail ? { lastCheck: {...detail,ok,time:now,guided}, checks:[...(p.checks??[]),{...detail,ok,time:now,guided}].slice(-50) } : {}),
+            ...(detail ? { lastCheck: {...detail,ok,time:now,guided:wasGuided}, checks:[...(p.checks??[]),{...detail,ok,time:now,guided:wasGuided}].slice(-50) } : {}),
             attempts: p.attempts + 1,
             lastAt: now,
-            solved: p.solved || (ok && !guided),
-            guidedSolved: p.guidedSolved || (ok && guided),
-            firstSolvedAt: p.firstSolvedAt || (ok && !guided ? now : 0),
+            solved: p.solved || (ok && !wasGuided),
+            guidedSolved: p.guidedSolved || (ok && wasGuided),
+            firstSolvedAt: p.firstSolvedAt || (ok && !wasGuided ? now : 0),
           };
           return { questions: { ...s.questions, [id]: next } };
-        }),
-      questionHint: (id) =>
+        });
+        if (ok) {
+          track("challenge_passed", {
+            subject: "sql",
+            surface: "practice",
+            question: id,
+            guided,
+          });
+        }
+      },
+      questionHint: (id) => {
         set((s) => {
           const p = latestQuestion(id,s.questions[id] ?? emptyQuestion());
           return { questions: { ...s.questions, [id]: { ...p, hints: p.hints + 1, lastAt: Date.now() } } };
-        }),
+        });
+        track("hint_used", { subject: "sql", surface: "practice", question: id });
+      },
       revealQuestion: (id) =>
         set((s) => {
           const p = latestQuestion(id,s.questions[id] ?? emptyQuestion());

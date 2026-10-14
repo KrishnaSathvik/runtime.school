@@ -29,6 +29,7 @@ import { SqlWorkspace } from "@/components/editor/SqlWorkspace";
 import { ExampleRun } from "@/components/editor/ExampleRun";
 import { MobileTaskBar } from "@/features/lesson/MobileTaskBar";
 import { NextInTrack, TrackBanner, useTrackContext } from "@/features/practice/TrackBanner";
+import { track } from "@/lib/analytics";
 import {
   attemptKey,
   classifyFailure,
@@ -194,6 +195,15 @@ function Workspace({
   useEffect(() => {
     setSession(lessonId, projectId, stage, variant);
   }, [lessonId, projectId, stage, variant, setSession]);
+
+  useEffect(() => {
+    track("lesson_started", {
+      subject: "sql",
+      lesson: lessonId,
+      project: projectId,
+      position: courseOrder.indexOf(lessonId) + 1,
+    });
+  }, [lessonId, projectId]);
 
   // Move focus to the new stage heading so keyboard/screen-reader users follow along.
   useEffect(() => {

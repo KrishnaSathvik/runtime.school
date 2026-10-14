@@ -16,7 +16,7 @@ import {
   type PySyntaxError,
 } from "@/engine/python/client";
 import { checkPython, type PyCheckOutcome, type PyGradeReport, type PyTask } from "@/engine/python/grading";
-import { Keys } from "@/features/rt/Keys";
+import { Keys, MacOnly } from "@/features/rt/Keys";
 import { PyEditor, type PyEditorHandle } from "./PyEditor";
 import { Split } from "./Split";
 
@@ -223,9 +223,11 @@ export function PythonWorkspace({
                     height="100%"
                   />
                   <div className="py-actions">
-                    <span className="py-hint" aria-hidden="true">
-                      <Keys keys={["mod", "enter"]} /> run · <Keys keys={["mod", "shift", "enter"]} /> check · <Keys keys={["esc"]} /> then Tab leaves the editor
-                    </span>
+                    <MacOnly>
+                      <span className="py-hint" aria-hidden="true">
+                        <Keys keys={["mod", "enter"]} /> run · <Keys keys={["mod", "shift", "enter"]} /> check · <Keys keys={["esc"]} /> then Tab leaves the editor
+                      </span>
+                    </MacOnly>
                     {undo !== null ? (
                       <button type="button" className="rx-btn ghost" onClick={() => { replaceCode(undo); setUndo(null); }}>
                         <Undo2 size={13} /> Undo reset

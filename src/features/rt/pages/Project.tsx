@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ArrowRight, Download, List, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Download, List, X } from "lucide-react";
 import taskContexts from "@/content/task-context.json";
 import { datasetCatalog, getLesson, getProject, projects } from "@/content";
 import { lessonSummaries, projectOutcomes } from "@/content/ux-summaries";
@@ -11,8 +11,8 @@ import { learnerExplanation } from "@/lib/content-copy";
 import { milestoneDone, useHydrated, useLearning } from "@/lib/learning-state";
 import { projectReport, projectReportPdf, reportFilename, reportReadiness } from "@/features/projects/deliverables";
 import { projectsEntryHref } from "@/features/rt/entry";
+import { projectHref, type ProjectStop } from "@/platform/project-paths";
 import { Shell } from "../Shell";
-import { Pager } from "../Pager";
 import { RunCell } from "../Cells";
 import { Challenge } from "../Challenge";
 import { Tables } from "../Tables";
@@ -20,9 +20,8 @@ import { Tables } from "../Tables";
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9+]+/g, "-").replace(/^-|-$/g, "");
 const pad = (n: number) => String(n).padStart(2, "0");
 
-type Stop = { kind: "brief" } | { kind: "milestone"; id: number } | { kind: "report" };
-const hrefFor = (projectId: number, s: Stop) =>
-  s.kind === "brief" ? `/sql/projects/${projectId}` : s.kind === "report" ? `/sql/projects/${projectId}/report` : `/sql/projects/${projectId}/m/${s.id}`;
+type Stop = ProjectStop;
+const hrefFor = (projectId: number, s: Stop) => projectHref(projectId, s);
 const stopsFor = (projectId: number): Stop[] => [
   { kind: "brief" },
   ...(getProject(projectId)?.milestoneIds ?? []).map((id) => ({ kind: "milestone" as const, id })),
@@ -61,10 +60,10 @@ export function ProjectPage({ projectId, stop }: { projectId: number; stop: Stop
       </Shell>
     );
   }
-  const file = stop.kind === "brief" ? "brief.md" : stop.kind === "report" ? "report.md" : `${pad(project.milestoneIds.indexOf(stop.id) + 1)}-${slug(getLesson(stop.id)?.title ?? "")}.sql`;
+  const file = stop.kind === "brief" ? "brief" : stop.kind === "report" ? "export" : `${pad(project.milestoneIds.indexOf(stop.id) + 1)}-${slug(getLesson(stop.id)?.title ?? "")}.sql`;
   return (
     <Shell
-      path={[{ label: "sql" }, { label: "projects", href: "/sql/projects" }, { label: slug(project.title), href: hrefFor(projectId, { kind: "brief" }) }, { label: file }]}
+      path={[{ label: "sql" }, { label: "projects", href: "/sql/projects" }, { label: project.title, href: hrefFor(projectId, { kind: "brief" }) }, { label: file }]}
       section="projects"
       status={ready ? statusFor(projectId) : ["SQL", project.title]}
     >
@@ -88,7 +87,7 @@ function statusFor(projectId: number) {
   return ["SQL", project.title, `${done}/${project.milestoneIds.length} milestones`, `${findings} findings`, `sqlite · ${datasetCatalog[project.dataset]?.name ?? project.dataset}`];
 }
 
-/** Same bar as Learn and Practice: all projects in a drawer, position, previous and next. */
+/** Same bar as Learn and Practice: all projects in a drawer, position, and previous. */
 function ProjectBar({ projectId, stop }: { projectId: number; stop: Stop }) {
   const state = useLearning();
   const [open, setOpen] = useState(false);
@@ -96,9 +95,8 @@ function ProjectBar({ projectId, stop }: { projectId: number; stop: Stop }) {
   const stops = stopsFor(projectId);
   const at = stops.findIndex((s) => sameStop(s, stop));
   const prev = stops[at - 1];
-  const next = stops[at + 1];
   const label = (s: Stop) =>
-    s.kind === "brief" ? "brief" : s.kind === "report" ? "report" : `milestone ${pad(project.milestoneIds.indexOf(s.id) + 1)} / ${pad(project.milestoneIds.length)}`;
+    s.kind === "brief" ? "brief" : s.kind === "report" ? "export" : `milestone ${pad(project.milestoneIds.indexOf(s.id) + 1)} / ${pad(project.milestoneIds.length)}`;
 
   useEffect(() => {
     if (!open) return;
@@ -115,10 +113,13 @@ function ProjectBar({ projectId, stop }: { projectId: number; stop: Stop }) {
         </button>
         <span className="mono rx-small" style={{ margin: 0 }}>{project.title} · {label(stop)}</span>
         <span className="push" />
-        <Pager
-          prev={prev ? { href: hrefFor(projectId, prev), label: label(prev) } : null}
-          next={next ? { href: hrefFor(projectId, next), label: label(next) } : null}
-        />
+        {prev && (
+          <nav className="rx-pager" aria-label="Previous">
+            <Link href={hrefFor(projectId, prev)} aria-label={`Previous: ${label(prev)}`} title={label(prev)}>
+              <ArrowLeft size={14} aria-hidden="true" /> Prev
+            </Link>
+          </nav>
+        )}
       </div>
       {open && (
         <div className="rx-drawer" role="dialog" aria-label="All projects">
@@ -140,7 +141,7 @@ function ProjectBar({ projectId, stop }: { projectId: number; stop: Stop }) {
                     return (
                       <Link key={hrefFor(p.id, s)} href={hrefFor(p.id, s)} aria-current={current ? "page" : undefined} onClick={() => setOpen(false)}>
                         <span className={`mono g ${complete ? "ok" : ""}`}>{s.kind !== "milestone" ? "" : complete ? "✓" : started ? "◐" : "·"}</span>
-                        <span>{s.kind === "brief" ? "Brief" : s.kind === "report" ? "Report" : getLesson(s.id)?.title}</span>
+                        <span>{s.kind === "brief" ? "Brief" : s.kind === "report" ? "Export" : getLesson(s.id)?.title}</span>
                         <span className="mono k">{s.kind === "milestone" ? pad(p.milestoneIds.indexOf(s.id) + 1) : ""}</span>
                       </Link>
                     );
@@ -291,7 +292,7 @@ function Milestone({ projectId, lessonId }: { projectId: number; lessonId: numbe
             {tab === "finding" && (
               <>
                 <p className="rx-task-prompt">What did the data show?</p>
-                <p className="rx-task-rules">One or two plain sentences. This goes into report.md for this milestone. It does not affect SQL credit.</p>
+                <p className="rx-task-rules">One or two plain sentences. Included when you download this project. It does not affect SQL credit.</p>
                 <textarea
                   className="rx-notes rx-finding"
                   aria-label="Your finding for this milestone"
@@ -327,7 +328,7 @@ function Report({ projectId }: { projectId: number }) {
     const blob =
       kind === "md"
         ? new Blob([projectReport(project, rec)], { type: "text/markdown;charset=utf-8" })
-        : new Blob([Uint8Array.from(projectReportPdf(project, rec))], { type: "application/pdf" });
+        : new Blob([projectReportPdf(project, rec)], { type: "application/pdf" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -339,12 +340,12 @@ function Report({ projectId }: { projectId: number }) {
     <div className="rx-task rx-lesson">
       <div className="rx-task-split">
         <article className="rx-brief" aria-labelledby="report-title">
-          <p className="rx-prompt-line"><b>report</b> {readiness.kind === "complete" ? "complete" : readiness.kind === "draft" ? "draft" : "not started"}</p>
+          <p className="rx-prompt-line"><b>export</b> {readiness.kind === "complete" ? "complete" : readiness.kind === "draft" ? "draft" : "not started"}</p>
           <h1 id="report-title" className="rx-task-title">{project.title}</h1>
           <p className="rx-lead" style={{ fontSize: "1.05rem" }}>Your checked SQL, result evidence and findings, ready to download.</p>
           <div className="rx-next" style={{ justifyContent: "flex-start", maxWidth: "none" }}>
-            <button type="button" className="rx-btn primary" disabled={!readiness.hasAnyWork} onClick={() => save("md")}><Download size={14} /> report.md</button>
-            <button type="button" className="rx-btn" disabled={!readiness.hasAnyWork} onClick={() => save("pdf")}><Download size={14} /> report.pdf</button>
+            <button type="button" className="rx-btn primary" disabled={!readiness.hasAnyWork} onClick={() => save("md")}><Download size={14} /> Download Markdown</button>
+            <button type="button" className="rx-btn" disabled={!readiness.hasAnyWork} onClick={() => save("pdf")}><Download size={14} /> Download PDF</button>
           </div>
           <p className="rx-small">
             {readiness.hasAnyWork
@@ -374,7 +375,7 @@ function Report({ projectId }: { projectId: number }) {
         </article>
         <section className="rx-work rx-lesson-work" aria-label="Report preview">
           <div className="rx-cell" style={{ marginTop: 0 }}>
-            <div className="rx-cell-head"><span className="name">report.md · preview</span></div>
+            <div className="rx-cell-head"><span className="name">export · preview</span></div>
             <pre className="rx-report" tabIndex={0}>{projectReport(project, rec)}</pre>
           </div>
         </section>

@@ -141,6 +141,10 @@ describe("PDF and Markdown exports for all five projects", () => {
       const pdf = projectReportPdf(p, rec);
       expect(pdf.byteLength).toBeGreaterThan(200);
       expect(new TextDecoder().decode(pdf.slice(0, 8))).toBe("%PDF-1.4");
+      const body = new TextDecoder().decode(pdf);
+      expect(body).toContain("Helvetica-Bold");
+      expect(body).toContain("runtime");
+      expect(body).toContain(p.title.slice(0, 12));
     },
   );
 });

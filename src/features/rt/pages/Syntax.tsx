@@ -7,6 +7,7 @@ import { REFERENCE_ONLY_CONCEPTS, syntaxNotes } from "@/content/syntax-notes";
 import { Shell } from "../Shell";
 import { RunCell } from "../Cells";
 import { Select } from "../Select";
+import { SqlCode } from "../SqlCode";
 
 const conceptId = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 // [label, column in dialectGuide, position in syntaxNotes.examples]
@@ -66,7 +67,7 @@ export function Syntax() {
             {DIALECTS.map(([label, col, ex, tag], i) => (
               <section key={label} className="rx-cell" aria-label={label} style={i === 0 ? { marginTop: 0 } : undefined}>
                 <div className="rx-cell-head"><span className="name">{label}</span><span className="acts mono">{tag}</span></div>
-                <div className="rx-cell-in"><pre tabIndex={0}>{note?.examples?.[ex] ?? row[col]}</pre></div>
+                <div className="rx-cell-in"><SqlCode source={note?.examples?.[ex] ?? row[col]} label={label} /></div>
               </section>
             ))}
             {note?.sqlite ? (
