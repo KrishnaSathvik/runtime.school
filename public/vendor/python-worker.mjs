@@ -12,6 +12,55 @@ const fromEntries = Object.fromEntries;
 const stringify = JSON.stringify;
 const now = performance.now.bind(performance);
 
+// Libraries a lesson may ask for (`?packages=pandas,matplotlib` on this worker's URL). Each maps to
+// the Pyodide packages to load (dependencies come from the hash-checked lockfile) and the modules
+// imported during boot, so the first Run doesn't pay for the import. Wheels are copied and verified
+// by scripts/copy-pyodide.mjs; anything not listed here is refused.
+const PACKAGE_SETS = {
+  numpy: { load: ["numpy"], warm: ["numpy"] },
+  pandas: { load: ["pandas"], warm: ["pandas"] },
+  matplotlib: { load: ["matplotlib"], warm: ["matplotlib.pyplot"] },
+  duckdb: { load: ["duckdb"], warm: ["duckdb"] },
+  // DuckDB's PySpark-compatible DataFrame API, importable as `pyspark`. Not Apache Spark.
+  pyspark: { load: ["duckdb", "pandas", "typing-extensions"], warm: ["pyspark.sql"] },
+  "scikit-learn": { load: ["scikit-learn"], warm: ["sklearn"] },
+};
+const requested = (new URL(import.meta.url).searchParams.get("packages") ?? "").split(",").filter(Boolean);
+
+// Runs once per interpreter, before the harness and before any learner code.
+const SETUP = String.raw`
+import importlib, importlib.abc, importlib.util, os, sys, warnings
+
+def _setup(requested, warm):
+    if "matplotlib" in requested:
+        # No display in a worker: draw with Agg, and the harness sends finished figures as PNGs.
+        os.environ["MPLBACKEND"] = "Agg"
+        # Emitted by matplotlib 3.10's own Agg text drawing under Pyodide, not by learner code.
+        warnings.filterwarnings("ignore", message=r"The [xy] parameter as float was deprecated", category=DeprecationWarning)
+    if "pyspark" in requested:
+        sys.meta_path.insert(0, _SparkAlias())
+    for name in warm:
+        importlib.import_module(name)
+
+
+class _SparkAlias(importlib.abc.MetaPathFinder, importlib.abc.Loader):
+    # pyspark, pyspark.sql, pyspark.sql.functions, … resolve to duckdb.experimental.spark.*.
+    TARGET = "duckdb.experimental.spark"
+
+    def find_spec(self, name, path=None, target=None):
+        if name != "pyspark" and not name.startswith("pyspark."):
+            return None
+        if importlib.util.find_spec(self.TARGET + name[len("pyspark"):]) is None:
+            return None
+        return importlib.util.spec_from_loader(name, self, is_package=True)
+
+    def create_module(self, spec):
+        return importlib.import_module(self.TARGET + spec.name[len("pyspark"):])
+
+    def exec_module(self, module):
+        pass
+`;
+
 // The harness. Python's exec() runs the learner's own program inside Pyodide (no shell, no child
 // process). Every builtin used after the learner's code has run is captured first, so patching
 // builtins cannot change how values are read. Values are returned as type-tagged data and judged
@@ -31,6 +80,43 @@ _ast_parse = ast.parse; _ast_walk = ast.walk
 _Assign = ast.Assign; _AugAssign = ast.AugAssign; _AnnAssign = ast.AnnAssign; _Name = ast.Name; _Tuple = ast.Tuple; _List = ast.List
 _out0 = sys.stdout; _err0 = sys.stderr
 MAX_DEPTH = 12; MAX_ITEMS = 500; MAX_STR = 5000; MAX_CALL_OUT = 5000; MAX_NAMES = 100
+MAX_FIGURES = 10; MAX_FIGURE_BYTES = 1500000
+
+# matplotlib (only when the lesson loaded it): plt.show() and the end of the program send every open
+# figure to the page as a PNG, in order with printed output, then close it.
+_plt = sys.modules.get("matplotlib.pyplot")
+_figure_sink = [None, 0]  # [callback for this run, figures sent]
+if _plt is not None:
+    import base64
+    _get_fignums = _plt.get_fignums; _figure = _plt.figure; _close = _plt.close
+    _BytesIO = io.BytesIO; _b64encode = base64.b64encode
+
+
+def _show_figures(*args, **kwargs):
+    if _plt is None or _figure_sink[0] is None:
+        return
+    for stream in (_out0, _err0):
+        stream.flush()
+    for num in _get_fignums():
+        fig = _figure(num)
+        try:
+            if _figure_sink[1] >= MAX_FIGURES:
+                if _figure_sink[1] == MAX_FIGURES:
+                    _err0.write("Only the first " + _str(MAX_FIGURES) + " figures are shown.\n")
+                    _err0.flush()
+                    _figure_sink[1] += 1
+                continue
+            buf = _BytesIO()
+            fig.savefig(buf, format="png", dpi=100, bbox_inches="tight")
+            data = buf.getvalue()
+            if _len(data) > MAX_FIGURE_BYTES:
+                _err0.write("A figure was too large to show. Try a smaller figsize.\n")
+                _err0.flush()
+                continue
+            _figure_sink[1] += 1
+            _figure_sink[0](_b64encode(data).decode("ascii"))
+        finally:
+            _close(fig)
 
 
 class _OutputLimit(BaseException):
@@ -238,9 +324,12 @@ def _probe(ns, probe, progress):
     return {"names": names, "vars": found, "calls": calls, "assignments": probe.get("_assignments", {})}
 
 
-def run(source, probe_json, progress):
+def run(source, probe_json, progress, figure):
     # Parsed before the learner's code runs.
     probe = _loads(probe_json) if probe_json is not None else None
+    if _plt is not None:
+        _figure_sink[0] = figure
+        _plt.show = _show_figures
     _lines["main.py"] = (_len(source), None, source.splitlines(True), "main.py")
     try:
         code = compile(source, "main.py", "exec", dont_inherit=True)
@@ -271,6 +360,13 @@ def run(source, probe_json, progress):
     except BaseException as e:
         result = {"status": "runtime-error"}
         result.update(_error(e))
+    # Figures still open when the program ends are shown too, as in a notebook.
+    try:
+        _show_figures()
+    except BaseException as e:
+        if result["status"] == "ok":
+            result = {"status": "runtime-error"}
+            result.update(_error(e))
     finally:
         for stream in (_out0, _err0):
             try:
@@ -310,6 +406,8 @@ function makeWriter(stream) {
 }
 
 const booted = (async () => {
+  const unknown = requested.filter((name) => !Object.hasOwn(PACKAGE_SETS, name));
+  if (unknown.length) throw new Error(`unsupported package: ${unknown.join(", ")}`);
   const pyodide = await loadPyodide({
     indexURL: new URL("./pyodide/314.0.7/", import.meta.url).href,
     packages: [],
@@ -318,6 +416,17 @@ const booted = (async () => {
   pyodide.setStderr(makeWriter("stderr"));
   pyodideRef = pyodide;
   const ns = pyodide.globals.get("dict")();
+  if (requested.length) {
+    const load = [...new Set(requested.flatMap((name) => PACKAGE_SETS[name].load))];
+    const failures = [];
+    // Only from this origin's verified copy of the release, checked against the lockfile's sha256.
+    await pyodide.loadPackage(load, { messageCallback: () => {}, errorCallback: (m) => failures.push(m), checkIntegrity: true });
+    if (failures.length) throw new Error(failures.join("; "));
+    pyodide.runPython(SETUP, { globals: ns });
+    const setup = ns.get("_setup");
+    setup(pyodide.toPy(requested), pyodide.toPy(requested.flatMap((name) => PACKAGE_SETS[name].warm)));
+    setup.destroy();
+  }
   pyodide.runPython(HARNESS, { globals: ns });
   harnessRun = ns.get("run");
   ns.destroy();
@@ -344,10 +453,11 @@ onmessage = async ({ data }) => {
   const progress = (call, index) => post({ type: "case", id, nonce, call: String(call), index: Number(index) });
   // undefined, not null: Pyodide turns JS null into jsnull, which is not Python's None.
   const probeJson = data.probe ? stringify(data.probe) : undefined;
+  const figure = (png) => post({ type: "figure", id, nonce, src: "data:image/png;base64," + String(png) });
   const started = now();
   let result;
   try {
-    const proxy = harnessRun(String(data.code ?? ""), probeJson, progress);
+    const proxy = harnessRun(String(data.code ?? ""), probeJson, progress, figure);
     result = proxy.toJs({ dict_converter: fromEntries });
     proxy.destroy();
   } catch (err) {

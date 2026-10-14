@@ -166,7 +166,7 @@ function Brief({ lesson, moduleTitle }: { lesson: PyLesson; moduleTitle: string 
 
       <h2 className="rx-label sec">example</h2>
       <p className="rx-cap">{lesson.example.caption}</p>
-      <PyRunCell code={lesson.example.code} name="example.py" />
+      <PyRunCell packages={lesson.packages} code={lesson.example.code} name="example.py" />
 
       <h2 className="rx-label sec">step by step</h2>
       <p className="rx-cap">Each step adds one idea. Run them in order and watch what changes.</p>
@@ -176,7 +176,7 @@ function Brief({ lesson, moduleTitle }: { lesson: PyLesson; moduleTitle: string 
             <span className="rx-walk-no" aria-hidden="true">{i + 1}</span>
             <div className="rx-walk-body">
               <p><strong>{step.title}.</strong> <Rich text={step.text} /></p>
-              <PyRunCell code={step.code} name={`step-${i + 1}.py`} />
+              <PyRunCell packages={lesson.packages} code={step.code} name={`step-${i + 1}.py`} />
             </div>
           </li>
         ))}
@@ -187,7 +187,7 @@ function Brief({ lesson, moduleTitle }: { lesson: PyLesson; moduleTitle: string 
         <div key={m.title} className="py-mistake">
           <p className="py-mistake-title">{m.title}</p>
           <p className="rx-prose py-prose"><Rich text={m.text} /></p>
-          <PyRunCell code={m.code} name={`mistake-${i + 1}.py`} />
+          <PyRunCell packages={lesson.packages} code={m.code} name={`mistake-${i + 1}.py`} />
           <p className="py-fix"><Rich text={m.fix} /></p>
         </div>
       ))}
@@ -307,7 +307,7 @@ function ChallengePanel({ lesson, challenge, index, onNext }: { lesson: PyLesson
       <div className="py-lesson-code">
         <CodePane
           ref={pane}
-          task={challenge.task}
+          task={lesson.packages ? { ...challenge.task, packages: lesson.packages } : challenge.task}
           starter={challenge.starter}
           value={value}
           onChange={(code) => setDraft(lesson.ref, cid, code)}

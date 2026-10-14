@@ -1,4 +1,4 @@
-import { runPython, type PyCallCase, type PyProbe, type PyProbeResult, type PyRunResult } from "./client";
+import { runPython, type PyCallCase, type PyPackage, type PyProbe, type PyProbeResult, type PyRunResult } from "./client";
 import { formatPy, pyEqual, pyTypeName, sameKind, toWire, type ComparePolicy, type PyValue } from "./values";
 
 /**
@@ -38,7 +38,13 @@ export type PyFunctionCase = {
   hidden?: boolean;
 };
 
-export type PyTask = { checks: PyCheck[]; stdin?: string; timeoutMs?: number };
+export type PyTask = {
+  checks: PyCheck[];
+  stdin?: string;
+  timeoutMs?: number;
+  /** Libraries the program may import (pandas, matplotlib, …). */
+  packages?: readonly PyPackage[];
+};
 
 export type PyFailure =
   | "syntax-error"
@@ -140,7 +146,7 @@ export function probeFor(task: PyTask): PyProbe {
 
 /** Check Answer: one fresh interpreter, then judgement on this side. */
 export async function checkPython(task: PyTask, code: string): Promise<PyGradeReport> {
-  const result = await runPython(code, { probe: probeFor(task), stdin: task.stdin, timeoutMs: task.timeoutMs });
+  const result = await runPython(code, { probe: probeFor(task), stdin: task.stdin, timeoutMs: task.timeoutMs, packages: task.packages });
   return gradePython(task, result);
 }
 

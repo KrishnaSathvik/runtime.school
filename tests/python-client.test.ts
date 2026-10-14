@@ -12,7 +12,10 @@ class FakeWorker {
   listeners: Record<string, Listener[]> = { message: [], error: [] };
   runs: Run[] = [];
   terminated = false;
-  constructor(public behaviour: { bootFail?: boolean; bootDelay?: number; never?: boolean } = {}) {
+  constructor(
+    public behaviour: { bootFail?: boolean; bootDelay?: number; never?: boolean } = {},
+    public packages = "",
+  ) {
     FakeWorker.instances.push(this);
     if (!behaviour.never) {
       setTimeout(
@@ -62,7 +65,7 @@ beforeAll(async () => {
 });
 
 function useFake(allow = true) {
-  client.__setPythonWorkerFactory(() => new FakeWorker(behaviour) as unknown as Worker, () => allow);
+  client.__setPythonWorkerFactory((packages) => new FakeWorker(behaviour, packages) as unknown as Worker, () => allow);
 }
 
 afterEach(() => {
@@ -74,6 +77,75 @@ afterEach(() => {
 });
 
 describe("python-client execution", () => {
+  it("boots workers with the run's package set and reuses a spare only for the same set", async () => {
+    useFake();
+    expect(client.packageKey(["pandas", "matplotlib", "pandas"])).toBe("matplotlib,pandas");
+    client.preloadPython(["pandas"]);
+    const warm = latest();
+    expect(warm.packages).toBe("pandas");
+    // A different set replaces the spare instead of running on it.
+    const p1 = client.runPython("import numpy", { packages: ["numpy"] });
+    await flush();
+    expect(warm.terminated).toBe(true);
+    const w1 = latest();
+    expect(w1.packages).toBe("numpy");
+    expect(w1.runs).toHaveLength(1);
+    w1.finish();
+    await p1;
+    // The next spare keeps the same set, so the following numpy run starts on it.
+    const spare = latest();
+    expect(spare.packages).toBe("numpy");
+    const p2 = client.runPython("import numpy", { packages: ["numpy"] });
+    await flush();
+    expect(latest()).toBe(spare);
+    expect(spare.runs).toHaveLength(1);
+    spare.finish();
+    await p2;
+    // Core Python runs never load packages.
+    const p3 = client.runPython("print(1)");
+    await flush();
+    expect(latest().packages).toBe("");
+    latest().finish();
+    await p3;
+  });
+
+  it("a spare that is replaced or released never reports a late boot failure", async () => {
+    vi.useFakeTimers();
+    useFake();
+    behaviour = { never: true };
+    client.preloadPython(["pandas"]);
+    client.preloadPython(["numpy"]); // replaces the pandas spare before it booted
+    client.releasePython(); // and the numpy one
+    expect(client.getPythonStatus()).toBe("idle");
+    await vi.advanceTimersByTimeAsync(client.PY_PACKAGES_BOOT_TIMEOUT_MS + 1000);
+    expect(client.getPythonStatus()).toBe("idle");
+    expect(client.getPythonFailure()).toBeNull();
+  });
+
+  it("keeps matplotlib figures in order with printed output", async () => {
+    useFake();
+    const seen: string[] = [];
+    const p = client.runPython("plot", { packages: ["matplotlib"], onOutput: (c) => seen.push(c.stream) });
+    await flush();
+    const w = latest();
+    w.print("before\n");
+    w.emit({ type: "figure", ...w.tag, src: "data:image/png;base64,AAAA" });
+    w.emit({ type: "figure", ...w.tag, src: "javascript:alert(1)" });
+    w.print("after\n");
+    w.finish();
+    const r = await p;
+    expect(r).toMatchObject({
+      status: "ok",
+      stdout: "before\nafter\n",
+      output: [
+        { stream: "stdout", text: "before\n" },
+        { stream: "figure", text: "data:image/png;base64,AAAA" },
+        { stream: "stdout", text: "after\n" },
+      ],
+    });
+    expect(seen).toEqual(["stdout", "figure", "stdout"]);
+  });
+
   it("returns stdout and the ok status for the run that was sent", async () => {
     useFake();
     const p = client.runPython("print(48)");
@@ -313,7 +385,19 @@ describe("pinned pyodide", () => {
     expect(pkg.dependencies.pyodide).toBe("314.0.7");
     const worker = readFileSync("public/vendor/python-worker.mjs", "utf8");
     expect(worker).toContain("./pyodide/314.0.7/pyodide.mjs");
-    expect(worker).not.toMatch(/micropip|loadPackage\(/);
+    expect(worker).not.toMatch(/micropip/);
+    // Packages load only from the same-origin indexURL, by name, from an allowlist that matches the copy script.
+    const { PYODIDE_PACKAGES, resolvePackages } = await import("../scripts/copy-pyodide.mjs");
+    const { PY_PACKAGES } = await import("@/engine/python/client");
+    const sets = worker.match(/const PACKAGE_SETS = \{([\s\S]*?)\n\};/)![1];
+    const named = [...sets.matchAll(/^ {2}"?([\w-]+)"?: \{ load: \[([^\]]*)\]/gm)];
+    expect(named.map((m) => m[1]).sort()).toEqual([...PY_PACKAGES].sort());
+    const loads = new Set(named.flatMap((m) => [...m[2].matchAll(/"([\w-]+)"/g)].map((x) => x[1])));
+    expect([...loads].every((n) => (PYODIDE_PACKAGES as string[]).includes(n))).toBe(true);
+    const lock = JSON.parse(readFileSync("node_modules/pyodide/pyodide-lock.json", "utf8"));
+    for (const pkg of resolvePackages(lock) as { file_name: string; sha256: string }[]) {
+      expect(createHash("sha256").update(readFileSync(`public/vendor/pyodide/314.0.7/${pkg.file_name}`)).digest("hex")).toBe(pkg.sha256);
+    }
     const { PYODIDE_VERSION, PYODIDE_FILES } = await import("../scripts/copy-pyodide.mjs");
     expect(PYODIDE_VERSION).toBe("314.0.7");
     for (const [name, hash] of Object.entries(PYODIDE_FILES as Record<string, string>)) {

@@ -11,6 +11,7 @@ import {
   runPython,
   stopPython,
   subscribePythonStatus,
+  packageKey,
   type PyOutputChunk,
   type PyRunResult,
 } from "@/engine/python/client";
@@ -123,13 +124,17 @@ export const CodePane = forwardRef<CodePaneHandle, {
     },
   }));
 
+  const packages = task.packages;
+  const packagesKey = packageKey(packages);
   useEffect(() => {
-    preloadPython();
+    preloadPython(packages);
     return () => {
       stopPython();
       releasePython();
     };
-  }, []);
+    // Re-preload only when the set of libraries changes, not on every new `task` object.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [packagesKey]);
 
   const markError = (line: number | null) => setMark(line ? { line, token: Date.now() } : null);
 
@@ -143,7 +148,7 @@ export const CodePane = forwardRef<CodePaneHandle, {
     setRan(null);
     setMark(null);
     setInterrupted(null);
-    const r = await runPython(code, { onOutput: (c) => setLive((l) => appendChunk(l, c)) });
+    const r = await runPython(code, { packages, onOutput: (c) => setLive((l) => appendChunk(l, c)) });
     setBusy(null);
     // Another program on the page (e.g. a lesson example) started and replaced this run.
     if (r.status === "superseded") return setInterrupted("run");
@@ -191,7 +196,7 @@ export const CodePane = forwardRef<CodePaneHandle, {
 
   const retry = () => {
     releasePython();
-    preloadPython();
+    preloadPython(packages);
   };
 
   const goTo = (line: number) => editor.current?.goToLine(line);

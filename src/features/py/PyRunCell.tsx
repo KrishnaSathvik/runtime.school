@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { Play, RotateCcw, X } from "lucide-react";
-import { runPython, type PyOutputChunk, type PyRunResult } from "@/engine/python/client";
+import { runPython, type PyOutputChunk, type PyPackage, type PyRunResult } from "@/engine/python/client";
 import { appendChunk, RunEnd, Stream } from "./Output";
 
 /**
  * Read-only Python you can run. Output comes from a real, fresh interpreter every time;
  * running an example never touches progress.
  */
-export function PyRunCell({ code, name }: { code: string; name: string }) {
+export function PyRunCell({ code, name, packages }: { code: string; name: string; packages?: readonly PyPackage[] }) {
   const [busy, setBusy] = useState(false);
   const [live, setLive] = useState<PyOutputChunk[]>([]);
   const [result, setResult] = useState<PyRunResult | null>(null);
@@ -20,7 +20,7 @@ export function PyRunCell({ code, name }: { code: string; name: string }) {
     setResult(null);
     setLive([]);
     setInterrupted(false);
-    const r = await runPython(code, { onOutput: (c) => setLive((l) => appendChunk(l, c)) });
+    const r = await runPython(code, { packages, onOutput: (c) => setLive((l) => appendChunk(l, c)) });
     setBusy(false);
     if (r.status === "superseded") return setInterrupted(true);
     setResult(r);

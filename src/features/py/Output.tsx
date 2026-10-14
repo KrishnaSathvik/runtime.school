@@ -8,7 +8,7 @@ import type { PyCheckOutcome, PyGradeReport } from "@/engine/python/grading";
 
 export function appendChunk(list: PyOutputChunk[], c: PyOutputChunk): PyOutputChunk[] {
   const last = list.at(-1);
-  if (last && last.stream === c.stream) return [...list.slice(0, -1), { ...last, text: last.text + c.text }];
+  if (last && last.stream === c.stream && c.stream !== "figure") return [...list.slice(0, -1), { ...last, text: last.text + c.text }];
   return [...list, c];
 }
 
@@ -64,7 +64,14 @@ export function RuntimeBlock({ type, message, line, traceback, onLine }: { type:
 export function Stream({ chunks }: { chunks: PyOutputChunk[] }) {
   return (
     <pre className="py-stream">
-      {chunks.map((c, i) => <span key={i} className={c.stream}>{c.text}</span>)}
+      {chunks.map((c, i) =>
+        c.stream === "figure" ? (
+          // eslint-disable-next-line @next/next/no-img-element -- a PNG data URL drawn by the learner's own program
+          <img key={i} className="py-figure" src={c.text} alt={`Figure ${chunks.slice(0, i + 1).filter((k) => k.stream === "figure").length} drawn by your program`} />
+        ) : (
+          <span key={i} className={c.stream}>{c.text}</span>
+        ),
+      )}
     </pre>
   );
 }

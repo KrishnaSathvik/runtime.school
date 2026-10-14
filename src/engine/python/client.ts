@@ -14,13 +14,23 @@ import type { PyValue, WireValue } from "./values";
  */
 
 export const PY_BOOT_TIMEOUT_MS = 30000;
+/** Loading data libraries (pandas, matplotlib, …) downloads and unpacks several MB the first time. */
+export const PY_PACKAGES_BOOT_TIMEOUT_MS = 120000;
 export const PY_RUN_TIMEOUT_MS = 5000;
 /** Characters of stdout + stderr kept per run. */
 export const PY_OUTPUT_LIMIT = 50000;
 export const PY_WORKER_URL = "/vendor/python-worker.mjs";
 
+/**
+ * Libraries a lesson can load, all self-hosted and hash-checked (scripts/copy-pyodide.mjs).
+ * `pyspark` is DuckDB's PySpark-compatible DataFrame API under the `pyspark` name, not Apache Spark.
+ */
+export const PY_PACKAGES = ["numpy", "pandas", "matplotlib", "duckdb", "pyspark", "scikit-learn"] as const;
+export type PyPackage = (typeof PY_PACKAGES)[number];
+
 export type PyStream = "stdout" | "stderr";
-export type PyOutputChunk = { stream: PyStream; text: string };
+/** Printed text, or a matplotlib figure (`text` is then a PNG data URL). */
+export type PyOutputChunk = { stream: PyStream | "figure"; text: string };
 
 export type PySyntaxError = {
   type: string;
@@ -80,11 +90,17 @@ function allowedHere(): boolean {
   return !(typeof location !== "undefined" && PRODUCTION_HOSTS.has(location.hostname));
 }
 
-let createWorker: () => WorkerLike = () => new Worker(PY_WORKER_URL, { type: "module", name: "runtime-python" });
+/** Stable key for a package set: sorted, unique, comma-separated ("" for core Python). */
+export function packageKey(packages: readonly PyPackage[] = []): string {
+  return [...new Set(packages)].sort().join(",");
+}
+
+let createWorker: (packages: string) => WorkerLike = (packages) =>
+  new Worker(packages ? `${PY_WORKER_URL}?packages=${packages}` : PY_WORKER_URL, { type: "module", name: "runtime-python" });
 let allowed: () => boolean = allowedHere;
 
 /** Test hooks. */
-export function __setPythonWorkerFactory(factory: () => WorkerLike, allow: () => boolean = () => true): void {
+export function __setPythonWorkerFactory(factory: (packages: string) => WorkerLike, allow: () => boolean = () => true): void {
   stopPython();
   releasePython();
   createWorker = factory;
@@ -112,14 +128,24 @@ export function subscribePythonStatus(cb: () => void): () => void {
 
 // ---- warm spare interpreter ----
 
-type Spare = { worker: WorkerLike; ready: Promise<void>; settled: boolean; failed: string | null };
+/** The next interpreter, already booted with one package set (`key`). */
+type Spare = {
+  worker: WorkerLike;
+  key: string;
+  ready: Promise<void>;
+  settled: boolean;
+  failed: string | null;
+  /** Throw this interpreter away unused: its boot timer stops, so it can never report a late failure. */
+  discard: () => void;
+};
 let spare: Spare | null = null;
 
-function boot(): Spare {
-  const worker = createWorker();
-  const s: Spare = { worker, ready: Promise.resolve(), settled: false, failed: null };
+function boot(key: string): Spare {
+  const worker = createWorker(key);
+  const s: Spare = { worker, key, ready: Promise.resolve(), settled: false, failed: null, discard: () => worker.terminate() };
   s.ready = new Promise<void>((resolve, reject) => {
-    const timer = setTimeout(() => done(new Error("Python took too long to load. Check your connection and try again.")), PY_BOOT_TIMEOUT_MS);
+    const limit = key ? PY_PACKAGES_BOOT_TIMEOUT_MS : PY_BOOT_TIMEOUT_MS;
+    const timer = setTimeout(() => done(new Error("Python took too long to load. Check your connection and try again.")), limit);
     const done = (err?: Error) => {
       if (s.settled) return;
       s.settled = true;
@@ -141,6 +167,15 @@ function boot(): Spare {
     const onError = () => done(new Error("Python could not load. Refresh the page and try again."));
     worker.addEventListener("message", onMessage);
     worker.addEventListener("error", onError);
+    s.discard = () => {
+      if (!s.settled) {
+        s.settled = true;
+        clearTimeout(timer);
+        worker.removeEventListener("message", onMessage);
+        worker.removeEventListener("error", onError);
+      }
+      worker.terminate();
+    };
   });
   s.ready.catch(() => {
     worker.terminate();
@@ -149,10 +184,13 @@ function boot(): Spare {
   return s;
 }
 
-/** Start loading Python ahead of the first Run (e.g. when a Python activity mounts). */
-export function preloadPython(): void {
-  if (typeof window === "undefined" || !allowed() || spare || active) return;
-  spare = boot();
+/** Start loading Python (with these libraries) ahead of the first Run, e.g. when a Python activity mounts. */
+export function preloadPython(packages: readonly PyPackage[] = []): void {
+  if (typeof window === "undefined" || !allowed() || active) return;
+  const key = packageKey(packages);
+  if (spare?.key === key) return;
+  spare?.discard();
+  spare = boot(key);
   const s = spare;
   setStatus("loading");
   s.ready.then(
@@ -163,10 +201,8 @@ export function preloadPython(): void {
 
 /** Free the warm interpreter (e.g. when leaving Python pages). */
 export function releasePython(): void {
-  if (spare) {
-    spare.worker.terminate();
-    spare = null;
-  }
+  spare?.discard();
+  spare = null;
   if (!active) setStatus("idle");
 }
 
@@ -185,13 +221,22 @@ function makeNonce(): string {
 
 export async function runPython(
   code: string,
-  opts: { timeoutMs?: number; outputLimit?: number; stdin?: string; probe?: PyProbe; onOutput?: (chunk: PyOutputChunk) => void } = {},
+  opts: {
+    timeoutMs?: number;
+    outputLimit?: number;
+    stdin?: string;
+    probe?: PyProbe;
+    /** Libraries this program may import; loaded before the run clock starts. */
+    packages?: readonly PyPackage[];
+    onOutput?: (chunk: PyOutputChunk) => void;
+  } = {},
 ): Promise<PyRunResult> {
   if (typeof window === "undefined" || !allowed()) {
     return { status: "unavailable", message: "Python execution isn't available on this site yet." };
   }
   if (active) active.settle({ status: "superseded" });
 
+  const key = packageKey(opts.packages);
   const id = nextId++;
   const nonce = makeNonce();
   const out: Output = { stdout: "", stderr: "", output: [] };
@@ -215,13 +260,14 @@ export async function runPython(
       // Warm the next interpreter so the next Run starts quickly.
       if (r.status !== "superseded") {
         setStatus("idle");
-        preloadPython();
+        preloadPython(opts.packages);
       }
     },
   };
   active = me;
 
-  const s = spare ?? boot();
+  if (spare && spare.key !== key) spare.discard();
+  const s = spare?.key === key ? spare : boot(key);
   spare = null;
   w = s.worker;
   setStatus(s.settled && !s.failed ? "running" : "loading");
@@ -231,9 +277,15 @@ export async function runPython(
     if (d?.id !== id || d?.nonce !== nonce) return;
     if (d.type === "case") {
       me.current = { call: String(d.call), index: Number(d.index) };
+    } else if (d.type === "figure") {
+      const src = String(d.src);
+      if (!src.startsWith("data:image/png;base64,")) return;
+      out.output.push({ stream: "figure", text: src });
+      opts.onOutput?.({ stream: "figure", text: src });
     } else if (d.type === "output") {
-      const chunk: PyOutputChunk = { stream: d.stream, text: d.text };
-      out[chunk.stream] += chunk.text;
+      const stream: PyStream = d.stream === "stderr" ? "stderr" : "stdout";
+      const chunk: PyOutputChunk = { stream, text: d.text };
+      out[stream] += chunk.text;
       const last = out.output.at(-1);
       if (last && last.stream === chunk.stream) last.text += chunk.text;
       else out.output.push({ ...chunk });

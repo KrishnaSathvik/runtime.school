@@ -77,6 +77,8 @@
 .py-empty { margin: 0; font-size: 14px; color: var(--rx-dim); }
 .py-stream { margin: 0; font-family: var(--rx-mono); font-size: 13.5px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--rx-ink); }
 .py-stream .stderr { color: var(--rx-bad); }
+/* matplotlib output: always drawn on white, so it keeps a white card in dark mode too. */
+.py-stream .py-figure { display: block; max-width: 100%; height: auto; margin: 8px 0; padding: 6px; background: #fff; border: 1px solid var(--rx-line); border-radius: 6px; }
 .py-meta { margin: 10px 0 0; font-family: var(--rx-mono); font-size: 12.5px; line-height: 1.5; color: var(--rx-dim); }
 .py-meta.ok { color: var(--rx-ok); }
 .py-meta.bad { color: var(--rx-bad); }

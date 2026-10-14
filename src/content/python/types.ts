@@ -1,3 +1,4 @@
+import type { PyPackage } from "@/engine/python/client";
 import type { PyTask } from "@/engine/python/grading";
 
 /**
@@ -50,6 +51,8 @@ export type PyLesson = {
   quiz: PyQuizQuestion[];
   /** What the learner can do after mastering the lesson. */
   outcomes: string[];
+  /** Libraries every runnable block and challenge in this lesson may import. Omit for core Python. */
+  packages?: PyPackage[];
 };
 
 export type PyModule = { id: string; number: number; title: string; summary: string; lessons: string[] };

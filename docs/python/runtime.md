@@ -6,8 +6,8 @@ How learner Python executes and is graded in Runtime: what the boundary is, what
 
 | File | Role |
 | --- | --- |
-| `scripts/copy-pyodide.mjs` | Copies the Pyodide **314.0.7** core from `node_modules/pyodide` into `public/vendor/pyodide/314.0.7/` (gitignored). It checks the version and the sha256 of all 5 files against the official release and fails the build on any mismatch. Runs on `postinstall`, `predev` and `prebuild`. |
-| `public/vendor/python-worker.mjs` | Module worker. Boots one interpreter (no packages, no micropip) and runs **one** program, then is discarded. Streams stdout/stderr, enforces the output cap, and classifies syntax and runtime errors. |
+| `scripts/copy-pyodide.mjs` | Copies the Pyodide **314.0.7** core from `node_modules/pyodide` into `public/vendor/pyodide/314.0.7/` (gitignored). It checks the version and the sha256 of all 5 files against the official release and fails the build on any mismatch. It then downloads the data-library wheels (see [Data libraries](#data-libraries)) from the official release and checks each against the sha256 in the pinned `pyodide-lock.json`. Runs on `postinstall`, `predev` and `prebuild`; already-verified wheels are skipped. |
+| `public/vendor/python-worker.mjs` | Module worker. Boots one interpreter (core only, or with the libraries named in `?packages=`; never micropip) and runs **one** program, then is discarded. Streams stdout/stderr and matplotlib figures, enforces the output cap, and classifies syntax and runtime errors. |
 | `src/engine/python/client.ts` | Main-thread client: the warm spare interpreter, run ids, the run timeout, Stop, overflow, crash and boot-failure recovery, and status for the UI. Imports nothing from SQL. |
 | `src/engine/python/values.ts` | Type-tagged Python values, `py.*` authoring helpers, comparison policies, Python-style display. |
 | `src/engine/python/grading.ts` | `checkPython(task, code)` and the pure `gradePython(task, result)` that produces the structured report. |
@@ -115,6 +115,42 @@ connect drafts and progress without changing it. `onGraded(report)` fires after 
   and `total = 21` or `total = price * 7` fail with a reason and the line number. It is opt-in per check, not a
   comparison with a reference solution, and not tamper-proof.
 
+## Data libraries
+
+A lesson opts in with `packages` on `PyLesson` (or `PyTask.packages` / `runPython(code, { packages })`). Without it,
+nothing extra is downloaded and core lessons behave exactly as before.
+
+| Name | Loads (Pyodide 314.0.7 build) | Notes |
+| --- | --- | --- |
+| `numpy` | NumPy 2.4.6 | |
+| `pandas` | pandas 3.0.2 (+ NumPy, dateutil, pytz, six) | |
+| `matplotlib` | matplotlib 3.10.8 (+ deps) | Agg backend. `plt.show()` and figures still open at the end are sent as PNGs, in order with printed output (max 10 per run, 1.5 MB each). |
+| `duckdb` | DuckDB 1.5.1 | SQL over pandas DataFrames. |
+| `pyspark` | DuckDB + pandas + typing-extensions | **Not Apache Spark.** DuckDB's experimental PySpark-compatible DataFrame API, importable as `pyspark` (`from pyspark.sql import SparkSession, functions as F`). DataFrame work only: no RDDs, streaming, cluster config, and not every function. |
+| `scikit-learn` | scikit-learn 1.8.0 (+ SciPy, joblib, threadpoolctl) | ~21 MB, mostly SciPy. |
+
+- **Self-hosted and verified.** Wheels live next to the core in `public/vendor/pyodide/314.0.7/` (gitignored, ~50 MB
+  for all of them), served with the same immutable cache header. The worker loads them by name from that folder with
+  Pyodide's integrity check; names outside its allowlist are refused at boot.
+- **Loaded during boot, before the run clock starts**, and the listed modules are imported then too, so the 5 s
+  run limit only covers the learner's program. Boot allows 120 s with libraries (30 s without).
+- **Still one interpreter per run.** The warm spare boots with the same library set, so Run is fast while the
+  learner edits; a different set replaces the spare. Libraries a lesson didn't request can't be imported.
+- matplotlib 3.10's own Agg text drawing emits a float-coordinate `DeprecationWarning` under Pyodide; the worker
+  filters exactly that message.
+
+Measured (production build with `NEXT_PUBLIC_PYTHON_RUNNER=1`, headless, local, 2026-10-14;
+`tests/e2e/python-packages.mjs`):
+
+| NumPy + pandas | Chromium | WebKit | Firefox |
+| --- | --- | --- | --- |
+| First run (download, boot, import, run) | ~2.9 s | ~4.0 s | ~15 s |
+| Run on a warm spare | ~45 ms | ~90 ms | spare not ready 8 s later (~7 s wait) |
+
+**Known limitation (accepted for now): Firefox.** It already needs ~5 s per core interpreter, and libraries add
+~10 s, so a Firefox learner who runs again soon after a run waits for the next spare. Execution, timeout, Stop and
+recovery all behave correctly; only the wait is long. Real-device and throttled-network timings are still to do.
+
 ## Measured (local, headless, production build, 2026-10-13)
 
 | | Chromium | WebKit | Firefox |
@@ -176,5 +212,7 @@ normal path or raised with the owner. It is never routed around.
 - `npm run dev -- -p 3041`, then `BASE=http://localhost:3041 npm run test:python-runtime` and `npm run test:python-grading`:
   real Pyodide in Chromium, Firefox and WebKit. `npm run test:python-workspace` drives the workspace UI (set
   `BASELINE=<server on the previous commit>` to compare the SQL shell byte for byte), and `npm run test:python-lesson`
-  walks the whole learner journey (including hint/assisted credit and `sql-studio-v1` staying unchanged). For a
+  walks the whole learner journey (including hint/assisted credit and `sql-studio-v1` staying unchanged).
+  `npm run test:python-packages` covers the data libraries: results, figures, DuckDB, pyspark, scikit-learn,
+  per-run isolation, timeout/Stop recovery, and that unrequested libraries can't be imported. For a
   production build: `NEXT_PUBLIC_PYTHON_RUNNER=1 npm run build && npx next start`.
