@@ -64,7 +64,9 @@ it('source inventory is private and all 29 original hashes still match',()=>{
  expect(rows).toHaveLength(29);const hashes=[];
  for(const row of rows){const [file,,size,sha]=row.split(',');const bytes=fs.readFileSync(`${root}/source-documents/${file}`);expect(bytes.length).toBe(Number(size));expect(crypto.createHash('sha256').update(bytes).digest('hex')).toBe(sha);hashes.push(sha);}
  expect(new Set(hashes).size).toBe(28);
- const files=fs.readdirSync('public',{recursive:true}).map(String);expect(files.some(f=>/\.(pdf|docx|zip)$/i.test(f))).toBe(false);
+ // Only exception: the pinned Pyodide stdlib archive, verified byte-for-byte against the official release.
+ const pyodideStdlib=(f:string)=>f.replace(/\\/g,'/')==='vendor/pyodide/314.0.7/python_stdlib.zip'&&crypto.createHash('sha256').update(fs.readFileSync('public/'+f)).digest('hex')==='fa1957e5777068fc4f7437f96d860ae2fbe9c19732ba06c84e004ec16dd7dd7a';
+ const files=fs.readdirSync('public',{recursive:true}).map(String);expect(files.filter(f=>/\.(pdf|docx|zip)$/i.test(f)&&!pyodideStdlib(f))).toEqual([]);
 },20000);
 
 it('merges two tabs without clobbering unrelated drafts or earned achievements',()=>{

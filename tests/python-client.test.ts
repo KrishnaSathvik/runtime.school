@@ -1,0 +1,271 @@
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { pythonRunnerEnabled } from "@/platform/python-runner";
+
+type Listener = (e: MessageEvent) => void;
+type Run = { type: "run"; id: number; code: string; stdin: string; outputLimit: number };
+
+/** Fake python-worker.mjs: boots, accepts one run, answers when told to. */
+class FakeWorker {
+  static instances: FakeWorker[] = [];
+  listeners: Record<string, Listener[]> = { message: [], error: [] };
+  runs: Run[] = [];
+  terminated = false;
+  constructor(public behaviour: { bootFail?: boolean; bootDelay?: number; never?: boolean } = {}) {
+    FakeWorker.instances.push(this);
+    if (!behaviour.never) {
+      setTimeout(
+        () => this.emit(behaviour.bootFail ? { type: "boot-error", message: "wasm failed" } : { type: "ready", version: "314.0.7" }),
+        behaviour.bootDelay ?? 0,
+      );
+    }
+  }
+  addEventListener(type: string, fn: Listener) {
+    (this.listeners[type] ??= []).push(fn);
+  }
+  removeEventListener(type: string, fn: Listener) {
+    this.listeners[type] = (this.listeners[type] ?? []).filter((f) => f !== fn);
+  }
+  emit(data: unknown) {
+    if (this.terminated) return;
+    [...this.listeners.message].forEach((f) => f({ data } as MessageEvent));
+  }
+  postMessage(req: Run) {
+    this.runs.push(req);
+  }
+  print(text: string, stream = "stdout") {
+    this.emit({ type: "output", id: this.runs[0].id, stream, text });
+  }
+  finish(result: Record<string, unknown> = { status: "ok", durationMs: 1 }) {
+    this.emit({ type: "done", id: this.runs[0].id, result });
+  }
+  crash() {
+    [...this.listeners.error].forEach((f) => f({} as MessageEvent));
+  }
+  terminate() {
+    this.terminated = true;
+  }
+}
+
+let client: typeof import("@/engine/python/client");
+const flush = () => new Promise((r) => setTimeout(r, 0));
+const latest = () => FakeWorker.instances.at(-1)!;
+let behaviour: ConstructorParameters<typeof FakeWorker>[0] = {};
+
+beforeAll(async () => {
+  (globalThis as unknown as { window: unknown }).window = globalThis;
+  client = await import("@/engine/python/client");
+});
+
+function useFake(allow = true) {
+  client.__setPythonWorkerFactory(() => new FakeWorker(behaviour) as unknown as Worker, () => allow);
+}
+
+afterEach(() => {
+  vi.useRealTimers();
+  behaviour = {};
+  client.stopPython();
+  client.releasePython();
+  FakeWorker.instances = [];
+});
+
+describe("python-client execution", () => {
+  it("returns stdout and the ok status for the run that was sent", async () => {
+    useFake();
+    const p = client.runPython("print(48)");
+    await flush();
+    const w = latest();
+    expect(w.runs[0]).toMatchObject({ type: "run", code: "print(48)" });
+    w.print("48\n");
+    w.finish();
+    const r = await p;
+    expect(r).toMatchObject({ status: "ok", stdout: "48\n", output: [{ stream: "stdout", text: "48\n" }] });
+  });
+
+  it("uses every worker for one run only, then warms a new one", async () => {
+    useFake();
+    const p1 = client.runPython("a = 1");
+    await flush();
+    const first = latest();
+    first.finish();
+    await p1;
+    expect(first.terminated).toBe(true);
+    // A spare is already booting for the next run.
+    expect(FakeWorker.instances).toHaveLength(2);
+    const p2 = client.runPython("print(a)");
+    await flush();
+    const second = latest();
+    expect(second).not.toBe(first);
+    expect(FakeWorker.instances).toHaveLength(2);
+    second.finish({ status: "runtime-error", type: "NameError", message: "name 'a' is not defined", line: 1, traceback: "t", durationMs: 1 });
+    expect(await p2).toMatchObject({ status: "runtime-error", error: { type: "NameError", line: 1 } });
+  });
+
+  it("passes supplied stdin to the worker (empty by default)", async () => {
+    useFake();
+    const p1 = client.runPython("input()", { stdin: "Ada\n" });
+    await flush();
+    expect(latest().runs[0].stdin).toBe("Ada\n");
+    latest().finish();
+    await p1;
+    const p2 = client.runPython("input()");
+    await flush();
+    expect(latest().runs[0].stdin).toBe("");
+    latest().finish();
+    await p2;
+  });
+
+  it("ignores messages that belong to another run id", async () => {
+    useFake();
+    const p = client.runPython("x");
+    await flush();
+    const w = latest();
+    w.emit({ type: "done", id: 999, result: { status: "ok" } });
+    w.print("real\n");
+    w.finish();
+    expect(await p).toMatchObject({ status: "ok", stdout: "real\n" });
+  });
+
+  it("maps syntax errors with line and column", async () => {
+    useFake();
+    const p = client.runPython("print(");
+    await flush();
+    latest().finish({ status: "syntax-error", type: "SyntaxError", message: "'(' was never closed", line: 1, column: 6, text: "print(", durationMs: 0 });
+    expect(await p).toMatchObject({ status: "syntax-error", error: { line: 1, column: 6, text: "print(" } });
+  });
+
+  it("times out a hung program, terminates its worker, keeps partial output", async () => {
+    vi.useFakeTimers();
+    useFake();
+    const p = client.runPython("while True: pass", { timeoutMs: 5000 });
+    await vi.advanceTimersByTimeAsync(1);
+    const w = latest();
+    w.print("started\n");
+    await vi.advanceTimersByTimeAsync(5000);
+    const r = await p;
+    expect(r).toMatchObject({ status: "timeout", limitMs: 5000, stdout: "started\n" });
+    expect(w.terminated).toBe(true);
+  });
+
+  it("the run limit starts after boot, not before", async () => {
+    vi.useFakeTimers();
+    behaviour = { bootDelay: 8000 };
+    useFake();
+    const p = client.runPython("print(1)", { timeoutMs: 5000 });
+    await vi.advanceTimersByTimeAsync(8001);
+    const w = latest();
+    expect(w.runs).toHaveLength(1);
+    w.finish();
+    expect(await p).toMatchObject({ status: "ok" });
+  });
+
+  it("Stop settles the run, terminates the worker and recovers", async () => {
+    useFake();
+    const p = client.runPython("while True: print(1)");
+    await flush();
+    const w = latest();
+    w.print("1\n1\n");
+    client.stopPython();
+    expect(await p).toMatchObject({ status: "stopped", stdout: "1\n1\n" });
+    expect(w.terminated).toBe(true);
+    expect(client.pythonBusy()).toBe(false);
+    const p2 = client.runPython("print(2)");
+    await flush();
+    latest().finish();
+    expect(await p2).toMatchObject({ status: "ok" });
+  });
+
+  it("Stop works while Python is still loading", async () => {
+    behaviour = { never: true };
+    useFake();
+    const p = client.runPython("print(1)");
+    client.stopPython();
+    expect(await p).toMatchObject({ status: "stopped" });
+    expect(FakeWorker.instances[0].terminated).toBe(true);
+  });
+
+  it("output overflow terminates the run", async () => {
+    useFake();
+    const p = client.runPython("while True: print('x')", { outputLimit: 10 });
+    await flush();
+    const w = latest();
+    expect(w.runs[0].outputLimit).toBe(10);
+    w.print("xxxxxxxxxx");
+    w.emit({ type: "overflow", id: w.runs[0].id });
+    expect(await p).toMatchObject({ status: "output-limit", limit: 10, stdout: "xxxxxxxxxx" });
+    expect(w.terminated).toBe(true);
+  });
+
+  it("a worker crash is reported and the next run uses a fresh worker", async () => {
+    useFake();
+    const p = client.runPython("boom");
+    await flush();
+    const w = latest();
+    w.crash();
+    expect(await p).toMatchObject({ status: "crashed" });
+    const p2 = client.runPython("print(1)");
+    await flush();
+    expect(latest()).not.toBe(w);
+    latest().finish();
+    expect(await p2).toMatchObject({ status: "ok" });
+  });
+
+  it("a boot failure fails the run and a later run retries", async () => {
+    behaviour = { bootFail: true };
+    useFake();
+    const r = await client.runPython("print(1)");
+    expect(r).toMatchObject({ status: "crashed" });
+    expect(client.getPythonStatus()).toBe("failed");
+    behaviour = {};
+    const p2 = client.runPython("print(1)");
+    await flush();
+    latest().finish();
+    expect(await p2).toMatchObject({ status: "ok" });
+  });
+
+  it("a new run supersedes one still in flight", async () => {
+    useFake();
+    const p1 = client.runPython("slow");
+    await flush();
+    const w1 = latest();
+    const p2 = client.runPython("fast");
+    expect(await p1).toEqual({ status: "superseded" });
+    expect(w1.terminated).toBe(true);
+    await flush();
+    latest().finish();
+    expect(await p2).toMatchObject({ status: "ok" });
+  });
+
+  it("does nothing where the runner is not allowed", async () => {
+    useFake(false);
+    expect(await client.runPython("print(1)")).toMatchObject({ status: "unavailable" });
+    client.preloadPython();
+    expect(FakeWorker.instances).toHaveLength(0);
+  });
+});
+
+describe("python runner gate", () => {
+  it("is on in development, off in production even with the flag", () => {
+    expect(pythonRunnerEnabled({ nodeEnv: "development" })).toBe(true);
+    expect(pythonRunnerEnabled({ nodeEnv: "production" })).toBe(false);
+    expect(pythonRunnerEnabled({ nodeEnv: "production", flag: "1" })).toBe(true);
+    expect(pythonRunnerEnabled({ nodeEnv: "production", vercelEnv: "production", flag: "1" })).toBe(false);
+    expect(pythonRunnerEnabled({ nodeEnv: "development", vercelEnv: "production" })).toBe(false);
+  });
+});
+
+describe("pinned pyodide", () => {
+  it("package, worker and copy script all name 314.0.7, and hashes match node_modules", async () => {
+    const pkg = JSON.parse(readFileSync("package.json", "utf8"));
+    expect(pkg.dependencies.pyodide).toBe("314.0.7");
+    const worker = readFileSync("public/vendor/python-worker.mjs", "utf8");
+    expect(worker).toContain("./pyodide/314.0.7/pyodide.mjs");
+    expect(worker).not.toMatch(/micropip|loadPackage\(/);
+    const { PYODIDE_VERSION, PYODIDE_FILES } = await import("../scripts/copy-pyodide.mjs");
+    expect(PYODIDE_VERSION).toBe("314.0.7");
+    for (const [name, hash] of Object.entries(PYODIDE_FILES as Record<string, string>)) {
+      expect(createHash("sha256").update(readFileSync(`node_modules/pyodide/${name}`)).digest("hex")).toBe(hash);
+    }
+  });
+});

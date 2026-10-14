@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "postinstall": "node scripts/copy-pyodide.mjs",
+    "predev": "node scripts/copy-pyodide.mjs",
     "dev": "next dev --turbopack",
+    "prebuild": "node scripts/copy-pyodide.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -19,7 +22,8 @@
     "test:learning": "node tests/e2e/learning-experience.mjs",
     "test:v4": "node tests/e2e/v4.mjs",
     "test:language": "node tests/e2e/content-language.mjs",
-    "test:v5": "node tests/e2e/v5.mjs"
+    "test:v5": "node tests/e2e/v5.mjs",
+    "test:python-runtime": "node tests/e2e/python-runtime.mjs"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.20.3",
@@ -33,6 +37,7 @@
     "idb": "^8.0.4",
     "lucide-react": "^1.53.0",
     "next": "^15.5.9",
+    "pyodide": "314.0.7",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "sql.js": "^1.14.2",

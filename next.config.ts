@@ -10,7 +10,11 @@ const nextConfig: NextConfig = {
       "/playground", "/database-lab", "/query-performance", "/sql-syntax", "/explore", "/subjects", "/skills/:path*",
       "/my-learning", "/progress", "/review", "/review/:path*", "/settings", "/placement",
     ];
-    return legacy.map((source) => ({ source, headers: [{ key: "X-Robots-Tag", value: "noindex, follow" }] }));
+    return [
+      ...legacy.map((source) => ({ source, headers: [{ key: "X-Robots-Tag", value: "noindex, follow" }] })),
+      // Pyodide files live under a versioned folder, so they never change in place.
+      { source: "/vendor/pyodide/:path*", headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }] },
+    ];
   },
   async redirects() {
     return [
