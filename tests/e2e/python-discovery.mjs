@@ -13,7 +13,7 @@ for(const mobile of [false,true]) for(const colorScheme of ['light','dark']) {
  const context=await browser.newContext({viewport:mobile?{width:390,height:844}:{width:1440,height:1000},colorScheme});
  const p=await context.newPage();
  const count=()=>p.locator('.py-project-catalog > li').count();
- await p.goto(`${BASE}/python/projects`);
+ await p.goto(`${BASE}/python/projects?browse=1`);
  assert.equal(await count(),6);
  await p.getByLabel('Difficulty',{exact:true}).selectOption('beginner'); assert.equal(await count(),1);
  await p.getByRole('link',{name:'Retail Order Engine',exact:true}).waitFor();
@@ -38,7 +38,7 @@ for(const mobile of [false,true]) for(const colorScheme of ['light','dark']) {
  assert.equal(await p.locator('.py-project-preparation li').filter({hasText:'Mastered'}).count(),1);
  assert.deepEqual((await new AxeBuilder({page:p}).analyze()).violations.map(v=>v.id),[]);
  await p.evaluate(()=>scrollTo(0,0)); await p.screenshot({path:`${DIR}/${name}-preparation.png`,fullPage:true});
- await p.goto(`${BASE}/python`);
+ await p.goto(`${BASE}/python?browse=1`);
  await p.getByRole('link',{name:'Practice strings and text',exact:true}).click();
  await p.waitForURL('**/python/practice?module=strings#questions');
  assert.equal(await p.getByLabel('Module',{exact:true}).inputValue(),'strings');

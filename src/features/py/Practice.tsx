@@ -1,12 +1,13 @@
 "use client";
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { pythonQuestions, pythonTracks, getPythonQuestion, getPythonQuestionByRef, getPythonTrack, pythonQuestionHref, pythonTrackHref, type PyQuestion } from '@/content/python/practice';
 import { pythonCases, journeyHref } from '@/content/python/journeys';
 import { pythonModules } from '@/content/python';
 import { usePyProgress, usePyProgressReady } from '@/lib/python-progress';
 import { Shell } from '@/features/rt/Shell';
+import { BrowserBar } from './BrowserBar';
 import { Exercise } from './Study';
 
 export function PracticeIndex({ trackSlug, initialModule = '' }: { trackSlug?: string; initialModule?: string }) {
@@ -40,10 +41,15 @@ export function PracticeIndex({ trackSlug, initialModule = '' }: { trackSlug?: s
 
 export function PracticeQuestion({ slug }: { slug: string }) {
   const ready = usePyProgressReady();
+  const items = usePyProgress(s => s.items);
   const q = getPythonQuestion(slug)!;
   const index = pythonQuestions.indexOf(q);
   const next = pythonQuestions[index + 1];
+  useEffect(() => {
+    if (ready) usePyProgress.getState().setTab(q.ref, 'answer');
+  }, [ready, q.ref]);
   return <Shell subject="python" section="practice" path={[{label:'python',href:'/python'},{label:'practice',href:'/python/practice'},{label:q.slug}]}>
+    <BrowserBar label="All questions" current={pythonQuestionHref(slug)} browseHref="/python/practice?browse=1" browseLabel="Tracks, cases, and question filters" items={pythonQuestions.map(q => ({href:pythonQuestionHref(q.slug),label:q.title,group:q.module,status:ready && items[q.ref]?.challenges.answer?.solved ? '✓ solved' : ready && items[q.ref]?.challenges.answer?.assisted ? 'with help' : q.difficulty}))} />
     {ready ? <Exercise key={q.ref} itemRef={q.ref} id="answer" title={q.title} question={q} next={next && <Link href={pythonQuestionHref(next.slug)}>Next question: {next.title}</Link>} /> : <p role="status" className="rx-page">Loading saved progress…</p>}
   </Shell>;
 }

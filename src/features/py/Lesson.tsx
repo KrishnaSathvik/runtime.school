@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Circle, CircleCheck, Eye, Lightbulb, Lock, RotateCcw } from "lucide-react";
-import { getPythonLesson, pythonLessonOrder, pythonModules, type PyChallenge, type PyLesson } from "@/content/python";
+import { ArrowRight, Circle, CircleCheck, Eye, Lightbulb, Lock, RotateCcw } from "lucide-react";
+import { getPythonLesson, pythonLessonOrder, pythonLessons, pythonLessonHref, pythonModules, type PyChallenge, type PyLesson } from "@/content/python";
 import type { PyGradeReport } from "@/engine/python/grading";
 import { emptyAttempt, emptyLesson, isPyLessonMastered, usePyProgress, usePyProgressReady, type PyLessonRecord } from "@/lib/python-progress";
 import { Shell } from "@/features/rt/Shell";
 import { CodePane, type CodePaneHandle } from "./CodePane";
 import { PyRunCell } from "./PyRunCell";
+import { BrowserBar } from "./BrowserBar";
 import { Rich } from "./Rich";
 
 type Tab = "challenge-1" | "challenge-2" | "check" | "complete";
@@ -47,7 +48,8 @@ function openingTab(lesson: PyLesson, rec: PyLessonRecord | undefined): Tab {
 export function PythonLesson({ slug }: { slug: string }) {
   const lesson = getPythonLesson(slug)!;
   const ready = usePyProgressReady();
-  const rec = usePyProgress((s) => s.lessons[lesson.ref]);
+  const lessons = usePyProgress((s) => s.lessons);
+  const rec = lessons[lesson.ref];
   const setTabStored = usePyProgress((s) => s.setTab);
   const ids = challengeIds(lesson);
   const mastered = isPyLessonMastered(rec, ids);
@@ -88,12 +90,7 @@ export function PythonLesson({ slug }: { slug: string }) {
       path={[{ label: "python", href: "/python" }, { label: mod.id, href: "/python" }, { label: `${pad(lesson.number)}-${lesson.slug}` }]}
       status={["Python", `lesson ${position + 1}/${pythonLessonOrder.length}`, "python 3.14 · runs in your browser", mastered ? "✓ mastered" : "drafts save as you type"]}
     >
-      <div className="rx-task py-lesson-bar" style={{ maxWidth: "none" }}>
-        <div className="rx-task-bar">
-          <Link href="/python" className="rx-btn ghost"><ArrowLeft size={14} /> {mod.title}</Link>
-          <span className="mono rx-small" style={{ margin: 0 }}>{pad(position + 1)} / {pad(pythonLessonOrder.length)}</span>
-        </div>
-      </div>
+      <BrowserBar label="All lessons" current={pythonLessonHref(slug)} browseHref="/python?browse=1" browseLabel="Course overview" items={pythonLessons.map(l => ({href:pythonLessonHref(l.slug), label:l.title, group:l.module, status:ready && isPyLessonMastered(lessons[l.ref], l.challenges.map(c => c.id)) ? '✓ mastered' : l.module}))} />
       <div className="rx-task rx-lesson py-lesson">
         <div className="rx-task-split">
           <article className="rx-brief" aria-labelledby="lesson-title">
@@ -396,7 +393,8 @@ function QuizPanel({ lesson, onNext }: { lesson: PyLesson; onNext: () => void })
 }
 
 function CompletePanel({ lesson }: { lesson: PyLesson }) {
-  const rec = usePyProgress((s) => s.lessons[lesson.ref]);
+  const lessons = usePyProgress((s) => s.lessons);
+  const rec = lessons[lesson.ref];
   const when = rec?.masteredAt ? new Date(rec.masteredAt).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" }) : null;
   const next = pythonLessonOrder[pythonLessonOrder.indexOf(lesson.slug) + 1];
   return (

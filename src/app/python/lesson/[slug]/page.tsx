@@ -23,5 +23,5 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function Page({ params }: Props) {
   const lesson = getPythonLesson((await params).slug);
   if (!pythonRunnerEnabled() || !lesson) notFound();
-  return <PythonLesson slug={lesson.slug} />;
+  return <PythonLesson key={lesson.slug} slug={lesson.slug} />;
 }

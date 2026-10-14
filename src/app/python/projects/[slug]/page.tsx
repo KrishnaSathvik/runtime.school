@@ -5,8 +5,8 @@ import { pythonProjects } from "@/content/python/journeys";
 export const dynamicParams = false;
 export function generateStaticParams() { return pythonProjects.map(x => ({slug:x.slug})); }
 export const metadata = { robots: { index:false, follow:false } };
-export default async function Page({params}: {params: Promise<{slug:string}>}) {
+export default async function Page({params, searchParams}: {params: Promise<{slug:string}>; searchParams: Promise<{stage?:string}>}) {
  const {slug} = await params;
  if (!pythonRunnerEnabled() || !pythonProjects.some(x => x.slug === slug)) notFound();
- return <Journey slug={slug} />;
+ return <Journey key={slug + ((await searchParams).stage ?? "brief")} slug={slug} initialStage={(await searchParams).stage} />;
 }

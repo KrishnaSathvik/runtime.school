@@ -6,6 +6,7 @@ import { projectGuides, projectLevels, projectSkills } from '@/content/python/jo
 import { getPythonLesson, pythonLessonHref } from '@/content/python';
 import { isPyLessonMastered, usePyProgress, usePyProgressReady } from '@/lib/python-progress';
 import { Shell } from '@/features/rt/Shell';
+import { BrowserBar } from './BrowserBar';
 import { Exercise } from './Study';
 import { Download } from './Downloads';
 
@@ -70,12 +71,12 @@ function ProjectPreparation({ slug }: { slug: string }) {
   </div>;
 }
 
-export function Journey({ slug }: { slug: string }) {
+export function Journey({ slug, initialStage }: { slug: string; initialStage?: string }) {
   const j = pythonJourneys.find(j => j.slug === slug)!;
   const ready = usePyProgressReady();
   const rec = usePyProgress(s => s.items[j.ref]);
-  const [selected, setSelected] = useState<string | null>(null);
-  const selectedId = selected ?? rec?.tab;
+  const [selected, setSelected] = useState<string | null>(initialStage ?? null);
+  const selectedId = selected ?? (j.kind === 'case' ? rec?.tab : null);
   const index = j.stages.findIndex(s => s.id === selectedId);
   const stage = index >= 0 ? j.stages[index] : null;
   const previous = index > 0 ? j.stages[index - 1] : null;
@@ -89,11 +90,15 @@ export function Journey({ slug }: { slug: string }) {
   };
   const inheritedHelp = j.stages.slice(0,index).some(s => !!rec?.attempts[s.id]?.guided);
   return <Shell subject="python" section={j.kind === 'case' ? 'practice' : 'projects'} path={[{label:'python',href:'/python'},{label:j.kind === 'case' ? 'practice' : 'projects',href:j.kind === 'case' ? '/python/practice' : '/python/projects'},{label:j.title}]}>
+    {j.kind === 'project' && <BrowserBar label="All projects" current={journeyHref(j)} browseHref="/python/projects?browse=1" browseLabel="Project filters and preparation" items={pythonProjects.map(p => ({href:journeyHref(p), label:p.title}))} />}
     <section className="rx-page py-journey-intro">
+      {stage && j.kind === 'project' && <button className="rx-btn ghost" onClick={() => setSelected(null)}>Project brief</button>}
+      {(!stage || j.kind === 'case') && <>
       <h1 className="rx-title">{j.title}</h1><p className="rx-lead">{j.overview}</p>
       <p>{j.packages.length ? 'Uses pandas in your browser.' : 'Uses the Python standard library.'} Run code to inspect outputs and download generated files. Check answer records progress. Earlier milestone checks remain active.</p>
       {j.kind === 'project' && <ProjectPreparation slug={j.slug} />}
       <details><summary>Explore the source data</summary>{Object.entries(j.files).map(([name,text]) => <div key={name}><h2>{name}</h2><pre>{text}</pre><Download name={name} text={text} /></div>)}</details>
+      </>}
       <ol className="py-stage-list" aria-label="Milestones">{j.stages.map((s,n) => <li key={s.id}><button className="rx-btn" disabled={!ready || !available(n)} aria-current={stage?.id === s.id ? 'step' : undefined} onClick={() => open(n)}>{n+1}. {s.title}</button><span>{rec?.challenges[s.id]?.solved ? 'Independent' : rec?.challenges[s.id]?.assisted ? 'With help' : !available(n) ? 'Complete earlier stages first' : 'Ready'}</span></li>)}</ol>
     </section>
     {!ready ? <p role="status">Loading saved progress…</p> : stage && available(index) ? <Exercise key={stage.ref} itemRef={j.ref} id={stage.id} title={stage.title} question={stage} starterOverride={previous ? rec?.drafts[previous.id] ?? '' : stage.starter} inheritedHelp={inheritedHelp} next={index < j.stages.length - 1 ? <button className="rx-btn primary" onClick={() => open(index+1)}>Continue to milestone {index+2}</button> : <span>All stages passed. Run your final program to download its outputs, and download your source and verified summary.</span>} /> : <p className="rx-page">Read the overview, inspect the source data, then open the first stage.</p>}

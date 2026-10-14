@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
 import { pythonRunnerEnabled } from "@/platform/python-runner";
+import { PythonEntry } from "@/features/py/Entry";
 import { ProjectIndex } from "@/features/py/Journeys";
 export const metadata = { robots: { index:false, follow:false } };
-export default function Page() {
+export default async function Page({ searchParams }: { searchParams: Promise<{ browse?: string }> }) {
  if (!pythonRunnerEnabled()) notFound();
- return <ProjectIndex  />;
+ return (await searchParams).browse === "1" ? <ProjectIndex /> : <PythonEntry section="projects" />;
 }
