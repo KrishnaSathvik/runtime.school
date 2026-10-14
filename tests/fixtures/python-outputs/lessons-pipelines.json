@@ -1,0 +1,194 @@
+{
+ "python:build-a-reproducible-data-deliverable#example": {
+  "status": "ok",
+  "stdout": "a.csv b88f8579d1b58699\nb.csv b88f8579d1b58699\nc.csv cd2253ce2a927c89\nraw input: a8ee158293c83bf0\n",
+  "files": [
+   "a.csv",
+   "b.csv",
+   "c.csv"
+  ]
+ },
+ "python:build-a-reproducible-data-deliverable#mistake-1": {
+  "status": "ok",
+  "stdout": "False\n"
+ },
+ "python:build-a-reproducible-data-deliverable#mistake-2": {
+  "status": "ok",
+  "stdout": "int True\n"
+ },
+ "python:build-a-reproducible-data-deliverable#step-1": {
+  "status": "ok",
+  "stdout": "'A1,40.00\\n' cb1f7fbfadc2\n'A1,40.0\\n' 5b94aace7739\n'A1,40.00\\n' cb1f7fbfadc2\n"
+ },
+ "python:build-a-reproducible-data-deliverable#step-2": {
+  "status": "ok",
+  "stdout": "True 2cf912085a3c\n"
+ },
+ "python:build-a-reproducible-data-deliverable#step-3": {
+  "status": "ok",
+  "stdout": "{\n  \"inputs\": {\n    \"orders_raw.csv\": \"a8ee158293c83bf0\"\n  },\n  \"outputs\": {\n    \"clean.csv\": \"32dfc9a8db41065b\"\n  },\n  \"rows\": {\n    \"accepted\": 1,\n    \"in\": 5,\n    \"rejected\": 4\n  },\n  \"schema_version\": \"orders.v1\"\n}\n",
+  "files": [
+   "clean.csv"
+  ]
+ },
+ "python:build-a-reproducible-data-deliverable#step-4": {
+  "status": "ok",
+  "stdout": "True\n",
+  "files": [
+   "run1.csv",
+   "run2.csv"
+  ]
+ },
+ "python:data-quality-rules-and-rejections#example": {
+  "status": "ok",
+  "stdout": "accepted: ['A1']\nrejected: A2 ['missing_customer', 'non_positive_amount']\nrejected: A3 ['unknown_currency']\nTrue\n"
+ },
+ "python:data-quality-rules-and-rejections#mistake-1": {
+  "status": "ok",
+  "stdout": "['missing_customer']\n"
+ },
+ "python:data-quality-rules-and-rejections#mistake-2": {
+  "status": "ok",
+  "stdout": "3 in, 1 out\n"
+ },
+ "python:data-quality-rules-and-rejections#step-1": {
+  "status": "ok",
+  "stdout": "missing_customer FAILS\nnon_positive_amount FAILS\nunknown_currency passes\n"
+ },
+ "python:data-quality-rules-and-rejections#step-2": {
+  "status": "ok",
+  "stdout": "['missing_customer', 'non_positive_amount', 'unknown_currency']\n"
+ },
+ "python:data-quality-rules-and-rejections#step-3": {
+  "status": "ok",
+  "stdout": "{'unknown_currency': 2, 'missing_customer': 1, 'non_positive_amount': 1}\n"
+ },
+ "python:data-quality-rules-and-rejections#step-4": {
+  "status": "ok",
+  "stdout": "6 4 True\n"
+ },
+ "python:define-input-and-output-contracts#example": {
+  "status": "ok",
+  "stdout": "[]\n['customer_id: required', 'amount: expected float, got str', 'discount: not in the schema']\n"
+ },
+ "python:define-input-and-output-contracts#mistake-1": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "TypeError",
+   "line": 4
+  }
+ },
+ "python:define-input-and-output-contracts#mistake-2": {
+  "status": "ok",
+  "stdout": "[['amount', 'order_id'], ['amount', 'coupon', 'order_id']]\n"
+ },
+ "python:define-input-and-output-contracts#step-1": {
+  "status": "ok",
+  "stdout": "['order_id', 'customer_id', 'amount']\nfloat\n"
+ },
+ "python:define-input-and-output-contracts#step-2": {
+  "status": "ok",
+  "stdout": "order_id 'A1' str\ncustomer_id None absent\namount '40.0' str\ncoupon None absent\n"
+ },
+ "python:define-input-and-output-contracts#step-3": {
+  "status": "ok",
+  "stdout": "3 True True\n3.5 True True\nTrue True False\n"
+ },
+ "python:define-input-and-output-contracts#step-4": {
+  "status": "ok",
+  "stdout": "{'order_id': 'A1', 'customer_id': 'C01', 'amount': 40.0, 'coupon': '', 'schema_version': 'orders.v1'}\n"
+ },
+ "python:incremental-processing-and-idempotence#example": {
+  "status": "ok",
+  "stdout": "new since watermark: ['E2', 'E3']\n3 3 True\n2173344708ffeca6\n"
+ },
+ "python:incremental-processing-and-idempotence#mistake-1": {
+  "status": "ok",
+  "stdout": "['A1', 'A2', 'A3', 'A3']\n"
+ },
+ "python:incremental-processing-and-idempotence#mistake-2": {
+  "status": "ok",
+  "stdout": "pending\n"
+ },
+ "python:incremental-processing-and-idempotence#step-1": {
+  "status": "ok",
+  "stdout": "0 2\n"
+ },
+ "python:incremental-processing-and-idempotence#step-2": {
+  "status": "ok",
+  "stdout": "3 2\n"
+ },
+ "python:incremental-processing-and-idempotence#step-3": {
+  "status": "ok",
+  "stdout": "shipped\n"
+ },
+ "python:incremental-processing-and-idempotence#step-4": {
+  "status": "ok",
+  "stdout": "3e692b32bd18\n3e692b32bd18\n165ebab7de13 3e692b32bd18\n"
+ },
+ "python:parse-and-normalize-raw-records#example": {
+  "status": "ok",
+  "stdout": "{'event': 'purchase', 'user': 'U-07', 'ts': '2026-10-14T08:30:00+00:00', 'amount_cents': 123450}\n{'event': 'signup', 'user': 'U-09', 'ts': '2026-10-14T08:00:00+00:00'}\n{'event': 'purchase', 'user': 'U-07', 'ts': '2026-10-15T04:45:00+00:00', 'amount_cents': 1200}\nfailed: [{'line': 3, 'error': 'not valid JSON'}, {'line': 5, 'error': \"bad amount 'twelve'\"}]\n"
+ },
+ "python:parse-and-normalize-raw-records#mistake-1": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "JSONDecodeError",
+   "line": 3
+  }
+ },
+ "python:parse-and-normalize-raw-records#mistake-2": {
+  "status": "ok",
+  "stdout": "0.30000000000000004 False\n"
+ },
+ "python:parse-and-normalize-raw-records#step-1": {
+  "status": "ok",
+  "stdout": "1 Purchase\n2 signup\n3 not JSON: Expecting value\n4 purchase\n5 purchase\n"
+ },
+ "python:parse-and-normalize-raw-records#step-2": {
+  "status": "ok",
+  "stdout": "{'U-07'}\n{'purchase'}\n"
+ },
+ "python:parse-and-normalize-raw-records#step-3": {
+  "status": "ok",
+  "stdout": "0.9999999999999999 False True\n£1,234.50 -> 123450\n12 -> 1200\n0.07 -> 7\n"
+ },
+ "python:parse-and-normalize-raw-records#step-4": {
+  "status": "ok",
+  "stdout": "2026-10-14T09:30:00+01:00 -> 2026-10-14T08:30:00+00:00\n2026-10-14T08:00:00Z -> 2026-10-14T08:00:00+00:00\n2026-10-14T23:45:00-05:00 -> 2026-10-15T04:45:00+00:00\n"
+ },
+ "python:pipeline-tests-and-observability#example": {
+  "status": "ok",
+  "stdout": "{'rows_in': 4, 'accepted': 2, 'rejected': 2, 'cents_in': 6500, 'cents_accepted': 5200}\n"
+ },
+ "python:pipeline-tests-and-observability#mistake-1": {
+  "status": "ok",
+  "stdout": "published 1 rows; rejected 0\n"
+ },
+ "python:pipeline-tests-and-observability#mistake-2": {
+  "status": "ok",
+  "stdout": "passed, but no bad row was ever tested\n"
+ },
+ "python:pipeline-tests-and-observability#step-1": {
+  "status": "ok",
+  "stdout": "True\nTrue\n"
+ },
+ "python:pipeline-tests-and-observability#step-2": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "RuntimeError",
+   "line": 17
+  }
+ },
+ "python:pipeline-tests-and-observability#step-3": {
+  "status": "ok",
+  "stdout": "{'missing_id': 1, 'bad_amount': 2} 1\n"
+ },
+ "python:pipeline-tests-and-observability#step-4": {
+  "status": "ok",
+  "stdout": "test_pipeline passed\n"
+ }
+}

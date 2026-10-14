@@ -9,7 +9,7 @@ import { appendChunk, RunEnd, Stream } from "./Output";
  * Read-only Python you can run. Output comes from a real, fresh interpreter every time;
  * running an example never touches progress.
  */
-export function PyRunCell({ code, name, packages }: { code: string; name: string; packages?: readonly PyPackage[] }) {
+export function PyRunCell({ code, name, packages, files }: { code: string; name: string; packages?: readonly PyPackage[]; files?: Record<string, string> }) {
   const [busy, setBusy] = useState(false);
   const [live, setLive] = useState<PyOutputChunk[]>([]);
   const [result, setResult] = useState<PyRunResult | null>(null);
@@ -20,7 +20,7 @@ export function PyRunCell({ code, name, packages }: { code: string; name: string
     setResult(null);
     setLive([]);
     setInterrupted(false);
-    const r = await runPython(code, { packages, onOutput: (c) => setLive((l) => appendChunk(l, c)) });
+    const r = await runPython(code, { packages, files, onOutput: (c) => setLive((l) => appendChunk(l, c)) });
     setBusy(false);
     if (r.status === "superseded") return setInterrupted(true);
     setResult(r);

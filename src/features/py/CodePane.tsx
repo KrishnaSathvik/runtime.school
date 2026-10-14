@@ -148,7 +148,7 @@ export const CodePane = forwardRef<CodePaneHandle, {
     setRan(null);
     setMark(null);
     setInterrupted(null);
-    const r = await runPython(code, { packages, onOutput: (c) => setLive((l) => appendChunk(l, c)) });
+    const r = await runPython(code, { packages, files: task.files, onOutput: (c) => setLive((l) => appendChunk(l, c)) });
     setBusy(null);
     // Another program on the page (e.g. a lesson example) started and replaced this run.
     if (r.status === "superseded") return setInterrupted("run");

@@ -15,6 +15,13 @@ type Tab = "challenge-1" | "challenge-2" | "check" | "complete";
 const TABS: Tab[] = ["challenge-1", "challenge-2", "check", "complete"];
 const pad = (n: number) => String(n).padStart(2, "0");
 
+/** A challenge's task with the lesson's libraries and fixture files (the challenge's own files win on a clash). */
+function lessonTask(lesson: PyLesson, challenge: PyChallenge) {
+  const task = challenge.task;
+  const files = lesson.files || task.files ? { ...lesson.files, ...task.files } : undefined;
+  return { ...task, ...(lesson.packages && !task.packages ? { packages: lesson.packages } : {}), ...(files ? { files } : {}) };
+}
+
 function challengeIds(lesson: PyLesson) {
   return lesson.challenges.map((c) => c.id);
 }
@@ -166,7 +173,7 @@ function Brief({ lesson, moduleTitle }: { lesson: PyLesson; moduleTitle: string 
 
       <h2 className="rx-label sec">example</h2>
       <p className="rx-cap">{lesson.example.caption}</p>
-      <PyRunCell packages={lesson.packages} code={lesson.example.code} name="example.py" />
+      <PyRunCell packages={lesson.packages} files={lesson.files} code={lesson.example.code} name="example.py" />
 
       <h2 className="rx-label sec">step by step</h2>
       <p className="rx-cap">Each step adds one idea. Run them in order and watch what changes.</p>
@@ -176,7 +183,7 @@ function Brief({ lesson, moduleTitle }: { lesson: PyLesson; moduleTitle: string 
             <span className="rx-walk-no" aria-hidden="true">{i + 1}</span>
             <div className="rx-walk-body">
               <p><strong>{step.title}.</strong> <Rich text={step.text} /></p>
-              <PyRunCell packages={lesson.packages} code={step.code} name={`step-${i + 1}.py`} />
+              <PyRunCell packages={lesson.packages} files={lesson.files} code={step.code} name={`step-${i + 1}.py`} />
             </div>
           </li>
         ))}
@@ -187,7 +194,7 @@ function Brief({ lesson, moduleTitle }: { lesson: PyLesson; moduleTitle: string 
         <div key={m.title} className="py-mistake">
           <p className="py-mistake-title">{m.title}</p>
           <p className="rx-prose py-prose"><Rich text={m.text} /></p>
-          <PyRunCell packages={lesson.packages} code={m.code} name={`mistake-${i + 1}.py`} />
+          <PyRunCell packages={lesson.packages} files={lesson.files} code={m.code} name={`mistake-${i + 1}.py`} />
           <p className="py-fix"><Rich text={m.fix} /></p>
         </div>
       ))}
@@ -313,7 +320,7 @@ function ChallengePanel({ lesson, challenge, index, onNext }: { lesson: PyLesson
       <div className="py-lesson-code">
         <CodePane
           ref={pane}
-          task={lesson.packages ? { ...challenge.task, packages: lesson.packages } : challenge.task}
+          task={lessonTask(lesson, challenge)}
           starter={challenge.starter}
           value={value}
           onChange={(code) => setDraft(lesson.ref, cid, code)}
