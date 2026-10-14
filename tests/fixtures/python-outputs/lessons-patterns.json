@@ -1,0 +1,221 @@
+{
+ "python:classes-and-data-models#example": {
+  "status": "ok",
+  "stdout": "Product('Lamp', 24.5, 3) -> 73.5\nProduct('Desk', 120.0, 1) -> 120.0\nProduct('Pen', 1.5, 0) -> 0.0\nTotal: 193.5\n"
+ },
+ "python:classes-and-data-models#mistake-1": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "TypeError",
+   "line": 8
+  }
+ },
+ "python:classes-and-data-models#mistake-2": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "AttributeError",
+   "line": 5
+  }
+ },
+ "python:classes-and-data-models#quiz-self": {
+  "status": "ok",
+  "stdout": "2 1\n"
+ },
+ "python:classes-and-data-models#step-1": {
+  "status": "ok",
+  "stdout": "Lamp 20.0 | Desk 120.0\nProduct True\n"
+ },
+ "python:classes-and-data-models#step-2": {
+  "status": "ok",
+  "stdout": "73.5 73.5\n"
+ },
+ "python:classes-and-data-models#step-3": {
+  "status": "ok",
+  "stdout": "<__main__.Plain object>\nNice('x') [Nice('a'), Nice('b')]\n"
+ },
+ "python:classes-and-data-models#step-4": {
+  "status": "runtime-error",
+  "stdout": "Lamp\n",
+  "error": {
+   "type": "AttributeError",
+   "line": 7
+  }
+ },
+ "python:context-managers-and-resource-safety#example": {
+  "status": "ok",
+  "stdout": "start import\nworking\nend import\nstart export\nend export\nhandled: disk full\n"
+ },
+ "python:context-managers-and-resource-safety#mistake-1": {
+  "status": "ok",
+  "stdout": "['start']\n"
+ },
+ "python:context-managers-and-resource-safety#mistake-2": {
+  "status": "runtime-error",
+  "stdout": "carried on, but result was never set\n",
+  "error": {
+   "type": "NameError",
+   "line": 10
+  }
+ },
+ "python:context-managers-and-resource-safety#quiz-order": {
+  "status": "ok",
+  "stdout": "<b>\nbold\n</b>\n"
+ },
+ "python:context-managers-and-resource-safety#step-1": {
+  "status": "ok",
+  "stdout": "True\n'partial\\n'\n",
+  "files": [
+   "data.txt"
+  ]
+ },
+ "python:context-managers-and-resource-safety#step-2": {
+  "status": "ok",
+  "stdout": "inside: EUR\nafter: GBP\n"
+ },
+ "python:context-managers-and-resource-safety#step-3": {
+  "status": "ok",
+  "stdout": "['enter', 'ok', 'exit (no error)', 'enter', 'exit (ZeroDivisionError)', 'caller saw the error']\n"
+ },
+ "python:context-managers-and-resource-safety#step-4": {
+  "status": "ok",
+  "stdout": "{'lamp': 3, 'desk': 1}\n"
+ },
+ "python:dataclasses-and-type-hints#example": {
+  "status": "ok",
+  "stdout": "Event(name='signup', user_id=7, tags=['first'], source='web')\nFalse []\n{\"name\": \"purchase\", \"source\": \"app\", \"tags\": [\"sale\"], \"user_id\": 7}\n"
+ },
+ "python:dataclasses-and-type-hints#mistake-1": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "ValueError",
+   "line": 3
+  }
+ },
+ "python:dataclasses-and-type-hints#mistake-2": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "TypeError",
+   "line": 3
+  }
+ },
+ "python:dataclasses-and-type-hints#step-1": {
+  "status": "ok",
+  "stdout": "8\nabab\n{'n': <class 'int'>, 'return': <class 'int'>}\n"
+ },
+ "python:dataclasses-and-type-hints#step-2": {
+  "status": "ok",
+  "stdout": "Point(x=1.5, y=-2) 1.5\nPoint(x=0, y=3)\n"
+ },
+ "python:dataclasses-and-type-hints#step-3": {
+  "status": "ok",
+  "stdout": "True\nFalse\n"
+ },
+ "python:dataclasses-and-type-hints#step-4": {
+  "status": "ok",
+  "stdout": "Sku(code='TSHIRT', size='M') Sku(code='TSHIRT', size='L') 3\nfrozen: can't change size\n"
+ },
+ "python:iterators-and-generators#example": {
+  "status": "ok",
+  "stdout": "send ['A1', 'B2']\nsend ['C3', 'D4']\nsend ['E5']\n[12.5, 7.0] 19.5\n"
+ },
+ "python:iterators-and-generators#mistake-1": {
+  "status": "ok",
+  "stdout": "4.0\n0\n"
+ },
+ "python:iterators-and-generators#mistake-2": {
+  "status": "ok",
+  "stdout": "[1, 2]\n"
+ },
+ "python:iterators-and-generators#quiz-lazy": {
+  "status": "ok",
+  "stdout": "C\nA\n1\n"
+ },
+ "python:iterators-and-generators#step-1": {
+  "status": "runtime-error",
+  "stdout": "a\nb\n",
+  "error": {
+   "type": "StopIteration",
+   "line": 4
+  }
+ },
+ "python:iterators-and-generators#step-2": {
+  "status": "ok",
+  "stdout": "created\nstarting\n2\n1\nfinished\n[]\n"
+ },
+ "python:iterators-and-generators#step-3": {
+  "status": "ok",
+  "stdout": "[0, 1, 4, 9]\n[]\n"
+ },
+ "python:iterators-and-generators#step-4": {
+  "status": "ok",
+  "stdout": "31\n[12, 18, 31]\n"
+ },
+ "python:logging-configuration-and-project-structure#example": {
+  "status": "ok",
+  "stdout": "INFO pipeline: config: {'currency': 'GBP', 'min_amount': 5, 'output': 'report.csv'}\nWARNING pipeline: dropped 1 row(s) below 5\nTotal: 52.5 GBP\n"
+ },
+ "python:logging-configuration-and-project-structure#mistake-1": {
+  "status": "ok",
+  "stdout": "done\n"
+ },
+ "python:logging-configuration-and-project-structure#mistake-2": {
+  "status": "ok",
+  "stdout": "10 {'threshold': 10, 'treshold': 5}\n"
+ },
+ "python:logging-configuration-and-project-structure#step-1": {
+  "status": "ok",
+  "stdout": "WARNING: something odd\nERROR: something failed\n"
+ },
+ "python:logging-configuration-and-project-structure#step-2": {
+  "status": "ok",
+  "stdout": "read 120 rows, skipped 3\n"
+ },
+ "python:logging-configuration-and-project-structure#step-3": {
+  "status": "ok",
+  "stdout": "{'threshold': 10, 'currency': 'EUR'}\nRejected: \"unknown settings: ['treshold']\"\n"
+ },
+ "python:logging-configuration-and-project-structure#step-4": {
+  "status": "ok",
+  "stdout": "main.py                wires the steps together\nconfig.py              DEFAULTS and load_config()\nreaders.py             read_orders(path)\nrules.py               validate(row), totals(rows): no I/O\nwriters.py             write_report(rows, path)\ntests/test_rules.py    tests for rules.py\n"
+ },
+ "python:methods-and-object-state#example": {
+  "status": "ok",
+  "stdout": "Refused: insufficient funds: balance is 120\n120 2 [('deposit', 50), ('withdraw', 30)]\n"
+ },
+ "python:methods-and-object-state#mistake-1": {
+  "status": "ok",
+  "stdout": "-30\n"
+ },
+ "python:methods-and-object-state#mistake-2": {
+  "status": "runtime-error",
+  "stdout": "",
+  "error": {
+   "type": "TypeError",
+   "line": 6
+  }
+ },
+ "python:methods-and-object-state#quiz-class-attr": {
+  "status": "ok",
+  "stdout": "110.00000000000001 55.00000000000001\n"
+ },
+ "python:methods-and-object-state#step-1": {
+  "status": "ok",
+  "stdout": "10 10\n"
+ },
+ "python:methods-and-object-state#step-2": {
+  "status": "ok",
+  "stdout": "Refused: insufficient funds\n20\n"
+ },
+ "python:methods-and-object-state#step-3": {
+  "status": "ok",
+  "stdout": "5.0\n9.0\n"
+ },
+ "python:methods-and-object-state#step-4": {
+  "status": "ok",
+  "stdout": "['sale']\n[]\n"
+ }
+}
