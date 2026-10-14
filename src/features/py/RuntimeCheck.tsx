@@ -13,6 +13,7 @@ import {
   type PyOutputChunk,
   type PyRunResult,
 } from "@/engine/python/client";
+import { checkPython } from "@/engine/python/grading";
 import { Shell } from "@/features/rt/Shell";
 
 const SAMPLE = `price = 12
@@ -21,7 +22,7 @@ total = price * quantity
 print(total)
 `;
 
-/** Plain harness for Milestone 1: run, stop, watch status. No grading, no progress. */
+/** Developer harness: run, stop, watch status; tests also call the grader through window.__runtimePython. */
 export function RuntimeCheck() {
   const status = useSyncExternalStore(subscribePythonStatus, getPythonStatus, () => "idle" as const);
   const failure = useSyncExternalStore(subscribePythonStatus, getPythonFailure, () => null);
@@ -33,6 +34,8 @@ export function RuntimeCheck() {
 
   useEffect(() => {
     preloadPython();
+    // Browser tests drive the real runtime and grader from here. This page only exists where the runner gate is on.
+    (window as unknown as { __runtimePython?: unknown }).__runtimePython = { runPython, checkPython, stopPython };
     return () => releasePython();
   }, []);
 

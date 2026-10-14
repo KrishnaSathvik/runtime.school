@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { pythonRunnerEnabled } from "@/platform/python-runner";
 
 type Listener = (e: MessageEvent) => void;
-type Run = { type: "run"; id: number; code: string; stdin: string; outputLimit: number };
+type Run = { type: "run"; id: number; nonce: string; code: string; stdin: string; outputLimit: number; probe?: unknown };
 
 /** Fake python-worker.mjs: boots, accepts one run, answers when told to. */
 class FakeWorker {
@@ -34,11 +34,14 @@ class FakeWorker {
   postMessage(req: Run) {
     this.runs.push(req);
   }
+  get tag() {
+    return { id: this.runs[0].id, nonce: this.runs[0].nonce };
+  }
   print(text: string, stream = "stdout") {
-    this.emit({ type: "output", id: this.runs[0].id, stream, text });
+    this.emit({ type: "output", ...this.tag, stream, text });
   }
   finish(result: Record<string, unknown> = { status: "ok", durationMs: 1 }) {
-    this.emit({ type: "done", id: this.runs[0].id, result });
+    this.emit({ type: "done", ...this.tag, result });
   }
   crash() {
     [...this.listeners.error].forEach((f) => f({} as MessageEvent));
@@ -127,6 +130,55 @@ describe("python-client execution", () => {
     expect(await p).toMatchObject({ status: "ok", stdout: "real\n" });
   });
 
+  it("ignores messages without this run's nonce (forged from Python via js.postMessage)", async () => {
+    useFake();
+    const p = client.runPython("x");
+    await flush();
+    const w = latest();
+    expect(w.runs[0].nonce).toMatch(/^[0-9a-f]{32}$/);
+    w.emit({ type: "done", id: w.runs[0].id, result: { status: "ok", durationMs: 0, probe: { names: [], vars: {}, calls: {} } } });
+    w.emit({ type: "done", id: w.runs[0].id, nonce: "0".repeat(32), result: { status: "ok", durationMs: 0 } });
+    w.emit({ type: "overflow", id: w.runs[0].id, nonce: "forged" });
+    w.finish({ status: "runtime-error", type: "NameError", message: "x", line: 1, traceback: "", durationMs: 0 });
+    expect(await p).toMatchObject({ status: "runtime-error" });
+  });
+
+  it("every run gets a different nonce", async () => {
+    useFake();
+    const p1 = client.runPython("a");
+    await flush();
+    const n1 = latest().runs[0].nonce;
+    latest().finish();
+    await p1;
+    const p2 = client.runPython("b");
+    await flush();
+    expect(latest().runs[0].nonce).not.toBe(n1);
+    latest().finish();
+    await p2;
+  });
+
+  it("passes the probe through and returns the probe result", async () => {
+    useFake();
+    const probe = { vars: ["total"], calls: [] };
+    const p = client.runPython("total = 48", { probe });
+    await flush();
+    expect(latest().runs[0].probe).toEqual(probe);
+    latest().finish({ status: "ok", durationMs: 1, probe: { names: ["total"], vars: { total: { value: { t: "int", v: "48" } } }, calls: {} } });
+    expect(await p).toMatchObject({ status: "ok", probe: { vars: { total: { value: { t: "int", v: "48" } } } } });
+  });
+
+  it("a timeout reports which test input was running", async () => {
+    vi.useFakeTimers();
+    useFake();
+    const p = client.runPython("def f(n):\n  while True: pass", { timeoutMs: 1000 });
+    await vi.advanceTimersByTimeAsync(1);
+    const w = latest();
+    w.emit({ type: "case", ...w.tag, call: "f", index: 0 });
+    w.emit({ type: "case", ...w.tag, call: "f", index: 2 });
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(await p).toMatchObject({ status: "timeout", case: { call: "f", index: 2 } });
+  });
+
   it("maps syntax errors with line and column", async () => {
     useFake();
     const p = client.runPython("print(");
@@ -192,7 +244,7 @@ describe("python-client execution", () => {
     const w = latest();
     expect(w.runs[0].outputLimit).toBe(10);
     w.print("xxxxxxxxxx");
-    w.emit({ type: "overflow", id: w.runs[0].id });
+    w.emit({ type: "overflow", ...w.tag });
     expect(await p).toMatchObject({ status: "output-limit", limit: 10, stdout: "xxxxxxxxxx" });
     expect(w.terminated).toBe(true);
   });

@@ -1,6 +1,6 @@
-# Python runtime (Milestone 1)
+# Python runtime and grading (Milestones 1–2)
 
-How learner Python executes in Runtime: what the boundary is, what it guarantees, and what it doesn't.
+How learner Python executes and is graded in Runtime: what the boundary is, what it guarantees, and what it doesn't.
 
 ## Pieces
 
@@ -9,6 +9,8 @@ How learner Python executes in Runtime: what the boundary is, what it guarantees
 | `scripts/copy-pyodide.mjs` | Copies the Pyodide **314.0.7** core from `node_modules/pyodide` into `public/vendor/pyodide/314.0.7/` (gitignored). It checks the version and the sha256 of all 5 files against the official release and fails the build on any mismatch. Runs on `postinstall`, `predev` and `prebuild`. |
 | `public/vendor/python-worker.mjs` | Module worker. Boots one interpreter (no packages, no micropip) and runs **one** program, then is discarded. Streams stdout/stderr, enforces the output cap, and classifies syntax and runtime errors. |
 | `src/engine/python/client.ts` | Main-thread client: the warm spare interpreter, run ids, the run timeout, Stop, overflow, crash and boot-failure recovery, and status for the UI. Imports nothing from SQL. |
+| `src/engine/python/values.ts` | Type-tagged Python values, `py.*` authoring helpers, comparison policies, Python-style display. |
+| `src/engine/python/grading.ts` | `checkPython(task, code)` and the pure `gradePython(task, result)` that produces the structured report. |
 | `src/platform/python-runner.ts` | The gate deciding where execution is allowed. |
 | `src/app/python/runtime` | Developer check page. Returns 404 wherever the gate is off. |
 
@@ -28,6 +30,40 @@ How learner Python executes in Runtime: what the boundary is, what it guarantees
   `EOFError` once that runs out (default: empty).
 - **UI stays responsive** while Python is busy; the main-thread timer keeps ticking.
 - **Progress:** the runner never reads or writes `sql-studio-v1` (e2e compares it before and after).
+
+## Grading
+
+**Run Code and Check Answer are separate calls** (`runPython` and `checkPython`), and each uses its own fresh
+interpreter. A Check runs the learner's program once, from scratch. If it finishes, the same interpreter then reports:
+
+- the values of the named variables,
+- the result (or exception and line) of each required function call, with fresh argument objects for every test input,
+- the program's top-level names, for "did you mean" feedback.
+
+Values come back as **type-tagged data**, and only exact built-in types are read as values (`None`, `bool`, `int`,
+`float`, `str`, `list`, `tuple`, `set`, `frozenset`, `dict`). Anything else, including subclasses of those types and
+objects with a custom `__eq__`/`__repr__`, comes back as `other` and never matches an expected value. **Judgement
+happens in TypeScript** (`gradePython`), not in Python. Expected values, including hidden cases, are never sent to the
+interpreter. Code is never compared with a reference string.
+
+| Check | What it verifies | Policy (explicit per check) |
+| --- | --- | --- |
+| `output` | Full stdout | `exact` (default), or `trailing` to ignore trailing spaces and blank lines |
+| `variable` | Named variable exists, has the right type and value | `numbers`: `exact-type` (default; `48 ≠ 48.0`, `True ≠ 1`) or `int-float-equal` (bool still never an int) · `float`: rel 1e-9 / abs 1e-12 (default) or `exact` · `strings`: `exact` or `strip` · `order`: `ordered` or `any` for lists/tuples |
+| `function` | Function exists, is callable, and returns the expected value for every case | Same policies. Cases can be `hidden`: neither their inputs nor their expected values are ever shown |
+
+`ok` is true only when the program finished **and** every check passed. Syntax errors, runtime errors, timeouts,
+output overflow, Stop, crashes and missing probe data all give `ok: false` with every check `not-run` (or `fail` for
+the function that was running when time ran out). Failure categories: `wrong-output`, `missing-name`, `not-callable`,
+`wrong-type`, `wrong-value`, `call-error`, `returned-none-printed`, `fails-hidden-cases`, plus the program-level ones.
+
+**What it resists, and what it doesn't.** Every builtin the reader uses after the learner's code has run is bound
+before that code starts. Patching `builtins.repr/type/isinstance/len/callable` or `json.loads` therefore doesn't
+change how values are read (e2e). Worker messages carry a per-run nonce that lives only in the worker's module scope,
+and the worker's `postMessage` is bound before learner code runs. Results forged through `js.postMessage`, or a
+replaced `js.postMessage`, are ignored (e2e). This is still the learner's own interpreter. Deliberate introspection
+(e.g. `gc`, frame objects) can reach the harness and fake results, and anyone can edit the page itself. **Browser-side
+grading is educational feedback, not tamper-proof certification.**
 
 ## Measured (local, headless, production build, 2026-10-13)
 
@@ -85,6 +121,7 @@ normal path or raised with the owner. It is never routed around.
 
 ## Tests
 
-- `npx vitest run tests/python-client.test.ts`: client state machine (fake worker), the gate, pinned version and hashes.
-- `npm run dev -- -p 3041` then `BASE=http://localhost:3041 npm run test:python-runtime`: real Pyodide in Chromium,
-  Firefox and WebKit (20 checks each). For a production build: `NEXT_PUBLIC_PYTHON_RUNNER=1 npm run build && npx next start`.
+- `npx vitest run tests/python-client.test.ts tests/python-grading.test.ts`: client state machine (fake worker), nonce,
+  probe, gate, pinned version and hashes; comparison policies, display, every grading path.
+- `npm run dev -- -p 3041`, then `BASE=http://localhost:3041 npm run test:python-runtime` and `npm run test:python-grading`:
+  real Pyodide in Chromium, Firefox and WebKit. For a production build: `NEXT_PUBLIC_PYTHON_RUNNER=1 npm run build && npx next start`.

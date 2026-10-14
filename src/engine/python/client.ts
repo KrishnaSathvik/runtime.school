@@ -1,4 +1,5 @@
 import { pythonRunnerEnabled } from "@/platform/python-runner";
+import type { PyValue, WireValue } from "./values";
 
 /**
  * Python execution client. Separate from the SQL engine: nothing here imports SQL code.
@@ -34,13 +35,30 @@ export type PyRuntimeError = { type: string; message: string; line: number | nul
 
 type Output = { stdout: string; stderr: string; output: PyOutputChunk[] };
 
+/** What a Check asks the interpreter to report after the program runs. Never contains expected values. */
+export type PyProbe = {
+  vars?: string[];
+  calls?: { name: string; cases: { args: WireValue[]; kwargs?: Record<string, WireValue> }[] }[];
+};
+export type PyCallCase =
+  | { ok: true; value: PyValue; stdout: string }
+  | { ok: false; error: PyRuntimeError; stdout: string };
+export type PyProbeResult = {
+  /** Top-level names the program defined (not modules or dunders), for "did you mean" feedback. */
+  names: string[];
+  vars: Record<string, { value: PyValue } | { missing: true }>;
+  calls: Record<string, { missing: true } | { notCallable: true; type: string } | { cases: PyCallCase[] }>;
+};
+/** The test input being evaluated when a check was cut short. */
+export type PyCaseRef = { call: string; index: number };
+
 export type PyRunResult =
-  | (Output & { status: "ok"; durationMs: number })
+  | (Output & { status: "ok"; durationMs: number; probe?: PyProbeResult })
   | (Output & { status: "syntax-error"; error: PySyntaxError; durationMs: number })
   | (Output & { status: "runtime-error"; error: PyRuntimeError; durationMs: number })
-  | (Output & { status: "timeout"; limitMs: number })
-  | (Output & { status: "output-limit"; limit: number })
-  | (Output & { status: "stopped" })
+  | (Output & { status: "timeout"; limitMs: number; case?: PyCaseRef })
+  | (Output & { status: "output-limit"; limit: number; case?: PyCaseRef })
+  | (Output & { status: "stopped"; case?: PyCaseRef })
   | (Output & { status: "crashed"; message: string })
   | { status: "superseded" }
   | { status: "unavailable"; message: string };
@@ -149,13 +167,20 @@ export function releasePython(): void {
 
 // ---- execution ----
 
-type Active = { id: number; out: Output; settle: (r: PyRunResult) => void };
+type Active = { id: number; out: Output; current?: PyCaseRef; settle: (r: PyRunResult) => void };
 let active: Active | null = null;
 let nextId = 1;
 
+/** Per-run secret: Python can call js.postMessage, but cannot read this, so forged messages are ignored. */
+function makeNonce(): string {
+  const bytes = new Uint32Array(4);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(8, "0")).join("");
+}
+
 export async function runPython(
   code: string,
-  opts: { timeoutMs?: number; outputLimit?: number; stdin?: string; onOutput?: (chunk: PyOutputChunk) => void } = {},
+  opts: { timeoutMs?: number; outputLimit?: number; stdin?: string; probe?: PyProbe; onOutput?: (chunk: PyOutputChunk) => void } = {},
 ): Promise<PyRunResult> {
   if (typeof window === "undefined" || !allowed()) {
     return { status: "unavailable", message: "Python execution isn't available on this site yet." };
@@ -163,6 +188,7 @@ export async function runPython(
   if (active) active.settle({ status: "superseded" });
 
   const id = nextId++;
+  const nonce = makeNonce();
   const out: Output = { stdout: "", stderr: "", output: [] };
   let settle!: (r: PyRunResult) => void;
   const result = new Promise<PyRunResult>((resolve) => (settle = resolve));
@@ -197,8 +223,10 @@ export async function runPython(
 
   const onMessage = (event: MessageEvent) => {
     const d = event.data;
-    if (d?.id !== id) return;
-    if (d.type === "output") {
+    if (d?.id !== id || d?.nonce !== nonce) return;
+    if (d.type === "case") {
+      me.current = { call: String(d.call), index: Number(d.index) };
+    } else if (d.type === "output") {
       const chunk: PyOutputChunk = { stream: d.stream, text: d.text };
       out[chunk.stream] += chunk.text;
       const last = out.output.at(-1);
@@ -206,10 +234,10 @@ export async function runPython(
       else out.output.push({ ...chunk });
       opts.onOutput?.(chunk);
     } else if (d.type === "overflow") {
-      me.settle({ ...out, status: "output-limit", limit: opts.outputLimit ?? PY_OUTPUT_LIMIT });
+      me.settle({ ...out, status: "output-limit", limit: opts.outputLimit ?? PY_OUTPUT_LIMIT, case: me.current });
     } else if (d.type === "done") {
       const r = d.result ?? {};
-      if (r.status === "ok") me.settle({ ...out, status: "ok", durationMs: r.durationMs });
+      if (r.status === "ok") me.settle({ ...out, status: "ok", durationMs: r.durationMs, ...(r.probe ? { probe: r.probe } : {}) });
       else if (r.status === "syntax-error")
         me.settle({ ...out, status: "syntax-error", durationMs: r.durationMs, error: { type: r.type, message: r.message, line: r.line ?? null, column: r.column ?? null, endLine: r.endLine ?? null, endColumn: r.endColumn ?? null, text: r.text ?? "" } });
       else if (r.status === "runtime-error")
@@ -237,15 +265,15 @@ export async function runPython(
   w.addEventListener("message", onMessage);
   w.addEventListener("error", onError);
   const limitMs = opts.timeoutMs ?? PY_RUN_TIMEOUT_MS;
-  clock.timer = setTimeout(() => me.settle({ ...out, status: "timeout", limitMs }), limitMs);
-  w.postMessage({ type: "run", id, code, stdin: opts.stdin ?? "", outputLimit: opts.outputLimit ?? PY_OUTPUT_LIMIT });
+  clock.timer = setTimeout(() => me.settle({ ...out, status: "timeout", limitMs, case: me.current }), limitMs);
+  w.postMessage({ type: "run", id, nonce, code, stdin: opts.stdin ?? "", outputLimit: opts.outputLimit ?? PY_OUTPUT_LIMIT, ...(opts.probe ? { probe: opts.probe } : {}) });
   return result;
 }
 
 /** Stop the current run (if any). The interpreter is discarded and a fresh one warms up. */
 export function stopPython(): void {
   if (!active) return;
-  active.settle({ ...active.out, status: "stopped" });
+  active.settle({ ...active.out, status: "stopped", case: active.current });
 }
 
 export const pythonBusy = (): boolean => active !== null;
