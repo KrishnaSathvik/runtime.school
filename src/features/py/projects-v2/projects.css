@@ -78,3 +78,76 @@
 .pv-orientation p { font-size:14px; margin:8px 0; }
 .pv-orientation ol { list-style:decimal; padding-left:20px; font-size:14px; }
 .pv-orientation li { margin:8px 0; }
+
+/* Workspace stages keep reference depth outside the active task. */
+.pv-stage-nav,.pv-tab-bar { display:flex; align-items:center; gap:4px; border-bottom:1px solid var(--rx-line); }
+.pv-stage-nav { margin-bottom:24px; flex-wrap:wrap; }
+.pv-stage-nav button,.pv-tab-bar button { padding:12px 16px; border-bottom:2px solid transparent; font-size:14px; }
+.pv-stage-nav [aria-current],.pv-tab-bar [aria-pressed=true] { border-bottom-color:var(--rx-ink); font-weight:600; background:var(--rx-cell); }
+.pv-stage-nav > span { margin-left:auto; font-size:12px; color:var(--rx-dim); }
+.pv-overview,.pv-finish { max-width:900px; margin:0 auto; padding-bottom:24px; }
+.pv-overview ol { list-style:decimal; padding-left:24px; }
+.pv-overview li { margin:12px 0; }
+.pv-overview li p { margin:4px 0; }
+.pv-overview > .rx-btn { margin-top:16px; }
+.pv-build { display:grid; grid-template-columns:minmax(0,var(--pv-task-width)) 12px minmax(0,1fr); align-items:start; }
+.pv-build .pv-brief { padding:0 18px 0 0; border:0; }
+.pv-build .pv-work { position:sticky; top:64px; min-width:0; padding:0 0 0 18px; }
+.pv-build select { display:block; width:100%; padding:10px; border:1px solid var(--rx-line); border-radius:4px; background:var(--rx-bg); font-size:13px; color:var(--rx-ink); margin:6px 0 16px; }
+.pv-milestone-label { font-weight:600; font-size:13px; }
+.pv-build .pv-task { padding:0; border:0; margin:20px 0; }
+.pv-task h3 { font-family:inherit; margin:16px 0 8px; }
+.pv-task .rx-btn { white-space:normal; height:auto; padding:8px; text-align:left; }
+.pv-build .pv-inputs { margin:16px 0; }
+.pv-build .pv-inputs h2 { overflow-wrap:anywhere; }
+.pv-files { border-top:1px solid var(--rx-line); }
+.pv-build .pv-explorer { padding:0; border:0; gap:8px; }
+.pv-explorer p { font-size:12px; color:var(--rx-dim); margin:8px 0; }
+.pv-explorer button { display:block; width:100%; text-align:left; padding:7px 10px; font:12px var(--rx-mono); overflow-wrap:anywhere; border-left:2px solid transparent; }
+.pv-explorer [aria-pressed=true] { border-left-color:var(--rx-ink); }
+.pv-build .pv-file-head { margin:0; min-height:40px; padding:0 0 10px; border:0; }
+.pv-divider { height:100%; min-height:600px; cursor:col-resize; touch-action:none; border-left:1px solid var(--rx-line); border-right:1px solid var(--rx-line); background:var(--rx-cell); }
+.pv-divider:focus-visible { outline:2px solid var(--rx-ink); outline-offset:2px; }
+.py-project-v2 .pv-build .cm-editor { height:440px; }
+.py-project-v2 .pv-build .cm-scroller { height:100%; overflow:auto; }
+.py-project-v2 .pv-full-source { height:440px; resize:vertical; overflow:auto; white-space:pre; font:12px/1.6 var(--rx-mono); }
+.pv-build .pv-output { margin-top:0; padding-top:0; }
+.pv-results { overflow:auto; min-height:160px; padding:12px 4px; }
+.pv-results-size { display:flex; justify-content:flex-end; align-items:center; gap:12px; font-size:11px; color:var(--rx-dim); padding-top:8px; }
+.pv-results-size input { width:100px; }
+.pv-status { font-size:12px; margin:4px 0 12px; min-height:20px; }
+.pv-finish-link { margin:18px 0; }
+.pv-finish .pv-output { margin-bottom:24px; }
+.pv-finish .pv-artifacts { margin-bottom:20px; }
+@media(max-width:700px){
+ .pv-build { grid-template-columns:minmax(0,1fr); }
+ .pv-build .pv-brief,.pv-build .pv-work { padding:0; position:static; }
+ .pv-divider { display:none; }
+ .pv-stage-nav > span { width:100%; margin:8px 0; }
+ .pv-build .pv-work { margin-top:20px; border-top:1px solid var(--rx-line); padding-top:16px; }
+ .pv-build .pv-explorer > div { display:flex; flex-wrap:wrap; gap:4px; }
+ .pv-build .pv-explorer p { width:100%; }
+ .pv-build .pv-explorer button { width:auto; border:1px solid var(--rx-line); }
+ .pv-tab-bar button,.pv-stage-nav button { padding:10px; }
+ .py-project-v2 .pv-build .cm-editor,.py-project-v2 .pv-full-source { height:360px; }
+}
+.pv-mobile-nav { display:none; }
+@media(max-width:700px){
+ .pv-mobile-nav { display:flex; position:sticky; top:48px; z-index:10; background:var(--rx-bg); border-bottom:1px solid var(--rx-line); margin-bottom:16px; }
+ .pv-mobile-nav button { flex:1; padding:12px 6px; font-size:13px; }
+ .pv-build .pv-brief,.pv-build .pv-files,.pv-build .pv-work,.pv-build .pv-output { scroll-margin-top:108px; }
+}
+/* All stages share the same full-width page frame. */
+.pv-overview,.pv-finish { max-width:none; width:100%; margin:0; }
+.pv-overview { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:0; }
+.pv-overview-context { min-width:0; padding-right:28px; border-right:1px solid var(--rx-line); }
+.pv-overview-plan { min-width:0; padding-left:28px; }
+.pv-overview h2:first-child { margin-top:0; }
+.pv-build { grid-template-columns:minmax(0,calc(var(--pv-task-width) - 6px)) 12px minmax(0,1fr); }
+.pv-finish > h2:first-child { margin-top:0; }
+@media(max-width:700px){
+ .pv-overview,.pv-build { grid-template-columns:minmax(0,1fr); }
+ .pv-overview-context,.pv-overview-plan { padding:0; border:0; }
+ .pv-overview-plan { margin-top:24px; }
+}
+.py-project-v2.pv-project-page { max-width:none; }

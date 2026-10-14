@@ -11,17 +11,18 @@ for(const engine of browsers){const b=await ({chromium,firefox,webkit}[engine]).
  if(!localStorage.getItem('runtime-python-projects-v2'))localStorage.setItem('runtime-python-projects-v2',JSON.stringify({version:2,projects:{[project.ref]:{[project.revision]:{files:project.reference,selected:Object.keys(project.reference).find(x=>x!=='main.py'),milestone:0,interpretation:'',milestones:{}}}}}));
  if(!localStorage.getItem('runtime-python-v1'))localStorage.setItem('runtime-python-v1',legacy);
  },{project,legacy});
- await p.goto(`${base}/python/projects/${project.slug}`);await p.getByRole('button',{name:'Check complete project',exact:true}).waitFor();
+ await p.goto(`${base}/python/projects/${project.slug}`);await p.getByRole('navigation',{name:'Project stages'}).waitFor();
  assert.equal(await p.getByText(/V1 history|Revision 2\.0|Projects · V2/).count(),0,'internal versioning stays out of product UI');
- assert.equal(await p.getByRole('button',{name:'Download verified project',exact:true}).isEnabled(),false);
+ await p.getByRole('navigation',{name:'Project stages'}).getByRole('button',{name:'Build',exact:true}).click();
  if(project.slug==='customer-data-quality'){
   for(let i=0;i<project.milestones.length;i++){
-   await p.getByRole('navigation',{name:'Project milestones'}).getByRole('button').nth(i).click();
+   await p.getByLabel('Current milestone',{exact:true}).selectOption(String(i));
    await p.getByRole('button',{name:'Check milestone',exact:true}).click();await p.waitForFunction(()=>!document.querySelector('.pv-actions button')?.disabled,{},{timeout:120000});
    const passed=await p.evaluate(({ref,id})=>JSON.parse(localStorage.getItem('runtime-python-projects-v2')).projects[ref]['2.0.0'].milestones[id]?.passed,{ref:project.ref,id:project.milestones[i].id});assert.equal(passed,true,'cumulative milestone check');
   }
  }
 
+ await p.getByRole('navigation',{name:'Project stages'}).getByRole('button',{name:'Test & deliver',exact:true}).click();
  await p.getByRole('button',{name:'Check complete project',exact:true}).click();
  await p.waitForFunction(()=>!document.querySelector('.pv-actions button')?.disabled,{},{timeout:120000});
  await p.waitForFunction(ref=>JSON.parse(localStorage.getItem('runtime-python-projects-v2')).projects[ref]['2.0.0'].evidence!==undefined,project.ref);
@@ -34,7 +35,9 @@ for(const engine of browsers){const b=await ({chromium,firefox,webkit}[engine]).
  await p.evaluate(()=>window.scrollTo(0,0));await p.screenshot({path:`${dir}/${engine}-${project.slug}-desktop.png`});
  await p.reload();await p.getByRole('button',{name:'Check complete project',exact:true}).waitFor();assert.equal(await p.getByRole('button',{name:'Download verified project',exact:true}).isEnabled(),true,'completion and files persist');
  await p.setViewportSize({width:390,height:844});assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await p.screenshot({path:`${dir}/${engine}-${project.slug}-mobile.png`});
- const editor=p.locator('.cm-content');await editor.click();await p.keyboard.press(`${process.platform==='darwin'?'Meta':'Control'}+a`);await p.keyboard.insertText('# unfinished implementation\n');assert.equal(await p.getByRole('button',{name:'Download verified project',exact:true}).isEnabled(),false,'editing invalidates delivery');
+ await p.getByRole('navigation',{name:'Project stages'}).getByRole('button',{name:'Build',exact:true}).click();
+ const editor=p.locator('.cm-content');await editor.click();await p.keyboard.press(`${process.platform==='darwin'?'Meta':'Control'}+a`);await p.keyboard.insertText('# unfinished implementation\n');await p.getByRole('navigation',{name:'Project stages'}).getByRole('button',{name:'Test & deliver',exact:true}).click();assert.equal(await p.getByRole('button',{name:'Download verified project',exact:true}).isEnabled(),false,'editing invalidates delivery');
+ await p.getByRole('navigation',{name:'Project stages'}).getByRole('button',{name:'Test & deliver',exact:true}).click();
  await p.getByRole('button',{name:'Check complete project',exact:true}).click();await p.waitForFunction(()=>!document.querySelector('.pv-actions button')?.disabled,{},{timeout:120000});
  await p.waitForFunction(ref=>JSON.parse(localStorage.getItem('runtime-python-projects-v2')).projects[ref]['2.0.0'].evidence?.passed===false,project.ref);
  const failed=await p.evaluate(ref=>JSON.parse(localStorage.getItem('runtime-python-projects-v2')).projects[ref]['2.0.0'].evidence,project.ref);assert.equal(failed.passed,false,'incorrect solution fails');
