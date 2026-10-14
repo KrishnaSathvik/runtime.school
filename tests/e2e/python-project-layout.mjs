@@ -11,6 +11,7 @@ try{
   await page.goto(`http://127.0.0.1:3052/python/projects/${project.slug}`);
   await page.locator('.cm-content').waitFor();
   const left=page.locator('.pv-brief'),right=page.locator('.pv-work');
+  assert.ok(await left.getByRole('heading',{name:'Start here',exact:true}).isVisible());
   assert.equal(await left.getByRole('group',{name:'File explorer'}).count(),1);
   assert.equal(await right.locator('.pv-explorer,.pv-dataset,.pv-delivery').count(),0);
   assert.equal(await page.getByText(/View sample|Dataset generation rules|V1 history|Revision 2\.0/).count(),0);
@@ -25,7 +26,7 @@ try{
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`${project.slug}: ${width}`);
   }
   if(project.slug==='customer-data-quality'){
-   await page.setViewportSize({width:1365,height:1000});await page.screenshot({path:'docs/python/projects-v2/screens/current-project-desktop.png'});
+   await page.setViewportSize({width:1365,height:1000});await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:'docs/python/projects-v2/screens/current-project-desktop.png'});
    await page.locator('.pv-inputs').scrollIntoViewIfNeeded();await page.screenshot({path:'docs/python/projects-v2/screens/current-inputs-desktop.png'});
    await page.setViewportSize({width:390,height:844});await page.locator('.pv-inputs').scrollIntoViewIfNeeded();await page.screenshot({path:'docs/python/projects-v2/screens/current-project-mobile.png'});
    const a11y=await new AxeBuilder({page}).include('.py-project-v2').analyze();

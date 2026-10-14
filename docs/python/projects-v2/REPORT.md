@@ -288,3 +288,9 @@ Implementation commits: `c54b86a`, `1fbaac8`; final UI cleanup and verification 
 Project instructions, file navigation, input previews, generated artifacts and delivery controls are in the left column. The right column contains only editable Python, execution controls and terminal/check output. Input samples are visible by default; generation machinery is removed from the learner task view. Data selection previews on the left without replacing code. Tables align fields on desktop and become labeled records on narrow phones. Desktop uses equal columns with a sticky workspace; smaller screens stack naturally without nested editor scrolling.
 
 The six-project layout test verifies file placement, always-visible inputs, preserved editor contents when inspecting data, and no horizontal overflow at 1365, 600, 390 and 360 pixels. The representative workspace passes Axe with no serious or critical violations.
+
+## Learner comprehension review
+
+Reviewed all six project briefs, milestone requirements, starter contracts and their file-loading entry points. This is a heuristic review, not a study with real learners. The previous page described constraints but left prerequisites, file relationships, expected starter errors and the execution sequence implicit. Each project now includes a visible starting guide, task-specific example and prerequisite list. The guide distinguishes milestone checks from executing the full program and final acceptance. Existing placement of task material on the left and editor/output on the right is preserved.
+
+These remain intermediate projects. They assume working knowledge of functions, collection operations and file handling; the analytical projects additionally require dates, plotting and/or pandas. A beginner still needs instruction in those concepts. The guidance improves orientation but does not establish that an unassisted beginner can complete the projects.
