@@ -1,0 +1,11 @@
+/** A portable uncompressed ZIP. Contents come only from the current workspace and captured run. */
+const encoder=new TextEncoder();
+function crc32(bytes:Uint8Array){let crc=0xffffffff;for(const byte of bytes){crc^=byte;for(let n=0;n<8;n++)crc=(crc>>>1)^((crc&1)?0xedb88320:0);}return (crc^0xffffffff)>>>0;}
+export function zipFiles(files:Record<string,string>):Uint8Array{
+ const chunks:Uint8Array[]=[];const entries:{name:Uint8Array;size:number;crc:number;offset:number}[]=[];let offset=0;
+ function header(size:number){const bytes=new Uint8Array(size);return {bytes,view:new DataView(bytes.buffer)};}
+ for(const [path,text] of Object.entries(files)){if(path.startsWith('/')||path.split('/').includes('..'))throw new Error('Invalid archive path');const name=encoder.encode(path),data=encoder.encode(text),crc=crc32(data);const {bytes,view}=header(30);view.setUint32(0,0x04034b50,true);view.setUint16(4,20,true);view.setUint16(6,0x800,true);view.setUint32(14,crc,true);view.setUint32(18,data.length,true);view.setUint32(22,data.length,true);view.setUint16(26,name.length,true);chunks.push(bytes,name,data);entries.push({name,size:data.length,crc,offset});offset+=30+name.length+data.length;}
+ const start=offset;for(const e of entries){const {bytes,view}=header(46);view.setUint32(0,0x02014b50,true);view.setUint16(4,20,true);view.setUint16(6,20,true);view.setUint16(8,0x800,true);view.setUint32(16,e.crc,true);view.setUint32(20,e.size,true);view.setUint32(24,e.size,true);view.setUint16(28,e.name.length,true);view.setUint32(42,e.offset,true);chunks.push(bytes,e.name);offset+=46+e.name.length;}
+ const {bytes,view}=header(22);view.setUint32(0,0x06054b50,true);view.setUint16(8,entries.length,true);view.setUint16(10,entries.length,true);view.setUint32(12,offset-start,true);view.setUint32(16,start,true);chunks.push(bytes);const result=new Uint8Array(offset+22);let p=0;for(const chunk of chunks){result.set(chunk,p);p+=chunk.length;}return result;
+}
+export function downloadZip(name:string,files:Record<string,string>){const bytes=zipFiles(files);const url=URL.createObjectURL(new Blob([bytes as BlobPart],{type:'application/zip'}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
