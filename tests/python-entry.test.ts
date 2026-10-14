@@ -32,7 +32,7 @@ describe('Python follows SQL section entry rules', () => {
   it('returns completed work to a reviewable destination', () => {
     const p = pythonProjects[0];
     const state = normalizePyProgress({items:{[p.ref]:{updatedAt:20,challenges:Object.fromEntries(p.stages.map(s => [s.id,{passes:1}]))},...Object.fromEntries(pythonQuestions.map(q => [q.ref,{challenges:{answer:{solved:true}}}]))}});
-    expect(pythonSectionHrefs(state).projects).toBe(journeyHref(p));
+    expect(pythonSectionHrefs(state).projects).toBe(`${journeyHref(p)}?stage=export`);
     expect(pythonSectionHrefs(state).practice).toBe(pythonQuestionHref(pythonQuestions[0].slug));
   });
 });

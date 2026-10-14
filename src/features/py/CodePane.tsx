@@ -74,6 +74,10 @@ export type CodePaneHandle = {
  */
 export const CodePane = forwardRef<CodePaneHandle, {
   task: PyTask;
+  layout?: "workspace" | "cell";
+  name?: string;
+  footer?: ReactNode;
+  minHeight?: string;
   ungraded?: boolean;
   starter: string;
   value: string;
@@ -86,7 +90,7 @@ export const CodePane = forwardRef<CodePaneHandle, {
   splitKey?: string;
   /** Initial share of the editor, 0–1. */
   editorShare?: number;
-}>(function CodePane({ task, ungraded = false, starter, value, onChange, onGraded, checkBanner, splitKey = "runtime-python-split-console", editorShare = 0.58 }, ref) {
+}>(function CodePane({ task, layout = "workspace", name = "solution.py", footer, minHeight = "clamp(280px, calc(100dvh - 340px), 820px)", ungraded = false, starter, value, onChange, onGraded, checkBanner, splitKey = "runtime-python-split-console", editorShare = 0.58 }, ref) {
   const status = useSyncExternalStore(subscribePythonStatus, getPythonStatus, () => "idle" as const);
   const failure = useSyncExternalStore(subscribePythonStatus, getPythonFailure, () => null);
   const version = useSyncExternalStore(subscribePythonStatus, getPythonVersion, () => null);
@@ -100,6 +104,7 @@ export const CodePane = forwardRef<CodePaneHandle, {
   const [mark, setMark] = useState<{ line: number; token: number } | null>(null);
   const [undo, setUndo] = useState<string | null>(null);
   /** Which button was pressed last: the summary under the controls belongs to Check only. */
+  const [outputHidden, setOutputHidden] = useState(false);
   const [last, setLast] = useState<Busy>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
   const summaryHeading = useRef<HTMLParagraphElement>(null);
@@ -142,6 +147,7 @@ export const CodePane = forwardRef<CodePaneHandle, {
   const run = async () => {
     if (busyRef.current) return;
     const code = value;
+    setOutputHidden(false);
     setBusy("run");
     setLast("run");
     setPanel("console");
@@ -161,6 +167,7 @@ export const CodePane = forwardRef<CodePaneHandle, {
     if (ungraded) return;
     if (busyRef.current) return;
     const code = value;
+    setOutputHidden(false);
     setBusy("check");
     setLast("check");
     setPanel("checks");
@@ -215,6 +222,25 @@ export const CodePane = forwardRef<CodePaneHandle, {
             : status === "ready"
               ? "Python ready"
               : "Loading Python…"; // idle only before the mount effect starts loading
+
+  if (layout === "cell") return <div className="rx-cell py-task-cell">
+    <div className="rx-cell-head"><span className="name">{name}</span><span className="acts" aria-hidden="true"><MacOnly><Keys keys={["mod", "enter"]} /><span>run</span>{!ungraded && <><Keys keys={["mod", "shift", "enter"]} /><span>check</span></>}</MacOnly></span></div>
+    <PyEditor ref={editor} value={value} onChange={onChange} onRun={() => void run()} onCheck={() => void check()} label={name} errorLine={mark} minHeight={minHeight} />
+    <div className="rx-cell-foot">
+      <span className="hint">{(last === 'check' ? checked?.code : ran?.code) !== undefined && (last === 'check' ? checked?.code : ran?.code) !== value ? 'edited since the last run' : ' '}</span>
+      {footer}
+      {busy ? <button className="rx-btn" onClick={stopPython}><CircleStop size={14} />Stop</button> : <button className="rx-btn" onClick={() => void run()} disabled={status === 'failed'}><Play size={13} />Run</button>}
+      {!ungraded && <button className="rx-btn primary" disabled={busy !== null || status === 'failed'} onClick={() => void check()}><Check size={14} />{busy === 'check' ? 'Checking…' : 'Check'}</button>}
+    </div>
+    {status === 'failed' && <p className="rx-feedback bad" role="alert">{failure} <button className="rx-btn" onClick={retry}>Retry</button></p>}
+    {(busy || checked || ran || interrupted) && <div className="py-cell-output" ref={summaryRef}>
+      <div className="rx-out-meta"><span>{last === 'check' ? 'checks' : 'output'}</span><span className="acts"><button className="rx-btn ghost" onClick={() => setOutputHidden(!outputHidden)}>{outputHidden ? 'Show' : 'Hide'}</button><button className="rx-btn ghost" disabled={busy !== null} onClick={() => {setChecked(null);setRan(null);setInterrupted(null);}}>Close</button></span></div>
+      {!outputHidden && <div className="py-cell-results" ref={outRef}>
+        {interrupted && <p className="rx-feedback">The run was interrupted. Try again.</p>}
+        {last === 'check' ? <><ChecksView busy={busy === 'check'} checked={checked} edited={!!checked && checked.code !== value} onLine={goTo} />{checked && checkBanner?.(checked.report)}</> : <ConsoleView busy={busy === 'run'} live={live} ran={ran} edited={!!ran && ran.code !== value} onLine={goTo} />}
+      </div>}
+    </div>}
+  </div>;
 
   return (
     <Split

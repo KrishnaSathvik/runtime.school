@@ -1,10 +1,11 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Circle, CircleCheck, Eye, Lightbulb, Lock, RotateCcw } from "lucide-react";
+import { Circle, CircleCheck, Eye, Lightbulb, RotateCcw } from "lucide-react";
 import { getPythonLesson, pythonLessonOrder, pythonLessons, pythonLessonHref, pythonModules, type PyChallenge, type PyLesson } from "@/content/python";
-import type { PyGradeReport } from "@/engine/python/grading";
+import { Spec } from "@/features/rt/Spec";
+import { CHALLENGE_EDITOR_HEIGHT } from "@/features/rt/editor-height";
 import { emptyAttempt, emptyLesson, isPyLessonMastered, usePyProgress, usePyProgressReady, type PyLessonRecord } from "@/lib/python-progress";
 import { Shell } from "@/features/rt/Shell";
 import { CodePane, type CodePaneHandle } from "./CodePane";
@@ -12,8 +13,8 @@ import { PyRunCell } from "./PyRunCell";
 import { BrowserBar } from "./BrowserBar";
 import { Rich } from "./Rich";
 
-type Tab = "challenge-1" | "challenge-2" | "check" | "complete";
-const TABS: Tab[] = ["challenge-1", "challenge-2", "check", "complete"];
+type Tab = "challenge-1" | "challenge-2" | "check";
+const TABS: Tab[] = ["challenge-1", "challenge-2", "check"];
 const pad = (n: number) => String(n).padStart(2, "0");
 
 /** A challenge's task with the lesson's libraries and fixture files (the challenge's own files win on a clash). */
@@ -27,25 +28,24 @@ function challengeIds(lesson: PyLesson) {
   return lesson.challenges.map((c) => c.id);
 }
 
-/** The next step a learner should take: first unfinished challenge, then the check, then Complete. */
+/** The next step a learner should take: first unfinished challenge, then the concept check. */
 function nextStep(lesson: PyLesson, rec: PyLessonRecord | undefined): Tab {
   for (const c of lesson.challenges) if (!rec?.challenges[c.id]?.solved) return c.id;
   if (!rec?.quiz.passed) return "check";
-  return "complete";
+  return "check";
 }
 
 function openingTab(lesson: PyLesson, rec: PyLessonRecord | undefined): Tab {
-  const mastered = isPyLessonMastered(rec, challengeIds(lesson));
   const saved = rec?.tab as Tab | null | undefined;
-  if (saved && TABS.includes(saved) && (saved !== "complete" || mastered)) return saved;
-  return mastered ? "complete" : nextStep(lesson, rec);
+  if (saved && TABS.includes(saved)) return saved;
+  return nextStep(lesson, rec);
 }
 
 /**
- * A Python lesson: read and run on the left; the two challenges, the concept check and the
- * completion step on the right. Mastery: both challenges solved without help, plus the check.
+ * A Python lesson: read and run on the left; the two challenges, the concept check on the right. Mastery: both challenges solved without help, plus the check.
  */
 export function PythonLesson({ slug }: { slug: string }) {
+  const router = useRouter();
   const lesson = getPythonLesson(slug)!;
   const ready = usePyProgressReady();
   const lessons = usePyProgress((s) => s.lessons);
@@ -80,7 +80,6 @@ export function PythonLesson({ slug }: { slug: string }) {
     { id: "challenge-1", label: "Challenge 1", done: done["challenge-1"] },
     { id: "challenge-2", label: "Challenge 2", done: done["challenge-2"] },
     { id: "check", label: "Concept check", done: done.check },
-    { id: "complete", label: "Complete", done: mastered, locked: !mastered },
   ];
 
   return (
@@ -111,7 +110,7 @@ export function PythonLesson({ slug }: { slug: string }) {
                   title={t.locked ? "Finish both challenges and the concept check first" : undefined}
                   onClick={() => !t.locked && pick(t.id)}
                 >
-                  {t.locked ? <Lock size={14} className="todo" aria-hidden="true" /> : t.done ? <CircleCheck size={15} className="ok" aria-hidden="true" /> : <Circle size={15} className="todo" aria-hidden="true" />} {t.label}
+                  {t.done ? <CircleCheck size={15} className="ok" aria-hidden="true" /> : <Circle size={15} className="todo" aria-hidden="true" />} {t.label}
                   {t.done && <span className="sr-only"> (done)</span>}
                   {t.locked && <span className="sr-only"> (locked)</span>}
                 </button>
@@ -124,17 +123,16 @@ export function PythonLesson({ slug }: { slug: string }) {
                   lesson={lesson}
                   challenge={lesson.challenges[tab === "challenge-1" ? 0 : 1]}
                   index={tab === "challenge-1" ? 0 : 1}
-                  onNext={() => pick(nextStep(lesson, usePyProgress.getState().lessons[lesson.ref]))}
+                  onNext={() => pick(tab === "challenge-1" ? "challenge-2" : "check")}
                 />
               )}
-              {tab === "check" && <QuizPanel lesson={lesson} onNext={() => pick(nextStep(lesson, usePyProgress.getState().lessons[lesson.ref]))} />}
-              {tab === "complete" && mastered && <CompletePanel lesson={lesson} />}
+              {tab === "check" && <QuizPanel lesson={lesson} onNext={() => { const next = pythonLessonOrder[position + 1]; if (next) router.push(pythonLessonHref(next)); }} />}
             </div>
-            {tab !== "complete" && (
+            {(
               <div className={`rx-lesson-status ${mastered ? "done" : ""}`} aria-live="polite">
                 <span>
                   {mastered ? (
-                    <>✓ Lesson mastered. <button type="button" className="py-link" onClick={() => pick("complete")}>See what you completed</button></>
+                    <>✓ Lesson mastered.</>
                   ) : (
                     <>To master this lesson, solve both challenges without help and pass the concept check.{" "}<b>{`${left} of 3 to go.`}</b></>
                   )}
@@ -212,29 +210,9 @@ function ChallengePanel({ lesson, challenge, index, onNext }: { lesson: PyLesson
   const record = rec.challenges[cid];
   const value = rec.drafts[cid] ?? challenge.starter;
   const hintsShown = Math.min(challenge.hints.length, attempt.hints);
-  const nextLabel = (() => {
-    const others = lesson.challenges.filter((c) => c.id !== cid && !rec.challenges[c.id]?.solved);
-    if (others.length) return `Continue to ${others[0].id === "challenge-1" ? "Challenge 1" : "Challenge 2"}`;
-    return rec.quiz.passed ? "See your completed lesson" : "Continue to the concept check";
-  })();
-
   const help = (kind: "hint" | "answer") => {
     takeHelp(lesson.ref, cid, kind);
     setConfirm(null);
-  };
-
-  const banner = (report: PyGradeReport) => {
-    if (!report.ok) return null;
-    return attempt.guided ? (
-      <div className="py-banner assisted" role="status">
-        <p><b>✓ Correct, with help.</b> Because you used {attempt.revealed ? "the answer" : "a hint"}, this doesn&apos;t count toward mastery. When you&apos;re ready, choose <em>Try again without help</em> and solve it on your own.</p>
-      </div>
-    ) : (
-      <div className="py-banner ok" role="status">
-        <p><b>✓ Solved without help.</b></p>
-        <button type="button" className="rx-btn primary" onClick={onNext}>{nextLabel} <ArrowRight size={14} /></button>
-      </div>
-    );
   };
 
   return (
@@ -250,19 +228,17 @@ function ChallengePanel({ lesson, challenge, index, onNext }: { lesson: PyLesson
             <span className="rx-tag amber">solved with help</span>
           ) : null}
         </div>
-        <h2 id={`${cid}-title`} className="py-ch-title">{challenge.title}</h2>
-        <p className="py-ch-prompt"><Rich text={challenge.prompt} /></p>
-        {challenge.expectedOutput && (
-          <>
-            <p className="py-looks" id={`${cid}-expected`}>Your program should print</p>
-            <pre className="py-expected" aria-labelledby={`${cid}-expected`} tabIndex={0}>{challenge.expectedOutput}</pre>
-          </>
-        )}
-        <p className="py-looks">Check answer looks for</p>
-        <ul className="py-list py-looks-list">
-          {challenge.looksFor.map((t) => <li key={t}><Rich text={t} /></li>)}
-        </ul>
-        <div className="py-help">
+        <p id={`${cid}-title`} className="rx-question-text"><Rich text={challenge.prompt} /></p>
+        <div className="rx-question-spec"><p className="rx-label">what to return</p><Spec rows={challenge.looksFor.map((t,i) => [i === 0 ? 'Result' : 'Watch for', <Rich key={t} text={t} />])} /></div>
+        {challenge.expectedOutput && <pre className="py-expected">{challenge.expectedOutput}</pre>}
+
+      </section>
+
+      <CodePane layout="cell" name={`challenge-${index+1}.py`} minHeight={CHALLENGE_EDITOR_HEIGHT}
+        ref={pane} task={lessonTask(lesson, challenge)} starter={challenge.starter} value={value}
+        onChange={(code) => setDraft(lesson.ref, cid, code)}
+        onGraded={(report) => { if (['unavailable','stopped','crashed','superseded'].includes(report.outcome)) return; recordCheck(lesson.ref, cid, report.ok, challengeIds(lesson)); if (report.ok) onNext(); }}
+        footer={        <>
           {hintsShown < challenge.hints.length && (
             <button type="button" className="rx-btn ghost" onClick={() => (attempt.guided ? help("hint") : setConfirm("hint"))}>
               <Lightbulb size={13} /> {hintsShown === 0 ? "Hint" : "Another hint"}
@@ -270,7 +246,7 @@ function ChallengePanel({ lesson, challenge, index, onNext }: { lesson: PyLesson
           )}
           {!attempt.revealed && (
             <button type="button" className="rx-btn ghost" onClick={() => setConfirm("answer")}>
-              <Eye size={13} /> Show answer
+              <Eye size={13} /> Answer
             </button>
           )}
           {attempt.guided && (
@@ -282,12 +258,11 @@ function ChallengePanel({ lesson, challenge, index, onNext }: { lesson: PyLesson
                 pane.current?.setCode(challenge.starter);
               }}
             >
-              <RotateCcw size={13} /> Try again without help
+              <RotateCcw size={13} /> Try without help
             </button>
           )}
-        </div>
-      </section>
-
+        </>}
+      />
       {confirm && (
         <div className="rx-confirm" role="group" aria-label="Confirm help">
           <p>
@@ -314,19 +289,7 @@ function ChallengePanel({ lesson, challenge, index, onNext }: { lesson: PyLesson
         </div>
       )}
 
-      <div className="py-lesson-code">
-        <CodePane
-          ref={pane}
-          task={lessonTask(lesson, challenge)}
-          starter={challenge.starter}
-          value={value}
-          onChange={(code) => setDraft(lesson.ref, cid, code)}
-          onGraded={(report) => recordCheck(lesson.ref, cid, report.ok, challengeIds(lesson))}
-          checkBanner={banner}
-          splitKey="runtime-python-split-lesson"
-          editorShare={0.5}
-        />
-      </div>
+
     </div>
   );
 }
@@ -337,14 +300,16 @@ function QuizPanel({ lesson, onNext }: { lesson: PyLesson; onNext: () => void })
   const [choices, setChoices] = useState<Record<string, number>>({});
   const correctIndex = (qid: string) => lesson.quiz.find((q) => q.id === qid)!.options.findIndex((o) => o.correct);
   const allCorrect = lesson.quiz.every((q) => choices[q.id] === correctIndex(q.id));
-  const mastered = isPyLessonMastered(rec, challengeIds(lesson));
-  const remaining = lesson.challenges.filter((c) => !rec.challenges[c.id]?.solved).map((c) => (c.id === "challenge-1" ? "Challenge 1" : "Challenge 2"));
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
 
   const choose = (qid: string, i: number) => {
     const next = { ...choices, [qid]: i };
     setChoices(next);
     const passed = lesson.quiz.every((q) => next[q.id] === correctIndex(q.id));
     answerQuiz(lesson.ref, qid, i, passed, challengeIds(lesson));
+    if (timer.current) clearTimeout(timer.current);
+    if (passed) timer.current = setTimeout(onNext, 900);
   };
 
   return (
@@ -378,42 +343,11 @@ function QuizPanel({ lesson, onNext }: { lesson: PyLesson; onNext: () => void })
       })}
       <div aria-live="polite">
         {allCorrect ? (
-          <div className="py-banner ok" role="status">
-            <p><b>✓ Concept check passed.</b> {mastered ? "That completes the lesson." : `To finish the lesson, solve ${remaining.join(" and ")} without help.`}</p>
-            <button type="button" className="rx-btn primary" onClick={onNext}>
-              {mastered ? "See your completed lesson" : `Go to ${remaining[0] ?? "the next step"}`} <ArrowRight size={14} />
-            </button>
-          </div>
+          <p className="rx-feedback ok">✓ Concept check passed.{pythonLessonOrder.indexOf(lesson.slug) < pythonLessonOrder.length - 1 ? ' Opening the next lesson…' : ' That’s the last lesson in the course.'}</p>
         ) : rec.quiz.passed ? (
           <p className="rx-feedback ok">✓ You passed this concept check earlier. You can answer again to review.</p>
         ) : null}
       </div>
     </div>
-  );
-}
-
-function CompletePanel({ lesson }: { lesson: PyLesson }) {
-  const lessons = usePyProgress((s) => s.lessons);
-  const rec = lessons[lesson.ref];
-  const when = rec?.masteredAt ? new Date(rec.masteredAt).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" }) : null;
-  const next = pythonLessonOrder[pythonLessonOrder.indexOf(lesson.slug) + 1];
-  return (
-    <section className="py-complete" aria-labelledby="complete-title">
-      <p className="rx-label">lesson complete</p>
-      <h2 id="complete-title" className="py-complete-title">✓ {lesson.title}: mastered</h2>
-      <p className="py-complete-sub">You solved both challenges on your own and passed the concept check{when ? ` on ${when}` : ""}.</p>
-      <p className="py-looks">You can now</p>
-      <ul className="py-list">
-        {lesson.outcomes.map((o) => <li key={o}><Rich text={o} /></li>)}
-      </ul>
-      <div className="py-complete-acts">
-        {next ? (
-          <Link href={`/python/lesson/${next}`} className="rx-btn primary">Next lesson <ArrowRight size={14} /></Link>
-        ) : (
-          <Link href="/python" className="rx-btn primary">Back to Python Foundations <ArrowRight size={14} /></Link>
-        )}
-      </div>
-      {!next && <p className="rx-small">This is the latest Python lesson. The next Foundations lessons are being written.</p>}
-    </section>
   );
 }

@@ -1,18 +1,29 @@
 "use client";
 
 import { useState, useRef, type ReactNode } from 'react';
+import { Eye, Lightbulb, RotateCcw, Check } from 'lucide-react';
 import type { PyGraded } from '@/content/python/types';
 import type { PyQuestion } from '@/content/python/practice';
-import type { PyGradeReport } from '@/engine/python/grading';
 import { gradePrediction } from '@/engine/python/predict';
 import { usePyProgress } from '@/lib/python-progress';
+import { Spec } from '@/features/rt/Spec';
 import { CodePane, type CodePaneHandle } from './CodePane';
+import { filePreview } from './file-preview';
 import { Rich } from './Rich';
-import { Download } from './Downloads';
 
-export function Exercise({ itemRef, id, title, question, starterOverride, next, inheritedHelp = false }: {
+/** Source fixtures use the same card treatment as SQL's data tables. */
+export function FileData({ files }: { files: Record<string,string> }) {
+  return <div className="py-file-data">{Object.entries(files).map(([name,text]) => {
+    const preview = filePreview(name,text);
+    return <details key={name} className="rx-schema-table" open><summary className="mono">{name}</summary>
+      {preview ? <><div className="rx-table-wrap" tabIndex={0} role="region" aria-label={`${name} preview`}><table className="rx-table rx-data"><thead><tr>{preview.columns.map((c,i)=><th key={i}>{c}</th>)}</tr></thead><tbody>{preview.rows.slice(0,5).map((row,i)=><tr key={i}>{preview.columns.map((_,c)=><td key={c}>{row[c] == null ? <span className="rx-dim">—</span> : typeof row[c] === 'object' ? JSON.stringify(row[c]) : String(row[c])}</td>)}</tr>)}</tbody></table></div><p className="rx-table-foot">{preview.rows.length>5?`showing 5 of ${preview.rows.length} rows`:`all ${preview.rows.length} rows`}</p><details><summary>Source file</summary><pre tabIndex={0}>{text}</pre></details></> : <pre tabIndex={0} aria-label={name}>{text}</pre>}
+    </details>;
+  })}</div>;
+}
+
+export function Exercise({ itemRef, id, title, question, starterOverride, next, inheritedHelp = false, onPassed, context, project = false }: {
   itemRef: string; id: string; title: string; question: PyQuestion | PyGraded;
-  starterOverride?: string; next?: ReactNode; inheritedHelp?: boolean;
+  starterOverride?: string; next?: ReactNode; inheritedHelp?: boolean; onPassed?: () => void; context?: string; project?: boolean;
 }) {
   const pane = useRef<CodePaneHandle>(null);
   const rec = usePyProgress(s => s.items[itemRef]);
@@ -23,40 +34,46 @@ export function Exercise({ itemRef, id, title, question, starterOverride, next, 
   const help = rec?.attempts[id];
   const result = rec?.challenges[id];
   const [predictionResult, setPredictionResult] = useState<{ ok: boolean; code: string } | null>(null);
-  const [verified, setVerified] = useState<{ code: string; report: PyGradeReport } | null>(null);
-  const [generation, setGeneration] = useState(0);
+  const [tab, setTab] = useState('program');
   const actions = usePyProgress.getState();
   const setCode = (v: string) => actions.setDraft(itemRef, id, v);
   const mark = (ok: boolean) => {
     if (inheritedHelp && !usePyProgress.getState().items[itemRef]?.attempts[id]?.guided) actions.takeHelp(itemRef, id, 'answer');
     actions.recordCheck(itemRef, id, ok, [id]);
+    if (ok) { if (project) setTab("finding"); onPassed?.(); }
   };
   const files = { ...('files' in question ? question.files : {}), ...graded?.task.files };
   const answer = predict?.output ?? graded?.answer ?? '';
-  return <div className="py-study">
-    <section className="py-brief" aria-labelledby="study-title">
-      <h1 id="study-title">{title}</h1>
-      <p><Rich text={question.prompt} /></p>
-      {graded && <><h2>What to build</h2><ul>{graded.looksFor.map(t => <li key={t}><Rich text={t} /></li>)}</ul>{graded.expectedOutput && <><h2>Expected output</h2><pre>{graded.expectedOutput}</pre></>}</>}
-      {Object.keys(files).length > 0 && <details><summary>Input files ({Object.keys(files).length})</summary>{Object.entries(files).map(([name, text]) => <div key={name}><h3>{name}</h3><pre>{text}</pre><Download name={name} text={text} /></div>)}</details>}
-      <p role="status">{result?.solved ? 'Solved independently' : result?.assisted ? 'Solved with help' : 'Not solved'}{help?.guided || inheritedHelp ? ' · This attempt uses help.' : ''}</p>
-      <div className="py-links">
-        <button className="rx-btn" disabled={(help?.hints ?? 0) >= question.hints.length} onClick={() => actions.takeHelp(itemRef, id, 'hint')}>Show hint</button>
-        <button className="rx-btn" onClick={() => actions.takeHelp(itemRef, id, 'answer')}>Reveal answer</button>
-        <button className="rx-btn" onClick={() => { actions.freshAttempt(itemRef, id); setCode(starter); setVerified(null); setPredictionResult(null); setGeneration(n => n + 1); }}>Start fresh attempt</button>
+  const footer = <>
+    {(help?.hints ?? 0) < question.hints.length && <button className="rx-btn ghost" onClick={() => actions.takeHelp(itemRef, id, 'hint')}><Lightbulb size={13} />Hint</button>}
+    {!help?.revealed && <button className="rx-btn ghost" onClick={() => actions.takeHelp(itemRef, id, 'answer')}><Eye size={13} />Answer</button>}
+    {help?.guided && <button className="rx-btn ghost" onClick={() => { actions.freshAttempt(itemRef, id); pane.current?.setCode(starter); setCode(starter); setPredictionResult(null); }}><RotateCcw size={13} />Try without help</button>}
+  </>;
+  return <div className="rx-task rx-lesson"><div className="rx-task-split">
+    <article className="rx-brief" aria-labelledby="study-title">
+      <p className="rx-prompt-line"><b>{project ? 'milestone' : 'task'}</b> {context ?? ('module' in question ? `${question.module} · ${question.difficulty}` : '')}</p>
+      <h1 id="study-title" className="rx-task-title">{title}</h1>
+      <p className="rx-lead rx-ask"><Rich text={question.prompt} /></p>
+      {graded && <><p className="rx-label">what to return</p><Spec rows={graded.looksFor.map((t,i) => [i === 0 ? 'Result' : 'Watch for', <Rich key={t} text={t} />])} />{graded.expectedOutput && <><p className="rx-label sec">expected output</p><div className="rx-expected"><pre className="py-static-code">{graded.expectedOutput}</pre></div></>}</>}
+      {predict && <><p className="rx-label sec">read the program</p><div className="rx-cell"><div className="rx-cell-head"><span className="name">example.py</span></div><div className="rx-cell-in"><pre>{predict.code}</pre></div></div></>}
+      {Object.keys(files).length > 0 && <><p className="rx-label sec">data for this {project ? 'milestone' : 'question'}</p><FileData files={files} /></>}
+    </article>
+    <section className="rx-work rx-lesson-work" aria-label="Your solution">
+      {project && <div className="rx-tabs" role="tablist" aria-label="Milestone steps"><button role="tab" id="program-tab" aria-controls="program-panel" aria-selected={tab === 'program'} onClick={() => setTab('program')}>Program{result?.passes ? ' ✓' : ''}</button><button role="tab" id="finding-tab" aria-controls="finding-panel" aria-selected={tab === 'finding'} onClick={() => setTab('finding')}>Finding{rec?.drafts[`finding:${id}`]?.trim() ? ' ✓' : ''}</button></div>}
+      <div id={tab === 'program' ? 'program-panel' : 'finding-panel'} role={project ? 'tabpanel' : undefined} aria-labelledby={project ? `${tab}-tab` : undefined}>
+      {tab === 'finding' ? <><section className="rx-question"><p className="rx-question-text">What did you find?</p><p className="rx-cap">Explain the result, the assumptions you made, and one input you checked.</p></section><label className="sr-only" htmlFor="finding">Your finding</label><textarea id="finding" className="py-finding" rows={8} value={rec?.drafts[`finding:${id}`] ?? ''} onChange={e => actions.setDraft(itemRef, `finding:${id}`, e.target.value)} /><p className="rx-small">Saved in this browser. Included in your project report.</p></> : <>
+      {predict ? <div className="rx-cell"><div className="rx-cell-head"><span className="name">your prediction</span></div><label className="sr-only" htmlFor="prediction">What does it print?</label><textarea className="py-prediction-input" id="prediction" value={code} onChange={e => setCode(e.target.value)} spellCheck={false} rows={12} /><div className="rx-cell-foot"><span className="hint" />{footer}<button className="rx-btn primary" onClick={() => { const r = gradePrediction(predict.output, code); setPredictionResult({ok:r.ok,code}); mark(r.ok); }}><Check size={14} />Check</button></div>{predictionResult && <p role="status" className={`rx-feedback ${predictionResult.ok ? 'ok' : 'bad'}`}>{predictionResult.ok ? '✓ Correct prediction.' : 'Not quite. Check each line, including spaces and punctuation.'}{predictionResult.code !== code ? ' Edited since this check.' : ''}</p>}</div> : <CodePane layout="cell" ref={pane} task={{ ...graded!.task, files, packages: graded!.task.packages ?? ('packages' in question ? question.packages : undefined) }} starter={starter} value={code} onChange={setCode} footer={footer} onGraded={r => {
+        if (['unavailable','stopped','crashed','superseded'].includes(r.outcome)) return;
+        mark(r.ok);
+        if (project) actions.setDraft(itemRef, `checked:${id}`, JSON.stringify({source:code,ok:r.ok,passed:r.passed,total:r.total,assisted:!!help?.guided || inheritedHelp}));
+      }} />}
+      {(help?.hints ?? 0) > 0 && <ul className="rx-hints">{question.hints.slice(0, help?.hints).map(h => <li key={h}><span className="mono">hint ›</span><Rich text={h} /></li>)}</ul>}
+      {help?.revealed && <div className="rx-cell"><div className="rx-cell-head"><span className="name">one correct answer</span>{!predict && <span className="acts"><button className="rx-btn ghost" onClick={() => pane.current?.setCode(answer)}>Put in editor</button></span>}</div><div className="rx-cell-in"><span className="p">py›</span><pre>{answer}</pre></div></div>}
+      {predict && predictionResult?.ok && <div className="rx-why"><p className="rx-label">why it works</p><p>{predict.explanation}</p></div>}
+      {!help?.guided && <p className="rx-small">Hints and the answer are always available. Using them counts the {project ? 'milestone' : 'question'} as solved with help.</p>}
+      </>}
+      {result && (result.solved || result.assisted) && next && <div className="rx-feedback ok">{next}</div>}
       </div>
-      {question.hints.slice(0, help?.hints ?? 0).map((h, i) => <p key={i}><Rich text={h} /></p>)}
-      {help?.revealed && <div><h2>Reference answer</h2><pre>{answer}</pre>{predict ? <p>{predict.explanation}</p> : <button className="rx-btn" onClick={() => pane.current?.setCode(answer)}>Put answer in editor</button>}</div>}
-      {graded && <div className="py-links"><Download name="main.py" text={code} />{verified?.report.ok && verified.code === code && <Download name="verified-summary.json" text={JSON.stringify({ item: itemRef, stage:id, passed:verified.report.passed, total:verified.report.total, assisted:!!help?.guided || inheritedHelp, source:verified.code, scope:'Browser learning checks; not certification' },null,2)} label="Download verified summary" />}</div>}
-      {result && (result.solved || result.assisted) && next && <p className="py-next">{next}</p>}
     </section>
-    <section className="py-study-code" aria-label={predict ? 'Predict output' : 'Your program'}>
-      {predict ? <div className="py-prediction">
-        <h2>Read the program</h2><pre>{predict.code}</pre>
-        <label htmlFor="prediction">What does it print?</label><textarea id="prediction" value={code} onChange={e => { setCode(e.target.value); }} spellCheck={false} rows={8} />
-        <button className="rx-btn primary" onClick={() => { const r = gradePrediction(predict.output, code); setPredictionResult({ok:r.ok,code}); mark(r.ok); }}>Check prediction</button>
-        {predictionResult && <div role="status"><p>{predictionResult.ok ? 'Correct prediction.' : 'Not quite. Check each line, including spaces and punctuation.'}{predictionResult.code !== code ? ' Edited since this check.' : ''}</p>{predictionResult.ok && <p>{predict.explanation}</p>}</div>}
-      </div> : <CodePane ref={pane} key={`${id}-${generation}`} task={{ ...graded!.task, files, packages: graded!.task.packages ?? ('packages' in question ? question.packages : undefined) }} starter={starter} value={code} onChange={setCode} onGraded={r => { if (r.outcome === 'unavailable' || r.outcome === 'stopped' || r.outcome === 'crashed') return; mark(r.ok); setVerified({code,report:r}); }} />}
-    </section>
-  </div>;
+  </div></div>;
 }

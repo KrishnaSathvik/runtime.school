@@ -8,5 +8,5 @@ export const metadata = { robots: { index:false, follow:false } };
 export default async function Page({params}: {params: Promise<{slug:string}>}) {
  const {slug} = await params;
  if (!pythonRunnerEnabled() || !pythonQuestions.some(x => x.slug === slug)) notFound();
- return <PracticeQuestion slug={slug} />;
+ return <PracticeQuestion key={slug} slug={slug} />;
 }

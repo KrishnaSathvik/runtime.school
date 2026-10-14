@@ -17,6 +17,6 @@ export function pythonSectionHrefs(s: PyProgress) {
   return {
     learn: pythonLessonHref(lesson.slug),
     practice: pythonQuestionHref(question.slug),
-    projects: project ? `${journeyHref(project)}${stage ? `?stage=${encodeURIComponent(stage.id)}` : ''}` : journeyHref(pythonProjects[0]),
+    projects: project ? `${journeyHref(project)}${stage ? `?stage=${encodeURIComponent(stage.id)}` : '?stage=export'}` : journeyHref(pythonProjects[0]),
   };
 }

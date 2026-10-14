@@ -1,34 +1,42 @@
-# SQL navigation audit and Python alignment
+# SQL design and workflow parity
 
-Audited the current SQL implementation in `features/rt/pages/LearnEntry.tsx`, `Practice.tsx`, `Project.tsx`, `rt/entry.ts`, `discovery/selectors.ts`, and `practice/browser.ts`.
+The initial navigation-only alignment did not match SQL's actual screens. This revision compares screenshots and reuses the same SQL presentation classes instead of retaining the separate Python notebook layout.
 
-| Area | SQL behavior | Python alignment |
-| --- | --- | --- |
-| Main navigation | Learn, Practice, Projects inside the workspace shell | Same shell and three labels; destinations stay within Python |
-| Learn entry | First unfinished lesson, after saved progress loads | First lesson not independently mastered; opens saved lesson step |
-| Lesson browsing | All lessons drawer and previous/next | Searchable All lessons drawer, mastery markers, previous/next; course overview available inside drawer |
-| Practice entry | Resume current unfinished question, then next unfinished question; assisted passes count as finished | Most recently visited question, then next unfinished question, wrapping at the end; independent and assisted results remain distinct |
-| Question browsing | All questions drawer and previous/next | Searchable All questions drawer, result markers, previous/next; tracks, cases, module filters available inside drawer |
-| Projects entry | First project brief, or most recent project at next unfinished milestone | First project brief, or most recently worked project at next unpassed milestone |
-| Project browsing | All projects drawer; brief and milestone work | Searchable All projects drawer; brief, milestone selection, program workspace; filters/preparation available inside drawer |
-| Work layout | Brief on left, editable solution and checks on right | Existing Python lesson/exercise split retained; project brief collapses when a milestone opens |
-| Persistence | SQL progress store | Existing `runtime-python-v1` schema and stable content refs retained |
+## Shared presentation
 
-The subject content remains different: Python includes output prediction, program files, packages, and downloadable source/results/checked summaries. SQL retains its query-specific result evidence and report export. Python uses an explicit Next question link after a pass; SQL currently advances automatically after 900 ms. Python projects retain cumulative milestone gating. These assessment behaviors were not changed by navigation alignment.
+- The same `rx-task-split`, `rx-brief`, `rx-work`, and `rx-lesson-work` layout: equal desktop columns, stacked mobile content, sticky work area.
+- The same title sizing, spacing, task labels, specification rows, editor card header/footer, help controls, tabs, drawer and status band.
+- Python fixture records appear in table cards; their original JSON/CSV text remains available inside each card.
+- The editor shows output after Run or Check instead of dedicating half the screen to an empty console. Results support Hide, Show, and Close.
+- The existing resizable Python workspace/playground still supports its dedicated console layout.
 
-## Routes
+## Learn
 
-- `/python`, `/python/practice`, `/python/projects`: open work after progress hydration.
-- Add `?browse=1` to view the retained course, practice, or project catalog.
-- Existing module-filter practice links still open the filtered question browser.
-- Project resume links include `?stage=<stage-id>`; inaccessible stages cannot execute.
-- Direct lesson, question, track, case, and project URLs remain available.
+Three tabs match SQL: Challenge 1, Challenge 2, Concept check. Passing a challenge advances to the next tab. Passing the concept check opens the next lesson after 900 ms. The separate Complete tab and completion card were removed. Existing saved `complete` tabs fall back to the concept check; no progress identities changed.
+
+The prompt/specification stays above the editor. Hint, Answer and (only after help) Try without help are in the editor footer. Help confirmation and independent-mastery rules remain intact. The lesson prose, runnable examples, and walkthrough stay in the left column.
+
+## Practice
+
+The brief contains the task, specification, expected output and input data. The right column contains the solution editor and help. No standalone Not solved message, unconditional Start fresh attempt, source download, or verified-summary download appears on a question. Successful checks advance to the next question after 900 ms. Output prediction uses the same card treatment and advancement rules.
+
+## Projects
+
+Projects use a brief → milestone → finding → export flow:
+
+- Brief: title, objective, deliverables, skills, scope, start/continue, report link, milestone list; source data on the right.
+- All projects drawer groups Brief, milestones, and Export under each project. Previous moves to the previous stop.
+- Milestone: task/data on the left, Program/Finding tabs on the right. A passing check opens Finding. Python milestones have one cumulative program rather than SQL's two queries and concept check; no fake tasks were added.
+- Findings save in the existing project record's drafts map.
+- Export: readiness list, source download, report preview and Markdown report download. A finished report requires current passing evidence and a finding for every milestone. Editing checked code downgrades the report to draft until rechecked. Older passes without saved source evidence require a new check for a finished report.
+
+The Python execution gate, content/grading definitions, stable refs, SQL source and SQL persistence are unchanged. `runtime-python-v1` stays compatible; findings/evidence use additional keys in the existing project drafts map.
 
 ## Validation
 
-- Five focused entry-selector tests: fresh progress, mastery vs help, recent practice, project continuation, completed-content fallback.
-- Scoped application TypeScript and changed-file ESLint.
-- Desktop/mobile browser checks: entries, drawer inventory, selection, question/project resume, course overview, project brief, Escape, overflow, and accessibility.
-- Retained discovery checks cover difficulty/skill/search filters, preparation links, saved mastery, and module practice.
+- `tests/e2e/python-design-parity.mjs`: desktop/mobile light/dark layouts, accessibility, screenshots, saved findings, draft report, real Python lesson checks, help/reset and assisted practice advancement, full project grading, report download, stale-evidence handling, SQL storage isolation.
+- `tests/python-entry.test.ts`, `tests/python-file-preview.test.ts`, `tests/python-progress.test.ts`: 22 checks covering entry/resume, CSV/JSON previews and mastery/storage semantics.
+- Scoped application TypeScript, changed-file ESLint, diff checks.
+- Screenshots and browser results: `docs/python/screens/sql-parity/`.
 
-SQL source, grading, persistence and routes were not modified. The Python production runtime gate remains unchanged. Local work only; no push or deployment.
+Local changes only; no push or deployment.

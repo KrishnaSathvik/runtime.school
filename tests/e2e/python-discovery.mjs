@@ -27,15 +27,10 @@ for(const mobile of [false,true]) for(const colorScheme of ['light','dark']) {
  assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
  await p.evaluate(()=>scrollTo(0,0)); await p.screenshot({path:`${DIR}/${name}-projects.png`,fullPage:true});
  await p.getByRole('link',{name:'Retail Order Engine',exact:true}).click();
- await p.getByRole('heading',{name:'Before you start',exact:true}).waitFor();
- assert.equal(await p.locator('.py-project-preparation li').count(),4);
- assert.equal(await p.locator('.py-project-preparation li').filter({hasText:'Mastered'}).count(),0);
- assert.equal(await p.locator('.cm-content').count(),0);
- await p.getByText('Explain your work',{exact:true}).click();
- await p.getByText('This reflection is for your own project write-up; it is not automatically graded.',{exact:true}).waitFor();
- await p.evaluate(()=>localStorage.setItem('runtime-python-v1',JSON.stringify({version:1,state:{version:1,lessons:{'python:numbers-and-arithmetic':{challenges:{'challenge-1':{solved:true},'challenge-2':{solved:true}},quiz:{passed:true}}},lastLesson:'python:numbers-and-arithmetic'}})));
- await p.reload(); await p.locator('.py-project-preparation li').filter({hasText:'Mastered'}).waitFor();
- assert.equal(await p.locator('.py-project-preparation li').filter({hasText:'Mastered'}).count(),1);
+ await p.getByText('Preparation lessons',{exact:true}).click();
+ assert.equal(await p.locator('.py-preparation li').count(),4);
+ assert.equal(await p.locator('.py-task-cell').count(),0);
+ assert.equal(await p.locator('.py-file-data table').count(),2);
  assert.deepEqual((await new AxeBuilder({page:p}).analyze()).violations.map(v=>v.id),[]);
  await p.evaluate(()=>scrollTo(0,0)); await p.screenshot({path:`${DIR}/${name}-preparation.png`,fullPage:true});
  await p.goto(`${BASE}/python?browse=1`);
@@ -47,7 +42,7 @@ for(const mobile of [false,true]) for(const colorScheme of ['light','dark']) {
  await p.goto(`${BASE}/python/practice?module=unknown`);
  assert.equal(await p.getByLabel('Module',{exact:true}).inputValue(),'');
  assert.equal(await p.locator('.py-catalog-list').last().getByRole('link').count(),120);
- results.push(name); console.log('PASS',name,'filters, preparation, saved mastery, module practice, accessibility');
+ results.push(name); console.log('PASS',name,'filters, preparation, source data, module practice, accessibility');
  await context.close();
 }
 fs.writeFileSync(`${DIR}/results.json`,JSON.stringify({passed:results},null,2)+'\n');
