@@ -96,8 +96,9 @@ describe("python content: Variables and values", () => {
 
   it("is the first lesson in Python Foundations, with a stable ref", () => {
     const order = ["variables-and-values", "print-comments-and-execution-order"];
-    expect(pythonLessons.map((l) => l.slug)).toEqual(order);
-    expect(pythonModules[0]).toMatchObject({ id: "foundations", title: "Python Foundations", lessons: order });
+    expect(pythonLessons.map((l) => l.slug).slice(0, 2)).toEqual(order);
+    expect(pythonModules[0]).toMatchObject({ id: "foundations", title: "Python Foundations" });
+    expect(pythonModules[0].lessons.slice(0, 2)).toEqual(order);
     expect(lesson.ref).toBe(REF);
     expect(new Set(pythonLessons.map((l) => l.ref)).size).toBe(pythonLessons.length);
   });

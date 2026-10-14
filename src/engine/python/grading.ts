@@ -1,4 +1,4 @@
-import { runPython, type PyCallCase, type PyPackage, type PyProbe, type PyProbeResult, type PyRunResult } from "./client";
+import { runPython, type PyCallCase, type PyExprResult, type PyPackage, type PyProbe, type PyProbeResult, type PyRunResult, type PyVariantResult } from "./client";
 import { formatPy, pyEqual, pyTypeName, sameKind, toWire, type ComparePolicy, type PyValue } from "./values";
 
 /**
@@ -28,12 +28,53 @@ export type PyCheck =
    * Python's parsed syntax tree, so any expression that uses them counts; it is not a source comparison.
    * Use it only where calculating from variables is the point of the exercise.
    */
-  | { kind: "uses-variables"; id?: string; label?: string; tip?: string; name: string; uses: string[] };
+  | { kind: "uses-variables"; id?: string; label?: string; tip?: string; name: string; uses: string[] }
+  /**
+   * A Python expression (or a short snippet that sets `result`) evaluated after the program, in a copy of
+   * its namespace: for values a variable check can't read directly (a DataFrame's rows, an array's shape,
+   * an object's attribute, a file the program wrote). `_records(df)` gives a DataFrame's rows as dicts.
+   * The expression is the author's; the expected value still never enters the interpreter.
+   */
+  | {
+      kind: "expr";
+      id?: string;
+      /** Required: the expression itself is not shown to the learner unless `show` is given. */
+      label: string;
+      tip?: string;
+      expr: string;
+      /** What the learner sees as "what was checked", e.g. "summary(orders)". Omit to show nothing. */
+      show?: string;
+      expected?: PyValue;
+      /** Instead of a value: the exception type this expression must raise, e.g. "ValueError". */
+      raises?: string;
+      compare?: ComparePolicy;
+      hidden?: boolean;
+    }
+  /**
+   * Run the program again with some top-level input assignments replaced (`price = 4` becomes
+   * `price = 7`), and compare what it prints and the variables it ends with. This is how a program
+   * without functions is tested on more than the values in its starter code.
+   */
+  | {
+      kind: "variant";
+      id?: string;
+      label?: string;
+      tip?: string;
+      set: Record<string, PyValue>;
+      output?: string;
+      whitespace?: "exact" | "trailing";
+      vars?: Record<string, PyValue>;
+      compare?: ComparePolicy;
+      hidden?: boolean;
+    };
 
 export type PyFunctionCase = {
   args: PyValue[];
   kwargs?: Record<string, PyValue>;
-  expected: PyValue;
+  /** The return value; omit when `raises` is given. */
+  expected?: PyValue;
+  /** The call must raise this exception type instead of returning. */
+  raises?: string;
   /** Hidden cases are never shown: not their inputs, not their expected value. */
   hidden?: boolean;
 };
@@ -44,6 +85,8 @@ export type PyTask = {
   timeoutMs?: number;
   /** Libraries the program may import (pandas, matplotlib, …). */
   packages?: readonly PyPackage[];
+  /** Text files placed next to main.py before every Run and Check (fixtures: CSV, JSON, helper modules). */
+  files?: Record<string, string>;
 };
 
 export type PyFailure =
@@ -64,7 +107,9 @@ export type PyFailure =
   | "call-error"
   | "returned-none-printed"
   | "fails-hidden-cases"
-  | "not-calculated";
+  | "not-calculated"
+  | "wrong-exception"
+  | "missing-input";
 
 export type PyCaseOutcome = {
   index: number;
@@ -141,12 +186,22 @@ export function probeFor(task: PyTask): PyProbe {
         ...(k.kwargs ? { kwargs: Object.fromEntries(Object.entries(k.kwargs).map(([n, v]) => [n, toWire(v)])) } : {}),
       })),
     }));
-  return { vars: [...new Set(vars)], calls, ...(assignments.length ? { assignments: [...new Set(assignments)] } : {}) };
+  const exprs = task.checks.filter((c) => c.kind === "expr").map((c) => ({ code: c.expr }));
+  const variants = task.checks
+    .filter((c) => c.kind === "variant")
+    .map((c) => ({ set: Object.fromEntries(Object.entries(c.set).map(([n, v]) => [n, toWire(v)])), vars: Object.keys(c.vars ?? {}) }));
+  return {
+    vars: [...new Set(vars)],
+    calls,
+    ...(assignments.length ? { assignments: [...new Set(assignments)] } : {}),
+    ...(exprs.length ? { exprs } : {}),
+    ...(variants.length ? { variants } : {}),
+  };
 }
 
 /** Check Answer: one fresh interpreter, then judgement on this side. */
 export async function checkPython(task: PyTask, code: string): Promise<PyGradeReport> {
-  const result = await runPython(code, { probe: probeFor(task), stdin: task.stdin, timeoutMs: task.timeoutMs, packages: task.packages });
+  const result = await runPython(code, { probe: probeFor(task), stdin: task.stdin, timeoutMs: task.timeoutMs, packages: task.packages, files: task.files });
   return gradePython(task, result);
 }
 
@@ -156,6 +211,8 @@ const checkId = (c: PyCheck, i: number) => c.id ?? `${c.kind}-${i + 1}`;
 const callText = (name: string, k: PyFunctionCase) =>
   `${name}(${[...k.args.map(formatPy), ...Object.entries(k.kwargs ?? {}).map(([n, v]) => `${n}=${formatPy(v)}`)].join(", ")})`;
 
+const setText = (set: Record<string, PyValue>) => Object.entries(set).map(([n, v]) => `${n} = ${formatPy(v)}`).join(", ");
+
 /** "an int", "a str": the article that reads correctly before a Python type name. */
 const aType = (v: PyValue) => `${/^[aeiou]/i.test(pyTypeName(v)) ? "an" : "a"} ${pyTypeName(v)}`;
 
@@ -164,6 +221,8 @@ function defaultLabel(c: PyCheck): string {
   if (c.kind === "output") return "Prints the expected output";
   if (c.kind === "variable") return `${c.name} is ${formatPy(c.expected)}`;
   if (c.kind === "uses-variables") return `${c.name} is calculated from ${c.uses.join(" and ")}`;
+  if (c.kind === "expr") return c.label;
+  if (c.kind === "variant") return c.hidden ? "Works with other input values" : `Works when ${setText(c.set)}`;
   return `${c.name}() returns the right result for every input`;
 }
 
@@ -242,11 +301,26 @@ function judgeVariable(c: Extract<PyCheck, { kind: "variable" }>, probe: PyProbe
 
 function judgeCase(name: string, k: PyFunctionCase, index: number, got: PyCallCase | undefined, policy?: ComparePolicy): PyCaseOutcome {
   const hidden = !!k.hidden;
+  const wanted = k.raises ? `raises ${k.raises}` : formatPy(k.expected ?? { t: "none" });
   const base: PyCaseOutcome = hidden
     ? { index, hidden, ok: false }
-    : { index, hidden, ok: false, call: callText(name, k), expected: formatPy(k.expected) };
+    : { index, hidden, ok: false, call: callText(name, k), expected: wanted };
   const what = hidden ? "another input" : callText(name, k);
   if (!got) return { ...base, category: "not-run", detail: `${what} was not tested.` };
+  if (k.raises) {
+    if (!got.ok && got.error.type === k.raises) return { ...base, ...(hidden ? {} : { actual: `raises ${got.error.type}` }), ok: true };
+    const gotText = got.ok ? `returned ${formatPy(got.value)}` : `raised ${got.error.type}${got.error.message ? `: ${got.error.message}` : ""}`;
+    return {
+      ...base,
+      ...(hidden ? {} : { actual: got.ok ? formatPy(got.value) : `raises ${got.error.type}` }),
+      category: "wrong-exception",
+      line: got.ok ? null : got.error.line,
+      detail: hidden
+        ? `For another invalid input, the function should raise ${k.raises}, but it ${got.ok ? "returned a value" : `raised ${got.error.type}`}.`
+        : `${what} should raise ${k.raises}, but it ${gotText}.`,
+    };
+  }
+  const expectedValue = k.expected ?? ({ t: "none" } as PyValue);
   if (!got.ok) {
     const e = got.error;
     return {
@@ -260,8 +334,8 @@ function judgeCase(name: string, k: PyFunctionCase, index: number, got: PyCallCa
   }
   const actual = got.value;
   const shown = hidden ? {} : { actual: formatPy(actual) };
-  if (pyEqual(actual, k.expected, policy)) return { ...base, ...shown, ok: true };
-  if (actual.t === "none" && k.expected.t !== "none" && got.stdout) {
+  if (pyEqual(actual, expectedValue, policy)) return { ...base, ...shown, ok: true };
+  if (actual.t === "none" && expectedValue.t !== "none" && got.stdout) {
     return {
       ...base,
       ...shown,
@@ -269,21 +343,21 @@ function judgeCase(name: string, k: PyFunctionCase, index: number, got: PyCallCa
       detail: `${hidden ? "For another input, the function" : what} printed a value but returned None. Use return to give the result back.`,
     };
   }
-  if (!sameKind(actual, k.expected, policy)) {
+  if (!sameKind(actual, expectedValue, policy)) {
     return {
       ...base,
       ...shown,
       category: "wrong-type",
       detail: hidden
-        ? `For another input, the function returned ${aType(actual)} instead of ${aType(k.expected)}.`
-        : `${what} returned ${aType(actual)} (${formatPy(actual)}), but should return ${aType(k.expected)} (${formatPy(k.expected)}).`,
+        ? `For another input, the function returned ${aType(actual)} instead of ${aType(expectedValue)}.`
+        : `${what} returned ${aType(actual)} (${formatPy(actual)}), but should return ${aType(expectedValue)} (${formatPy(expectedValue)}).`,
     };
   }
   return {
     ...base,
     ...shown,
     category: "wrong-value",
-    detail: hidden ? "For another input, the function returned a different result." : `${what} returned ${formatPy(actual)}, but should return ${formatPy(k.expected)}.`,
+    detail: hidden ? "For another input, the function returned a different result." : `${what} returned ${formatPy(actual)}, but should return ${formatPy(expectedValue)}.`,
   };
 }
 
@@ -346,6 +420,78 @@ function judgeUses(c: Extract<PyCheck, { kind: "uses-variables" }>, probe: PyPro
       ? `${c.name} is set to a fixed value on line ${line}. Calculate it from ${listNames(c.uses)} instead of typing the result, so the program still works if those values change.`
       : `${c.name} is calculated on line ${line} without using ${listNames(missing)}. Use the variable${missing.length === 1 ? "" : "s"} instead of typing ${missing.length === 1 ? "its value" : "their values"}.`,
   };
+}
+
+type Judged = Omit<PyCheckOutcome, "id" | "kind" | "label">;
+
+function judgeExpr(c: Extract<PyCheck, { kind: "expr" }>, got: PyExprResult | undefined): Judged {
+  const shownAs = !c.hidden && c.show ? `${c.show} ` : "";
+  if (!got) return { status: "fail", category: "not-run", detail: "This check could not run." };
+  if (c.raises) {
+    if (!got.ok && got.error.type === c.raises) return { status: "pass" };
+    if (c.hidden) return { status: "fail", category: "wrong-exception", detail: `For another invalid input, your code should raise ${c.raises}, but it ${got.ok ? "didn't raise an error" : `raised ${got.error.type}`}.` };
+    return {
+      status: "fail",
+      category: "wrong-exception",
+      expected: `raises ${c.raises}`,
+      actual: got.ok ? formatPy(got.value) : `raises ${got.error.type}`,
+      line: got.ok ? null : got.error.line,
+      detail: `${shownAs || "This "}should raise ${c.raises}, but it ${got.ok ? `gave ${formatPy(got.value)}` : `raised ${got.error.type}${got.error.message ? `: ${got.error.message}` : ""}`}.`,
+    };
+  }
+  const expectedValue = c.expected ?? ({ t: "none" } as PyValue);
+  const expected = formatPy(expectedValue);
+  if (!got.ok) {
+    const e = got.error;
+    return {
+      status: "fail",
+      category: "call-error",
+      line: e.line,
+      detail: c.hidden
+        ? `With another input, your code raised ${e.type}${e.line ? ` (line ${e.line})` : ""}.`
+        : `Checking ${shownAs}raised ${e.type}${e.message ? `: ${e.message}` : ""}${e.line ? ` (line ${e.line})` : ""}.`,
+    };
+  }
+  const actual = formatPy(got.value);
+  if (pyEqual(got.value, expectedValue, c.compare)) return c.hidden ? { status: "pass" } : { status: "pass", expected, actual };
+  if (c.hidden) return { status: "fail", category: "fails-hidden-cases", detail: "Works for the visible example, but gives a different result for another input." };
+  const typeNote = !sameKind(got.value, expectedValue, c.compare) ? ` That is ${aType(got.value)}; this needs ${aType(expectedValue)}.` : "";
+  return { status: "fail", category: typeNote ? "wrong-type" : "wrong-value", expected, actual, detail: `${shownAs ? `${shownAs}gave` : "Got"} ${actual}, but expected ${expected}.${typeNote}` };
+}
+
+function judgeVariant(c: Extract<PyCheck, { kind: "variant" }>, got: PyVariantResult | undefined): Judged {
+  const when = c.hidden ? "With other input values" : `With ${setText(c.set)}`;
+  if (!got || got.status === "skipped") return { status: "fail", category: "not-run", detail: "Your program could not be re-run with other values." };
+  if (got.status === "missing") {
+    const names = listNames(got.missing);
+    return {
+      status: "fail",
+      category: "missing-input",
+      detail: `Keep the input line${got.missing.length === 1 ? "" : "s"} ${got.missing.map((n) => `${n} = …`).join(", ")} at the top of your program: Check replaces ${names} with other values to test it, and couldn't find ${got.missing.length === 1 ? "that line" : "those lines"}.`,
+    };
+  }
+  if (got.status === "error") {
+    const e = got.error;
+    return { status: "fail", category: "runtime-error", line: e.line, detail: `${when}, your program stopped with ${e.type}${e.message ? `: ${e.message}` : ""}${e.line ? ` (line ${e.line})` : ""}.` };
+  }
+  if (c.output !== undefined) {
+    const mode = c.whitespace ?? "exact";
+    if (normalizeOutput(got.stdout, mode) !== normalizeOutput(c.output, mode)) {
+      return c.hidden
+        ? { status: "fail", category: "fails-hidden-cases", detail: `${when}, your program printed something different from what was expected. Make sure every printed value is calculated from the inputs.` }
+        : { status: "fail", category: "wrong-output", expected: c.output, actual: got.stdout, detail: `${when}: ${outputDiff(got.stdout, c.output).replace(/^Line/, "line")}` };
+    }
+  }
+  for (const [name, want] of Object.entries(c.vars ?? {})) {
+    const v = got.vars[name];
+    if (!v || "missing" in v) return { status: "fail", category: "missing-name", detail: `${when}, your program didn't create ${name}.` };
+    if (!pyEqual(v.value, want, c.compare)) {
+      return c.hidden
+        ? { status: "fail", category: "fails-hidden-cases", detail: `${when}, ${name} came out wrong. Make sure it is calculated from the inputs, not typed in.` }
+        : { status: "fail", category: "wrong-value", expected: formatPy(want), actual: formatPy(v.value), detail: `${when}, ${name} is ${formatPy(v.value)}, but it should be ${formatPy(want)}.` };
+    }
+  }
+  return { status: "pass" };
 }
 
 function caseLabel(task: PyTask, ref: { call: string; index: number } | undefined): { checkIndex: number; text: string } | null {
@@ -422,12 +568,16 @@ export function gradePython(task: PyTask, r: PyRunResult): PyGradeReport {
 
   // status "ok": the program finished. Judge every check from this run only.
   const probe: PyProbeResult = r.probe ?? { names: [], vars: {}, calls: {} };
+  let exprIndex = 0;
+  let variantIndex = 0;
   const checks = task.checks.map((c, i): PyCheckOutcome => {
     const base = { id: checkId(c, i), kind: c.kind, label: defaultLabel(c) };
     const judged =
       c.kind === "output" ? judgeOutput(c, r.stdout)
       : c.kind === "variable" ? judgeVariable(c, probe)
       : c.kind === "uses-variables" ? judgeUses(c, probe)
+      : c.kind === "expr" ? judgeExpr(c, probe.exprs?.[exprIndex++])
+      : c.kind === "variant" ? judgeVariant(c, probe.variants?.[variantIndex++])
       : judgeFunction(c, probe);
     return { ...base, ...judged, ...(judged.status === "fail" && c.tip ? { tip: c.tip } : {}) };
   });

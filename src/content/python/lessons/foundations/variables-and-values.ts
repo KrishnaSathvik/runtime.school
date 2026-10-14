@@ -1,5 +1,5 @@
 import { py } from "@/engine/python/values";
-import type { PyLesson } from "./types";
+import type { PyLesson } from "../../types";
 
 export const variablesAndValues: PyLesson = {
   slug: "variables-and-values",
@@ -85,6 +85,7 @@ export const variablesAndValues: PyLesson = {
       title: "Forgetting the quotes around text",
       text: "Without quotes, Python reads `notebook` as the name of a variable. No variable has that name, so the program stops with a `NameError`. Run it to see Python's real message.",
       code: "product = notebook\nprint(product)",
+      raises: "NameError",
       fix: 'Put text in quotes: `product = "notebook"`.',
     },
     {

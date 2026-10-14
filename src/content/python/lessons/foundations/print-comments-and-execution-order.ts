@@ -1,5 +1,5 @@
 import { py } from "@/engine/python/values";
-import type { PyLesson } from "./types";
+import type { PyLesson } from "../../types";
 
 export const printCommentsAndExecutionOrder: PyLesson = {
   slug: "print-comments-and-execution-order",
@@ -100,18 +100,21 @@ export const printCommentsAndExecutionOrder: PyLesson = {
       title: "Writing a note without #",
       text: "Line 2 isn't Python, so this is a syntax error. Look closely: `Order received` is **not** printed. Python checks the whole file before running any of it.",
       code: 'print("Order received")\nCheck the delivery address\nprint("Order packed")',
+      raises: "SyntaxError",
       fix: "Start every note with `#`: `# Check the delivery address`.",
     },
     {
       title: "Using a name before the line that assigns it",
       text: "Python runs line 1 first. At that moment `total` doesn't exist, because its assignment on line 2 hasn't run yet.",
       code: 'print("Total:", total)\ntotal = 4 * 3',
+      raises: "NameError",
       fix: "Assign first, then print: move `total = 4 * 3` above the `print()`.",
     },
     {
       title: "Joining a label and a number with +",
       text: "`+` can't join text to a number, so the program stops with a `TypeError`.",
       code: 'total = 12\nprint("Total: " + total)',
+      raises: "TypeError",
       fix: 'Separate the values with a comma instead: `print("Total:", total)`.',
     },
   ],

@@ -21,8 +21,10 @@ function expectRun(r: PyRunResult, e: Expect) {
   }
 }
 
-describe("every Python lesson", () => {
-  for (const lesson of pythonLessons) {
+// The whole inventory is validated by tests/python-lessons-*.test.ts (one interpreter per library set). Here the
+// first two lessons also run with a fresh interpreter per program, exactly as the browser worker does.
+describe("the first Python lessons, with a fresh interpreter per run", () => {
+  for (const lesson of pythonLessons.slice(0, 2)) {
     it(`${lesson.slug}: reference answers pass the real grader; starters don't`, async () => {
       for (const c of lesson.challenges) {
         const pass = await checkNode(c.task, c.answer);

@@ -29,8 +29,15 @@ export const PY_PACKAGES = ["numpy", "pandas", "matplotlib", "duckdb", "pyspark"
 export type PyPackage = (typeof PY_PACKAGES)[number];
 
 export type PyStream = "stdout" | "stderr";
-/** Printed text, or a matplotlib figure (`text` is then a PNG data URL). */
-export type PyOutputChunk = { stream: PyStream | "figure"; text: string };
+/**
+ * Printed text, a matplotlib figure (`text` is then a PNG data URL), or a table from display(df)
+ * (`text` is then JSON for a PyTable).
+ */
+export type PyOutputChunk = { stream: PyStream | "figure" | "table"; text: string };
+/** A DataFrame or Series shown with display(): the first rows, as text cells (null = missing). */
+export type PyTable = { columns: string[]; dtypes: string[]; rows: (string | null)[][]; shape: [number, number]; index: string; series: boolean };
+/** A file the program created or changed in its working folder. */
+export type PyFile = { path: string; text: string; truncated?: boolean; changed?: boolean };
 
 export type PySyntaxError = {
   type: string;
@@ -43,7 +50,7 @@ export type PySyntaxError = {
 };
 export type PyRuntimeError = { type: string; message: string; line: number | null; traceback: string };
 
-type Output = { stdout: string; stderr: string; output: PyOutputChunk[] };
+type Output = { stdout: string; stderr: string; output: PyOutputChunk[]; files?: PyFile[] };
 
 /** What a Check asks the interpreter to report after the program runs. Never contains expected values. */
 export type PyProbe = {
@@ -51,7 +58,17 @@ export type PyProbe = {
   /** Names whose top-level assignments should be described from the parsed source (learning-objective checks). */
   assignments?: string[];
   calls?: { name: string; cases: { args: WireValue[]; kwargs?: Record<string, WireValue> }[] }[];
+  /** Python expressions (or short snippets that set `result`) evaluated after the program, in a copy of its namespace. */
+  exprs?: { code: string }[];
+  /** Re-run the program with these top-level input assignments replaced, and report output and variables. */
+  variants?: { set: Record<string, WireValue>; vars: string[] }[];
 };
+export type PyExprResult = { ok: true; value: PyValue; stdout: string } | { ok: false; error: PyRuntimeError; stdout: string };
+export type PyVariantResult =
+  | { status: "ok"; stdout: string; vars: Record<string, { value: PyValue } | { missing: true }> }
+  | { status: "error"; stdout: string; error: PyRuntimeError; vars: Record<string, { value: PyValue } | { missing: true }> }
+  | { status: "missing"; missing: string[] }
+  | { status: "skipped" };
 export type PyCallCase =
   | { ok: true; value: PyValue; stdout: string }
   | { ok: false; error: PyRuntimeError; stdout: string };
@@ -62,6 +79,8 @@ export type PyProbeResult = {
   calls: Record<string, { missing: true } | { notCallable: true; type: string } | { cases: PyCallCase[] }>;
   /** Top-level assignments to the requested names, in source order, with the variable names each uses. */
   assignments?: Record<string, PyAssignment[]>;
+  exprs?: PyExprResult[];
+  variants?: PyVariantResult[];
 };
 export type PyAssignment = { line: number; uses: string[]; aug: boolean };
 /** The test input being evaluated when a check was cut short. */
@@ -228,6 +247,8 @@ export async function runPython(
     probe?: PyProbe;
     /** Libraries this program may import; loaded before the run clock starts. */
     packages?: readonly PyPackage[];
+    /** Text files written to the program's working folder before it runs (CSV, JSON, helper modules). */
+    files?: Record<string, string>;
     onOutput?: (chunk: PyOutputChunk) => void;
   } = {},
 ): Promise<PyRunResult> {
@@ -282,6 +303,11 @@ export async function runPython(
       if (!src.startsWith("data:image/png;base64,")) return;
       out.output.push({ stream: "figure", text: src });
       opts.onOutput?.({ stream: "figure", text: src });
+    } else if (d.type === "rich") {
+      if (d.kind !== "table") return;
+      const text = String(d.json);
+      out.output.push({ stream: "table", text });
+      opts.onOutput?.({ stream: "table", text });
     } else if (d.type === "output") {
       const stream: PyStream = d.stream === "stderr" ? "stderr" : "stdout";
       const chunk: PyOutputChunk = { stream, text: d.text };
@@ -294,6 +320,7 @@ export async function runPython(
       me.settle({ ...out, status: "output-limit", limit: opts.outputLimit ?? PY_OUTPUT_LIMIT, case: me.current });
     } else if (d.type === "done") {
       const r = d.result ?? {};
+      if (Array.isArray(r.files)) out.files = r.files.filter((f: PyFile) => f && typeof f.path === "string" && typeof f.text === "string");
       if (r.status === "ok") me.settle({ ...out, status: "ok", durationMs: r.durationMs, ...(r.probe ? { probe: r.probe } : {}) });
       else if (r.status === "syntax-error")
         me.settle({ ...out, status: "syntax-error", durationMs: r.durationMs, error: { type: r.type, message: r.message, line: r.line ?? null, column: r.column ?? null, endLine: r.endLine ?? null, endColumn: r.endColumn ?? null, text: r.text ?? "" } });
@@ -323,7 +350,7 @@ export async function runPython(
   w.addEventListener("error", onError);
   const limitMs = opts.timeoutMs ?? PY_RUN_TIMEOUT_MS;
   clock.timer = setTimeout(() => me.settle({ ...out, status: "timeout", limitMs, case: me.current }), limitMs);
-  w.postMessage({ type: "run", id, nonce, code, stdin: opts.stdin ?? "", outputLimit: opts.outputLimit ?? PY_OUTPUT_LIMIT, ...(opts.probe ? { probe: opts.probe } : {}) });
+  w.postMessage({ type: "run", id, nonce, code, stdin: opts.stdin ?? "", outputLimit: opts.outputLimit ?? PY_OUTPUT_LIMIT, ...(opts.probe ? { probe: opts.probe } : {}), ...(opts.files ? { files: opts.files } : {}) });
   return result;
 }
 
