@@ -314,3 +314,11 @@ Project files now precede the current milestone in Build. Test & deliver groups 
 ## Project entry and selection
 
 The Projects route opens the first project's Overview directly. A compact All projects control in the project header lists the six project names and links each to its Overview, following SQL's project-selection pattern. The catalog detour is removed; individual project URLs and saved work remain unchanged. The Python runtime route gate is preserved. Browser checks cover the entry redirect and switching through every project from this menu.
+
+## Guided milestone editing
+
+Build now presents only the active milestone's function in the editor. Function edits are composed into the existing connected source file; earlier and later functions and imports are retained. Optional saved function ranges preserve temporarily invalid or empty drafts across reloads and adjust when earlier functions change length. Existing full-file drafts load without migration or replacement.
+
+The dropdown is replaced by milestone progress buttons and a gated Continue action. Future steps unlock only after passing the current cumulative check. Earlier steps remain revisitable; edits invalidate the affected step and later progress without deleting code. A successful cumulative check records the prerequisites it proved. Full-program execution remains available in Test & deliver. Overview's Start/Continue action resumes the first unfinished step. File references and supplied tests are grouped separately, and final acceptance criteria appear before running checks.
+
+Validation: Customer Data Quality was built through all four function editors in a browser, with passing milestone checks, saved earlier code, reload during the workflow, and final full-project acceptance. A separate case with missing milestone-1 behavior was rejected at milestone 2 despite a previously saved milestone-1 pass. Responsive checks pass for all six projects; unit tests cover isolated replacement, later-range adjustment, empty/invalid saved snippets, cross-file isolation and assembly of every project's milestone functions.

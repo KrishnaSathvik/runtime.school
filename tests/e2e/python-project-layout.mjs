@@ -32,10 +32,12 @@ try{
   assert.ok(await right.locator('.pv-results').evaluate(el=>getComputedStyle(el).overflowY==='visible'&&el.clientHeight<140));
   const taskBox=await left.boundingBox(),editorBox=await right.boundingBox();assert.ok(Math.abs(taskBox.width-editorBox.width)<2,'default equal columns');
   assert.equal(await left.getByRole('group',{name:'File explorer'}).count(),1);
-  const filesBox=await left.locator('.pv-files').boundingBox(),milestoneBox=await left.getByLabel('Current milestone',{exact:true}).boundingBox();assert.ok(filesBox.y+filesBox.height<=milestoneBox.y,'files above milestone');
+  const filesBox=await left.locator('.pv-files').boundingBox(),milestoneBox=await left.locator('.pv-current-step').boundingBox();assert.ok(filesBox.y+filesBox.height<=milestoneBox.y,'files above milestone');
   assert.equal(await page.getByRole('button',{name:'Check complete project',exact:true}).count(),0);
   assert.equal(await right.locator('.pv-explorer,.pv-delivery').count(),0);
   assert.equal(await page.getByText(/Dataset generation rules|V1 history|Revision 2\.0/).count(),0);
+  assert.equal(await page.locator('#project-milestone').count(),0);
+  assert.equal(await page.getByRole('button',{name:'Continue to next milestone',exact:true}).isEnabled(),false);
   await left.getByRole('button',{name:/^Open .*\(\) in /}).click();
   const original=await page.evaluate(ref=>JSON.stringify(JSON.parse(localStorage.getItem('runtime-python-projects-v2')).projects[ref]['2.0.0'].files),project.ref);
   const codeFile=await right.locator('.pv-file-head b').innerText();
