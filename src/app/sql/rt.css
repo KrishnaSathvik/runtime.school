@@ -622,7 +622,7 @@ html[data-theme="dark"] .rx {
 .rx-pager [aria-disabled="true"] { color: var(--rx-faint); font-weight: 500; cursor: default; }
 @media (max-width: 480px) { .rx-pager a, .rx-pager span { min-width: 0; padding: 0 10px; } }
 
-/* Learn, Practice and Projects: equal desktop columns and stacked mobile halves, one document scroll
+/* Learn, Practice and Projects: equal desktop columns and content-sized mobile sections, one document scroll
    for both the brief and editor. Neither pane scrolls independently. */
 .rx-lesson .rx-task-split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
 .rx-lesson .rx-brief {
@@ -653,15 +653,15 @@ html[data-theme="dark"] .rx {
 @media (max-width: 700px) {
   .rx-lesson .rx-task-split {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: repeat(2, minmax(0, 1fr));
-    align-items: stretch;
+    grid-template-rows: auto auto;
+    align-items: start;
   }
   .rx-lesson .rx-brief {
-    position: static; align-self: stretch;
-    min-height: calc((100dvh - 103px) / 2); max-height: none;
+    position: static; align-self: start;
+    min-height: 0; max-height: none;
     border-right: 0; border-bottom: 1px solid var(--rx-line);
   }
-  .rx-lesson .rx-lesson-work { align-self: stretch; }
+  .rx-lesson .rx-lesson-work { align-self: start; }
   .rx-lesson .rx-brief, .rx-lesson .rx-work { padding: 14px 8px 24px; }
   .rx-lesson .rx-task-title { font-size: clamp(1.15rem, 4vw, 1.6rem); }
   .rx-lesson .rx-cell-head { flex-wrap: wrap; gap: 4px; padding: 7px; }

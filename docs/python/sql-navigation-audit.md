@@ -78,3 +78,10 @@ Validation: application TypeScript and diff checks; `tests/e2e/project-context.m
 The forced equal-width cells made dates, field names and ordinary words wrap awkwardly, especially when two cards shared the lesson column. Lesson previews now occupy the full column and use content-sized table columns. At narrow container widths they become labeled records; dense tables switch earlier. Every sample value and its type remain visible, without a table scrollbar. This follows the data-width guidance in Carbon's table usage documentation while retaining the existing runtime styling.
 
 Validation: `tests/e2e/learn-table-layout.mjs` checks standard and seven-column lesson previews at 1440, 768, 600, 390 and 360px, including phone accessibility, unclipped values and no page overflow. Screenshots are in `screens/learn-table-layout/`.
+
+
+## Mobile trailing whitespace correction
+
+Small-screen outer sections now use natural content heights instead of equal grid rows. The equal rows were making a short workspace as tall as a long brief (especially with stacked data records), leaving a large empty area at the end. This supersedes the earlier equal-height mobile outer split: question and editor remain full-width, top then bottom, with one document scroll. Desktop columns and sticky editor behavior are unchanged. The editor's own code/output split is unchanged.
+
+Validated Learn, Practice and project milestones in both languages at 600, 390 and 360px for adjacent stacked sections, no oversized trailing work area, and no horizontal overflow.
