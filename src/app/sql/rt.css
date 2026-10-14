@@ -623,11 +623,11 @@ html[data-theme="dark"] .rx {
 @media (max-width: 480px) { .rx-pager a, .rx-pager span { min-width: 0; padding: 0 10px; } }
 
 /* Learn, Practice and Projects: equal desktop columns and stacked mobile halves, one document scroll
-   for the work. The left brief is the only independently scrolling content pane. */
+   for both the brief and editor. Neither pane scrolls independently. */
 .rx-lesson .rx-task-split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
 .rx-lesson .rx-brief {
-  position: sticky; top: 48px; align-self: start;
-  max-height: calc(100dvh - 74px); overflow: auto;
+  position: static; align-self: start;
+  max-height: none; overflow: visible;
   border-right: 1px solid var(--rx-line); border-bottom: 0;
 }
 .rx-lesson .rx-lesson-work,
@@ -651,7 +651,7 @@ html[data-theme="dark"] .rx {
     align-items: stretch;
   }
   .rx-lesson .rx-brief {
-    position: static; contain: size; align-self: stretch;
+    position: static; align-self: stretch;
     min-height: calc((100dvh - 103px) / 2); max-height: none;
     border-right: 0; border-bottom: 1px solid var(--rx-line);
   }

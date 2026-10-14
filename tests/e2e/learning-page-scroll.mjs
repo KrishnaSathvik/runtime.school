@@ -13,10 +13,22 @@ try{for(const width of (process.env.WIDTHS??"1440,768,600,390,360").split(",").m
   const editor=p.locator('.rx-work .cm-content').first();await editor.waitFor();
   const measure=()=>p.evaluate(()=>{const split=document.querySelector('.rx-task-split');const cells=[...split.children].map(e=>e.getBoundingClientRect());const work=document.querySelector('.rx-work');const nested=[work,...work.querySelectorAll('*')].filter(e=>e.scrollHeight>e.clientHeight+2&&['auto','scroll','hidden'].includes(getComputedStyle(e).overflowY)&&e.clientHeight>0).map(e=>e.className);return {widths:cells.map(r=>r.width),positions:cells.map(r=>r.x),tops:cells.map(r=>r.y),heights:cells.map(r=>r.height),nested,overflow:document.documentElement.scrollWidth>innerWidth+1,editorHeight:work.querySelector('.cm-editor').getBoundingClientRect().height};});
   let m=await measure();assert.ok(Math.abs(m.widths[0]-m.widths[1])<1,JSON.stringify(m));if(width<=700){assert.equal(m.positions[0],m.positions[1]);assert.ok(m.tops[1]>m.tops[0]);assert.ok(Math.abs(m.heights[0]-m.heights[1])<1,JSON.stringify(m));}else{assert.ok(m.positions[1]>m.positions[0]);}assert.equal(m.overflow,false,`${width} ${subject} ${section}`);
-  if(section==='learn'&&width>700) {const moved=await p.locator('.rx-brief').evaluate(e=>{e.scrollTop=100;const y=e.scrollTop;e.scrollTop=0;return y;});assert.ok(moved>0,'left brief remains independently scrollable');}
+  const briefScroll=await p.locator('.rx-brief').evaluate(e=>{e.scrollTop=100;return e.scrollTop;});assert.equal(briefScroll,0,'brief must not scroll independently');
   await p.screenshot({path:`${dir}/${width}-${subject}-${section}.png`});
   await editor.click();await p.keyboard.press(`${mod}+a`);await p.keyboard.insertText(Array.from({length:80},(_,i)=>`${subject==='python'?'#':'--'} line ${i+1} — editing should grow the page`).join('\n'));
   await p.waitForTimeout(150);m=await measure();assert.ok(m.editorHeight>1000,JSON.stringify(m));assert.deepEqual(m.nested,[],`${width} ${subject} ${section} nested scroll`);assert.equal(m.overflow,false);
+  // Wheel input over either pane must move the document and both panes together.
+  for(const selector of ['.rx-brief','.rx-work']) {
+   const target=p.locator(selector).first();
+   await target.evaluate(e=>window.scrollTo(0,e.getBoundingClientRect().top+scrollY-150));
+   await p.waitForTimeout(350); // Let CodeMirror measure wrapped lines after entering view.
+   const before=await measure();const beforeY=await p.evaluate(()=>scrollY);
+   const box=await target.boundingBox();await p.mouse.move(box.x+box.width/2,Math.max(160,box.y+20));
+   await p.mouse.wheel(0,180);await p.waitForTimeout(150);
+   const after=await measure();const delta=await p.evaluate(()=>scrollY)-beforeY;
+   assert.ok(delta>0,`${selector}: wheel must scroll page`);
+   for(let i=0;i<2;i++)assert.ok(Math.abs((before.tops[i]-after.tops[i])-delta)<1,JSON.stringify({selector,width,subject,section,before:before.tops,after:after.tops,delta}));
+  }
   const scroll=await p.evaluate(()=>{window.scrollTo(0,document.documentElement.scrollHeight);return {y:scrollY,max:document.documentElement.scrollHeight-innerHeight};});assert.ok(scroll.y>0&&scroll.max>0);
   if(width===390&&subject==='python'){
    await p.locator('.py-task-cell').getByRole('button',{name:'Run',exact:true}).click();await p.locator('.py-cell-output').waitFor();await p.locator('.py-task-cell').getByRole('button',{name:'Run',exact:true}).waitFor({timeout:60000});
