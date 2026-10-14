@@ -14,10 +14,20 @@ try{for(const width of (process.env.WIDTHS??"1440,768,600,390,360").split(",").m
   const measure=()=>p.evaluate(()=>{const split=document.querySelector('.rx-task-split');const cells=[...split.children].map(e=>e.getBoundingClientRect());const work=document.querySelector('.rx-work');const nested=[work,...work.querySelectorAll('*')].filter(e=>e.scrollHeight>e.clientHeight+2&&['auto','scroll','hidden'].includes(getComputedStyle(e).overflowY)&&e.clientHeight>0).map(e=>e.className);return {widths:cells.map(r=>r.width),positions:cells.map(r=>r.x),tops:cells.map(r=>r.y),heights:cells.map(r=>r.height),nested,overflow:document.documentElement.scrollWidth>innerWidth+1,editorHeight:work.querySelector('.cm-editor').getBoundingClientRect().height};});
   let m=await measure();assert.ok(Math.abs(m.widths[0]-m.widths[1])<1,JSON.stringify(m));if(width<=700){assert.equal(m.positions[0],m.positions[1]);assert.ok(m.tops[1]>m.tops[0]);assert.ok(Math.abs(m.heights[0]-m.heights[1])<1,JSON.stringify(m));}else{assert.ok(m.positions[1]>m.positions[0]);}assert.equal(m.overflow,false,`${width} ${subject} ${section}`);
   const briefScroll=await p.locator('.rx-brief').evaluate(e=>{e.scrollTop=100;return e.scrollTop;});assert.equal(briefScroll,0,'brief must not scroll independently');
+  if(width>700) {
+   // A long brief must not stretch the editor; scrolling keeps it beside the question.
+   const work=p.locator('.rx-lesson-work').first();const originalHeight=(await work.boundingBox()).height;
+   await p.locator('.rx-brief').evaluate((e,h)=>e.style.minHeight=`${h+1000}px`,originalHeight);
+   await p.evaluate(()=>window.scrollTo(0,document.querySelector('.rx-task-split').getBoundingClientRect().top+scrollY+200));
+   await p.waitForTimeout(200);
+   const pinned=await work.boundingBox();assert.ok(Math.abs(pinned.y-48)<1,'editor stays pinned beside long question');
+   assert.ok(Math.abs(pinned.height-originalHeight)<1,'long question must not stretch editor');
+   await p.locator('.rx-brief').evaluate(e=>e.style.removeProperty('min-height'));await p.evaluate(()=>window.scrollTo(0,0));
+  }
   await p.screenshot({path:`${dir}/${width}-${subject}-${section}.png`});
   await editor.click();await p.keyboard.press(`${mod}+a`);await p.keyboard.insertText(Array.from({length:80},(_,i)=>`${subject==='python'?'#':'--'} line ${i+1} — editing should grow the page`).join('\n'));
   await p.waitForTimeout(150);m=await measure();assert.ok(m.editorHeight>1000,JSON.stringify(m));assert.deepEqual(m.nested,[],`${width} ${subject} ${section} nested scroll`);assert.equal(m.overflow,false);
-  // Wheel input over either pane must move the document and both panes together.
+  // Wheel input over either pane moves the page; mobile panes both move, desktop editor sticks.
   for(const selector of ['.rx-brief','.rx-work']) {
    const target=p.locator(selector).first();
    await target.evaluate(e=>window.scrollTo(0,e.getBoundingClientRect().top+scrollY-150));
@@ -27,7 +37,7 @@ try{for(const width of (process.env.WIDTHS??"1440,768,600,390,360").split(",").m
    await p.mouse.wheel(0,180);await p.waitForTimeout(150);
    const after=await measure();const delta=await p.evaluate(()=>scrollY)-beforeY;
    assert.ok(delta>0,`${selector}: wheel must scroll page`);
-   for(let i=0;i<2;i++)assert.ok(Math.abs((before.tops[i]-after.tops[i])-delta)<1,JSON.stringify({selector,width,subject,section,before:before.tops,after:after.tops,delta}));
+   for(let i=0;i<(width<=700?2:1);i++)assert.ok(Math.abs((before.tops[i]-after.tops[i])-delta)<1,JSON.stringify({selector,width,subject,section,before:before.tops,after:after.tops,delta}));
   }
   const scroll=await p.evaluate(()=>{window.scrollTo(0,document.documentElement.scrollHeight);return {y:scrollY,max:document.documentElement.scrollHeight-innerHeight};});assert.ok(scroll.y>0&&scroll.max>0);
   if(width===390&&subject==='python'){

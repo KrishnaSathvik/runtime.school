@@ -636,6 +636,12 @@ html[data-theme="dark"] .rx {
   position: static; height: auto; max-height: none; overflow: visible;
 }
 .rx-lesson .rx-lesson-work { display: block; }
+@media (min-width: 701px) {
+  .rx-lesson .rx-lesson-work,
+  .rx-lesson .rx-lesson-work:has(> .rx-tabs) {
+    position: sticky; top: 48px; align-self: start;
+  }
+}
 .rx-lesson .rx-work .rx-cell { overflow: visible; }
 .rx-lesson .rx-work .rx-editor,
 .rx-lesson .rx-work .cm-editor,
