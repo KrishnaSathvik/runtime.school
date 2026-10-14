@@ -32,7 +32,8 @@ export type PyCheck =
   /**
    * A Python expression (or a short snippet that sets `result`) evaluated after the program, in a copy of
    * its namespace: for values a variable check can't read directly (a DataFrame's rows, an array's shape,
-   * an object's attribute, a file the program wrote). `_records(df)` gives a DataFrame's rows as dicts.
+   * an object's attribute, a file the program wrote). `_records(df)` gives a DataFrame's rows as dicts, and
+   * `_source` is the program's own text (to import it under another `__name__`, for example).
    * The expression is the author's; the expected value still never enters the interpreter.
    */
   | {

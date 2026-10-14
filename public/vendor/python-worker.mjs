@@ -403,11 +403,12 @@ def _records(frame):
     return [{_str(k): (None if _missing(v) else (v.item() if _np_generic is not None and _isinstance(v, _np_generic) else v)) for k, v in _dict_items(r)} for r in frame.to_dict("records")]
 
 
-def _exprs(ns, probe):
+def _exprs(ns, probe, source):
     out = []
     for item in probe.get("exprs", []):
         scratch = _dict(ns)
         scratch["_records"] = _records
+        scratch["_source"] = source
         cap = _Capture()
         saved = _sys.stdout
         _sys.stdout = cap
@@ -468,7 +469,7 @@ def _changed_files(files):
     return found
 
 
-def _probe(ns, probe, progress):
+def _probe(ns, probe, progress, source=""):
     names = []
     for k in _list(ns):
         if _len(names) >= MAX_NAMES:
@@ -513,7 +514,7 @@ def _probe(ns, probe, progress):
         calls[name] = {"cases": cases}
     result = {"names": names, "vars": found, "calls": calls, "assignments": probe.get("_assignments", {})}
     if probe.get("exprs"):
-        result["exprs"] = _exprs(ns, probe)
+        result["exprs"] = _exprs(ns, probe, source)
     return result
 
 
@@ -582,7 +583,7 @@ def run(source, probe_json, progress, figure, files_json=None, emit=None):
     if changed:
         result["files"] = changed
     if result["status"] == "ok" and probe is not None:
-        result["probe"] = _probe(ns, probe, progress)
+        result["probe"] = _probe(ns, probe, progress, source)
         if probe.get("variants"):
             result["probe"]["variants"] = _variants(source, ns, probe)
     return result
