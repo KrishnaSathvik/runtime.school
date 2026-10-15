@@ -1,0 +1,663 @@
+{
+  "browser": "Headless Chromium 140.0.7339.16, desktop CPU (not physical mobile hardware)",
+  "base": "http://127.0.0.1:3200",
+  "benchmarks": [
+    {
+      "dataset": "retail",
+      "name": "Retail",
+      "gzipBytes": 3924299,
+      "databaseBytes": 12496896,
+      "factTable": "order_items",
+      "factRows": 125613,
+      "coldLoadMs": 83,
+      "warmReloadMs": 72,
+      "queries": {
+        "preview (12 rows)": 2,
+        "filter": 1,
+        "group by": 12,
+        "join": 9,
+        "window (full partition sort)": 4
+      },
+      "lessonChecks": {
+        "count": 78,
+        "medianMs": 169,
+        "maxMs": 1269
+      },
+      "practiceChecks": {
+        "count": 29,
+        "medianMs": 32,
+        "maxMs": 477,
+        "slowest": "qb-0062 write"
+      },
+      "pageHeapBytes": 42100000,
+      "errors": [],
+      "failedChecks": []
+    },
+    {
+      "dataset": "flights",
+      "name": "U.S. Flights",
+      "gzipBytes": 6232381,
+      "databaseBytes": 24539136,
+      "factTable": "flights",
+      "factRows": 124460,
+      "coldLoadMs": 136,
+      "warmReloadMs": 124,
+      "queries": {
+        "preview (12 rows)": 1,
+        "filter": 14,
+        "group by": 37,
+        "join": 14,
+        "window (full partition sort)": 105
+      },
+      "lessonChecks": {
+        "count": 14,
+        "medianMs": 220,
+        "maxMs": 315
+      },
+      "practiceChecks": {
+        "count": 11,
+        "medianMs": 210,
+        "maxMs": 997,
+        "slowest": "qb-0129 write"
+      },
+      "pageHeapBytes": 37300000,
+      "errors": [],
+      "failedChecks": []
+    },
+    {
+      "dataset": "saas",
+      "name": "Product / SaaS Analytics",
+      "gzipBytes": 8143531,
+      "databaseBytes": 31174656,
+      "factTable": "events",
+      "factRows": 135428,
+      "coldLoadMs": 179,
+      "warmReloadMs": 176,
+      "queries": {
+        "preview (12 rows)": 1,
+        "filter": 1,
+        "group by": 14,
+        "join": 11,
+        "window (full partition sort)": 3
+      },
+      "lessonChecks": {
+        "count": 20,
+        "medianMs": 102,
+        "maxMs": 1136
+      },
+      "practiceChecks": {
+        "count": 19,
+        "medianMs": 131,
+        "maxMs": 547,
+        "slowest": "qb-0050 write"
+      },
+      "pageHeapBytes": 39600000,
+      "errors": [],
+      "failedChecks": []
+    },
+    {
+      "dataset": "mobility",
+      "name": "Mobility",
+      "gzipBytes": 5063846,
+      "databaseBytes": 20127744,
+      "factTable": "trips",
+      "factRows": 128620,
+      "coldLoadMs": 109,
+      "warmReloadMs": 100,
+      "queries": {
+        "preview (12 rows)": 1,
+        "filter": 13,
+        "group by": 37,
+        "join": 7,
+        "window (full partition sort)": 97
+      },
+      "lessonChecks": {
+        "count": 8,
+        "medianMs": 126,
+        "maxMs": 340
+      },
+      "practiceChecks": {
+        "count": 7,
+        "medianMs": 71,
+        "maxMs": 357,
+        "slowest": "qb-0107 debug"
+      },
+      "pageHeapBytes": 35100000,
+      "errors": [],
+      "failedChecks": []
+    },
+    {
+      "dataset": "weather",
+      "name": "Weather",
+      "gzipBytes": 2638802,
+      "databaseBytes": 13135872,
+      "factTable": "daily_weather",
+      "factRows": 109214,
+      "coldLoadMs": 70,
+      "warmReloadMs": 66,
+      "queries": {
+        "preview (12 rows)": 1,
+        "filter": 1,
+        "group by": 13,
+        "join": 6,
+        "window (full partition sort)": 108
+      },
+      "lessonChecks": {
+        "count": 6,
+        "medianMs": 7,
+        "maxMs": 76
+      },
+      "practiceChecks": {
+        "count": 6,
+        "medianMs": 3,
+        "maxMs": 81,
+        "slowest": "qb-0127 write"
+      },
+      "pageHeapBytes": 35100000,
+      "errors": [],
+      "failedChecks": []
+    },
+    {
+      "dataset": "energy",
+      "name": "Energy",
+      "gzipBytes": 3590415,
+      "databaseBytes": 14880768,
+      "factTable": "hourly_demand",
+      "factRows": 52405,
+      "coldLoadMs": 85,
+      "warmReloadMs": 75,
+      "queries": {
+        "preview (12 rows)": 3,
+        "filter": 1,
+        "group by": 7,
+        "join": 7,
+        "window (full partition sort)": 54
+      },
+      "lessonChecks": {
+        "count": 4,
+        "medianMs": 4,
+        "maxMs": 108
+      },
+      "practiceChecks": {
+        "count": 9,
+        "medianMs": 26,
+        "maxMs": 126,
+        "slowest": "qb-0088 write"
+      },
+      "pageHeapBytes": 35100000,
+      "errors": [],
+      "failedChecks": []
+    },
+    {
+      "dataset": "payments",
+      "name": "Finance / Payments",
+      "gzipBytes": 6014123,
+      "databaseBytes": 22716416,
+      "factTable": "transactions",
+      "factRows": 84798,
+      "coldLoadMs": 132,
+      "warmReloadMs": 111,
+      "queries": {
+        "preview (12 rows)": 1,
+        "filter": 4,
+        "group by": 9,
+        "join": 6,
+        "window (full partition sort)": 8
+      },
+      "lessonChecks": {
+        "count": 12,
+        "medianMs": 42,
+        "maxMs": 181
+      },
+      "practiceChecks": {
+        "count": 10,
+        "medianMs": 51,
+        "maxMs": 304,
+        "slowest": "qb-0134 write"
+      },
+      "pageHeapBytes": 37300000,
+      "errors": [],
+      "failedChecks": []
+    },
+    {
+      "dataset": "healthcare",
+      "name": "Healthcare",
+      "gzipBytes": 3382471,
+      "databaseBytes": 12877824,
+      "factTable": "observations",
+      "factRows": 39529,
+      "coldLoadMs": 75,
+      "warmReloadMs": 66,
+      "queries": {
+        "preview (12 rows)": 2,
+        "filter": 1,
+        "group by": 5,
+        "join": 3,
+        "window (full partition sort)": 4
+      },
+      "lessonChecks": {
+        "count": 4,
+        "medianMs": 37,
+        "maxMs": 47
+      },
+      "practiceChecks": {
+        "count": 9,
+        "medianMs": 34,
+        "maxMs": 78,
+        "slowest": "qb-0135 write"
+      },
+      "pageHeapBytes": 35100000,
+      "errors": [],
+      "failedChecks": []
+    },
+    {
+      "dataset": "iot",
+      "name": "IoT / Sensors",
+      "gzipBytes": 4282270,
+      "databaseBytes": 19623936,
+      "factTable": "sensor_readings",
+      "factRows": 150425,
+      "coldLoadMs": 106,
+      "warmReloadMs": 96,
+      "queries": {
+        "preview (12 rows)": 0,
+        "filter": 1,
+        "group by": 13,
+        "join": 9,
+        "window (full partition sort)": 95
+      },
+      "lessonChecks": {
+        "count": 4,
+        "medianMs": 62,
+        "maxMs": 70
+      },
+      "practiceChecks": {
+        "count": 5,
+        "medianMs": 216,
+        "maxMs": 694,
+        "slowest": "qb-0113 write"
+      },
+      "pageHeapBytes": 35100000,
+      "errors": [],
+      "failedChecks": []
+    },
+    {
+      "dataset": "logistics",
+      "name": "Logistics",
+      "gzipBytes": 4553923,
+      "databaseBytes": 18747392,
+      "factTable": "tracking_events",
+      "factRows": 100515,
+      "coldLoadMs": 108,
+      "warmReloadMs": 94,
+      "queries": {
+        "preview (12 rows)": 1,
+        "filter": 1,
+        "group by": 12,
+        "join": 9,
+        "window (full partition sort)": 3
+      },
+      "lessonChecks": {
+        "count": 12,
+        "medianMs": 62,
+        "maxMs": 200
+      },
+      "practiceChecks": {
+        "count": 10,
+        "medianMs": 88,
+        "maxMs": 852,
+        "slowest": "qb-0055 write"
+      },
+      "pageHeapBytes": 37300000,
+      "errors": [],
+      "failedChecks": []
+    },
+    {
+      "dataset": "developer",
+      "name": "Developer Platform",
+      "gzipBytes": 4867979,
+      "databaseBytes": 12541952,
+      "factTable": "commits",
+      "factRows": 35881,
+      "coldLoadMs": 92,
+      "warmReloadMs": 80,
+      "queries": {
+        "preview (12 rows)": 1,
+        "filter": 1,
+        "group by": 5,
+        "join": 2,
+        "window (full partition sort)": 16
+      },
+      "lessonChecks": {
+        "count": 8,
+        "medianMs": 17,
+        "maxMs": 28
+      },
+      "practiceChecks": {
+        "count": 17,
+        "medianMs": 12,
+        "maxMs": 71,
+        "slowest": "qb-0094 write"
+      },
+      "pageHeapBytes": 37300000,
+      "errors": [],
+      "failedChecks": []
+    },
+    {
+      "dataset": "sports",
+      "name": "Sports",
+      "gzipBytes": 2748593,
+      "databaseBytes": 11407360,
+      "factTable": "player_game_stats",
+      "factRows": 73029,
+      "coldLoadMs": 67,
+      "warmReloadMs": 63,
+      "queries": {
+        "preview (12 rows)": 0,
+        "filter": 1,
+        "group by": 10,
+        "join": 20,
+        "window (full partition sort)": 8
+      },
+      "lessonChecks": {
+        "count": 6,
+        "medianMs": 344,
+        "maxMs": 415
+      },
+      "practiceChecks": {
+        "count": 7,
+        "medianMs": 79,
+        "maxMs": 349,
+        "slowest": "qb-0040 write"
+      },
+      "pageHeapBytes": 35100000,
+      "errors": [],
+      "failedChecks": []
+    }
+  ],
+  "flows": [
+    {
+      "width": 1440,
+      "flow": "lesson 0: run example, two checks, concept check, advance"
+    },
+    {
+      "width": 1440,
+      "flow": "lesson 0 (retail) challenge 1 checked in the UI",
+      "ms": 401
+    },
+    {
+      "width": 1440,
+      "flow": "lesson 13 (flights) challenge 1 checked in the UI",
+      "ms": 658
+    },
+    {
+      "width": 1440,
+      "flow": "lesson 32 (saas) challenge 1 checked in the UI",
+      "ms": 734
+    },
+    {
+      "width": 1440,
+      "flow": "lesson 9 (mobility) challenge 1 checked in the UI",
+      "ms": 534
+    },
+    {
+      "width": 1440,
+      "flow": "lesson 12 (weather) challenge 1 checked in the UI",
+      "ms": 482
+    },
+    {
+      "width": 1440,
+      "flow": "lesson 43 (energy) challenge 1 checked in the UI",
+      "ms": 400
+    },
+    {
+      "width": 1440,
+      "flow": "lesson 23 (payments) challenge 1 checked in the UI",
+      "ms": 570
+    },
+    {
+      "width": 1440,
+      "flow": "lesson 18 (healthcare) challenge 1 checked in the UI",
+      "ms": 684
+    },
+    {
+      "width": 1440,
+      "flow": "lesson 40 (iot) challenge 1 checked in the UI",
+      "ms": 597
+    },
+    {
+      "width": 1440,
+      "flow": "lesson 25 (logistics) challenge 1 checked in the UI",
+      "ms": 735
+    },
+    {
+      "width": 1440,
+      "flow": "lesson 19 (developer) challenge 1 checked in the UI",
+      "ms": 668
+    },
+    {
+      "width": 1440,
+      "flow": "lesson 22 (sports) challenge 1 checked in the UI",
+      "ms": 913
+    },
+    {
+      "width": 1440,
+      "flow": "lesson 71 shows its scenario table bronze_sales with sample rows"
+    },
+    {
+      "width": 1440,
+      "flow": "qb-0001 (retail, write) solved in the UI",
+      "ms": 186
+    },
+    {
+      "width": 1440,
+      "flow": "qb-0006 (flights, write) solved in the UI",
+      "ms": 343
+    },
+    {
+      "width": 1440,
+      "flow": "qb-0013 (saas, write) solved in the UI",
+      "ms": 435
+    },
+    {
+      "width": 1440,
+      "flow": "qb-0007 (mobility, write) solved in the UI",
+      "ms": 347
+    },
+    {
+      "width": 1440,
+      "flow": "qb-0002 (weather, write) solved in the UI",
+      "ms": 252
+    },
+    {
+      "width": 1440,
+      "flow": "qb-0084 (energy, write) solved in the UI",
+      "ms": 298
+    },
+    {
+      "width": 1440,
+      "flow": "qb-0025 (payments, write) solved in the UI",
+      "ms": 486
+    },
+    {
+      "width": 1440,
+      "flow": "qb-0004 (healthcare, write) solved in the UI",
+      "ms": 299
+    },
+    {
+      "width": 1440,
+      "flow": "qb-0113 (iot, write) solved in the UI",
+      "ms": 1290
+    },
+    {
+      "width": 1440,
+      "flow": "qb-0022 (logistics, write) solved in the UI",
+      "ms": 445
+    },
+    {
+      "width": 1440,
+      "flow": "qb-0008 (developer, write) solved in the UI",
+      "ms": 257
+    },
+    {
+      "width": 1440,
+      "flow": "qb-0019 (sports, write) solved in the UI",
+      "ms": 323
+    },
+    {
+      "width": 1440,
+      "flow": "qb-0078 (healthcare, debug) solved in the UI",
+      "ms": 288
+    },
+    {
+      "width": 1440,
+      "flow": "qb-0074 predict: typed rows graded correct"
+    },
+    {
+      "width": 1440,
+      "flow": "alias capacity-avoid-fan-out opens qb-0087; prior draft offered; prior progress kept"
+    },
+    {
+      "width": 390,
+      "flow": "lesson 0: run example, two checks, concept check, advance"
+    },
+    {
+      "width": 390,
+      "flow": "lesson 0 (retail) challenge 1 checked in the UI",
+      "ms": 154
+    },
+    {
+      "width": 390,
+      "flow": "lesson 13 (flights) challenge 1 checked in the UI",
+      "ms": 544
+    },
+    {
+      "width": 390,
+      "flow": "lesson 32 (saas) challenge 1 checked in the UI",
+      "ms": 415
+    },
+    {
+      "width": 390,
+      "flow": "lesson 9 (mobility) challenge 1 checked in the UI",
+      "ms": 433
+    },
+    {
+      "width": 390,
+      "flow": "lesson 12 (weather) challenge 1 checked in the UI",
+      "ms": 267
+    },
+    {
+      "width": 390,
+      "flow": "lesson 43 (energy) challenge 1 checked in the UI",
+      "ms": 266
+    },
+    {
+      "width": 390,
+      "flow": "lesson 23 (payments) challenge 1 checked in the UI",
+      "ms": 350
+    },
+    {
+      "width": 390,
+      "flow": "lesson 18 (healthcare) challenge 1 checked in the UI",
+      "ms": 334
+    },
+    {
+      "width": 390,
+      "flow": "lesson 40 (iot) challenge 1 checked in the UI",
+      "ms": 349
+    },
+    {
+      "width": 390,
+      "flow": "lesson 25 (logistics) challenge 1 checked in the UI",
+      "ms": 518
+    },
+    {
+      "width": 390,
+      "flow": "lesson 19 (developer) challenge 1 checked in the UI",
+      "ms": 287
+    },
+    {
+      "width": 390,
+      "flow": "lesson 22 (sports) challenge 1 checked in the UI",
+      "ms": 665
+    },
+    {
+      "width": 390,
+      "flow": "lesson 71 shows its scenario table bronze_sales with sample rows"
+    },
+    {
+      "width": 390,
+      "flow": "qb-0001 (retail, write) solved in the UI",
+      "ms": 127
+    },
+    {
+      "width": 390,
+      "flow": "qb-0006 (flights, write) solved in the UI",
+      "ms": 375
+    },
+    {
+      "width": 390,
+      "flow": "qb-0013 (saas, write) solved in the UI",
+      "ms": 469
+    },
+    {
+      "width": 390,
+      "flow": "qb-0007 (mobility, write) solved in the UI",
+      "ms": 792
+    },
+    {
+      "width": 390,
+      "flow": "qb-0002 (weather, write) solved in the UI",
+      "ms": 457
+    },
+    {
+      "width": 390,
+      "flow": "qb-0084 (energy, write) solved in the UI",
+      "ms": 349
+    },
+    {
+      "width": 390,
+      "flow": "qb-0025 (payments, write) solved in the UI",
+      "ms": 472
+    },
+    {
+      "width": 390,
+      "flow": "qb-0004 (healthcare, write) solved in the UI",
+      "ms": 317
+    },
+    {
+      "width": 390,
+      "flow": "qb-0113 (iot, write) solved in the UI",
+      "ms": 1133
+    },
+    {
+      "width": 390,
+      "flow": "qb-0022 (logistics, write) solved in the UI",
+      "ms": 461
+    },
+    {
+      "width": 390,
+      "flow": "qb-0008 (developer, write) solved in the UI",
+      "ms": 253
+    },
+    {
+      "width": 390,
+      "flow": "qb-0019 (sports, write) solved in the UI",
+      "ms": 329
+    },
+    {
+      "width": 390,
+      "flow": "qb-0078 (healthcare, debug) solved in the UI",
+      "ms": 283
+    },
+    {
+      "width": 390,
+      "flow": "qb-0074 predict: typed rows graded correct"
+    },
+    {
+      "width": 390,
+      "flow": "alias capacity-avoid-fan-out opens qb-0087; prior draft offered; prior progress kept"
+    }
+  ],
+  "pageErrors": []
+}

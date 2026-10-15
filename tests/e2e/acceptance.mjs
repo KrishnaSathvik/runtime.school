@@ -293,44 +293,52 @@ await test("Tools are discoverable on mobile via the header Tools menu", async (
   await page.goto(`${BASE}/sql`);
   await ready(page);
   await page.getByRole("button", { name: "SQL tools" }).click();
-  for (const name of ["SQL Playground", "Database Lab", "Query Performance", "Compare SQL Syntax"]) {
+  for (const name of ["SQL Playground", "Database Lab", "Query Performance", "Compare Syntax"]) {
     await page.locator(".rt-menu-panel").getByRole("link", { name: new RegExp(name) }).waitFor();
   }
   await page.screenshot({ path: `${SHOTS}/mobile-explore.png` });
   await page.context().close();
 });
 
-await test("Playground starter question loads a working query that runs", async () => {
+await test("Playground offers exactly the twelve datasets and queries a table on the full data", async () => {
   const { page } = await freshPage();
   await page.goto(`${BASE}/playground`);
-  await ready(page);
-  await page.getByRole("button", { name: /Paid revenue/ }).click();
-  await page.getByRole("button", { name: "Run query" }).click();
-  await page.waitForSelector(".results-panel table");
-  assert.match(await page.locator(".results-panel").innerText(), /revenue/);
+  await page.waitForURL(/\/sql\/playground$/);
+  assert.equal(await page.locator("#tool-dataset option").count(), 12);
+  assert.equal(await page.locator("#pg-edition").count(), 0, "no dataset-size selector");
+  await page.locator("#tool-dataset").selectOption("flights");
+  await page.waitForURL(/\/sql\/playground\/flights$/);
+  await page.locator("summary", { hasText: "airlines" }).click();
+  await page.getByRole("button", { name: "Query this table" }).first().click();
+  await page.getByRole("button", { name: "Run", exact: true }).click();
+  await page.locator(".rx-out .rx-table").waitFor();
+  assert.match(await page.locator(".rx-out").innerText(), /airline_name/);
   await page.screenshot({ path: `${SHOTS}/playground.png` });
   await page.context().close();
 });
 
-await test("Database Lab: all experiments listed; running one returns rows", async () => {
+await test("Database Lab: experiments follow the dataset; a broken variant is rejected", async () => {
   const { page } = await freshPage();
-  await page.goto(`${BASE}/database-lab`);
-  await ready(page);
-  for (const e of pack.labExperiments) assert.equal(await page.getByRole("group", { name: "Choose an experiment" }).getByRole("button", { name: e.title, exact: true }).count(),1);
-  await page.getByRole("button", { name: "Run query" }).click();
-  await page.waitForSelector(".results-panel table");
+  await page.goto(`${BASE}/sql/lab?dataset=retail&experiment=keys`);
+  await page.locator("#lab-experiment").waitFor();
+  const retail = await page.locator("#lab-experiment option").count();
+  await page.locator("#tool-dataset").selectOption("sports");
+  await page.waitForURL(/dataset=sports/);
+  assert.ok(await page.locator("#lab-experiment option").count() < retail, "experiments are filtered by dataset");
+  await page.goto(`${BASE}/sql/lab?dataset=retail&experiment=keys`);
+  await page.getByRole("button", { name: /Try it:/ }).click();
+  await page.getByRole("button", { name: "Run", exact: true }).click();
+  await page.getByText(/FOREIGN KEY constraint failed/).first().waitFor();
   await page.context().close();
 });
 
-await test("Query Performance explains strategies and shows real SCAN vs SEARCH plans", async () => {
+await test("Query Performance compares real plans on a canonical dataset", async () => {
   const { page } = await freshPage();
-  await page.goto(`${BASE}/query-performance`);
-  await ready(page);
-  await page.getByText("How to read a query plan",{exact:true}).click();
-  assert.match(await page.locator("main").innerText(), /SCAN reads rows/);
-  // Plans run on open; the summary reports the observed equivalence.
-  await page.getByText("Both return identical rows", { exact: false }).waitFor();
-  assert.match(await page.locator("main").innerText(), /SEARCH/);
+  await page.goto(`${BASE}/sql/query-performance?dataset=flights`);
+  await page.getByText("yes · only the plan differs").waitFor();
+  const main = await page.locator("main").innerText();
+  assert.match(main, /SEARCH flights USING INDEX idx_flights_flight_date/);
+  assert.match(main, /SCAN flights/);
   await page.context().close();
 });
 

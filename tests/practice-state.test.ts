@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { allQuestions, bankQuestions } from "@/content/question-bank";
 import { migrateLearning, questionStatus, useLearning, validateImport } from "@/lib/learning-state";
 import { statusOf } from "@/features/practice/status";
-import { bankStarter } from "@/features/practice/QuestionWorkspace";
+import { bankStarter } from "@/content/question-bank";
 
 const store = () => useLearning.getState();
 beforeEach(() => store().resetProgress());

@@ -2,17 +2,18 @@ import fs from "fs";
 import { beforeAll, describe, expect, it } from "vitest";
 import { lessons } from "@/content";
 import {
+  bankBySlug,
   allQuestions,
   bankCheckRequest,
   bankRunRequest,
+  bankSeed,
   bankQuestions,
   DIFFICULTIES,
   practiceDatasets,
-  practiceSeed,
 } from "@/content/question-bank";
 import { allTopicIds } from "@/content/question-bank/topics";
 import { parseSchema } from "@/engine/explain";
-import { bankStarter } from "@/features/practice/QuestionWorkspace";
+import { bankStarter } from "@/content/question-bank";
 import { bootWorker, type WorkerResponse } from "./helpers/original";
 
 let send: (d: Record<string, unknown>) => Promise<WorkerResponse>;
@@ -20,7 +21,6 @@ beforeAll(async () => {
   send = await bootWorker();
 });
 
-const schema = parseSchema(practiceSeed);
 const literal = (v: unknown) => (v === null ? "NULL" : typeof v === "number" ? String(v) : `'${String(v).replace(/'/g, "''")}'`);
 
 describe("inventory integrity", () => {
@@ -53,9 +53,11 @@ describe("inventory integrity", () => {
       expect(q.slug).toMatch(/^[a-z0-9-]+$/);
       expect(q.columns.length).toBeGreaterThan(0);
       expect(q.hints.length).toBeGreaterThan(0);
-      expect(q.wrong.length).toBeGreaterThan(0);
+      // Predict answers are typed rows, so they have no SQL wrong answers.
+      if (q.exerciseType !== "predict") expect(q.wrong.length, q.id).toBeGreaterThan(0);
       expect(q.solution.trim()).not.toBe("");
-      for (const t of q.tables) expect(schema[t], `${q.id} table ${t}`).toBeTruthy();
+      const questionSchema = parseSchema(bankSeed(q));
+      for (const t of q.tables) expect(questionSchema[t], `${q.id} table ${t}`).toBeTruthy();
       for (const p of q.prerequisites) expect(lessons[p], `${q.id} prereq ${p}`).toBeTruthy();
       expect(new Set(q.topicTags).has(q.primaryTopic)).toBe(false);
     });
@@ -72,7 +74,7 @@ describe("inventory integrity", () => {
   });
 
   it("monthly-signup-cohorts lists retained with the other three required columns", () => {
-    const q = bankQuestions.find((x) => x.slug === "monthly-signup-cohorts");
+    const q = bankBySlug.get("next-month-retention-by-signup-cohort");
     expect(q?.columns).toEqual(["cohort_month", "cohort_size", "retained", "retention_pct"]);
   });
 
@@ -93,7 +95,8 @@ describe.each(bankQuestions.map((q) => [q.id, q.title, q] as const))("%s %s", (_
     expect(r.error, r.error).toBeUndefined();
     expect(r.grade?.ok, r.grade?.message).toBe(true);
     expect(r.result.columns).toEqual(q.columns);
-    expect(r.result.values.length, "non-empty on visible data").toBeGreaterThan(0);
+    // A Predict item may deliberately return no rows (for example NOT IN over a list containing NULL).
+    if (q.exerciseType !== "predict") expect(r.result.values.length, "non-empty on visible data").toBeGreaterThan(0);
   });
 
   it.each(q.equivalent ?? [])("accepts an equivalent solution: %s", async (sql) => {
@@ -102,7 +105,8 @@ describe.each(bankQuestions.map((q) => [q.id, q.title, q] as const))("%s %s", (_
     expect(r.grade?.ok, r.grade?.message).toBe(true);
   });
 
-  it("hard-coding the visible output fails", async () => {
+  // Predict is graded on typed rows, not SQL, so a hard-coded query is not an answer path there.
+  it.skipIf(q.exerciseType === "predict")("hard-coding the visible output fails", async () => {
     const base = await send(bankRunRequest(q, q.solution));
     const rows = base.result.values as unknown[][];
     const select = rows

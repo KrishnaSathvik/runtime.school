@@ -5,14 +5,16 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ChevronDown, Moon, Search, Sun } from "lucide-react";
-import { courseOrder, getLesson, projects } from "@/content";
+import { courseOrder, getLesson } from "@/content";
+import { projects as sqlProjects } from "@/content/projects";
+import { sqlProjectHref } from "@/content/projects/paths";
 import { bankQuestions } from "@/content/question-bank";
 import { rtSectionHrefs } from "@/features/rt/entry";
 import { pythonQuestions, pythonTracks, pythonQuestionHref, pythonTrackHref } from "@/content/python/practice";
 import { pythonJourneys, journeyHref } from "@/content/python/journeys";
 import { pythonLessonHref, pythonLessons } from "@/content/python";
 import { useHydrated, useLearning } from "@/lib/learning-state";
-import { projectHref } from "@/platform/project-paths";
+import { sqlLessonHref } from "@/platform/sql-lesson-href";
 import { useTheme } from "@/lib/theme";
 import { Keys } from "./Keys";
 
@@ -37,10 +39,10 @@ const PYTHON_NAV: { id: Exclude<Section, "tools">; label: string; href: string }
 ];
 
 export const TOOLS = [
-  { href: "/sql/playground", label: "SQL Playground", purpose: "Explore data freely. No grades." },
-  { href: "/sql/lab", label: "Database Lab", purpose: "Create tables, change data, test transactions." },
-  { href: "/sql/query-plans", label: "Query Performance", purpose: "Why some queries are faster." },
-  { href: "/sql/syntax", label: "Compare SQL Syntax", purpose: "One concept in three SQL dialects." },
+  { href: "/sql/playground", label: "SQL Playground", purpose: "Explore any dataset with SQL. No grades." },
+  { href: "/sql/lab", label: "Database Lab", purpose: "Change a disposable copy of a dataset." },
+  { href: "/sql/query-performance", label: "Query Performance", purpose: "Compare real SQLite query plans." },
+  { href: "/sql/syntax", label: "Compare Syntax", purpose: "One concept in three SQL dialects." },
 ];
 
 /**
@@ -209,8 +211,8 @@ function Palette({ onClose }: { onClose: () => void }) {
       { label: "Projects: continue", href: continueTo.projects, kind: "go" },
       ...TOOLS.map((t) => ({ label: t.label, href: t.href, kind: "tool" })),
       { label: "Choose a subject", href: "/", kind: "go" },
-      ...courseOrder.map((id, i) => ({ label: `${String(i + 1).padStart(2, "0")} ${getLesson(id)?.title ?? ""}`, href: `/sql/lesson/${id}`, kind: "lesson" })),
-      ...projects.map((p) => ({ label: p.title, href: projectHref(p.id), kind: "project" })),
+      ...courseOrder.map((id, i) => ({ label: `${String(i + 1).padStart(2, "0")} ${getLesson(id)?.title ?? ""}`, href: sqlLessonHref(id), kind: "lesson" })),
+      ...sqlProjects.map((p) => ({ label: p.title, href: sqlProjectHref(p.id), kind: "project" })),
       ...bankQuestions.map((b) => ({ label: b.title, href: `/sql/practice/${b.slug}`, kind: "practice" })),
     ];
     return all;

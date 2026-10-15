@@ -32,10 +32,10 @@ Prerequisite knowledge is also supported by the ordering: each track's *starting
 | Master SQL Joins | Easy → Hard | 14 | 6 | 8 | 8 |
 | SQL Interview Essentials | Easy → Medium | 15 | 11 | 4 | 12 |
 | Advanced SQL Challenges | Medium → Hard | 12 | 7 | 5 | 11 |
-| Real-World Data Analytics | Medium → Hard | 13 | 4 | 9 | 7 |
+| Real-World Data Analytics | Easy → Hard | 13 | 4 | 9 | 7 |
 | SQL for Data Engineers | Easy → Hard | 17 | 6 | 11 | 11 |
 
-84 distinct questions appear in at least one track (42 of 88 practice problems); 0 appear in two tracks.
+84 distinct questions appear in at least one track (42 of 139 practice problems); 0 appear in two tracks.
 
 ## 01 · SQL from Zero
 
@@ -49,19 +49,19 @@ Prerequisite knowledge is also supported by the ordering: each track's *starting
 
 | # | Question | Difficulty | Topic | Source | Also in |
 | --- | --- | --- | --- | --- | --- |
-| 1 | qb-0001 · Shopper contact list | Warm-up | SELECT columns | practice problem |  |
+| 1 | qb-0001 · Customer list | Warm-up | SELECT columns | practice problem |  |
 | 2 | lc-1-0 · Aliases & calculated columns · Challenge 1 | Warm-up | Column aliases | lesson 1 |  |
-| 3 | qb-0002 · Shoppers in the West region | Warm-up | WHERE | practice problem |  |
+| 3 | qb-0002 · Weather stations in the West | Warm-up | WHERE | practice problem |  |
 | 4 | lc-5-1 · Combine conditions · Challenge 2 | Warm-up | AND / OR / NOT | lesson 5 |  |
 | 5 | lc-6-0 · Lists & text patterns · Challenge 1 | Warm-up | LIKE | lesson 6 |  |
-| 6 | qb-0004 · Orders with no delivery date | Warm-up | NULL handling | practice problem |  |
+| 6 | qb-0004 · Appointments that produced no visit | Warm-up | NULL handling | practice problem |  |
 | 7 | lc-7-1 · Understand NULL · Challenge 2 | Warm-up | NULL handling | lesson 7 |  |
-| 8 | qb-0003 · Catalog from most to least expensive | Warm-up | ORDER BY | practice problem |  |
-| 9 | qb-0005 · The three cheapest items | Warm-up | LIMIT | practice problem |  |
-| 10 | qb-0008 · Hired during 2023 | Warm-up | BETWEEN & ranges | practice problem |  |
+| 8 | qb-0003 · Kitchen catalog from most to least expensive | Warm-up | ORDER BY | practice problem |  |
+| 9 | qb-0005 · The three cheapest products | Warm-up | LIMIT | practice problem |  |
+| 10 | qb-0008 · Developers who joined during 2024 | Warm-up | BETWEEN & ranges | practice problem |  |
 | 11 | lc-2-0 · Unique values with DISTINCT · Challenge 1 | Warm-up | DISTINCT | lesson 2 |  |
 | 12 | qb-0017 · Find the lamps | Easy | LIKE | practice problem |  |
-| 13 | qb-0018 · Open orders in February and March | Easy | AND / OR / NOT | practice problem |  |
+| 13 | qb-0018 · Spring orders from France and Germany | Easy | AND / OR / NOT | practice problem |  |
 
 ## 02 · Master SQL Joins
 
@@ -71,24 +71,24 @@ Prerequisite knowledge is also supported by the ordering: each track's *starting
 
 **Skills.** INNER JOIN · LEFT JOIN & COALESCE · anti-joins · self joins · set operations · fan-out at two and three grains
 
-**Shape.** 14 questions · Warm-up 0, Easy 7, Medium 5, Hard 2 · 8 topics · 6 practice problems + 8 lesson challenges · rule check: passes
+**Shape.** 14 questions · Warm-up 0, Easy 8, Medium 4, Hard 2 · 8 topics · 6 practice problems + 8 lesson challenges · rule check: passes
 
 | # | Question | Difficulty | Topic | Source | Also in |
 | --- | --- | --- | --- | --- | --- |
 | 1 | lc-14-0 · Connect tables with JOIN · Challenge 1 | Easy | INNER JOIN | lesson 14 |  |
-| 2 | qb-0015 · Employees and their departments | Easy | INNER JOIN | practice problem |  |
-| 3 | qb-0016 · Every employee, with a department label | Easy | LEFT JOIN | practice problem |  |
+| 2 | qb-0015 · Developers and their teams | Easy | INNER JOIN | practice problem |  |
+| 3 | qb-0016 · Every developer, with a team label | Easy | LEFT JOIN | practice problem |  |
 | 4 | lc-15-1 · Keep unmatched rows · Challenge 2 | Easy | LEFT JOIN | lesson 15 |  |
-| 5 | qb-0010 · Items nobody has ordered | Easy | Missing relationships / anti-joins | practice problem |  |
+| 5 | qb-0010 · Providers with no encounters | Easy | Missing relationships / anti-joins | practice problem |  |
 | 6 | lc-34-0 · Self-joins & referral relationships · Challenge 1 | Easy | Self joins | lesson 34 |  |
 | 7 | lc-38-1 · INTERSECT & EXCEPT · Challenge 2 | Easy | UNION / INTERSECT / EXCEPT | lesson 38 |  |
-| 8 | lc-15-0 · Keep unmatched rows · Challenge 1 | Medium | LEFT JOIN | lesson 15 |  |
-| 9 | lc-37-0 · ON versus WHERE in a LEFT JOIN · Challenge 1 | Medium | LEFT JOIN | lesson 37 |  |
-| 10 | lc-16-0 · Revenue across tables · Challenge 1 | Medium | Multiple joins | lesson 16 |  |
-| 11 | qb-0029 · Earning more than the manager | Medium | Self joins | practice problem |  |
-| 12 | qb-0032 · Orders whose payments don't match | Medium | Join fan-out & cardinality | practice problem |  |
+| 8 | lc-16-0 · Revenue across tables · Challenge 1 | Easy | Multiple joins | lesson 16 |  |
+| 9 | lc-15-0 · Keep unmatched rows · Challenge 1 | Medium | LEFT JOIN | lesson 15 |  |
+| 10 | lc-37-0 · ON versus WHERE in a LEFT JOIN · Challenge 1 | Medium | LEFT JOIN | lesson 37 |  |
+| 11 | qb-0029 · More pull requests than their manager | Medium | Self joins | practice problem |  |
+| 12 | qb-0032 · Orders whose payments don’t match | Medium | Join fan-out & cardinality | practice problem |  |
 | 13 | lc-49-0 · Multi-grain joins without fan-out · Challenge 1 | Hard | Join fan-out & cardinality | lesson 49 |  |
-| 14 | qb-0048 · Reconcile orders, payments and refunds | Hard | Reconciliation & quality gates | practice problem |  |
+| 14 | qb-0048 · Settlements, refunds and disputes | Hard | Reconciliation & quality gates | practice problem |  |
 
 ## 03 · SQL Interview Essentials
 
@@ -102,21 +102,21 @@ Prerequisite knowledge is also supported by the ordering: each track's *starting
 
 | # | Question | Difficulty | Topic | Source | Also in |
 | --- | --- | --- | --- | --- | --- |
-| 1 | qb-0009 · Orders by status | Easy | GROUP BY | practice problem |  |
-| 2 | qb-0011 · Repeat shoppers | Easy | HAVING | practice problem |  |
-| 3 | qb-0012 · Delivered revenue by category | Easy | GROUP BY | practice problem |  |
+| 1 | qb-0009 · Orders by year and type | Easy | GROUP BY | practice problem |  |
+| 2 | qb-0011 · Frequent customers | Easy | HAVING | practice problem |  |
+| 3 | qb-0012 · 2011 net sales by department | Easy | GROUP BY | practice problem |  |
 | 4 | qb-0021 · Active buyers per month | Easy | Monthly / weekly buckets | practice problem |  |
 | 5 | lc-17-0 · Subqueries · Challenge 1 | Easy | Scalar subqueries | lesson 17 |  |
-| 6 | qb-0014 · Emails used more than once | Easy | TRIM / LOWER / SUBSTR / REPLACE | practice problem |  |
+| 6 | qb-0014 · People invited by several workspaces | Easy | TRIM / LOWER / SUBSTR / REPLACE | practice problem |  |
 | 7 | lc-18-1 · Ask whether a row exists · Challenge 2 | Easy | IN / EXISTS / NOT EXISTS | lesson 18 |  |
 | 8 | lc-20-0 · Readable queries with CTEs · Challenge 1 | Medium | CTEs | lesson 20 |  |
-| 9 | qb-0025 · Big spenders for their region | Medium | Correlated subqueries | practice problem |  |
-| 10 | qb-0034 · Loyal shoppers who never needed a refund | Medium | IN / EXISTS / NOT EXISTS | practice problem |  |
-| 11 | qb-0033 · Order status mix by region | Medium | Conditional aggregation | practice problem |  |
+| 9 | qb-0025 · Big spenders for their state | Medium | Correlated subqueries | practice problem |  |
+| 10 | qb-0034 · Loyal customers who never returned anything | Medium | IN / EXISTS / NOT EXISTS | practice problem |  |
+| 11 | qb-0033 · Flight outcomes by origin state | Medium | Conditional aggregation | practice problem |  |
 | 12 | qb-0027 · Bestsellers within each category | Medium | RANK / DENSE_RANK | practice problem |  |
-| 13 | qb-0040 · Second-highest salary per department | Medium | RANK / DENSE_RANK | practice problem |  |
+| 13 | qb-0040 · Second-highest home-run total per team | Medium | RANK / DENSE_RANK | practice problem |  |
 | 14 | lc-25-0 · Latest row per group · Challenge 1 | Medium | Top-N per group | lesson 25 |  |
-| 15 | qb-0037 · Keep one account per email | Medium | Deduplication | practice problem |  |
+| 15 | qb-0037 · Keep one invitation per person | Medium | Deduplication | practice problem |  |
 
 ## 04 · Advanced SQL Challenges
 
@@ -126,22 +126,22 @@ Prerequisite knowledge is also supported by the ordering: each track's *starting
 
 **Skills.** LAG / LEAD · running & rolling windows · top-N with ties · date series · gaps & islands · recursive CTEs · medians · sessions & history builds
 
-**Shape.** 12 questions · Warm-up 0, Easy 0, Medium 6, Hard 6 · 11 topics · 7 practice problems + 5 lesson challenges · rule check: passes
+**Shape.** 12 questions · Warm-up 0, Easy 0, Medium 7, Hard 5 · 11 topics · 7 practice problems + 5 lesson challenges · rule check: passes
 
 | # | Question | Difficulty | Topic | Source | Also in |
 | --- | --- | --- | --- | --- | --- |
 | 1 | lc-24-0 · Compare rows with LAG · Challenge 1 | Medium | LAG / LEAD | lesson 24 |  |
 | 2 | lc-23-1 · Running totals · Challenge 2 | Medium | Running totals | lesson 23 |  |
-| 3 | qb-0031 · First order versus latest order | Medium | ROW_NUMBER | practice problem |  |
+| 3 | qb-0031 · First and latest order per customer | Medium | ROW_NUMBER | practice problem |  |
 | 4 | lc-53-1 · Top N per group & ties · Challenge 2 | Medium | Top-N per group | lesson 53 |  |
-| 5 | qb-0028 · Seven-day rolling active shoppers | Medium | Rolling windows & frames | practice problem |  |
+| 5 | qb-0028 · Seven-day rolling high temperature | Medium | Rolling windows & frames | practice problem |  |
 | 6 | qb-0030 · Days with no orders | Medium | Date series & missing days | practice problem |  |
-| 7 | lc-42-1 · Rolling averages & missing dates · Challenge 2 | Hard | Rolling windows & frames | lesson 42 |  |
-| 8 | qb-0042 · Longest login streak | Hard | Gaps & islands | practice problem |  |
-| 9 | qb-0045 · Management chain for every employee | Hard | Recursive CTEs | practice problem |  |
-| 10 | qb-0046 · Median order value by region | Hard | Medians, shares & ratios | practice problem |  |
+| 7 | lc-42-1 · Rolling averages & missing dates · Challenge 2 | Medium | Rolling windows & frames | lesson 42 |  |
+| 8 | qb-0042 · Longest winning streak | Hard | Gaps & islands | practice problem |  |
+| 9 | qb-0045 · Management chain for every developer | Hard | Recursive CTEs | practice problem |  |
+| 10 | qb-0046 · Median home attendance per team | Hard | Medians, shares & ratios | practice problem |  |
 | 11 | lc-48-0 · Sessionize an event stream · Challenge 1 | Hard | Sessions & sequences | lesson 48 |  |
-| 12 | qb-0047 · Build a region history from snapshots | Hard | History, SCD & as-of | practice problem |  |
+| 12 | qb-0047 · Build a country history from invoices | Hard | History, SCD & as-of | practice problem |  |
 
 ## 05 · Real-World Data Analytics
 
@@ -151,23 +151,23 @@ Prerequisite knowledge is also supported by the ordering: each track's *starting
 
 **Skills.** ratios & NULLIF · average order value · net revenue · share of total · funnels · experiments · cohorts · reconciliation
 
-**Shape.** 13 questions · Warm-up 0, Easy 0, Medium 6, Hard 7 · 7 topics · 4 practice problems + 9 lesson challenges · rule check: passes
+**Shape.** 13 questions · Warm-up 0, Easy 1, Medium 7, Hard 5 · 7 topics · 4 practice problems + 9 lesson challenges · rule check: passes
 
 | # | Question | Difficulty | Topic | Source | Also in |
 | --- | --- | --- | --- | --- | --- |
-| 1 | lc-32-0 · Ratios, ROUND & NULLIF · Challenge 1 | Medium | Medians, shares & ratios | lesson 32 |  |
-| 2 | qb-0035 · Average order value by month | Medium | Revenue & order value | practice problem |  |
-| 3 | qb-0026 · Monthly revenue after refunds | Medium | Revenue & order value | practice problem |  |
+| 1 | qb-0035 · Average order value by month | Medium | Revenue & order value | practice problem |  |
+| 2 | lc-32-0 · Ratios, ROUND & NULLIF · Challenge 1 | Easy | Medians, shares & ratios | lesson 32 |  |
+| 3 | qb-0026 · Monthly sales after cancellations | Medium | Revenue & order value | practice problem |  |
 | 4 | lc-43-0 · Share of total with windows · Challenge 1 | Medium | Medians, shares & ratios | lesson 43 |  |
-| 5 | qb-0036 · Payroll versus budget | Medium | GROUP BY | practice problem |  |
+| 5 | qb-0036 · Deployments versus incidents | Medium | GROUP BY | practice problem |  |
 | 6 | lc-73-0 · Customer & product reporting contracts · Challenge 1 | Medium | Segmentation & ranking | lesson 73 |  |
-| 7 | lc-29-0 · Capstone: customer insights · Challenge 1 | Hard | Segmentation & ranking | lesson 29 |  |
-| 8 | lc-46-0 · Ordered conversion funnels · Challenge 1 | Hard | Funnels & conversion | lesson 46 |  |
-| 9 | lc-52-0 · Experiment conversion denominators · Challenge 1 | Hard | Funnels & conversion | lesson 52 |  |
-| 10 | lc-47-0 · Cohorts & exact-day retention · Challenge 1 | Hard | Cohorts & retention | lesson 47 |  |
-| 11 | qb-0041 · Next-month retention by signup cohort | Hard | Cohorts & retention | practice problem |  |
-| 12 | lc-51-1 · AI usage cost & contribution margin · Challenge 2 | Hard | Revenue & order value | lesson 51 |  |
-| 13 | lc-50-0 · Revenue & payment reconciliation · Challenge 1 | Hard | Reconciliation & quality gates | lesson 50 |  |
+| 7 | lc-52-0 · Experiment conversion denominators · Challenge 1 | Medium | Funnels & conversion | lesson 52 |  |
+| 8 | lc-50-0 · Revenue & payment reconciliation · Challenge 1 | Medium | Reconciliation & quality gates | lesson 50 |  |
+| 9 | lc-29-0 · Capstone: customer insights · Challenge 1 | Hard | Segmentation & ranking | lesson 29 |  |
+| 10 | lc-46-0 · Ordered conversion funnels · Challenge 1 | Hard | Funnels & conversion | lesson 46 |  |
+| 11 | lc-47-0 · Cohorts & exact-day retention · Challenge 1 | Hard | Cohorts & retention | lesson 47 |  |
+| 12 | qb-0041 · Next-month retention by signup cohort | Hard | Cohorts & retention | practice problem |  |
+| 13 | lc-51-1 · Usage cost & contribution margin · Challenge 2 | Hard | Revenue & order value | lesson 51 |  |
 
 ## 06 · SQL for Data Engineers
 
@@ -181,20 +181,20 @@ Prerequisite knowledge is also supported by the ordering: each track's *starting
 
 | # | Question | Difficulty | Topic | Source | Also in |
 | --- | --- | --- | --- | --- | --- |
-| 1 | lc-58-0 · DDL: create, alter & inspect a table · Challenge 1 | Easy | CREATE / ALTER | lesson 58 |  |
-| 2 | qb-0023 · Create a wishlist table | Easy | CREATE / ALTER | practice problem |  |
-| 3 | lc-59-0 · DML: INSERT, UPDATE & DELETE · Challenge 1 | Easy | INSERT / UPDATE / DELETE | lesson 59 |  |
-| 4 | qb-0024 · Reprice the garden range | Easy | INSERT / UPDATE / DELETE | practice problem |  |
+| 1 | qb-0023 · Create a wishlist table | Easy | CREATE / ALTER | practice problem |  |
+| 2 | lc-59-0 · DML: INSERT, UPDATE & DELETE · Challenge 1 | Easy | INSERT / UPDATE / DELETE | lesson 59 |  |
+| 3 | qb-0024 · Reprice the garden range | Easy | INSERT / UPDATE / DELETE | practice problem |  |
+| 4 | lc-58-0 · DDL: create, alter & inspect a table · Challenge 1 | Medium | CREATE / ALTER | lesson 58 |  |
 | 5 | lc-60-0 · Constraints protect the data contract · Challenge 1 | Medium | Constraints | lesson 60 |  |
 | 6 | lc-61-1 · Transactions & savepoint recovery · Challenge 2 | Easy | Transactions | lesson 61 |  |
-| 7 | qb-0039 · A reusable shopper totals view | Medium | Views, temp tables & triggers | practice problem |  |
+| 7 | qb-0039 · A reusable customer totals view | Medium | Views, temp tables & triggers | practice problem |  |
 | 8 | lc-64-0 · Triggers & visible audit effects · Challenge 1 | Medium | Views, temp tables & triggers | lesson 64 |  |
 | 9 | qb-0038 · A covering index for unit totals | Medium | Indexes | practice problem |  |
-| 10 | lc-84-0 · Idempotent incremental UPSERT & stale updates · Challenge 1 | Medium | Incremental & idempotent loads | lesson 84 |  |
+| 10 | lc-84-0 · Idempotent incremental UPSERT & stale updates · Challenge 1 | Easy | Incremental & idempotent loads | lesson 84 |  |
 | 11 | lc-85-0 · Stage, validate & atomically promote a refresh · Challenge 1 | Medium | Transactions | lesson 85 |  |
 | 12 | lc-83-0 · Latest-state reporting versus SCD Type 2 · Challenge 1 | Easy | History, SCD & as-of | lesson 83 |  |
 | 13 | lc-78-0 · Product validity with LEAD & half-open intervals · Challenge 1 | Medium | History, SCD & as-of | lesson 78 |  |
-| 14 | qb-0044 · Detect overlapping history periods | Hard | Validation & types | practice problem |  |
-| 15 | qb-0043 · Salary at the time of each review | Hard | History, SCD & as-of | practice problem |  |
+| 14 | qb-0044 · Overlapping prescription fills | Hard | Validation & types | practice problem |  |
+| 15 | qb-0043 · Customer segment at order time | Hard | History, SCD & as-of | practice problem |  |
 | 16 | lc-70-0 · Silver: clean, map & deduplicate · Challenge 1 | Hard | Bronze / Silver / Gold | lesson 70 |  |
 | 17 | lc-81-0 · Automated star-schema quality tests · Challenge 1 | Hard | Reconciliation & quality gates | lesson 81 |  |

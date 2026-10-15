@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PracticeTask } from "@/features/rt/pages/Practice";
-import { practiceSlugs, questionMetadata } from "@/platform/seo";
+import { practiceRouteSlugs, questionMetadata } from "@/platform/seo";
 
 type Props = { params: Promise<{ slug: string }> };
 
 export function generateStaticParams() {
-  return practiceSlugs().map((slug) => ({ slug }));
+  return practiceRouteSlugs().map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

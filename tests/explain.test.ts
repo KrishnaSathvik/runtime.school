@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { content, lessons } from "@/content";
+import { lessonFixture, lessons } from "@/content";
+import { learningDatasets } from "@/data/datasets/learning";
 import {
   closest,
   explainError,
@@ -8,7 +9,6 @@ import {
   tableRefs,
   teachingSchema,
 } from "@/engine/explain";
-import { practiceSeed } from "@/content/question-bank";
 import { bootWorker, type WorkerResponse } from "./helpers/original";
 
 let send: (d: Record<string, unknown>) => Promise<WorkerResponse>;
@@ -16,21 +16,27 @@ beforeAll(async () => {
   send = await bootWorker();
 });
 
+const RETAIL = learningDatasets.retail.seed;
+
 /** Runs SQL through the shipped worker and explains the real error it returns. */
 async function explainRun(query: string, allowWrites = false) {
-  const r = await send({ seed: content.seed, query, allowWrites });
+  const r = await send({ seed: RETAIL, query, allowWrites });
   expect(r.error, `expected an error for: ${query}`).toBeTruthy();
   return explainError(r.error, query, ["customers", "products", "orders"]);
 }
 
 describe("schema parsing", () => {
-  it("matches SQLite's own PRAGMA table_info for every table (37 curriculum + 21 original bank + 6 V4)", async () => {
+  it("knows every canonical table and matches SQLite's own PRAGMA table_info", async () => {
     const schema = teachingSchema();
-    expect(Object.keys(schema)).toHaveLength(64);
-    expect(Object.keys(schema).filter(t=>!t.startsWith("studio_") && !["capacity_regions","capacity_sites","current_capacity","future_supply"].includes(t))).toHaveLength(58);
-    for (const [table, cols] of Object.entries(schema)) {
-      const r = await send({ seed: practiceSeed, query: `SELECT name FROM pragma_table_info('${table}')` });
-      expect(cols, table).toEqual(r.result.values.map((v: unknown[]) => v[0]));
+    const owners = new Map<string, number>();
+    for (const d of Object.values(learningDatasets)) for (const t of d.metadata.tables) owners.set(t.name, (owners.get(t.name) ?? 0) + 1);
+    for (const d of Object.values(learningDatasets)) {
+      for (const t of d.metadata.tables) {
+        for (const c of t.columns) expect(schema[t.name], `${t.name}.${c.name}`).toContain(c.name);
+        if (owners.get(t.name) !== 1 || d.ref.datasetId !== "retail") continue;
+        const r = await send({ seed: d.seed, query: `SELECT name FROM pragma_table_info('${t.name}')` });
+        expect(schema[t.name], t.name).toEqual(r.result.values.map((v: unknown[]) => v[0]));
+      }
     }
   });
 
@@ -53,7 +59,7 @@ describe("schema parsing", () => {
 
 describe("explaining real SQLite errors", () => {
   it("syntax: comma before FROM", async () => {
-    const e = await explainRun("SELECT name, city, FROM customers");
+    const e = await explainRun("SELECT country, region, FROM customers");
     expect(e.title).toBe("SQL syntax error");
     expect(e.next).toMatch(/Remove the comma/);
     expect(e.technical).toMatch(/near "FROM": syntax error/);
@@ -67,13 +73,13 @@ describe("explaining real SQLite errors", () => {
   });
 
   it("syntax: misspelled keyword", async () => {
-    const e = await explainRun("SELECT name FORM customers");
+    const e = await explainRun("SELECT country FORM customers");
     expect(e.title).toBe("SQL syntax error");
     expect(e.detail).toMatch(/FORM|customers/);
   });
 
   it("syntax: misspelled SELECT is not treated as a write", async () => {
-    const e = await explainRun("SELEC name FROM customers");
+    const e = await explainRun("SELEC country FROM customers");
     expect(e.title).toBe("SQL syntax error");
     expect(e.detail).toMatch(/SELEC/);
     expect(e.next).toMatch(/SELECT/);
@@ -81,52 +87,52 @@ describe("explaining real SQLite errors", () => {
   });
 
   it("incomplete input after FROM", async () => {
-    const e = await explainRun("SELECT name\nFROM ");
+    const e = await explainRun("SELECT country\nFROM ");
     expect(e.title).toMatch(/ends too early/);
   });
 
   it("unclosed parenthesis", async () => {
-    const e = await explainRun("SELECT COUNT(name FROM customers");
+    const e = await explainRun("SELECT COUNT(country FROM customers");
     expect(e.title).toMatch(/syntax|ends too early/);
   });
 
   it("missing table with typo suggestion", async () => {
-    const e = await explainRun("SELECT name FROM custmers");
+    const e = await explainRun("SELECT country FROM custmers");
     expect(e.title).toBe("There is no table called `custmers`");
     expect(e.next).toBe("Did you mean `customers`?");
   });
 
   it("missing column with typo suggestion from the queried table", async () => {
-    const e = await explainRun("SELECT nme FROM customers");
-    expect(e.title).toBe("There is no column called `nme`");
-    expect(e.next).toBe("Did you mean `name`?");
+    const e = await explainRun("SELECT countr FROM customers");
+    expect(e.title).toBe("There is no column called `countr`");
+    expect(e.next).toBe("Did you mean `country`?");
   });
 
   it("unquoted text value is identified as a missing quote", async () => {
-    const e = await explainRun("SELECT name FROM customers WHERE city = Chicago");
+    const e = await explainRun("SELECT customer_id FROM customers WHERE region = Europe");
     expect(e.title).toMatch(/read as a column name/);
-    expect(e.next).toMatch(/'Chicago'/);
+    expect(e.next).toMatch(/'Europe'/);
   });
 
   it("column that exists elsewhere but not in the queried table", async () => {
-    const e = await explainRun("SELECT price FROM customers");
+    const e = await explainRun("SELECT list_price FROM customers");
     expect(e.title).toMatch(/isn't in the tables you're reading/);
     expect(e.detail).toMatch(/products/);
   });
 
   it("undefined alias prefix", async () => {
-    const e = await explainRun("SELECT x.name FROM customers c");
+    const e = await explainRun("SELECT x.country FROM customers c");
     expect(e.title).toBe("`x` isn't a table or alias in this query");
     expect(e.next).toMatch(/`c`/);
   });
 
   it("alias pointing to the wrong table", async () => {
-    const e = await explainRun("SELECT c.price FROM customers c JOIN orders o ON o.customer_id=c.id");
-    expect(e.title).toBe("`customers` has no column `price`");
+    const e = await explainRun("SELECT c.list_price FROM customers c JOIN orders o ON o.customer_id=c.customer_id");
+    expect(e.title).toBe("`customers` has no column `list_price`");
   });
 
   it("ambiguous column names both tables", async () => {
-    const e = await explainRun("SELECT id FROM customers c JOIN orders o ON o.customer_id=c.id");
+    const e = await explainRun("SELECT customer_id FROM customers c JOIN orders o ON o.customer_id=c.customer_id");
     expect(e.title).toMatch(/more than one table/);
     expect(e.detail).toMatch(/`c`/);
     expect(e.detail).toMatch(/`o`/);
@@ -175,7 +181,7 @@ describe("explaining real SQLite errors", () => {
   });
 
   it("UNION with mismatched columns", async () => {
-    const e = await explainRun("SELECT id, name FROM customers UNION SELECT id FROM products");
+    const e = await explainRun("SELECT customer_id, country FROM customers UNION SELECT stock_code FROM products");
     expect(e.title).toMatch(/UNION/);
   });
 
@@ -196,9 +202,10 @@ describe("explaining real SQLite errors", () => {
 async function explainCheck(lessonId: number, variant: number, query: string) {
   const l = lessons[lessonId];
   const t = l.tasks[variant];
+  const fixture = lessonFixture(l);
   const r = await send({
-    seed: content.seed, query, answer: t.answer, ordered: t.ordered,
-    mutation: content.fixtureMutation, allowWrites: l.mode === "lab",
+    seed: fixture.seed, query, answer: t.answer, ordered: t.ordered,
+    mutation: fixture.mutation, allowWrites: l.mode === "lab",
     validate: t.validate, required: t.required,
   });
   expect(r.grade?.ok).toBe(false);
@@ -216,14 +223,14 @@ describe("explaining incorrect output", () => {
   });
 
   it("columns in the wrong order", async () => {
-    const e = await explainCheck(0, 0, "SELECT city, name FROM customers");
+    const e = await explainCheck(0, 0, "SELECT country, customer_id FROM customers");
     expect(e.title).toBe("Columns are in a different order");
   });
 
   it("missing alias names the expected column", async () => {
     const id = lessons.findIndex((l) => / AS /i.test(l.tasks[0].answer) && l.mode !== "lab" && !/^WITH/i.test(l.tasks[0].answer));
     const answer = lessons[id].tasks[0].answer;
-    const r = await send({ seed: content.seed, query: answer });
+    const r = await send({ seed: lessonFixture(lessons[id]).seed, query: answer });
     const renamed = `SELECT ${r.result.columns.map((c: string, i: number) => `"${c}" AS col${i}`).join(", ")} FROM (${answer})`;
     const e = await explainCheck(id, 0, renamed);
     expect(e.title).toBe("Column names don't match");
@@ -231,7 +238,7 @@ describe("explaining incorrect output", () => {
   });
 
   it("duplicate rows from a join are identified", async () => {
-    const e = await explainCheck(0, 0, "SELECT c.name, c.city FROM customers c JOIN orders o ON o.customer_id = c.id");
+    const e = await explainCheck(0, 0, "SELECT c.customer_id, c.country FROM customers c JOIN orders o ON o.customer_id = c.customer_id");
     expect(e.title).toBe("Too many rows");
     expect(e.detail).toMatch(/exact duplicates/);
     expect(e.next).toMatch(/JOIN repeats rows/);
@@ -240,7 +247,7 @@ describe("explaining incorrect output", () => {
   it("aggregate without GROUP BY → suggests GROUP BY", async () => {
     // lesson 10 "Group into summaries": answer groups by a column.
     const t = lessons[10].tasks[0];
-    const r = await send({ seed: content.seed, query: t.answer });
+    const r = await send({ seed: lessonFixture(lessons[10]).seed, query: t.answer });
     expect(r.result.values.length).toBeGreaterThan(1);
     const cols = r.result.columns;
     const query = t.answer.replace(/\s+GROUP\s+BY[\s\S]*$/i, "");
@@ -261,7 +268,7 @@ describe("explaining incorrect output", () => {
   });
 
   it("wrong order on an ordered task", async () => {
-    const e = await explainCheck(8, 0, "SELECT * FROM (SELECT name,price FROM products ORDER BY price DESC LIMIT 3) ORDER BY price ASC");
+    const e = await explainCheck(8, 0, "SELECT * FROM (SELECT stock_code, description, list_price FROM products WHERE is_merchandise = 1 ORDER BY list_price DESC, stock_code LIMIT 10) ORDER BY list_price ASC");
     expect(e.title).toMatch(/out of order/);
   });
 

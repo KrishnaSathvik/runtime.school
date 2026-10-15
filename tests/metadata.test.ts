@@ -1,3 +1,4 @@
+import { sqlLessonHref } from "@/platform/sql-lesson-href";
 import fs from "fs";
 import { describe, expect, it } from "vitest";
 import { bankQuestions } from "@/content/question-bank";
@@ -23,13 +24,13 @@ describe("inventory metadata audit (all 247 questions)", () => {
   });
 
   it("known keyword traps are not read as tables", () => {
-    expect(sqlFeatures("CREATE TRIGGER t AFTER UPDATE OF price ON lab_items BEGIN SELECT 1; END;").tables).toEqual(["lab_items"]);
-    expect(sqlFeatures("CREATE INDEX idx ON sales_orders(shopper_id); SELECT 1").tables).toEqual(["sales_orders"]);
+    expect(sqlFeatures("CREATE TRIGGER t AFTER UPDATE OF list_price ON products BEGIN SELECT 1; END;").tables).toEqual(["products"]);
+    expect(sqlFeatures("CREATE INDEX idx ON orders(customer_id); SELECT 1").tables).toEqual(["orders"]);
     expect(
-      sqlFeatures("INSERT INTO current_people SELECT * FROM incoming_people WHERE 1 ON CONFLICT(customer_id) DO UPDATE SET name=excluded.name").tables.sort(),
-    ).toEqual(["current_people", "incoming_people"]);
-    expect(sqlFeatures("CREATE TEMP TABLE silver AS SELECT * FROM bronze_customers; SELECT * FROM silver").tables.sort()).toEqual([
-      "bronze_customers",
+      sqlFeatures("INSERT INTO customers SELECT customer_id, country, segment, valid_from FROM customer_history WHERE 1 ON CONFLICT(customer_id) DO UPDATE SET country=excluded.country").tables.sort(),
+    ).toEqual(["customer_history", "customers"]);
+    expect(sqlFeatures("CREATE TEMP TABLE silver AS SELECT * FROM customers; SELECT * FROM silver").tables.sort()).toEqual([
+      "customers",
       "silver",
     ]);
   });
@@ -56,7 +57,7 @@ describe("lesson-only challenges", () => {
     const hidden = allQuestions().filter((q) => !q.practiceEligible);
     expect(hidden.map((q) => `${q.sourceLessonId}/${q.sourceVariant}`).sort()).toEqual(Object.keys(LESSON_ONLY).sort());
     for (const q of hidden) {
-      expect(q.href).toBe(`/lesson/${q.sourceLessonId}?challenge=${q.sourceVariant! + 1}`);
+      expect(q.href).toBe(sqlLessonHref(q.sourceLessonId!));
       expect(lessons[q.sourceLessonId!].tasks[q.sourceVariant!]).toBeTruthy();
     }
     expect(allQuestions().filter((q) => q.sourceType === "bank").every((q) => q.practiceEligible)).toBe(true);

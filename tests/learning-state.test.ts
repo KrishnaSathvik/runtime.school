@@ -2,11 +2,10 @@ import { beforeEach, describe, expect, it } from "vitest";
 import {
   isMastered,
   migrateLearning,
-  milestoneDone,
   useLearning,
   validateImport,
 } from "@/lib/learning-state";
-import { lessons, projects } from "@/content";
+import { lessons } from "@/content";
 
 const store = () => useLearning.getState();
 const check = (lessonId: number, variant: number, ok: boolean, guided = false, project: number | null = null) =>
@@ -85,16 +84,12 @@ describe("returning-user state", () => {
     store().setSession(5, null, "review", 1);
     expect(store().active).toEqual({ id: 5, variant: 1, stage: "review", project: null });
     expect(store().sessions["activity:null:5"]).toEqual({ stage: "review", variant: 1 });
-    store().setSession(45, 0, "practice", 0);
-    expect(store().sessions["activity:0:45"]).toEqual({ stage: "practice", variant: 0 });
-    expect(store().lastProject).toBe(0);
   });
 
-  it("export → import round-trips drafts, attempts, sessions, projects and theme", () => {
+  it("export → import round-trips drafts, attempts, sessions and theme", () => {
     store().setDraft("sql-lesson-4-1", "SELECT name FROM customers");
     store().markGuided("lesson:4:1", "hint");
     store().setSession(4, null, "practice", 1);
-    check(45, 0, true, false, 0);
     store().setTheme("dark");
     const exported = JSON.parse(JSON.stringify(store().exportProgress()));
     store().resetProgress();
@@ -104,14 +99,12 @@ describe("returning-user state", () => {
     expect(s.drafts["sql-lesson-4-1"]).toBe("SELECT name FROM customers");
     expect(s.attempts["lesson:4:1"].guided).toBe(true);
     expect(s.active).toEqual({ id: 4, variant: 1, stage: "practice", project: null });
-    expect(s.projects[0].milestones[45].solved).toEqual([0]);
-    expect(s.projects[0].milestones[45].queries[0]).toBe("SELECT 1");
     expect(s.preferences.theme).toBe("dark");
   });
 });
 
 describe("progress import compatibility", () => {
-  it("V1 files keep mastery via the legacy flag and gain review + project records", () => {
+  it("V1 files keep mastery via the legacy flag and gain a review schedule", () => {
     const v1 = { id: 45, stats: { 45: { attempts: 4, correct: 2, solved: [0, 1], last: 1700000000000 }, 0: { attempts: 1, solved: [0] } } };
     store().importProgress(v1);
     const s = store();
@@ -119,7 +112,6 @@ describe("progress import compatibility", () => {
     expect(isMastered(s.stats[45])).toBe(true);
     expect(isMastered(s.stats[0])).toBe(false);
     expect(s.reviews[45]).toBeTruthy();
-    expect(milestoneDone(s.projects[0].milestones[45])).toBe(true);
     expect(s.active?.id).toBe(45);
   });
 
@@ -145,9 +137,6 @@ describe("progress import compatibility", () => {
     [{ version: 3, stats: {}, drafts: { a: 5 } }, "Invalid SQL drafts"],
     [{ version: 3, stats: {}, attempts: { a: {} } }, "Invalid guidance history"],
     [{ version: 3, stats: {}, reviews: { 0: { due: "soon" } } }, "Invalid review schedule"],
-    [{ version: 3, stats: {}, projects: { 9: { milestones: {} } } }, "Invalid project record"],
-    [{ version: 3, stats: {}, projects: { 0: { milestones: { 0: { solved: [] } } } } }, "Invalid project milestone"],
-    [{ version: 3, stats: {}, projects: { 0: { milestones: { 45: { solved: [3] } } } } }, "Invalid project milestone"],
   ])("rejects malformed import %#", (input, message) => {
     expect(() => validateImport(input)).toThrow(message as string);
   });
@@ -162,20 +151,6 @@ describe("progress import compatibility", () => {
     const d = migrateLearning({ version: 3, stats: { 0: null }, active: { id: 999, stage: "x" }, projects: "bad" });
     expect(d.stats).toEqual({});
     expect(d.active).toBeNull();
-    expect(d.projects).toEqual({});
   });
 });
 
-describe("project milestones", () => {
-  it("milestone completes only with two independent queries plus its own concept check", () => {
-    const [pid, id] = [0, projects[0].milestoneIds[0]];
-    check(id, 0, true, false, pid);
-    check(id, 1, true, true, pid); // guided
-    expect(milestoneDone(store().projects[pid].milestones[id])).toBe(false);
-    check(id, 1, true, false, pid);
-    expect(store().completeQuiz(id, pid, lessons[id].quiz.correct).complete).toBe(true);
-    const m = store().projects[pid].milestones[id];
-    expect(milestoneDone(m)).toBe(true);
-    expect((m.results[0] as { columns: string[] }).columns).toEqual(["a"]);
-  });
-});

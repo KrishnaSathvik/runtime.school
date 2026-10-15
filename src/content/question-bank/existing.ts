@@ -1,4 +1,5 @@
-import { courseOrder, lessons, projects } from "@/content";
+import { courseOrder, lessons } from "@/content";
+import { sqlLessonHref } from "@/platform/sql-lesson-href";
 import { featureTags, rubricDifficulty, rubricScore, similarity, skeleton, sqlFeatures } from "./rubric";
 import type { Difficulty, QuestionRecord, TopicId } from "./types";
 
@@ -55,7 +56,7 @@ export const DIFFICULTY_OVERRIDES: Record<string, { difficulty: Difficulty; why:
 
 /**
  * Challenges that only make sense inside their lesson (reviewed individually).
- * They stay reachable through the lesson (and project) flow, but are not listed
+ * They stay reachable through the lesson flow, but are not listed
  * in the Practice browser because the prompt depends on earlier lesson context.
  */
 export const LESSON_ONLY: Record<string, string> = {
@@ -76,13 +77,12 @@ export const LESSON_ONLY: Record<string, string> = {
   "87/1": "“the same two TEMP outputs” refers to challenge 1",
 };
 
-function lessonHref(id: number, variant: number) {
-  return `/lesson/${id}?challenge=${variant + 1}`;
+function lessonHref(id: number) {
+  return sqlLessonHref(id);
 }
 
 export function existingQuestions(): QuestionRecord[] {
   const out: QuestionRecord[] = [];
-  const projectOf = (id: number) => projects.filter((p) => p.milestoneIds.includes(id)).map((p) => p.id);
   for (const id of courseOrder) {
     const l = lessons[id];
     l.tasks.forEach((t, v) => {
@@ -92,7 +92,6 @@ export function existingQuestions(): QuestionRecord[] {
       const override = DIFFICULTY_OVERRIDES[key];
       const rubric = rubricDifficulty(score, f);
       const primary = LESSON_TOPIC[id];
-      const pids = projectOf(id);
       out.push({
         id: `lc-${id}-${v}`,
         slug: `lesson-${id}-challenge-${v + 1}`,
@@ -104,16 +103,15 @@ export function existingQuestions(): QuestionRecord[] {
         primaryTopic: primary,
         topicTags: featureTags(f).filter((x) => x !== primary),
         datasetId: l.dataset,
-        sourceType: pids.length ? "project" : "lesson",
+        sourceType: "lesson",
         sourceLessonId: id,
         sourceVariant: v,
-        projectIds: pids.length ? pids : undefined,
         moduleId: l.group,
         prompt: t.prompt,
         ordered: t.ordered,
         pattern: "",
         practiceEligible: !(key in LESSON_ONLY),
-        href: lessonHref(id, v),
+        href: lessonHref(id),
       });
     });
   }

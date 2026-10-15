@@ -1,0 +1,63 @@
+import {chromium} from 'playwright';
+import AxeBuilder from '@axe-core/playwright';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import initSqlJs from 'sql.js';
+const base=process.env.BASE??'http://127.0.0.1:3100',out='docs/sql-phase1/screens';fs.mkdirSync(out,{recursive:true});
+const audit=JSON.parse(fs.readFileSync('docs/sql-phase1/audit.json')),assets=JSON.parse(fs.readFileSync('src/data/datasets/generated/learning.json'));
+const names=Object.values(assets).map(d=>d.metadata.name).sort();
+const SQL=await initSqlJs();
+const browser=await chromium.launch({headless:true}),evidence=[];let activePage;
+const stored=async p=>p.evaluate(()=>JSON.parse(localStorage.getItem('sql-studio-v1')??'{}').state);
+const fill=async(p,sql)=>{await p.locator('.cm-content[contenteditable="true"]').last().fill(sql);};
+try{
+ for(const theme of ['light','dark'])for(const width of [1440,390]){
+  const context=await browser.newContext({viewport:{width,height:1000},colorScheme:theme}),p=await context.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));p.setDefaultTimeout(30000);activePage=p;
+  const healthy=async()=>{assert.equal(await p.evaluate(()=>document.documentElement.dataset.theme),theme);assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,'page overflows');assert.doesNotMatch(await p.locator('body').innerText(),/Corner Shop|Harbor Market|Streamly|SocialLoop|Community Studio|Atlas Corp|Northstar|dataset edition|Synthetic data · Runtime.school|About Workspace Analytics/i);};
+  await p.goto(base+'/sql/lesson/0');await p.getByRole('heading',{level:1}).waitFor();
+  await p.evaluate(()=>localStorage.setItem('sql-studio-v1',JSON.stringify({version:3,state:{version:3,drafts:{'sql-lesson-0-0':'SELECT name,city FROM customers;','sql-qb-qb-0114':'SELECT older_saved_work;'},stats:{},questions:{}}})));
+  await p.reload();await p.locator('.cm-content[contenteditable="true"]').last().waitFor();
+  const l=audit.lessons.find(l=>l.id===0);
+  await p.getByRole('button',{name:'Run',exact:true}).first().click();await p.getByText('name',{exact:true}).first().waitFor();
+  await fill(p,l.challenges[0].answer);await p.getByRole('button',{name:'Check',exact:true}).click();
+  await p.waitForFunction(()=>JSON.parse(localStorage.getItem('sql-studio-v1')).state.stats['0']?.solved?.includes(0));
+  await p.getByRole('tab',{name:/^Challenge 2/}).click();await fill(p,l.challenges[1].answer);await p.getByRole('button',{name:'Check',exact:true}).click();
+  await p.waitForFunction(()=>JSON.parse(localStorage.getItem('sql-studio-v1')).state.stats['0']?.solved?.includes(1));
+  await p.getByRole('tab',{name:/^Concept check/}).click();await p.locator('.rx-quiz button').nth(l.quiz.correct).click();
+  await p.waitForURL(url=>url.pathname.startsWith('/sql/lesson/')&&!url.pathname.endsWith('/0'));
+  console.log('lesson complete',theme,width);
+  await healthy();await p.evaluate(()=>window.scrollTo(0,0));await p.screenshot({path:`${out}/lesson-${theme}-${width}.png`,fullPage:true});
+  await p.goto(base+'/sql/lesson/3');
+  const orders=p.getByRole('region',{name:'store_orders sample rows'});
+  await orders.waitFor({state:'visible'});
+  assert.equal(await orders.locator('thead th').count(),6);
+  assert.ok(await orders.locator('tbody tr').count()>0);
+  assert.equal(await p.getByText('One simulated product purchase line, not an entire multi-item order.',{exact:true}).count(),0);
+  await healthy();await orders.scrollIntoViewIfNeeded();
+  await p.screenshot({path:`${out}/orders-${theme}-${width}.png`});
+  // Resolve the stable slug from the audited source rather than guess labels.
+  const sports=audit.questions.find(q=>q.id==='qb-0114');await p.goto(base+'/sql/practice/'+sports.slug);await p.locator('.cm-content').waitFor();console.log('sports opened',theme,width);
+  await p.getByRole('button',{name:'All questions',exact:true}).click();
+  const filter=p.locator('select').filter({has:p.locator('option[value="sports"]')});
+  assert.deepEqual((await filter.locator('option').allTextContents()).filter(x=>names.includes(x)).sort(),names);
+  assert.equal(await filter.locator('option').count(),13);
+  await filter.selectOption('iot');await p.getByRole('dialog',{name:'All questions'}).getByRole('link',{name:/A sustained warm interval/}).waitFor();
+  await filter.selectOption('sports');await p.getByRole('button',{name:'All questions',exact:true}).click();
+  assert.ok(await p.getByText('Previous drafts preserved',{exact:true}).count());
+  await fill(p,sports.solution);await p.getByRole('button',{name:'Check',exact:true}).click();
+  await p.waitForFunction(()=>JSON.parse(localStorage.getItem('sql-studio-v1')).state.questions['qb-0114']?.solved);
+  await p.reload();await p.locator('.cm-content').waitFor();assert.match(await p.locator('.cm-content').innerText(),/EXISTS/i);
+  assert.equal((await stored(p)).drafts['sql-qb-qb-0114'],'SELECT older_saved_work;');console.log('sports solved',theme,width);
+  await healthy();await p.screenshot({path:`${out}/practice-${theme}-${width}.png`,fullPage:true});
+  const axe=await new AxeBuilder({page:p}).withTags(['wcag2a','wcag2aa']).analyze();fs.writeFileSync('/tmp/sql-phase1-axe.json',JSON.stringify(axe.violations,null,2));assert.deepEqual(axe.violations.map(v=>v.id),[]);
+  const debug=audit.questions.find(q=>q.id==='qb-0111');await p.goto(base+'/sql/practice/'+debug.slug);await p.locator('.cm-content').waitFor();await p.getByRole('button',{name:'Check fix',exact:true}).click();await p.waitForFunction(()=>JSON.parse(localStorage.getItem('sql-studio-v1')).state.questions['qb-0111']?.attempts>0);assert.equal((await stored(p)).questions['qb-0111'].solved,false);
+  await fill(p,debug.solution);await p.getByRole('button',{name:'Check fix',exact:true}).click();await p.waitForFunction(()=>JSON.parse(localStorage.getItem('sql-studio-v1')).state.questions['qb-0111']?.solved);
+  await p.waitForURL('**/sql/practice/'+audit.questions.find(q=>q.id==='qb-0112').slug);
+  const predict=audit.questions.find(q=>q.id==='qb-0101');await p.goto(base+'/sql/practice/'+predict.slug);await p.locator('#prediction-rows').waitFor();assert.equal(await p.getByText('expected result',{exact:true}).count(),0);
+  const db=new SQL.Database();db.run(assets[predict.datasetId].seed);const expected=db.exec(predict.solution)[0].values;db.close();await p.locator('#prediction-rows').fill(JSON.stringify(expected));await p.getByRole('button',{name:'Check prediction',exact:true}).click();await p.waitForFunction(()=>JSON.parse(localStorage.getItem('sql-studio-v1')).state.questions['qb-0101']?.solved);
+  const refresher=p.getByRole('link',{name:/Refresher:/});assert.ok(await refresher.count());await refresher.click();await p.getByRole('heading',{level:1}).waitFor();await healthy();
+  const lessonAxe=await new AxeBuilder({page:p}).withTags(['wcag2a','wcag2aa']).analyze();assert.deepEqual(lessonAxe.violations.map(v=>v.id),[]);
+  assert.deepEqual(errors,[]);evidence.push({theme,width,lessonChecks:true,canonicalFilters:12,write:true,predict:true,debug:true,prerequisites:true,draftReload:true,legacyDraftPreserved:true,pageErrors:errors,accessibilityViolations:0});console.log('PASS',theme,width);await context.close();
+ }
+ fs.writeFileSync('docs/sql-phase1/browser-results.json',JSON.stringify(evidence,null,2)+'\n');
+}catch(error){console.error('PAGE',activePage?.url(),await activePage?.locator('body').innerText());await activePage?.screenshot({path:'/tmp/sql-phase1-browser-failure.png',fullPage:true});throw error;}finally{await browser.close();}

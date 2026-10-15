@@ -29,13 +29,44 @@ export type ExecuteResponse = {
   superseded?: boolean;
   comparison?: Array<{
     label: string;
+    /** First 200 rows; `total` is the full count. */
     result: SqlResult;
+    total?: number;
     plan: SqlResult;
   }>;
   equivalent?: boolean;
 };
 
 export const TIMEOUT_MS = 3000;
+/** Grading runs the learner query and the reference on original and changed data. */
+export const CHECK_TIMEOUT_MS = 8000;
+/** Downloading and verifying a canonical dataset (a few MB) has its own budget, before any query timer. */
+export const DATASET_TIMEOUT_MS = 60000;
+
+/** A canonical SQLite dataset served as an immutable, hash-named asset. */
+export type DatabaseRef = { url: string; sha256: string };
+const DIRECTIVE = /^-- runtime:database (\S+) ([0-9a-f]{64})[^\n]*(?:\n|$)/;
+/**
+ * Seeds stay plain SQL strings throughout the UI. A seed for a canonical dataset starts with a
+ * directive line naming the database file; the worker loads that file and applies the rest of the
+ * seed (a small lesson or question overlay) on top of it.
+ */
+export function databaseSeed(db: DatabaseRef, overlay = ""): string {
+  return `-- runtime:database ${db.url} ${db.sha256}\n${overlay}`;
+}
+export function databaseOf(seed: string | null | undefined): DatabaseRef | null {
+  const m = DIRECTIVE.exec(seed ?? "");
+  return m ? { url: m[1], sha256: m[2] } : null;
+}
+/** Overlay SQL without the directive line. */
+export function seedOverlay(seed: string): string {
+  return seed.replace(DIRECTIVE, "");
+}
+/** Warm the browser cache for a dataset while the learner reads the lesson. */
+export function preloadDatabase(seed: string | null | undefined): void {
+  const db = databaseOf(seed);
+  if (db && typeof window !== "undefined") void fetch(db.url).then(r => r.arrayBuffer()).catch(() => undefined);
+}
 /**
  * Loading sql.js and its wasm on a cold page can take longer than a query is
  * allowed to run. Booting gets its own, longer limit so a first run is not
@@ -209,13 +240,24 @@ export async function executeSql(
   }
   if (pending !== token) return result; // superseded while booting
 
-  // The query limit starts once the engine is ready.
+  // The query limit starts once the engine (and any dataset) is ready.
+  const limit = request.answer ? CHECK_TIMEOUT_MS : TIMEOUT_MS;
+  const startQueryTimer = () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      if (pending !== token) return;
+      discardWorker();
+      finish({ error: `Query timed out after ${limit / 1000} seconds. Simplify the query or add a LIMIT.` });
+    }, limit);
+  };
   clearTimeout(timer);
-  timer = setTimeout(() => {
-    if (pending !== token) return;
-    discardWorker();
-    finish({ error: "Query timed out after 3 seconds. Simplify the query or add a LIMIT." });
-  }, TIMEOUT_MS);
+  if (databaseOf(request.seed)) {
+    timer = setTimeout(() => {
+      if (pending !== token) return;
+      discardWorker();
+      finish({ error: "The dataset took too long to load. Check your connection and press Run again." });
+    }, DATASET_TIMEOUT_MS);
+  } else startQueryTimer();
 
   const w = worker!;
 
@@ -226,6 +268,7 @@ export async function executeSql(
   };
   const onMessage = (event: MessageEvent) => {
     if (event.data?.ready) return;
+    if (event.data?.phase === "database-ready") { startQueryTimer(); return; }
     cleanup();
     const data = event.data as ExecuteResponse;
     if (data.result && data.total === undefined) {

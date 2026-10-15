@@ -1,16 +1,7 @@
 import { expect, it } from "vitest";
-import { extraTablesLabel, focusedTables } from "@/components/editor/TableInspector";
 import { lessonTouched, moduleStatusLabel } from "@/features/discovery/selectors";
 import { sessionKey, useLearning, type LearningState } from "@/lib/learning-state";
 
-it("does not call unused catalog tables a task requirement", () => {
-  const tables = ["customers", "products", "orders"];
-  expect(extraTablesLabel(true)).toBe("Also in this database");
-  expect(extraTablesLabel(false)).toBe("Other tables in this database (optional)");
-  expect(focusedTables(tables, undefined, true)).toEqual(["customers", "products"]);
-  expect(focusedTables(tables, undefined, false)).toEqual(tables);
-  expect(focusedTables(tables, ["orders"], false)).toEqual(["orders"]);
-});
 
 it("treats an opened lesson as in progress before the first graded attempt", () => {
   const state = {

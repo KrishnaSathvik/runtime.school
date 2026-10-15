@@ -1,26 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Circle, CircleCheck, List, X } from "lucide-react";
 import taskContexts from "@/content/task-context.json";
-import { courseOrder, datasetCatalog, getLesson, groups } from "@/content";
+import lessonPreviews from "@/content/lesson-previews.json";
+import type { DatasetPreview as LessonPreview } from "@/data/datasets/learning";
+import { courseOrder, learningDatasetCatalog as datasetCatalog, getLesson, groups, lessonFixture } from "@/content";
+import { preloadDatabase } from "@/engine/sql-client";
 import { mastered as isLessonMastered } from "@/features/discovery/selectors";
 import { lessonSummaries } from "@/content/ux-summaries";
 import { learnerExplanation } from "@/lib/content-copy";
 import { track } from "@/lib/analytics";
 import { isMastered, sessionKey, useHydrated, useLearning, type LessonStats } from "@/lib/learning-state";
+import { sqlLessonHref } from "@/platform/sql-lesson-href";
 import { Shell } from "../Shell";
 import { Pager } from "../Pager";
 import { RunCell } from "../Cells";
 import { Challenge } from "../Challenge";
-import { Tables } from "../Tables";
-
-/** Brief pause so “✓ Correct” is readable before the next lesson opens. */
-const NEXT_LESSON_MS = 900;
-
-const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+import { PREVIEW_ROWS, Tables } from "../Tables";
 
 /**
  * A lesson is one session: read, run, observe, then the two challenges and the concept check
@@ -41,6 +39,13 @@ export function Lesson({ lessonId }: { lessonId: number }) {
 
 type Tab = "challenge-1" | "challenge-2" | "check";
 
+/** Sample rows of the scenario tables a lesson's setup creates. */
+function overlayPreviews(lessonId: number): Record<string, LessonPreview> {
+  const data = lessonPreviews as unknown as { lessons: Record<string, number>; overlays: Record<string, LessonPreview>[] };
+  const index = data.lessons[lessonId];
+  return index === undefined ? {} : data.overlays[index];
+}
+
 function idealTab(lessonId: number): Tab {
   const s = useLearning.getState();
   const stats = s.stats[lessonId] ?? (emptyStats() as LessonStats);
@@ -54,16 +59,24 @@ function idealTab(lessonId: number): Tab {
 }
 
 function Session({ lessonId }: { lessonId: number }) {
-  const router = useRouter();
   const ready = useHydrated();
   const lesson = getLesson(lessonId)!;
   const stats = useLearning((s) => s.stats[lessonId]) ?? (emptyStats() as LessonStats);
   const completeQuiz = useLearning((s) => s.completeQuiz);
   const setSession = useLearning((s) => s.setSession);
   const [quiz, setQuiz] = useState<{ choice: number; ok: boolean } | null>(null);
-  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const position = courseOrder.indexOf(lessonId);
+  // The example and the walkthrough are one sequence: show the steps in order, mark the step that is the example,
+  // and finish with the example when it is not one of the steps.
+  const sameQuery = (a: string, b: string) => a.replace(/\s+/g, " ").replace(/;\s*$/, "").trim() === b.replace(/\s+/g, " ").replace(/;\s*$/, "").trim();
+  const walkthrough = lesson.walkthrough ?? [];
+  const workedSteps = [
+    ...walkthrough.map((s) => ({ ...s, isExample: sameQuery(s.query, lesson.example) })),
+    ...(walkthrough.some((s) => sameQuery(s.query, lesson.example))
+      ? []
+      : [{ title: "Put it together", description: "The lesson's pattern in one query.", query: lesson.example, isExample: true }]),
+  ];
   const nextLessonId = courseOrder[position + 1];
   const tables = [...new Set((taskContexts as Record<string, { tables: string[] }[]>)[lessonId]?.flatMap((t) => t.tables) ?? [])];
   const solved0 = stats.solved.includes(0);
@@ -71,9 +84,8 @@ function Session({ lessonId }: { lessonId: number }) {
   const checkPassed = stats.check || stats.legacy;
   const mastered = isMastered(stats);
 
-  useEffect(() => () => {
-    if (advanceTimer.current) clearTimeout(advanceTimer.current);
-  }, []);
+  // Start downloading the lesson's dataset while the learner reads the explanation.
+  useEffect(() => preloadDatabase(lessonFixture(lesson).seed), [lesson]);
 
   // Open on the saved step, else the first unfinished one.
   const [tab, setTab] = useState<Tab>(() => idealTab(lessonId));
@@ -114,12 +126,17 @@ function Session({ lessonId }: { lessonId: number }) {
 
   return (
     <Shell
-      path={[{ label: "sql", href: "/sql" }, { label: slug(groups[lesson.group]) }, { label: `${String(position + 1).padStart(2, "0")}-${slug(lesson.title)}` }]}
+      path={[
+        { label: "sql", href: "/sql" },
+        { label: "learn", href: "/sql" },
+        { label: groups[lesson.group] },
+        { label: lesson.title },
+      ]}
       section="learn"
       status={["SQL", `lesson ${position + 1}/${courseOrder.length}`, `sqlite · ${datasetCatalog[lesson.dataset]?.name ?? lesson.dataset}`, mastered ? "✓ mastered" : "drafts save as you type"]}
     >
       <LessonBar lessonId={lessonId} />
-      <div className="rx-task rx-lesson rx-learn-tables">
+      <div className="rx-task rx-canonical-learning rx-lesson rx-learn-tables">
         <div className="rx-task-split">
           {/* Left: read and run. */}
           <article className="rx-brief" aria-labelledby="lesson-title">
@@ -132,32 +149,32 @@ function Session({ lessonId }: { lessonId: number }) {
 
             {tables.length > 0 && (
               <>
-                <p className="rx-label sec">tables in this lesson</p>
-                <p className="rx-cap">The challenges use this data. Each column shows its type underneath; → marks a link to another table.</p>
-                <Tables tables={tables} open />
+                <p className="rx-label sec">Dataset: {datasetCatalog[lesson.dataset]?.name}</p>
+                <p className="rx-cap">The tables the challenges use, with their first {PREVIEW_ROWS} rows. Under each column name: the kind of value it holds, and which table it links to.</p>
+                <Tables tables={tables} open previews={{ ...lessonFixture(lesson).previews, ...overlayPreviews(lessonId) }} />
               </>
             )}
 
-            <p className="rx-label sec">example</p>
-            <p className="rx-cap">The idea in one query. Press Run to see what it returns; running examples never affects your progress.</p>
-            <RunCell query={lesson.example} name="example.sql" allowWrites={lesson.mode === "lab"} />
-            {lesson.trap && <p className="rx-note"><strong>Watch for:</strong> {lesson.trap}</p>}
-
-            {lesson.walkthrough?.length > 0 && (
+            <p className="rx-label sec">worked example</p>
+            <p className="rx-cap">Run these steps in order to see the idea before you write your own query. The step marked “the pattern” is what the challenges ask for. Running the example does not count toward progress.</p>
+            <ol className="rx-walk">
+              {workedSteps.map((step, i) => (
+                <li key={`${i}-${step.title}`} className={step.isExample ? "rx-walk-example" : undefined}>
+                  <span className="rx-walk-no" aria-hidden="true">{i + 1}</span>
+                  <div className="rx-walk-body">
+                    <p>
+                      <strong>{step.title}.</strong> {step.description ? learnerExplanation(step.description) : ""}
+                      {step.isExample && <span className="rx-walk-tag">the pattern</span>}
+                    </p>
+                    <RunCell query={step.query} name={step.isExample ? "example.sql" : `step-${i + 1}.sql`} seedSql={lessonFixture(lesson).seed} allowWrites={lesson.mode === "lab"} />
+                  </div>
+                </li>
+              ))}
+            </ol>
+            {lesson.trap && (
               <>
-                <p className="rx-label sec">build it step by step</p>
-                <p className="rx-cap">Each step changes one thing. Run them in order and watch the result change.</p>
-                <ol className="rx-walk">
-                  {lesson.walkthrough.map((step, i) => (
-                    <li key={step.title}>
-                      <span className="rx-walk-no" aria-hidden="true">{i + 1}</span>
-                      <div className="rx-walk-body">
-                        <p><strong>{step.title}.</strong> {step.description ? learnerExplanation(step.description) : ""}</p>
-                        <RunCell query={step.query} name={`step-${i + 1}.sql`} allowWrites={lesson.mode === "lab"} />
-                      </div>
-                    </li>
-                  ))}
-                </ol>
+                <p className="rx-label sec">common mistake</p>
+                <p className="rx-note">{lesson.trap}</p>
               </>
             )}
           </article>
@@ -173,8 +190,8 @@ function Session({ lessonId }: { lessonId: number }) {
               ))}
             </div>
             <div id={`panel-${tab}`} role="tabpanel">
-              {tab === "challenge-1" && <Challenge key="c1" lessonId={lessonId} variant={0} onSolved={() => pick("challenge-2")} />}
-              {tab === "challenge-2" && <Challenge key="c2" lessonId={lessonId} variant={1} onSolved={() => pick("check")} />}
+              {tab === "challenge-1" && <Challenge key="c1" lessonId={lessonId} variant={0} />}
+              {tab === "challenge-2" && <Challenge key="c2" lessonId={lessonId} variant={1} />}
               {tab === "check" && (
                 <>
                   <section className="rx-question" aria-label="Concept check">
@@ -192,13 +209,6 @@ function Session({ lessonId }: { lessonId: number }) {
                         onClick={() => {
                           const r = completeQuiz(lessonId, null, i);
                           setQuiz({ choice: i, ok: r.ok });
-                          // Correct concept check → next lesson (same as the Next control).
-                          if (r.ok && nextLessonId !== undefined) {
-                            if (advanceTimer.current) clearTimeout(advanceTimer.current);
-                            advanceTimer.current = setTimeout(() => {
-                              router.push(`/sql/lesson/${nextLessonId}`);
-                            }, NEXT_LESSON_MS);
-                          }
                         }}
                       >
                         <span className="mono rx-opt">{String.fromCharCode(97 + i)}</span> {opt}
@@ -210,7 +220,7 @@ function Session({ lessonId }: { lessonId: number }) {
                       <p className={`rx-feedback ${quiz.ok ? "ok" : "bad"}`}>
                         {quiz.ok
                           ? nextLessonId !== undefined
-                            ? "✓ Correct. Opening the next lesson…"
+                            ? "✓ Correct. Use Next when you want the next lesson."
                             : "✓ Correct. That’s the last lesson in the course."
                           : "✕ Not quite."}{" "}
                         {lesson.quiz.why}
@@ -239,17 +249,14 @@ function Session({ lessonId }: { lessonId: number }) {
 function LessonBar({ lessonId }: { lessonId: number }) {
   const state = useLearning();
   const [open, setOpen] = useState(false);
-  const [filter, setFilter] = useState("");
   const listRef = useRef<HTMLOListElement>(null);
   const position = courseOrder.indexOf(lessonId);
   const prev = courseOrder[position - 1];
   const next = courseOrder[position + 1];
-  const rows = useMemo(() => {
-    const n = filter.trim().toLowerCase();
-    return courseOrder
-      .map((id, i) => ({ id, i, lesson: getLesson(id)! }))
-      .filter((r) => !n || `${r.lesson.title} ${groups[r.lesson.group]}`.toLowerCase().includes(n));
-  }, [filter]);
+  const rows = useMemo(
+    () => courseOrder.map((id, i) => ({ id, i, lesson: getLesson(id)! })),
+    [],
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -259,6 +266,7 @@ function LessonBar({ lessonId }: { lessonId: number }) {
     return () => window.removeEventListener("keydown", key);
   }, [open]);
 
+  /** ✓ mastered (both challenges + concept check); ◐ started; · not started. */
   const glyph = (id: number) => {
     if (isLessonMastered(state, id)) return "✓";
     const st = state.stats[id];
@@ -274,14 +282,14 @@ function LessonBar({ lessonId }: { lessonId: number }) {
         <span className="mono rx-small" style={{ margin: 0 }}>{String(position + 1).padStart(2, "0")} / {courseOrder.length}</span>
         <span className="push" />
         <Pager
-          prev={prev !== undefined ? { href: `/sql/lesson/${prev}`, label: getLesson(prev)?.title ?? "" } : null}
-          next={next !== undefined ? { href: `/sql/lesson/${next}`, label: getLesson(next)?.title ?? "" } : null}
+          prev={prev !== undefined ? { href: sqlLessonHref(prev), label: getLesson(prev)?.title ?? "" } : null}
+          next={next !== undefined ? { href: sqlLessonHref(next), label: getLesson(next)?.title ?? "" } : null}
         />
       </div>
       {open && (
         <div className="rx-drawer" role="dialog" aria-label="All lessons">
           <div className="rx-drawer-head">
-            <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="filter lessons…" aria-label="Filter lessons" autoFocus />
+            <span className="rx-small" style={{ flex: 1, margin: 0 }}>Course lessons</span>
             <button type="button" className="rx-btn ghost" onClick={() => setOpen(false)} aria-label="Close list"><X size={14} /></button>
           </div>
           <ol ref={listRef}>
@@ -290,14 +298,13 @@ function LessonBar({ lessonId }: { lessonId: number }) {
                 {(k === 0 || rows[k - 1].lesson.group !== r.lesson.group) && (
                   <p className="rx-drawer-group mono">{String(r.lesson.group + 1).padStart(2, "0")} {groups[r.lesson.group]}</p>
                 )}
-                <Link href={`/sql/lesson/${r.id}`} aria-current={r.id === lessonId ? "page" : undefined} onClick={() => setOpen(false)}>
+                <Link href={sqlLessonHref(r.id)} aria-current={r.id === lessonId ? "page" : undefined} onClick={() => setOpen(false)}>
                   <span className={`mono g ${glyph(r.id) === "✓" ? "ok" : ""}`}>{glyph(r.id)}</span>
                   <span>{r.lesson.title}</span>
                   <span className="mono k">{String(r.i + 1).padStart(2, "0")}</span>
                 </Link>
               </li>
             ))}
-            {rows.length === 0 && <li className="rx-small" style={{ padding: 8 }}>No lessons match.</li>}
           </ol>
         </div>
       )}

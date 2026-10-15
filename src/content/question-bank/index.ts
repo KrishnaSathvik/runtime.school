@@ -1,6 +1,5 @@
-import { datasetCatalog, fixtureMutation, seed } from "@/content";
+import { learningDataset, learningDatasetInfo } from "@/data/datasets/learning";
 import type { ExecuteRequest } from "@/engine/sql-client";
-import { questionBankDatasets, questionBankMutation, questionBankSeed } from "./datasets";
 import { existingQuestions } from "./existing";
 import { bankQuestions } from "./questions";
 import type { BankQuestion, QuestionRecord } from "./types";
@@ -9,19 +8,14 @@ export * from "./types";
 export { bankQuestions } from "./questions";
 export { topicFamilies, topicLabel, familyOf, familyLabel } from "./topics";
 
-/** Curriculum seed + question-bank seed: one SQLite database for practice. */
-export const practiceSeed = `${seed}\n${questionBankSeed}`;
-
-/** Shared changed-data fixture: curriculum mutation + question-bank mutation. */
-export const practiceMutation = `${fixtureMutation} ${questionBankMutation}`;
-
-/** Every dataset learners can practise on (curriculum + new). */
-export const practiceDatasets = { ...datasetCatalog, ...questionBankDatasets };
+export const practiceDatasets = learningDatasetInfo;
 
 export const bankById = new Map(bankQuestions.map((q) => [q.id, q]));
-export const bankBySlug = new Map(bankQuestions.map((q) => [q.slug, q]));
+export const bankBySlug = new Map<string, BankQuestion>(bankQuestions.map((q) => [q.slug, q]));
 
-export const bankSeed = (q: BankQuestion) => `${practiceSeed}\n${q.setupSql ?? ""}`;
+/** A question's database: its canonical dataset plus any small setup tables the question declares. */
+export const bankSeed = (q: BankQuestion) => `${learningDataset(q.datasetRef).seed}\n${q.setupSql ?? ""}`;
+export const bankMutation = (q: BankQuestion) => `${learningDataset(q.datasetRef).mutation} ${q.extraMutation ?? ""}`.trim();
 
 /** The exact request the Practice workspace sends for "Check answer". */
 export function bankCheckRequest(q: BankQuestion, query: string): ExecuteRequest {
@@ -30,13 +24,23 @@ export function bankCheckRequest(q: BankQuestion, query: string): ExecuteRequest
     query,
     answer: q.solution,
     ordered: q.ordered,
-    mutation: `${practiceMutation} ${q.extraMutation ?? ""}`.trim(),
+    mutation: bankMutation(q),
     allowWrites: q.mode === "lab",
     planValidation: q.planValidation,
     repeatCheck: q.repeatCheck,
     stateQueries: q.stateQueries,
     validate: q.validate ?? null,
     required: q.required ?? null,
+  };
+}
+
+/** Starting SQL for a question: an incomplete scaffold that can never pass a check. */
+export function bankStarter(q: BankQuestion): { sql: string; cursor: number } {
+  if (q.exerciseType === "debug") return { sql: q.starterSql!, cursor: 0 };
+  if (q.mode === "lab") return { sql: "", cursor: 0 };
+  return {
+    sql: q.difficulty === "warmup" ? `SELECT \nFROM ${q.tables[0]};` : "SELECT \nFROM ",
+    cursor: "SELECT ".length,
   };
 }
 

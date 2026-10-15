@@ -1,11 +1,9 @@
-import {courseOrder, lessons, projects} from "@/content";
+import {courseOrder, lessons} from "@/content";
 import {allQuestions, bankBySlug, bankQuestions, topicLabel} from "@/content/question-bank";
-import {trackById} from "@/content/question-bank/tracks";
-import {isMastered, isReviewDue, milestoneDone, placementStart, sessionKey, type LearningState, type Recommendation} from "@/lib/learning-state";
+import {isMastered, isReviewDue, placementStart, sessionKey, type LearningState, type Recommendation} from "@/lib/learning-state";
 import {statusOf} from "@/features/practice/status";
-import {resumeInTrack, trackHref} from "@/features/practice/tracks";
 import {hrefFor} from "@/lib/routes";
-import {seoLessonPath} from "@/platform/sql-slugs";
+import {sqlLessonHref} from "@/platform/sql-lesson-href";
 export const practiceQuestions = [...new Map(allQuestions().filter(q=>q.practiceEligible).map(q=>[q.id,q])).values()];
 export const mastered = (s:LearningState,id:number)=>!!s.stats[id]&&isMastered(s.stats[id]);
 
@@ -33,23 +31,19 @@ export function dueLessons(s:LearningState,now=Date.now()) {return lessons.filte
 export function nextCourse(s:LearningState) {return courseOrder.find(id=>!mastered(s,id));}
 export type Continuation = {href:string;title:string;kind:string;reason:string;at:number};
 export function practiceContinuation(s:LearningState):Continuation|null {
- const t=s.lastTrack?trackById.get(s.lastTrack):undefined;
- const next=t?resumeInTrack(t,s,s.tracks[t.id]?.lastQuestionId):null;
  const q=s.lastQuestion?bankBySlug.get(s.lastQuestion):undefined;
  const qi=bankQuestions.findIndex(x=>x.id===q?.id);
  const open=(id:string)=>{const p=s.questions[id];return !p?.solved&&!p?.guidedSolved;};
  const candidate=q&&open(q.id)?q:q?[...bankQuestions.slice(qi+1),...bankQuestions.slice(0,qi)].find(x=>open(x.id)):undefined;
- if(t&&next&&(s.tracks[t.id]?.lastAt??0)>=s.lastQuestionAt) return {href:trackHref(next.q,t.id),title:t.title,kind:"Practice track",reason:next.q.title,at:s.tracks[t.id]?.lastAt??0};
- return candidate?{href:`/practice/${candidate.slug}`,title:candidate.title,kind:"Practice question",reason:"Continue with your saved SQL and progress.",at:s.lastQuestionAt}:null;
+ return candidate?{href:`/sql/practice/${candidate.slug}`,title:candidate.title,kind:"Practice question",reason:"Continue with your saved SQL and progress.",at:s.lastQuestionAt}:null;
 }
 export function continuation(s:LearningState,rec:Recommendation):Continuation {
  const practice=practiceContinuation(s);const a=s.active;
- const activeValid=a&&lessons[a.id]&&(a.project===null?!mastered(s,a.id):projects.some(p=>p.id===a.project&&p.milestoneIds.includes(a.id))&&!milestoneDone(s.projects[a.project]?.milestones[a.id]));
- const inTrack=!!a&&a.project===null&&!!s.lastTrack&&s.tracks[s.lastTrack]?.lastQuestionId===`lc-${a.id}-${a.variant}`;
- if(practice&&(!activeValid||practice.at>s.lastLessonAt||inTrack))return practice;
- if(a&&activeValid)return {href:a.project===null?(seoLessonPath(a.id)??`/lesson/${a.id}`):`/projects/${a.project}/milestone/${a.id}`,title:lessons[a.id].title,kind:a.project===null?"Lesson":"Project milestone",reason:a.project===null?(a.stage==="practice"?`Practice · Challenge ${a.variant+1} of 2`:a.stage==="review"?"Concept check":"Reading the concept"):projects.find(p=>p.id===a.project)!.title,at:s.lastLessonAt};
- if(courseOrder.every(id=>mastered(s,id))&&rec.kind==="lesson")return {href:"/practice/questions",title:"Every lesson mastered",kind:"Practice",reason:"Keep your skills sharp with a new problem or project.",at:0};
- return {href:hrefFor(rec),title:lessons[rec.id].title,kind:rec.kind==="review"?"Review":rec.project!==null?"Project milestone":"Lesson",reason:rec.reason,at:0};
+ const activeValid=a&&lessons[a.id]&&a.project===null&&!mastered(s,a.id);
+ if(practice&&(!activeValid||practice.at>s.lastLessonAt))return practice;
+ if(a&&activeValid)return {href:sqlLessonHref(a.id),title:lessons[a.id].title,kind:"Lesson",reason:a.stage==="practice"?`Practice · Challenge ${a.variant+1} of 2`:a.stage==="review"?"Concept check":"Reading the concept",at:s.lastLessonAt};
+ if(courseOrder.every(id=>mastered(s,id))&&rec.kind==="lesson")return {href:"/sql/practice",title:"Every lesson mastered",kind:"Practice",reason:"Keep your skills sharp with a new problem or project.",at:0};
+ return {href:hrefFor(rec),title:lessons[rec.id].title,kind:rec.kind==="review"?"Review":"Lesson",reason:rec.reason,at:0};
 }
 export function skillEvidence(s:LearningState) {
  const topics=new Map<string,{title:string;solved:number;attempted:number;last:number}>();
@@ -70,7 +64,7 @@ export function courseContinuation(s: LearningState) {
  const id = active ?? recent ?? saved ?? (placed !== null && unfinished(placed) ? placed : nextCourse(s));
  if (id === undefined) return null;
  const session = active === id ? s.active : s.sessions[sessionKey(id,null)];
- return {id, href:seoLessonPath(id) ?? `/lesson/${id}`, returning:started || active !== undefined, stage:session?.stage ?? "understand", variant:session?.variant ?? 0};
+ return {id, href:sqlLessonHref(id), returning:started || active !== undefined, stage:session?.stage ?? "understand", variant:session?.variant ?? 0};
 }
 
 /**
@@ -85,7 +79,7 @@ export function learnEntry(s: LearningState) {
  if (id === undefined) return null;
  const session = s.sessions[sessionKey(id,null)];
  const touched = !!session || !!s.stats[id]?.attempts;
- return {id, href:seoLessonPath(id) ?? `/lesson/${id}`, returning:touched, stage:session?.stage ?? "understand", variant:session?.variant ?? 0};
+ return {id, href:sqlLessonHref(id), returning:touched, stage:session?.stage ?? "understand", variant:session?.variant ?? 0};
 }
 
 /** A different unfinished lesson the learner was last working in, shown beside learnEntry. */

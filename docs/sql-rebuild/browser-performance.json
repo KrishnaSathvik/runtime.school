@@ -1,0 +1,86 @@
+{
+  "browser": "Playwright Chromium",
+  "viewport": "1440x1000",
+  "measurements": [
+    {
+      "edition": "learn",
+      "loadMs": 4,
+      "results": [
+        {
+          "query": "SELECT * FROM accounts LIMIT 20",
+          "ms": 11,
+          "rows": 20
+        },
+        {
+          "query": "SELECT event_type, COUNT(*) AS deliveries FROM events GROUP BY event_type",
+          "ms": 9,
+          "rows": 5
+        },
+        {
+          "query": "SELECT a.plan, COUNT(*) AS deliveries FROM accounts a JOIN events e ON e.account_id=a.id GROUP BY a.plan",
+          "ms": 4,
+          "rows": 2
+        },
+        {
+          "query": "SELECT delivery_id, ROW_NUMBER() OVER (PARTITION BY event_key ORDER BY ingested_at DESC, delivery_id DESC) AS version_rank FROM events LIMIT 200",
+          "ms": 8,
+          "rows": 200
+        }
+      ]
+    },
+    {
+      "edition": "practice",
+      "loadMs": 9,
+      "results": [
+        {
+          "query": "SELECT * FROM accounts LIMIT 20",
+          "ms": 95,
+          "rows": 20
+        },
+        {
+          "query": "SELECT event_type, COUNT(*) AS deliveries FROM events GROUP BY event_type",
+          "ms": 67,
+          "rows": 5
+        },
+        {
+          "query": "SELECT a.plan, COUNT(*) AS deliveries FROM accounts a JOIN events e ON e.account_id=a.id GROUP BY a.plan",
+          "ms": 64,
+          "rows": 2
+        },
+        {
+          "query": "SELECT delivery_id, ROW_NUMBER() OVER (PARTITION BY event_key ORDER BY ingested_at DESC, delivery_id DESC) AS version_rank FROM events LIMIT 200",
+          "ms": 65,
+          "rows": 200
+        }
+      ]
+    },
+    {
+      "edition": "project",
+      "loadMs": 39,
+      "results": [
+        {
+          "query": "SELECT * FROM accounts LIMIT 20",
+          "ms": 277,
+          "rows": 20
+        },
+        {
+          "query": "SELECT event_type, COUNT(*) AS deliveries FROM events GROUP BY event_type",
+          "ms": 328,
+          "rows": 5
+        },
+        {
+          "query": "SELECT a.plan, COUNT(*) AS deliveries FROM accounts a JOIN events e ON e.account_id=a.id GROUP BY a.plan",
+          "ms": 298,
+          "rows": 2
+        },
+        {
+          "query": "SELECT delivery_id, ROW_NUMBER() OVER (PARTITION BY event_key ORDER BY ingested_at DESC, delivery_id DESC) AS version_rank FROM events LIMIT 200",
+          "ms": 290,
+          "rows": 200
+        }
+      ]
+    }
+  ],
+  "mobileOverflow": false,
+  "loadingRecovery": true
+}

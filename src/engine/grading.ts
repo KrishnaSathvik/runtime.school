@@ -50,13 +50,11 @@ export function compareResults(
     };
   }
 
-  const key = (r: unknown[]) => JSON.stringify(r);
-  const a = ordered
-    ? actual.values
-    : [...actual.values].sort((x, y) => key(x).localeCompare(key(y)));
-  const e = ordered
-    ? expected.values
-    : [...expected.values].sort((x, y) => key(x).localeCompare(key(y)));
+  // Serialize each row once; sorting large results by a comparator that re-serializes is quadratic in practice.
+  const sorted = (rows: unknown[][]) =>
+    rows.map((r) => [JSON.stringify(r), r] as const).sort((x, y) => (x[0] < y[0] ? -1 : x[0] > y[0] ? 1 : 0)).map((p) => p[1]);
+  const a = ordered ? actual.values : sorted(actual.values);
+  const e = ordered ? expected.values : sorted(expected.values);
 
   const same = (x: unknown, y: unknown) =>
     typeof x === "number" && typeof y === "number"

@@ -1,0 +1,1031 @@
+{
+ "groups": [
+  "SQL foundations",
+  "Filtering & sorting",
+  "Calculations & data quality",
+  "Joins & sets",
+  "Dates, strings & subqueries",
+  "Window functions",
+  "Advanced product analysis",
+  "Database engineering",
+  "Performance & query plans",
+  "Warehouse & reporting projects"
+ ],
+ "moduleDescriptions": [
+  "Read tables, choose columns, and name calculated values.",
+  "Choose the rows you mean, handle missing values, and sort results.",
+  "Summarize with DISTINCT and aggregates, then shape metrics with CASE and CAST.",
+  "Connect related tables, keep unmatched rows, calculate ratios, and combine sets.",
+  "Work with time, text, and staged queries.",
+  "Compare rows without collapsing them.",
+  "Answer business questions with explicit definitions.",
+  "Create reusable objects and understand their lifetimes.",
+  "Read plans and test a hypothesis instead of memorizing speed rules.",
+  "Turn raw records into trusted dimensions, facts, and useful reports."
+ ],
+ "courseOrder": [
+  0,
+  1,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  2,
+  9,
+  10,
+  30,
+  11,
+  12,
+  13,
+  56,
+  54,
+  14,
+  15,
+  32,
+  16,
+  34,
+  35,
+  36,
+  37,
+  19,
+  38,
+  17,
+  18,
+  31,
+  20,
+  26,
+  33,
+  39,
+  21,
+  22,
+  23,
+  55,
+  24,
+  25,
+  40,
+  41,
+  42,
+  43,
+  53,
+  57,
+  27,
+  28,
+  29,
+  44,
+  45,
+  46,
+  47,
+  48,
+  49,
+  50,
+  51,
+  52,
+  58,
+  59,
+  60,
+  61,
+  62,
+  63,
+  64,
+  65,
+  66,
+  67,
+  68,
+  75,
+  69,
+  70,
+  71,
+  72,
+  73,
+  74,
+  76,
+  77,
+  78,
+  79,
+  80,
+  81,
+  82,
+  83,
+  84,
+  85,
+  86,
+  87
+ ],
+ "lessons": [
+  {
+   "id": 0,
+   "title": "Meet your first SELECT",
+   "group": 0,
+   "difficulty": "Beginner",
+   "prereq": [],
+   "mode": "query"
+  },
+  {
+   "id": 1,
+   "title": "Aliases & calculated columns",
+   "group": 0,
+   "difficulty": "Beginner",
+   "prereq": [
+    0
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 2,
+   "title": "Unique values with DISTINCT",
+   "group": 2,
+   "difficulty": "Beginner",
+   "prereq": [
+    1
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 3,
+   "title": "Filter with WHERE",
+   "group": 1,
+   "difficulty": "Beginner",
+   "prereq": [
+    1
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 4,
+   "title": "Comparisons & ranges",
+   "group": 1,
+   "difficulty": "Beginner",
+   "prereq": [
+    3
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 5,
+   "title": "Combine conditions",
+   "group": 1,
+   "difficulty": "Beginner",
+   "prereq": [
+    4
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 6,
+   "title": "Lists & text patterns",
+   "group": 1,
+   "difficulty": "Beginner",
+   "prereq": [
+    5
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 7,
+   "title": "Understand NULL",
+   "group": 1,
+   "difficulty": "Beginner",
+   "prereq": [
+    6
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 8,
+   "title": "Sort & limit",
+   "group": 1,
+   "difficulty": "Beginner",
+   "prereq": [
+    7
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 9,
+   "title": "COUNT, SUM & AVG",
+   "group": 2,
+   "difficulty": "Intermediate",
+   "prereq": [
+    8
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 10,
+   "title": "Group into summaries",
+   "group": 2,
+   "difficulty": "Intermediate",
+   "prereq": [
+    9
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 11,
+   "title": "Filter groups with HAVING",
+   "group": 2,
+   "difficulty": "Intermediate",
+   "prereq": [
+    10
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 12,
+   "title": "Make decisions with CASE",
+   "group": 2,
+   "difficulty": "Intermediate",
+   "prereq": [
+    11
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 13,
+   "title": "Conditional aggregation",
+   "group": 2,
+   "difficulty": "Intermediate",
+   "prereq": [
+    12
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 14,
+   "title": "Connect tables with JOIN",
+   "group": 3,
+   "difficulty": "Intermediate",
+   "prereq": [
+    13
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 15,
+   "title": "Keep unmatched rows",
+   "group": 3,
+   "difficulty": "Intermediate",
+   "prereq": [
+    14
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 16,
+   "title": "Revenue across tables",
+   "group": 3,
+   "difficulty": "Intermediate",
+   "prereq": [
+    15
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 17,
+   "title": "Subqueries",
+   "group": 4,
+   "difficulty": "Intermediate",
+   "prereq": [
+    16
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 18,
+   "title": "Ask whether a row exists",
+   "group": 4,
+   "difficulty": "Intermediate",
+   "prereq": [
+    17
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 19,
+   "title": "Combine sets with UNION",
+   "group": 3,
+   "difficulty": "Advanced",
+   "prereq": [
+    3
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 20,
+   "title": "Readable queries with CTEs",
+   "group": 4,
+   "difficulty": "Intermediate",
+   "prereq": [
+    10
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 21,
+   "title": "Window functions: ROW_NUMBER",
+   "group": 5,
+   "difficulty": "Advanced",
+   "prereq": [
+    20
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 22,
+   "title": "RANK & DENSE_RANK",
+   "group": 5,
+   "difficulty": "Advanced",
+   "prereq": [
+    21
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 23,
+   "title": "Running totals",
+   "group": 5,
+   "difficulty": "Advanced",
+   "prereq": [
+    22
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 24,
+   "title": "Compare rows with LAG",
+   "group": 5,
+   "difficulty": "Advanced",
+   "prereq": [
+    23
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 25,
+   "title": "Latest row per group",
+   "group": 5,
+   "difficulty": "Advanced",
+   "prereq": [
+    24
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 26,
+   "title": "Dates & monthly analysis",
+   "group": 4,
+   "difficulty": "Intermediate",
+   "prereq": [
+    10
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 27,
+   "title": "Recursive CTEs",
+   "group": 6,
+   "difficulty": "Advanced",
+   "prereq": [
+    26
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 28,
+   "title": "Query plans & indexes",
+   "group": 6,
+   "difficulty": "Advanced",
+   "prereq": [
+    27
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 29,
+   "title": "Capstone: customer insights",
+   "group": 6,
+   "difficulty": "Advanced",
+   "prereq": [
+    28
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 30,
+   "title": "MIN, MAX & the grain of a result",
+   "group": 2,
+   "difficulty": "Beginner",
+   "prereq": [
+    9,
+    10
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 31,
+   "title": "NOT IN and the NULL trap",
+   "group": 4,
+   "difficulty": "Beginner",
+   "prereq": [
+    7,
+    18
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 32,
+   "title": "Ratios, ROUND & NULLIF",
+   "group": 3,
+   "difficulty": "Intermediate",
+   "prereq": [
+    13,
+    15
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 33,
+   "title": "Clean strings & cast values",
+   "group": 4,
+   "difficulty": "Intermediate",
+   "prereq": [
+    7
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 34,
+   "title": "Self-joins & referral relationships",
+   "group": 3,
+   "difficulty": "Intermediate",
+   "prereq": [
+    14
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 35,
+   "title": "CROSS JOIN & a complete date grid",
+   "group": 3,
+   "difficulty": "Intermediate",
+   "prereq": [
+    14
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 36,
+   "title": "FULL OUTER JOIN & unmatched records",
+   "group": 3,
+   "difficulty": "Intermediate",
+   "prereq": [
+    15
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 37,
+   "title": "ON versus WHERE in a LEFT JOIN",
+   "group": 3,
+   "difficulty": "Intermediate",
+   "prereq": [
+    15
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 38,
+   "title": "INTERSECT & EXCEPT",
+   "group": 3,
+   "difficulty": "Intermediate",
+   "prereq": [
+    19
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 39,
+   "title": "Date boundaries & monthly buckets",
+   "group": 4,
+   "difficulty": "Intermediate",
+   "prereq": [
+    26
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 40,
+   "title": "LEAD & the next event",
+   "group": 5,
+   "difficulty": "Advanced",
+   "prereq": [
+    24
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 41,
+   "title": "FIRST_VALUE, LAST_VALUE & frames",
+   "group": 5,
+   "difficulty": "Advanced",
+   "prereq": [
+    23
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 42,
+   "title": "Rolling averages & missing dates",
+   "group": 5,
+   "difficulty": "Advanced",
+   "prereq": [
+    23,
+    35
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 43,
+   "title": "Share of total with windows",
+   "group": 5,
+   "difficulty": "Advanced",
+   "prereq": [
+    20,
+    32
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 44,
+   "title": "Deduplicate event retries",
+   "group": 6,
+   "difficulty": "Advanced",
+   "prereq": [
+    25
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 45,
+   "title": "Daily active users & engagement",
+   "group": 6,
+   "difficulty": "Advanced",
+   "prereq": [
+    10,
+    39
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 46,
+   "title": "Ordered conversion funnels",
+   "group": 6,
+   "difficulty": "Advanced",
+   "prereq": [
+    20,
+    37
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 47,
+   "title": "Cohorts & exact-day retention",
+   "group": 6,
+   "difficulty": "Advanced",
+   "prereq": [
+    18,
+    39
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 48,
+   "title": "Sessionize an event stream",
+   "group": 6,
+   "difficulty": "Advanced",
+   "prereq": [
+    24,
+    23
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 49,
+   "title": "Multi-grain joins without fan-out",
+   "group": 6,
+   "difficulty": "Advanced",
+   "prereq": [
+    20,
+    16
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 50,
+   "title": "Revenue & payment reconciliation",
+   "group": 6,
+   "difficulty": "Advanced",
+   "prereq": [
+    49
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 51,
+   "title": "AI usage cost & contribution margin",
+   "group": 6,
+   "difficulty": "Advanced",
+   "prereq": [
+    49,
+    32
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 52,
+   "title": "Experiment conversion denominators",
+   "group": 6,
+   "difficulty": "Advanced",
+   "prereq": [
+    18,
+    32
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 53,
+   "title": "Top N per group & ties",
+   "group": 5,
+   "difficulty": "Advanced",
+   "prereq": [
+    22,
+    25
+   ],
+   "mode": "query"
+  },
+  {
+   "id": 54,
+   "title": "Databases, schemas, tables & keys",
+   "group": 3,
+   "difficulty": "Beginner",
+   "prereq": [
+    0
+   ],
+   "mode": "read"
+  },
+  {
+   "id": 55,
+   "title": "Logical query processing & row grain",
+   "group": 5,
+   "difficulty": "Intermediate",
+   "prereq": [
+    10,
+    11,
+    23
+   ],
+   "mode": "read"
+  },
+  {
+   "id": 56,
+   "title": "CAST, text types & NULL arithmetic",
+   "group": 2,
+   "difficulty": "Intermediate",
+   "prereq": [
+    1
+   ],
+   "mode": "read"
+  },
+  {
+   "id": 57,
+   "title": "NTILE & balanced ranking buckets",
+   "group": 5,
+   "difficulty": "Advanced",
+   "prereq": [
+    22
+   ],
+   "mode": "read"
+  },
+  {
+   "id": 58,
+   "title": "DDL: create, alter & inspect a table",
+   "group": 7,
+   "difficulty": "Advanced",
+   "prereq": [
+    54
+   ],
+   "mode": "lab"
+  },
+  {
+   "id": 59,
+   "title": "DML: INSERT, UPDATE & DELETE",
+   "group": 7,
+   "difficulty": "Advanced",
+   "prereq": [
+    58
+   ],
+   "mode": "lab"
+  },
+  {
+   "id": 60,
+   "title": "Constraints protect the data contract",
+   "group": 7,
+   "difficulty": "Advanced",
+   "prereq": [
+    58
+   ],
+   "mode": "lab"
+  },
+  {
+   "id": 61,
+   "title": "Transactions & savepoint recovery",
+   "group": 7,
+   "difficulty": "Advanced",
+   "prereq": [
+    59
+   ],
+   "mode": "lab"
+  },
+  {
+   "id": 62,
+   "title": "Views: reusable query definitions",
+   "group": 7,
+   "difficulty": "Advanced",
+   "prereq": [
+    20
+   ],
+   "mode": "lab"
+  },
+  {
+   "id": 63,
+   "title": "CTEs, CTAS & temporary tables",
+   "group": 7,
+   "difficulty": "Advanced",
+   "prereq": [
+    20
+   ],
+   "mode": "lab"
+  },
+  {
+   "id": 64,
+   "title": "Triggers & visible audit effects",
+   "group": 7,
+   "difficulty": "Advanced",
+   "prereq": [
+    59
+   ],
+   "mode": "lab"
+  },
+  {
+   "id": 65,
+   "title": "Stored procedures: parameters & contracts",
+   "group": 7,
+   "difficulty": "Advanced",
+   "prereq": [
+    20
+   ],
+   "mode": "read"
+  },
+  {
+   "id": 66,
+   "title": "Indexes: observe a real access path",
+   "group": 8,
+   "difficulty": "Advanced",
+   "prereq": [
+    28
+   ],
+   "mode": "lab"
+  },
+  {
+   "id": 67,
+   "title": "SARGable ranges, not speed commandments",
+   "group": 8,
+   "difficulty": "Advanced",
+   "prereq": [
+    39,
+    66
+   ],
+   "mode": "lab"
+  },
+  {
+   "id": 68,
+   "title": "Partitioning & workload trade-offs",
+   "group": 8,
+   "difficulty": "Advanced",
+   "prereq": [
+    39
+   ],
+   "mode": "read"
+  },
+  {
+   "id": 69,
+   "title": "Bronze: inspect raw data before cleaning",
+   "group": 9,
+   "difficulty": "Advanced",
+   "prereq": [
+    44,
+    39
+   ],
+   "mode": "read"
+  },
+  {
+   "id": 70,
+   "title": "Silver: clean, map & deduplicate",
+   "group": 9,
+   "difficulty": "Advanced",
+   "prereq": [
+    69,
+    44
+   ],
+   "mode": "lab"
+  },
+  {
+   "id": 71,
+   "title": "Gold: dimensions, facts & quality gates",
+   "group": 9,
+   "difficulty": "Advanced",
+   "prereq": [
+    70,
+    56
+   ],
+   "mode": "lab"
+  },
+  {
+   "id": 72,
+   "title": "EDA: explore before telling the story",
+   "group": 9,
+   "difficulty": "Advanced",
+   "prereq": [
+    71
+   ],
+   "mode": "read"
+  },
+  {
+   "id": 73,
+   "title": "Customer & product reporting contracts",
+   "group": 9,
+   "difficulty": "Advanced",
+   "prereq": [
+    72,
+    15
+   ],
+   "mode": "read"
+  },
+  {
+   "id": 74,
+   "title": "Monthly change & cumulative reports",
+   "group": 9,
+   "difficulty": "Advanced",
+   "prereq": [
+    72,
+    24,
+    23
+   ],
+   "mode": "read"
+  },
+  {
+   "id": 75,
+   "title": "Review AI-generated SQL with evidence",
+   "group": 8,
+   "difficulty": "Advanced",
+   "prereq": [
+    32,
+    49
+   ],
+   "mode": "read"
+  },
+  {
+   "id": 76,
+   "title": "Reconcile extraction & Bronze ingestion",
+   "group": 9,
+   "difficulty": "Advanced",
+   "prereq": [
+    69
+   ],
+   "mode": "read"
+  },
+  {
+   "id": 77,
+   "title": "Integrate CRM + ERP with source authority",
+   "group": 9,
+   "difficulty": "Advanced",
+   "prereq": [
+    76,
+    70,
+    55
+   ],
+   "mode": "read"
+  },
+  {
+   "id": 78,
+   "title": "Product validity with LEAD & half-open intervals",
+   "group": 9,
+   "difficulty": "Advanced",
+   "prereq": [
+    24
+   ],
+   "mode": "read"
+  },
+  {
+   "id": 79,
+   "title": "Validate calendar dates before converting",
+   "group": 9,
+   "difficulty": "Advanced",
+   "prereq": [
+    56
+   ],
+   "mode": "read"
+  },
+  {
+   "id": 80,
+   "title": "Quarantine bad rows & reconcile the batch",
+   "group": 9,
+   "difficulty": "Advanced",
+   "prereq": [
+    79
+   ],
+   "mode": "lab"
+  },
+  {
+   "id": 81,
+   "title": "Automated star-schema quality tests",
+   "group": 9,
+   "difficulty": "Advanced",
+   "prereq": [
+    71,
+    15
+   ],
+   "mode": "read"
+  },
+  {
+   "id": 82,
+   "title": "Durable surrogate keys across loads",
+   "group": 9,
+   "difficulty": "Advanced",
+   "prereq": [
+    58,
+    59,
+    70
+   ],
+   "mode": "lab"
+  },
+  {
+   "id": 83,
+   "title": "Latest-state reporting versus SCD Type 2",
+   "group": 9,
+   "difficulty": "Advanced",
+   "prereq": [
+    78,
+    82
+   ],
+   "mode": "read"
+  },
+  {
+   "id": 84,
+   "title": "Idempotent incremental UPSERT & stale updates",
+   "group": 9,
+   "difficulty": "Advanced",
+   "prereq": [
+    82
+   ],
+   "mode": "lab"
+  },
+  {
+   "id": 85,
+   "title": "Stage, validate & atomically promote a refresh",
+   "group": 9,
+   "difficulty": "Advanced",
+   "prereq": [
+    61,
+    81
+   ],
+   "mode": "lab"
+  },
+  {
+   "id": 86,
+   "title": "Protect fact grain when joining versions",
+   "group": 9,
+   "difficulty": "Advanced",
+   "prereq": [
+    83,
+    49
+   ],
+   "mode": "read"
+  },
+  {
+   "id": 87,
+   "title": "Capstone: integrated customers to trusted sales",
+   "group": 9,
+   "difficulty": "Advanced",
+   "prereq": [
+    77,
+    80,
+    81,
+    85,
+    86
+   ],
+   "mode": "lab"
+  }
+ ]
+}

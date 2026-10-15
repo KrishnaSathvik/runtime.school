@@ -1,24 +1,24 @@
 import type { Metadata } from "next";
-import { notFound, permanentRedirect } from "next/navigation";
-import { projects } from "@/content";
-import { ProjectPage } from "@/features/rt/pages/Project";
-import { projectHref, projectSlug, resolveProjectParam } from "@/platform/project-paths";
-import { projectMetadata } from "@/platform/seo";
+import { notFound } from "next/navigation";
+import { allSqlProjectStaticParams, resolveSqlProjectSlug } from "@/content/projects/paths";
+import { ProjectWorkspace } from "@/features/rt/projects/ProjectWorkspace";
+import { sqlProjectMetadata } from "@/platform/seo";
 
 type Props = { params: Promise<{ id: string }> };
 
+export const dynamicParams = false;
+
 export function generateStaticParams() {
-  return projects.map((p) => ({ id: projectSlug(p.title) }));
+  return allSqlProjectStaticParams();
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const found = resolveProjectParam((await params).id);
-  return (found && projectMetadata(found.project.id)) || { title: "Project not found" };
+  const project = resolveSqlProjectSlug((await params).id);
+  return project ? sqlProjectMetadata(project.id) ?? { title: project.title } : { title: "Project not found" };
 }
 
 export default async function Page({ params }: Props) {
-  const found = resolveProjectParam((await params).id);
-  if (!found) notFound();
-  if (found.legacy) permanentRedirect(projectHref(found.project.id));
-  return <ProjectPage projectId={found.project.id} stop={{ kind: "brief" }} />;
+  const project = resolveSqlProjectSlug((await params).id);
+  if (!project) notFound();
+  return <ProjectWorkspace key={project.id} project={project} />;
 }

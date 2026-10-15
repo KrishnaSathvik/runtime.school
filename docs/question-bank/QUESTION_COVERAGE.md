@@ -6,10 +6,10 @@
 
 | Difficulty | Challenges | Share |
 | --- | --- | --- |
-| Warm-up | 31 | 18% |
-| Easy | 58 | 33% |
-| Medium | 58 | 33% |
-| Hard | 29 | 16% |
+| Warm-up | 28 | 16% |
+| Easy | 56 | 32% |
+| Medium | 57 | 32% |
+| Hard | 35 | 20% |
 
 ## By module (curriculum position) versus difficulty
 
@@ -19,14 +19,14 @@ Modules are *not* difficulty levels — this table shows how they differ.
 | --- | --- | --- | --- | --- |
 | 1. SQL foundations | 4 | 0 | 0 | 0 |
 | 2. Filtering & sorting | 12 | 0 | 0 | 0 |
-| 3. Calculations & data quality | 6 | 10 | 0 | 0 |
-| 4. Joins & sets | 1 | 12 | 9 | 0 |
-| 5. Dates, strings & subqueries | 3 | 9 | 2 | 0 |
-| 6. Window functions | 0 | 6 | 17 | 1 |
-| 7. Advanced product analysis | 2 | 2 | 6 | 14 |
-| 8. Database engineering | 2 | 7 | 7 | 0 |
+| 3. Calculations & data quality | 5 | 9 | 2 | 0 |
+| 4. Joins & sets | 1 | 10 | 9 | 2 |
+| 5. Dates, strings & subqueries | 1 | 11 | 1 | 1 |
+| 6. Window functions | 0 | 3 | 17 | 4 |
+| 7. Advanced product analysis | 2 | 4 | 5 | 13 |
+| 8. Database engineering | 2 | 5 | 8 | 1 |
 | 9. Performance & query plans | 1 | 5 | 2 | 0 |
-| 10. Warehouse & reporting projects | 0 | 7 | 15 | 14 |
+| 10. Warehouse & reporting projects | 0 | 9 | 13 | 14 |
 
 ## By topic
 
@@ -36,125 +36,121 @@ Modules are *not* difficulty levels — this table shows how they differ.
 | --- | --- | --- | --- | --- | --- |
 | SQL basics | basics.select | SELECT columns | 2 | 2 | 2 / 0 / 0 / 0 |
 | SQL basics | basics.alias | Column aliases | 2 | 2 | 2 / 0 / 0 / 0 |
-| SQL basics | basics.distinct | DISTINCT | 2 | 2 | 2 / 0 / 0 / 0 |
-| SQL basics | basics.order-by | ORDER BY | 2 | 13 | 2 / 0 / 0 / 0 |
+| SQL basics | basics.distinct | DISTINCT | 2 | 5 | 2 / 0 / 0 / 0 |
+| SQL basics | basics.order-by | ORDER BY | 2 | 14 | 2 / 0 / 0 / 0 |
 | SQL basics | basics.limit | LIMIT | 0 | 2 | 0 / 0 / 0 / 0 |
 | SQL basics | basics.schema | Tables & keys | 2 | 2 | 1 / 1 / 0 / 0 |
-| Filtering | filtering.where | WHERE | 2 | 89 | 2 / 0 / 0 / 0 |
+| Filtering | filtering.where | WHERE | 2 | 128 | 2 / 0 / 0 / 0 |
 | Filtering | filtering.logic | AND / OR / NOT | 2 | 2 | 2 / 0 / 0 / 0 |
 | Filtering | filtering.in | IN | 0 | 3 | 0 / 0 / 0 / 0 |
-| Filtering | filtering.between | BETWEEN & ranges | 2 | 2 | 2 / 0 / 0 / 0 |
-| Filtering | filtering.like | LIKE | 2 | 12 | 2 / 0 / 0 / 0 |
-| Filtering | filtering.null | NULL handling | 4 | 28 | 3 / 1 / 0 / 0 |
-| Aggregation | aggregation.basic | COUNT / SUM / AVG / MIN / MAX | 6 | 78 | 0 / 6 / 0 / 0 |
-| Aggregation | aggregation.group-by | GROUP BY | 4 | 61 | 0 / 3 / 1 / 0 |
-| Aggregation | aggregation.having | HAVING | 2 | 6 | 0 / 2 / 0 / 0 |
-| Aggregation | aggregation.conditional | Conditional aggregation | 2 | 7 | 0 / 2 / 0 / 0 |
-| Aggregation | aggregation.distinct-count | Distinct counts | 0 | 4 | 0 / 0 / 0 / 0 |
-| Joins | joins.inner | INNER JOIN | 2 | 19 | 0 / 2 / 0 / 0 |
-| Joins | joins.left | LEFT JOIN | 4 | 25 | 0 / 1 / 3 / 0 |
-| Joins | joins.self | Self joins | 2 | 6 | 0 / 2 / 0 / 0 |
-| Joins | joins.multi | Multiple joins | 2 | 21 | 0 / 0 / 2 / 0 |
-| Joins | joins.anti | Missing relationships / anti-joins | 2 | 2 | 0 / 2 / 0 / 0 |
+| Filtering | filtering.between | BETWEEN & ranges | 2 | 10 | 2 / 0 / 0 / 0 |
+| Filtering | filtering.like | LIKE | 2 | 11 | 2 / 0 / 0 / 0 |
+| Filtering | filtering.null | NULL handling | 4 | 38 | 2 / 2 / 0 / 0 |
+| Aggregation | aggregation.basic | COUNT / SUM / AVG / MIN / MAX | 6 | 85 | 0 / 6 / 0 / 0 |
+| Aggregation | aggregation.group-by | GROUP BY | 4 | 67 | 0 / 2 / 2 / 0 |
+| Aggregation | aggregation.having | HAVING | 2 | 14 | 0 / 2 / 0 / 0 |
+| Aggregation | aggregation.conditional | Conditional aggregation | 2 | 4 | 0 / 0 / 2 / 0 |
+| Aggregation | aggregation.distinct-count | Distinct counts | 0 | 7 | 0 / 0 / 0 / 0 |
+| Joins | joins.inner | INNER JOIN | 2 | 31 | 0 / 2 / 0 / 0 |
+| Joins | joins.left | LEFT JOIN | 4 | 23 | 0 / 1 / 3 / 0 |
+| Joins | joins.self | Self joins | 2 | 13 | 0 / 1 / 1 / 0 |
+| Joins | joins.multi | Multiple joins | 2 | 28 | 0 / 1 / 1 / 0 |
+| Joins | joins.anti | Missing relationships / anti-joins | 2 | 2 | 0 / 0 / 0 / 2 |
 | Joins | joins.fan-out | Join fan-out & cardinality | 4 | 4 | 0 / 0 / 2 / 2 |
-| Joins | joins.set-ops | UNION / INTERSECT / EXCEPT | 4 | 11 | 0 / 4 / 0 / 0 |
-| Subqueries & CTEs | subqueries.scalar | Scalar subqueries | 2 | 45 | 0 / 2 / 0 / 0 |
+| Joins | joins.set-ops | UNION / INTERSECT / EXCEPT | 4 | 10 | 0 / 3 / 1 / 0 |
+| Subqueries & CTEs | subqueries.scalar | Scalar subqueries | 2 | 50 | 0 / 2 / 0 / 0 |
 | Subqueries & CTEs | subqueries.exists | IN / EXISTS / NOT EXISTS | 2 | 7 | 0 / 2 / 0 / 0 |
 | Subqueries & CTEs | subqueries.correlated | Correlated subqueries | 0 | 0 | 0 / 0 / 0 / 0 |
-| Subqueries & CTEs | subqueries.cte | CTEs | 2 | 40 | 0 / 0 / 2 / 0 |
-| Subqueries & CTEs | subqueries.recursive | Recursive CTEs | 2 | 3 | 0 / 0 / 2 / 0 |
-| Window functions | windows.row-number | ROW_NUMBER | 2 | 2 | 0 / 2 / 0 / 0 |
-| Window functions | windows.rank | RANK / DENSE_RANK | 4 | 20 | 0 / 2 / 2 / 0 |
-| Window functions | windows.lag-lead | LAG / LEAD | 4 | 11 | 0 / 1 / 3 / 0 |
+| Subqueries & CTEs | subqueries.cte | CTEs | 2 | 32 | 0 / 0 / 1 / 1 |
+| Subqueries & CTEs | subqueries.recursive | Recursive CTEs | 2 | 2 | 0 / 0 / 0 / 2 |
+| Window functions | windows.row-number | ROW_NUMBER | 2 | 2 | 0 / 1 / 1 / 0 |
+| Window functions | windows.rank | RANK / DENSE_RANK | 4 | 23 | 0 / 0 / 0 / 4 |
+| Window functions | windows.lag-lead | LAG / LEAD | 4 | 10 | 0 / 1 / 3 / 0 |
 | Window functions | windows.running | Running totals | 4 | 4 | 0 / 0 / 3 / 1 |
-| Window functions | windows.rolling | Rolling windows & frames | 4 | 6 | 0 / 0 / 3 / 1 |
+| Window functions | windows.rolling | Rolling windows & frames | 4 | 4 | 0 / 1 / 3 / 0 |
 | Window functions | windows.top-n | Top-N per group | 4 | 4 | 0 / 0 / 4 / 0 |
 | Window functions | windows.gaps-islands | Gaps & islands | 0 | 0 | 0 / 0 / 0 / 0 |
-| Dates & time | dates.filter | Date filtering | 2 | 27 | 0 / 2 / 0 / 0 |
+| Dates & time | dates.filter | Date filtering | 2 | 26 | 0 / 2 / 0 / 0 |
 | Dates & time | dates.buckets | Monthly / weekly buckets | 2 | 2 | 0 / 2 / 0 / 0 |
 | Dates & time | dates.diff | Date differences | 0 | 0 | 0 / 0 / 0 / 0 |
 | Dates & time | dates.series | Date series & missing days | 2 | 2 | 0 / 0 / 2 / 0 |
 | Dates & time | dates.sessions | Sessions & sequences | 2 | 2 | 0 / 0 / 0 / 2 |
-| Strings & data cleaning | cleaning.strings | TRIM / LOWER / SUBSTR / REPLACE | 2 | 16 | 2 / 0 / 0 / 0 |
-| Strings & data cleaning | cleaning.coalesce | COALESCE & NULLIF | 0 | 18 | 0 / 0 / 0 / 0 |
-| Strings & data cleaning | cleaning.case | CASE | 2 | 24 | 2 / 0 / 0 / 0 |
-| Strings & data cleaning | cleaning.dedupe | Deduplication | 2 | 2 | 0 / 0 / 2 / 0 |
-| Strings & data cleaning | cleaning.validation | Validation & types | 4 | 4 | 2 / 0 / 2 / 0 |
-| Business analytics | analytics.revenue | Revenue & order value | 2 | 2 | 0 / 0 / 1 / 1 |
+| Strings & data cleaning | cleaning.strings | TRIM / LOWER / SUBSTR / REPLACE | 2 | 25 | 1 / 1 / 0 / 0 |
+| Strings & data cleaning | cleaning.coalesce | COALESCE & NULLIF | 0 | 15 | 0 / 0 / 0 / 0 |
+| Strings & data cleaning | cleaning.case | CASE | 2 | 21 | 2 / 0 / 0 / 0 |
+| Strings & data cleaning | cleaning.dedupe | Deduplication | 2 | 2 | 0 / 1 / 1 / 0 |
+| Strings & data cleaning | cleaning.validation | Validation & types | 4 | 4 | 1 / 1 / 2 / 0 |
+| Business analytics | analytics.revenue | Revenue & order value | 2 | 2 | 0 / 0 / 0 / 2 |
 | Business analytics | analytics.active-users | Active users & engagement | 2 | 2 | 0 / 2 / 0 / 0 |
-| Business analytics | analytics.conversion | Funnels & conversion | 4 | 4 | 0 / 0 / 1 / 3 |
-| Business analytics | analytics.retention | Cohorts & retention | 2 | 2 | 0 / 0 / 0 / 2 |
+| Business analytics | analytics.conversion | Funnels & conversion | 4 | 4 | 0 / 1 / 1 / 2 |
+| Business analytics | analytics.retention | Cohorts & retention | 2 | 2 | 0 / 0 / 1 / 1 |
 | Business analytics | analytics.segmentation | Segmentation & ranking | 4 | 4 | 0 / 0 / 2 / 2 |
-| Business analytics | analytics.statistics | Medians, shares & ratios | 4 | 4 | 0 / 0 / 4 / 0 |
-| Database engineering | engineering.ddl | CREATE / ALTER | 2 | 14 | 0 / 2 / 0 / 0 |
-| Database engineering | engineering.dml | INSERT / UPDATE / DELETE | 2 | 14 | 0 / 2 / 0 / 0 |
-| Database engineering | engineering.constraints | Constraints | 4 | 30 | 2 / 0 / 2 / 0 |
+| Business analytics | analytics.statistics | Medians, shares & ratios | 4 | 4 | 0 / 1 / 3 / 0 |
+| Database engineering | engineering.ddl | CREATE / ALTER | 2 | 16 | 0 / 1 / 1 / 0 |
+| Database engineering | engineering.dml | INSERT / UPDATE / DELETE | 2 | 16 | 0 / 2 / 0 / 0 |
+| Database engineering | engineering.constraints | Constraints | 4 | 24 | 2 / 0 / 2 / 0 |
 | Database engineering | engineering.transactions | Transactions | 4 | 6 | 0 / 2 / 2 / 0 |
-| Database engineering | engineering.views | Views, temp tables & triggers | 6 | 6 | 0 / 1 / 5 / 0 |
+| Database engineering | engineering.views | Views, temp tables & triggers | 6 | 6 | 0 / 0 / 5 / 1 |
 | Query optimization | optimization.indexes | Indexes | 2 | 4 | 0 / 2 / 0 / 0 |
 | Query optimization | optimization.plans | Query plans & SARGable filters | 8 | 8 | 3 / 3 / 2 / 0 |
 | Data warehousing | warehousing.layers | Bronze / Silver / Gold | 10 | 10 | 0 / 1 / 1 / 8 |
 | Data warehousing | warehousing.history | History, SCD & as-of | 4 | 4 | 0 / 1 / 3 / 0 |
-| Data warehousing | warehousing.incremental | Incremental & idempotent loads | 4 | 4 | 0 / 2 / 2 / 0 |
-| Data warehousing | warehousing.reconciliation | Reconciliation & quality gates | 8 | 8 | 0 / 1 / 0 / 7 |
+| Data warehousing | warehousing.incremental | Incremental & idempotent loads | 4 | 4 | 0 / 4 / 0 / 0 |
+| Data warehousing | warehousing.reconciliation | Reconciliation & quality gates | 8 | 8 | 0 / 1 / 2 / 5 |
 
 ## By dataset
 
 | Dataset | Name | Existing challenges | New bank questions |
 | --- | --- | --- | --- |
-| shop | Corner Shop | 72 | 0 |
-| stream | Streamly | 26 | 0 |
-| social | SocialLoop | 12 | 0 |
-| ai | ModelWorks | 16 | 0 |
-| warehouse | Northstar Retail | 14 | 0 |
-| lab | Disposable Lab | 12 | 0 |
-| integration | Northstar CRM + ERP | 24 | 0 |
-| reasoning | Community Studio | 0 | 12 |
-| capacity | Regional Capacity | 0 | 5 |
-| market | Harbor Market | 0 | 59 |
-| org | Atlas Corp | 0 | 12 |
+| retail | Retail | 78 | 29 |
+| flights | U.S. Flights | 14 | 11 |
+| saas | Product / SaaS Analytics | 20 | 19 |
+| mobility | Mobility | 8 | 7 |
+| weather | Weather | 6 | 6 |
+| energy | Energy | 4 | 9 |
+| payments | Finance / Payments | 12 | 10 |
+| healthcare | Healthcare | 4 | 9 |
+| iot | IoT / Sensors | 4 | 5 |
+| logistics | Logistics | 12 | 10 |
+| developer | Developer Platform | 8 | 17 |
+| sports | Sports | 6 | 7 |
 
 ## Weak topics (≤ 1 primary challenge)
 
 - `basics.limit` LIMIT: 0 primary, 2 secondary
 - `filtering.in` IN: 0 primary, 3 secondary
-- `aggregation.distinct-count` Distinct counts: 0 primary, 4 secondary
+- `aggregation.distinct-count` Distinct counts: 0 primary, 7 secondary
 - `subqueries.correlated` Correlated subqueries: 0 primary, 0 secondary
 - `windows.gaps-islands` Gaps & islands: 0 primary, 0 secondary
 - `dates.diff` Date differences: 0 primary, 0 secondary
-- `cleaning.coalesce` COALESCE & NULLIF: 0 primary, 18 secondary
+- `cleaning.coalesce` COALESCE & NULLIF: 0 primary, 15 secondary
 
 ## Duplicate patterns
 
-- 22 lessons have two challenges that need the **same reasoning** (structure identical or ≥ 80% similar) — the second challenge rehearses rather than extends.
-- 4 cross-lesson groups have identical structure.
+- 18 lessons have two challenges that need the **same reasoning** (structure identical or ≥ 80% similar) — the second challenge rehearses rather than extends.
+- 3 cross-lesson groups have identical structure.
 
 | Pattern | Challenges | Lesson(s) |
 | --- | --- | --- |
-| p-0-0 | lc-0-0, lc-0-1 | Meet your first SELECT |
-| p-1-0 | lc-1-0, lc-1-1 | Aliases & calculated columns |
-| p-3-0 | lc-3-0, lc-3-1, lc-28-1 | Filter with WHERE; Query plans & indexes |
-| p-2-0 | lc-2-0, lc-2-1 | Unique values with DISTINCT |
-| p-13-0 | lc-13-0, lc-13-1 | Conditional aggregation |
-| p-54-1 | lc-54-1, lc-34-1 | Databases, schemas, tables & keys; Self-joins & referral relationships |
-| p-14-0 | lc-14-0, lc-14-1 | Connect tables with JOIN |
-| p-32-1 | lc-32-1, lc-75-1 | Ratios, ROUND & NULLIF; Review AI-generated SQL with evidence |
+| p-3-0 | lc-3-0, lc-3-1, lc-28-0, lc-28-1, lc-83-0 | Filter with WHERE; Query plans & indexes; Latest-state reporting versus SCD Type 2 |
+| p-9-0 | lc-9-0, lc-9-1 | COUNT, SUM & AVG |
 | p-16-0 | lc-16-0, lc-16-1 | Revenue across tables |
-| p-35-0 | lc-35-0, lc-35-1 | CROSS JOIN & a complete date grid |
 | p-37-0 | lc-37-0, lc-37-1 | ON versus WHERE in a LEFT JOIN |
 | p-17-0 | lc-17-0, lc-17-1 | Subqueries |
-| p-21-0 | lc-21-0, lc-21-1 | Window functions: ROW_NUMBER |
-| p-22-0 | lc-22-0, lc-22-1 | RANK & DENSE_RANK |
-| p-25-0 | lc-25-0, lc-25-1, lc-44-0 | Latest row per group; Deduplicate event retries |
+| p-18-1 | lc-18-1, lc-31-0 | Ask whether a row exists; NOT IN and the NULL trap |
+| p-20-0 | lc-20-0, lc-20-1 | Readable queries with CTEs |
+| p-25-0 | lc-25-0, lc-25-1 | Latest row per group |
+| p-57-0 | lc-57-0, lc-57-1 | NTILE & balanced ranking buckets |
 | p-27-0 | lc-27-0, lc-27-1 | Recursive CTEs |
-| p-29-0 | lc-29-0, lc-29-1 | Capstone: customer insights |
 | p-47-0 | lc-47-0, lc-47-1 | Cohorts & exact-day retention |
 | p-48-0 | lc-48-0, lc-48-1 | Sessionize an event stream |
-| p-66-0 | lc-66-0, lc-66-1 | Indexes: observe a real access path |
+| p-49-0 | lc-49-0, lc-49-1 | Multi-grain joins without fan-out |
+| p-58-0 | lc-58-0, lc-60-1 | DDL: create, alter & inspect a table; Constraints protect the data contract |
+| p-64-0 | lc-64-0, lc-64-1 | Triggers & visible audit effects |
 | p-67-0 | lc-67-0, lc-67-1 | SARGable ranges, not speed commandments |
 | p-70-0 | lc-70-0, lc-70-1 | Silver: clean, map & deduplicate |
+| p-71-0 | lc-71-0, lc-71-1 | Gold: dimensions, facts & quality gates |
 | p-77-0 | lc-77-0, lc-77-1 | Integrate CRM + ERP with source authority |
-| p-79-0 | lc-79-0, lc-79-1 | Validate calendar dates before converting |
 | p-84-0 | lc-84-0, lc-84-1 | Idempotent incremental UPSERT & stale updates |
 | p-87-0 | lc-87-0, lc-87-1 | Capstone: integrated customers to trusted sales |
 

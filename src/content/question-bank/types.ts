@@ -1,5 +1,6 @@
 import type { PlanValidation } from "@/engine/plan-validation";
 import type { Challenge } from "@/content/types";
+import type { LearningDatasetRef } from "@/data/datasets/learning-map";
 
 export const DIFFICULTIES = ["warmup", "easy", "medium", "hard"] as const;
 export type Difficulty = (typeof DIFFICULTIES)[number];
@@ -25,6 +26,7 @@ export type WrongAnswer = { sql: string; mistake: string };
 
 /** A new, independent question-bank problem (namespace qb-####). */
 export type BankQuestion = {
+  datasetRef: LearningDatasetRef;
   exerciseType?: ExerciseType;
   starterSql?: string;
   id: string; // "qb-0001"

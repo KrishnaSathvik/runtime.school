@@ -50,8 +50,8 @@ export const subjects: SubjectDefinition[] = [
     availabilityLabel: "Available",
     href: "/sql",
     courseHref: "/sql",
-    practiceHref: "/practice",
-    projectsHref: "/projects/sql",
+    practiceHref: "/sql/practice",
+    projectsHref: "/sql/projects",
     icon: Database,
     tools: tools.map((t) => ({ href: t.href, label: t.label, purpose: t.purpose })),
   },
@@ -117,38 +117,6 @@ export const subjectById = Object.fromEntries(
 ) as Record<SubjectId, SubjectDefinition>;
 
 export const availableSubjects = subjects.filter((s) => s.availability === "available");
-
-/** Infer active subject from the current pathname for contextual nav. */
-export function subjectFromPath(pathname: string): SubjectId | null {
-  if (
-    pathname === "/sql" ||
-    pathname.startsWith("/learn") ||
-    pathname.startsWith("/lesson/") ||
-    pathname.startsWith("/practice/sql") ||
-    pathname.startsWith("/projects/sql") ||
-    pathname === "/practice" ||
-    pathname === "/settings" ||
-    pathname === "/projects" ||
-    pathname.startsWith("/review") ||
-    pathname.startsWith("/placement") ||
-    pathname.startsWith("/playground") ||
-    pathname.startsWith("/database-lab") ||
-    pathname.startsWith("/query-performance") ||
-    pathname.startsWith("/sql-syntax") ||
-    // Legacy SQL practice deep links (questions, tracks, cases, bank slugs)
-    (pathname.startsWith("/practice/") &&
-      !pathname.startsWith("/practice/python") &&
-      pathname !== "/practice") ||
-    // Numeric SQL project routes
-    /^\/projects\/\d+(\/|$)/.test(pathname)
-  ) {
-    return "sql";
-  }
-  if (pathname.startsWith("/skills/python") || pathname.startsWith("/learn/python")) {
-    return "python";
-  }
-  return null;
-}
 
 export function parseLessonRef(ref: string): { subjectId: SubjectId; lessonId: string } | null {
   const i = ref.indexOf(":");

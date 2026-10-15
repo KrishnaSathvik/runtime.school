@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { statusText, questionStatusText } from "@/features/practice/status";
 import { allQuestions } from "@/content/question-bank";
 import { useLearning } from "@/lib/learning-state";
-import { checkLabel, importFailureMessage } from "@/lib/feedback-copy";
 import { learnerExplanation } from "@/lib/content-copy";
 import { explainError, explainGrade } from "@/engine/explain";
 
@@ -49,17 +48,6 @@ describe("plain feedback with precise diagnostics", () => {
   });
   it("describes a timeout without assuming the database had finished starting", () => {
     expect(explainError("Query timed out", "SELECT 1").detail).toContain("stopped waiting");
-  });
-  it("explains each index strategy while leaving other check labels intact", () => {
-    expect(checkLabel("Required index: internal-id")).toBe("Required index");
-    expect(checkLabel("Access strategy: search")).toBe("Find matching rows with an index");
-    expect(checkLabel("Access strategy: covering-search")).toBe("Read matching rows directly from the index");
-    expect(checkLabel("Access strategy: index-scan")).toBe("Read rows in index order");
-    expect(checkLabel("Avoid temporary sorts")).toBe("Avoid temporary sorts");
-  });
-  it("explains backup failure and preservation of existing work", () => {
-    expect(importFailureMessage()).toContain("Your existing progress was not changed");
-    expect(importFailureMessage()).toContain("backup (.json)");
   });
   it("clarifies the known implementation sentence without altering SQL terminology", () => {
     expect(learnerExplanation("In this app each worker creates an in-memory SQLite database.")).toBe("In Runtime, each run starts with the original sample data.");

@@ -5,7 +5,7 @@ import {courseOrder} from "@/content";
 const fresh = (): LearningState => ({...useLearning.getState(), active:null, sessions:{}, stats:{}, history:[], placement:null});
 describe("course-only Learn continuation", () => {
  it("starts a new learner directly in the first lesson", () => {
-  expect(courseContinuation(fresh())).toMatchObject({id:courseOrder[0],href:"/learn/sql/meet-your-first-select",returning:false});
+  expect(courseContinuation(fresh())).toMatchObject({id:courseOrder[0],href:"/sql/lesson/meet-your-first-select",returning:false});
  });
  it("preserves the active course stage and challenge", () => {
   const s=fresh();s.active={id:3,project:null,stage:"practice",variant:1};
@@ -14,7 +14,7 @@ describe("course-only Learn continuation", () => {
  it("keeps a course session when a project becomes active", () => {
   const s=fresh();s.active={id:45,project:0,stage:"practice",variant:0};s.sessions[sessionKey(3,null)]={stage:"review",variant:1};
   s.history=[{id:45,project:0,time:200,ok:false},{id:3,time:100,ok:false}];
-  expect(courseContinuation(s)).toMatchObject({id:3,href:"/learn/sql/filter-with-where",stage:"review",variant:1});
+  expect(courseContinuation(s)).toMatchObject({id:3,href:"/sql/lesson/filter-with-where",stage:"review",variant:1});
  });
  it("does not turn practice-only activity into a course continuation", () => {
   const s=fresh();s.lastQuestion="shopper-contact-list";s.lastTrack="sql-from-zero";
@@ -35,7 +35,7 @@ describe("Learn entry point", () => {
  it("starts at the first unfinished lesson even after a later lesson was opened from Practice", () => {
   const s=fresh();s.active={id:courseOrder[4],project:null,stage:"practice",variant:1};
   s.history=[{id:courseOrder[4],time:100,ok:false}];
-  expect(learnEntry(s)).toMatchObject({id:courseOrder[0],href:"/learn/sql/meet-your-first-select"});
+  expect(learnEntry(s)).toMatchObject({id:courseOrder[0],href:"/sql/lesson/meet-your-first-select"});
   expect(otherLessonInProgress(s)).toMatchObject({id:courseOrder[4]});
  });
  it("moves on once the first lesson is mastered and resumes its saved stage", () => {

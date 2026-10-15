@@ -7,6 +7,7 @@ import { ArrowRight } from "lucide-react";
 import { learnEntry } from "@/features/discovery/selectors";
 import { useHydrated, useLearning } from "@/lib/learning-state";
 import { subjects } from "@/platform/subjects";
+import { sqlLessonHref } from "@/platform/sql-lesson-href";
 import { NotifyInterest } from "../NotifyInterest";
 import { Shell } from "../Shell";
 
@@ -17,7 +18,7 @@ export function Landing({ pythonAvailable = false }: { pythonAvailable?: boolean
   const state = useLearning();
   const entry = learnEntry(state);
   const returning = ready && !!entry?.returning;
-  const startHref = returning && entry ? `/sql/lesson/${entry.id}` : "/sql";
+  const startHref = returning && entry ? sqlLessonHref(entry.id) : "/sql";
   const startLabel = returning ? "Continue SQL" : "Start SQL";
 
   // Enter starts (or continues) SQL from anywhere on the page.

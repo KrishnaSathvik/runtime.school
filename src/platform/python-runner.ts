@@ -3,8 +3,8 @@
  *
  * Python currently runs in a same-origin worker, which is not an isolation boundary: Pyodide's JS
  * bridge can reach this origin's storage and network. Until the separate-origin runner exists,
- * execution is allowed only in local development and in previews that are access-controlled and
- * built with NEXT_PUBLIC_PYTHON_RUNNER=1. Production is always off, whatever the flag says.
+ * execution is allowed only in local `next dev`. Every Vercel deployment (production and preview)
+ * keeps Python off — `/python*` routes 404 and the landing subject stays waitlisted.
  *
  * Env reads are literal so Next inlines them into client bundles.
  */
@@ -15,6 +15,9 @@ export function pythonRunnerEnabled(
     flag: process.env.NEXT_PUBLIC_PYTHON_RUNNER,
   },
 ): boolean {
-  if (env.vercelEnv === "production") return false;
-  return env.nodeEnv === "development" || env.flag === "1";
+  // Never ship Python on Vercel (production or preview), regardless of flags.
+  if (env.vercelEnv === "production" || env.vercelEnv === "preview") return false;
+  // Local development only. NEXT_PUBLIC_PYTHON_RUNNER is ignored for deploy safety.
+  void env.flag;
+  return env.nodeEnv === "development";
 }

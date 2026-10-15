@@ -8,7 +8,7 @@ import { Prec } from "@codemirror/state";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { editorTheme } from "@/components/editor/editor-theme";
 import { sqlFunctionHighlight } from "@/components/editor/sql-function-highlight";
-import { teachingSchema } from "@/engine/explain";
+import { teachingSchema, parseSchema } from "@/engine/explain";
 
 /** True on desktop/trackpad; false on phones so the popup does not cover typing. */
 function useActivateOnTyping() {
@@ -33,6 +33,7 @@ export function Editor({
   minHeight = "96px",
   autoFocus = false,
   tables,
+  seedSql,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -43,6 +44,7 @@ export function Editor({
   autoFocus?: boolean;
   /** Prefer these tables for completion; omit to offer the full teaching schema. */
   tables?: string[];
+  seedSql?: string;
 }) {
   // Keep the latest handlers without rebuilding the editor extensions.
   const handlers = useRef({ onRun, onCheck });
@@ -51,7 +53,7 @@ export function Editor({
   const tableKey = tables?.join(",") ?? "";
 
   const extensions = useMemo(() => {
-    const all = teachingSchema();
+    const all = seedSql ? parseSchema(seedSql) : teachingSchema();
     const names = tableKey
       ? tableKey.split(",").map((t) => t.trim()).filter(Boolean)
       : Object.keys(all);
@@ -93,7 +95,7 @@ export function Editor({
         ]),
       ),
     ];
-  }, [label, tableKey, activateOnTyping]);
+  }, [label, tableKey, activateOnTyping, seedSql]);
 
   return (
     <div className="rx-editor">

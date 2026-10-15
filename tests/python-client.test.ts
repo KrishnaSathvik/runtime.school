@@ -370,12 +370,13 @@ describe("python-client execution", () => {
 });
 
 describe("python runner gate", () => {
-  it("is on in development, off in production even with the flag", () => {
+  it("is on in local development only; off on every Vercel deploy and production build", () => {
     expect(pythonRunnerEnabled({ nodeEnv: "development" })).toBe(true);
     expect(pythonRunnerEnabled({ nodeEnv: "production" })).toBe(false);
-    expect(pythonRunnerEnabled({ nodeEnv: "production", flag: "1" })).toBe(true);
+    expect(pythonRunnerEnabled({ nodeEnv: "production", flag: "1" })).toBe(false);
     expect(pythonRunnerEnabled({ nodeEnv: "production", vercelEnv: "production", flag: "1" })).toBe(false);
     expect(pythonRunnerEnabled({ nodeEnv: "development", vercelEnv: "production" })).toBe(false);
+    expect(pythonRunnerEnabled({ nodeEnv: "development", vercelEnv: "preview", flag: "1" })).toBe(false);
   });
 });
 

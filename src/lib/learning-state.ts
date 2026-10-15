@@ -5,7 +5,7 @@ import { attemptContext, track } from "./analytics";
 import { useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist, type StateStorage } from "zustand/middleware";
-import { courseOrder, lessons, projects } from "@/content";
+import { courseOrder, lessons } from "@/content";
 import { BRAND_NAME } from "@/platform/brand";
 
 const STAGES: Stage[] = ["understand", "practice", "review", "complete"];
@@ -18,6 +18,15 @@ const STAGES: Stage[] = ["understand", "practice", "review", "complete"];
 let hydrated = false;
 const hydrationListeners = new Set<() => void>();
 let storageSnapshot: unknown = null;
+let storageFailed = false;
+const saveListeners = new Set<() => void>();
+function storageStatus(failed: boolean) {
+  storageFailed = failed;
+  saveListeners.forEach(cb => cb());
+}
+export function useDraftSaveFailed() {
+  return useSyncExternalStore(cb => { saveListeners.add(cb); return () => { saveListeners.delete(cb); }; }, () => storageFailed, () => false);
+}
 const guardedStorage: StateStorage = {
   getItem: (name) => {
     try {
@@ -35,8 +44,10 @@ const guardedStorage: StateStorage = {
       const merged=mergeStorageWrite(storageSnapshot,JSON.parse(value),remote?JSON.parse(remote):null);
       localStorage.setItem(name,JSON.stringify(merged));
       storageSnapshot=JSON.parse(value);
+      storageStatus(false);
     } catch {
-      // Storage full or blocked: keep working in memory.
+      // Keep drafts in memory and expose a persistent retry state.
+      storageStatus(true);
     }
   },
   removeItem: (name) => {
@@ -368,7 +379,6 @@ type Store = LearningState & {
     mastery: number;
     independent: number;
     due: number;
-    projectsStarted: number;
   };
 };
 
@@ -872,18 +882,6 @@ export const useLearning = create<Store>()(
         if (unfinished !== undefined) {
           return { id: unfinished, project: null, reason: "Finish a concept you already started.", kind: "lesson" };
         }
-        for (const p of projects) {
-          const rec = s.projects[p.id];
-          const allDone = p.milestoneIds.every((id) => milestoneDone(rec?.milestones[id]));
-          if (!allDone && p.milestoneIds.slice(0, 2).every((id) => isMastered(recordOf(s.stats, id)))) {
-            return {
-              id: p.milestoneIds.find((id) => !milestoneDone(rec?.milestones[id]))!,
-              project: p.id,
-              reason: "Apply concepts you've mastered in a project.",
-              kind: "project",
-            };
-          }
-        }
         const start = placementStart(s.placement, {
           joinMastered: isMastered(recordOf(s.stats, PLACEMENT_JOIN_LESSON)),
         });
@@ -916,8 +914,7 @@ export const useLearning = create<Store>()(
         const due = lessons.filter(
           (l) => isMastered(recordOf(s.stats, l.id)) && isReviewDue(s.reviews[l.id]),
         ).length;
-        const projectsStarted = projects.filter((p) => s.projects[p.id]).length;
-        return { mastery, independent, due, projectsStarted };
+        return { mastery, independent, due };
       },
     }),
     {
@@ -1008,20 +1005,6 @@ export function validateImport(data: unknown): Raw {
     if (Object.values((data.drafts as Raw) ?? {}).some((v) => typeof v !== "string" || v.length > 200000)) {
       throw new Error("Invalid SQL drafts.");
     }
-    for (const [pid, r] of Object.entries((data.projects as Raw) ?? {})) {
-      const project = projects[Number(pid)];
-      if (!project || !isObj(r) || !isObj(r.milestones)) throw new Error("Invalid project record.");
-      for (const [id, m] of Object.entries(r.milestones)) {
-        if (
-          !project.milestoneIds.includes(Number(id)) ||
-          !isObj(m) ||
-          !Array.isArray(m.solved) ||
-          m.solved.some((v) => v !== 0 && v !== 1)
-        ) {
-          throw new Error("Invalid project milestone.");
-        }
-      }
-    }
   }
   return data;
 }
@@ -1089,35 +1072,6 @@ export function migrateLearning(input: unknown): LearningState {
         variant: x.variant === 1 ? 1 : 0,
       };
     }
-    for (const [pid, p] of Object.entries(isObj(src.projects) ? src.projects : {})) {
-      const project = projects[Number(pid)];
-      if (!project || !isObj(p)) continue;
-      const milestones: Record<number, MilestoneState> = {};
-      for (const [id, m] of Object.entries(isObj(p.milestones) ? p.milestones : {})) {
-        if (!project.milestoneIds.includes(Number(id)) || !isObj(m)) continue;
-        milestones[Number(id)] = {
-          solved: [...new Set((Array.isArray(m.solved) ? m.solved : []).filter((x) => x === 0 || x === 1))] as number[],
-          check: m.check === true,
-          legacy: m.legacy === true,
-          queries: Object.fromEntries(
-            Object.entries(isObj(m.queries) ? m.queries : {}).filter(([, q]) => typeof q === "string"),
-          ) as Record<number, string>,
-          results: Object.fromEntries(
-            Object.entries(isObj(m.results) ? m.results : {}).filter(
-              ([, r]) => isObj(r) && (r.columns === undefined || Array.isArray(r.columns)),
-            ),
-          ),
-          updated: Number(m.updated) || 0,
-          ...(typeof m.notes === "string" && m.notes ? { notes: m.notes.slice(0, 20000) } : {}),
-        };
-      }
-      const last = Number(p.last);
-      data.projects[Number(pid)] = {
-        started: Number(p.started) || Date.now(),
-        milestones,
-        last: project.milestoneIds.includes(last) ? last : project.milestoneIds[0],
-      };
-    }
     for (const [id, r] of Object.entries(isObj(src.reviews) ? src.reviews : {})) {
       if (!lessons[Number(id)] || !isObj(r) || !Number.isFinite(Number(r.due))) continue;
       data.reviews[Number(id)] = {
@@ -1150,13 +1104,8 @@ export function migrateLearning(input: unknown): LearningState {
     }
     const a = src.active;
     if (isObj(a) && lessons[Number(a.id)] && STAGES.includes(a.stage as Stage)) {
-      const project = Number.isInteger(a.project) && projects[a.project as number] ? (a.project as number) : null;
-      data.active = { id: Number(a.id), variant: a.variant === 1 ? 1 : 0, stage: a.stage as Stage, project };
+      data.active = { id: Number(a.id), variant: a.variant === 1 ? 1 : 0, stage: a.stage as Stage, project: null };
     }
-    data.lastProject =
-      Number.isInteger(src.lastProject) && projects[src.lastProject as number]
-        ? (src.lastProject as number)
-        : null;
     const p = src.placement;
     if (isObj(p) && Array.isArray(p.answers)) {
       const index = Math.max(0, Math.min(PLACEMENT_IDS.length, Number(p.index) || 0));
@@ -1218,30 +1167,6 @@ export function migrateLearning(input: unknown): LearningState {
     if (isMastered(r) && !data.reviews[Number(id)]) {
       data.reviews[Number(id)] = { level: 0, due: (r.last || Date.now()) + 86400000, history: [] };
     }
-  }
-  // Pre-V3 files: carry mastered project lessons into project milestones.
-  if (!v3) {
-    projects.forEach((project) => {
-      const done = project.milestoneIds.filter((id) => data.stats[id] && isMastered(data.stats[id]));
-      if (!done.length) return;
-      data.projects[project.id] = {
-        started: Math.min(...done.map((id) => data.stats[id].last || Date.now())),
-        last: done[0],
-        milestones: Object.fromEntries(
-          done.map((id) => [
-            id,
-            {
-              solved: [0, 1],
-              check: data.stats[id].check,
-              legacy: data.stats[id].legacy,
-              queries: {},
-              results: {},
-              updated: data.stats[id].last || 0,
-            },
-          ]),
-        ),
-      };
-    });
   }
   return data;
 }

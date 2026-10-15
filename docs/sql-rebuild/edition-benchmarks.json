@@ -1,0 +1,964 @@
+{
+  "browser": "Headless Chromium desktop CPU, 390px viewport; not physical mobile hardware",
+  "workerMemory": "Worker WASM heap is not exposed by performance.memory; pageHeapBytes excludes worker memory.",
+  "budgetMs": 3000,
+  "measurements": [
+    {
+      "id": "retail",
+      "edition": "learn",
+      "bytes": 64974,
+      "loadMs": 5,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM order_items LIMIT 20",
+          "ms": 22,
+          "rows": 20
+        },
+        {
+          "query": "SELECT source_row,COUNT(*) AS n FROM order_items GROUP BY source_row LIMIT 20",
+          "ms": 4,
+          "rows": 20
+        },
+        {
+          "query": "SELECT source_row,ROW_NUMBER() OVER(ORDER BY source_row) AS position FROM order_items LIMIT 200",
+          "ms": 5,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM order_items f JOIN orders d ON f.order_id=d.id",
+          "ms": 3,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "retail",
+      "edition": "practice",
+      "bytes": 1142017,
+      "loadMs": 220,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM order_items LIMIT 20",
+          "ms": 49,
+          "rows": 20
+        },
+        {
+          "query": "SELECT source_row,COUNT(*) AS n FROM order_items GROUP BY source_row LIMIT 20",
+          "ms": 27,
+          "rows": 20
+        },
+        {
+          "query": "SELECT source_row,ROW_NUMBER() OVER(ORDER BY source_row) AS position FROM order_items LIMIT 200",
+          "ms": 29,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM order_items f JOIN orders d ON f.order_id=d.id",
+          "ms": 30,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "retail",
+      "edition": "project",
+      "bytes": 6693748,
+      "loadMs": 221,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM order_items LIMIT 20",
+          "ms": 218,
+          "rows": 20
+        },
+        {
+          "query": "SELECT source_row,COUNT(*) AS n FROM order_items GROUP BY source_row LIMIT 20",
+          "ms": 151,
+          "rows": 20
+        },
+        {
+          "query": "SELECT source_row,ROW_NUMBER() OVER(ORDER BY source_row) AS position FROM order_items LIMIT 200",
+          "ms": 154,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM order_items f JOIN orders d ON f.order_id=d.id",
+          "ms": 158,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "saas",
+      "edition": "learn",
+      "bytes": 114887,
+      "loadMs": 37,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM events LIMIT 20",
+          "ms": 17,
+          "rows": 20
+        },
+        {
+          "query": "SELECT delivery_id,COUNT(*) AS n FROM events GROUP BY delivery_id LIMIT 20",
+          "ms": 7,
+          "rows": 20
+        },
+        {
+          "query": "SELECT delivery_id,ROW_NUMBER() OVER(ORDER BY delivery_id) AS position FROM events LIMIT 200",
+          "ms": 5,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM events f JOIN accounts d ON f.account_id=d.id",
+          "ms": 3,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "saas",
+      "edition": "practice",
+      "bytes": 2782443,
+      "loadMs": 425,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM events LIMIT 20",
+          "ms": 93,
+          "rows": 20
+        },
+        {
+          "query": "SELECT delivery_id,COUNT(*) AS n FROM events GROUP BY delivery_id LIMIT 20",
+          "ms": 50,
+          "rows": 20
+        },
+        {
+          "query": "SELECT delivery_id,ROW_NUMBER() OVER(ORDER BY delivery_id) AS position FROM events LIMIT 200",
+          "ms": 64,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM events f JOIN accounts d ON f.account_id=d.id",
+          "ms": 53,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "saas",
+      "edition": "project",
+      "bytes": 14430967,
+      "loadMs": 309,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM events LIMIT 20",
+          "ms": 265,
+          "rows": 20
+        },
+        {
+          "query": "SELECT delivery_id,COUNT(*) AS n FROM events GROUP BY delivery_id LIMIT 20",
+          "ms": 241,
+          "rows": 20
+        },
+        {
+          "query": "SELECT delivery_id,ROW_NUMBER() OVER(ORDER BY delivery_id) AS position FROM events LIMIT 200",
+          "ms": 239,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM events f JOIN accounts d ON f.account_id=d.id",
+          "ms": 249,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "weather",
+      "edition": "learn",
+      "bytes": 22254,
+      "loadMs": 3,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM daily_weather LIMIT 20",
+          "ms": 14,
+          "rows": 20
+        },
+        {
+          "query": "SELECT station_id,COUNT(*) AS n FROM daily_weather GROUP BY station_id LIMIT 20",
+          "ms": 2,
+          "rows": 3
+        },
+        {
+          "query": "SELECT station_id,ROW_NUMBER() OVER(ORDER BY station_id,date,element) AS position FROM daily_weather LIMIT 200",
+          "ms": 3,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM daily_weather f JOIN stations d ON f.station_id=d.id",
+          "ms": 2,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "weather",
+      "edition": "practice",
+      "bytes": 1097808,
+      "loadMs": 15,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM daily_weather LIMIT 20",
+          "ms": 49,
+          "rows": 20
+        },
+        {
+          "query": "SELECT station_id,COUNT(*) AS n FROM daily_weather GROUP BY station_id LIMIT 20",
+          "ms": 30,
+          "rows": 3
+        },
+        {
+          "query": "SELECT station_id,ROW_NUMBER() OVER(ORDER BY station_id,date,element) AS position FROM daily_weather LIMIT 200",
+          "ms": 30,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM daily_weather f JOIN stations d ON f.station_id=d.id",
+          "ms": 30,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "weather",
+      "edition": "project",
+      "bytes": 5480110,
+      "loadMs": 58,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM daily_weather LIMIT 20",
+          "ms": 166,
+          "rows": 20
+        },
+        {
+          "query": "SELECT station_id,COUNT(*) AS n FROM daily_weather GROUP BY station_id LIMIT 20",
+          "ms": 152,
+          "rows": 3
+        },
+        {
+          "query": "SELECT station_id,ROW_NUMBER() OVER(ORDER BY station_id,date,element) AS position FROM daily_weather LIMIT 200",
+          "ms": 143,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM daily_weather f JOIN stations d ON f.station_id=d.id",
+          "ms": 149,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "payments",
+      "edition": "learn",
+      "bytes": 55137,
+      "loadMs": 9,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM authorizations LIMIT 20",
+          "ms": 15,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,COUNT(*) AS n FROM authorizations GROUP BY id LIMIT 20",
+          "ms": 3,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,ROW_NUMBER() OVER(ORDER BY id) AS position FROM authorizations LIMIT 200",
+          "ms": 3,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM authorizations f JOIN accounts d ON f.account_id=d.id",
+          "ms": 2,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "payments",
+      "edition": "practice",
+      "bytes": 1350041,
+      "loadMs": 26,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM authorizations LIMIT 20",
+          "ms": 43,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,COUNT(*) AS n FROM authorizations GROUP BY id LIMIT 20",
+          "ms": 25,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,ROW_NUMBER() OVER(ORDER BY id) AS position FROM authorizations LIMIT 200",
+          "ms": 26,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM authorizations f JOIN accounts d ON f.account_id=d.id",
+          "ms": 25,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "payments",
+      "edition": "project",
+      "bytes": 7413666,
+      "loadMs": 148,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM authorizations LIMIT 20",
+          "ms": 158,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,COUNT(*) AS n FROM authorizations GROUP BY id LIMIT 20",
+          "ms": 133,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,ROW_NUMBER() OVER(ORDER BY id) AS position FROM authorizations LIMIT 200",
+          "ms": 143,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM authorizations f JOIN accounts d ON f.account_id=d.id",
+          "ms": 158,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "logistics",
+      "edition": "learn",
+      "bytes": 44185,
+      "loadMs": 99,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM tracking_events LIMIT 20",
+          "ms": 19,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,COUNT(*) AS n FROM tracking_events GROUP BY id LIMIT 20",
+          "ms": 5,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,ROW_NUMBER() OVER(ORDER BY id) AS position FROM tracking_events LIMIT 200",
+          "ms": 5,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM tracking_events f JOIN packages d ON f.package_id=d.id",
+          "ms": 3,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "logistics",
+      "edition": "practice",
+      "bytes": 1277613,
+      "loadMs": 36,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM tracking_events LIMIT 20",
+          "ms": 48,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,COUNT(*) AS n FROM tracking_events GROUP BY id LIMIT 20",
+          "ms": 23,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,ROW_NUMBER() OVER(ORDER BY id) AS position FROM tracking_events LIMIT 200",
+          "ms": 23,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM tracking_events f JOIN packages d ON f.package_id=d.id",
+          "ms": 23,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "logistics",
+      "edition": "project",
+      "bytes": 7264215,
+      "loadMs": 126,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM tracking_events LIMIT 20",
+          "ms": 151,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,COUNT(*) AS n FROM tracking_events GROUP BY id LIMIT 20",
+          "ms": 125,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,ROW_NUMBER() OVER(ORDER BY id) AS position FROM tracking_events LIMIT 200",
+          "ms": 127,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM tracking_events f JOIN packages d ON f.package_id=d.id",
+          "ms": 131,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "developer",
+      "edition": "learn",
+      "bytes": 22289,
+      "loadMs": 3,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM reviews LIMIT 20",
+          "ms": 13,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,COUNT(*) AS n FROM reviews GROUP BY id LIMIT 20",
+          "ms": 2,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,ROW_NUMBER() OVER(ORDER BY id) AS position FROM reviews LIMIT 200",
+          "ms": 2,
+          "rows": 120
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM reviews f JOIN pull_requests d ON f.pull_request_id=d.id",
+          "ms": 2,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "developer",
+      "edition": "practice",
+      "bytes": 656497,
+      "loadMs": 11,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM reviews LIMIT 20",
+          "ms": 30,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,COUNT(*) AS n FROM reviews GROUP BY id LIMIT 20",
+          "ms": 14,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,ROW_NUMBER() OVER(ORDER BY id) AS position FROM reviews LIMIT 200",
+          "ms": 13,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM reviews f JOIN pull_requests d ON f.pull_request_id=d.id",
+          "ms": 13,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "developer",
+      "edition": "project",
+      "bytes": 3334858,
+      "loadMs": 43,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM reviews LIMIT 20",
+          "ms": 80,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,COUNT(*) AS n FROM reviews GROUP BY id LIMIT 20",
+          "ms": 60,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,ROW_NUMBER() OVER(ORDER BY id) AS position FROM reviews LIMIT 200",
+          "ms": 60,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM reviews f JOIN pull_requests d ON f.pull_request_id=d.id",
+          "ms": 62,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "iot",
+      "edition": "learn",
+      "bytes": 63929,
+      "loadMs": 4,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM sensor_readings LIMIT 20",
+          "ms": 17,
+          "rows": 20
+        },
+        {
+          "query": "SELECT device_id,COUNT(*) AS n FROM sensor_readings GROUP BY device_id LIMIT 20",
+          "ms": 5,
+          "rows": 9
+        },
+        {
+          "query": "SELECT device_id,ROW_NUMBER() OVER(ORDER BY device_id,observed_at) AS position FROM sensor_readings LIMIT 200",
+          "ms": 8,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM sensor_readings f JOIN devices d ON f.device_id=d.id",
+          "ms": 10,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "iot",
+      "edition": "practice",
+      "bytes": 620236,
+      "loadMs": 32,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM sensor_readings LIMIT 20",
+          "ms": 66,
+          "rows": 20
+        },
+        {
+          "query": "SELECT device_id,COUNT(*) AS n FROM sensor_readings GROUP BY device_id LIMIT 20",
+          "ms": 30,
+          "rows": 9
+        },
+        {
+          "query": "SELECT device_id,ROW_NUMBER() OVER(ORDER BY device_id,observed_at) AS position FROM sensor_readings LIMIT 200",
+          "ms": 27,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM sensor_readings f JOIN devices d ON f.device_id=d.id",
+          "ms": 26,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "iot",
+      "edition": "project",
+      "bytes": 8367555,
+      "loadMs": 193,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM sensor_readings LIMIT 20",
+          "ms": 319,
+          "rows": 20
+        },
+        {
+          "query": "SELECT device_id,COUNT(*) AS n FROM sensor_readings GROUP BY device_id LIMIT 20",
+          "ms": 301,
+          "rows": 9
+        },
+        {
+          "query": "SELECT device_id,ROW_NUMBER() OVER(ORDER BY device_id,observed_at) AS position FROM sensor_readings LIMIT 200",
+          "ms": 291,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM sensor_readings f JOIN devices d ON f.device_id=d.id",
+          "ms": 299,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "healthcare",
+      "edition": "learn",
+      "bytes": 26663,
+      "loadMs": 4,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM observations LIMIT 20",
+          "ms": 14,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,COUNT(*) AS n FROM observations GROUP BY id LIMIT 20",
+          "ms": 2,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,ROW_NUMBER() OVER(ORDER BY id) AS position FROM observations LIMIT 200",
+          "ms": 2,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM observations f JOIN encounters d ON f.encounter_id=d.id",
+          "ms": 2,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "healthcare",
+      "edition": "practice",
+      "bytes": 833722,
+      "loadMs": 18,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM observations LIMIT 20",
+          "ms": 35,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,COUNT(*) AS n FROM observations GROUP BY id LIMIT 20",
+          "ms": 17,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,ROW_NUMBER() OVER(ORDER BY id) AS position FROM observations LIMIT 200",
+          "ms": 17,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM observations f JOIN encounters d ON f.encounter_id=d.id",
+          "ms": 17,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "healthcare",
+      "edition": "project",
+      "bytes": 4292957,
+      "loadMs": 88,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM observations LIMIT 20",
+          "ms": 101,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,COUNT(*) AS n FROM observations GROUP BY id LIMIT 20",
+          "ms": 87,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,ROW_NUMBER() OVER(ORDER BY id) AS position FROM observations LIMIT 200",
+          "ms": 82,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM observations f JOIN encounters d ON f.encounter_id=d.id",
+          "ms": 86,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "energy",
+      "edition": "learn",
+      "bytes": 88755,
+      "loadMs": 3,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM generation LIMIT 20",
+          "ms": 17,
+          "rows": 20
+        },
+        {
+          "query": "SELECT region_id,COUNT(*) AS n FROM generation GROUP BY region_id LIMIT 20",
+          "ms": 5,
+          "rows": 3
+        },
+        {
+          "query": "SELECT region_id,ROW_NUMBER() OVER(ORDER BY region_id,hour,fuel) AS position FROM generation LIMIT 200",
+          "ms": 5,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM generation f JOIN regions d ON f.region_id=d.id",
+          "ms": 4,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "energy",
+      "edition": "practice",
+      "bytes": 1476115,
+      "loadMs": 23,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM generation LIMIT 20",
+          "ms": 66,
+          "rows": 20
+        },
+        {
+          "query": "SELECT region_id,COUNT(*) AS n FROM generation GROUP BY region_id LIMIT 20",
+          "ms": 47,
+          "rows": 3
+        },
+        {
+          "query": "SELECT region_id,ROW_NUMBER() OVER(ORDER BY region_id,hour,fuel) AS position FROM generation LIMIT 200",
+          "ms": 46,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM generation f JOIN regions d ON f.region_id=d.id",
+          "ms": 45,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "energy",
+      "edition": "project",
+      "bytes": 8956192,
+      "loadMs": 123,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM generation LIMIT 20",
+          "ms": 327,
+          "rows": 20
+        },
+        {
+          "query": "SELECT region_id,COUNT(*) AS n FROM generation GROUP BY region_id LIMIT 20",
+          "ms": 292,
+          "rows": 3
+        },
+        {
+          "query": "SELECT region_id,ROW_NUMBER() OVER(ORDER BY region_id,hour,fuel) AS position FROM generation LIMIT 200",
+          "ms": 331,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM generation f JOIN regions d ON f.region_id=d.id",
+          "ms": 332,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "flights",
+      "edition": "learn",
+      "bytes": 42677,
+      "loadMs": 4,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM flights LIMIT 20",
+          "ms": 21,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,COUNT(*) AS n FROM flights GROUP BY id LIMIT 20",
+          "ms": 4,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,ROW_NUMBER() OVER(ORDER BY id) AS position FROM flights LIMIT 200",
+          "ms": 3,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM flights f JOIN routes d ON f.route_id=d.id",
+          "ms": 3,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "flights",
+      "edition": "practice",
+      "bytes": 2024713,
+      "loadMs": 52,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM flights LIMIT 20",
+          "ms": 66,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,COUNT(*) AS n FROM flights GROUP BY id LIMIT 20",
+          "ms": 43,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,ROW_NUMBER() OVER(ORDER BY id) AS position FROM flights LIMIT 200",
+          "ms": 37,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM flights f JOIN routes d ON f.route_id=d.id",
+          "ms": 36,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "flights",
+      "edition": "project",
+      "bytes": 10011479,
+      "loadMs": 232,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM flights LIMIT 20",
+          "ms": 217,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,COUNT(*) AS n FROM flights GROUP BY id LIMIT 20",
+          "ms": 188,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,ROW_NUMBER() OVER(ORDER BY id) AS position FROM flights LIMIT 200",
+          "ms": 174,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM flights f JOIN routes d ON f.route_id=d.id",
+          "ms": 177,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "mobility",
+      "edition": "learn",
+      "bytes": 49766,
+      "loadMs": 3,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM trips LIMIT 20",
+          "ms": 14,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,COUNT(*) AS n FROM trips GROUP BY id LIMIT 20",
+          "ms": 3,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,ROW_NUMBER() OVER(ORDER BY id) AS position FROM trips LIMIT 200",
+          "ms": 3,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM trips f JOIN zones d ON f.pickup_zone=d.id",
+          "ms": 2,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "mobility",
+      "edition": "practice",
+      "bytes": 1431938,
+      "loadMs": 25,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM trips LIMIT 20",
+          "ms": 46,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,COUNT(*) AS n FROM trips GROUP BY id LIMIT 20",
+          "ms": 29,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,ROW_NUMBER() OVER(ORDER BY id) AS position FROM trips LIMIT 200",
+          "ms": 29,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM trips f JOIN zones d ON f.pickup_zone=d.id",
+          "ms": 29,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "id": "mobility",
+      "edition": "project",
+      "bytes": 8768795,
+      "loadMs": 125,
+      "pageHeapBytes": 86400000,
+      "results": [
+        {
+          "query": "SELECT * FROM trips LIMIT 20",
+          "ms": 191,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,COUNT(*) AS n FROM trips GROUP BY id LIMIT 20",
+          "ms": 170,
+          "rows": 20
+        },
+        {
+          "query": "SELECT id,ROW_NUMBER() OVER(ORDER BY id) AS position FROM trips LIMIT 200",
+          "ms": 172,
+          "rows": 200
+        },
+        {
+          "query": "SELECT COUNT(*) AS matched FROM trips f JOIN zones d ON f.pickup_zone=d.id",
+          "ms": 181,
+          "rows": 1
+        }
+      ]
+    }
+  ]
+}

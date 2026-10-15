@@ -1,14 +1,18 @@
 // Node-only helpers shared by the inventory generator and tests.
+import fs from "fs";
 import path from "path";
+import { gunzipSync } from "zlib";
 import { createRequire } from "module";
-import { lessons, courseOrder, projects, seed } from "@/content";
-import { allQuestions, bankQuestions, bankSeed, practiceDatasets, practiceSeed } from "@/content/question-bank";
+import { databaseOf, seedOverlay } from "@/engine/sql-client";
+import { lessons, courseOrder, lessonFixture } from "@/content";
+import { allQuestions, bankQuestions, bankSeed, practiceDatasets } from "@/content/question-bank";
 import { featureTags, rubricDifficulty, rubricScore, sqlFeatures } from "@/content/question-bank/rubric";
 
 const require = createRequire(import.meta.url);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Db = any;
-let SQL: { Database: new () => Db } | null = null;
+let SQL: { Database: new (bytes?: Uint8Array) => Db } | null = null;
+const datasetBytes = new Map<string, Uint8Array>();
 
 export async function sqlEngine() {
   if (!SQL) {
@@ -18,10 +22,23 @@ export async function sqlEngine() {
   return SQL!;
 }
 
+/** Opens a seed: a canonical database named by its directive line (plus overlay SQL), or plain seed SQL. */
 export async function freshDb(seedSql: string): Promise<Db> {
   const S = await sqlEngine();
-  const db = new S.Database();
-  db.exec(seedSql);
+  const ref = databaseOf(seedSql);
+  if (!ref) {
+    const db = new S.Database();
+    db.exec(seedSql);
+    return db;
+  }
+  let bytes = datasetBytes.get(ref.url);
+  if (!bytes) {
+    bytes = new Uint8Array(gunzipSync(fs.readFileSync(path.resolve(process.cwd(), "public", ref.url.replace(/^\//, "")))));
+    datasetBytes.set(ref.url, bytes);
+  }
+  const db = new S.Database(bytes);
+  const overlay = seedOverlay(seedSql);
+  if (overlay.trim()) db.exec(overlay);
   return db;
 }
 
@@ -29,7 +46,14 @@ export async function freshDb(seedSql: string): Promise<Db> {
 export function lastResult(db: Db, sql: string): { columns: string[]; values: unknown[][] } {
   const res = db.exec(sql);
   const last = res[res.length - 1];
-  return last ? { columns: last.columns, values: last.values } : { columns: [], values: [] };
+  if (last) return { columns: last.columns, values: last.values };
+  // An empty result still has columns: read them from the prepared statement.
+  let columns: string[] = [];
+  try {
+    const stmt = db.prepare(sql);
+    try { columns = stmt.getColumnNames(); } finally { stmt.free(); }
+  } catch { /* multi-statement scripts have no single column list */ }
+  return { columns, values: [] };
 }
 
 export type Example = { columns: string[]; rows: unknown[][]; total: number };
@@ -49,38 +73,12 @@ export async function computeExamples(): Promise<Record<string, Example>> {
 /** Complete small V4 inputs, generated from the same database used by Run/Check. */
 export async function computeInputPreviews() {
   const out:Record<string,Record<string,{result:{columns:string[];values:unknown[][]};total:number}>>={};
-  for(const q of bankQuestions.filter(q=>q.exerciseType || q.setupSql || q.caseStudy?.id === "regional-capacity")) {
+  for(const q of bankQuestions.filter(q=>q.datasetRef || q.exerciseType || q.setupSql || q.caseStudy?.id === "regional-capacity")) {
     const db=await freshDb(bankSeed(q));out[q.id]={};
-    for(const table of q.tables) {const result=lastResult(db,`SELECT * FROM ${table}`);out[q.id][table]={result:{...result,values:result.values.length>100 ? result.values.slice(0,5) : result.values},total:result.values.length};}
+    // Small samples are shown whole; large tables show their first rows while queries run on all of them.
+    for(const table of q.tables) {const total=Number(lastResult(db,`SELECT COUNT(*) FROM ${table}`).values[0][0]);const result=lastResult(db,`SELECT * FROM ${table} LIMIT ${total<=20?20:12}`);out[q.id][table]={result,total};}
     db.close();
   }
-  return out;
-}
-
-export type TableInfo = {
-  name: string;
-  rows: number;
-  columns: Array<{ name: string; type: string; notnull: boolean; pk: boolean }>;
-  foreignKeys: Array<{ column: string; references: string }>;
-};
-
-export async function tableInfo(): Promise<Record<string, TableInfo>> {
-  const db = await freshDb(practiceSeed);
-  const names = lastResult(db, "SELECT name FROM sqlite_schema WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name").values.map(
-    (v) => String(v[0]),
-  );
-  const out: Record<string, TableInfo> = {};
-  for (const n of names) {
-    const cols = lastResult(db, `SELECT name, type, "notnull", pk FROM pragma_table_info('${n}')`).values;
-    const fks = lastResult(db, `SELECT "from", "table", "to" FROM pragma_foreign_key_list('${n}')`).values;
-    out[n] = {
-      name: n,
-      rows: Number(lastResult(db, `SELECT COUNT(*) FROM "${n}"`).values[0][0]),
-      columns: cols.map((c) => ({ name: String(c[0]), type: String(c[1] || "ANY"), notnull: c[2] === 1, pk: Number(c[3]) > 0 })),
-      foreignKeys: fks.map((f) => ({ column: String(f[0]), references: `${f[1]}(${f[2] ?? "rowid"})` })),
-    };
-  }
-  db.close();
   return out;
 }
 
@@ -89,7 +87,7 @@ export async function existingOutputs(): Promise<Record<string, { columns: strin
   const out: Record<string, { columns: string[]; rows: number }> = {};
   for (const id of courseOrder) {
     for (const v of [0, 1]) {
-      const db = await freshDb(seed);
+      const db = await freshDb(lessonFixture(lessons[id]).seed);
       try {
         const r = lastResult(db, lessons[id].tasks[v].answer);
         out[`lc-${id}-${v}`] = { columns: r.columns, rows: r.values.length };
@@ -107,4 +105,4 @@ export function rubricFor(sql: string, validators: number) {
   return { features: f, score, difficulty: rubricDifficulty(score, f), tags: featureTags(f) };
 }
 
-export { allQuestions, bankQuestions, bankSeed, practiceDatasets, lessons, courseOrder, projects };
+export { allQuestions, bankQuestions, bankSeed, practiceDatasets, lessons, courseOrder };

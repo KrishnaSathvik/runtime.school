@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Circle, CircleCheck, Eye, Lightbulb, RotateCcw } from "lucide-react";
 import { getPythonLesson, pythonLessonOrder, pythonLessons, pythonLessonHref, pythonModules, type PyChallenge, type PyLesson } from "@/content/python";
@@ -45,7 +44,6 @@ function openingTab(lesson: PyLesson, rec: PyLessonRecord | undefined): Tab {
  * A Python lesson: read and run on the left; the two challenges, the concept check on the right. Mastery: both challenges solved without help, plus the check.
  */
 export function PythonLesson({ slug }: { slug: string }) {
-  const router = useRouter();
   const lesson = getPythonLesson(slug)!;
   const ready = usePyProgressReady();
   const lessons = usePyProgress((s) => s.lessons);
@@ -126,7 +124,7 @@ export function PythonLesson({ slug }: { slug: string }) {
                   onNext={() => pick(tab === "challenge-1" ? "challenge-2" : "check")}
                 />
               )}
-              {tab === "check" && <QuizPanel lesson={lesson} onNext={() => { const next = pythonLessonOrder[position + 1]; if (next) router.push(pythonLessonHref(next)); }} />}
+              {tab === "check" && <QuizPanel lesson={lesson} />}
             </div>
             {(
               <div className={`rx-lesson-status ${mastered ? "done" : ""}`} aria-live="polite">
@@ -294,22 +292,18 @@ function ChallengePanel({ lesson, challenge, index, onNext }: { lesson: PyLesson
   );
 }
 
-function QuizPanel({ lesson, onNext }: { lesson: PyLesson; onNext: () => void }) {
+function QuizPanel({ lesson }: { lesson: PyLesson }) {
   const rec = usePyProgress((s) => s.lessons[lesson.ref]) ?? emptyLesson();
   const answerQuiz = usePyProgress((s) => s.answerQuiz);
   const [choices, setChoices] = useState<Record<string, number>>({});
   const correctIndex = (qid: string) => lesson.quiz.find((q) => q.id === qid)!.options.findIndex((o) => o.correct);
   const allCorrect = lesson.quiz.every((q) => choices[q.id] === correctIndex(q.id));
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
 
   const choose = (qid: string, i: number) => {
     const next = { ...choices, [qid]: i };
     setChoices(next);
     const passed = lesson.quiz.every((q) => next[q.id] === correctIndex(q.id));
     answerQuiz(lesson.ref, qid, i, passed, challengeIds(lesson));
-    if (timer.current) clearTimeout(timer.current);
-    if (passed) timer.current = setTimeout(onNext, 900);
   };
 
   return (
@@ -343,7 +337,7 @@ function QuizPanel({ lesson, onNext }: { lesson: PyLesson; onNext: () => void })
       })}
       <div aria-live="polite">
         {allCorrect ? (
-          <p className="rx-feedback ok">✓ Concept check passed.{pythonLessonOrder.indexOf(lesson.slug) < pythonLessonOrder.length - 1 ? ' Opening the next lesson…' : ' That’s the last lesson in the course.'}</p>
+          <p className="rx-feedback ok">✓ Concept check passed.{pythonLessonOrder.indexOf(lesson.slug) < pythonLessonOrder.length - 1 ? ' Use Next when you want the next lesson.' : ' That’s the last lesson in the course.'}</p>
         ) : rec.quiz.passed ? (
           <p className="rx-feedback ok">✓ You passed this concept check earlier. You can answer again to review.</p>
         ) : null}

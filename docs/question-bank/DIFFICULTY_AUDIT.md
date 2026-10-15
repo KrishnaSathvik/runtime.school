@@ -38,10 +38,10 @@ The rubric is a first pass. A reviewer then checks each question against the qua
 
 | Difficulty | Rubric | After review |
 | --- | --- | --- |
-| Warm-up | 35 | 31 |
-| Easy | 56 | 58 |
-| Medium | 50 | 58 |
-| Hard | 35 | 29 |
+| Warm-up | 32 | 28 |
+| Easy | 54 | 56 |
+| Medium | 51 | 57 |
+| Hard | 39 | 35 |
 
 ### Reviewer overrides (12)
 
@@ -66,57 +66,82 @@ The original lessons carry Beginner/Intermediate/Advanced labels. Question diffi
 
 | Lesson label | Warm-up | Easy | Medium | Hard |
 | --- | --- | --- | --- | --- |
-| Beginner | 20 | 4 | 0 | 0 |
-| Intermediate | 6 | 26 | 12 | 0 |
-| Advanced | 5 | 28 | 46 | 29 |
+| Beginner | 19 | 5 | 0 | 0 |
+| Intermediate | 4 | 24 | 13 | 3 |
+| Advanced | 5 | 27 | 44 | 32 |
 
 ## New questions: assigned vs rubric (calibration)
 
-**47 of 88 agree with the rubric; 41 disagree** (20 where the rubric scores higher, 21 where it scores lower). Each disagreement was reviewed individually; the assigned value stands for the reason given.
+**73 of 139 agree with the rubric; 66 disagree** (14 where the rubric scores higher, 52 where it scores lower). Each disagreement was reviewed individually; the assigned value stands for the reason given.
 
 | Question | Assigned | Rubric (score) | Why the assigned difficulty |
 | --- | --- | --- | --- |
-| qb-0012 Delivered revenue by category | Easy | Medium (4.5) | Two joins and one SUM per group; no nesting. |
-| qb-0013 Signups in the last 30 days | Easy | Warm-up (0) | One table, but the inclusive 30-day window must be worked out. |
-| qb-0014 Emails used more than once | Easy | Medium (3) | String normalisation plus GROUP BY/HAVING on one table. |
-| qb-0016 Every employee, with a department label | Easy | Medium (3) | LEFT JOIN plus COALESCE for the missing side. |
-| qb-0017 Find the lamps | Easy | Warm-up (0) | One LIKE pattern, but case behaviour matters. |
-| qb-0018 Open orders in February and March | Easy | Warm-up (0) | IN plus BETWEEN combined correctly; operator precedence is the trap. |
-| qb-0019 Average salary by department | Easy | Medium (3.5) | One join, one AVG per group, rounding. |
-| qb-0020 Price bands | Easy | Warm-up (0.5) | A three-way CASE with exact boundaries. |
-| qb-0022 How long did delivery take? | Easy | Warm-up (0.5) | One date difference with a NULL guard. |
-| qb-0023 Create a wishlist table | Easy | Medium (3.5) | One CREATE TABLE with a composite key and two inserts. |
-| qb-0025 Big spenders for their region | Medium | Hard (7.25) | Aggregate per shopper, then compare with a per-region average (correlated subquery or CTE); NULL regions excluded. |
-| qb-0026 Monthly revenue after refunds | Medium | Hard (9.5) | Two child tables at order grain must be aggregated separately to avoid fan-out; NULL refunds must become 0. |
-| qb-0027 Bestsellers within each category | Medium | Hard (8.75) | Aggregate after a join, then rank within groups with a stated tie rule. |
-| qb-0028 Seven-day rolling active shoppers | Medium | Hard (7.25) | Deduplicate to daily counts, then a calendar-based (not row-based) window frame over gaps. |
-| qb-0029 Earning more than the manager | Medium | Easy (2) | Self-join with two roles of the same table and a strict comparison. |
-| qb-0030 Days with no orders | Medium | Hard (6.75) | Requires generating a date series (recursive CTE) and an anti-join against it. |
-| qb-0031 First order versus latest order | Medium | Hard (12) | Order totals, then picking first and last rows per shopper with explicit tie rules. |
-| qb-0032 Orders whose payments don't match | Medium | Hard (9) | Two child tables at different grains (lines, split payments) plus missing payments. |
-| qb-0034 Loyal shoppers who never needed a refund | Medium | Hard (7.5) | Combines a counted EXISTS-style condition with a NOT EXISTS across two hops. |
-| qb-0039 A reusable shopper totals view | Medium | Hard (7.5) | A view over a join that must count orders, not lines; checked on the view's definition. |
-| qb-0040 Second-highest salary per department | Medium | Hard (9.25) | Distinct values, ranking per group, and a NULL result when there is no second value. |
-| qb-0043 Salary at the time of each review | Hard | Easy (2) | As-of lookup over half-open, open-ended intervals with overlapping bad data and missing history. |
-| qb-0044 Detect overlapping history periods | Hard | Easy (2) | Interval-overlap logic on a self-join with half-open bounds, open ends and no duplicate pairs. |
-| qb-0049 Design a purchase lookup index | Hard | Easy (0.5) | Choose equality-prefix and range-key order, preserve a half-open boundary, and satisfy a catalog plus plan contract. |
-| qb-0050 Cover the event export | Hard | Easy (0.5) | Separate filter keys from payload columns and demonstrate covering access while preserving a time boundary. |
-| qb-0051 Make the event-day filter SARGable | Medium | Easy (0.5) | Rewrite a function-wrapped timestamp predicate as a half-open range and verify the resulting access. |
-| qb-0052 Top events without a temporary sort | Hard | Easy (0.5) | Align equality filtering, two descending sort keys and a deterministic top-N boundary with index traversal. |
-| qb-0054 Identify abandoned checkout attempts | Medium | Hard (7) | Use a same-cart anti-join with a temporal deadline and distinguish attempts from shoppers. |
-| qb-0055 Audit conflicting event retries | Medium | Hard (10.5) | Select a canonical row while retaining multiplicity and detecting retries with conflicting payload. |
-| qb-0064 Parse malformed product codes | Medium | Easy (2.25) | Validate the entire token before extracting typed fields; CAST alone accepts malformed numeric prefixes. |
-| qb-0065 Normalize contact import collisions | Medium | Hard (7.25) | Apply an explicit normalization and validity contract before grouping, without collapsing meaningful aliases. |
-| qb-0067 Checkout review 1: establish the baseline | Medium | Hard (13) | Aggregate at session grain, assign cross-midnight sessions to their start day, and distinguish sessions from shoppers. |
-| qb-0073 Predict: unknown credits in a filter | Easy | Warm-up (0) | Track row membership, NULLs, ties and the explicit ordering in a small fixture. |
-| qb-0074 Predict: count rows or known values? | Medium | Easy (1.5) | Track row membership, NULLs, ties and the explicit ordering in a small fixture. |
-| qb-0076 Predict: a frame that includes peers | Hard | Medium (4.5) | Track row membership, NULLs, ties and the explicit ordering in a small fixture. |
-| qb-0078 Debug: find members with unknown credits | Easy | Warm-up (0) | Identify the logical mistake and write a correction that also handles unseen edge cases. |
-| qb-0079 Debug: retain members without paid bookings | Medium | Easy (2.5) | Identify the logical mistake and write a correction that also handles unseen edge cases. |
-| qb-0081 Debug: the second distinct credit balance | Medium | Warm-up (0) | Identify the logical mistake and write a correction that also handles unseen edge cases. |
-| qb-0082 Debug: April bookings at the boundary | Easy | Warm-up (0) | Identify the logical mistake and write a correction that also handles unseen edge cases. |
-| qb-0083 Debug: the last balance in each team | Hard | Medium (4) | Identify the logical mistake and write a correction that also handles unseen edge cases. |
-| qb-0084 Capacity 1: current regional totals | Medium | Hard (7.25) | Combine explicit time boundaries with grain-aware aggregation while preserving missing groups. |
+| qb-0012 2011 net sales by department | Easy | Medium (3.5) | Four-table join and one grouped measure. |
+| qb-0013 Users created in March 2025 | Easy | Warm-up (0) | A month boundary on timestamps. |
+| qb-0014 People invited by several workspaces | Easy | Medium (3.5) | Normalize text, then group and filter. |
+| qb-0017 Find the lamps | Easy | Warm-up (0) | A LIKE pattern on descriptions. |
+| qb-0018 Spring orders from France and Germany | Easy | Warm-up (0) | AND/OR with parentheses and a date range. |
+| qb-0020 Price bands | Easy | Warm-up (0.5) | Ordered CASE branches including a NULL branch. |
+| qb-0022 How long did delivery take? | Easy | Medium (3) | Join, earliest delivered scan and a day difference. |
+| qb-0023 Create a wishlist table | Easy | Medium (3.5) | CREATE TABLE with a composite key and two foreign keys. |
+| qb-0027 Bestsellers within each category | Medium | Hard (7) | Aggregate, rank within partitions, keep ties. |
+| qb-0030 Days with no orders | Medium | Hard (6.75) | Generate a date series and anti-join it. |
+| qb-0031 First and latest order per customer | Medium | Hard (7) | Two ROW_NUMBER rankings or MIN/MAX with a join back. |
+| qb-0032 Orders whose payments don’t match | Medium | Hard (8) | Pre-aggregate two child tables to avoid fan-out. |
+| qb-0033 Flight outcomes by origin state | Medium | Easy (2.5) | Conditional counts with a ratio per group. |
+| qb-0036 Deployments versus incidents | Medium | Hard (8) | Two independent aggregates joined at organization grain. |
+| qb-0038 A covering index for unit totals | Medium | Easy (2) | Index design verified by the plan. |
+| qb-0039 A reusable customer totals view | Medium | Hard (7) | Create a view and query it. |
+| qb-0040 Second-highest home-run total per team | Medium | Hard (6) | DENSE_RANK over aggregates to find the second distinct value. |
+| qb-0041 Next-month retention by signup cohort | Hard | Medium (5.75) | Cohort assignment, a relative period and a mature-cohort rule. |
+| qb-0043 Customer segment at order time | Hard | Easy (2.5) | An as-of join to half-open history intervals. |
+| qb-0044 Overlapping prescription fills | Hard | Easy (2) | Self-join with an interval-overlap condition and pair ordering. |
+| qb-0046 Median home attendance per team | Hard | Medium (5.5) | Median with even and odd counts using window positions. |
+| qb-0049 Design a flight lookup index | Hard | Easy (0.5) | Composite index column order verified by the plan. |
+| qb-0050 Cover the export query | Hard | Easy (0.5) | A covering index that serves filter and output columns. |
+| qb-0051 Make the event-day filter searchable | Medium | Easy (0.5) | Rewrite a function-wrapped predicate as a range. |
+| qb-0052 Latest failed deliveries without a sort | Hard | Easy (0.5) | Index order that satisfies ORDER BY … LIMIT. |
+| qb-0055 Audit duplicate scans | Medium | Hard (7.25) | Group by the identity of a scan and measure the spread. |
+| qb-0057 Paid conversion by acquisition channel | Hard | Medium (4.5) | Conversion within a window from signup, by segment. |
+| qb-0058 A replay-safe ledger load | Hard | Medium (3) | Idempotent insert from a feed containing duplicates. |
+| qb-0059 Enforce delivery-slot rules | Hard | Medium (4) | Combine CHECK, UNIQUE and FOREIGN KEY constraints. |
+| qb-0060 Recover a partially failed transfer | Hard | Easy (2) | Savepoint recovery inside a transaction with state checks. |
+| qb-0064 Parse tracking numbers | Medium | Easy (2.25) | Normalize, then split a fixed-format code. |
+| qb-0065 Normalize invitee emails | Medium | Easy (2.75) | Text normalization rules including a +tag removal. |
+| qb-0066 Parse statement amounts into cents | Hard | Easy (2.75) | Several text formats parsed to exact integers. |
+| qb-0067 Upgrade review 1: the daily pricing audience | Medium | Easy (2.5) | Daily distinct counts on deduplicated events. |
+| qb-0073 Predict: unknown passenger counts in a filter | Easy | Warm-up (0) | A not-equal filter over NULL values. |
+| qb-0074 Predict: count rows or known values? | Medium | Easy (1.5) | Three COUNT forms over NULLs and duplicates. |
+| qb-0076 Predict: a frame that includes peers | Hard | Medium (3) | The default RANGE frame includes rows with equal ORDER BY values. |
+| qb-0078 Debug: find measurements with no value | Easy | Warm-up (0) | Replace = NULL with IS NULL. |
+| qb-0083 Debug: each account’s last posted amount | Hard | Medium (4) | LAST_VALUE needs an explicit full frame. |
+| qb-0086 Grid review 3: June peak hours and ties | Hard | Medium (3.5) | Top-1 per group keeping ties. |
+| qb-0087 Grid review 4: does demand balance? | Hard | Easy (2.5) | Join two hourly sources at the same grain and test an identity. |
+| qb-0088 Grid review 5: monthly forecast error | Hard | Easy (2) | Mean absolute percentage error with a safe denominator. |
+| qb-0091 Signed invoice totals | Medium | Easy (2.5) | Keep the sign convention of the source. |
+| qb-0092 What actually moved money? | Hard | Medium (5) | Separate posted, pending and reversed ledger states. |
+| qb-0095 Two measures, one stream | Medium | Easy (1) | Stack two measures with UNION ALL and a label. |
+| qb-0096 Last known daily maximum | Hard | Medium (3.5) | Fill forward across missing days with a correlated subquery. |
+| qb-0099 State as known at an operational cutoff | Hard | Medium (4.5) | Filter by ingestion time, then pick the latest by event time. |
+| qb-0101 Predict: integer and decimal ratios | Medium | Warm-up (0) | Integer division versus real division. |
+| qb-0102 Predict: missing passenger counts in an average | Medium | Easy (1.5) | AVG skips NULL; COALESCE changes the denominator. |
+| qb-0103 Predict: a recursive team path | Medium | Hard (6.75) | Follow a small hierarchy by hand. |
+| qb-0104 Predict: dates across midnight | Medium | Warm-up (0.5) | Flight date versus arrival date for overnight legs. |
+| qb-0106 Predict: NOT IN with an unknown alternative | Medium | Easy (1) | A NULL in the NOT IN list empties the result. |
+| qb-0107 Debug: observable tip rate | Medium | Easy (2.5) | Choose the population where the measure is recorded. |
+| qb-0108 Debug: delay among operated flights | Medium | Easy (2.5) | Unknown is not zero. |
+| qb-0109 Debug: forecast accuracy | Medium | Easy (1.5) | Wrong denominator and unknown values. |
+| qb-0110 Debug: teams without active repositories | Medium | Easy (1.5) | A right-side filter in WHERE defeats the LEFT JOIN. |
+| qb-0112 Debug: a duplicate scan is not another delivery | Medium | Easy (2.5) | Count entities, not repeated events. |
+| qb-0116 Carry the last good reading forward | Hard | Medium (5.75) | Fill forward over runs of NULLs, not just one step. |
+| qb-0119 When did devices go silent? | Medium | Hard (6.25) | Gap detection relative to each device’s own reporting interval. |
+| qb-0122 Each patient’s latest systolic reading | Medium | Easy (1) | A correlated subquery chooses the latest row, not the largest value. |
+| qb-0124 Reviewers who cover every team repository | Hard | Medium (4.5) | Relational division with a double NOT EXISTS. |
+| qb-0127 A histogram of daily highs | Medium | Easy (1.5) | Floor-based buckets that are correct below zero. |
+| qb-0133 Routes flown in one direction only | Medium | Easy (1.5) | An anti-join against the reversed relationship. |
+| qb-0136 Predict: payments after joining line items | Medium | Easy (2.5) | Two one-to-many joins multiply each other. |
+| qb-0137 Debug: redelivered events | Medium | Easy (2.5) | At-least-once delivery creates duplicate rows for one event. |
+| qb-0138 Predict: which trips are in January? | Easy | Warm-up (0) | BETWEEN with a date-only upper bound on timestamps. |
 
 Patterns in the disagreements:
 

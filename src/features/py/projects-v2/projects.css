@@ -84,7 +84,6 @@
 .pv-stage-nav { margin-bottom:24px; flex-wrap:wrap; }
 .pv-stage-nav button,.pv-tab-bar button { padding:12px 16px; border-bottom:2px solid transparent; font-size:14px; }
 .pv-stage-nav [aria-current],.pv-tab-bar [aria-pressed=true] { border-bottom-color:var(--rx-ink); font-weight:600; background:var(--rx-cell); }
-.pv-stage-nav > span { margin-left:auto; font-size:12px; color:var(--rx-dim); }
 .pv-overview,.pv-finish { max-width:900px; margin:0 auto; padding-bottom:24px; }
 .pv-overview ol { list-style:decimal; padding-left:24px; }
 .pv-overview li { margin:12px 0; }
@@ -113,14 +112,14 @@
 .py-project-v2 .pv-full-source { margin:0; padding:12px; border:1px solid var(--rx-line); height:auto; overflow:visible; white-space:pre-wrap; overflow-wrap:anywhere; font:12px/1.6 var(--rx-mono); }
 .pv-build .pv-output { margin-top:0; padding-top:0; }
 .pv-results { height:auto; overflow:visible; padding:12px 4px; }
-.pv-status { font-size:12px; margin:4px 0 12px; min-height:20px; }
+.pv-status { font-size:12px; margin:4px 0 12px; }
+.pv-status:empty { margin:0; }
 .pv-finish .pv-output { margin-bottom:24px; }
 .pv-finish .pv-artifacts { margin-bottom:20px; }
 @media(max-width:700px){
  .pv-build { grid-template-columns:minmax(0,1fr); }
  .pv-build .pv-brief,.pv-build .pv-work { padding:0; position:static; }
  .pv-divider { display:none; }
- .pv-stage-nav > span { width:100%; margin:8px 0; }
  .pv-build .pv-work { margin-top:20px; border-top:1px solid var(--rx-line); padding-top:16px; }
  .pv-build .pv-explorer > div { display:flex; flex-wrap:wrap; gap:4px; }
  .pv-build .pv-explorer p { width:100%; }
@@ -187,7 +186,6 @@
 .pv-explorer summary { cursor:pointer; padding:7px 0; font-size:13px; font-weight:600; }
 .pv-explorer summary span { color:var(--rx-dim); font-weight:400; }
 .pv-milestone-status { display:inline-block; margin-left:8px; font-size:12px; color:var(--rx-dim); }
-.pv-run-help { font-size:12px; color:var(--rx-dim); margin:0 0 8px; }
 .pv-finish-grid { align-items:start; }
 .pv-criteria li { margin:8px 0; }
 .pv-current-step h2 { font-size:18px; margin:6px 0 12px; }

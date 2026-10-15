@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Check, ChevronDown, ChevronRight, Play, RotateCcw, X } from "lucide-react";
-import { seed as lessonSeed, fixtureMutation } from "@/content";
 import { executeSql, isEngineBootError, type ExecuteRequest, type ExecuteResponse } from "@/engine/sql-client";
 import { errorKind, track, type AnalyticsProps } from "@/lib/analytics";
 import { Editor } from "./Editor";
@@ -20,13 +19,14 @@ export function RunCell({
   query,
   name,
   allowWrites = false,
-  seedSql = lessonSeed,
+  seedSql,
   children,
 }: {
   query: string;
   name: string;
   allowWrites?: boolean;
-  seedSql?: string;
+  /** The canonical dataset (directive seed) the query runs on. */
+  seedSql: string;
   /** Optional note shown under the output once it has run. */
   children?: ReactNode;
 }) {
@@ -92,7 +92,7 @@ export function RunCell({
 export type Gradable = Pick<
   ExecuteRequest,
   "answer" | "ordered" | "required" | "validate" | "planValidation" | "repeatCheck" | "stateQueries"
-> & { allowWrites?: boolean; seedSql?: string; mutationSql?: string };
+> & { allowWrites?: boolean; seedSql: string; mutationSql?: string };
 
 /**
  * An editable cell with Run and Check. Check runs the real grader and shows
@@ -104,6 +104,7 @@ export function TaskCell({
   onChange,
   task,
   onGraded,
+  onExecuted,
   focus = false,
   footer,
   checkLabel = "Check",
@@ -118,6 +119,7 @@ export function TaskCell({
   onChange: (v: string) => void;
   task: Gradable;
   onGraded?: (res: ExecuteResponse, ok: boolean) => void;
+  onExecuted?: (res: ExecuteResponse, query: string) => void;
   focus?: boolean;
   /** Extra controls in the footer (hints, reset…). */
   footer?: ReactNode;
@@ -140,19 +142,20 @@ export function TaskCell({
   const resultRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (res && open) resultRef.current?.scrollIntoView({ block: "nearest" });
-  }, [res, open]);
+    if (!res || !open) return;
+    resultRef.current?.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+  }, [res, open, ran]);
 
   const exec = async (check: boolean) => {
     const id = ++runGen.current;
     setBusy(check ? "check" : "run");
     try {
       const r = await executeSql({
-        seed: task.seedSql ?? lessonSeed,
+        seed: task.seedSql,
         query: value,
         answer: check ? task.answer : null,
         ordered: task.ordered,
-        mutation: check ? (task.mutationSql ?? fixtureMutation) : null,
+        mutation: check ? (task.mutationSql ?? null) : null,
         allowWrites: task.allowWrites,
         repeatCheck: check && task.repeatCheck,
         stateQueries: check ? task.stateQueries : undefined,
@@ -165,6 +168,7 @@ export function TaskCell({
       setRan(value);
       setMode(check ? "check" : "run");
       setOpen(true);
+      onExecuted?.(r, value);
       if (analytics) {
         track("query_run", { ...analytics, check, ok: !r.error && (!check || !!r.grade?.ok) });
         if (r.error) track("query_error", { ...analytics, kind: errorKind(r.error), check });
@@ -198,6 +202,7 @@ export function TaskCell({
         label={name}
         minHeight={minHeight}
         tables={tables}
+        seedSql={task.seedSql}
       />
       <div className="rx-cell-foot">
         <span className="hint">{res && value !== ran ? "edited since the last run" : " "}</span>
@@ -212,7 +217,7 @@ export function TaskCell({
         )}
       </div>
       {res && open && (
-        <div ref={resultRef}>
+        <div className="rx-result" ref={resultRef}>
           {checks && (
             <>
               <p className={`rx-verdict ${ok ? "ok" : "bad"}`} role="status">

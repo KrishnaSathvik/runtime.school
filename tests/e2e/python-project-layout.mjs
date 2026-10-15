@@ -25,7 +25,7 @@ try{
   await page.getByRole('navigation',{name:'Project stages'}).getByRole('button',{name:'Build',exact:true}).click();
   const left=page.locator('.pv-brief'),right=page.locator('.pv-work');
   await right.locator('.cm-content').waitFor();
-  assert.equal(await page.locator('.pv-stage-nav > span').count(),1);
+  assert.equal(await page.locator('.pv-stage-nav > span').count(),0);
   assert.equal(await page.getByLabel('Results height').count(),0);
   assert.equal(await page.getByRole('button',{name:'Go to Test & deliver',exact:true}).count(),0);
   assert.ok(await right.locator('.cm-scroller').evaluate(el=>getComputedStyle(el).overflowY==='visible'&&el.scrollHeight<=el.clientHeight+2));

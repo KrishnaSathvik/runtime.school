@@ -3,29 +3,29 @@ import { Database, FlaskConical, Gauge, GitCompare } from "lucide-react";
 /** The four exploratory tools, with plain-language purposes for first-time users. */
 export const tools = [
   {
-    href: "/playground",
+    href: "/sql/playground",
     label: "SQL Playground",
     icon: Database,
     purpose:
-      "Explore data. Try ideas. No grades.",
+      "Explore any of Runtime's twelve datasets with SQL. No grades.",
   },
   {
-    href: "/database-lab",
+    href: "/sql/lab",
     label: "Database Lab",
     icon: FlaskConical,
     purpose:
-      "Create tables, change data, and test constraints and transactions in a temporary database.",
+      "Create tables, change data, and test constraints and transactions on a disposable copy of a dataset.",
   },
   {
-    href: "/query-performance",
+    href: "/sql/query-performance",
     label: "Query Performance",
     icon: Gauge,
     purpose:
-      "Why some queries are faster: real query plans, side by side.",
+      "Compare two ways of writing a query with real SQLite plans, side by side.",
   },
   {
-    href: "/sql-syntax",
-    label: "Compare SQL Syntax",
+    href: "/sql/syntax",
+    label: "Compare Syntax",
     icon: GitCompare,
     purpose:
       "One concept, three SQL dialects.",

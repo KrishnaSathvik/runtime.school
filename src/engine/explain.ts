@@ -1,7 +1,7 @@
-import { seed } from "@/content";
-import { questionBankSeed } from "@/content/question-bank/datasets";
 import { BRAND_NAME } from "@/platform/brand";
 import type { SqlResult } from "./grading";
+import { datasetForUrl, learningDatasets } from "@/data/datasets/learning";
+import { databaseOf } from "./sql-client";
 
 /**
  * Deterministic explanations for SQLite errors and failed checks.
@@ -23,7 +23,7 @@ export type Explanation = {
 };
 
 /* ------------------------------------------------------------------ */
-/* Schema from the teaching seed                                       */
+/* Schema of the canonical datasets                                    */
 /* ------------------------------------------------------------------ */
 
 const CONSTRAINT_START = /^(PRIMARY|UNIQUE|CHECK|FOREIGN|CONSTRAINT)\b/i;
@@ -52,8 +52,56 @@ function splitTopLevel(body: string): string[] {
 }
 
 /** Table → column names, parsed from CREATE TABLE statements. */
+/** Index of the first top-level occurrence of a keyword (outside parentheses and quotes), or -1. */
+function topLevelKeyword(sql: string, keyword: RegExp): number {
+  let depth = 0;
+  let quote: string | null = null;
+  for (let i = 0; i < sql.length; i++) {
+    const ch = sql[i];
+    if (quote) { if (ch === quote) quote = null; continue; }
+    if (ch === "'" || ch === '"') quote = ch;
+    else if (ch === "(") depth++;
+    else if (ch === ")") depth--;
+    else if (ch === ";" && depth === 0) return -1;
+    else if (depth === 0 && /\w/.test(ch) && !/\w/.test(sql[i - 1] ?? "") && keyword.test(sql.slice(i, i + 12))) return i;
+  }
+  return -1;
+}
+
+/** Output column names of a SELECT, from aliases and column references; `*` expands from known tables. */
+function selectColumns(body: string, known: Record<string, string[]>): string[] {
+  const select = topLevelKeyword(body, /^SELECT\b/i);
+  if (select < 0) return [];
+  const rest = body.slice(select + 6);
+  const from = topLevelKeyword(rest, /^FROM\b/i);
+  const end = from >= 0 ? from : (() => { const semi = rest.indexOf(";"); return semi >= 0 ? semi : rest.length; })();
+  const list = rest.slice(0, end).replace(/^\s*(DISTINCT|ALL)\s+/i, "");
+  const source = from >= 0 ? rest.slice(from + 4).match(/^\s*([A-Za-z_]\w*)/)?.[1]?.toLowerCase() : undefined;
+  return splitTopLevel(list).flatMap((item) => {
+    const text = item.trim();
+    const alias = text.match(/\bAS\s+["`[]?([A-Za-z_]\w*)["`\]]?\s*$/i)?.[1];
+    if (alias) return [alias];
+    if (/^(\w+\.)?\*$/.test(text)) return known[(text.split(".")[0] === "*" ? source : text.split(".")[0])?.toLowerCase() ?? ""] ?? [];
+    const ref = text.match(/(?:^|\.)["`[]?([A-Za-z_]\w*)["`\]]?$/)?.[1];
+    return ref ? [ref] : [];
+  });
+}
+
+/** Views and CREATE TABLE … AS SELECT tables in seed SQL, with their inferred column names. */
+function derivedTables(sql: string, known: Record<string, string[]>): Record<string, string[]> {
+  const out: Record<string, string[]> = {};
+  const re = /CREATE\s+(?:TEMP(?:ORARY)?\s+)?(?:VIEW|TABLE)\s+(?:IF\s+NOT\s+EXISTS\s+)?([A-Za-z_]\w*)\s*(?:\(([^()]*)\))?\s*AS\s+/gi;
+  for (const m of sql.matchAll(re)) {
+    const cols = m[2] ? m[2].split(",").map((c) => c.trim().replace(/["`[\]]/g, "")) : selectColumns(sql.slice((m.index ?? 0) + m[0].length), { ...known, ...out });
+    if (cols.length) out[m[1].toLowerCase()] = cols;
+  }
+  return out;
+}
+
 export function parseSchema(sql: string): Record<string, string[]> {
-  const schema: Record<string, string[]> = {};
+  const schema: Record<string, string[]> = Object.fromEntries(
+    Object.entries(canonicalSchema(sql)).map(([t, cols]) => [t, cols.map((c) => c.name)]),
+  );
   const re = /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*\(/gi;
   for (const m of sql.matchAll(re)) {
     const start = (m.index ?? 0) + m[0].length;
@@ -68,13 +116,19 @@ export function parseSchema(sql: string): Record<string, string[]> {
       .filter((d) => d && !CONSTRAINT_START.test(d))
       .map((d) => d.split(/\s+/)[0].replace(/["`[\]]/g, ""));
   }
-  return schema;
+  return { ...schema, ...derivedTables(sql, schema) };
 }
 
 let cachedSchema: Record<string, string[]> | null = null;
 export function teachingSchema(): Record<string, string[]> {
-  // Curriculum + question-bank tables: every table a learner can query.
-  return (cachedSchema ??= parseSchema(`${seed}\n${questionBankSeed}`));
+  // Every table a learner can query, across the twelve canonical datasets. Tables that share a
+  // name in different datasets (customers, calendar…) list the union of their columns.
+  if (cachedSchema) return cachedSchema;
+  const schema: Record<string, string[]> = {};
+  for (const d of Object.values(learningDatasets)) {
+    for (const t of d.metadata.tables) schema[t.name] = [...new Set([...(schema[t.name] ?? []), ...t.columns.map((c) => c.name)])];
+  }
+  return (cachedSchema = schema);
 }
 
 /* ------------------------------------------------------------------ */
@@ -357,7 +411,7 @@ export function explainError(error: string, query: string, tables: string[] = []
       map[fn]
         ? `${fn}() comes from another database. SQLite's equivalent is ${map[fn]}.`
         : `${fn}() isn't available in SQLite — it may come from another database, or be misspelled.`,
-      map[fn] ? `Use ${map[fn]}.` : "See Compare SQL Syntax for SQLite equivalents.",
+      map[fn] ? `Use ${map[fn]}.` : "See Compare Syntax for SQLite equivalents.",
     );
   }
 
@@ -621,11 +675,15 @@ export function explainGrade(args: {
     );
   }
 
-  if (actual && expected && actual.values.length !== expected.values.length) {
-    const more = actual.values.length > expected.values.length;
+  // Results arrive capped at 200 rows; the grader's message carries the full row counts.
+  const counted = message.match(/Expected (\d+) rows; got (\d+)/);
+  const expectedRows = counted ? Number(counted[1]) : expected?.values.length ?? 0;
+  const actualRows = counted ? Number(counted[2]) : actual?.values.length ?? 0;
+  if (actual && expected && actualRows !== expectedRows) {
+    const more = actualRows > expectedRows;
     const dup = more && hasDuplicates(actual.values) && !hasDuplicates(expected.values);
     const aggregateNoGroup = AGG.test(clean) && !/\bGROUP\s+BY\b/i.test(clean);
-    let detail = `The expected result has ${expected.values.length} row${expected.values.length === 1 ? "" : "s"}; yours has ${actual.values.length}.`;
+    let detail = `The expected result has ${expectedRows} row${expectedRows === 1 ? "" : "s"}; yours has ${actualRows}.`;
     let next = more
       ? "Look for a missing WHERE condition, a JOIN that matches more rows than intended, or rows that should be combined."
       : "Look for a WHERE condition that's too strict, an INNER JOIN that drops unmatched rows, or a LIMIT.";
@@ -634,7 +692,7 @@ export function explainGrade(args: {
       next = /\bJOIN\b/i.test(clean)
         ? "A JOIN repeats rows when a key matches several rows. Check the ON condition, or aggregate before joining."
         : "Use DISTINCT if each value should appear once.";
-    } else if (aggregateNoGroup && actual.values.length === 1 && expected.values.length > 1) {
+    } else if (aggregateNoGroup && actualRows === 1 && expectedRows > 1) {
       detail += " An aggregate without GROUP BY always produces a single summary row.";
       next = "Add GROUP BY with the column(s) that define each group.";
     }
@@ -673,8 +731,19 @@ export function explainGrade(args: {
 export type ColumnDef = { name: string; type: string; key: "PK" | "FK" | null; references?: string };
 
 /** Column names, declared types and keys for each table (for the schema panel). */
+/** Tables of the canonical database named by a seed's directive line (none for plain SQL seeds). */
+function canonicalSchema(seed: string): Record<string, ColumnDef[]> {
+  const ref = databaseOf(seed);
+  const dataset = ref ? datasetForUrl(ref.url) : undefined;
+  if (!dataset) return {};
+  return Object.fromEntries(dataset.metadata.tables.map((t) => [t.name, t.columns.map((c) => {
+    const fk = t.foreignKeys.find((f) => f.columns.includes(c.name));
+    return { name: c.name, type: c.type, key: t.primaryKey.includes(c.name) ? "PK" as const : fk ? "FK" as const : null, references: fk ? `${fk.table}.${fk.references[fk.columns.indexOf(c.name)]}` : undefined };
+  })]));
+}
+
 export function parseSchemaDetailed(sql: string): Record<string, ColumnDef[]> {
-  const out: Record<string, ColumnDef[]> = {};
+  const out: Record<string, ColumnDef[]> = canonicalSchema(sql);
   const re = /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*\(/gi;
   for (const m of sql.matchAll(re)) {
     const start = (m.index ?? 0) + m[0].length;
@@ -699,5 +768,7 @@ export function parseSchemaDetailed(sql: string): Record<string, ColumnDef[]> {
         return { name, type, key: pk ? "PK" : ref ? "FK" : null, references: ref ? `${ref[1]}.${ref[2]}` : undefined };
       });
   }
+  const known = Object.fromEntries(Object.entries(out).map(([t, cols]) => [t, cols.map((c) => c.name)]));
+  for (const [t, cols] of Object.entries(derivedTables(sql, known))) out[t] = cols.map((name) => ({ name, type: "", key: null }));
   return out;
 }

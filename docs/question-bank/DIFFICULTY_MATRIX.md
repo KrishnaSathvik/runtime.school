@@ -4,56 +4,56 @@
 
 Counts by primary topic family. Each question has exactly one primary topic.
 
-### All questions (264)
+### All questions (315)
 
 | Topic family (primary topic) | Warm-up | Easy | Medium | Hard | Total |
 | --- | --- | --- | --- | --- | --- |
 | SQL basics | 14 | 1 | 0 | 0 | 15 |
-| Filtering | 14 | 5 | 0 | 0 | 19 |
-| Aggregation | 0 | 17 | 6 | 0 | 23 |
-| Joins | 0 | 15 | 12 | 4 | 31 |
-| Subqueries & CTEs | 0 | 4 | 6 | 3 | 13 |
-| Window functions | 0 | 5 | 22 | 5 | 32 |
-| Dates & time | 0 | 8 | 3 | 3 | 14 |
-| Strings & data cleaning | 6 | 2 | 8 | 2 | 18 |
-| Business analytics | 0 | 2 | 12 | 16 | 30 |
-| Database engineering | 2 | 9 | 10 | 3 | 24 |
+| Filtering | 13 | 6 | 3 | 0 | 22 |
+| Aggregation | 0 | 14 | 14 | 0 | 28 |
+| Joins | 0 | 12 | 22 | 7 | 41 |
+| Subqueries & CTEs | 0 | 4 | 6 | 15 | 25 |
+| Window functions | 0 | 3 | 23 | 15 | 41 |
+| Dates & time | 0 | 9 | 4 | 3 | 16 |
+| Strings & data cleaning | 4 | 5 | 9 | 3 | 21 |
+| Business analytics | 0 | 4 | 16 | 16 | 36 |
+| Database engineering | 2 | 7 | 11 | 4 | 24 |
 | Query optimization | 3 | 5 | 4 | 3 | 15 |
-| Data warehousing | 0 | 5 | 6 | 19 | 30 |
-| **Total** | 39 | 78 | 89 | 58 | 264 |
+| Data warehousing | 0 | 7 | 6 | 18 | 31 |
+| **Total** | 36 | 77 | 118 | 84 | 315 |
 
 ### Existing challenges (176)
 
 | Topic family (primary topic) | Warm-up | Easy | Medium | Hard | Total |
 | --- | --- | --- | --- | --- | --- |
 | SQL basics | 9 | 1 | 0 | 0 | 10 |
-| Filtering | 11 | 1 | 0 | 0 | 12 |
-| Aggregation | 0 | 13 | 1 | 0 | 14 |
-| Joins | 0 | 11 | 7 | 2 | 20 |
-| Subqueries & CTEs | 0 | 4 | 4 | 0 | 8 |
-| Window functions | 0 | 5 | 15 | 2 | 22 |
+| Filtering | 10 | 2 | 0 | 0 | 12 |
+| Aggregation | 0 | 10 | 4 | 0 | 14 |
+| Joins | 0 | 8 | 8 | 4 | 20 |
+| Subqueries & CTEs | 0 | 4 | 1 | 3 | 8 |
+| Window functions | 0 | 3 | 14 | 5 | 22 |
 | Dates & time | 0 | 4 | 2 | 2 | 8 |
-| Strings & data cleaning | 6 | 0 | 4 | 0 | 10 |
-| Business analytics | 0 | 2 | 8 | 8 | 18 |
-| Database engineering | 2 | 7 | 9 | 0 | 18 |
+| Strings & data cleaning | 4 | 3 | 3 | 0 | 10 |
+| Business analytics | 0 | 4 | 7 | 7 | 18 |
+| Database engineering | 2 | 5 | 10 | 1 | 18 |
 | Query optimization | 3 | 5 | 2 | 0 | 10 |
-| Data warehousing | 0 | 5 | 6 | 15 | 26 |
-| **Total** | 31 | 58 | 58 | 29 | 176 |
+| Data warehousing | 0 | 7 | 6 | 13 | 26 |
+| **Total** | 28 | 56 | 57 | 35 | 176 |
 
-### New question-bank problems (88)
+### New question-bank problems (139)
 
 | Topic family (primary topic) | Warm-up | Easy | Medium | Hard | Total |
 | --- | --- | --- | --- | --- | --- |
 | SQL basics | 5 | 0 | 0 | 0 | 5 |
-| Filtering | 3 | 4 | 0 | 0 | 7 |
-| Aggregation | 0 | 4 | 5 | 0 | 9 |
-| Joins | 0 | 4 | 5 | 2 | 11 |
-| Subqueries & CTEs | 0 | 0 | 2 | 3 | 5 |
-| Window functions | 0 | 0 | 7 | 3 | 10 |
-| Dates & time | 0 | 4 | 1 | 1 | 6 |
-| Strings & data cleaning | 0 | 2 | 4 | 2 | 8 |
-| Business analytics | 0 | 0 | 4 | 8 | 12 |
+| Filtering | 3 | 4 | 3 | 0 | 10 |
+| Aggregation | 0 | 4 | 10 | 0 | 14 |
+| Joins | 0 | 4 | 14 | 3 | 21 |
+| Subqueries & CTEs | 0 | 0 | 5 | 12 | 17 |
+| Window functions | 0 | 0 | 9 | 10 | 19 |
+| Dates & time | 0 | 5 | 2 | 1 | 8 |
+| Strings & data cleaning | 0 | 2 | 6 | 3 | 11 |
+| Business analytics | 0 | 0 | 9 | 9 | 18 |
 | Database engineering | 0 | 2 | 1 | 3 | 6 |
 | Query optimization | 0 | 0 | 2 | 3 | 5 |
-| Data warehousing | 0 | 0 | 0 | 4 | 4 |
-| **Total** | 8 | 20 | 31 | 29 | 88 |
+| Data warehousing | 0 | 0 | 0 | 5 | 5 |
+| **Total** | 8 | 21 | 61 | 49 | 139 |

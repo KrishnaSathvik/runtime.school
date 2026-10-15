@@ -55,6 +55,12 @@ export async function bootWorker(
   const ctx: AnyRecord = {
     postMessage: (x: WorkerResponse) => posts.push(x),
     initSqlJs: () => Promise.resolve(SQL),
+    // Canonical datasets are fetched by URL; serve them from the built public/ folder.
+    fetch: async (url: string) => {
+      const file = path.join(ROOT, "public", decodeURIComponent(url));
+      return fs.existsSync(file) ? new Response(fs.readFileSync(file)) : new Response(null, { status: 404 });
+    },
+    Blob, Response, DecompressionStream, crypto: globalThis.crypto,
   };
   vm.createContext(ctx);
   ctx.importScripts = (...files: string[]) => {
@@ -70,6 +76,6 @@ export async function bootWorker(
   return async (data: AnyRecord): Promise<WorkerResponse> => {
     posts.length = 0;
     await ctx.onmessage({ data });
-    return posts.find((p) => !p.ready) as WorkerResponse;
+    return posts.find((p) => !p.ready && !p.phase) as WorkerResponse;
   };
 }

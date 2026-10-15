@@ -278,7 +278,7 @@ for (const name of BROWSERS) {
         const list = page.getByRole("listbox", { name: "Results" });
         const items = await list.getByRole("option").allInnerTexts();
         assert.ok(items.some((t) => /Python · Learn/.test(t)), items.join(" | "));
-        assert.ok(!items.some((t) => /Playground|Database Lab|Query Performance|Compare SQL Syntax/.test(t)), items.join(" | "));
+        assert.ok(!items.some((t) => /Playground|Database Lab|Query Performance|Compare Syntax/.test(t)), items.join(" | "));
         await page.keyboard.press("Escape");
       });
 

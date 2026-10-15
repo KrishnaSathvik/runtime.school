@@ -1,0 +1,3390 @@
+{
+  "lessons": [
+    {
+      "id": 0,
+      "title": "Meet your first SELECT",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice.",
+      "challenge1": "Show the name and city of every customer.",
+      "challenge2": "Show the name and price of every product."
+    },
+    {
+      "id": 1,
+      "title": "Aliases & calculated columns",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice.",
+      "challenge1": "Return name and price * 2 as double_price for every product.",
+      "challenge2": "Return id and quantity * 10 as units_times_ten for every order."
+    },
+    {
+      "id": 3,
+      "title": "Filter with WHERE",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice.",
+      "challenge1": "Show name and city for customers in Chicago.",
+      "challenge2": "Show name and city for customers in Austin."
+    },
+    {
+      "id": 4,
+      "title": "Comparisons & ranges",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice.",
+      "challenge1": "Show name and price for products priced at least 45.",
+      "challenge2": "Show name and price for products priced between 12 and 80 inclusive."
+    },
+    {
+      "id": 5,
+      "title": "Combine conditions",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice.",
+      "challenge1": "Show name and price for Tech products costing less than 100.",
+      "challenge2": "Show name and price for Home or Stationery products costing at least 12."
+    },
+    {
+      "id": 6,
+      "title": "Lists & text patterns",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice.",
+      "challenge1": "Show name for customers whose name starts with A.",
+      "challenge2": "Show name and city for customers in Austin or Seattle."
+    },
+    {
+      "id": 7,
+      "title": "Understand NULL",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice.",
+      "challenge1": "Show name for customers whose city is missing.",
+      "challenge2": "Return name and city, replacing missing city with Unknown (alias the column city)."
+    },
+    {
+      "id": 8,
+      "title": "Sort & limit",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice.",
+      "challenge1": "Show name and price of the 3 most expensive products, highest price first.",
+      "challenge2": "Show name and price of the 2 cheapest products, lowest price first."
+    },
+    {
+      "id": 2,
+      "title": "Unique values with DISTINCT",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice.",
+      "challenge1": "Show each distinct customer city, including NULL.",
+      "challenge2": "Show each distinct product category."
+    },
+    {
+      "id": 9,
+      "title": "COUNT, SUM & AVG",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice.",
+      "challenge1": "Return the number of customers as customer_count.",
+      "challenge2": "Return total order quantity as total_units."
+    },
+    {
+      "id": 10,
+      "title": "Group into summaries",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice.",
+      "challenge1": "Show category and product_count for each product category.",
+      "challenge2": "Show status and total_units (sum of quantity) for each order status."
+    },
+    {
+      "id": 30,
+      "title": "MIN, MAX & the grain of a result",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts.",
+      "challenge1": "Return shortest_watch and longest_watch: minimum and maximum watch_seconds across all watch events.",
+      "challenge2": "Return video_id and longest_watch: maximum watch_seconds for each video that has events."
+    },
+    {
+      "id": 11,
+      "title": "Filter groups with HAVING",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice.",
+      "challenge1": "Show customer_id and order_count for customers with at least 2 orders.",
+      "challenge2": "Show customer_id and total_units for customers with total quantity greater than 3."
+    },
+    {
+      "id": 12,
+      "title": "Make decisions with CASE",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice.",
+      "challenge1": "Show name and tier: Premium if price >= 80, otherwise Standard.",
+      "challenge2": "Show id and is_paid: 1 for paid orders, otherwise 0."
+    },
+    {
+      "id": 13,
+      "title": "Conditional aggregation",
+      "decision": "MIGRATE",
+      "dataset": "weather",
+      "reason": "Weather measurements transfer conditional counts to averages with missing-value and unit semantics.",
+      "challenge1": "Return wet_observations: the number of daily_weather rows with element PRCP, raw_value greater than zero and no quality_flag. A missing value does not count as wet.",
+      "challenge2": "For every station_id present in daily_weather, return station_id and avg_tmax_c: the average usable TMAX in Celsius, rounded to two decimals. A usable value has quality_flag NULL and raw_value non-NULL. Divide raw tenths by 10.0. Preserve NULL if no usable TMAX exists; do not average other elements as zeros."
+    },
+    {
+      "id": 56,
+      "title": "CAST, text types & NULL arithmetic",
+      "decision": "KEEP",
+      "dataset": "lab",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts.",
+      "challenge1": "Return id and price_text by casting price to TEXT for every lab item.",
+      "challenge2": "Return id and absolute_gap as ABS(price - 50) for every lab item."
+    },
+    {
+      "id": 54,
+      "title": "Databases, schemas, tables & keys",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts.",
+      "challenge1": "Return name and type for the customers, products and orders tables from sqlite_schema.",
+      "challenge2": "Return order_id and customer_name by joining orders.customer_id to customers.id for every order."
+    },
+    {
+      "id": 14,
+      "title": "Connect tables with JOIN",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts.",
+      "challenge1": "Return every order id and its customer name (columns id, name).",
+      "challenge2": "Return every order id and its product name (columns id, name)."
+    },
+    {
+      "id": 15,
+      "title": "Keep unmatched rows",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts.",
+      "challenge1": "Show every customer name and order_count, including customers with zero orders.",
+      "challenge2": "Show name for customers with no orders."
+    },
+    {
+      "id": 32,
+      "title": "Ratios, ROUND & NULLIF",
+      "decision": "KEEP",
+      "dataset": "ai",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer.",
+      "challenge1": "Return account_id and success_pct (0–100, rounded to 2 decimals) for accounts with requests.",
+      "challenge2": "Return id and success_pct for every account, including accounts with no requests (NULL rate). Round to 2 decimals."
+    },
+    {
+      "id": 16,
+      "title": "Revenue across tables",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts.",
+      "challenge1": "Show customer name and paid revenue (alias revenue), only customers with paid orders.",
+      "challenge2": "Show category and paid revenue (alias revenue) for each category with paid orders."
+    },
+    {
+      "id": 34,
+      "title": "Self-joins & referral relationships",
+      "decision": "KEEP",
+      "dataset": "social",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts.",
+      "challenge1": "Return member_id and referrer_id for every member, keeping NULL when no referrer exists.",
+      "challenge2": "Return member_id and referrer_country for members with a referrer, taking the country from the referrer row."
+    },
+    {
+      "id": 35,
+      "title": "CROSS JOIN & a complete date grid",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts.",
+      "challenge1": "Return day and viewer_id for every day from 2025-01-01 through 2025-01-03 inclusive and every viewer, including pre-signup combinations.",
+      "challenge2": "Return day and viewer_id for the same date range, keeping only combinations on or after that viewer's signup_at."
+    },
+    {
+      "id": 36,
+      "title": "FULL OUTER JOIN & unmatched records",
+      "decision": "KEEP",
+      "dataset": "ai",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts.",
+      "challenge1": "Return invoice_id and payment_id for every invoice/payment match, retaining unmatched rows on either side. Keep split payments as separate rows.",
+      "challenge2": "Return payment_id for payments whose invoice_id has no matching invoice, including NULL invoice_id."
+    },
+    {
+      "id": 37,
+      "title": "ON versus WHERE in a LEFT JOIN",
+      "decision": "KEEP",
+      "dataset": "ai",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts.",
+      "challenge1": "Return id and successful_requests for every account, including zero successful requests.",
+      "challenge2": "Return id and error_requests for every account, including zero failed requests (status = error)."
+    },
+    {
+      "id": 19,
+      "title": "Combine sets with UNION",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts.",
+      "challenge1": "Return distinct city values from Chicago customers and Austin customers using UNION.",
+      "challenge2": "Stack name from customers and name from products, keeping duplicates."
+    },
+    {
+      "id": 38,
+      "title": "INTERSECT & EXCEPT",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts.",
+      "challenge1": "Return viewer_id for viewers who watched both video 1 and video 2. Each viewer appears once.",
+      "challenge2": "Return viewer_id for viewers who watched video 1 but never video 2. Each viewer appears once."
+    },
+    {
+      "id": 17,
+      "title": "Subqueries",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts.",
+      "challenge1": "Show name and price of products above the average product price.",
+      "challenge2": "Show id and quantity for orders whose quantity is above the average order quantity."
+    },
+    {
+      "id": 18,
+      "title": "Ask whether a row exists",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts.",
+      "challenge1": "Show name of customers who have at least one paid order.",
+      "challenge2": "Show name of customers who have no paid orders."
+    },
+    {
+      "id": 31,
+      "title": "NOT IN and the NULL trap",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts.",
+      "challenge1": "Return id for viewers who have not referred anyone. A referred_by value identifies the referrer, and NULL means no referrer.",
+      "challenge2": "Return id and country for viewers outside US and GB."
+    },
+    {
+      "id": 20,
+      "title": "Readable queries with CTEs",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts.",
+      "challenge1": "Use a CTE to return customer_id and units for customers whose total quantity exceeds 3.",
+      "challenge2": "Use a CTE to return category and avg_price for categories with average price greater than 30."
+    },
+    {
+      "id": 26,
+      "title": "Dates & monthly analysis",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts.",
+      "challenge1": "Return month (YYYY-MM) and order_count for all orders by month.",
+      "challenge2": "Return month (YYYY-MM) and paid_units for paid orders by month."
+    },
+    {
+      "id": 33,
+      "title": "Clean strings & cast values",
+      "decision": "KEEP",
+      "dataset": "social",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts.",
+      "challenge1": "Return id and clean_email for every member: trim outside spaces and lowercase the email; preserve NULL.",
+      "challenge2": "Return id and email_domain: lowercase, trim, and take the email text after @. Preserve NULL."
+    },
+    {
+      "id": 39,
+      "title": "Date boundaries & monthly buckets",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts.",
+      "challenge1": "Return id and watched_at for January 2025 watch events, including the full final day and excluding February.",
+      "challenge2": "Return month (YYYY-MM) and active_viewers (distinct viewers) across all watch events by month."
+    },
+    {
+      "id": 21,
+      "title": "Window functions: ROW_NUMBER",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts.",
+      "challenge1": "Return id, customer_id and order_number: number each customer's orders by ordered_at then id.",
+      "challenge2": "Return name, category and price_rank: number products within category by price descending then id."
+    },
+    {
+      "id": 22,
+      "title": "RANK & DENSE_RANK",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts.",
+      "challenge1": "Show customer_id, order_count and rank using DENSE_RANK by order_count descending.",
+      "challenge2": "Show customer_id, order_count and rank using RANK by order_count descending."
+    },
+    {
+      "id": 23,
+      "title": "Running totals",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts.",
+      "challenge1": "Show id, quantity and running_units: cumulative quantity ordered by ordered_at then id.",
+      "challenge2": "Show id, customer_id and running_units: cumulative quantity per customer ordered by ordered_at then id."
+    },
+    {
+      "id": 55,
+      "title": "Logical query processing & row grain",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts.",
+      "challenge1": "Return customer_id and units for paid orders grouped by customer; keep groups with units >2. Sort units descending, then customer_id ascending.",
+      "challenge2": "Keep every paid order row and return id, customer_id, quantity and customer_units (sum of paid quantity for that customer using a window)."
+    },
+    {
+      "id": 24,
+      "title": "Compare rows with LAG",
+      "decision": "MIGRATE",
+      "dataset": "flights",
+      "reason": "Flights transfer previous scheduled row to previous operated row; filtering changes window membership.",
+      "challenge1": "Return id, route_id and previous_delay for every scheduled flight. previous_delay is the departure_delay_minutes of the previous scheduled flight on that route, ordered by scheduled_departure then id. Keep cancelled flights and their NULL delays.",
+      "challenge2": "Return id, route_id and delay_change for operated flights only (cancelled=0). Compare departure_delay_minutes with the previous operated flight on the same route, ordered by scheduled_departure then id. The first operated flight on each route has NULL change."
+    },
+    {
+      "id": 25,
+      "title": "Latest row per group",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts.",
+      "challenge1": "Return id, customer_id and ordered_at for the latest order per customer; break date ties by highest id.",
+      "challenge2": "Return name, category and price for the most expensive product per category; break price ties by lowest id."
+    },
+    {
+      "id": 40,
+      "title": "LEAD & the next event",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts.",
+      "challenge1": "Return id, viewer_id and next_watch_at for each viewer's next watch event, ordering each viewer by watched_at then id.",
+      "challenge2": "Return id and seconds_to_next: next watched_at minus current watched_at in seconds per viewer, ordered by watched_at then id. Last events get NULL."
+    },
+    {
+      "id": 41,
+      "title": "FIRST_VALUE, LAST_VALUE & frames",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts.",
+      "challenge1": "Return id, viewer_id and last_video for each viewer's final watched video, ordered within viewer by watched_at then id. Repeat that final video on every viewer row.",
+      "challenge2": "Return id, viewer_id and first_video for each viewer's first watched video, ordered within viewer by watched_at then id."
+    },
+    {
+      "id": 42,
+      "title": "Rolling averages & missing dates",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer.",
+      "challenge1": "Return day, watch_minutes and rolling_avg (2 decimals) for the current and previous 2 observed rows in daily_metrics, sorted by day. This task intentionally uses rows, not calendar days.",
+      "challenge2": "Return day, watch_minutes and rolling_avg (2 decimals) for every day Jan 1–7 2025, treating absent daily_metrics days as zero. Average current and previous 2 calendar days; early windows use available days. Sort by day."
+    },
+    {
+      "id": 43,
+      "title": "Share of total with windows",
+      "decision": "KEEP",
+      "dataset": "ai",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts.",
+      "challenge1": "Return model, request_count and share_pct (0–100, 2 decimals) for all request rows by model.",
+      "challenge2": "Return model, output_tokens and share_pct (0–100, 2 decimals) of total successful output tokens by model."
+    },
+    {
+      "id": 53,
+      "title": "Top N per group & ties",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer.",
+      "challenge1": "Return creator_id, video_id and watch_seconds for the top 2 watched videos per creator, excluding videos with no events. Rank by total seconds descending, break ties by smallest video_id.",
+      "challenge2": "Return creator_id, video_id and watch_seconds for each creator's most-watched video(s), including ties. Exclude videos with no events."
+    },
+    {
+      "id": 57,
+      "title": "NTILE & balanced ranking buckets",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts.",
+      "challenge1": "Return id, watch_seconds and bucket using NTILE(4), ordered within the window by watch_seconds descending then id.",
+      "challenge2": "Return id, viewer_id and bucket using NTILE(2) per viewer, ordered within viewer by watched_at then id."
+    },
+    {
+      "id": 27,
+      "title": "Recursive CTEs",
+      "decision": "MIGRATE",
+      "dataset": "developer",
+      "reason": "Developer management hierarchy extends a number sequence to recursive relationships.",
+      "challenge1": "Use a recursive CTE to return n with integers 1 through 5.",
+      "challenge2": "Return developer_id and depth for every developer reachable from a root whose manager_id is NULL. Roots have depth 0; each reporting edge adds 1. The supplied management graph is acyclic. Use a recursive CTE to follow all levels."
+    },
+    {
+      "id": 28,
+      "title": "Query plans & indexes",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts.",
+      "challenge1": "Show name for Chicago customers. Run the reference with Explain mode to inspect the plan.",
+      "challenge2": "Show id and quantity for paid orders. Inspect its plan with Explain mode."
+    },
+    {
+      "id": 29,
+      "title": "Capstone: customer insights",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts.",
+      "challenge1": "Show name, paid_revenue and revenue_rank for customers with paid orders. Use DENSE_RANK, highest revenue first in the rank calculation.",
+      "challenge2": "Show category, paid_revenue and revenue_rank for product categories with paid orders. Use DENSE_RANK by revenue descending."
+    },
+    {
+      "id": 44,
+      "title": "Deduplicate event retries",
+      "decision": "KEEP",
+      "dataset": "social",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer.",
+      "challenge1": "Return id, event_key and member_id for the latest ingested row of each event_key. Break ingestion ties by highest id.",
+      "challenge2": "After keeping the latest ingested row per event_key (tie: highest id), return event_type and event_count by event_type."
+    },
+    {
+      "id": 45,
+      "title": "Daily active users & engagement",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer.",
+      "challenge1": "Return day (YYYY-MM-DD) and active_viewers (distinct viewers) for every observed watch date.",
+      "challenge2": "Return day, active_viewers and minutes_per_active_viewer, rounded to 2 decimals, for each observed watch date."
+    },
+    {
+      "id": 46,
+      "title": "Ordered conversion funnels",
+      "decision": "KEEP",
+      "dataset": "social",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer.",
+      "challenge1": "Return one row: viewed, signed_up, purchased as member counts for the ordered view → signup → purchase funnel. Equal times are allowed; use each member's earliest valid next step.",
+      "challenge2": "Return member_id, viewed_at, signed_at and purchased_at for members who complete that ordered funnel."
+    },
+    {
+      "id": 47,
+      "title": "Cohorts & exact-day retention",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer.",
+      "challenge1": "With observation cutoff Jan 15 2025, return cohort_day, cohort_size, retained_viewers and retention_pct (0–100, 2 decimals) for exact-day D1 retention. Include only mature cohorts.",
+      "challenge2": "Use the same output and cutoff for exact-day D7 retention (signup date +7 days); include only mature cohorts."
+    },
+    {
+      "id": 48,
+      "title": "Sessionize an event stream",
+      "decision": "KEEP",
+      "dataset": "social",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer.",
+      "challenge1": "Using raw social_events, return member_id and session_count. Start a new session on the first event or a gap of at least 30 minutes; order by event_at then id per member.",
+      "challenge2": "Using the same rule, return id, member_id and session_number for every raw social event."
+    },
+    {
+      "id": 49,
+      "title": "Multi-grain joins without fan-out",
+      "decision": "KEEP",
+      "dataset": "ai",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer.",
+      "challenge1": "Return id, request_count and billed_amount for every account across all dates. Aggregate requests and invoices separately to avoid multiplication; use zeros for missing totals.",
+      "challenge2": "Return id, output_tokens and billed_amount for every account across all dates. Sum only successful output tokens and aggregate invoices separately. Use zeros for missing totals."
+    },
+    {
+      "id": 50,
+      "title": "Revenue & payment reconciliation",
+      "decision": "KEEP",
+      "dataset": "ai",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer.",
+      "challenge1": "Return id, billed_amount, net_collected and gap for every invoice across all periods. Net collected = payments - refunds; gap = billed - net collected. Treat missing totals as zero.",
+      "challenge2": "Using the same definition, return invoice_id and gap only for invoices with nonzero gap."
+    },
+    {
+      "id": 51,
+      "title": "AI usage cost & contribution margin",
+      "decision": "KEEP",
+      "dataset": "ai",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer.",
+      "challenge1": "Return model and usage_cost in fictional USD, rounded to 6 decimals, for successful requests across all dates.",
+      "challenge2": "Return id, billed_amount, usage_cost and contribution_margin for every account for Jan 2025. Use January invoices and successful requests only; missing totals are zero. Round cost and margin to 6 decimals. Margin = billed - usage cost."
+    },
+    {
+      "id": 52,
+      "title": "Experiment conversion denominators",
+      "decision": "KEEP",
+      "dataset": "social",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer.",
+      "challenge1": "Return variant, assigned, converted and conversion_pct (0–100, 2 decimals). A member converts with any purchase on/after assigned_at and before Feb 1 2025. Include all assigned members.",
+      "challenge2": "Return member_id, variant and converted (1 or 0) for every assignment using the same post-assignment purchase definition and cutoff."
+    },
+    {
+      "id": 58,
+      "title": "DDL: create, alter & inspect a table",
+      "decision": "KEEP",
+      "dataset": "lab",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity.",
+      "challenge1": "Create practice_people with id INTEGER PRIMARY KEY and name TEXT; add city TEXT with ALTER TABLE. Return name and type from pragma_table_info('practice_people').",
+      "challenge2": "Create practice_totals with account_id INTEGER and total REAL. Return name and type from pragma_table_info('practice_totals')."
+    },
+    {
+      "id": 59,
+      "title": "DML: INSERT, UPDATE & DELETE",
+      "decision": "KEEP",
+      "dataset": "lab",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity.",
+      "challenge1": "Insert lab item (4, Pen, 8); add 5 to price for id=1; delete id=2. Return id, name, price for remaining items.",
+      "challenge2": "Double every lab item price below 50, then delete items with price >100. Return id, name, price."
+    },
+    {
+      "id": 60,
+      "title": "Constraints protect the data contract",
+      "decision": "KEEP",
+      "dataset": "lab",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity.",
+      "challenge1": "Create inventory with sku TEXT PRIMARY KEY NOT NULL and quantity INTEGER NOT NULL CHECK(quantity>=0); insert (A,2). Return sku and quantity.",
+      "challenge2": "Create contacts with id INTEGER PRIMARY KEY and email TEXT NOT NULL UNIQUE; insert (1,a@example.com) and (2,b@example.com). Return id,email."
+    },
+    {
+      "id": 61,
+      "title": "Transactions & savepoint recovery",
+      "decision": "KEEP",
+      "dataset": "lab",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity.",
+      "challenge1": "Begin a transaction, add 10 to every lab item price, then roll back. Return id and price; all values should be original.",
+      "challenge2": "Begin; add 5 to price for id=1; create SAVEPOINT partial; delete id=2; roll back to partial; commit. Return id and price."
+    },
+    {
+      "id": 62,
+      "title": "Views: reusable query definitions",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity.",
+      "challenge1": "Create view paid_orders exposing id, customer_id and quantity for paid orders. Return those columns by selecting the view.",
+      "challenge2": "Create view product_totals with category and total_price (sum of price). Return category and total_price from the view."
+    },
+    {
+      "id": 63,
+      "title": "CTEs, CTAS & temporary tables",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity.",
+      "challenge1": "Materialize a TEMP table customer_units with customer_id and total quantity as units. Return customer_id and units for units >3.",
+      "challenge2": "Materialize a TEMP table category_prices with category and average price as avg_price. Return category and avg_price for avg_price >30."
+    },
+    {
+      "id": 64,
+      "title": "Triggers & visible audit effects",
+      "decision": "KEEP",
+      "dataset": "lab",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity.",
+      "challenge1": "Create a price_audit trigger AFTER UPDATE OF price on lab_items, logging changed prices in lab_audit; add 5 to id=1 price. Return item_id,old_price,new_price from lab_audit.",
+      "challenge2": "Create the same trigger, then double prices for all items with price<50. Return item_id,old_price,new_price from lab_audit."
+    },
+    {
+      "id": 65,
+      "title": "Stored procedures: parameters & contracts",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity.",
+      "challenge1": "For customer_id=1, return id, customer_id and quantity from orders. This practices a procedure’s retrieval contract; no procedure is created in SQLite.",
+      "challenge2": "For customer_id=2, return id, customer_id and quantity for paid orders only."
+    },
+    {
+      "id": 66,
+      "title": "Indexes: observe a real access path",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity.",
+      "challenge1": "Create idx_orders_customer on orders(customer_id), then return id and quantity for customer_id=1. Run Query plan after the script to inspect the final SELECT.",
+      "challenge2": "Create idx_products_category on products(category), then return name and price for Tech products."
+    },
+    {
+      "id": 67,
+      "title": "SARGable ranges, not speed commandments",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity.",
+      "challenge1": "Create idx_watch_time on watched_at; return id and watched_at for Jan 2025 using a half-open timestamp range.",
+      "challenge2": "Create idx_watch_time on watched_at; return id and watched_at for Jan 1–7 2025 inclusive, using a half-open range."
+    },
+    {
+      "id": 68,
+      "title": "Partitioning & workload trade-offs",
+      "decision": "KEEP",
+      "dataset": "warehouse",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity.",
+      "challenge1": "Return sale_key, order_date and sales for Feb 2025 from fact_sales. Use a half-open range.",
+      "challenge2": "Return month (YYYY-MM) and sales (sum) by month from fact_sales."
+    },
+    {
+      "id": 75,
+      "title": "Review AI-generated SQL with evidence",
+      "decision": "KEEP",
+      "dataset": "ai",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity.",
+      "challenge1": "Fix the proposed COUNT(*) LEFT JOIN query. Return id and request_count for every account, including zero-request accounts.",
+      "challenge2": "Fix an AI query that divides integers or filters out inactive accounts. Return id and success_pct for every account, NULL with no requests, 2 decimals."
+    },
+    {
+      "id": 69,
+      "title": "Bronze: inspect raw data before cleaning",
+      "decision": "KEEP",
+      "dataset": "warehouse",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity.",
+      "challenge1": "Return customer_id (trimmed raw_id) and versions for non-NULL duplicate customer keys in bronze_customers. Keep only keys with more than one version.",
+      "challenge2": "Return row_id and order_date for bronze sales whose date is invalid (date(order_date) IS NULL)."
+    },
+    {
+      "id": 70,
+      "title": "Silver: clean, map & deduplicate",
+      "decision": "KEEP",
+      "dataset": "warehouse",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity.",
+      "challenge1": "Create TEMP silver_customers: trim keys/names; discard NULL/empty keys; keep latest updated_at per trimmed key. Map US/USA→United States, GB/UK→United Kingdom, IND→India, CA→Canada. Return customer_id,name,country.",
+      "challenge2": "Create the same TEMP silver_customers, then return country and customer_count per mapped country."
+    },
+    {
+      "id": 71,
+      "title": "Gold: dimensions, facts & quality gates",
+      "decision": "KEEP",
+      "dataset": "warehouse",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity.",
+      "challenge1": "Build TEMP built_fact from bronze_sales and dimension lookups. Validate numeric positive quantity, valid date and matching trimmed natural keys. Recompute sales = quantity × dim_product.price. Return sale_key,customer_key,product_key,quantity,sales,order_date.",
+      "challenge2": "Build the same TEMP built_fact; return rejected_rows as source row count minus built fact row count."
+    },
+    {
+      "id": 72,
+      "title": "EDA: explore before telling the story",
+      "decision": "KEEP",
+      "dataset": "warehouse",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity.",
+      "challenge1": "Return first_sale, last_sale, sales_lines and total_sales as one summary row from fact_sales.",
+      "challenge2": "Return metric and value using UNION ALL for Total sales (sum of sales), Units (sum of quantity), and Active customers (distinct customer_key) from fact_sales."
+    },
+    {
+      "id": 73,
+      "title": "Customer & product reporting contracts",
+      "decision": "KEEP",
+      "dataset": "warehouse",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity.",
+      "challenge1": "Return customer_id,name,sales_lines,total_sales,recency_days for every dim_customer. Missing sales total=0; recency=NULL with no sales. Recency = days from last order_date to 2025-04-01, integer.",
+      "challenge2": "Return product_id,name,total_sales,total_units,performance_segment for every dim_product. Missing totals=0. High if total_sales>=200, otherwise Standard."
+    },
+    {
+      "id": 74,
+      "title": "Monthly change & cumulative reports",
+      "decision": "KEEP",
+      "dataset": "warehouse",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity.",
+      "challenge1": "Return month (YYYY-MM),sales,running_sales for observed months; cumulative sales ordered by month. Sort output by month.",
+      "challenge2": "Return month,sales,previous_sales,change_pct for observed months. Compare to previous observed month; percentage rounded to 2 decimals, NULL with no/nonzero denominator. Sort by month."
+    },
+    {
+      "id": 76,
+      "title": "Reconcile extraction & Bronze ingestion",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity.",
+      "challenge1": "Return source_name,expected_rows,landed_rows,difference (landed minus expected) for CRM and ERP using load_manifest and the raw tables.",
+      "challenge2": "Return source_row and customer_id for CRM records with a missing or whitespace-only customer key. Do not modify Bronze."
+    },
+    {
+      "id": 77,
+      "title": "Integrate CRM + ERP with source authority",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity.",
+      "challenge1": "Return customer_id,name,gender,country,birth_date using the integration contract in Understand. Use latest normalized CRM keys, CRM-first gender, ERP fallback, mapped country, and valid nonfuture birth date.",
+      "challenge2": "Use the same integration contract; return gender and customer_count grouped by the resolved gender."
+    },
+    {
+      "id": 78,
+      "title": "Product validity with LEAD & half-open intervals",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity.",
+      "challenge1": "Return version_id,product_id,valid_from,valid_to. valid_to is the next start for the same product, NULL for the latest version.",
+      "challenge2": "As of 2025-02-01, return product_id,cost for the version effective on that date using inclusive start and exclusive end."
+    },
+    {
+      "id": 79,
+      "title": "Validate calendar dates before converting",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity.",
+      "challenge1": "Return row_id,raw_date,clean_date for every raw_dates row. Accept exactly eight digits and a valid calendar day; invalid values become NULL.",
+      "challenge2": "Return row_id and raw_date only for invalid or missing dates under the same rule."
+    },
+    {
+      "id": 80,
+      "title": "Quarantine bad rows & reconcile the batch",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity.",
+      "challenge1": "Create TEMP checked_dates using the validation rule and TEMP date_rejects with invalid rows. Return row_id,raw_date,reason: missing for NULL, format for not exactly eight digits, otherwise calendar.",
+      "challenge2": "Create TEMP checked_dates; return source_rows,accepted_rows,rejected_rows,reconciled (1 if accepted+rejected equals source count)."
+    },
+    {
+      "id": 81,
+      "title": "Automated star-schema quality tests",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity.",
+      "challenge1": "Return test,failures for duplicate_line_ids (number of duplicated id groups), orphan_customers (rows), orphan_products (rows), and invalid_quantity (NULL or <=0 rows) in dq_sales.",
+      "challenge2": "Return blocking_failures as the sum of the four failure counts, and can_publish as 1 only if that sum is zero."
+    },
+    {
+      "id": 82,
+      "title": "Durable surrogate keys across loads",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity.",
+      "challenge1": "Insert natural key C000, name New earlier key, updated_at 2025-02-01 into current_people without supplying customer_key. Return customer_id,customer_key for all rows.",
+      "challenge2": "Update C001 name to Alice Updated without changing its key. Return customer_id,customer_key,name for all current_people rows."
+    },
+    {
+      "id": 83,
+      "title": "Latest-state reporting versus SCD Type 2",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity.",
+      "challenge1": "Return customer_id,country for the current version of every customer_history customer.",
+      "challenge2": "Join fact_sales to dim_customer for natural customer_id and customer_history at sale time. Return sale_key,customer_id,country as of each order_date."
+    },
+    {
+      "id": 84,
+      "title": "Idempotent incremental UPSERT & stale updates",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity.",
+      "challenge1": "Apply incoming_people to current_people with INSERT ON CONFLICT(customer_id) DO UPDATE only if the incoming updated_at is newer. Apply that same batch twice. Return customer_id,name,updated_at.",
+      "challenge2": "Apply that UPSERT once. Return customer_id,customer_key for all current_people rows, showing that old keys stayed stable."
+    },
+    {
+      "id": 85,
+      "title": "Stage, validate & atomically promote a refresh",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity.",
+      "challenge1": "Simulate an interrupted promotion: BEGIN, DELETE published_totals, INSERT from refresh_stage, ROLLBACK. Return customer_id,total_sales; the old snapshot must remain.",
+      "challenge2": "Promote the known-valid refresh_stage in a transaction: DELETE old rows, INSERT staged rows, COMMIT. Return customer_id,total_sales."
+    },
+    {
+      "id": 86,
+      "title": "Protect fact grain when joining versions",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity.",
+      "challenge1": "Return country,total_sales using CURRENT customer_history version, for facts with a customer history match. Group by current country.",
+      "challenge2": "Return country,total_sales using the customer_history version effective at each sale date; group by historical country."
+    },
+    {
+      "id": 87,
+      "title": "Capstone: integrated customers to trusted sales",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity.",
+      "challenge1": "Create TEMP integrated_customers using the integration contract, and TEMP built_sales using the Gold validation rules from lesson Gold: dimensions, facts & quality gates. Return customer_id,name,gender,country,sales_lines,total_sales for valid CRM customers with a dimension match; preserve customers with no valid sales as 0 totals.",
+      "challenge2": "Create the same two TEMP outputs. Return country,total_sales at integrated country grain, preserving countries with no sales as 0."
+    }
+  ],
+  "questions": [
+    {
+      "id": "lc-0-0",
+      "title": "Meet your first SELECT · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "basics.select",
+      "pattern": "p-0-0",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice."
+    },
+    {
+      "id": "lc-0-1",
+      "title": "Meet your first SELECT · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "basics.select",
+      "pattern": "p-0-0",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice."
+    },
+    {
+      "id": "lc-1-0",
+      "title": "Aliases & calculated columns · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "basics.alias",
+      "pattern": "p-1-0",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice."
+    },
+    {
+      "id": "lc-1-1",
+      "title": "Aliases & calculated columns · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "basics.alias",
+      "pattern": "p-1-0",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice."
+    },
+    {
+      "id": "lc-3-0",
+      "title": "Filter with WHERE · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "filtering.where",
+      "pattern": "p-3-0",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice."
+    },
+    {
+      "id": "lc-3-1",
+      "title": "Filter with WHERE · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "filtering.where",
+      "pattern": "p-3-0",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice."
+    },
+    {
+      "id": "lc-4-0",
+      "title": "Comparisons & ranges · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "filtering.between",
+      "pattern": "p-4-0",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice."
+    },
+    {
+      "id": "lc-4-1",
+      "title": "Comparisons & ranges · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "filtering.between",
+      "pattern": "p-4-1",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice."
+    },
+    {
+      "id": "lc-5-0",
+      "title": "Combine conditions · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "filtering.logic",
+      "pattern": "p-5-0",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice."
+    },
+    {
+      "id": "lc-5-1",
+      "title": "Combine conditions · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "filtering.logic",
+      "pattern": "p-5-1",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice."
+    },
+    {
+      "id": "lc-6-0",
+      "title": "Lists & text patterns · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "filtering.like",
+      "pattern": "p-6-0",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice."
+    },
+    {
+      "id": "lc-6-1",
+      "title": "Lists & text patterns · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "filtering.like",
+      "pattern": "p-6-1",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice."
+    },
+    {
+      "id": "lc-7-0",
+      "title": "Understand NULL · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "filtering.null",
+      "pattern": "p-7-0",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice."
+    },
+    {
+      "id": "lc-7-1",
+      "title": "Understand NULL · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "filtering.null",
+      "pattern": "p-7-1",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice."
+    },
+    {
+      "id": "lc-8-0",
+      "title": "Sort & limit · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "basics.order-by",
+      "pattern": "p-8-0",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice."
+    },
+    {
+      "id": "lc-8-1",
+      "title": "Sort & limit · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "basics.order-by",
+      "pattern": "p-8-1",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice."
+    },
+    {
+      "id": "lc-2-0",
+      "title": "Unique values with DISTINCT · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "basics.distinct",
+      "pattern": "p-2-0",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice."
+    },
+    {
+      "id": "lc-2-1",
+      "title": "Unique values with DISTINCT · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "basics.distinct",
+      "pattern": "p-2-0",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice."
+    },
+    {
+      "id": "lc-9-0",
+      "title": "COUNT, SUM & AVG · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "aggregation.basic",
+      "pattern": "p-9-0",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice."
+    },
+    {
+      "id": "lc-9-1",
+      "title": "COUNT, SUM & AVG · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "aggregation.basic",
+      "pattern": "p-9-1",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice."
+    },
+    {
+      "id": "lc-10-0",
+      "title": "Group into summaries · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "aggregation.group-by",
+      "pattern": "p-10-0",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice."
+    },
+    {
+      "id": "lc-10-1",
+      "title": "Group into summaries · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "aggregation.group-by",
+      "pattern": "p-10-1",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice."
+    },
+    {
+      "id": "lc-30-0",
+      "title": "MIN, MAX & the grain of a result · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "topic": "aggregation.basic",
+      "pattern": "p-30-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-30-1",
+      "title": "MIN, MAX & the grain of a result · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "topic": "aggregation.basic",
+      "pattern": "p-30-1",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-11-0",
+      "title": "Filter groups with HAVING · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "aggregation.having",
+      "pattern": "p-11-0",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice."
+    },
+    {
+      "id": "lc-11-1",
+      "title": "Filter groups with HAVING · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "aggregation.having",
+      "pattern": "p-11-1",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice."
+    },
+    {
+      "id": "lc-12-0",
+      "title": "Make decisions with CASE · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "cleaning.case",
+      "pattern": "p-12-0",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice."
+    },
+    {
+      "id": "lc-12-1",
+      "title": "Make decisions with CASE · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "cleaning.case",
+      "pattern": "p-12-1",
+      "reason": "Preserve inspectable foundation data; each clause is introduced before larger-domain transfer in Practice."
+    },
+    {
+      "id": "lc-13-0",
+      "title": "Conditional aggregation · Challenge 1",
+      "decision": "MIGRATE",
+      "dataset": "weather",
+      "topic": "aggregation.conditional",
+      "pattern": "p-13-0",
+      "reason": "Weather measurements transfer conditional counts to averages with missing-value and unit semantics."
+    },
+    {
+      "id": "lc-13-1",
+      "title": "Conditional aggregation · Challenge 2",
+      "decision": "MIGRATE",
+      "dataset": "weather",
+      "topic": "aggregation.conditional",
+      "pattern": "p-13-1",
+      "reason": "Weather measurements transfer conditional counts to averages with missing-value and unit semantics."
+    },
+    {
+      "id": "lc-56-0",
+      "title": "CAST, text types & NULL arithmetic · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "lab",
+      "topic": "cleaning.validation",
+      "pattern": "p-56-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-56-1",
+      "title": "CAST, text types & NULL arithmetic · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "lab",
+      "topic": "cleaning.validation",
+      "pattern": "p-56-1",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-54-0",
+      "title": "Databases, schemas, tables & keys · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "basics.schema",
+      "pattern": "p-54-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-54-1",
+      "title": "Databases, schemas, tables & keys · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "basics.schema",
+      "pattern": "p-54-1",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-14-0",
+      "title": "Connect tables with JOIN · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "joins.inner",
+      "pattern": "p-14-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-14-1",
+      "title": "Connect tables with JOIN · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "joins.inner",
+      "pattern": "p-14-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-15-0",
+      "title": "Keep unmatched rows · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "joins.left",
+      "pattern": "p-15-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-15-1",
+      "title": "Keep unmatched rows · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "joins.left",
+      "pattern": "p-15-1",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-32-0",
+      "title": "Ratios, ROUND & NULLIF · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "ai",
+      "topic": "analytics.statistics",
+      "pattern": "p-32-0",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer."
+    },
+    {
+      "id": "lc-32-1",
+      "title": "Ratios, ROUND & NULLIF · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "ai",
+      "topic": "analytics.statistics",
+      "pattern": "p-32-1",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer."
+    },
+    {
+      "id": "lc-16-0",
+      "title": "Revenue across tables · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "joins.multi",
+      "pattern": "p-16-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-16-1",
+      "title": "Revenue across tables · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "joins.multi",
+      "pattern": "p-16-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-34-0",
+      "title": "Self-joins & referral relationships · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "social",
+      "topic": "joins.self",
+      "pattern": "p-34-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-34-1",
+      "title": "Self-joins & referral relationships · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "social",
+      "topic": "joins.self",
+      "pattern": "p-54-1",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-35-0",
+      "title": "CROSS JOIN & a complete date grid · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "topic": "dates.series",
+      "pattern": "p-35-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-35-1",
+      "title": "CROSS JOIN & a complete date grid · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "topic": "dates.series",
+      "pattern": "p-35-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-36-0",
+      "title": "FULL OUTER JOIN & unmatched records · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "ai",
+      "topic": "joins.anti",
+      "pattern": "p-36-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-36-1",
+      "title": "FULL OUTER JOIN & unmatched records · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "ai",
+      "topic": "joins.anti",
+      "pattern": "p-36-1",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-37-0",
+      "title": "ON versus WHERE in a LEFT JOIN · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "ai",
+      "topic": "joins.left",
+      "pattern": "p-37-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-37-1",
+      "title": "ON versus WHERE in a LEFT JOIN · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "ai",
+      "topic": "joins.left",
+      "pattern": "p-37-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-19-0",
+      "title": "Combine sets with UNION · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "joins.set-ops",
+      "pattern": "p-19-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-19-1",
+      "title": "Combine sets with UNION · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "joins.set-ops",
+      "pattern": "p-19-1",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-38-0",
+      "title": "INTERSECT & EXCEPT · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "topic": "joins.set-ops",
+      "pattern": "p-38-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-38-1",
+      "title": "INTERSECT & EXCEPT · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "topic": "joins.set-ops",
+      "pattern": "p-38-1",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-17-0",
+      "title": "Subqueries · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "subqueries.scalar",
+      "pattern": "p-17-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-17-1",
+      "title": "Subqueries · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "subqueries.scalar",
+      "pattern": "p-17-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-18-0",
+      "title": "Ask whether a row exists · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "subqueries.exists",
+      "pattern": "p-18-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-18-1",
+      "title": "Ask whether a row exists · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "subqueries.exists",
+      "pattern": "p-18-1",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-31-0",
+      "title": "NOT IN and the NULL trap · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "topic": "filtering.null",
+      "pattern": "p-31-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-31-1",
+      "title": "NOT IN and the NULL trap · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "topic": "filtering.null",
+      "pattern": "p-31-1",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-20-0",
+      "title": "Readable queries with CTEs · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "subqueries.cte",
+      "pattern": "p-20-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-20-1",
+      "title": "Readable queries with CTEs · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "subqueries.cte",
+      "pattern": "p-20-1",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-26-0",
+      "title": "Dates & monthly analysis · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "dates.buckets",
+      "pattern": "p-26-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-26-1",
+      "title": "Dates & monthly analysis · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "dates.buckets",
+      "pattern": "p-26-1",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-33-0",
+      "title": "Clean strings & cast values · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "social",
+      "topic": "cleaning.strings",
+      "pattern": "p-33-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-33-1",
+      "title": "Clean strings & cast values · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "social",
+      "topic": "cleaning.strings",
+      "pattern": "p-33-1",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-39-0",
+      "title": "Date boundaries & monthly buckets · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "topic": "dates.filter",
+      "pattern": "p-39-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-39-1",
+      "title": "Date boundaries & monthly buckets · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "topic": "dates.filter",
+      "pattern": "p-39-1",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-21-0",
+      "title": "Window functions: ROW_NUMBER · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "windows.row-number",
+      "pattern": "p-21-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-21-1",
+      "title": "Window functions: ROW_NUMBER · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "windows.row-number",
+      "pattern": "p-21-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-22-0",
+      "title": "RANK & DENSE_RANK · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "windows.rank",
+      "pattern": "p-22-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-22-1",
+      "title": "RANK & DENSE_RANK · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "windows.rank",
+      "pattern": "p-22-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-23-0",
+      "title": "Running totals · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "windows.running",
+      "pattern": "p-23-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-23-1",
+      "title": "Running totals · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "windows.running",
+      "pattern": "p-23-1",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-55-0",
+      "title": "Logical query processing & row grain · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "aggregation.group-by",
+      "pattern": "p-55-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-55-1",
+      "title": "Logical query processing & row grain · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "aggregation.group-by",
+      "pattern": "p-55-1",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-24-0",
+      "title": "Compare rows with LAG · Challenge 1",
+      "decision": "MIGRATE",
+      "dataset": "flights",
+      "topic": "windows.lag-lead",
+      "pattern": "p-24-0",
+      "reason": "Flights transfer previous scheduled row to previous operated row; filtering changes window membership."
+    },
+    {
+      "id": "lc-24-1",
+      "title": "Compare rows with LAG · Challenge 2",
+      "decision": "MIGRATE",
+      "dataset": "flights",
+      "topic": "windows.lag-lead",
+      "pattern": "p-24-0",
+      "reason": "Flights transfer previous scheduled row to previous operated row; filtering changes window membership."
+    },
+    {
+      "id": "lc-25-0",
+      "title": "Latest row per group · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "windows.top-n",
+      "pattern": "p-25-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-25-1",
+      "title": "Latest row per group · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "windows.top-n",
+      "pattern": "p-25-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-40-0",
+      "title": "LEAD & the next event · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "topic": "windows.lag-lead",
+      "pattern": "p-40-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-40-1",
+      "title": "LEAD & the next event · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "topic": "windows.lag-lead",
+      "pattern": "p-40-1",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-41-0",
+      "title": "FIRST_VALUE, LAST_VALUE & frames · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "topic": "windows.rolling",
+      "pattern": "p-41-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-41-1",
+      "title": "FIRST_VALUE, LAST_VALUE & frames · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "topic": "windows.rolling",
+      "pattern": "p-41-1",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-42-0",
+      "title": "Rolling averages & missing dates · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "topic": "windows.rolling",
+      "pattern": "p-42-0",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer."
+    },
+    {
+      "id": "lc-42-1",
+      "title": "Rolling averages & missing dates · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "topic": "windows.rolling",
+      "pattern": "p-42-1",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer."
+    },
+    {
+      "id": "lc-43-0",
+      "title": "Share of total with windows · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "ai",
+      "topic": "analytics.statistics",
+      "pattern": "p-43-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-43-1",
+      "title": "Share of total with windows · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "ai",
+      "topic": "analytics.statistics",
+      "pattern": "p-43-1",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-53-0",
+      "title": "Top N per group & ties · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "topic": "windows.top-n",
+      "pattern": "p-53-0",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer."
+    },
+    {
+      "id": "lc-53-1",
+      "title": "Top N per group & ties · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "topic": "windows.top-n",
+      "pattern": "p-53-1",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer."
+    },
+    {
+      "id": "lc-57-0",
+      "title": "NTILE & balanced ranking buckets · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "topic": "windows.rank",
+      "pattern": "p-57-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-57-1",
+      "title": "NTILE & balanced ranking buckets · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "topic": "windows.rank",
+      "pattern": "p-57-1",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-27-0",
+      "title": "Recursive CTEs · Challenge 1",
+      "decision": "MIGRATE",
+      "dataset": "developer",
+      "topic": "subqueries.recursive",
+      "pattern": "p-27-0",
+      "reason": "Developer management hierarchy extends a number sequence to recursive relationships."
+    },
+    {
+      "id": "lc-27-1",
+      "title": "Recursive CTEs · Challenge 2",
+      "decision": "MIGRATE",
+      "dataset": "developer",
+      "topic": "subqueries.recursive",
+      "pattern": "p-27-1",
+      "reason": "Developer management hierarchy extends a number sequence to recursive relationships."
+    },
+    {
+      "id": "lc-28-0",
+      "title": "Query plans & indexes · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "optimization.plans",
+      "pattern": "p-28-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-28-1",
+      "title": "Query plans & indexes · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "optimization.plans",
+      "pattern": "p-3-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-29-0",
+      "title": "Capstone: customer insights · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "analytics.segmentation",
+      "pattern": "p-29-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-29-1",
+      "title": "Capstone: customer insights · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "analytics.segmentation",
+      "pattern": "p-29-0",
+      "reason": "Preserve the existing concept and explicit boundary/tie/NULL contract; shared-domain Practice provides transfer without invalidating saved drafts."
+    },
+    {
+      "id": "lc-44-0",
+      "title": "Deduplicate event retries · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "social",
+      "topic": "cleaning.dedupe",
+      "pattern": "p-25-0",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer."
+    },
+    {
+      "id": "lc-44-1",
+      "title": "Deduplicate event retries · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "social",
+      "topic": "cleaning.dedupe",
+      "pattern": "p-44-1",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer."
+    },
+    {
+      "id": "lc-45-0",
+      "title": "Daily active users & engagement · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "topic": "analytics.active-users",
+      "pattern": "p-45-0",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer."
+    },
+    {
+      "id": "lc-45-1",
+      "title": "Daily active users & engagement · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "topic": "analytics.active-users",
+      "pattern": "p-45-1",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer."
+    },
+    {
+      "id": "lc-46-0",
+      "title": "Ordered conversion funnels · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "social",
+      "topic": "analytics.conversion",
+      "pattern": "p-46-0",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer."
+    },
+    {
+      "id": "lc-46-1",
+      "title": "Ordered conversion funnels · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "social",
+      "topic": "analytics.conversion",
+      "pattern": "p-46-1",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer."
+    },
+    {
+      "id": "lc-47-0",
+      "title": "Cohorts & exact-day retention · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "topic": "analytics.retention",
+      "pattern": "p-47-0",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer."
+    },
+    {
+      "id": "lc-47-1",
+      "title": "Cohorts & exact-day retention · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "topic": "analytics.retention",
+      "pattern": "p-47-0",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer."
+    },
+    {
+      "id": "lc-48-0",
+      "title": "Sessionize an event stream · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "social",
+      "topic": "dates.sessions",
+      "pattern": "p-48-0",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer."
+    },
+    {
+      "id": "lc-48-1",
+      "title": "Sessionize an event stream · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "social",
+      "topic": "dates.sessions",
+      "pattern": "p-48-0",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer."
+    },
+    {
+      "id": "lc-49-0",
+      "title": "Multi-grain joins without fan-out · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "ai",
+      "topic": "joins.fan-out",
+      "pattern": "p-49-0",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer."
+    },
+    {
+      "id": "lc-49-1",
+      "title": "Multi-grain joins without fan-out · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "ai",
+      "topic": "joins.fan-out",
+      "pattern": "p-49-1",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer."
+    },
+    {
+      "id": "lc-50-0",
+      "title": "Revenue & payment reconciliation · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "ai",
+      "topic": "warehousing.reconciliation",
+      "pattern": "p-50-0",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer."
+    },
+    {
+      "id": "lc-50-1",
+      "title": "Revenue & payment reconciliation · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "ai",
+      "topic": "warehousing.reconciliation",
+      "pattern": "p-50-1",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer."
+    },
+    {
+      "id": "lc-51-0",
+      "title": "AI usage cost & contribution margin · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "ai",
+      "topic": "analytics.revenue",
+      "pattern": "p-51-0",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer."
+    },
+    {
+      "id": "lc-51-1",
+      "title": "AI usage cost & contribution margin · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "ai",
+      "topic": "analytics.revenue",
+      "pattern": "p-51-1",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer."
+    },
+    {
+      "id": "lc-52-0",
+      "title": "Experiment conversion denominators · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "social",
+      "topic": "analytics.conversion",
+      "pattern": "p-52-0",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer."
+    },
+    {
+      "id": "lc-52-1",
+      "title": "Experiment conversion denominators · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "social",
+      "topic": "analytics.conversion",
+      "pattern": "p-52-1",
+      "reason": "Preserve linked project narrative and its specialized event/warehouse semantics; new investigations add larger-domain transfer."
+    },
+    {
+      "id": "lc-58-0",
+      "title": "DDL: create, alter & inspect a table · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "lab",
+      "topic": "engineering.ddl",
+      "pattern": "p-58-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-58-1",
+      "title": "DDL: create, alter & inspect a table · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "lab",
+      "topic": "engineering.ddl",
+      "pattern": "p-58-1",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-59-0",
+      "title": "DML: INSERT, UPDATE & DELETE · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "lab",
+      "topic": "engineering.dml",
+      "pattern": "p-59-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-59-1",
+      "title": "DML: INSERT, UPDATE & DELETE · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "lab",
+      "topic": "engineering.dml",
+      "pattern": "p-59-1",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-60-0",
+      "title": "Constraints protect the data contract · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "lab",
+      "topic": "engineering.constraints",
+      "pattern": "p-60-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-60-1",
+      "title": "Constraints protect the data contract · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "lab",
+      "topic": "engineering.constraints",
+      "pattern": "p-60-1",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-61-0",
+      "title": "Transactions & savepoint recovery · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "lab",
+      "topic": "engineering.transactions",
+      "pattern": "p-61-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-61-1",
+      "title": "Transactions & savepoint recovery · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "lab",
+      "topic": "engineering.transactions",
+      "pattern": "p-61-1",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-62-0",
+      "title": "Views: reusable query definitions · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "engineering.views",
+      "pattern": "p-62-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-62-1",
+      "title": "Views: reusable query definitions · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "engineering.views",
+      "pattern": "p-62-1",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-63-0",
+      "title": "CTEs, CTAS & temporary tables · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "engineering.views",
+      "pattern": "p-63-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-63-1",
+      "title": "CTEs, CTAS & temporary tables · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "engineering.views",
+      "pattern": "p-63-1",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-64-0",
+      "title": "Triggers & visible audit effects · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "lab",
+      "topic": "engineering.views",
+      "pattern": "p-64-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-64-1",
+      "title": "Triggers & visible audit effects · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "lab",
+      "topic": "engineering.views",
+      "pattern": "p-64-1",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-65-0",
+      "title": "Stored procedures: parameters & contracts · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "engineering.constraints",
+      "pattern": "p-65-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-65-1",
+      "title": "Stored procedures: parameters & contracts · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "engineering.constraints",
+      "pattern": "p-65-1",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-66-0",
+      "title": "Indexes: observe a real access path · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "optimization.indexes",
+      "pattern": "p-66-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-66-1",
+      "title": "Indexes: observe a real access path · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "shop",
+      "topic": "optimization.indexes",
+      "pattern": "p-66-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-67-0",
+      "title": "SARGable ranges, not speed commandments · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "topic": "optimization.plans",
+      "pattern": "p-67-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-67-1",
+      "title": "SARGable ranges, not speed commandments · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "stream",
+      "topic": "optimization.plans",
+      "pattern": "p-67-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-68-0",
+      "title": "Partitioning & workload trade-offs · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "warehouse",
+      "topic": "optimization.plans",
+      "pattern": "p-68-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-68-1",
+      "title": "Partitioning & workload trade-offs · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "warehouse",
+      "topic": "optimization.plans",
+      "pattern": "p-68-1",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-75-0",
+      "title": "Review AI-generated SQL with evidence · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "ai",
+      "topic": "optimization.plans",
+      "pattern": "p-75-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-75-1",
+      "title": "Review AI-generated SQL with evidence · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "ai",
+      "topic": "optimization.plans",
+      "pattern": "p-32-1",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-69-0",
+      "title": "Bronze: inspect raw data before cleaning · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "warehouse",
+      "topic": "warehousing.layers",
+      "pattern": "p-69-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-69-1",
+      "title": "Bronze: inspect raw data before cleaning · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "warehouse",
+      "topic": "warehousing.layers",
+      "pattern": "p-69-1",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-70-0",
+      "title": "Silver: clean, map & deduplicate · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "warehouse",
+      "topic": "warehousing.layers",
+      "pattern": "p-70-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-70-1",
+      "title": "Silver: clean, map & deduplicate · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "warehouse",
+      "topic": "warehousing.layers",
+      "pattern": "p-70-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-71-0",
+      "title": "Gold: dimensions, facts & quality gates · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "warehouse",
+      "topic": "warehousing.layers",
+      "pattern": "p-71-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-71-1",
+      "title": "Gold: dimensions, facts & quality gates · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "warehouse",
+      "topic": "warehousing.layers",
+      "pattern": "p-71-1",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-72-0",
+      "title": "EDA: explore before telling the story · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "warehouse",
+      "topic": "aggregation.basic",
+      "pattern": "p-72-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-72-1",
+      "title": "EDA: explore before telling the story · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "warehouse",
+      "topic": "aggregation.basic",
+      "pattern": "p-72-1",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-73-0",
+      "title": "Customer & product reporting contracts · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "warehouse",
+      "topic": "analytics.segmentation",
+      "pattern": "p-73-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-73-1",
+      "title": "Customer & product reporting contracts · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "warehouse",
+      "topic": "analytics.segmentation",
+      "pattern": "p-73-1",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-74-0",
+      "title": "Monthly change & cumulative reports · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "warehouse",
+      "topic": "windows.running",
+      "pattern": "p-74-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-74-1",
+      "title": "Monthly change & cumulative reports · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "warehouse",
+      "topic": "windows.running",
+      "pattern": "p-74-1",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-76-0",
+      "title": "Reconcile extraction & Bronze ingestion · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "topic": "warehousing.reconciliation",
+      "pattern": "p-76-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-76-1",
+      "title": "Reconcile extraction & Bronze ingestion · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "topic": "warehousing.reconciliation",
+      "pattern": "p-76-1",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-77-0",
+      "title": "Integrate CRM + ERP with source authority · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "topic": "warehousing.layers",
+      "pattern": "p-77-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-77-1",
+      "title": "Integrate CRM + ERP with source authority · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "topic": "warehousing.layers",
+      "pattern": "p-77-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-78-0",
+      "title": "Product validity with LEAD & half-open intervals · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "topic": "warehousing.history",
+      "pattern": "p-78-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-78-1",
+      "title": "Product validity with LEAD & half-open intervals · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "topic": "warehousing.history",
+      "pattern": "p-78-1",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-79-0",
+      "title": "Validate calendar dates before converting · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "topic": "cleaning.validation",
+      "pattern": "p-79-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-79-1",
+      "title": "Validate calendar dates before converting · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "topic": "cleaning.validation",
+      "pattern": "p-79-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-80-0",
+      "title": "Quarantine bad rows & reconcile the batch · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "topic": "warehousing.reconciliation",
+      "pattern": "p-80-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-80-1",
+      "title": "Quarantine bad rows & reconcile the batch · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "topic": "warehousing.reconciliation",
+      "pattern": "p-80-1",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-81-0",
+      "title": "Automated star-schema quality tests · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "topic": "warehousing.reconciliation",
+      "pattern": "p-81-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-81-1",
+      "title": "Automated star-schema quality tests · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "topic": "warehousing.reconciliation",
+      "pattern": "p-81-1",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-82-0",
+      "title": "Durable surrogate keys across loads · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "topic": "warehousing.incremental",
+      "pattern": "p-82-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-82-1",
+      "title": "Durable surrogate keys across loads · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "topic": "warehousing.incremental",
+      "pattern": "p-82-1",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-83-0",
+      "title": "Latest-state reporting versus SCD Type 2 · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "topic": "warehousing.history",
+      "pattern": "p-83-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-83-1",
+      "title": "Latest-state reporting versus SCD Type 2 · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "topic": "warehousing.history",
+      "pattern": "p-83-1",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-84-0",
+      "title": "Idempotent incremental UPSERT & stale updates · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "topic": "warehousing.incremental",
+      "pattern": "p-84-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-84-1",
+      "title": "Idempotent incremental UPSERT & stale updates · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "topic": "warehousing.incremental",
+      "pattern": "p-84-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-85-0",
+      "title": "Stage, validate & atomically promote a refresh · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "topic": "engineering.transactions",
+      "pattern": "p-85-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-85-1",
+      "title": "Stage, validate & atomically promote a refresh · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "topic": "engineering.transactions",
+      "pattern": "p-85-1",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-86-0",
+      "title": "Protect fact grain when joining versions · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "topic": "joins.fan-out",
+      "pattern": "p-86-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-86-1",
+      "title": "Protect fact grain when joining versions · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "topic": "joins.fan-out",
+      "pattern": "p-86-1",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-87-0",
+      "title": "Capstone: integrated customers to trusted sales · Challenge 1",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "topic": "warehousing.layers",
+      "pattern": "p-87-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "lc-87-1",
+      "title": "Capstone: integrated customers to trusted sales · Challenge 2",
+      "decision": "KEEP",
+      "dataset": "integration",
+      "topic": "warehousing.layers",
+      "pattern": "p-87-0",
+      "reason": "Preserve executable SQLite engineering contract, state validation, and guided project continuity."
+    },
+    {
+      "id": "qb-0001",
+      "title": "Shopper contact list",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "basics.select",
+      "pattern": "qb-shopper-contact-list",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0002",
+      "title": "Shoppers in the West region",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "filtering.where",
+      "pattern": "qb-shoppers-in-the-west",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0003",
+      "title": "Catalog from most to least expensive",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "basics.order-by",
+      "pattern": "qb-catalog-by-price",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0004",
+      "title": "Orders with no delivery date",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "filtering.null",
+      "pattern": "qb-orders-without-delivery-date",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0005",
+      "title": "The three cheapest items",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "basics.limit",
+      "pattern": "qb-three-cheapest-items",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0006",
+      "title": "Rename a column",
+      "decision": "KEEP",
+      "dataset": "org",
+      "topic": "basics.alias",
+      "pattern": "qb-salary-column-alias",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0007",
+      "title": "Office locations",
+      "decision": "KEEP",
+      "dataset": "org",
+      "topic": "basics.distinct",
+      "pattern": "qb-office-locations",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0008",
+      "title": "Hired during 2023",
+      "decision": "KEEP",
+      "dataset": "org",
+      "topic": "filtering.between",
+      "pattern": "qb-hired-in-2023",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0009",
+      "title": "Orders by status",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "aggregation.group-by",
+      "pattern": "qb-orders-by-status",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0010",
+      "title": "Items nobody has ordered",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "joins.anti",
+      "pattern": "qb-items-never-ordered",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0011",
+      "title": "Repeat shoppers",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "aggregation.having",
+      "pattern": "qb-repeat-shoppers",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0012",
+      "title": "Delivered revenue by category",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "aggregation.group-by",
+      "pattern": "qb-delivered-revenue-by-category",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0013",
+      "title": "Signups in the last 30 days",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "dates.filter",
+      "pattern": "qb-march-signups",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0014",
+      "title": "Emails used more than once",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "cleaning.strings",
+      "pattern": "qb-shared-emails",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0015",
+      "title": "Employees and their departments",
+      "decision": "KEEP",
+      "dataset": "org",
+      "topic": "joins.inner",
+      "pattern": "qb-employees-and-departments",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0016",
+      "title": "Every employee, with a department label",
+      "decision": "KEEP",
+      "dataset": "org",
+      "topic": "joins.left",
+      "pattern": "qb-everyone-with-a-department-label",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0017",
+      "title": "Find the lamps",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "filtering.like",
+      "pattern": "qb-lamps-in-the-catalog",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0018",
+      "title": "Open orders in February and March",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "filtering.logic",
+      "pattern": "qb-open-orders-feb-mar",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0019",
+      "title": "Average salary by department",
+      "decision": "KEEP",
+      "dataset": "org",
+      "topic": "aggregation.basic",
+      "pattern": "qb-average-salary-by-department",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0020",
+      "title": "Price bands",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "cleaning.case",
+      "pattern": "qb-price-bands",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0021",
+      "title": "Active buyers per month",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "dates.buckets",
+      "pattern": "qb-monthly-active-buyers",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0022",
+      "title": "How long did delivery take?",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "dates.diff",
+      "pattern": "qb-days-to-deliver",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0023",
+      "title": "Create a wishlist table",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "engineering.ddl",
+      "pattern": "qb-create-a-wishlist-table",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0024",
+      "title": "Reprice the garden range",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "engineering.dml",
+      "pattern": "qb-garden-repricing",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0025",
+      "title": "Big spenders for their region",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "subqueries.correlated",
+      "pattern": "qb-above-regional-average",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0026",
+      "title": "Monthly revenue after refunds",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "analytics.revenue",
+      "pattern": "qb-monthly-net-revenue",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0027",
+      "title": "Bestsellers within each category",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "windows.rank",
+      "pattern": "qb-bestsellers-within-category",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0028",
+      "title": "Seven-day rolling active shoppers",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "windows.rolling",
+      "pattern": "qb-rolling-seven-day-logins",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0029",
+      "title": "Earning more than the manager",
+      "decision": "KEEP",
+      "dataset": "org",
+      "topic": "joins.self",
+      "pattern": "qb-out-earning-the-manager",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0030",
+      "title": "Days with no orders",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "dates.series",
+      "pattern": "qb-days-without-orders",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0031",
+      "title": "First order versus latest order",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "windows.row-number",
+      "pattern": "qb-first-versus-latest-order",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0032",
+      "title": "Orders whose payments don't match",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "joins.fan-out",
+      "pattern": "qb-orders-not-fully-paid",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0033",
+      "title": "Order status mix by region",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "aggregation.conditional",
+      "pattern": "qb-status-mix-by-region",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0034",
+      "title": "Loyal shoppers who never needed a refund",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "subqueries.exists",
+      "pattern": "qb-loyal-and-never-refunded",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0035",
+      "title": "Average order value by month",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "analytics.revenue",
+      "pattern": "qb-average-order-value-by-month",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0036",
+      "title": "Payroll versus budget",
+      "decision": "KEEP",
+      "dataset": "org",
+      "topic": "aggregation.group-by",
+      "pattern": "qb-payroll-versus-budget",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0037",
+      "title": "Keep one account per email",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "cleaning.dedupe",
+      "pattern": "qb-deduplicate-shopper-accounts",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0038",
+      "title": "A covering index for unit totals",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "optimization.indexes",
+      "pattern": "qb-covering-index-for-units",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0039",
+      "title": "A reusable shopper totals view",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "engineering.views",
+      "pattern": "qb-shopper-totals-view",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0040",
+      "title": "Second-highest salary per department",
+      "decision": "KEEP",
+      "dataset": "org",
+      "topic": "windows.rank",
+      "pattern": "qb-second-highest-salary",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0041",
+      "title": "Next-month retention by signup cohort",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "analytics.retention",
+      "pattern": "qb-monthly-signup-cohorts",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0042",
+      "title": "Longest login streak",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "windows.gaps-islands",
+      "pattern": "qb-longest-login-streak",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0043",
+      "title": "Salary at the time of each review",
+      "decision": "KEEP",
+      "dataset": "org",
+      "topic": "warehousing.history",
+      "pattern": "qb-salary-at-review-time",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0044",
+      "title": "Detect overlapping history periods",
+      "decision": "KEEP",
+      "dataset": "org",
+      "topic": "cleaning.validation",
+      "pattern": "qb-overlapping-salary-periods",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0045",
+      "title": "Management chain for every employee",
+      "decision": "KEEP",
+      "dataset": "org",
+      "topic": "subqueries.recursive",
+      "pattern": "qb-management-chain",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0046",
+      "title": "Median order value by region",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "analytics.statistics",
+      "pattern": "qb-median-order-value",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0047",
+      "title": "Build a region history from snapshots",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "warehousing.history",
+      "pattern": "qb-build-region-history",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0048",
+      "title": "Reconcile orders, payments and refunds",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "warehousing.reconciliation",
+      "pattern": "qb-three-way-payment-reconciliation",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0049",
+      "title": "Design a purchase lookup index",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "optimization.indexes",
+      "pattern": "qb-purchase-lookup-index",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0050",
+      "title": "Cover the event export",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "optimization.indexes",
+      "pattern": "qb-cover-the-event-export",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0051",
+      "title": "Make the event-day filter SARGable",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "optimization.plans",
+      "pattern": "qb-sargable-event-day",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0052",
+      "title": "Top events without a temporary sort",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "optimization.plans",
+      "pattern": "qb-top-events-without-a-sort",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0053",
+      "title": "Find a truly ordered cart funnel",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "analytics.conversion",
+      "pattern": "qb-ordered-cart-funnel",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0054",
+      "title": "Identify abandoned checkout attempts",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "analytics.conversion",
+      "pattern": "qb-abandoned-checkout-attempts",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0055",
+      "title": "Audit conflicting event retries",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "cleaning.dedupe",
+      "pattern": "qb-canonical-event-retries",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0056",
+      "title": "Sessionize retries and exact boundaries",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "dates.sessions",
+      "pattern": "qb-session-boundaries-with-retries",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0057",
+      "title": "Attribute session conversion to first touch",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "analytics.conversion",
+      "pattern": "qb-session-conversion-by-first-touch",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0058",
+      "title": "Build a replay-safe ledger load",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "engineering.dml",
+      "pattern": "qb-replay-safe-ledger-load",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0059",
+      "title": "Enforce the reservation boundary",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "engineering.constraints",
+      "pattern": "qb-validated-reservation-boundary",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0060",
+      "title": "Recover a failed stock allocation",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "engineering.transactions",
+      "pattern": "qb-recover-a-stock-allocation",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0061",
+      "title": "Measure co-purchased product pairs",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "joins.self",
+      "pattern": "qb-co-purchased-product-pairs",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0062",
+      "title": "Find shoppers in every category",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "subqueries.exists",
+      "pattern": "qb-shoppers-in-every-category",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0063",
+      "title": "Compare category audience overlap",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "joins.fan-out",
+      "pattern": "qb-category-audience-overlap",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0064",
+      "title": "Parse malformed product codes",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "cleaning.strings",
+      "pattern": "qb-parse-import-product-codes",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0065",
+      "title": "Normalize contact import collisions",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "cleaning.strings",
+      "pattern": "qb-normalize-contact-imports",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0066",
+      "title": "Parse money into exact integer cents",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "cleaning.validation",
+      "pattern": "qb-parse-exact-money-cents",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0067",
+      "title": "Checkout review 1: establish the baseline",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "analytics.active-users",
+      "pattern": "qb-checkout-case-session-baseline",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0068",
+      "title": "Checkout review 2: locate funnel drop-off",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "analytics.conversion",
+      "pattern": "qb-checkout-case-funnel-dropoff",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0069",
+      "title": "Checkout review 3: measure the delay tail",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "analytics.statistics",
+      "pattern": "qb-checkout-case-delay-tail",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0070",
+      "title": "Checkout review 4: find later recoveries",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "analytics.retention",
+      "pattern": "qb-checkout-case-later-recovery",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0071",
+      "title": "Checkout review 5: prioritize channel fixes",
+      "decision": "KEEP",
+      "dataset": "market",
+      "topic": "analytics.segmentation",
+      "pattern": "qb-checkout-case-channel-priorities",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0072",
+      "title": "Predict: members with and without bookings",
+      "decision": "KEEP",
+      "dataset": "reasoning",
+      "topic": "joins.left",
+      "pattern": "qb-predict-unmatched-bookings",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0073",
+      "title": "Predict: unknown credits in a filter",
+      "decision": "KEEP",
+      "dataset": "reasoning",
+      "topic": "filtering.null",
+      "pattern": "qb-predict-null-comparison",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0074",
+      "title": "Predict: count rows or known values?",
+      "decision": "KEEP",
+      "dataset": "reasoning",
+      "topic": "aggregation.group-by",
+      "pattern": "qb-predict-count-grain",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0075",
+      "title": "Predict: positions and shared ranks",
+      "decision": "KEEP",
+      "dataset": "reasoning",
+      "topic": "windows.rank",
+      "pattern": "qb-predict-rank-ties",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0076",
+      "title": "Predict: a frame that includes peers",
+      "decision": "KEEP",
+      "dataset": "reasoning",
+      "topic": "windows.rolling",
+      "pattern": "qb-predict-peer-frames",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0077",
+      "title": "Predict: the previous member within a team",
+      "decision": "KEEP",
+      "dataset": "reasoning",
+      "topic": "windows.lag-lead",
+      "pattern": "qb-predict-partition-lag",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0078",
+      "title": "Debug: find members with unknown credits",
+      "decision": "KEEP",
+      "dataset": "reasoning",
+      "topic": "filtering.null",
+      "pattern": "qb-debug-null-filter",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0079",
+      "title": "Debug: retain members without paid bookings",
+      "decision": "KEEP",
+      "dataset": "reasoning",
+      "topic": "joins.left",
+      "pattern": "qb-debug-outer-join-filter",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0080",
+      "title": "Debug: count zero bookings correctly",
+      "decision": "KEEP",
+      "dataset": "reasoning",
+      "topic": "aggregation.basic",
+      "pattern": "qb-debug-count-bookings",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0081",
+      "title": "Debug: the second distinct credit balance",
+      "decision": "KEEP",
+      "dataset": "reasoning",
+      "topic": "windows.rank",
+      "pattern": "qb-debug-distinct-credit-rank",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0082",
+      "title": "Debug: April bookings at the boundary",
+      "decision": "KEEP",
+      "dataset": "reasoning",
+      "topic": "dates.filter",
+      "pattern": "qb-debug-month-boundary",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0083",
+      "title": "Debug: the last balance in each team",
+      "decision": "KEEP",
+      "dataset": "reasoning",
+      "topic": "windows.rolling",
+      "pattern": "qb-debug-last-window-value",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0084",
+      "title": "Capacity 1: current regional totals",
+      "decision": "KEEP",
+      "dataset": "capacity",
+      "topic": "aggregation.group-by",
+      "pattern": "qb-capacity-regional-snapshot",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0085",
+      "title": "Capacity 2: retain missing and unmapped sites",
+      "decision": "KEEP",
+      "dataset": "capacity",
+      "topic": "joins.left",
+      "pattern": "qb-capacity-missing-sites",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0086",
+      "title": "Capacity 3: the next delivery date and all ties",
+      "decision": "KEEP",
+      "dataset": "capacity",
+      "topic": "subqueries.cte",
+      "pattern": "qb-capacity-next-deliveries",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0087",
+      "title": "Capacity 4: reconcile capacity and incoming supply",
+      "decision": "KEEP",
+      "dataset": "capacity",
+      "topic": "joins.multi",
+      "pattern": "qb-capacity-avoid-fan-out",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0088",
+      "title": "Capacity 5: project regional capacity at month end",
+      "decision": "KEEP",
+      "dataset": "capacity",
+      "topic": "warehousing.reconciliation",
+      "pattern": "qb-capacity-fixed-cutoff-projection",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0089",
+      "title": "Two temperatures, one station day",
+      "decision": "ADD",
+      "dataset": "weather",
+      "topic": "aggregation.conditional",
+      "pattern": "qb-station-temperature-columns",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0090",
+      "title": "Observation coverage by station",
+      "decision": "ADD",
+      "dataset": "weather",
+      "topic": "analytics.statistics",
+      "pattern": "qb-weather-observation-coverage",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0091",
+      "title": "Signed invoice totals",
+      "decision": "ADD",
+      "dataset": "retail",
+      "topic": "analytics.revenue",
+      "pattern": "qb-signed-invoice-totals",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0092",
+      "title": "What actually moved money?",
+      "decision": "ADD",
+      "dataset": "payments",
+      "topic": "warehousing.reconciliation",
+      "pattern": "qb-posted-payment-balances",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0093",
+      "title": "Has the whole shipment arrived?",
+      "decision": "ADD",
+      "dataset": "logistics",
+      "topic": "subqueries.exists",
+      "pattern": "qb-fully-delivered-shipments",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0094",
+      "title": "Repeat reviews, distinct changes",
+      "decision": "ADD",
+      "dataset": "developer",
+      "topic": "aggregation.distinct-count",
+      "pattern": "qb-reviewer-pair-workload",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0095",
+      "title": "Two measures, one observation stream",
+      "decision": "ADD",
+      "dataset": "energy",
+      "topic": "joins.set-ops",
+      "pattern": "qb-library-reasoning-95",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0096",
+      "title": "Last known daily maximum",
+      "decision": "ADD",
+      "dataset": "weather",
+      "topic": "subqueries.correlated",
+      "pattern": "qb-library-reasoning-96",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0097",
+      "title": "Everyone below a manager",
+      "decision": "ADD",
+      "dataset": "developer",
+      "topic": "subqueries.recursive",
+      "pattern": "qb-library-reasoning-97",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0098",
+      "title": "Reliability bands",
+      "decision": "ADD",
+      "dataset": "flights",
+      "topic": "aggregation.conditional",
+      "pattern": "qb-library-reasoning-98",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0099",
+      "title": "State as of an operational cutoff",
+      "decision": "ADD",
+      "dataset": "logistics",
+      "topic": "windows.row-number",
+      "pattern": "qb-library-reasoning-99",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0100",
+      "title": "Continuous incident coverage",
+      "decision": "ADD",
+      "dataset": "developer",
+      "topic": "windows.gaps-islands",
+      "pattern": "qb-library-reasoning-100",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0101",
+      "title": "Predict: integer and decimal ratios",
+      "decision": "ADD",
+      "dataset": "energy",
+      "topic": "aggregation.conditional",
+      "pattern": "qb-library-reasoning-101",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0102",
+      "title": "Predict: missing tips in an average",
+      "decision": "ADD",
+      "dataset": "mobility",
+      "topic": "filtering.null",
+      "pattern": "qb-library-reasoning-102",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0103",
+      "title": "Predict: a recursive reporting path",
+      "decision": "ADD",
+      "dataset": "developer",
+      "topic": "subqueries.recursive",
+      "pattern": "qb-library-reasoning-103",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0104",
+      "title": "Predict: a date across midnight",
+      "decision": "ADD",
+      "dataset": "flights",
+      "topic": "dates.buckets",
+      "pattern": "qb-library-reasoning-104",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0105",
+      "title": "Predict: duplicate observations in a set",
+      "decision": "ADD",
+      "dataset": "energy",
+      "topic": "joins.set-ops",
+      "pattern": "qb-library-reasoning-105",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0106",
+      "title": "Predict: membership with an unknown alternative",
+      "decision": "ADD",
+      "dataset": "mobility",
+      "topic": "filtering.null",
+      "pattern": "qb-library-reasoning-106",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0107",
+      "title": "Debug: observable tip coverage",
+      "decision": "ADD",
+      "dataset": "mobility",
+      "topic": "filtering.null",
+      "pattern": "qb-library-reasoning-107",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0108",
+      "title": "Debug: delay among operated flights",
+      "decision": "ADD",
+      "dataset": "flights",
+      "topic": "aggregation.basic",
+      "pattern": "qb-library-reasoning-108",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0109",
+      "title": "Debug: forecast accuracy",
+      "decision": "ADD",
+      "dataset": "energy",
+      "topic": "analytics.statistics",
+      "pattern": "qb-library-reasoning-109",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0110",
+      "title": "Debug: teams without repositories",
+      "decision": "ADD",
+      "dataset": "developer",
+      "topic": "joins.left",
+      "pattern": "qb-library-reasoning-110",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0111",
+      "title": "Debug: visits after an observation join",
+      "decision": "ADD",
+      "dataset": "healthcare",
+      "topic": "joins.fan-out",
+      "pattern": "qb-library-reasoning-111",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    },
+    {
+      "id": "qb-0112",
+      "title": "Debug: a scan retry is not a new event",
+      "decision": "ADD",
+      "dataset": "logistics",
+      "topic": "cleaning.dedupe",
+      "pattern": "qb-library-reasoning-112",
+      "reason": "Retain stable question and progress identity; independent grading checks reference, changed data, hardcoded output and documented wrong approaches."
+    }
+  ]
+}

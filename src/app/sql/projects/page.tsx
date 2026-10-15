@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { redirectPage } from "@/platform/seo";
-import { ProjectsEntry } from "@/features/rt/pages/Project";
+import { ProjectLibrary } from "@/features/rt/projects/ProjectLibrary";
+import { toolMetadata } from "@/platform/seo";
 
-export const metadata: Metadata = redirectPage;
+export const metadata: Metadata = toolMetadata.projects;
 
 export default function Page() {
-  return <ProjectsEntry />;
+  return <ProjectLibrary />;
 }

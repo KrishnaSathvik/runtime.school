@@ -1,38 +1,41 @@
 "use client";
 
-import previews from "@/content/table-previews.json";
+import type { DatasetPreview as Preview } from "@/data/datasets/learning";
 
-type Column = { name: string; type: string; key: string | null; references?: string };
-type Preview = {
-  columns: Column[];
-  result: { columns: string[]; values: unknown[][] };
-  total: number;
-};
-const data = previews as Record<string, Preview>;
+type Column = Preview["columns"][number];
 
-/** "integer · key", "integer → shoppers": the type and any key, read under the column name. */
-function describe(c: Column | undefined) {
+/** Sample rows shown per table; queries always run on every row. */
+export const PREVIEW_ROWS = 6;
+
+const KIND: Record<string, string> = { INTEGER: "number", REAL: "decimal", NUMERIC: "number", TEXT: "text", BLOB: "binary" };
+
+/** Plain words under a column name: what it holds, and whether it identifies a row or points to another table. */
+function describe(c: Column | undefined, sample?: unknown) {
   if (!c) return "";
-  const type = c.type.toLowerCase() || "any";
-  if (c.references) return `${type} → ${c.references.split(".")[0]}`;
-  return c.key === "PK" ? `${type} · key` : type;
+  // SQLite stores dates as text; name them by what the values are.
+  const date = typeof sample === "string" && /^\d{4}-\d{2}-\d{2}/.test(sample) ? (sample.length > 10 ? "date & time" : "date") : null;
+  const kind = date ?? KIND[c.type.toUpperCase()] ?? "";
+  const role = c.references ? `links to ${c.references.split(".")[0]}` : c.key === "PK" ? "unique id" : "";
+  return [kind, role].filter(Boolean).join(" · ");
 }
 
 const cell = (v: unknown, j: number) =>
   v === null ? <td key={j} className="null">NULL</td> : <td key={j} title={String(v)}>{String(v)}</td>;
 
 /** Tables as cards: each column header shows its name with its type underneath, then sample rows. */
-export function Tables({ tables, open = false }: { tables: string[]; open?: boolean }) {
+export function Tables({ tables, open = false, previews }: { tables: string[]; open?: boolean; previews: Record<string, Preview> }) {
   return (
     <div className="rx-schema">
       {tables.map((t) => {
-        const p = data[t];
-        const byName = new Map(p?.columns.map((c) => [c.name, c]));
+        const p = previews[t];
+        const byName = new Map(p?.columns?.map((c) => [c.name, c]));
+        const rows = p?.result.values.slice(0, PREVIEW_ROWS) ?? [];
+        const label = (column: string) => describe(byName.get(column), p?.result.values.find((r) => r[p.result.columns.indexOf(column)] !== null)?.[p.result.columns.indexOf(column)]);
         return (
-          <details key={t} className={`rx-schema-table${p && p.columns.length > 5 ? " rx-schema-dense" : ""}`} open={open}>
+          <details key={t} className={`rx-schema-table${p && (p.columns?.length ?? 0) > 5 ? " rx-schema-dense" : ""}`} open={open}>
             <summary>
               <b>{t}</b>
-              <span>{p ? `${p.columns.length} columns · ${p.total} rows` : "created by the task"}</span>
+              <span>{p ? `${p.columns?.length ?? p.result.columns.length} columns · ${p.total.toLocaleString("en-US")} rows` : "created by the task"}</span>
             </summary>
             {p && (
               <>
@@ -41,26 +44,26 @@ export function Tables({ tables, open = false }: { tables: string[]; open?: bool
                     <thead>
                       <tr>
                         {p.result.columns.map((c) => (
-                          <th key={c} title={`${c} · ${describe(byName.get(c))}`} className={c === "id" ? "id" : undefined}>
+                          <th key={c} title={`${c} · ${label(c)}`} className={c === "id" ? "id" : undefined}>
                             <span className="n">{c}</span>
-                            <span className="t">{describe(byName.get(c))}</span>
+                            <span className="t">{label(c)}</span>
                           </th>
                         ))}
                       </tr>
                     </thead>
-                    <tbody>{p.result.values.map((r, i) => <tr key={i}>{r.map(cell)}</tr>)}</tbody>
+                    <tbody>{rows.map((r, i) => <tr key={i}>{r.map(cell)}</tr>)}</tbody>
                   </table>
                 </div>
                 <div className="rx-table-records" aria-label={`${t} sample records`}>
-                  {p.result.values.map((row, i) => <dl className="rx-table-record" key={i}>
+                  {rows.map((row, i) => <dl className="rx-table-record" key={i}>
                     {p.result.columns.map((column, j) => <div key={column}>
-                      <dt>{column}<span>{describe(byName.get(column))}</span></dt>
+                      <dt>{column}<span>{label(column)}</span></dt>
                       <dd>{row[j] === null ? <span className="null">NULL</span> : String(row[j])}</dd>
                     </div>)}
                   </dl>)}
                 </div>
                 <p className="rx-table-foot">
-                  {p.result.values.length < p.total ? `showing ${p.result.values.length} of ${p.total} rows` : `all ${p.total} rows`}
+                  {rows.length < p.total ? `first ${rows.length} of ${p.total.toLocaleString("en-US")} rows · your queries use all of them` : `all ${p.total} rows`}
                 </p>
               </>
             )}

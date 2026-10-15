@@ -2,12 +2,10 @@ import { readFileSync } from "node:fs";
 import { expect, it } from "vitest";
 import { getLesson, lessons } from "@/content";
 
-const workspace = readFileSync("src/features/lesson/LessonWorkspace.tsx", "utf8");
 const learning = readFileSync("src/lib/learning-state.ts", "utf8");
 
 it("shows and grades the quiz stored on that lesson id", () => {
-  expect(workspace).toContain("lesson.quiz");
-  expect(learning).toContain("lessons[lessonId]?.quiz");
+  expect(learning).toContain("const quiz = lessons[lessonId]?.quiz;");
   for (const lesson of lessons) {
     expect(lesson.id).toBe(lessons.indexOf(lesson));
     expect(getLesson(lesson.id)).toBe(lesson);
@@ -29,8 +27,8 @@ it("gives every lesson its own concept check", () => {
 
 it("asks the aliases lesson about a calculated column", () => {
   const quiz = lessons[1].quiz;
-  expect(quiz.q).toMatch(/double_price/);
-  expect(quiz.options[quiz.correct]).toMatch(/without changing products/);
+  expect(quiz.q).toMatch(/list_price \* /);
+  expect(quiz.options[quiz.correct]).toBe("NULL");
   expect(quiz.q).not.toBe(lessons[0].quiz.q);
   expect(lessons[1].walkthrough[0].query).toMatch(/FROM products/);
   expect(lessons[1].walkthrough[0].query).not.toMatch(/FROM customers/);
@@ -44,7 +42,8 @@ it("starts rewritten lessons from the table that lesson actually uses", () => {
   ]) {
     expect(lessons[id].walkthrough[0].title).not.toMatch(/Inspect the source|Inspect the starting state/);
   }
-  expect(lessons[3].quiz.q).toMatch(/Chicago/);
+  expect(lessons[3].quiz.q).toMatch(/sale orders/);
+  expect(lessons[3].walkthrough[0].query).toMatch(/FROM orders/);
   expect(lessons[3].quiz.q).not.toBe(lessons[7].quiz.q);
   expect(lessons[23].quiz.q).not.toBe(lessons[42].quiz.q);
   expect(lessons[26].quiz.q).not.toBe(lessons[39].quiz.q);
@@ -53,8 +52,11 @@ it("starts rewritten lessons from the table that lesson actually uses", () => {
   expect(lessons[75].quiz.q).not.toBe(lessons[66].quiz.q);
   expect(lessons[72].quiz.q).not.toBe(lessons[71].quiz.q);
   expect(lessons[74].quiz.q).toMatch(/month/);
-  expect(lessons[16].quiz.options[lessons[16].quiz.correct]).toMatch(/line's revenue|That line/i);
-  expect(lessons[70].quiz.options[lessons[70].quiz.correct]).toMatch(/latest/i);
+  // Lesson 16 checks line revenue (not fan-out); lesson 70 checks Silver deduplication keys.
+  expect(lessons[16].quiz.q).toMatch(/quantity \* unit_price/);
+  expect(JSON.stringify(lessons[16].quiz)).not.toMatch(/fan-?out/i);
+  expect(lessons[70].quiz.q).toMatch(/partition by/i);
+  expect(lessons[70].quiz.options[lessons[70].quiz.correct]).toMatch(/same customer/i);
   expect(lessons[35].example).not.toMatch(/RECURSIVE/i);
   expect(lessons[35].tasks[0].answer).not.toMatch(/RECURSIVE/i);
   expect(lessons[54].concept).toMatch(/JOIN/);

@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { courseOrder, projects } from "@/content";
+import { courseOrder } from "@/content";
 import { bankQuestions } from "@/content/question-bank";
 import { projectsEntryHref, rtSectionHrefs } from "@/features/rt/entry";
 import { useLearning } from "@/lib/learning-state";
+import { sqlLessonHref } from "@/platform/sql-lesson-href";
 
 const fresh = () => {
   useLearning.getState().resetProgress();
@@ -10,12 +11,12 @@ const fresh = () => {
 };
 
 describe("rt section entry hrefs", () => {
-  it("points a fresh learner at the first lesson, question, and project brief", () => {
+  it("points a fresh learner at the first lesson, question, and projects library", () => {
     const s = fresh();
     const hrefs = rtSectionHrefs(s);
-    expect(hrefs.learn).toBe(`/sql/lesson/${courseOrder[0]}`);
+    expect(hrefs.learn).toBe(sqlLessonHref(courseOrder[0]));
     expect(hrefs.practice).toBe(`/sql/practice/${bankQuestions[0].slug}`);
-    expect(hrefs.projects).toBe("/sql/projects/video-product-analytics");
+    expect(hrefs.projects).toBe("/sql/projects");
   });
 
   it("resumes practice on the last unsolved question", () => {
@@ -24,24 +25,10 @@ describe("rt section entry hrefs", () => {
     expect(rtSectionHrefs(s).practice).toBe(`/sql/practice/${bankQuestions[2].slug}`);
   });
 
-  it("opens the next unfinished milestone for a started project", () => {
+  it("resumes a started catalog project from local drafts", () => {
     const s = fresh();
-    const p = projects[0];
-    const first = p.milestoneIds[0];
-    s.projects[p.id] = {
-      started: 1,
-      last: first,
-      milestones: {
-        [first]: {
-          solved: [0, 1],
-          check: true,
-          queries: {},
-          results: {},
-          updated: 2,
-          notes: "done",
-        },
-      },
-    };
-    expect(projectsEntryHref(s)).toBe(`/sql/projects/video-product-analytics/m/${p.milestoneIds[1]}`);
+    s.setDraft("sql-project-airline-reliability-review-v1-baseline-sql", "SELECT 1");
+    s.setDraft("sql-project-airline-reliability-review-v1-baseline-seen", "1");
+    expect(projectsEntryHref(useLearning.getState())).toBe("/sql/projects/airline-reliability-review");
   });
 });

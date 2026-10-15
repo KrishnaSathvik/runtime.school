@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from "react";
 import { Eye, Lightbulb, RotateCcw } from "lucide-react";
 import taskContexts from "@/content/task-context.json";
-import { getLesson, isBlankSql, seed, starterFor } from "@/content";
+import { getLesson, isBlankSql, lessonFixture, starterFor } from "@/content";
 import {
   attemptKey,
   classifyFailure,
@@ -32,20 +32,17 @@ function PromptText({ text }: { text: string }) {
 }
 
 /**
- * One graded challenge (lesson or project milestone), with the same rules as the current app:
+ * One graded lesson challenge:
  * solving without hints or the answer counts toward mastery; help is always available.
  */
 export function Challenge({
   lessonId,
   variant,
-  projectId = null,
-  onSolved,
 }: {
   lessonId: number;
   variant: 0 | 1;
-  projectId?: number | null;
-  onSolved?: () => void;
 }) {
+  const projectId = null;
   const lesson = getLesson(lessonId)!;
   const task = lesson.tasks[variant];
   const ctx = (taskContexts as Record<string, TaskContext[]>)[lessonId]?.[variant];
@@ -59,8 +56,7 @@ export function Challenge({
   const recordCheck = useLearning((s) => s.recordCheck);
   const setSession = useLearning((s) => s.setSession);
   const stats = useLearning((s) => s.stats[lessonId]);
-  const milestone = useLearning((s) => (projectId !== null ? s.projects[projectId]?.milestones[lessonId] : undefined));
-  const solved = (projectId !== null ? milestone?.solved : stats?.solved)?.includes(variant) ?? false;
+  const solved = stats?.solved?.includes(variant) ?? false;
 
   const { sql: starter } = starterFor(lesson, variant);
   const value = isBlankSql(drafts[dKey]) && drafts[dKey] !== "" ? starter : drafts[dKey];
@@ -114,12 +110,15 @@ export function Challenge({
           project: projectId,
         }}
         task={{
-          seedSql: seed,
+          seedSql: lessonFixture(lesson).seed,
+          mutationSql: lessonFixture(lesson).mutation,
           answer: task.answer,
           ordered: task.ordered,
           required: task.required,
           validate: task.validate,
           planValidation: task.planValidation,
+          stateQueries: task.stateQueries,
+          repeatCheck: task.repeatCheck,
           allowWrites: lesson.mode === "lab",
         }}
         onGraded={(res, ok) => {
@@ -133,7 +132,6 @@ export function Challenge({
             result: res.result ?? null,
             category: ok ? null : classifyFailure(res),
           });
-          if (ok) onSolved?.();
         }}
         footer={
           <>

@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
-import { courseOrder, getLesson, groups, projects } from "@/content";
+import { courseOrder, getLesson, groups } from "@/content";
+import { getProject } from "@/content/projects";
+import { sqlProjectHref } from "@/content/projects/paths";
 import { lessonSummaries } from "@/content/ux-summaries";
 import { bankBySlug, bankQuestions, DIFFICULTY_LABEL, topicLabel } from "@/content/question-bank";
 import { BRAND_NAME, SITE_URL } from "@/platform/brand";
-import { projectHref } from "@/platform/project-paths";
+import { learningDatasets } from "@/data/datasets/learning";
+import { canonicalNames, type CanonicalDatasetId } from "@/data/datasets/learning-map";
+import { sqlLessonHref } from "@/platform/sql-lesson-href";
 
 /** Search-engine metadata for the public SQL pages (/sql/…). One canonical URL per page. */
 
@@ -16,11 +20,11 @@ const card = (file: string, alt: string): ShareCard => ({ url: `/${file}`, width
 const SHARE = {
   learn: card("og-sql-learn.png", "Learn SQL. Read the idea, run the query, then solve it."),
   practice: card("og-sql-practice.png", "SQL Practice. Write the query and check it on real data."),
-  projects: card("og-sql-projects.png", "SQL Projects. A brief, milestones, and a report."),
-  playground: card("og-sql-playground.png", "SQL Playground. Explore a sample database. Nothing is graded."),
+  projects: card("og-sql-projects.png", "SQL Projects. Investigate a business problem with real data."),
+  playground: card("og-sql-playground.png", "SQL Playground. Explore a real-world dataset with SQL. Nothing is graded."),
   lab: card("og-sql-lab.png", "Database Lab. Create, change, and roll back a temporary database."),
   queryPlans: card("og-sql-query-plans.png", "Query Performance. See why a SQL query is faster."),
-  syntax: card("og-sql-syntax.png", "SQL Syntax. One idea in SQLite, PostgreSQL, and SQL Server."),
+  syntax: card("og-sql-syntax.png", "Compare Syntax. One idea in SQLite, PostgreSQL, and SQL Server."),
 };
 
 function page(title: string, description: string, path: string, image: ShareCard): Metadata {
@@ -42,12 +46,11 @@ export const lessonIds = (): number[] => courseOrder;
 export function lessonMetadata(id: number): Metadata | null {
   const lesson = getLesson(id);
   if (!lesson) return null;
-  const n = courseOrder.indexOf(id) + 1;
   const summary = lessonSummaries[id] ?? "";
   return page(
-    `${lesson.title} — SQL lesson ${n}`,
+    `${lesson.title} — ${groups[lesson.group]}`,
     `${summary} ${groups[lesson.group]}, ${lesson.difficulty.toLowerCase()}. Read the idea, run real SQL in your browser, then solve two challenges.`.trim(),
-    `/sql/lesson/${id}`,
+    sqlLessonHref(id),
     SHARE.learn,
   );
 }
@@ -63,18 +66,37 @@ export function questionMetadata(slug: string): Metadata | null {
   );
 }
 
-export function projectMetadata(id: number): Metadata | null {
-  const p = projects.find((x) => x.id === id);
+/** Metadata for a SQL Projects catalog workspace. */
+export function sqlProjectMetadata(projectId: string): Metadata | null {
+  const p = getProject(projectId);
   if (!p) return null;
-  return page(`${p.title} — SQL project`, `${p.description} A guided SQL project with real data that runs in your browser.`, projectHref(id), SHARE.projects);
+  return page(
+    `${p.title} — SQL project`,
+    `${p.brief.ask} ${p.brief.deliverable}`,
+    sqlProjectHref(p.id),
+    SHARE.projects,
+  );
 }
 
 export const toolMetadata = {
-  playground: page("SQL Playground", "Write any SELECT query against sample databases and see the results instantly in your browser. No sign-up, nothing graded.", "/sql/playground", SHARE.playground),
-  lab: page("Database Lab", "Create tables, insert and update data, and test transactions in a safe temporary SQLite database that resets whenever you want.", "/sql/lab", SHARE.lab),
-  queryPlans: page("SQL Query Performance", "See why some SQL queries are faster: compare real EXPLAIN QUERY PLAN output for indexes, covering indexes, sorting and joins.", "/sql/query-plans", SHARE.queryPlans),
-  syntax: page("Compare SQL Syntax", "One concept in three SQL dialects: SQLite, PostgreSQL and SQL Server side by side, with runnable SQLite examples.", "/sql/syntax", SHARE.syntax),
+  playground: page("SQL Playground", "Explore twelve real-world datasets with SQL in your browser: retail, flights, product analytics, taxis, weather, energy, payments, healthcare, IoT, logistics, developer platforms and sports. Nothing is graded.", "/sql/playground", SHARE.playground),
+  lab: page("Database Lab", "Create tables, change data, test constraints, transactions, triggers, upserts and warehouse loads on a disposable copy of a real dataset. Every run starts fresh.", "/sql/lab", SHARE.lab),
+  queryPerformance: page("SQL Query Performance", "Compare two ways of writing the same SQL query and read the real SQLite execution plan for each, on full datasets of 89,000 to 238,000 rows.", "/sql/query-performance", SHARE.queryPlans),
+  syntax: page("Compare SQL Syntax", "See how the same SQL concept is written in SQLite, PostgreSQL and SQL Server, with runnable SQLite examples on real datasets.", "/sql/syntax", SHARE.syntax),
+  projects: page(
+    "SQL Projects",
+    "Apply SQL to realistic business problems. Investigate with evidence, write findings, and export a report.",
+    "/sql/projects",
+    SHARE.projects,
+  ),
 };
+
+/** One Playground page per canonical dataset; the plain /sql/playground page shows Retail. */
+export function playgroundDatasetMetadata(id: CanonicalDatasetId): Metadata {
+  const m = learningDatasets[id].metadata;
+  const path = id === "retail" ? "/sql/playground" : `/sql/playground/${id}`;
+  return page(`${canonicalNames[id]} dataset — SQL Playground`, `${m.description} Explore its ${m.totals.tables} tables with SQL in your browser. Nothing is graded.`, path, SHARE.playground);
+}
 
 /** schema.org data for the course, embedded on lesson pages. */
 export function courseJsonLd() {
@@ -83,7 +105,7 @@ export function courseJsonLd() {
     "@type": "Course",
     name: "SQL",
     description: "Learn to query, transform and analyze data with real SQL: lessons, practice questions and projects that run in your browser.",
-    url: `${SITE_URL}/sql/lesson/${courseOrder[0]}`,
+    url: `${SITE_URL}${sqlLessonHref(courseOrder[0])}`,
     provider: { "@type": "Organization", name: BRAND_NAME, url: SITE_URL },
     isAccessibleForFree: true,
     inLanguage: "en",
@@ -100,3 +122,4 @@ export function siteJsonLd() {
 }
 
 export const practiceSlugs = () => bankQuestions.map((q) => q.slug);
+export const practiceRouteSlugs = practiceSlugs;

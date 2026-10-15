@@ -1,133 +1,118 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import { getLesson, groups, labExperiments, labLessonPresets } from "@/content";
-import { lessonSummaries } from "@/content/ux-summaries";
-import { learnerExplanation } from "@/lib/content-copy";
-import { labObservations, labToRun } from "@/content/lab-guides";
-import { useLearning } from "@/lib/learning-state";
+import { useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import type { CanonicalDatasetId } from "@/data/datasets/learning-map";
+import { CANONICAL_VERSION } from "@/data/datasets/learning";
+import { datasetName, isToolDataset, toolDataset } from "@/content/tools/datasets";
+import { LAB_GROUPS, experimentsFor } from "@/content/tools/lab";
+import { preloadDatabase } from "@/engine/sql-client";
 import { Shell } from "../Shell";
 import { TaskCell } from "../Cells";
 import { LAB_EDITOR_HEIGHT } from "../editor-height";
-import { prettySql } from "@/components/editor/pretty-sql";
 import { Select } from "../Select";
+import { DatasetPicker, TableList, TablesInvolved } from "../DatasetBrowser";
+import { ReplaceConfirm, useScriptSlot, useSqlParam } from "../ScriptSlot";
 
-type Pick = { kind: "experiment" | "lesson"; id: string };
-
-/** Database Lab: experiments that change data, in a temporary database that resets on every run. */
+/** Database Lab: change a real dataset safely. Every run starts from a fresh disposable copy. */
 export function Lab() {
-  const [pick, setPick] = useState<Pick>({ kind: "experiment", id: labExperiments[0].id });
-  const [pending, setPending] = useState<string | null>(null);
-  const drafts = useLearning((s) => s.drafts);
-  const setDraft = useLearning((s) => s.setDraft);
+  const params = useSearchParams();
+  const router = useRouter();
+  const requested = params.get("dataset");
+  const dataset: CanonicalDatasetId = isToolDataset(requested) ? requested : "retail";
+  const available = experimentsFor(dataset);
+  const wanted = params.get("experiment") ?? (params.get("sql") ? "scratch" : null);
+  const experiment = available.find((e) => e.id === wanted) ?? available[0];
+  const script = experiment.scripts[dataset]!;
+  const d = toolDataset(dataset);
 
-  const experiment = pick.kind === "experiment" ? labExperiments.find((e) => e.id === pick.id) : undefined;
-  const preset = pick.kind === "lesson" ? labLessonPresets.find((l) => String(l.id) === pick.id) : undefined;
-  const lesson = preset ? getLesson(Number(preset.id)) : undefined;
-  const raw = experiment?.sql ?? preset?.example ?? "";
-  const original = prettySql(raw);
-  // Experiments keep the current app's draft keys, so saved scripts carry over.
-  const key = experiment ? `sql-lab-${experiment.id}` : `sql-lab-lesson-${pick.id}`;
-  // A draft that is still the untouched one-line script shows the readable version.
-  const value = drafts[key] === undefined || drafts[key] === raw ? original : drafts[key];
-  const duplicate = experiment?.id === "constraints" ? `${original}\nINSERT INTO tags(name) VALUES('sql');` : null;
-  const name = experiment ? `${experiment.id}.sql` : `lesson-${pick.id}.sql`;
-
-  const load = (sql: string) => {
-    if (value.trim() && value !== original && value !== duplicate) setPending(sql);
-    else { setDraft(key, sql); setPending(null); }
+  const go = (next: { dataset?: CanonicalDatasetId; experiment?: string }) => {
+    const ds = next.dataset ?? dataset;
+    // Keep the experiment when the new dataset has it too.
+    const exp = next.experiment ?? (experimentsFor(ds).some((e) => e.id === experiment.id) ? experiment.id : experimentsFor(ds)[0].id);
+    router.replace(`/sql/lab?dataset=${ds}&experiment=${exp}`, { scroll: false });
   };
+
+  const slot = useScriptSlot(
+    `sql-lab-${dataset}-${experiment.id}@${CANONICAL_VERSION}`,
+    script.sql,
+    (sql) => sql === script.sql || sql === script.variant?.sql,
+  );
+  useSqlParam(slot.load);
+  useEffect(() => preloadDatabase(d.seed), [d.seed]);
+
+  const name = `${experiment.id}.sql`;
 
   return (
     <Shell
-      path={[{ label: "sql" }, { label: "lab" }, { label: name }]}
+      path={[{ label: "sql" }, { label: "database-lab" }, { label: dataset }, { label: name }]}
       section="tools"
-      status={["SQL", "database lab · not graded", "temporary database", "resets on every run"]}
+      status={["SQL", "database lab · not graded", `sqlite · ${datasetName(dataset)}`, "resets on every run"]}
     >
       <div className="rx-task rx-lesson">
         <div className="rx-task-split">
           <article className="rx-brief" aria-labelledby="lab-title">
-            <p className="rx-prompt-line"><b>lab</b> learn how databases change · {labExperiments.length + labLessonPresets.length} experiments · resets every run</p>
+            <p className="rx-prompt-line"><b>database lab</b> change data safely · resets every run</p>
+            <h1 id="lab-title" className="rx-task-title">Database Lab</h1>
+            <p className="rx-prose" style={{ margin: "10px 0" }}>Run database experiments in a disposable copy. Nothing changes the shared Runtime dataset.</p>
+            <DatasetPicker value={dataset} onChange={(id) => go({ dataset: id })} />
             <Select
-              id="lab-choice"
+              id="lab-experiment"
               label="experiment"
-              value={`${pick.kind}:${pick.id}`}
-              onChange={(v) => {
-                const [kind, id] = v.split(":");
-                setPick({ kind: kind as Pick["kind"], id });
-                setPending(null);
-              }}
-              groups={[
-                { label: "Core experiments", options: labExperiments.map((e, i) => ({ value: `experiment:${e.id}`, label: `${String(i + 1).padStart(2, "0")} · ${e.title}` })) },
-                { label: "More database experiments · from the lessons", options: labLessonPresets.map((l) => ({ value: `lesson:${l.id}`, label: l.title })) },
-              ]}
+              value={experiment.id}
+              onChange={(id) => go({ experiment: id })}
+              groups={LAB_GROUPS
+                .map((g) => ({ label: g.label, options: available.filter((e) => e.group === g.id).map((e) => ({ value: e.id, label: e.title })) }))
+                .filter((g) => g.options.length)}
             />
-            <h1 id="lab-title" className="rx-task-title" style={{ marginTop: 22 }}>{experiment?.title ?? preset?.title}</h1>
-            {experiment ? (
-              <>
-                <p className="rx-lead" style={{ fontSize: "1.05rem", marginTop: 8 }}>{experiment.description}</p>
-                <dl className="rx-dl">
-                  <dt>what to run</dt><dd>{labToRun[experiment.id]}</dd>
-                  <dt>what you should see</dt><dd>{labObservations[experiment.id]}</dd>
-                </dl>
-                {duplicate && (
-                  <p style={{ marginTop: 14 }}>
-                    <button type="button" className="rx-btn" onClick={() => load(duplicate)}>Try a duplicate tag</button>
-                  </p>
-                )}
-              </>
-            ) : lesson ? (
-              <>
-                <p className="rx-lead" style={{ fontSize: "1.05rem", marginTop: 8 }}>{lessonSummaries[lesson.id]}</p>
-                <p className="rx-label">how it works</p>
-                <p className="rx-prose" style={{ marginTop: 0 }}>{learnerExplanation(lesson.concept)}</p>
-                {lesson.walkthrough?.length > 0 && (
-                  <>
-                    <p className="rx-label">what the script does, step by step</p>
-                    <ol className="rx-steps">
-                      {lesson.walkthrough.map((w, i) => (
-                        <li key={w.title}><span className="mono">{i + 1}.</span> <strong>{w.title}.</strong> {w.description ? learnerExplanation(w.description) : ""}</li>
-                      ))}
-                    </ol>
-                  </>
-                )}
-                {lesson.trap && <p className="rx-note"><strong>Watch for:</strong> {lesson.trap}</p>}
-                <p className="rx-small">From the lesson <Link href={`/sql/lesson/${lesson.id}`} style={{ textDecoration: "underline" }}>{lesson.title}</Link> · {groups[lesson.group]}</p>
-              </>
-            ) : null}
-            <p className="rx-label">how the lab works</p>
-            <p className="rx-prose" style={{ marginTop: 0, fontSize: 15 }}>Every run starts from a fresh temporary copy of the sample database, so tables you create and rows you change are not kept between runs. Your SQL is saved in this browser. End a script with a SELECT to see what changed.</p>
-          </article>
-          <section className="rx-work rx-lesson-work" aria-label="Script editor">
-            {pending && (
-              <div className="rx-confirm" role="group" aria-label="Replace your SQL">
-                <p>Replace your current SQL with this script? Your edits will be lost.</p>
-                <div className="rx-confirm-acts">
-                  <button type="button" className="rx-btn primary" onClick={() => { setDraft(key, pending); setPending(null); }}>Replace my SQL</button>
-                  <button type="button" className="rx-btn" onClick={() => setPending(null)}>Keep my SQL</button>
-                </div>
-              </div>
+            <p className="rx-small">{available.length - 1} experiments fit {datasetName(dataset)}. Other datasets offer others.</p>
+
+            <h2 className="rx-task-title" style={{ marginTop: 26, fontSize: "1.5rem" }}>{experiment.title}</h2>
+            <p className="rx-lead" style={{ fontSize: "1.05rem", marginTop: 8 }}>{experiment.summary}</p>
+            <dl className="rx-dl">
+              <dt>what you&apos;ll try</dt><dd>{script.tryThis}</dd>
+              <dt>what you should see</dt><dd>{script.observe}</dd>
+            </dl>
+            {script.variant && (
+              <p style={{ marginTop: 14 }}>
+                <button type="button" className="rx-btn" onClick={() => slot.load(script.variant!.sql)}>Try it: {script.variant.label.toLowerCase()}</button>
+              </p>
             )}
+            <p className="rx-label sec">tables involved</p>
+            <TablesInvolved id={dataset} sql={slot.value} />
+
+            <p className="rx-label sec">how the lab works</p>
+            <p className="rx-prose" style={{ marginTop: 0, fontSize: 15 }}>
+              Every Run starts from the original {datasetName(dataset)} database. Tables you create and rows you change exist only for that run. End the script with a SELECT to see the effect. Your SQL is saved in this browser.
+            </p>
+            <p className="rx-label sec">all {datasetName(dataset)} tables</p>
+            <TableList id={dataset} />
+          </article>
+          <section className="rx-work rx-lesson-work rx-tool-work" aria-label="Script editor">
+            <ReplaceConfirm sql={slot.pending} onConfirm={slot.confirm} onCancel={slot.cancel} what="script" />
             <TaskCell
-              key={key}
+              key={`${dataset}-${experiment.id}`}
               name={name}
-              value={value}
-              onChange={(v) => setDraft(key, v)}
+              value={slot.value}
+              onChange={slot.set}
               graded={false}
               minHeight={LAB_EDITOR_HEIGHT}
-              task={{ allowWrites: true }}
+              tables={d.metadata.tables.map((t) => t.name)}
+              task={{ seedSql: d.seed, allowWrites: true }}
+              analytics={{ subject: "sql", surface: "lab", dataset, experiment: experiment.id }}
               observe={(res, ran) =>
                 res.error
-                  ? experiment?.id === "constraints" && /UNIQUE constraint failed/.test(res.error)
-                    ? "The UNIQUE rule rejected the duplicate. Statements before it ran; the failing insert did not."
-                    : "The script stopped with an error. Earlier statements ran; see where it stopped below."
+                  ? ran === script.variant?.sql
+                    ? script.variant.observe
+                    : "The script stopped with an error. Statements before it ran on this copy; see where it stopped below. Nothing is kept after the run."
                   : res.result
-                    ? `The final SELECT returned ${res.total ?? res.result.values.length} row${(res.total ?? res.result.values.length) === 1 ? "" : "s"}${ran === original && experiment?.id === "transactions" ? ", after the rollback" : ""}.`
+                    ? ran === script.sql
+                      ? script.observe
+                      : `The final statement returned ${res.total ?? res.result.values.length} row${(res.total ?? res.result.values.length) === 1 ? "" : "s"}.`
                     : "The script ran. End it with a SELECT to see the effect."
               }
             />
-            <button type="button" className="rx-btn ghost" onClick={() => { setDraft(key, original); setPending(null); }}>
+            <button type="button" className="rx-btn ghost" onClick={() => { slot.cancel(); slot.set(script.sql); }}>
               Reset to the original script
             </button>
           </section>

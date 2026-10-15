@@ -1,10 +1,15 @@
 import type { PlanValidation } from "@/engine/plan-validation";
+import type { CanonicalDatasetId, LearningDatasetRef } from "@/data/datasets/learning-map";
 export type Challenge = {
   prompt: string;
   answer: string;
   ordered: boolean;
   required: string[] | null;
   planValidation?: PlanValidation | null;
+  /** Lab tasks: queries whose full results must match the reference database after the script. */
+  stateQueries?: string[];
+  /** Lab tasks: rerun the script on the same database to prove it is idempotent. */
+  repeatCheck?: boolean;
   validate: Array<{
     sql: string;
     value?: unknown;
@@ -27,6 +32,7 @@ export type WalkthroughStep = {
 };
 
 export type Lesson = {
+  datasetRef: LearningDatasetRef;
   id: number;
   title: string;
   group: number;
@@ -34,7 +40,7 @@ export type Lesson = {
   example: string;
   trap: string;
   hints: string[];
-  dataset: string;
+  dataset: CanonicalDatasetId;
   difficulty: string;
   prereq: number[];
   grain: string | null;
@@ -43,83 +49,18 @@ export type Lesson = {
   tasks: Challenge[];
   quiz: Quiz;
   walkthrough: WalkthroughStep[];
+  /** Scenario tables derived from the canonical dataset, created when the lesson's database opens. */
+  setupSql?: string;
+  /** Extra changed-data statements for this lesson's checks. */
+  extraMutation?: string;
 };
 
-export type Project = {
-  id: number;
-  title: string;
-  sourceTitle: string;
-  description: string;
-  dataset: string;
-  milestoneIds: number[];
-};
+/** One lesson as listed in the course outline; every dataset-bound field comes from its canonical spec. */
+export type LessonOutline = Pick<Lesson, "id" | "title" | "group" | "difficulty" | "prereq" | "mode">;
 
-export type DatasetInfo = {
-  name: string;
-  role: string;
-  description: string;
-  tables: string[];
-};
-
-export type PlanComparison = {
-  title: string;
-  question: string;
-  /** What the learner should notice in the two plans. */
-  takeaway?: string;
-  /** How it works: the mechanism behind the difference, in plain language. */
-  explain?: string;
-  cases: Array<{ label: string; query: string; plan: string }>;
-};
-
-export type LabExperiment = {
-  id: string;
-  title: string;
-  description: string;
-  sql: string;
-};
-
-export type WarehouseNode = {
-  title: string;
-  body?: string;
-  summary?: string;
-  detail?: string;
-  table?: string;
-  lesson?: number;
-  tables?: string[];
-};
-
-export type ContentPack = {
-  version: number;
-  counts: {
-    modules: number;
-    lessons: number;
-    challenges: number;
-    projects: number;
-    datasets: number;
-    walkthroughStages: number;
-    planComparisons: number;
-    quizzes: number;
-  };
-  seed: string;
-  fixtureMutation: string;
+export type CourseOutline = {
   groups: string[];
   moduleDescriptions: string[];
   courseOrder: number[];
-  datasetCatalog: Record<string, DatasetInfo>;
-  productSchemas: Record<string, unknown>;
-  dialectGuide: string[][];
-  sourceLinks: [string, string][];
-  planComparisons: PlanComparison[];
-  warehouseMap: Record<string, WarehouseNode>;
-  labExperiments: LabExperiment[];
-  playgroundStarters: Record<string, string[]>;
-  labLessonIds: number[];
-  labLessonPresets: Array<{
-    id: number;
-    title: string;
-    example: string;
-    mode: string;
-  }>;
-  projects: Project[];
-  lessons: Lesson[];
+  lessons: LessonOutline[];
 };
