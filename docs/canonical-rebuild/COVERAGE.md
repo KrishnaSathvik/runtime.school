@@ -42,15 +42,15 @@
 
 | Dataset | Write SQL | Predict Output | Debug Query | Total |
 | --- | --- | --- | --- | --- |
-| Retail | 27 | 2 | 0 | 29 |
-| U.S. Flights | 7 | 2 | 2 | 11 |
+| Retail | 33 | 3 | 1 | 37 |
+| U.S. Flights | 6 | 2 | 2 | 10 |
 | Product / SaaS Analytics | 16 | 0 | 3 | 19 |
-| Mobility | 2 | 4 | 1 | 7 |
-| Weather | 6 | 0 | 0 | 6 |
+| Mobility | 1 | 3 | 1 | 5 |
+| Weather | 5 | 0 | 0 | 5 |
 | Energy | 6 | 2 | 1 | 9 |
 | Finance / Payments | 8 | 1 | 1 | 10 |
-| Healthcare | 6 | 1 | 2 | 9 |
+| Healthcare | 5 | 1 | 1 | 7 |
 | IoT / Sensors | 5 | 0 | 0 | 5 |
 | Logistics | 8 | 0 | 2 | 10 |
-| Developer Platform | 15 | 1 | 1 | 17 |
-| Sports | 5 | 1 | 1 | 7 |
+| Developer Platform | 14 | 1 | 1 | 16 |
+| Sports | 4 | 1 | 1 | 6 |

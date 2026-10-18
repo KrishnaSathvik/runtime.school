@@ -6,19 +6,19 @@ Learn uses datasets for continuity: one dataset carries a run of related lessons
 
 | Dataset | Lessons | Lesson ids | Practice questions | Learn challenges + Practice |
 | --- | --- | --- | --- | --- |
-| Retail | 39 | 0, 1, 2, 3, 4, 5, 6, 7, 8, 14, 15, 16, 17, 28, 29, 31, 54, 55, 59, 62, 66, 69, 70, 71, 72, 73, 74, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87 | 29 | 107 |
-| U.S. Flights | 7 | 13, 20, 21, 24, 39, 63, 67 | 11 | 25 |
+| Retail | 39 | 0, 1, 2, 3, 4, 5, 6, 7, 8, 14, 15, 16, 17, 28, 29, 31, 54, 55, 59, 62, 66, 69, 70, 71, 72, 73, 74, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87 | 37 | 115 |
+| U.S. Flights | 7 | 13, 20, 21, 24, 39, 63, 67 | 10 | 24 |
 | Product / SaaS Analytics | 10 | 32, 34, 44, 45, 46, 47, 48, 51, 52, 75 | 19 | 39 |
-| Mobility | 4 | 9, 10, 11, 26 | 7 | 15 |
-| Weather | 3 | 12, 30, 35 | 6 | 12 |
+| Mobility | 4 | 9, 10, 11, 26 | 5 | 13 |
+| Weather | 3 | 12, 30, 35 | 5 | 11 |
 | Energy | 2 | 43, 68 | 9 | 13 |
 | Finance / Payments | 6 | 23, 41, 49, 50, 61, 64 | 10 | 22 |
-| Healthcare | 2 | 18, 37 | 9 | 13 |
+| Healthcare | 2 | 18, 37 | 7 | 11 |
 | IoT / Sensors | 2 | 40, 42 | 5 | 9 |
 | Logistics | 6 | 25, 33, 36, 56, 60, 65 | 10 | 22 |
-| Developer Platform | 4 | 19, 27, 38, 58 | 17 | 25 |
-| Sports | 3 | 22, 53, 57 | 7 | 13 |
+| Developer Platform | 4 | 19, 27, 38, 58 | 16 | 24 |
+| Sports | 3 | 22, 53, 57 | 6 | 12 |
 
 ## Transfer: Practice questions on a different dataset from their prerequisite lessons
 
-77 of 139 questions with prerequisites are set on a different dataset from every lesson they build on.
+69 of 139 questions with prerequisites are set on a different dataset from every lesson they build on.

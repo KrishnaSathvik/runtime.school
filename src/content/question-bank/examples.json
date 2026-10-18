@@ -26,28 +26,28 @@
   },
   "qb-0002": {
     "columns": [
-      "station_id",
-      "station_name",
-      "longitude"
+      "stock_code",
+      "description",
+      "list_price"
     ],
     "rows": [
       [
-        "USW00003131",
-        "San Diego Montgomery Fld",
-        -117.1375
+        "23085",
+        "ANTIQUE SILVER BAUBLE LAMP",
+        10.4
       ],
       [
-        "USW00003184",
-        "Phoenix Deer Valley Muni Airport",
-        -112.0661
+        "23314",
+        "VINTAGE CHRISTMAS TABLECLOTH",
+        12.5
       ],
       [
-        "USW00022521",
-        "Honolulu International Airport",
-        -157.9394
+        "22946",
+        "WOODEN ADVENT CALENDAR CREAM",
+        16.95
       ]
     ],
-    "total": 30
+    "total": 233
   },
   "qb-0003": {
     "columns": [
@@ -76,28 +76,24 @@
   },
   "qb-0004": {
     "columns": [
-      "appointment_id",
-      "patient_id",
-      "status"
+      "stock_code",
+      "list_price"
     ],
     "rows": [
       [
-        1,
-        1,
-        "cancelled"
+        "10124C",
+        null
       ],
       [
-        8,
-        1,
-        "cancelled"
+        "15060A",
+        null
       ],
       [
-        26,
-        5,
-        "cancelled"
+        "16065A",
+        null
       ]
     ],
-    "total": 2510
+    "total": 355
   },
   "qb-0005": {
     "columns": [
@@ -126,103 +122,95 @@
   },
   "qb-0006": {
     "columns": [
-      "route_id",
-      "destination",
-      "miles",
-      "km"
+      "product_code",
+      "list_price",
+      "price_for_five"
     ],
     "rows": [
       [
-        2512,
-        "ATL",
-        760,
-        1223
+        "10124C",
+        null,
+        null
       ],
       [
-        2513,
-        "AUS",
-        1521,
-        2448
+        "15060A",
+        null,
+        null
       ],
       [
-        2514,
-        "BNA",
-        765,
-        1231
+        "16065A",
+        null,
+        null
       ]
     ],
-    "total": 55
+    "total": 5304
   },
   "qb-0007": {
     "columns": [
-      "borough_id",
-      "service_zone"
+      "country"
     ],
     "rows": [
       [
-        1,
-        "EWR"
+        "Australia"
       ],
       [
-        2,
-        "Boro Zone"
+        "Austria"
       ],
       [
-        3,
-        "Boro Zone"
+        "Bahrain"
       ]
     ],
-    "total": 10
+    "total": 27
   },
   "qb-0008": {
     "columns": [
-      "developer_id",
-      "username",
-      "joined_at"
+      "order_id",
+      "invoice_no",
+      "ordered_at"
     ],
     "rows": [
       [
-        10,
-        "dreyes10",
-        "2024-03-30 21:30:35"
+        3606,
+        "538896",
+        "2010-12-15 09:09:00"
       ],
       [
-        11,
-        "dcooper11",
-        "2024-05-21 15:39:45"
+        3607,
+        "538899",
+        "2010-12-15 09:49:00"
       ],
       [
-        13,
-        "tmehta13",
-        "2024-05-30 06:26:19"
+        3608,
+        "538942",
+        "2010-12-15 11:14:00"
       ]
     ],
-    "total": 864
+    "total": 72
   },
   "qb-0009": {
     "columns": [
-      "year",
+      "country",
       "order_type",
       "orders"
     ],
     "rows": [
       [
-        "2009",
+        "Australia",
         "cancellation",
-        56
+        6
       ],
       [
-        "2009",
+        "Australia",
         "sale",
-        257
+        26
       ],
       [
-        "2010",
+        "Austria",
         "cancellation",
-        492
+        1
       ]
     ],
-    "total": 6
+    "total": 50
   },
   "qb-0010": {
     "columns": [
@@ -435,24 +423,24 @@
   },
   "qb-0019": {
     "columns": [
-      "venue_name",
-      "avg_attendance"
+      "category_id",
+      "avg_price"
     ],
     "rows": [
       [
-        "Angel Stadium of Anaheim",
-        32290
+        1,
+        2.01
       ],
       [
-        "BB&T Ballpark at Bowman Field",
-        2518
+        2,
+        2.86
       ],
       [
-        "Bristol Motor Speedway",
-        91032
+        3,
+        4.41
       ]
     ],
-    "total": 33
+    "total": 15
   },
   "qb-0020": {
     "columns": [
@@ -1725,13 +1713,13 @@
   },
   "qb-0073": {
     "columns": [
-      "trip_id",
-      "passenger_count"
+      "stock_code",
+      "list_price"
     ],
     "rows": [
       [
-        15,
-        3
+        "B",
+        2.5
       ]
     ],
     "total": 1
@@ -1840,24 +1828,24 @@
   },
   "qb-0078": {
     "columns": [
-      "observation_id",
-      "code"
+      "stock_code",
+      "category_id"
     ],
     "rows": [
       [
-        18,
-        "BP_SYS"
+        "10124C",
+        null
       ],
       [
-        24,
-        "BP_SYS"
+        "15060A",
+        null
       ],
       [
-        45,
-        "BP_SYS"
+        "16065A",
+        null
       ]
     ],
-    "total": 401
+    "total": 355
   },
   "qb-0079": {
     "columns": [
@@ -2951,16 +2939,16 @@
     ],
     "rows": [
       [
-        49,
-        3,
-        201.34,
-        66.07
-      ],
-      [
         38,
         4,
         175,
         44.37
+      ],
+      [
+        49,
+        3,
+        201.34,
+        66.07
       ],
       [
         66,

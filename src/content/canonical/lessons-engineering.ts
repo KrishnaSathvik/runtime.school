@@ -223,7 +223,7 @@ export const engineeringLessons: LessonOverrides = {
     quiz: quiz("Which check catches COUNT(*) after a LEFT JOIN?", ["Running it twice", "Checking a workspace you know has zero projects", "Adding ORDER BY"], 1, "A known zero case exposes the off-by-one count."),
     walkthrough: [
       step("Spot the bad LEFT JOIN count", "Run the assistant’s COUNT(*) version. Workspaces with zero projects can still show 1 because the unmatched join row counts as one row in the group.", "SELECT a.account_id, COUNT(*) AS projects FROM accounts a LEFT JOIN projects p ON p.account_id = a.account_id GROUP BY a.account_id HAVING COUNT(p.project_id) = 0 LIMIT 5;"),
-      step("List workspaces with no projects", "HAVING COUNT(p.project_id) = 0 finds accounts that truly have no projects—the corrected metric is COUNT(p.project_id), not COUNT(*).", "SELECT a.account_id, COUNT(p.project_id) AS projects FROM accounts a LEFT JOIN projects p ON p.account_id = a.account_id GROUP BY a.account_id HAVING COUNT(p.project_id) = 0 LIMIT 5;"),
+      step("Count matches, not the unmatched row", "Run this for one workspace. COUNT(project_id) is 0 when that workspace has no projects. The challenge asks for every workspace, not only the empty ones.", "SELECT a.account_id, COUNT(p.project_id) AS projects FROM accounts a LEFT JOIN projects p ON p.account_id = a.account_id WHERE a.account_id = 1 GROUP BY a.account_id;"),
     ],
   },
 };

@@ -11,7 +11,6 @@ export function ProjectTables({ datasetId, names }: { datasetId: CanonicalDatase
   return (
     <div className="project-data-browser">
       <p className="rx-label sec">tables</p>
-      <p className="rx-cap">Open a table for its columns, keys, and a row preview.</p>
       <TableList id={datasetId} only={names} />
       <p className="rx-label sec">relationships</p>
       <p className="rx-cap">How to join these tables. Left column matches the right column.</p>

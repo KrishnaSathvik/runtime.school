@@ -40,7 +40,7 @@
   --ide-str: #7565cc;
   --ide-num: #92156a;
   --ide-active: #f0f0ee;
-  --ide-selection: #f3dcae;
+  --ide-selection: #f0c14b;
   --editor-font-size: 14px;
 
   min-height: 100dvh;
@@ -82,7 +82,7 @@ html[data-theme="dark"] .rx {
   --ide-str: #e394dc;
   --ide-num: #ebc88d;
   --ide-active: #202020;
-  --ide-selection: #4a3a1c;
+  --ide-selection: #6e5424;
 }
 .rx *, .rx *::before, .rx *::after { box-sizing: border-box; }
 .rx a { color: inherit; text-decoration: none; }
@@ -207,6 +207,8 @@ html[data-theme="dark"] .rx {
 .rx-cell .cm-editor { background: var(--ide-bg); color: var(--ide-fg); }
 .rx .cm-editor .cm-gutters { background: var(--ide-chrome); color: var(--ide-line-number); border-right-color: var(--ide-border); }
 .rx .cm-editor .cm-activeLineGutter { color: var(--ide-fg); }
+/* The current-line wash is painted on top of CodeMirror's selection, so a selection on that line was invisible. */
+.rx .cm-editor .cm-activeLine { background-color: transparent !important; }
 .rx-tok-kw { color: var(--ide-kw); font-weight: 600; }
 .rx-tok-fn { color: var(--ide-fn); font-weight: 400; }
 .rx-tok-str { color: var(--ide-str); }
@@ -575,7 +577,6 @@ html[data-theme="dark"] .rx {
 .rx-walk-body { min-width: 0; }
 .rx-walk-body > p { margin: 2px 0 0; font-size: 15.5px; line-height: 1.6; }
 .rx-walk-body .rx-cell { margin-top: 10px; }
-.rx-walk-example .rx-cell { border-color: var(--rx-amber-ink); }
 .rx-walk-tag { display: inline-block; margin-left: 8px; padding: 1px 8px; border: 1px solid var(--rx-amber-ink); border-radius: 999px; font-family: var(--rx-mono); font-size: 11px; color: var(--rx-amber-ink); vertical-align: 2px; white-space: nowrap; }
 
 /* Task text, help and feedback on the right. */
@@ -638,30 +639,106 @@ html[data-theme="dark"] .rx {
 .rx-lesson .rx-lesson-work,
 .rx-project .rx-lesson-work { display: block; }
 @media (min-width: 701px) {
-  .rx-lesson .rx-brief,
-  .rx-lesson .rx-lesson-work,
-  .rx-lesson .rx-lesson-work:has(> .rx-tabs) {
-    position: sticky;
-    top: 48px;
-    align-self: start;
-    max-height: calc(100dvh - 74px);
-  }
-  .rx-lesson .rx-brief,
-  .rx-lesson .rx-lesson-work {
-    overflow: auto;
-  }
-  /* Lesson tabs: chrome stays put; only the active panel scrolls. */
-  .rx-lesson .rx-lesson-work:has(> .rx-tabs) {
+  /* The lesson bar sits under the site header. The split fills whatever height is left. */
+  .rx-main:has(> .rx-lesson) {
+    height: calc(100dvh - 48px);
+    max-height: calc(100dvh - 48px);
     overflow: hidden;
     display: flex;
     flex-direction: column;
   }
-  .rx-lesson .rx-lesson-work > [role="tabpanel"] {
+  .rx-main:has(> .rx-lesson) > .rx-lesson {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .rx-lesson:has(> .rx-task-bar) {
+    height: calc(100dvh - 48px);
+    max-height: calc(100dvh - 48px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .rx-lesson > .rx-task-split,
+  .rx-lesson:has(> .rx-task-bar) > .rx-task-split {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+  }
+  .rx-lesson .rx-brief,
+  .rx-lesson .rx-lesson-work,
+  .rx-lesson .rx-lesson-work:has(> .rx-tabs) {
+    position: sticky;
+    top: 0;
+    align-self: stretch;
+    max-height: 100%;
+    height: 100%;
+  }
+  .rx-lesson .rx-brief { overflow: auto; }
+  /* Work column: the prompt and results scroll. Run / Check stay on screen. */
+  .rx-lesson .rx-lesson-work:has(> .rx-tabs),
+  .rx-lesson .rx-lesson-work:has(> .rx-cell) {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .rx-lesson .rx-lesson-work > [role="tabpanel"]:has(.rx-cell) {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .rx-lesson .rx-lesson-work > [role="tabpanel"]:not(:has(.rx-cell)) {
     flex: 1 1 auto;
     min-height: 0;
     overflow: auto;
   }
-  .rx-lesson .rx-result {
+  .rx-lesson .rx-lesson-work .rx-question {
+    flex: 0 1 auto;
+    max-height: min(34%, 132px);
+    overflow: auto;
+  }
+  .rx-lesson .rx-lesson-work > .rx-lesson-status {
+    flex: none;
+    margin-top: 8px;
+    padding-top: 8px;
+  }
+  .rx-lesson .rx-lesson-work .rx-cell {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .rx-lesson .rx-lesson-work > .rx-cell ~ .rx-cell,
+  .rx-lesson .rx-lesson-work > .rx-hints,
+  .rx-lesson .rx-lesson-work > .rx-why,
+  .rx-lesson .rx-lesson-work > .rx-small {
+    flex: 0 1 auto;
+    max-height: 22%;
+    overflow: auto;
+  }
+  .rx-lesson .rx-lesson-work .rx-editor {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .rx-lesson .rx-lesson-work .rx-editor .cm-editor,
+  .rx-lesson .rx-lesson-work .rx-editor .cm-scroller {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    max-height: none;
+    overflow: auto;
+  }
+  .rx-lesson .rx-lesson-work .rx-cell-foot { flex: none; }
+  .rx-lesson .rx-lesson-work .rx-result {
+    flex: 0 1 auto;
+    max-height: min(34vh, 220px);
+    overflow: auto;
     scroll-margin-top: 12px;
   }
 }
@@ -674,6 +751,21 @@ html[data-theme="dark"] .rx {
 .rx-project .rx-work .cm-editor,
 .rx-project .rx-work .cm-scroller {
   height: auto; max-height: none; overflow: visible;
+}
+/* Beat the height:auto rule above so a short desktop still keeps Run / Check in view. */
+@media (min-width: 701px) {
+  .rx-lesson .rx-lesson-work .rx-cell.rx-cell {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .rx-lesson .rx-lesson-work .rx-editor .cm-editor.cm-editor,
+  .rx-lesson .rx-lesson-work .rx-editor .cm-scroller.cm-scroller {
+    height: 100%;
+    max-height: none;
+    overflow: auto;
+  }
 }
 .rx-lesson .rx-tabs { flex-wrap: wrap; overflow: visible; }
 .rx-lesson .rx-work { overflow-wrap: anywhere; }

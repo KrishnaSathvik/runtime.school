@@ -53,6 +53,8 @@ function firstTable(answer: string): string | null {
  */
 export function starterFor(lesson: Lesson, variant = 0): Starter {
   if (lesson.mode === "lab") return { sql: "", cursor: 0 };
+  const authored = lesson.tasks[variant]?.starter;
+  if (authored) return { sql: authored, cursor: authored.length };
   const table =
     lesson.difficulty === "Beginner" ? firstTable(lesson.tasks[variant]?.answer ?? "") : null;
   const sql = table ? `SELECT \nFROM ${table};` : "SELECT \nFROM ";

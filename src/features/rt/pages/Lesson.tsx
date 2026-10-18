@@ -18,7 +18,10 @@ import { Shell } from "../Shell";
 import { Pager } from "../Pager";
 import { RunCell } from "../Cells";
 import { Challenge } from "../Challenge";
-import { PREVIEW_ROWS, Tables } from "../Tables";
+import { Tables } from "../Tables";
+
+/** Same order as the course: easier levels first, matching the practice drawer. */
+const LESSON_LEVELS = ["Beginner", "Intermediate", "Advanced"] as const;
 
 /**
  * A lesson is one session: read, run, observe, then the two challenges and the concept check
@@ -150,16 +153,15 @@ function Session({ lessonId }: { lessonId: number }) {
             {tables.length > 0 && (
               <>
                 <p className="rx-label sec">Dataset: {datasetCatalog[lesson.dataset]?.name}</p>
-                <p className="rx-cap">The tables the challenges use, with their first {PREVIEW_ROWS} rows. Under each column name: the kind of value it holds, and which table it links to.</p>
-                <Tables tables={tables} open previews={{ ...lessonFixture(lesson).previews, ...overlayPreviews(lessonId) }} />
+                <Tables tables={tables} previews={{ ...lessonFixture(lesson).previews, ...overlayPreviews(lessonId) }} />
               </>
             )}
 
             <p className="rx-label sec">worked example</p>
-            <p className="rx-cap">Run these steps in order to see the idea before you write your own query. The step marked “the pattern” is what the challenges ask for. Running the example does not count toward progress.</p>
+            <p className="rx-cap">The step marked “the pattern” is what the challenges build on. Running examples doesn’t count toward progress.</p>
             <ol className="rx-walk">
               {workedSteps.map((step, i) => (
-                <li key={`${i}-${step.title}`} className={step.isExample ? "rx-walk-example" : undefined}>
+                <li key={`${i}-${step.title}`}>
                   <span className="rx-walk-no" aria-hidden="true">{i + 1}</span>
                   <div className="rx-walk-body">
                     <p>
@@ -253,10 +255,19 @@ function LessonBar({ lessonId }: { lessonId: number }) {
   const position = courseOrder.indexOf(lessonId);
   const prev = courseOrder[position - 1];
   const next = courseOrder[position + 1];
-  const rows = useMemo(
-    () => courseOrder.map((id, i) => ({ id, i, lesson: getLesson(id)! })),
-    [],
-  );
+  const byLevel = useMemo(() => {
+    const rows = courseOrder.map((id, i) => ({ id, i, lesson: getLesson(id)! }));
+    const known = new Set<string>(LESSON_LEVELS);
+    const grouped = LESSON_LEVELS.map((level) => ({
+      level,
+      items: rows.filter((r) => r.lesson.difficulty === level),
+    })).filter((g) => g.items.length > 0);
+    const extra = [...new Set(rows.map((r) => r.lesson.difficulty).filter((d) => !known.has(d)))];
+    return [
+      ...grouped,
+      ...extra.map((level) => ({ level, items: rows.filter((r) => r.lesson.difficulty === level) })),
+    ];
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -293,16 +304,20 @@ function LessonBar({ lessonId }: { lessonId: number }) {
             <button type="button" className="rx-btn ghost" onClick={() => setOpen(false)} aria-label="Close list"><X size={14} /></button>
           </div>
           <ol ref={listRef}>
-            {rows.map((r, k) => (
-              <li key={r.id}>
-                {(k === 0 || rows[k - 1].lesson.group !== r.lesson.group) && (
-                  <p className="rx-drawer-group mono">{String(r.lesson.group + 1).padStart(2, "0")} {groups[r.lesson.group]}</p>
-                )}
-                <Link href={sqlLessonHref(r.id)} aria-current={r.id === lessonId ? "page" : undefined} onClick={() => setOpen(false)}>
-                  <span className={`mono g ${glyph(r.id) === "✓" ? "ok" : ""}`}>{glyph(r.id)}</span>
-                  <span>{r.lesson.title}</span>
-                  <span className="mono k">{String(r.i + 1).padStart(2, "0")}</span>
-                </Link>
+            {byLevel.map(({ level, items }) => (
+              <li key={level}>
+                <p className="rx-drawer-group mono">{level}</p>
+                <ul className="rx-drawer-sub">
+                  {items.map((r) => (
+                    <li key={r.id}>
+                      <Link href={sqlLessonHref(r.id)} aria-current={r.id === lessonId ? "page" : undefined} onClick={() => setOpen(false)}>
+                        <span className={`mono g ${glyph(r.id) === "✓" ? "ok" : ""}`}>{glyph(r.id)}</span>
+                        <span>{r.lesson.title}</span>
+                        <span className="mono k">{String(r.i + 1).padStart(2, "0")}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
               </li>
             ))}
           </ol>

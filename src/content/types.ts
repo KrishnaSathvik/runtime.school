@@ -3,6 +3,8 @@ import type { CanonicalDatasetId, LearningDatasetRef } from "@/data/datasets/lea
 export type Challenge = {
   prompt: string;
   answer: string;
+  /** Prefilled editor text for a fix-this-query challenge. Omitted for a blank write. */
+  starter?: string;
   ordered: boolean;
   required: string[] | null;
   planValidation?: PlanValidation | null;

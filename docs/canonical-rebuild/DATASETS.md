@@ -35,14 +35,14 @@ Two years of real invoice lines from a UK online gift wholesaler: customers, pro
 
 | Table | Rows | Columns | Grain |
 | --- | --- | --- | --- |
-| categories | 17 | 3 | One merchandising category assigned by Runtime keyword rules. |
-| products | 5,304 | 6 | One stock code observed anywhere in the full two-year source, including codes this customer sample never bought. |
-| customers | 848 | 4 | One identified wholesale customer in the sample. Anonymous invoices have no customer row. |
-| orders | 6,722 | 6 | One invoice header: a sale, a cancellation (credit note) or an accounting adjustment. |
-| order_items | 125,613 | 7 | One recorded invoice line. Repeated identical lines are kept as recorded; cancellation lines carry negative quantities. |
-| payments | 5,423 | 6 | One payment attempt against a sale invoice (Runtime-modeled: the source has no payment ledger). |
-| returns | 1,996 | 6 | One cancelled invoice line, linked where possible to the earlier sale it reverses. |
-| customer_history | 1,685 | 7 | One version of a customer’s segment and country (type-2 history, half-open [valid_from, valid_to)). |
+| categories | 17 | 3 | One product category (for example Christmas or Kitchen). Products are grouped into these from their descriptions. |
+| products | 5,304 | 6 | One product in the catalog (one stock code). Some products never appear on invoices in this sample. |
+| customers | 848 | 4 | One known customer. Anonymous (walk-in) invoices have no matching customer row. |
+| orders | 6,722 | 6 | One invoice: a sale, a cancellation (credit note), or an accounting adjustment. |
+| order_items | 125,613 | 7 | One line on an invoice. Cancellation lines use negative quantities. |
+| payments | 5,423 | 6 | One payment attempt for a sale invoice. Payments are modeled; the original source has no payment ledger. |
+| returns | 1,996 | 6 | One cancelled invoice line, linked to the earlier sale it reverses when that sale is in the data. |
+| customer_history | 1,685 | 7 | One version of a customer’s segment and country over time. A new row starts when either changes. |
 
 **Transformations**
 
@@ -50,7 +50,7 @@ Two years of real invoice lines from a UK online gift wholesaler: customers, pro
 - Overlapping worksheet dates (2010-12-01..09) are taken once, from the second worksheet.
 - One order header per invoice number (earliest line timestamp); order_type from the invoice prefix.
 - Product catalog covers every stock code in the full source; description and list price are the modal recorded values.
-- Categories are assigned by Runtime keyword rules over descriptions; undescribed products stay uncategorised.
+- Categories are derived from product descriptions; products with no description stay uncategorised.
 - returns links each cancellation line to the latest earlier sale of that code to that customer.
 - customer_history derives segment from trailing-12-month net sales at each month start.
 - payments are modeled by Runtime (seed 20251): the source contains no payment ledger.
@@ -88,12 +88,12 @@ Every domestic flight flown by a sample of 435 aircraft in January–March 2025:
 
 | Table | Rows | Columns | Grain |
 | --- | --- | --- | --- |
-| airlines | 14 | 3 | One reporting carrier. |
-| airports | 326 | 8 | One airport served by at least one sampled flight. |
-| routes | 5,436 | 4 | One directed origin–destination airport pair flown in the quarter. |
+| airlines | 14 | 3 | One airline. |
+| airports | 326 | 8 | One airport that appears in this dataset. |
+| routes | 5,436 | 4 | One flight path from an origin airport to a destination airport. |
 | calendar | 90 | 10 | One calendar date in the first quarter of 2025. |
-| cancellation_reasons | 4 | 2 | One BTS cancellation reason code. |
-| flights | 124,460 | 25 | One scheduled domestic flight leg by a sampled aircraft, including cancelled and diverted flights. |
+| cancellation_reasons | 4 | 2 | One reason a flight can be cancelled (for example weather or carrier). |
+| flights | 124,460 | 25 | One scheduled domestic flight, including cancelled and diverted flights. |
 
 **Transformations**
 
@@ -136,14 +136,14 @@ Eighteen months of a fictional collaboration product: workspaces, users, invitat
 | --- | --- | --- | --- |
 | accounts | 3,200 | 7 | One customer workspace (a company or team). |
 | users | 11,348 | 9 | One person in one workspace. |
-| subscriptions | 4,583 | 8 | One plan interval for a workspace. Each workspace has exactly one open interval (ended_at NULL). |
+| subscriptions | 4,583 | 8 | One plan period for a workspace. Each workspace has exactly one current plan (no end date). |
 | sessions | 47,891 | 5 | One product session by one user. |
-| events | 135,428 | 8 | One event delivery as ingested. Retries repeat event_id; late deliveries arrive long after occurred_at. |
+| events | 135,428 | 8 | One product event as received. Retries can repeat the same event, and some events arrive late. |
 | projects | 9,962 | 6 | One project created in a workspace. |
 | invitations | 6,450 | 7 | One invitation sent from a workspace. |
 | experiments | 20 | 6 | One product experiment. |
-| experiment_assignments | 14,939 | 4 | One user’s assignment to one experiment variant, recorded at first exposure. |
-| billing_events | 4,193 | 6 | One billing ledger event for a paid subscription. |
+| experiment_assignments | 14,939 | 4 | One user’s assigned experiment variant, recorded the first time they see it. |
+| billing_events | 4,193 | 6 | One billing charge or credit for a paid subscription. |
 
 **Transformations**
 
@@ -185,13 +185,13 @@ A 1-in-87 sample of New York City yellow taxi trips from January–March 2025: p
 
 | Table | Rows | Columns | Grain |
 | --- | --- | --- | --- |
-| boroughs | 8 | 2 | One NYC borough label used by the taxi zone map, including unknown and outside-NYC placeholders. |
-| zones | 265 | 5 | One TLC taxi zone. |
-| vendors | 4 | 2 | One technology provider that recorded trips. |
-| payment_types | 7 | 3 | One TLC payment type code. |
-| rate_codes | 7 | 2 | One TLC rate code. |
+| boroughs | 8 | 2 | One New York City borough, plus labels for unknown and outside-NYC locations. |
+| zones | 265 | 5 | One taxi pickup/dropoff zone in New York City. |
+| vendors | 4 | 2 | One system that recorded the trip data. |
+| payment_types | 7 | 3 | One way a trip can be paid (for example card or cash). |
+| rate_codes | 7 | 2 | One taxi fare type (for example standard, JFK, or negotiated). |
 | calendar | 90 | 7 | One calendar date in the first quarter of 2025. |
-| trips | 128,620 | 19 | One yellow taxi trip record as reported by the vendor, sampled from January–March 2025. |
+| trips | 128,620 | 19 | One yellow taxi trip from January–March 2025. |
 
 **Transformations**
 
@@ -231,10 +231,10 @@ Three years (2022–2024) of daily observations from 100 NOAA weather stations s
 | Table | Rows | Columns | Grain |
 | --- | --- | --- | --- |
 | states | 51 | 4 | One U.S. state or the District of Columbia. |
-| cities | 96 | 6 | One city chosen for weather coverage, with its Census Gazetteer internal point. |
-| stations | 100 | 10 | One NOAA first-order weather station (usually an airport). A city can have more than one. |
+| cities | 96 | 6 | One city with weather coverage, including its map location. |
+| stations | 100 | 10 | One weather station (usually at an airport). A city can have more than one station. |
 | calendar | 1,096 | 10 | One calendar date, 2022–2024. |
-| daily_weather | 109,214 | 10 | One station and observation date with at least one reported measurement. Days a station did not report have no row. |
+| daily_weather | 109,214 | 10 | One day of weather for one station. If a station did not report that day, there is no row. |
 
 **Transformations**
 
@@ -273,14 +273,14 @@ Hourly electricity demand, forecasts, generation and interchange for twelve majo
 
 | Table | Rows | Columns | Grain |
 | --- | --- | --- | --- |
-| regions | 15 | 4 | One EIA-930 region or neighbouring country. |
-| balancing_authorities | 62 | 6 | One balancing authority that appears in the data: the twelve with hourly detail and their interchange partners. |
-| fuel_types | 9 | 5 | One EIA-930 energy source category. |
+| regions | 15 | 4 | One power-grid region or neighbouring country. |
+| balancing_authorities | 62 | 6 | One grid operator (balancing authority). Twelve have hourly detail; the rest appear only as interchange partners. |
+| fuel_types | 9 | 5 | One energy source used for generation (for example coal, natural gas, or wind). |
 | calendar | 182 | 7 | One calendar date, January–June 2024. |
-| hourly_demand | 52,405 | 9 | One balancing authority hour: reported demand and day-ahead forecast. |
-| generation | 52,405 | 15 | One balancing authority hour: net generation, total interchange and net generation by fuel. |
-| generation_by_fuel | 15,824 | 5 | One balancing authority, local date and fuel: summed hourly net generation. |
-| interchange | 17,654 | 5 | One directed BA pair and local date: summed hourly scheduled interchange reported by from_ba. |
+| hourly_demand | 52,405 | 9 | One hour for one grid operator: electricity demand and the day-ahead forecast. |
+| generation | 52,405 | 15 | One hour for one grid operator: power generated, power traded with neighbours, and generation by fuel. |
+| generation_by_fuel | 15,824 | 5 | One day for one grid operator and one fuel: total generation that day. |
+| interchange | 17,654 | 5 | One day of scheduled power flow from one grid operator to another. |
 
 **Transformations**
 
@@ -322,11 +322,11 @@ Six months of a fictional bank: customers, checking, savings and credit-card acc
 | accounts | 2,109 | 7 | One deposit or credit-card account owned by one customer. |
 | cards | 1,774 | 8 | One payment card. Lost or expired cards are replaced by a new card on the same account. |
 | merchants | 1,014 | 6 | One card-accepting merchant location. |
-| authorizations | 40,508 | 10 | One card authorization request. Network retries repeat request_key. |
-| settlements | 37,071 | 4 | One cleared card purchase. Amounts can differ from the authorization (tips, fuel and hotel pre-authorizations, currency conversion). |
+| authorizations | 40,508 | 10 | One card authorization request. The same request can appear more than once when the network retries. |
+| settlements | 37,071 | 4 | One completed card purchase. The final amount can differ from the authorization (tips, hotels, currency conversion). |
 | refunds | 1,230 | 5 | One merchant refund against a settlement; a settlement can have several partial refunds. |
 | chargebacks | 199 | 7 | One cardholder dispute against a settlement. |
-| transactions | 84,798 | 12 | One ledger entry on an account. Negative amounts take money out from the customer’s point of view. Pending entries have no posted_at. |
+| transactions | 84,798 | 12 | One money movement on an account. Negative amounts are money out. Pending entries have no posted time yet. |
 
 **Transformations**
 
@@ -368,8 +368,8 @@ Three years of synthetic patient journeys: patients, clinicians, appointments, v
 | --- | --- | --- | --- |
 | patients | 3,200 | 9 | One fictional patient. |
 | providers | 460 | 6 | One clinician. |
-| encounters | 20,447 | 9 | One patient visit: wellness, ambulatory, telehealth, urgent care, emergency or inpatient stay. |
-| appointments | 19,438 | 7 | One booked appointment slot. Completed appointments link to the encounter they produced. |
+| encounters | 20,447 | 9 | One patient visit (clinic, telehealth, urgent care, emergency, or hospital stay). |
+| appointments | 19,438 | 7 | One booked appointment. Completed appointments link to the visit they produced. |
 | conditions | 8,563 | 7 | One diagnosis recorded for a patient. Chronic conditions have no resolved date. |
 | medications | 19,275 | 8 | One prescription fill period. Repeat fills of the same drug can overlap or leave gaps. |
 | observations | 39,529 | 8 | One measurement: vital sign or lab result. |
@@ -415,12 +415,12 @@ Two months of telemetry from sensors across eight fictional facilities: cold roo
 | Table | Rows | Columns | Grain |
 | --- | --- | --- | --- |
 | locations | 41 | 5 | One monitored zone inside a site. |
-| sensor_types | 10 | 7 | One kind of measurement, with its physically valid range and alert thresholds. |
+| sensor_types | 10 | 7 | One kind of measurement (for example temperature), including valid ranges and alert thresholds. |
 | devices | 186 | 9 | One installed sensor device. |
-| sensor_readings | 150,425 | 10 | One reading as received. Retransmissions repeat device_id, recorded_at and sequence_number with a new reading_id. |
-| alerts | 483 | 7 | One threshold or connectivity alert interval. |
-| maintenance | 168 | 7 | One maintenance work order on a device. Overlapping orders happen when two technicians log the same visit. |
-| device_status_events | 1,231 | 5 | One change in a device’s reported state. A state lasts until the device’s next status event. |
+| sensor_readings | 150,425 | 10 | One sensor reading. The same reading can arrive more than once when a device retransmits. |
+| alerts | 483 | 7 | One alert period when a device went out of range or lost connectivity. |
+| maintenance | 168 | 7 | One maintenance visit for a device. Two technicians can log overlapping orders for the same visit. |
+| device_status_events | 1,231 | 5 | One change in a device’s status. That status lasts until the next status event. |
 
 **Transformations**
 
@@ -461,11 +461,11 @@ Four months of a fictional parcel network: shipments and packages moving from fu
 | --- | --- | --- | --- |
 | service_levels | 8 | 5 | One shipping service with its delivery promise. |
 | carriers | 14 | 4 | One fictional transport carrier. |
-| warehouses | 38 | 6 | One network facility: fulfillment center, sortation hub or delivery station. |
-| routes | 173 | 6 | One scheduled linehaul lane between two facilities. |
+| warehouses | 38 | 6 | One facility in the network: fulfillment center, sort hub, or delivery station. |
+| routes | 173 | 6 | One scheduled truck lane between two facilities. |
 | shipments | 8,200 | 12 | One customer order shipped as one or more packages. |
 | packages | 11,505 | 8 | One physical package within a shipment. |
-| tracking_events | 100,515 | 9 | One scan or status update as ingested. Scans can repeat, go missing, arrive late or out of order. |
+| tracking_events | 100,515 | 9 | One package scan or status update. Scans can repeat, go missing, arrive late, or show up out of order. |
 | delivery_attempts | 12,700 | 6 | One attempt by a driver to deliver a package. |
 
 **Transformations**
@@ -507,11 +507,11 @@ Eighteen months of activity on a fictional code-hosting platform: organizations,
 | Table | Rows | Columns | Grain |
 | --- | --- | --- | --- |
 | organizations | 60 | 5 | One customer organization on the developer platform. |
-| teams | 324 | 4 | One team. Teams nest under parent teams to form a hierarchy within an organization. |
+| teams | 324 | 4 | One team inside an organization. Teams can nest under other teams. |
 | developers | 2,891 | 9 | One person with an account in an organization. |
 | repositories | 512 | 9 | One code repository. Forks point to the repository they were copied from. |
 | pull_requests | 13,242 | 10 | One pull request. |
-| commits | 35,881 | 9 | One commit. parent_sha links each commit to the previous commit on its branch. |
+| commits | 35,881 | 9 | One code commit. Each commit can point to the previous commit on its branch. |
 | reviews | 19,622 | 5 | One review submitted on a pull request. |
 | issues | 7,214 | 9 | One tracked issue. |
 | deployments | 8,991 | 8 | One deployment of a commit to an environment. |
@@ -554,13 +554,13 @@ Ten seasons of Major League Baseball results (2016–2025) with every 2025 playe
 
 | Table | Rows | Columns | Grain |
 | --- | --- | --- | --- |
-| teams | 31 | 6 | One MLB club code used in 2016–2025. The Athletics appear twice: Oakland (OAK) through 2024 and Sacramento (ATH) in 2025. |
-| venues | 48 | 5 | One ballpark that hosted a game in 2016–2025, including neutral and international sites. |
+| teams | 31 | 6 | One MLB team. The Athletics appear twice: Oakland (OAK) through 2024, then Sacramento (ATH) in 2025. |
+| venues | 48 | 5 | One ballpark that hosted a game, including neutral and international sites. |
 | seasons | 10 | 5 | One MLB season. |
 | games | 23,168 | 13 | One completed regular-season or postseason game. |
 | players | 1,471 | 9 | One player who appeared in a 2025 MLB game. |
-| player_game_stats | 73,029 | 17 | One player’s batting line in one 2025 game. Every participant has a line, so most pitchers appear with zero plate appearances. |
-| standings | 2,010 | 7 | One club’s cumulative regular-season record at the end of a calendar month (and at season end). |
+| player_game_stats | 73,029 | 17 | One player’s batting stats in one 2025 game. Pitchers usually appear with zero plate appearances. |
+| standings | 2,010 | 7 | One team’s win–loss record at the end of a month (and at season end). |
 
 **Transformations**
 

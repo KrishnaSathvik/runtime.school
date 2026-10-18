@@ -28,7 +28,7 @@ import { Shell } from "../Shell";
 import { Pager } from "../Pager";
 import { TaskCell } from "../Cells";
 import { PRACTICE_EDITOR_HEIGHT } from "../editor-height";
-import { ExpectedResult, PREVIEW_ROWS, Tables } from "../Tables";
+import { ExpectedResult, Tables } from "../Tables";
 import { Cols, Spec } from "../Spec";
 import { prettySql } from "@/components/editor/pretty-sql";
 import { SqlCode } from "../SqlCode";
@@ -167,14 +167,12 @@ export function PracticeTask({ slug }: { slug: string }) {
             {example && supported && (
               <>
                 <p className="rx-label sec">expected result</p>
-                <p className="rx-cap">Your query should return exactly these columns and values. Run it and compare.</p>
                 <ExpectedResult columns={example.columns} rows={example.rows} total={example.total} ordered={q.ordered} />
               </>
             )}
 
             <p className="rx-label sec">data you can query</p>
-            <p className="rx-cap">{practiceDatasets[q.datasetId]?.name} dataset: the first {PREVIEW_ROWS} rows of each table. Under each column name: the kind of value it holds, and which table it links to. Your queries run on all rows.</p>
-            <Tables tables={q.tables} open previews={Object.fromEntries(q.tables.map(t => {
+            <Tables tables={q.tables} previews={Object.fromEntries(q.tables.map(t => {
               const schema = learningDataset(q.datasetRef).previews[t];
               const sample = (inputPreviews as Record<string, Record<string, Pick<DatasetPreview, "result" | "total">>>)[q.id]?.[t];
               // Tables and views the question creates (for example a Predict sample) take their columns from its setup SQL.

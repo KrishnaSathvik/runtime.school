@@ -4,7 +4,7 @@ import { quiz, step, task, type LessonOverrides } from "./spec";
 export const foundationLessons: LessonOverrides = {
   0: {
     dataset: "retail", decision: "MIGRATE", reason: "Same first-SELECT task on the real Retail customer and product tables.",
-    concept: "A table is a set of rows with named columns. SELECT lists the columns you want; FROM names the table that holds them. In Retail, every row of customers is one identified wholesale customer and every row of products is one stock code. A query reads rows; it never changes them.",
+    concept: "A table is a set of rows with named columns. SELECT lists the columns you want; FROM names the table that holds them. In Retail, every row of customers is one identified wholesale customer and every row of products is one stock code. A query reads rows; it never changes them. Worked steps sometimes end with LIMIT so you only preview a few rows. LIMIT is not part of the pattern, and nothing grades it until its own lesson.",
     trap: "SELECT * returns every column, including ones the task did not ask for. A checked answer must return exactly the requested columns, in the requested order.",
     grain: "One row per customer, then one row per product.",
     example: "SELECT customer_id, first_order_at\nFROM customers;",
@@ -15,7 +15,7 @@ export const foundationLessons: LessonOverrides = {
     ],
     quiz: quiz("What does SELECT country FROM customers return?", ["One row per customer, showing only the country column", "One row per distinct country", "A single count of customers"], 0, "SELECT chooses columns; it keeps every row. DISTINCT and aggregates are what change the number of rows."),
     walkthrough: [
-      step("See a few customers", "Run this first. Each row is one customer. You get every column so you can see what the table holds before you pick any.", "SELECT * FROM customers LIMIT 10;"),
+      step("See a few customers", "Run this first. Each row is one customer. LIMIT 10 only shortens the preview; the challenges ask for every row.", "SELECT * FROM customers LIMIT 10;"),
       step("Keep only the columns you need", "Same customers, but SELECT now lists just two columns—the ones you ask for.", "SELECT customer_id, first_order_at FROM customers;"),
     ],
   },
@@ -24,16 +24,16 @@ export const foundationLessons: LessonOverrides = {
     concept: "A SELECT item can be a calculation as well as a column. AS gives the result column a name. Arithmetic on a NULL value produces NULL, so a product with no list price has no calculated price either.",
     trap: "Without AS, the result column is named after the expression text, which does not match the requested name.",
     grain: "One row per product, then one row per customer.",
-    example: "SELECT stock_code, list_price, list_price * 10 AS price_for_ten\nFROM products\nWHERE list_price IS NOT NULL\nLIMIT 12;",
-    hints: ["Write the expression, then AS and the requested name.", "date(first_order_at) keeps only the date part of a timestamp."],
+    example: "SELECT stock_code, list_price, list_price * 10 AS price_for_ten\nFROM products;",
+    hints: ["Write the expression, then AS and the name the task asks for.", "Rename country with AS, and rename first_order_at the same way."],
     tasks: [
-      task("Return stock_code, list_price and price_with_vat for every product, where price_with_vat is list_price × 1.2 rounded to 2 decimals.", "SELECT stock_code, list_price, ROUND(list_price * 1.2, 2) AS price_with_vat FROM products"),
-      task("Return customer_id, country AS customer_country, and first_order_date (the date part of first_order_at) for every customer.", "SELECT customer_id, country AS customer_country, date(first_order_at) AS first_order_date FROM customers"),
+      task("Return stock_code, list_price and price_with_vat for every product, where price_with_vat is list_price × 1.2.", "SELECT stock_code, list_price, list_price * 1.2 AS price_with_vat FROM products"),
+      task("Return customer_id, country AS customer_country, and first_order_at AS first_order for every customer.", "SELECT customer_id, country AS customer_country, first_order_at AS first_order FROM customers"),
     ],
     quiz: quiz("A product has list_price NULL. What is list_price * 1.2?", ["0", "NULL", "An error"], 1, "Arithmetic with an unknown value is unknown. Use COALESCE only if the task defines a replacement."),
     walkthrough: [
-      step("See products that have a price", "list_price is the unit selling price. Some products have no price recorded (NULL); this step skips those so you see real numbers first.", "SELECT stock_code, description, list_price FROM products WHERE list_price IS NOT NULL LIMIT 10;"),
-      step("Calculate and name a column", "Multiply the price, then use AS to name the new column. The challenges ask for every product—including missing prices, where the result stays NULL. That is normal, not a bug.", "SELECT stock_code, list_price, list_price * 10 AS price_for_ten FROM products WHERE list_price IS NOT NULL LIMIT 12;"),
+      step("Calculate and name a column", "Multiply the price, then use AS to name the new column. A product with no list_price keeps NULL in the calculated column. That is normal, not a bug.", "SELECT stock_code, list_price, list_price * 10 AS price_for_ten FROM products;"),
+      step("Rename a column that already exists", "AS can rename a stored column as well as a calculation. This names region as customer_region.", "SELECT customer_id, region AS customer_region FROM customers;"),
     ],
   },
   2: {
@@ -76,7 +76,7 @@ export const foundationLessons: LessonOverrides = {
     trap: "ordered_at <= '2010-12-31' excludes invoices later on 31 December, because '2010-12-31 14:05:00' is greater than '2010-12-31'.",
     grain: "One row per product in the price range, then one row per order in the month.",
     example: "SELECT stock_code, list_price\nFROM products\nWHERE list_price >= 100;",
-    hints: ["BETWEEN 10 AND 20 includes 10 and 20.", "Use ordered_at >= '2010-12-01' AND ordered_at < '2011-01-01'."],
+    hints: ["BETWEEN includes both ends.", "A whole month is a half-open range: from the first instant of the month up to, but not including, the first instant of the next month."],
     tasks: [
       task("Return stock_code, description and list_price for products whose list price is between 10 and 20 inclusive.", "SELECT stock_code, description, list_price FROM products WHERE list_price BETWEEN 10 AND 20"),
       task("Return order_id, invoice_no and ordered_at for every order placed in December 2010. Use a half-open range so all of 31 December is included.", "SELECT order_id, invoice_no, ordered_at FROM orders WHERE ordered_at >= '2010-12-01' AND ordered_at < '2011-01-01'"),
@@ -96,7 +96,7 @@ export const foundationLessons: LessonOverrides = {
     hints: ["Wrap the two countries in parentheses.", "Group the price and category alternatives in parentheses, then AND with is_merchandise = 1."],
     tasks: [
       task("Return order_id, country and ordered_at for sale orders shipped to Germany or France.", "SELECT order_id, country, ordered_at FROM orders WHERE order_type = 'sale' AND (country = 'Germany' OR country = 'France')"),
-      task("Return stock_code, description and list_price for merchandise products (is_merchandise = 1) that either cost more than 50 or belong to category 7 (Jewellery).", "SELECT stock_code, description, list_price FROM products WHERE is_merchandise = 1 AND (list_price > 50 OR category_id = 7)"),
+      task("Merchandise products (is_merchandise = 1) that either cost more than 50 or belong to category 7 (Jewellery). The query in the editor is missing parentheses, so AND and OR do not group the way that sentence does. Fix it. Return stock_code, description and list_price.", "SELECT stock_code, description, list_price FROM products WHERE is_merchandise = 1 AND (list_price > 50 OR category_id = 7)", { starter: "SELECT stock_code, description, list_price\nFROM products\nWHERE is_merchandise = 1\n   OR list_price > 50\n  AND category_id = 7;" }),
     ],
     quiz: quiz("How is a = 1 AND b = 2 OR c = 3 evaluated?", ["(a = 1 AND b = 2) OR c = 3", "a = 1 AND (b = 2 OR c = 3)", "It is a syntax error"], 0, "AND has higher precedence than OR. Parentheses make the intended grouping explicit."),
     walkthrough: [
@@ -107,10 +107,10 @@ export const foundationLessons: LessonOverrides = {
   6: {
     dataset: "retail", decision: "MIGRATE", reason: "IN and LIKE over real countries and product descriptions.",
     concept: "IN tests membership in a list and replaces a chain of ORs. LIKE matches text patterns: % stands for any run of characters and _ for exactly one. In SQLite, LIKE ignores letter case for plain ASCII letters.",
-    trap: "LIKE 'LUNCH BAG' without % matches only that exact text. Use '%LUNCH BAG%' to find it anywhere in a description.",
+    trap: "LIKE 'CAKESTAND' without % matches only that exact text. Use '%CAKESTAND%' to find it anywhere in a description.",
     grain: "One row per matching customer, then one row per matching product.",
     example: "SELECT stock_code, description\nFROM products\nWHERE description LIKE 'VINTAGE%';",
-    hints: ["country IN ('Germany', 'France', 'Spain').", "Put % on both sides of the phrase."],
+    hints: ["IN holds the country names from the task, each in single quotes.", "Put % on both sides of the phrase so it can match anywhere in the description."],
     tasks: [
       task("Return customer_id and country for customers in Germany, France or Spain.", "SELECT customer_id, country FROM customers WHERE country IN ('Germany', 'France', 'Spain')"),
       task("Return stock_code and description for products whose description contains LUNCH BAG.", "SELECT stock_code, description FROM products WHERE description LIKE '%LUNCH BAG%'"),
@@ -130,7 +130,7 @@ export const foundationLessons: LessonOverrides = {
     hints: ["Use description IS NULL.", "Combine customer_id IS NULL with order_type = 'sale'."],
     tasks: [
       task("Return stock_code and first_sold_at for products with no description.", "SELECT stock_code, first_sold_at FROM products WHERE description IS NULL"),
-      task("Return order_id, invoice_no and country for sale orders with no customer (anonymous invoices).", "SELECT order_id, invoice_no, country FROM orders WHERE customer_id IS NULL AND order_type = 'sale'"),
+      task("The editor shows a query for sale orders with no customer (anonymous invoices). It returns nothing. Fix it, and return order_id, invoice_no and country.", "SELECT order_id, invoice_no, country FROM orders WHERE customer_id IS NULL AND order_type = 'sale'", { starter: "SELECT order_id, invoice_no, country\nFROM orders\nWHERE customer_id = NULL AND order_type = 'sale';" }),
     ],
     quiz: quiz("What does WHERE description = NULL return?", ["Products with no description", "No rows", "Every product"], 1, "Comparing with NULL is unknown, never true. IS NULL is the test for missing values."),
     walkthrough: [
@@ -143,21 +143,21 @@ export const foundationLessons: LessonOverrides = {
     concept: "ORDER BY sorts the result; DESC reverses the order. LIMIT keeps the first n rows after sorting. When values tie, add a second sort key so “the first n” is well defined.",
     trap: "The most expensive stock codes include non-merchandise items such as bad-debt adjustments. Filter before ranking when the question is about merchandise.",
     grain: "Ten products, then twenty orders, in a defined order.",
-    example: "SELECT stock_code, list_price\nFROM products\nORDER BY list_price DESC, stock_code\nLIMIT 5;",
-    hints: ["Filter is_merchandise = 1, then ORDER BY list_price DESC, stock_code.", "ORDER BY ordered_at DESC, order_id DESC LIMIT 20."],
+    example: "SELECT stock_code, list_price\nFROM products\nWHERE is_merchandise = 0\nORDER BY list_price DESC, stock_code\nLIMIT 5;",
+    hints: ["Keep merchandise only, sort by price from high to low, and break ties with stock_code.", "Sort cancellations from newest to oldest and break ties with the higher order_id."],
     tasks: [
       task("Return stock_code, description and list_price for the 10 most expensive merchandise products (is_merchandise = 1), highest price first, breaking ties by stock_code.", "SELECT stock_code, description, list_price FROM products WHERE is_merchandise = 1 ORDER BY list_price DESC, stock_code LIMIT 10", { ordered: true }),
-      task("Return order_id, invoice_no and ordered_at for the 20 most recent cancellation orders, newest first, breaking ties by the higher order_id.", "SELECT order_id, invoice_no, ordered_at FROM orders WHERE order_type = 'cancellation' ORDER BY ordered_at DESC, order_id DESC LIMIT 20", { ordered: true }),
+      task("The editor is meant to return the 20 most recent cancellation orders, newest first, breaking ties by the higher order_id. It sorts the wrong way and does not break ties. Fix it.", "SELECT order_id, invoice_no, ordered_at FROM orders WHERE order_type = 'cancellation' ORDER BY ordered_at DESC, order_id DESC LIMIT 20", { ordered: true, starter: "SELECT order_id, invoice_no, ordered_at\nFROM orders\nWHERE order_type = 'cancellation'\nORDER BY ordered_at\nLIMIT 20;" }),
     ],
     quiz: quiz("Two products share the tenth-highest price. Which ORDER BY makes LIMIT 10 deterministic?", ["ORDER BY list_price DESC", "ORDER BY list_price DESC, stock_code", "ORDER BY stock_code"], 1, "The tie-breaker decides which of the equal rows comes first."),
     walkthrough: [
       step("Sort all products by price", "Run this. Without a filter, fees and adjustments can appear among the highest list prices.", "SELECT stock_code, description, list_price FROM products WHERE list_price IS NOT NULL ORDER BY list_price DESC LIMIT 5;"),
-      step("Rank only merchandise", "Run this. WHERE is_merchandise = 1 keeps goods only; stock_code breaks ties when prices match.", "SELECT stock_code, description, list_price FROM products WHERE is_merchandise = 1 ORDER BY list_price DESC, stock_code LIMIT 5;"),
+      step("Rank only fees and adjustments", "Run this. WHERE is_merchandise = 0 keeps non-goods; stock_code breaks ties when prices match. The challenge asks for merchandise, highest price first.", "SELECT stock_code, description, list_price FROM products WHERE is_merchandise = 0 ORDER BY list_price DESC, stock_code LIMIT 5;"),
     ],
   },
   9: {
     dataset: "mobility", decision: "MIGRATE", reason: "Aggregates now run over 128,620 real taxi trips.",
-    concept: "COUNT(*) counts rows; COUNT(column) counts rows where that column is known. SUM adds values and AVG divides the sum by the number of known values. Without GROUP BY, an aggregate query returns one row for the whole table.",
+    concept: "COUNT(*) counts rows; COUNT(column) counts rows where that column is known. SUM adds values and AVG divides the sum by the number of known values. Without GROUP BY, an aggregate query returns one row for the whole table. ROUND(value, 2) rounds a numeric result to two decimal places, which is how money and averages are shown from here on.",
     trap: "COUNT(passenger_count) is smaller than COUNT(*) because flex-fare trips have no recorded passenger count. AVG ignores those trips rather than treating them as zero.",
     grain: "One summary row for all trips.",
     example: "SELECT COUNT(*) AS trips, ROUND(AVG(trip_distance_miles), 2) AS avg_miles\nFROM trips;",
@@ -289,7 +289,7 @@ export const foundationLessons: LessonOverrides = {
     walkthrough: [
       step("List tables in the database", "Run this. sqlite_schema names every table and view the database defines.", "SELECT name, type FROM sqlite_schema WHERE type IN ('table', 'view') ORDER BY name;"),
       step("Read a table’s CREATE statement", "Run this. The sql column shows columns, primary keys, and foreign keys for orders.", "SELECT name, sql FROM sqlite_schema WHERE type = 'table' AND name = 'orders';"),
-      step("Attach customer columns with LEFT JOIN", "Run this. Each order’s customer_id looks up customers; anonymous orders stay with NULL customer fields.", "SELECT o.order_id, o.customer_id, c.country, c.region\nFROM orders o\nLEFT JOIN customers c ON c.customer_id = o.customer_id\nORDER BY o.order_id\nLIMIT 10;"),
+      step("Attach customer columns with JOIN", "Run this. Each order’s customer_id looks up customers. An order with no customer_id does not appear.", "SELECT o.order_id, o.customer_id, c.country, c.region\nFROM orders o\nJOIN customers c ON c.customer_id = o.customer_id\nORDER BY o.order_id\nLIMIT 10;"),
     ],
   },
   55: {

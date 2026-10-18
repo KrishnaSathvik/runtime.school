@@ -3,7 +3,7 @@ import { it } from "vitest";
 import { lessons, lessonFixture } from "@/content";
 import { parseSchema, parseSchemaDetailed } from "@/engine/explain";
 import { learningDataset } from "@/data/datasets/learning";
-import { computeInputPreviews, freshDb, lastResult } from "./lib/qb-data";
+import { computeExamples, computeInputPreviews, freshDb, lastResult } from "./lib/qb-data";
 
 it("generate visible task context from the canonical databases", async () => {
   const contexts: Record<string, { columns: string[]; tables: string[] }[]> = {};
@@ -45,4 +45,5 @@ it("generate visible task context from the canonical databases", async () => {
   }
   fs.writeFileSync("src/content/lesson-previews.json", JSON.stringify({ lessons: lessonOverlay, overlays }) + "\n");
   fs.writeFileSync("src/content/question-bank/input-previews.json", JSON.stringify(await computeInputPreviews(), null, 2) + "\n");
+  fs.writeFileSync("src/content/question-bank/examples.json", JSON.stringify(await computeExamples(), null, 2) + "\n");
 });
