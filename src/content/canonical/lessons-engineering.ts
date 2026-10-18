@@ -200,8 +200,8 @@ export const engineeringLessons: LessonOverrides = {
     example: "SELECT substr(hour_ending_utc, 1, 7) AS month, COUNT(*) AS rows_in_partition\nFROM hourly_demand\nGROUP BY month;",
     hints: ["hour_ending_utc >= '2024-01-01' AND hour_ending_utc < '2024-02-01'.", "GROUP BY ba_code, substr(hour_ending_utc, 1, 7)."],
     tasks: [
-      task("Return ba_code, hour_ending_utc and demand_mw for ERCO in January 2024 using a half-open range on hour_ending_utc (the partition key).", "SELECT ba_code, hour_ending_utc, demand_mw FROM hourly_demand WHERE ba_code = 'ERCO' AND hour_ending_utc >= '2024-01-01' AND hour_ending_utc < '2024-02-01'"),
-      task("Return ba_code, month (YYYY-MM of hour_ending_utc) and avg_demand_mw (rounded to 0 decimals) for every authority and month.", "SELECT ba_code, substr(hour_ending_utc, 1, 7) AS month, ROUND(AVG(demand_mw), 0) AS avg_demand_mw FROM hourly_demand GROUP BY ba_code, month"),
+      task("Find ERCO in January 2024 using a half-open range on hour_ending_utc (the partition key). Return ba_code, hour_ending_utc and demand_mw.", "SELECT ba_code, hour_ending_utc, demand_mw FROM hourly_demand WHERE ba_code = 'ERCO' AND hour_ending_utc >= '2024-01-01' AND hour_ending_utc < '2024-02-01'"),
+      task("Find every authority and month. Return ba_code, month (YYYY-MM of hour_ending_utc) and avg_demand_mw (rounded to 0 decimals).", "SELECT ba_code, substr(hour_ending_utc, 1, 7) AS month, ROUND(AVG(demand_mw), 0) AS avg_demand_mw FROM hourly_demand GROUP BY ba_code, month"),
     ],
     quiz: quiz("A table is partitioned by month. Which query benefits most?", ["One filtering a single month", "One computing a total over all months", "One filtering by ba_code only"], 0, "Only filters on the partition key let the engine skip partitions."),
     walkthrough: [

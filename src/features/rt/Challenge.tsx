@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { Eye, Lightbulb, RotateCcw } from "lucide-react";
 import taskContexts from "@/content/task-context.json";
 import { getLesson, isBlankSql, lessonFixture, starterFor } from "@/content";
@@ -12,7 +12,6 @@ import {
 } from "@/lib/learning-state";
 import { TaskCell } from "./Cells";
 import { CHALLENGE_EDITOR_HEIGHT } from "./editor-height";
-import { Cols, Spec } from "./Spec";
 import { prettySql } from "@/components/editor/pretty-sql";
 import { SqlCode } from "./SqlCode";
 
@@ -65,21 +64,6 @@ export function Challenge({
   const revealed = !!attempt?.revealed;
   const [confirm, setConfirm] = useState<null | "hint" | "reveal">(null);
 
-  const specRows: [string, ReactNode][] = [];
-  if (ctx?.columns.length) {
-    specRows.push([
-      "Columns",
-      <>
-        <Cols names={ctx.columns} />{" "}
-        <span className="rx-dim">{ctx.columns.length > 1 ? "in this order" : ""}</span>
-      </>,
-    ]);
-  }
-  specRows.push(["Rows", task.ordered ? "in the order asked" : "any order"]);
-  if (lesson.mode === "lab") {
-    specRows.push(["Also checked", "TEMP / table changes from your script"]);
-  }
-
   return (
     <div>
       <section className="rx-question" aria-label={`Challenge ${variant + 1}`}>
@@ -89,10 +73,9 @@ export function Challenge({
           {!solved && guided && <span className="rx-tag amber">using help</span>}
         </div>
         <PromptText text={task.prompt} />
-        <div className="rx-question-spec">
-          <p className="rx-label">what to return</p>
-          <Spec rows={specRows} />
-        </div>
+        {lesson.mode === "lab" && (
+          <p className="rx-question-text">The check also looks at tables your script creates or changes.</p>
+        )}
       </section>
       <TaskCell
         name={`challenge-${variant + 1}.sql`}

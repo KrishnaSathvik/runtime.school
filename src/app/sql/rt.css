@@ -403,11 +403,8 @@ html[data-theme="dark"] .rx {
 .rx-tabs .ok { color: var(--rx-ok); }
 .rx-lesson-status { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--rx-line); font-size: 12.5px; color: var(--rx-faint); background: var(--rx-bg); }
 .rx-lesson-status.done { color: var(--rx-ok); }
-@media (max-width: 700px) {
+@media (max-width: 1199px) {
   .rx-lesson .rx-task-split { grid-template-columns: minmax(0, 1fr); }
-  .rx-lesson .rx-brief,
-  .rx-lesson-work,
-  .rx-lesson-work:has(> .rx-tabs) { position: static; max-height: none; overflow: visible; }
   .rx-lesson-work > [role="tabpanel"] { flex: none; overflow: visible; }
 }
 /* Open tables read as data, not as collapsed chips. */
@@ -630,15 +627,15 @@ html[data-theme="dark"] .rx {
 .rx-pager [aria-disabled="true"] { color: var(--rx-faint); font-weight: 500; cursor: default; }
 @media (max-width: 480px) { .rx-pager a, .rx-pager span { min-width: 0; padding: 0 10px; } }
 
-/* Desktop 50/50: each pane scrolls on its own so reference and workspace stay on screen.
-   Mobile stays one document scroll (stacked). */
+/* Desktop (1200px and up) is the only left/right split, and each pane scrolls on its own.
+   Phones and tablets stack top then bottom and scroll as one page. */
 .rx-lesson .rx-task-split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
 .rx-lesson .rx-brief {
   border-right: 1px solid var(--rx-line); border-bottom: 0;
 }
 .rx-lesson .rx-lesson-work,
 .rx-project .rx-lesson-work { display: block; }
-@media (min-width: 701px) {
+@media (min-width: 1200px) {
   /* The lesson bar sits under the site header. The split fills whatever height is left. */
   .rx-main:has(> .rx-lesson) {
     height: calc(100dvh - 48px);
@@ -686,7 +683,13 @@ html[data-theme="dark"] .rx {
   .rx-lesson .rx-lesson-work > [role="tabpanel"]:has(.rx-cell) {
     flex: 1 1 auto;
     min-height: 0;
-    overflow: hidden;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+  }
+  .rx-lesson .rx-lesson-work > [role="tabpanel"]:has(.rx-cell) > * {
+    flex: 1 0 auto;
+    min-height: min-content;
     display: flex;
     flex-direction: column;
   }
@@ -695,10 +698,11 @@ html[data-theme="dark"] .rx {
     min-height: 0;
     overflow: auto;
   }
+  /* The prompt and what-to-return stay fully visible. The editor uses whatever height is left. */
   .rx-lesson .rx-lesson-work .rx-question {
-    flex: 0 1 auto;
-    max-height: min(34%, 132px);
-    overflow: auto;
+    flex: none;
+    max-height: none;
+    overflow: visible;
   }
   .rx-lesson .rx-lesson-work > .rx-lesson-status {
     flex: none;
@@ -707,7 +711,7 @@ html[data-theme="dark"] .rx {
   }
   .rx-lesson .rx-lesson-work .rx-cell {
     flex: 1 1 auto;
-    min-height: 0;
+    min-height: 160px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -720,9 +724,13 @@ html[data-theme="dark"] .rx {
     max-height: 22%;
     overflow: auto;
   }
+  .rx-lesson .rx-lesson-work > [role="tabpanel"] .rx-cell {
+    flex: 1 0 auto;
+  }
   .rx-lesson .rx-lesson-work .rx-editor {
-    flex: 1 1 auto;
-    min-height: 0;
+    flex: 1 0 auto;
+    /* A result must not shrink the SQL you wrote down to a line. */
+    min-height: 96px;
     display: flex;
     flex-direction: column;
   }
@@ -736,8 +744,9 @@ html[data-theme="dark"] .rx {
   }
   .rx-lesson .rx-lesson-work .rx-cell-foot { flex: none; }
   .rx-lesson .rx-lesson-work .rx-result {
-    flex: 0 1 auto;
-    max-height: min(34vh, 220px);
+    flex: 0 0 auto;
+    min-height: 0;
+    max-height: 220px;
     overflow: auto;
     scroll-margin-top: 12px;
   }
@@ -753,34 +762,65 @@ html[data-theme="dark"] .rx {
   height: auto; max-height: none; overflow: visible;
 }
 /* Beat the height:auto rule above so a short desktop still keeps Run / Check in view. */
-@media (min-width: 701px) {
+@media (min-width: 1200px) {
   .rx-lesson .rx-lesson-work .rx-cell.rx-cell {
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    min-height: 160px;
+  }
+  .rx-lesson .rx-lesson-work > [role="tabpanel"] .rx-cell.rx-cell {
+    flex: 1 0 auto;
+  }
+  .rx-lesson .rx-lesson-work .rx-editor > * {
+    flex: 1 1 auto;
     min-height: 0;
+    display: flex;
+    flex-direction: column;
   }
   .rx-lesson .rx-lesson-work .rx-editor .cm-editor.cm-editor,
   .rx-lesson .rx-lesson-work .rx-editor .cm-scroller.cm-scroller {
-    height: 100%;
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
     max-height: none;
     overflow: auto;
   }
 }
 .rx-lesson .rx-tabs { flex-wrap: wrap; overflow: visible; }
 .rx-lesson .rx-work { overflow-wrap: anywhere; }
-@media (max-width: 700px) {
-  .rx-lesson .rx-task-split {
+@media (max-width: 1199px) {
+  /* Phones and tablets: one page scroll. The lesson comes first, then the work. */
+  .rx-main:has(> .rx-lesson),
+  .rx-main:has(> .rx-lesson) > .rx-lesson,
+  .rx-lesson:has(> .rx-task-bar) {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+  .rx-lesson .rx-task-split,
+  .rx-lesson:has(> .rx-task-bar) > .rx-task-split {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto auto;
-    align-items: start;
+    height: auto;
+    min-height: 0;
+  }
+  .rx-lesson .rx-brief,
+  .rx-lesson .rx-lesson-work,
+  .rx-lesson .rx-lesson-work:has(> .rx-tabs) {
+    position: static;
+    align-self: start;
+    min-height: 0;
+    max-height: none;
+    height: auto;
+    overflow: visible;
   }
   .rx-lesson .rx-brief {
-    position: static; align-self: start;
-    min-height: 0; max-height: none;
-    border-right: 0; border-bottom: 1px solid var(--rx-line);
+    border-right: 0;
+    border-bottom: 1px solid var(--rx-line);
   }
-  .rx-lesson .rx-lesson-work { align-self: start; }
+}
+@media (max-width: 700px) {
   .rx-lesson .rx-brief, .rx-lesson .rx-work { padding: 14px 8px 24px; }
   .rx-lesson .rx-task-title { font-size: clamp(1.15rem, 4vw, 1.6rem); }
   .rx-lesson .rx-cell-head { flex-wrap: wrap; gap: 4px; padding: 7px; }

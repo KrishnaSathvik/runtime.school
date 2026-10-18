@@ -10,8 +10,8 @@ export const foundationLessons: LessonOverrides = {
     example: "SELECT customer_id, first_order_at\nFROM customers;",
     hints: ["List the columns after SELECT, separated by commas.", "Use FROM customers for the first task and FROM products for the second."],
     tasks: [
-      task("Return customer_id and country for every customer.", "SELECT customer_id, country FROM customers"),
-      task("Return stock_code, description and list_price for every product.", "SELECT stock_code, description, list_price FROM products"),
+      task("Find every customer. Return customer_id and country.", "SELECT customer_id, country FROM customers"),
+      task("Find every product. Return stock_code, description, and list_price.", "SELECT stock_code, description, list_price FROM products"),
     ],
     quiz: quiz("What does SELECT country FROM customers return?", ["One row per customer, showing only the country column", "One row per distinct country", "A single count of customers"], 0, "SELECT chooses columns; it keeps every row. DISTINCT and aggregates are what change the number of rows."),
     walkthrough: [
@@ -27,8 +27,8 @@ export const foundationLessons: LessonOverrides = {
     example: "SELECT stock_code, list_price, list_price * 10 AS price_for_ten\nFROM products;",
     hints: ["Write the expression, then AS and the name the task asks for.", "Rename country with AS, and rename first_order_at the same way."],
     tasks: [
-      task("Return stock_code, list_price and price_with_vat for every product, where price_with_vat is list_price × 1.2.", "SELECT stock_code, list_price, list_price * 1.2 AS price_with_vat FROM products"),
-      task("Return customer_id, country AS customer_country, and first_order_at AS first_order for every customer.", "SELECT customer_id, country AS customer_country, first_order_at AS first_order FROM customers"),
+      task("Find every product. Return stock_code, list_price, and price_with_vat, where price_with_vat is list_price multiplied by 1.2.", "SELECT stock_code, list_price, list_price * 1.2 AS price_with_vat FROM products"),
+      task("Find every customer. Return customer_id, country renamed to customer_country, and first_order_at renamed to first_order.", "SELECT customer_id, country AS customer_country, first_order_at AS first_order FROM customers"),
     ],
     quiz: quiz("A product has list_price NULL. What is list_price * 1.2?", ["0", "NULL", "An error"], 1, "Arithmetic with an unknown value is unknown. Use COALESCE only if the task defines a replacement."),
     walkthrough: [
@@ -44,8 +44,8 @@ export const foundationLessons: LessonOverrides = {
     example: "SELECT DISTINCT order_type\nFROM orders;",
     hints: ["Put DISTINCT directly after SELECT.", "List both columns after DISTINCT for the pair task."],
     tasks: [
-      task("Return each distinct country that appears on an order.", "SELECT DISTINCT country FROM orders"),
-      task("Return each distinct pair of region and country among customers.", "SELECT DISTINCT region, country FROM customers"),
+      task("Find every country that appears on an order. Return country, with each value once.", "SELECT DISTINCT country FROM orders"),
+      task("Find every combination of region and country among customers. Return region and country, with each pair once.", "SELECT DISTINCT region, country FROM customers"),
     ],
     quiz: quiz("orders has 6,722 rows. SELECT DISTINCT order_type FROM orders returns how many rows?", ["6,722", "One per order type that occurs", "One"], 1, "DISTINCT keeps one row per different value of the selected columns."),
     walkthrough: [
@@ -61,8 +61,8 @@ export const foundationLessons: LessonOverrides = {
     example: "SELECT order_id, invoice_no, ordered_at\nFROM orders\nWHERE country = 'Netherlands';",
     hints: ["Compare order_type with the text 'cancellation'.", "is_merchandise is 1 for goods and 0 for fees and adjustments."],
     tasks: [
-      task("Return order_id, invoice_no and ordered_at for every cancellation order.", "SELECT order_id, invoice_no, ordered_at FROM orders WHERE order_type = 'cancellation'"),
-      task("Return stock_code and description for every non-merchandise code (is_merchandise = 0).", "SELECT stock_code, description FROM products WHERE is_merchandise = 0"),
+      task("Find every cancellation order. Return order_id, invoice_no, and ordered_at.", "SELECT order_id, invoice_no, ordered_at FROM orders WHERE order_type = 'cancellation'"),
+      task("Find every product that is not merchandise (is_merchandise = 0). Return stock_code and description.", "SELECT stock_code, description FROM products WHERE is_merchandise = 0"),
     ],
     quiz: quiz("Which filter keeps only sale orders?", ["WHERE order_type = 'sale'", "WHERE order_type = \"sale\"", "WHERE 'order_type' = 'sale'"], 0, "Single quotes make a text value; double quotes name an identifier."),
     walkthrough: [
@@ -78,8 +78,8 @@ export const foundationLessons: LessonOverrides = {
     example: "SELECT stock_code, list_price\nFROM products\nWHERE list_price >= 100;",
     hints: ["BETWEEN includes both ends.", "A whole month is a half-open range: from the first instant of the month up to, but not including, the first instant of the next month."],
     tasks: [
-      task("Return stock_code, description and list_price for products whose list price is between 10 and 20 inclusive.", "SELECT stock_code, description, list_price FROM products WHERE list_price BETWEEN 10 AND 20"),
-      task("Return order_id, invoice_no and ordered_at for every order placed in December 2010. Use a half-open range so all of 31 December is included.", "SELECT order_id, invoice_no, ordered_at FROM orders WHERE ordered_at >= '2010-12-01' AND ordered_at < '2011-01-01'"),
+      task("Find products whose list_price is between 10 and 20, including both ends. Return stock_code, description, and list_price.", "SELECT stock_code, description, list_price FROM products WHERE list_price BETWEEN 10 AND 20"),
+      task("Find every order placed in December 2010, including later on the 31st. Return order_id, invoice_no, and ordered_at.", "SELECT order_id, invoice_no, ordered_at FROM orders WHERE ordered_at >= '2010-12-01' AND ordered_at < '2011-01-01'"),
     ],
     quiz: quiz("Which filter returns every order on 2010-12-31, at any time of day?", ["ordered_at <= '2010-12-31'", "ordered_at >= '2010-12-31' AND ordered_at < '2011-01-01'", "ordered_at = '2010-12-31'"], 1, "Timestamps carry a time. Compare against the start of the next day instead of the date itself."),
     walkthrough: [
@@ -95,8 +95,8 @@ export const foundationLessons: LessonOverrides = {
     example: "SELECT order_id, country, order_type\nFROM orders\nWHERE country = 'Spain' AND order_type = 'cancellation';",
     hints: ["Wrap the two countries in parentheses.", "Group the price and category alternatives in parentheses, then AND with is_merchandise = 1."],
     tasks: [
-      task("Return order_id, country and ordered_at for sale orders shipped to Germany or France.", "SELECT order_id, country, ordered_at FROM orders WHERE order_type = 'sale' AND (country = 'Germany' OR country = 'France')"),
-      task("Merchandise products (is_merchandise = 1) that either cost more than 50 or belong to category 7 (Jewellery). The query in the editor is missing parentheses, so AND and OR do not group the way that sentence does. Fix it. Return stock_code, description and list_price.", "SELECT stock_code, description, list_price FROM products WHERE is_merchandise = 1 AND (list_price > 50 OR category_id = 7)", { starter: "SELECT stock_code, description, list_price\nFROM products\nWHERE is_merchandise = 1\n   OR list_price > 50\n  AND category_id = 7;" }),
+      task("Find sale orders shipped to Germany or France. Return order_id, country, and ordered_at.", "SELECT order_id, country, ordered_at FROM orders WHERE order_type = 'sale' AND (country = 'Germany' OR country = 'France')"),
+      task("The query in the editor should find merchandise that either costs more than 50 or is in the Jewellery category. The conditions are grouped wrong. Fix it. Return stock_code, description, and list_price.", "SELECT stock_code, description, list_price FROM products WHERE is_merchandise = 1 AND (list_price > 50 OR category_id = 7)", { starter: "SELECT stock_code, description, list_price\nFROM products\nWHERE is_merchandise = 1\n   OR list_price > 50\n  AND category_id = 7;" }),
     ],
     quiz: quiz("How is a = 1 AND b = 2 OR c = 3 evaluated?", ["(a = 1 AND b = 2) OR c = 3", "a = 1 AND (b = 2 OR c = 3)", "It is a syntax error"], 0, "AND has higher precedence than OR. Parentheses make the intended grouping explicit."),
     walkthrough: [
@@ -112,8 +112,8 @@ export const foundationLessons: LessonOverrides = {
     example: "SELECT stock_code, description\nFROM products\nWHERE description LIKE 'VINTAGE%';",
     hints: ["IN holds the country names from the task, each in single quotes.", "Put % on both sides of the phrase so it can match anywhere in the description."],
     tasks: [
-      task("Return customer_id and country for customers in Germany, France or Spain.", "SELECT customer_id, country FROM customers WHERE country IN ('Germany', 'France', 'Spain')"),
-      task("Return stock_code and description for products whose description contains LUNCH BAG.", "SELECT stock_code, description FROM products WHERE description LIKE '%LUNCH BAG%'"),
+      task("Find customers in Germany, France, or Spain. Return customer_id and country.", "SELECT customer_id, country FROM customers WHERE country IN ('Germany', 'France', 'Spain')"),
+      task("Find products whose description contains “LUNCH BAG”. Return stock_code and description.", "SELECT stock_code, description FROM products WHERE description LIKE '%LUNCH BAG%'"),
     ],
     quiz: quiz("Which pattern matches descriptions that end in HOLDER?", ["LIKE 'HOLDER%'", "LIKE '%HOLDER'", "LIKE '_HOLDER'"], 1, "% before the text allows anything in front of it; nothing after it means the text must be at the end."),
     walkthrough: [
@@ -129,8 +129,8 @@ export const foundationLessons: LessonOverrides = {
     example: "SELECT stock_code, COALESCE(description, '(no description)') AS label\nFROM products\nWHERE list_price IS NULL;",
     hints: ["Use description IS NULL.", "Combine customer_id IS NULL with order_type = 'sale'."],
     tasks: [
-      task("Return stock_code and first_sold_at for products with no description.", "SELECT stock_code, first_sold_at FROM products WHERE description IS NULL"),
-      task("The editor shows a query for sale orders with no customer (anonymous invoices). It returns nothing. Fix it, and return order_id, invoice_no and country.", "SELECT order_id, invoice_no, country FROM orders WHERE customer_id IS NULL AND order_type = 'sale'", { starter: "SELECT order_id, invoice_no, country\nFROM orders\nWHERE customer_id = NULL AND order_type = 'sale';" }),
+      task("Find products with no description. Return stock_code and first_sold_at.", "SELECT stock_code, first_sold_at FROM products WHERE description IS NULL"),
+      task("The query in the editor should find sale orders with no customer, but it returns nothing. Fix it. Return order_id, invoice_no, and country.", "SELECT order_id, invoice_no, country FROM orders WHERE customer_id IS NULL AND order_type = 'sale'", { starter: "SELECT order_id, invoice_no, country\nFROM orders\nWHERE customer_id = NULL AND order_type = 'sale';" }),
     ],
     quiz: quiz("What does WHERE description = NULL return?", ["Products with no description", "No rows", "Every product"], 1, "Comparing with NULL is unknown, never true. IS NULL is the test for missing values."),
     walkthrough: [
@@ -146,8 +146,8 @@ export const foundationLessons: LessonOverrides = {
     example: "SELECT stock_code, list_price\nFROM products\nWHERE is_merchandise = 0\nORDER BY list_price DESC, stock_code\nLIMIT 5;",
     hints: ["Keep merchandise only, sort by price from high to low, and break ties with stock_code.", "Sort cancellations from newest to oldest and break ties with the higher order_id."],
     tasks: [
-      task("Return stock_code, description and list_price for the 10 most expensive merchandise products (is_merchandise = 1), highest price first, breaking ties by stock_code.", "SELECT stock_code, description, list_price FROM products WHERE is_merchandise = 1 ORDER BY list_price DESC, stock_code LIMIT 10", { ordered: true }),
-      task("The editor is meant to return the 20 most recent cancellation orders, newest first, breaking ties by the higher order_id. It sorts the wrong way and does not break ties. Fix it.", "SELECT order_id, invoice_no, ordered_at FROM orders WHERE order_type = 'cancellation' ORDER BY ordered_at DESC, order_id DESC LIMIT 20", { ordered: true, starter: "SELECT order_id, invoice_no, ordered_at\nFROM orders\nWHERE order_type = 'cancellation'\nORDER BY ordered_at\nLIMIT 20;" }),
+      task("Find the 10 most expensive merchandise products, highest list_price first. Break ties by stock_code. Return stock_code, description, and list_price.", "SELECT stock_code, description, list_price FROM products WHERE is_merchandise = 1 ORDER BY list_price DESC, stock_code LIMIT 10", { ordered: true }),
+      task("The query should return the 20 most recent cancellations, newest ordered_at first. Break ties by the higher order_id. It sorts the wrong way and ignores ties. Fix it. Return order_id, invoice_no, and ordered_at.", "SELECT order_id, invoice_no, ordered_at FROM orders WHERE order_type = 'cancellation' ORDER BY ordered_at DESC, order_id DESC LIMIT 20", { ordered: true, starter: "SELECT order_id, invoice_no, ordered_at\nFROM orders\nWHERE order_type = 'cancellation'\nORDER BY ordered_at\nLIMIT 20;" }),
     ],
     quiz: quiz("Two products share the tenth-highest price. Which ORDER BY makes LIMIT 10 deterministic?", ["ORDER BY list_price DESC", "ORDER BY list_price DESC, stock_code", "ORDER BY stock_code"], 1, "The tie-breaker decides which of the equal rows comes first."),
     walkthrough: [
@@ -163,8 +163,8 @@ export const foundationLessons: LessonOverrides = {
     example: "SELECT COUNT(*) AS trips, ROUND(AVG(trip_distance_miles), 2) AS avg_miles\nFROM trips;",
     hints: ["Use COUNT(*), SUM(fare_amount) and AVG(fare_amount).", "COUNT(passenger_count) counts only known passenger counts."],
     tasks: [
-      task("Return trip_count, total_fare and avg_fare for all trips. Round total_fare and avg_fare to 2 decimals.", "SELECT COUNT(*) AS trip_count, ROUND(SUM(fare_amount), 2) AS total_fare, ROUND(AVG(fare_amount), 2) AS avg_fare FROM trips"),
-      task("Return trips, trips_with_passengers (trips whose passenger_count is known) and avg_passengers over known values, rounded to 2 decimals.", "SELECT COUNT(*) AS trips, COUNT(passenger_count) AS trips_with_passengers, ROUND(AVG(passenger_count), 2) AS avg_passengers FROM trips"),
+      task("Find one summary of all trips. Return trip_count, total_fare, and avg_fare. Round total_fare and avg_fare to 2 decimals. trip_count is the number of trips, total_fare is the sum of fare_amount, and avg_fare is the average fare_amount.", "SELECT COUNT(*) AS trip_count, ROUND(SUM(fare_amount), 2) AS total_fare, ROUND(AVG(fare_amount), 2) AS avg_fare FROM trips"),
+      task("Find one summary of all trips. Return trips, trips_with_passengers, and avg_passengers. trips counts every trip, trips_with_passengers counts trips with a known passenger_count, and avg_passengers is the average passenger_count among those, rounded to 2 decimals.", "SELECT COUNT(*) AS trips, COUNT(passenger_count) AS trips_with_passengers, ROUND(AVG(passenger_count), 2) AS avg_passengers FROM trips"),
     ],
     quiz: quiz("A column has values 10, NULL and 20. What is AVG(column)?", ["10", "15", "NULL"], 1, "AVG divides the sum of known values (30) by the number of known values (2)."),
     walkthrough: [
@@ -180,8 +180,8 @@ export const foundationLessons: LessonOverrides = {
     example: "SELECT vendor_id, COUNT(*) AS trips\nFROM trips\nGROUP BY vendor_id;",
     hints: ["SELECT pickup_zone_id, COUNT(*) … GROUP BY pickup_zone_id.", "Group by payment_type_id and average tip_amount."],
     tasks: [
-      task("Return pickup_zone_id and trip_count for every pickup zone with trips.", "SELECT pickup_zone_id, COUNT(*) AS trip_count FROM trips GROUP BY pickup_zone_id"),
-      task("Return payment_type_id, trip_count and avg_tip (rounded to 2 decimals) for each payment type.", "SELECT payment_type_id, COUNT(*) AS trip_count, ROUND(AVG(tip_amount), 2) AS avg_tip FROM trips GROUP BY payment_type_id"),
+      task("Find every pickup zone. Return pickup_zone_id and trip_count, where trip_count is the number of trips that started there.", "SELECT pickup_zone_id, COUNT(*) AS trip_count FROM trips GROUP BY pickup_zone_id"),
+      task("Find every payment type. Return payment_type_id, trip_count, and avg_tip. trip_count is the number of trips, and avg_tip is the average tip_amount rounded to 2 decimals.", "SELECT payment_type_id, COUNT(*) AS trip_count, ROUND(AVG(tip_amount), 2) AS avg_tip FROM trips GROUP BY payment_type_id"),
     ],
     quiz: quiz("SELECT vendor_id, COUNT(*) FROM trips GROUP BY vendor_id returns…", ["One row per trip", "One row per vendor that recorded trips", "One row in total"], 1, "The grouping column defines one output row per distinct value."),
     walkthrough: [
@@ -197,8 +197,8 @@ export const foundationLessons: LessonOverrides = {
     example: "SELECT payment_type_id, COUNT(*) AS trips\nFROM trips\nGROUP BY payment_type_id\nHAVING COUNT(*) > 10000;",
     hints: ["Group by pickup_zone_id, then HAVING COUNT(*) >= 1000.", "Filter card trips with WHERE payment_type_id = 1, then HAVING on the average."],
     tasks: [
-      task("Return pickup_zone_id and trip_count for pickup zones with at least 1,000 trips.", "SELECT pickup_zone_id, COUNT(*) AS trip_count FROM trips GROUP BY pickup_zone_id HAVING COUNT(*) >= 1000"),
-      task("For credit-card trips (payment_type_id = 1), return pickup_zone_id and avg_fare (rounded to 2 decimals) for zones with at least 100 card trips whose average card fare is above 30.", "SELECT pickup_zone_id, ROUND(AVG(fare_amount), 2) AS avg_fare FROM trips WHERE payment_type_id = 1 GROUP BY pickup_zone_id HAVING COUNT(*) >= 100 AND AVG(fare_amount) > 30"),
+      task("Find pickup zones with at least 1,000 trips. Return pickup_zone_id and trip_count.", "SELECT pickup_zone_id, COUNT(*) AS trip_count FROM trips GROUP BY pickup_zone_id HAVING COUNT(*) >= 1000"),
+      task("Find pickup zones with at least 100 credit-card trips (payment_type_id = 1) and an average fare above 30. Return pickup_zone_id and avg_fare, where avg_fare is the average fare_amount rounded to 2 decimals.", "SELECT pickup_zone_id, ROUND(AVG(fare_amount), 2) AS avg_fare FROM trips WHERE payment_type_id = 1 GROUP BY pickup_zone_id HAVING COUNT(*) >= 100 AND AVG(fare_amount) > 30"),
     ],
     quiz: quiz("Where does a condition on COUNT(*) belong?", ["WHERE", "HAVING", "ORDER BY"], 1, "Aggregates exist only after grouping, so conditions on them go in HAVING."),
     walkthrough: [
@@ -214,8 +214,8 @@ export const foundationLessons: LessonOverrides = {
     example: "SELECT MIN(observation_date) AS first_day, MAX(observation_date) AS last_day\nFROM daily_weather;",
     hints: ["MIN(tmin_c) and MAX(tmax_c) with no GROUP BY.", "GROUP BY station_id for the second task."],
     tasks: [
-      task("Return coldest_c (lowest tmin_c) and hottest_c (highest tmax_c) across all observations.", "SELECT MIN(tmin_c) AS coldest_c, MAX(tmax_c) AS hottest_c FROM daily_weather"),
-      task("Return station_id, coldest_c and hottest_c for every station.", "SELECT station_id, MIN(tmin_c) AS coldest_c, MAX(tmax_c) AS hottest_c FROM daily_weather GROUP BY station_id"),
+      task("Find one summary of all weather observations. Return coldest_c and hottest_c: the lowest tmin_c and the highest tmax_c.", "SELECT MIN(tmin_c) AS coldest_c, MAX(tmax_c) AS hottest_c FROM daily_weather"),
+      task("Find every weather station. Return station_id, coldest_c, and hottest_c: the station’s lowest tmin_c and highest tmax_c.", "SELECT station_id, MIN(tmin_c) AS coldest_c, MAX(tmax_c) AS hottest_c FROM daily_weather GROUP BY station_id"),
     ],
     quiz: quiz("Which query returns one row per station?", ["SELECT MAX(tmax_c) FROM daily_weather", "SELECT station_id, MAX(tmax_c) FROM daily_weather GROUP BY station_id", "SELECT MAX(station_id) FROM daily_weather"], 1, "GROUP BY station_id sets the result grain to one row per station."),
     walkthrough: [
@@ -231,8 +231,8 @@ export const foundationLessons: LessonOverrides = {
     example: "SELECT station_id, observation_date,\n  CASE WHEN precipitation_mm > 0 THEN 'wet' ELSE 'dry' END AS day_type\nFROM daily_weather\nWHERE station_id = 'USW00094728';",
     hints: ["Start with WHEN tmax_c IS NULL THEN 'unknown'.", "precip_trace = 1 is a trace, which is different from a dry day."],
     tasks: [
-      task("For station USW00094728 (Central Park), return observation_date, tmax_c and band: 'unknown' when tmax_c is NULL, 'freezing' below 0, 'hot' at 30 or above, otherwise 'mild'.", "SELECT observation_date, tmax_c, CASE WHEN tmax_c IS NULL THEN 'unknown' WHEN tmax_c < 0 THEN 'freezing' WHEN tmax_c >= 30 THEN 'hot' ELSE 'mild' END AS band FROM daily_weather WHERE station_id = 'USW00094728'"),
-      task("For station USW00094728, return observation_date, precipitation_mm and rain_type: 'unknown' when precipitation_mm is NULL, 'trace' when precip_trace = 1, 'dry' when precipitation is 0, otherwise 'wet'.", "SELECT observation_date, precipitation_mm, CASE WHEN precipitation_mm IS NULL THEN 'unknown' WHEN precip_trace = 1 THEN 'trace' WHEN precipitation_mm = 0 THEN 'dry' ELSE 'wet' END AS rain_type FROM daily_weather WHERE station_id = 'USW00094728'"),
+      task("Find every day at the Central Park station (station_id 'USW00094728'). Return observation_date, tmax_c, and band. band is unknown when tmax_c is missing, freezing when it is below 0, hot when it is 30 or above, and mild otherwise.", "SELECT observation_date, tmax_c, CASE WHEN tmax_c IS NULL THEN 'unknown' WHEN tmax_c < 0 THEN 'freezing' WHEN tmax_c >= 30 THEN 'hot' ELSE 'mild' END AS band FROM daily_weather WHERE station_id = 'USW00094728'"),
+      task("Find every day at the Central Park station (station_id 'USW00094728'). Return observation_date, precipitation_mm, and rain_type. rain_type is unknown when precipitation_mm is missing, trace when precip_trace is 1, dry when precipitation_mm is 0, and wet otherwise.", "SELECT observation_date, precipitation_mm, CASE WHEN precipitation_mm IS NULL THEN 'unknown' WHEN precip_trace = 1 THEN 'trace' WHEN precipitation_mm = 0 THEN 'dry' ELSE 'wet' END AS rain_type FROM daily_weather WHERE station_id = 'USW00094728'"),
     ],
     quiz: quiz("CASE WHEN x > 10 THEN 'big' WHEN x > 5 THEN 'medium' END returns what for x = 12?", ["'big'", "'medium'", "Both"], 0, "CASE stops at the first true condition."),
     walkthrough: [
@@ -248,8 +248,8 @@ export const foundationLessons: LessonOverrides = {
     example: "SELECT airline_code,\n  SUM(CASE WHEN diverted = 1 THEN 1 ELSE 0 END) AS diverted\nFROM flights\nGROUP BY airline_code;",
     hints: ["SUM(CASE WHEN cancelled = 1 THEN 1 ELSE 0 END).", "Operated means cancelled = 0; on time means operated and departure_delay <= 15."],
     tasks: [
-      task("Return airline_code, flights, cancelled and delayed for each airline. delayed counts operated flights (cancelled = 0) that departed more than 15 minutes late.", "SELECT airline_code, COUNT(*) AS flights, SUM(CASE WHEN cancelled = 1 THEN 1 ELSE 0 END) AS cancelled, SUM(CASE WHEN cancelled = 0 AND departure_delay > 15 THEN 1 ELSE 0 END) AS delayed FROM flights GROUP BY airline_code"),
-      task("Return airline_code, operated and on_time_pct for each airline: on_time_pct is the percentage (0–100, 2 decimals) of operated flights that departed no more than 15 minutes late.", "SELECT airline_code, SUM(CASE WHEN cancelled = 0 THEN 1 ELSE 0 END) AS operated, ROUND(100.0 * SUM(CASE WHEN cancelled = 0 AND departure_delay <= 15 THEN 1 ELSE 0 END) / SUM(CASE WHEN cancelled = 0 THEN 1 ELSE 0 END), 2) AS on_time_pct FROM flights GROUP BY airline_code"),
+      task("Find every airline. Return airline_code, flights, cancelled, and delayed. flights counts scheduled flights, cancelled counts cancelled flights, and delayed counts operated flights that left more than 15 minutes late.", "SELECT airline_code, COUNT(*) AS flights, SUM(CASE WHEN cancelled = 1 THEN 1 ELSE 0 END) AS cancelled, SUM(CASE WHEN cancelled = 0 AND departure_delay > 15 THEN 1 ELSE 0 END) AS delayed FROM flights GROUP BY airline_code"),
+      task("Find every airline. Return airline_code, operated, and on_time_pct. operated counts flights that were not cancelled, and on_time_pct is the percentage of those that left no more than 15 minutes late, from 0 to 100, rounded to 2 decimals.", "SELECT airline_code, SUM(CASE WHEN cancelled = 0 THEN 1 ELSE 0 END) AS operated, ROUND(100.0 * SUM(CASE WHEN cancelled = 0 AND departure_delay <= 15 THEN 1 ELSE 0 END) / SUM(CASE WHEN cancelled = 0 THEN 1 ELSE 0 END), 2) AS on_time_pct FROM flights GROUP BY airline_code"),
     ],
     quiz: quiz("Why not count on-time flights with SUM(CASE WHEN departure_delay <= 15 THEN 1 ELSE 0 END) over all flights and divide by COUNT(*)?", ["It is the same", "Cancelled flights would count as late in the denominator", "CASE cannot be summed"], 1, "The denominator must be the population the rate describes: operated flights."),
     walkthrough: [
@@ -265,8 +265,8 @@ export const foundationLessons: LessonOverrides = {
     example: "SELECT account_id, COUNT(*) AS sent, COUNT(accepted_at) AS accepted\nFROM invitations\nGROUP BY account_id;",
     hints: ["ROUND(100.0 * COUNT(accepted_at) / COUNT(*), 2).", "LEFT JOIN invitations to accounts and divide by NULLIF(COUNT(i.invitation_id), 0)."],
     tasks: [
-      task("For every workspace that sent invitations, return account_id, invitations_sent, accepted and acceptance_pct (0–100, rounded to 2 decimals).", "SELECT account_id, COUNT(*) AS invitations_sent, COUNT(accepted_at) AS accepted, ROUND(100.0 * COUNT(accepted_at) / COUNT(*), 2) AS acceptance_pct FROM invitations GROUP BY account_id"),
-      task("For every workspace, including those that sent none, return account_id, invitations_sent and acceptance_pct. acceptance_pct is NULL when no invitation was sent.", "SELECT a.account_id, COUNT(i.invitation_id) AS invitations_sent, ROUND(100.0 * COUNT(i.accepted_at) / NULLIF(COUNT(i.invitation_id), 0), 2) AS acceptance_pct FROM accounts a LEFT JOIN invitations i ON i.account_id = a.account_id GROUP BY a.account_id"),
+      task("Find every workspace that sent at least one invitation. Return account_id, invitations_sent, accepted, and acceptance_pct. acceptance_pct is accepted divided by invitations sent, from 0 to 100, rounded to 2 decimals.", "SELECT account_id, COUNT(*) AS invitations_sent, COUNT(accepted_at) AS accepted, ROUND(100.0 * COUNT(accepted_at) / COUNT(*), 2) AS acceptance_pct FROM invitations GROUP BY account_id"),
+      task("Find every workspace, including those that sent no invitations. Return account_id, invitations_sent, and acceptance_pct. Leave acceptance_pct empty when no invitations were sent. Round it to 2 decimals, from 0 to 100.", "SELECT a.account_id, COUNT(i.invitation_id) AS invitations_sent, ROUND(100.0 * COUNT(i.accepted_at) / NULLIF(COUNT(i.invitation_id), 0), 2) AS acceptance_pct FROM accounts a LEFT JOIN invitations i ON i.account_id = a.account_id GROUP BY a.account_id"),
     ],
     quiz: quiz("What does SELECT 3 / 4 return in SQLite?", ["0.75", "0", "1"], 1, "Two integers use integer division. Write 3 * 1.0 / 4 or 100.0 * 3 / 4."),
     walkthrough: [
@@ -282,8 +282,8 @@ export const foundationLessons: LessonOverrides = {
     example: "SELECT name, sql\nFROM sqlite_schema\nWHERE type = 'table' AND name = 'orders';",
     hints: ["Filter sqlite_schema on type = 'table'.", "JOIN customers ON customers.customer_id = orders.customer_id."],
     tasks: [
-      task("Return name and type for every table in the Retail database from sqlite_schema (type = 'table', excluding names that start with sqlite_).", "SELECT name, type FROM sqlite_schema WHERE type = 'table' AND name NOT LIKE 'sqlite_%'"),
-      task("Return order_id, invoice_no and customer_country for every sale order placed by an identified customer, joining orders.customer_id to customers.customer_id.", "SELECT o.order_id, o.invoice_no, c.country AS customer_country FROM orders o JOIN customers c ON c.customer_id = o.customer_id WHERE o.order_type = 'sale'"),
+      task("Find every user table in this database. Skip SQLite’s own internal tables. Return name and type.", "SELECT name, type FROM sqlite_schema WHERE type = 'table' AND name NOT LIKE 'sqlite_%'"),
+      task("Find every sale order placed by a known customer. Return order_id, invoice_no, and the customer’s country renamed to customer_country.", "SELECT o.order_id, o.invoice_no, c.country AS customer_country FROM orders o JOIN customers c ON c.customer_id = o.customer_id WHERE o.order_type = 'sale'"),
     ],
     quiz: quiz("orders.customer_id refers to customers.customer_id. What is orders.customer_id?", ["A primary key", "A foreign key", "An index"], 1, "It stores another table’s primary key to express the relationship."),
     walkthrough: [
@@ -300,8 +300,8 @@ export const foundationLessons: LessonOverrides = {
     example: "SELECT customer_id, COUNT(*) AS orders\nFROM orders\nWHERE order_type = 'sale'\nGROUP BY customer_id\nORDER BY orders DESC\nLIMIT 5;",
     hints: ["WHERE filters 2011 sale lines before grouping; HAVING keeps large groups.", "SUM(quantity) OVER (PARTITION BY order_id) adds the order total to each line."],
     tasks: [
-      task("For sale orders placed in 2011 by identified customers, return customer_id and units (total quantity) for customers with more than 5,000 units. Sort by units descending, then customer_id.", "SELECT o.customer_id, SUM(i.quantity) AS units FROM orders o JOIN order_items i ON i.order_id = o.order_id WHERE o.order_type = 'sale' AND o.customer_id IS NOT NULL AND o.ordered_at >= '2011-01-01' AND o.ordered_at < '2012-01-01' GROUP BY o.customer_id HAVING SUM(i.quantity) > 5000 ORDER BY units DESC, o.customer_id", { ordered: true }),
-      task("For orders placed on 2011-11-14, keep every line and return order_item_id, order_id, quantity and order_units, the total quantity of that line’s order.", "SELECT i.order_item_id, i.order_id, i.quantity, SUM(i.quantity) OVER (PARTITION BY i.order_id) AS order_units FROM order_items i JOIN orders o ON o.order_id = i.order_id WHERE o.ordered_at >= '2011-11-14' AND o.ordered_at < '2011-11-15'"),
+      task("Find known customers who bought more than 5,000 units on sale orders in 2011. Return customer_id and units, largest units first. Break ties by the smaller customer_id.", "SELECT o.customer_id, SUM(i.quantity) AS units FROM orders o JOIN order_items i ON i.order_id = o.order_id WHERE o.order_type = 'sale' AND o.customer_id IS NOT NULL AND o.ordered_at >= '2011-01-01' AND o.ordered_at < '2012-01-01' GROUP BY o.customer_id HAVING SUM(i.quantity) > 5000 ORDER BY units DESC, o.customer_id", { ordered: true }),
+      task("Find every line on orders placed on 14 November 2011. Return order_item_id, order_id, quantity, and order_units. order_units is the total quantity of that whole order. Keep one row per line.", "SELECT i.order_item_id, i.order_id, i.quantity, SUM(i.quantity) OVER (PARTITION BY i.order_id) AS order_units FROM order_items i JOIN orders o ON o.order_id = i.order_id WHERE o.ordered_at >= '2011-11-14' AND o.ordered_at < '2011-11-15'"),
     ],
     quiz: quiz("Which clause is evaluated first?", ["SELECT", "FROM", "ORDER BY"], 1, "FROM (and its joins) produce the rows every later clause works on."),
     walkthrough: [
@@ -318,8 +318,8 @@ export const foundationLessons: LessonOverrides = {
     example: "SELECT CAST('02134' AS INTEGER) AS as_number, CAST(42 AS TEXT) || '!' AS as_text, 'ZIP ' || NULL AS with_null;",
     hints: ["CAST(destination_postal_code AS INTEGER).", "'ZIP ' || code is NULL when code is NULL; wrap it in COALESCE."],
     tasks: [
-      task("For shipments to Massachusetts (destination_state = 'MA'), return shipment_id, destination_postal_code and zip_number, the postal code cast to INTEGER.", "SELECT shipment_id, destination_postal_code, CAST(destination_postal_code AS INTEGER) AS zip_number FROM shipments WHERE destination_state = 'MA'"),
-      task("For the same shipments, return shipment_id and zip_label: 'ZIP ' followed by the postal code, or 'ZIP unknown' when the code is missing.", "SELECT shipment_id, COALESCE('ZIP ' || destination_postal_code, 'ZIP unknown') AS zip_label FROM shipments WHERE destination_state = 'MA'"),
+      task("Find shipments to Massachusetts. Return shipment_id, destination_postal_code, and zip_number, the postal code read as an integer.", "SELECT shipment_id, destination_postal_code, CAST(destination_postal_code AS INTEGER) AS zip_number FROM shipments WHERE destination_state = 'MA'"),
+      task("Find those same shipments to Massachusetts. Return shipment_id and zip_label: “ZIP ” followed by the postal code, or “ZIP unknown” when the code is missing.", "SELECT shipment_id, COALESCE('ZIP ' || destination_postal_code, 'ZIP unknown') AS zip_label FROM shipments WHERE destination_state = 'MA'"),
     ],
     quiz: quiz("What is CAST('02134-1207' AS INTEGER)?", ["2134", "021341207", "NULL"], 0, "SQLite reads the leading digits and stops at the hyphen; leading zeros are not kept in a number."),
     walkthrough: [

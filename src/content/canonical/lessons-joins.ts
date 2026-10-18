@@ -10,8 +10,8 @@ export const joinLessons: LessonOverrides = {
     example: "SELECT o.order_id, o.invoice_no, c.region\nFROM orders o\nJOIN customers c ON c.customer_id = o.customer_id\nWHERE o.ordered_at >= '2011-12-09';",
     hints: ["JOIN customers c ON c.customer_id = o.customer_id.", "Join order_items to products on stock_code, then filter on the invoice number."],
     tasks: [
-      task("Return order_id, ordered_at and the customer’s region for every sale order placed in December 2011 by an identified customer.", "SELECT o.order_id, o.ordered_at, c.region FROM orders o JOIN customers c ON c.customer_id = o.customer_id WHERE o.order_type = 'sale' AND o.ordered_at >= '2011-12-01' AND o.ordered_at < '2012-01-01'"),
-      task("Return order_item_id, quantity and the catalog description (products.description) for every line on invoice 580030.", "SELECT i.order_item_id, i.quantity, p.description FROM orders o JOIN order_items i ON i.order_id = o.order_id JOIN products p ON p.stock_code = i.stock_code WHERE o.invoice_no = '580030'"),
+      task("Find every sale order placed in December 2011 by an identified customer. Return order_id, ordered_at and the customer’s region.", "SELECT o.order_id, o.ordered_at, c.region FROM orders o JOIN customers c ON c.customer_id = o.customer_id WHERE o.order_type = 'sale' AND o.ordered_at >= '2011-12-01' AND o.ordered_at < '2012-01-01'"),
+      task("Find every line on invoice 580030. Return order_item_id, quantity and the catalog description (products.description).", "SELECT i.order_item_id, i.quantity, p.description FROM orders o JOIN order_items i ON i.order_id = o.order_id JOIN products p ON p.stock_code = i.stock_code WHERE o.invoice_no = '580030'"),
     ],
     quiz: quiz("An order has customer_id NULL. What happens to it in orders JOIN customers ON customers.customer_id = orders.customer_id?", ["It appears with NULL customer columns", "It is dropped", "It matches every customer"], 1, "NULL never equals anything, so the inner join finds no partner and removes the row."),
     walkthrough: [
@@ -27,8 +27,8 @@ export const joinLessons: LessonOverrides = {
     example: "SELECT c.category_id, c.category_name, COUNT(p.stock_code) AS products\nFROM categories c\nLEFT JOIN products p ON p.category_id = c.category_id\nGROUP BY c.category_id, c.category_name;",
     hints: ["LEFT JOIN order_items i ON i.stock_code = p.stock_code, then COUNT(i.order_item_id).", "Keep rows where i.order_item_id IS NULL."],
     tasks: [
-      task("Return stock_code, description and lines_sold for every merchandise product (is_merchandise = 1), where lines_sold counts its invoice lines and is 0 for products never ordered.", "SELECT p.stock_code, p.description, COUNT(i.order_item_id) AS lines_sold FROM products p LEFT JOIN order_items i ON i.stock_code = p.stock_code WHERE p.is_merchandise = 1 GROUP BY p.stock_code, p.description"),
-      task("Return stock_code and description for merchandise products that appear on no invoice line.", "SELECT p.stock_code, p.description FROM products p LEFT JOIN order_items i ON i.stock_code = p.stock_code WHERE p.is_merchandise = 1 AND i.order_item_id IS NULL"),
+      task("Find every merchandise product (is_merchandise = 1). Return stock_code, description and lines_sold, where lines_sold counts its invoice lines and is 0 for products never ordered.", "SELECT p.stock_code, p.description, COUNT(i.order_item_id) AS lines_sold FROM products p LEFT JOIN order_items i ON i.stock_code = p.stock_code WHERE p.is_merchandise = 1 GROUP BY p.stock_code, p.description"),
+      task("Find merchandise products that appear on no invoice line. Return stock_code and description.", "SELECT p.stock_code, p.description FROM products p LEFT JOIN order_items i ON i.stock_code = p.stock_code WHERE p.is_merchandise = 1 AND i.order_item_id IS NULL"),
     ],
     quiz: quiz("After products LEFT JOIN order_items, what does COUNT(*) return for a product with no lines?", ["0", "1", "NULL"], 1, "The product row is kept once with NULL line columns; COUNT(*) counts that row. Count a right-side column instead."),
     walkthrough: [
@@ -45,8 +45,8 @@ export const joinLessons: LessonOverrides = {
     example: "SELECT o.order_type, ROUND(SUM(i.quantity * i.unit_price), 2) AS amount\nFROM orders o\nJOIN order_items i ON i.order_id = o.order_id\nGROUP BY o.order_type;",
     hints: ["Join orders to order_items and group by o.country.", "Join products and categories on their keys; filter o.order_type = 'sale'."],
     tasks: [
-      task("Return country and net_sales for each order country: the sum of quantity × unit_price over all lines (sales and cancellations), rounded to 2 decimals.", "SELECT o.country, ROUND(SUM(i.quantity * i.unit_price), 2) AS net_sales FROM orders o JOIN order_items i ON i.order_id = o.order_id GROUP BY o.country"),
-      task("Return category_name and gross_sales for each category with sales: the sum of quantity × unit_price over lines on sale orders only, rounded to 2 decimals.", "SELECT c.category_name, ROUND(SUM(i.quantity * i.unit_price), 2) AS gross_sales FROM orders o JOIN order_items i ON i.order_id = o.order_id JOIN products p ON p.stock_code = i.stock_code JOIN categories c ON c.category_id = p.category_id WHERE o.order_type = 'sale' GROUP BY c.category_name"),
+      task("Find each order country. Return country and net_sales: the sum of quantity × unit_price over all lines (sales and cancellations), rounded to 2 decimals.", "SELECT o.country, ROUND(SUM(i.quantity * i.unit_price), 2) AS net_sales FROM orders o JOIN order_items i ON i.order_id = o.order_id GROUP BY o.country"),
+      task("Find each category with sales. Return category_name and gross_sales: the sum of quantity × unit_price over lines on sale orders only, rounded to 2 decimals.", "SELECT c.category_name, ROUND(SUM(i.quantity * i.unit_price), 2) AS gross_sales FROM orders o JOIN order_items i ON i.order_id = o.order_id JOIN products p ON p.stock_code = i.stock_code JOIN categories c ON c.category_id = p.category_id WHERE o.order_type = 'sale' GROUP BY c.category_name"),
     ],
     quiz: quiz("Why do cancellations reduce SUM(quantity * unit_price)?", ["They are filtered automatically", "Their quantities are negative", "Their prices are negative"], 1, "The source records a cancellation as negative units at the original price."),
     walkthrough: [
@@ -62,8 +62,8 @@ export const joinLessons: LessonOverrides = {
     example: "SELECT u.user_id, u.full_name, r.full_name AS referred_by\nFROM users u\nJOIN users r ON r.user_id = u.referred_by_user_id\nLIMIT 10;",
     hints: ["LEFT JOIN users r ON r.user_id = u.referred_by_user_id.", "LEFT JOIN users x ON x.referred_by_user_id = u.user_id and COUNT(x.user_id)."],
     tasks: [
-      task("For every workspace creator (signup_source = 'workspace_creator'), return user_id, referred_by_user_id and referrer_email. Creators who were not referred keep NULL.", "SELECT u.user_id, u.referred_by_user_id, r.email AS referrer_email FROM users u LEFT JOIN users r ON r.user_id = u.referred_by_user_id WHERE u.signup_source = 'workspace_creator'"),
-      task("For every workspace creator, return user_id and referrals: how many users name this creator as their referrer (0 when none).", "SELECT u.user_id, COUNT(x.user_id) AS referrals FROM users u LEFT JOIN users x ON x.referred_by_user_id = u.user_id WHERE u.signup_source = 'workspace_creator' GROUP BY u.user_id"),
+      task("Find every workspace creator (signup_source = 'workspace_creator'). Return user_id, referred_by_user_id and referrer_email. Creators who were not referred keep NULL.", "SELECT u.user_id, u.referred_by_user_id, r.email AS referrer_email FROM users u LEFT JOIN users r ON r.user_id = u.referred_by_user_id WHERE u.signup_source = 'workspace_creator'"),
+      task("Find every workspace creator. Return user_id and referrals: how many users name this creator as their referrer (0 when none).", "SELECT u.user_id, COUNT(x.user_id) AS referrals FROM users u LEFT JOIN users x ON x.referred_by_user_id = u.user_id WHERE u.signup_source = 'workspace_creator' GROUP BY u.user_id"),
     ],
     quiz: quiz("In users u JOIN users r ON r.user_id = u.referred_by_user_id, which alias is the referrer?", ["u", "r", "Both"], 1, "r is the row whose user_id equals u’s referred_by_user_id."),
     walkthrough: [
@@ -79,8 +79,8 @@ export const joinLessons: LessonOverrides = {
     example: "SELECT s.station_id, c.date\nFROM stations s\nCROSS JOIN calendar c\nWHERE s.station_id = 'USW00094728' AND c.date BETWEEN '2024-01-01' AND '2024-01-03';",
     hints: ["Filter stations to the Pennsylvania cities and calendar to the week, then CROSS JOIN.", "LEFT JOIN daily_weather ON station and date from the grid."],
     tasks: [
-      task("Return station_id and date for every station in a Pennsylvania city (cities.state_code = 'PA') and every calendar date from 2024-11-15 to 2024-11-21 inclusive.", "SELECT s.station_id, c.date FROM stations s JOIN cities ci ON ci.city_id = s.city_id CROSS JOIN calendar c WHERE ci.state_code = 'PA' AND c.date BETWEEN '2024-11-15' AND '2024-11-21'"),
-      task("For the same grid, return station_id, date and tmax_c from daily_weather. Days with no observation keep NULL.", "SELECT s.station_id, c.date, d.tmax_c FROM stations s JOIN cities ci ON ci.city_id = s.city_id CROSS JOIN calendar c LEFT JOIN daily_weather d ON d.station_id = s.station_id AND d.observation_date = c.date WHERE ci.state_code = 'PA' AND c.date BETWEEN '2024-11-15' AND '2024-11-21'"),
+      task("Find every station in a Pennsylvania city (cities.state_code = 'PA') and every calendar date from 2024-11-15 to 2024-11-21 inclusive. Return station_id and date.", "SELECT s.station_id, c.date FROM stations s JOIN cities ci ON ci.city_id = s.city_id CROSS JOIN calendar c WHERE ci.state_code = 'PA' AND c.date BETWEEN '2024-11-15' AND '2024-11-21'"),
+      task("Find the same grid. Return station_id, date and tmax_c from daily_weather. Days with no observation keep NULL.", "SELECT s.station_id, c.date, d.tmax_c FROM stations s JOIN cities ci ON ci.city_id = s.city_id CROSS JOIN calendar c LEFT JOIN daily_weather d ON d.station_id = s.station_id AND d.observation_date = c.date WHERE ci.state_code = 'PA' AND c.date BETWEEN '2024-11-15' AND '2024-11-21'"),
     ],
     quiz: quiz("3 stations CROSS JOIN 7 dates produces how many rows?", ["7", "10", "21"], 2, "Every station is paired with every date: 3 × 7."),
     walkthrough: [
@@ -96,8 +96,8 @@ export const joinLessons: LessonOverrides = {
     example: "SELECT p.package_id AS picked_up, d.package_id AS delivered\nFROM (SELECT DISTINCT package_id FROM tracking_events WHERE event_type = 'picked_up') p\nFULL OUTER JOIN (SELECT DISTINCT package_id FROM tracking_events WHERE event_type = 'delivered') d\n  ON d.package_id = p.package_id\nLIMIT 20;",
     hints: ["Build one subquery per event type, each with DISTINCT package_id, then FULL OUTER JOIN on package_id.", "SUM(pick.package_id IS NULL) counts the rows found only in the delivered feed."],
     tasks: [
-      task("For packages in shipments created from 2025-02-03 through 2025-02-09, return pickup_package_id and delivered_package_id: the package ids with a picked_up scan and with a delivered scan, matched on package_id and keeping packages found in only one feed.", "SELECT pick.package_id AS pickup_package_id, del.package_id AS delivered_package_id FROM (SELECT DISTINCT e.package_id FROM tracking_events e JOIN packages p ON p.package_id = e.package_id JOIN shipments s ON s.shipment_id = p.shipment_id WHERE s.created_at >= '2025-02-03' AND s.created_at < '2025-02-10' AND e.event_type = 'picked_up') pick FULL OUTER JOIN (SELECT DISTINCT e.package_id FROM tracking_events e JOIN packages p ON p.package_id = e.package_id JOIN shipments s ON s.shipment_id = p.shipment_id WHERE s.created_at >= '2025-02-03' AND s.created_at < '2025-02-10' AND e.event_type = 'delivered') del ON del.package_id = pick.package_id"),
-      task("For the same packages, return delivered_only, pickup_only and both: how many packages appear only in the delivered feed, only in the pickup feed, and in both.", "SELECT SUM(CASE WHEN pick.package_id IS NULL THEN 1 ELSE 0 END) AS delivered_only, SUM(CASE WHEN del.package_id IS NULL THEN 1 ELSE 0 END) AS pickup_only, SUM(CASE WHEN pick.package_id IS NOT NULL AND del.package_id IS NOT NULL THEN 1 ELSE 0 END) AS both FROM (SELECT DISTINCT e.package_id FROM tracking_events e JOIN packages p ON p.package_id = e.package_id JOIN shipments s ON s.shipment_id = p.shipment_id WHERE s.created_at >= '2025-02-03' AND s.created_at < '2025-02-10' AND e.event_type = 'picked_up') pick FULL OUTER JOIN (SELECT DISTINCT e.package_id FROM tracking_events e JOIN packages p ON p.package_id = e.package_id JOIN shipments s ON s.shipment_id = p.shipment_id WHERE s.created_at >= '2025-02-03' AND s.created_at < '2025-02-10' AND e.event_type = 'delivered') del ON del.package_id = pick.package_id"),
+      task("Find packages in shipments created from 2025-02-03 through 2025-02-09. Return pickup_package_id and delivered_package_id: the package ids with a picked_up scan and with a delivered scan, matched on package_id and keeping packages found in only one feed.", "SELECT pick.package_id AS pickup_package_id, del.package_id AS delivered_package_id FROM (SELECT DISTINCT e.package_id FROM tracking_events e JOIN packages p ON p.package_id = e.package_id JOIN shipments s ON s.shipment_id = p.shipment_id WHERE s.created_at >= '2025-02-03' AND s.created_at < '2025-02-10' AND e.event_type = 'picked_up') pick FULL OUTER JOIN (SELECT DISTINCT e.package_id FROM tracking_events e JOIN packages p ON p.package_id = e.package_id JOIN shipments s ON s.shipment_id = p.shipment_id WHERE s.created_at >= '2025-02-03' AND s.created_at < '2025-02-10' AND e.event_type = 'delivered') del ON del.package_id = pick.package_id"),
+      task("Find the same packages. Return delivered_only, pickup_only and both: how many packages appear only in the delivered feed, only in the pickup feed, and in both.", "SELECT SUM(CASE WHEN pick.package_id IS NULL THEN 1 ELSE 0 END) AS delivered_only, SUM(CASE WHEN del.package_id IS NULL THEN 1 ELSE 0 END) AS pickup_only, SUM(CASE WHEN pick.package_id IS NOT NULL AND del.package_id IS NOT NULL THEN 1 ELSE 0 END) AS both FROM (SELECT DISTINCT e.package_id FROM tracking_events e JOIN packages p ON p.package_id = e.package_id JOIN shipments s ON s.shipment_id = p.shipment_id WHERE s.created_at >= '2025-02-03' AND s.created_at < '2025-02-10' AND e.event_type = 'picked_up') pick FULL OUTER JOIN (SELECT DISTINCT e.package_id FROM tracking_events e JOIN packages p ON p.package_id = e.package_id JOIN shipments s ON s.shipment_id = p.shipment_id WHERE s.created_at >= '2025-02-03' AND s.created_at < '2025-02-10' AND e.event_type = 'delivered') del ON del.package_id = pick.package_id"),
     ],
     quiz: quiz("A package has a delivered scan but no pickup scan. How does it appear in pickups FULL OUTER JOIN deliveries?", ["It is dropped", "pickup side NULL, delivered side filled", "Twice"], 1, "FULL OUTER JOIN keeps right-only rows with NULL left-side columns."),
     walkthrough: [
@@ -113,8 +113,8 @@ export const joinLessons: LessonOverrides = {
     example: "SELECT p.provider_id, COUNT(e.encounter_id) AS telehealth_visits\nFROM providers p\nLEFT JOIN encounters e ON e.provider_id = p.provider_id AND e.encounter_class = 'telehealth'\nGROUP BY p.provider_id;",
     hints: ["Put e.encounter_class = 'emergency' in the ON clause.", "Put a.status = 'no_show' in the ON clause and count a.appointment_id."],
     tasks: [
-      task("Return provider_id and emergency_visits for every provider: the number of their emergency encounters, 0 when none.", "SELECT p.provider_id, COUNT(e.encounter_id) AS emergency_visits FROM providers p LEFT JOIN encounters e ON e.provider_id = p.provider_id AND e.encounter_class = 'emergency' GROUP BY p.provider_id"),
-      task("Return patient_id and no_shows for every patient: the number of their appointments with status 'no_show', 0 when none.", "SELECT p.patient_id, COUNT(a.appointment_id) AS no_shows FROM patients p LEFT JOIN appointments a ON a.patient_id = p.patient_id AND a.status = 'no_show' GROUP BY p.patient_id"),
+      task("Find every provider. Return provider_id and emergency_visits: the number of their emergency encounters, 0 when none.", "SELECT p.provider_id, COUNT(e.encounter_id) AS emergency_visits FROM providers p LEFT JOIN encounters e ON e.provider_id = p.provider_id AND e.encounter_class = 'emergency' GROUP BY p.provider_id"),
+      task("Find every patient. Return patient_id and no_shows: the number of their appointments with status 'no_show', 0 when none.", "SELECT p.patient_id, COUNT(a.appointment_id) AS no_shows FROM patients p LEFT JOIN appointments a ON a.patient_id = p.patient_id AND a.status = 'no_show' GROUP BY p.patient_id"),
     ],
     quiz: quiz("Moving the right-table filter from ON to WHERE in a LEFT JOIN usually…", ["keeps the same rows", "drops left rows with no matching right row", "adds duplicate rows"], 1, "WHERE sees NULL right-side values for unmatched rows and the condition is not true for them."),
     walkthrough: [
@@ -130,8 +130,8 @@ export const joinLessons: LessonOverrides = {
     example: "SELECT reviewer_id FROM reviews\nEXCEPT\nSELECT author_id FROM pull_requests;",
     hints: ["SELECT author_id FROM pull_requests INTERSECT SELECT reviewer_id FROM reviews.", "Put authors first and reviewers second with EXCEPT."],
     tasks: [
-      task("Return developer_id for developers who both authored a pull request and submitted a review.", "SELECT author_id AS developer_id FROM pull_requests INTERSECT SELECT reviewer_id FROM reviews"),
-      task("Return developer_id for pull request authors who never submitted a review.", "SELECT author_id AS developer_id FROM pull_requests EXCEPT SELECT reviewer_id FROM reviews"),
+      task("Find developers who both authored a pull request and submitted a review. Return developer_id.", "SELECT author_id AS developer_id FROM pull_requests INTERSECT SELECT reviewer_id FROM reviews"),
+      task("Find pull request authors who never submitted a review. Return developer_id.", "SELECT author_id AS developer_id FROM pull_requests EXCEPT SELECT reviewer_id FROM reviews"),
     ],
     quiz: quiz("A EXCEPT B returns…", ["Rows in A or B", "Rows in A that are not in B", "Rows in both"], 1, "EXCEPT subtracts the second result from the first."),
     walkthrough: [
@@ -147,8 +147,8 @@ export const joinLessons: LessonOverrides = {
     example: "SELECT author_id AS developer_id, 'author' AS role FROM pull_requests WHERE repository_id = 1\nUNION\nSELECT reviewer_id, 'reviewer' FROM reviews JOIN pull_requests USING (pull_request_id) WHERE repository_id = 1;",
     hints: ["SELECT author_id … UNION SELECT reviewer_id ….", "UNION ALL the two activity lists, then group by developer."],
     tasks: [
-      task("Return developer_id for every developer who authored a pull request or submitted a review, once each.", "SELECT author_id AS developer_id FROM pull_requests UNION SELECT reviewer_id FROM reviews"),
-      task("For developers in organization 1, return developer_id and contributions: one for every pull request they authored plus one for every review they submitted.", "SELECT developer_id, COUNT(*) AS contributions FROM (SELECT p.author_id AS developer_id FROM pull_requests p JOIN developers d ON d.developer_id = p.author_id WHERE d.organization_id = 1 UNION ALL SELECT r.reviewer_id FROM reviews r JOIN developers d ON d.developer_id = r.reviewer_id WHERE d.organization_id = 1) GROUP BY developer_id"),
+      task("Find every developer who authored a pull request or submitted a review, once each. Return developer_id.", "SELECT author_id AS developer_id FROM pull_requests UNION SELECT reviewer_id FROM reviews"),
+      task("Find developers in organization 1. Return developer_id and contributions: one for every pull request they authored plus one for every review they submitted.", "SELECT developer_id, COUNT(*) AS contributions FROM (SELECT p.author_id AS developer_id FROM pull_requests p JOIN developers d ON d.developer_id = p.author_id WHERE d.organization_id = 1 UNION ALL SELECT r.reviewer_id FROM reviews r JOIN developers d ON d.developer_id = r.reviewer_id WHERE d.organization_id = 1) GROUP BY developer_id"),
     ],
     quiz: quiz("Two queries return 5 and 7 rows with 2 rows in common. UNION ALL returns how many rows?", ["10", "12", "5"], 1, "UNION ALL keeps every row: 5 + 7."),
     walkthrough: [
@@ -164,8 +164,8 @@ export const joinLessons: LessonOverrides = {
     example: "SELECT stock_code, list_price\nFROM products\nWHERE list_price = (SELECT MAX(list_price) FROM products WHERE is_merchandise = 1);",
     hints: ["WHERE list_price > (SELECT AVG(list_price) FROM products WHERE is_merchandise = 1).", "Correlate: WHERE x.category_id = p.category_id inside the subquery."],
     tasks: [
-      task("Return stock_code, description and list_price for merchandise products priced above the average list price of all merchandise products.", "SELECT stock_code, description, list_price FROM products WHERE is_merchandise = 1 AND list_price > (SELECT AVG(list_price) FROM products WHERE is_merchandise = 1)"),
-      task("Return stock_code, category_id and list_price for merchandise products priced strictly above the average list price of merchandise in their own category.", "SELECT p.stock_code, p.category_id, p.list_price FROM products p WHERE p.is_merchandise = 1 AND p.list_price > (SELECT AVG(x.list_price) FROM products x WHERE x.is_merchandise = 1 AND x.category_id = p.category_id)"),
+      task("Find merchandise products priced above the average list price of all merchandise products. Return stock_code, description and list_price.", "SELECT stock_code, description, list_price FROM products WHERE is_merchandise = 1 AND list_price > (SELECT AVG(list_price) FROM products WHERE is_merchandise = 1)"),
+      task("Find merchandise products priced strictly above the average list price of merchandise in their own category. Return stock_code, category_id and list_price.", "SELECT p.stock_code, p.category_id, p.list_price FROM products p WHERE p.is_merchandise = 1 AND p.list_price > (SELECT AVG(x.list_price) FROM products x WHERE x.is_merchandise = 1 AND x.category_id = p.category_id)"),
     ],
     quiz: quiz("What makes a subquery correlated?", ["It uses GROUP BY", "It refers to a column of the outer query", "It returns one value"], 1, "A correlated subquery depends on the current outer row, so its result can differ for each row."),
     walkthrough: [
@@ -181,8 +181,8 @@ export const joinLessons: LessonOverrides = {
     example: "SELECT p.patient_id\nFROM patients p\nWHERE EXISTS (SELECT 1 FROM encounters e WHERE e.patient_id = p.patient_id AND e.encounter_class = 'inpatient');",
     hints: ["EXISTS (SELECT 1 FROM encounters e WHERE e.patient_id = p.patient_id AND …).", "NOT EXISTS with a.status = 'completed' also keeps patients who never booked."],
     tasks: [
-      task("Return patient_id for patients with at least one emergency encounter.", "SELECT p.patient_id FROM patients p WHERE EXISTS (SELECT 1 FROM encounters e WHERE e.patient_id = p.patient_id AND e.encounter_class = 'emergency')"),
-      task("Return patient_id for patients with no completed appointment, including patients who never booked one.", "SELECT p.patient_id FROM patients p WHERE NOT EXISTS (SELECT 1 FROM appointments a WHERE a.patient_id = p.patient_id AND a.status = 'completed')"),
+      task("Find patients with at least one emergency encounter. Return patient_id.", "SELECT p.patient_id FROM patients p WHERE EXISTS (SELECT 1 FROM encounters e WHERE e.patient_id = p.patient_id AND e.encounter_class = 'emergency')"),
+      task("Find patients with no completed appointment, including patients who never booked one. Return patient_id.", "SELECT p.patient_id FROM patients p WHERE NOT EXISTS (SELECT 1 FROM appointments a WHERE a.patient_id = p.patient_id AND a.status = 'completed')"),
     ],
     quiz: quiz("A patient has three emergency visits. How many times does EXISTS return them?", ["Three", "Once", "Never"], 1, "EXISTS is a yes/no test on each outer row; it does not repeat the row."),
     walkthrough: [
@@ -198,8 +198,8 @@ export const joinLessons: LessonOverrides = {
     example: "SELECT COUNT(*) AS anonymous_cancellations\nFROM orders\nWHERE order_type = 'cancellation' AND customer_id IS NULL;",
     hints: ["NOT EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.customer_id AND o.order_type = 'cancellation').", "Add AND customer_id IS NOT NULL inside the NOT IN subquery."],
     tasks: [
-      task("Return customer_id for customers who never placed a cancellation order. Use NOT EXISTS.", "SELECT c.customer_id FROM customers c WHERE NOT EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.customer_id AND o.order_type = 'cancellation')", { required: ["NOT EXISTS"] }),
-      task("Return the same customers using NOT IN, excluding NULL customer ids from the subquery.", "SELECT customer_id FROM customers WHERE customer_id NOT IN (SELECT customer_id FROM orders WHERE order_type = 'cancellation' AND customer_id IS NOT NULL)", { required: ["NOT IN"] }),
+      task("Find customers who never placed a cancellation order. Return customer_id. Use NOT EXISTS.", "SELECT c.customer_id FROM customers c WHERE NOT EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.customer_id AND o.order_type = 'cancellation')", { required: ["NOT EXISTS"] }),
+      task("Find those same customers with NOT IN. Return customer_id. Exclude NULL customer ids from the subquery.", "SELECT customer_id FROM customers WHERE customer_id NOT IN (SELECT customer_id FROM orders WHERE order_type = 'cancellation' AND customer_id IS NOT NULL)", { required: ["NOT IN"] }),
     ],
     quiz: quiz("What does 5 NOT IN (1, NULL) evaluate to?", ["true", "false", "unknown (NULL)"], 2, "5 <> NULL is unknown, so the whole NOT IN is unknown and WHERE drops the row."),
     walkthrough: [
@@ -216,8 +216,8 @@ export const joinLessons: LessonOverrides = {
     example: "WITH daily AS (\n  SELECT flight_date, COUNT(*) AS flights FROM flights GROUP BY flight_date\n)\nSELECT * FROM daily WHERE flights > 1500;",
     hints: ["WITH route_delay AS (SELECT route_id, COUNT(*) AS n, AVG(departure_delay) AS avg_delay FROM flights WHERE cancelled = 0 GROUP BY route_id).", "Add a second CTE with the overall operated average and compare."],
     tasks: [
-      task("Using a CTE, return route_id and avg_delay (average departure delay of operated flights, rounded to 1 decimal) for routes with at least 50 operated flights whose average delay exceeds 20 minutes.", "WITH route_delay AS (SELECT route_id, COUNT(*) AS operated, AVG(departure_delay) AS avg_delay FROM flights WHERE cancelled = 0 GROUP BY route_id) SELECT route_id, ROUND(avg_delay, 1) AS avg_delay FROM route_delay WHERE operated >= 50 AND avg_delay > 20"),
-      task("Using CTEs, return route_id and avg_delay (rounded to 1 decimal) for routes with at least 50 operated flights whose average delay is above the average delay of all operated flights.", "WITH route_delay AS (SELECT route_id, COUNT(*) AS operated, AVG(departure_delay) AS avg_delay FROM flights WHERE cancelled = 0 GROUP BY route_id), overall AS (SELECT AVG(departure_delay) AS avg_delay FROM flights WHERE cancelled = 0) SELECT r.route_id, ROUND(r.avg_delay, 1) AS avg_delay FROM route_delay r CROSS JOIN overall o WHERE r.operated >= 50 AND r.avg_delay > o.avg_delay"),
+      task("Using a CTE, find routes with at least 50 operated flights whose average delay exceeds 20 minutes. Return route_id and avg_delay (average departure delay of operated flights, rounded to 1 decimal).", "WITH route_delay AS (SELECT route_id, COUNT(*) AS operated, AVG(departure_delay) AS avg_delay FROM flights WHERE cancelled = 0 GROUP BY route_id) SELECT route_id, ROUND(avg_delay, 1) AS avg_delay FROM route_delay WHERE operated >= 50 AND avg_delay > 20"),
+      task("Using CTEs, find routes with at least 50 operated flights whose average delay is above the average delay of all operated flights. Return route_id and avg_delay (rounded to 1 decimal).", "WITH route_delay AS (SELECT route_id, COUNT(*) AS operated, AVG(departure_delay) AS avg_delay FROM flights WHERE cancelled = 0 GROUP BY route_id), overall AS (SELECT AVG(departure_delay) AS avg_delay FROM flights WHERE cancelled = 0) SELECT r.route_id, ROUND(r.avg_delay, 1) AS avg_delay FROM route_delay r CROSS JOIN overall o WHERE r.operated >= 50 AND r.avg_delay > o.avg_delay"),
     ],
     quiz: quiz("What is a CTE?", ["A stored table", "A named result defined in WITH for one statement", "An index"], 1, "A CTE exists only for the statement that defines it."),
     walkthrough: [
@@ -233,8 +233,8 @@ export const joinLessons: LessonOverrides = {
     example: "SELECT strftime('%w', pickup_at) AS weekday, COUNT(*) AS trips\nFROM trips\nGROUP BY weekday;",
     hints: ["GROUP BY strftime('%Y-%m', pickup_at).", "Add WHERE payment_type_id = 1 AND pickup_at >= '2025-01-01'."],
     tasks: [
-      task("Return month (YYYY-MM) and trips for every pickup month in the data.", "SELECT strftime('%Y-%m', pickup_at) AS month, COUNT(*) AS trips FROM trips GROUP BY month"),
-      task("For credit-card trips (payment_type_id = 1) picked up in 2025, return month and card_fares (sum of fare_amount, rounded to 2 decimals).", "SELECT strftime('%Y-%m', pickup_at) AS month, ROUND(SUM(fare_amount), 2) AS card_fares FROM trips WHERE payment_type_id = 1 AND pickup_at >= '2025-01-01' AND pickup_at < '2026-01-01' GROUP BY month"),
+      task("Find every pickup month in the data. Return month (YYYY-MM) and trips.", "SELECT strftime('%Y-%m', pickup_at) AS month, COUNT(*) AS trips FROM trips GROUP BY month"),
+      task("Find credit-card trips (payment_type_id = 1) picked up in 2025. Return month and card_fares (sum of fare_amount, rounded to 2 decimals).", "SELECT strftime('%Y-%m', pickup_at) AS month, ROUND(SUM(fare_amount), 2) AS card_fares FROM trips WHERE payment_type_id = 1 AND pickup_at >= '2025-01-01' AND pickup_at < '2026-01-01' GROUP BY month"),
     ],
     quiz: quiz("What does strftime('%Y-%m', '2025-02-14 08:30:00') return?", ["'2025-02'", "'02-2025'", "'2025-02-14'"], 0, "%Y is the year and %m the zero-padded month."),
     walkthrough: [
@@ -250,8 +250,8 @@ export const joinLessons: LessonOverrides = {
     example: "SELECT tracking_number, UPPER(REPLACE(TRIM(tracking_number), ' ', '')) AS clean\nFROM packages\nWHERE tracking_number <> UPPER(REPLACE(TRIM(tracking_number), ' ', ''))\nLIMIT 10;",
     hints: ["UPPER(REPLACE(TRIM(tracking_number), ' ', '')).", "CASE WHEN instr(code, '-') > 0 THEN substr(code, 1, instr(code, '-') - 1) ELSE code END, then substr('00000' || … , -5)."],
     tasks: [
-      task("Return package_id, tracking_number and clean_tracking (trimmed, spaces removed, upper case) for packages whose tracking number is not already in that clean form.", "SELECT package_id, tracking_number, UPPER(REPLACE(TRIM(tracking_number), ' ', '')) AS clean_tracking FROM packages WHERE tracking_number <> UPPER(REPLACE(TRIM(tracking_number), ' ', ''))"),
-      task("For shipments to Connecticut or Massachusetts, return shipment_id and zip5: take the postal code before any hyphen and left-pad it with zeros to 5 characters. Missing codes stay NULL.", "SELECT shipment_id, substr('00000' || CASE WHEN instr(destination_postal_code, '-') > 0 THEN substr(destination_postal_code, 1, instr(destination_postal_code, '-') - 1) ELSE destination_postal_code END, -5) AS zip5 FROM shipments WHERE destination_state IN ('CT', 'MA')"),
+      task("Find packages whose tracking number is not already in that clean form. Return package_id, tracking_number and clean_tracking (trimmed, spaces removed, upper case).", "SELECT package_id, tracking_number, UPPER(REPLACE(TRIM(tracking_number), ' ', '')) AS clean_tracking FROM packages WHERE tracking_number <> UPPER(REPLACE(TRIM(tracking_number), ' ', ''))"),
+      task("Find shipments to Connecticut or Massachusetts. Return shipment_id and zip5: take the postal code before any hyphen and left-pad it with zeros to 5 characters. Missing codes stay NULL.", "SELECT shipment_id, substr('00000' || CASE WHEN instr(destination_postal_code, '-') > 0 THEN substr(destination_postal_code, 1, instr(destination_postal_code, '-') - 1) ELSE destination_postal_code END, -5) AS zip5 FROM shipments WHERE destination_state IN ('CT', 'MA')"),
     ],
     quiz: quiz("What does substr('00000' || '2134', -5) return?", ["'02134'", "'00000'", "'2134'"], 0, "Prefix zeros, then keep the last five characters."),
     walkthrough: [
@@ -267,8 +267,8 @@ export const joinLessons: LessonOverrides = {
     example: "SELECT COUNT(*) AS new_year_flights\nFROM flights\nWHERE scheduled_departure >= '2025-01-01 00:00' AND scheduled_departure < '2025-01-02 00:00';",
     hints: ["scheduled_departure >= '2025-02-28 00:00' AND scheduled_departure < '2025-03-01 00:00'.", "COUNT(DISTINCT tail_number) for operated flights, grouped by substr(flight_date, 1, 7)."],
     tasks: [
-      task("Return flight_id and scheduled_departure for every flight scheduled to depart on 28 February 2025, using a half-open range on scheduled_departure.", "SELECT flight_id, scheduled_departure FROM flights WHERE scheduled_departure >= '2025-02-28 00:00' AND scheduled_departure < '2025-03-01 00:00'"),
-      task("Return month (YYYY-MM) and aircraft: the number of distinct tail numbers that operated at least one flight (cancelled = 0) in each month.", "SELECT substr(flight_date, 1, 7) AS month, COUNT(DISTINCT tail_number) AS aircraft FROM flights WHERE cancelled = 0 GROUP BY month"),
+      task("Find every flight scheduled to depart on 28 February 2025, using a half-open range on scheduled_departure. Return flight_id and scheduled_departure.", "SELECT flight_id, scheduled_departure FROM flights WHERE scheduled_departure >= '2025-02-28 00:00' AND scheduled_departure < '2025-03-01 00:00'"),
+      task("Find each month. Return month (YYYY-MM) and aircraft: the number of distinct tail numbers that operated at least one flight (cancelled = 0).", "SELECT substr(flight_date, 1, 7) AS month, COUNT(DISTINCT tail_number) AS aircraft FROM flights WHERE cancelled = 0 GROUP BY month"),
     ],
     quiz: quiz("Which range selects every departure on 2025-02-28?", ["BETWEEN '2025-02-28' AND '2025-02-28'", ">= '2025-02-28 00:00' AND < '2025-03-01 00:00'", "> '2025-02-27' AND < '2025-02-28'"], 1, "The half-open range covers the whole day, including 23:59 departures."),
     walkthrough: [
