@@ -1,13 +1,16 @@
 "use client";
+
+import { focusWorkspaceEditor } from "../workspace-focus";
 import Link from "next/link";
-import { Lightbulb } from "lucide-react";
+import { ArrowDown, ArrowRight, Lightbulb } from "lucide-react";
 import { MetricDefinitions, DataNotes } from "./ProjectGuidance";
-import { useEffect, useRef, useState } from "react";
-import type { Project } from "@/content/projects";
-import { SQL_PROJECTS_LIBRARY_HREF } from "@/content/projects/paths";
+import { useEffect, useRef, useState, type Ref } from "react";
+import { projects as allProjects, type Project, type ProjectStage } from "@/content/projects";
+import { SQL_PROJECTS_LIBRARY_HREF, sqlProjectHref } from "@/content/projects/paths";
 import { getProjectReference } from "@/content/projects/references";
 import { datasetName, toolDataset } from "@/content/tools/datasets";
 import { cancelSql, executeSql, preloadDatabase, type ExecuteResponse } from "@/engine/sql-client";
+import { gradeFeedback } from "../feedback";
 import { useDraftSaveFailed, useHydrated, useLearning } from "@/lib/learning-state";
 import { Shell } from "../Shell";
 import { Editor } from "../Editor";
@@ -20,6 +23,7 @@ import { buildRules, buildSetup, buildValidation, priorBuildSql } from "./build"
 import { ProjectTables } from "./ProjectTables";
 import { ProjectPicker } from "./ProjectPicker";
 import { ProjectDialog } from "./ProjectDialog";
+import { jumpTo, revealRange } from "../reveal";
 
 export function ProjectWorkspace({ project }: { project: Project }) {
   const state = useLearning();
@@ -58,13 +62,33 @@ export function ProjectWorkspace({ project }: { project: Project }) {
   const priorComplete = project.stages.slice(0, stageIndex).every(s => stageIsComplete(s, state.drafts, draftPrefix(project, s.id), project));
   const canContinue = (stage.type === "orientation" || (needsSql ? isExploration ? findings.length >= minimum : checkPass && !!finding.trim() : stage.type === "report" ? reportReady && priorComplete : stageIsComplete(stage, state.drafts, prefix, project)));
   const setDraft = (key: string, value: string) => state.setDraft(key, value);
+  const stageDone = project.stages.map(s => stageIsComplete(s, state.drafts, draftPrefix(project, s.id), project));
+  const nextStage = project.stages[stageIndex + 1];
+  const footRef = useRef<HTMLDivElement>(null);
+  const verdictRef = useRef<HTMLDivElement>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
+  const findingRef = useRef<HTMLTextAreaElement>(null);
+  // After Run or Check, bring the verdict (or the first result rows) in under the Run / Check bar.
+  useEffect(() => {
+    if (!response) return;
+    const frame = requestAnimationFrame(() => {
+      const end = response.grade && verdictRef.current?.firstElementChild ? verdictRef.current : resultsRef.current;
+      if (footRef.current && end) revealRange(footRef.current, end, 320);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [response]);
 
   useEffect(() => {
     if (!hydrated || restored.current) return;
     restored.current = true;
     const requested = new URLSearchParams(window.location.search).get("stage");
     const index = project.stages.findIndex(s => s.id === requested);
-    setStageIndex(index >= 0 ? index : 0);
+    // Without ?stage, resume the stage the learner was on (saved by go()), else the start.
+    const saved = Number(useLearning.getState().drafts[positionKey]);
+    const resume = index >= 0 ? index : Number.isInteger(saved) && saved >= 0 && saved < project.stages.length ? saved : 0;
+    setStageIndex(resume);
+    // A finished project reopens on its completion screen rather than the report form.
+    if (project.stages[resume]?.type === "report" && projectIsComplete(project, useLearning.getState().drafts)) setCompleteScreen(true);
   }, [hydrated, positionKey, project]);
   // Start the download while the learner reads the brief.
   useEffect(() => { preloadDatabase(dataset.seed); return () => cancelSql(); }, [dataset.seed]);
@@ -135,27 +159,48 @@ export function ProjectWorkspace({ project }: { project: Project }) {
     finally { setExporting(false); }
   };
   const reportActions = <section className="project-delivery" aria-label="Project download"><div><h3>Your project portfolio</h3><p>{complete ? "Download your certificate, analysis, saved results, and SQL in one PDF." : "Preview your report now. Complete the project to download your certificate and analysis as a PDF."}</p></div><label className="project-certificate-input">Name on certificate <span>(optional)</span><input maxLength={100} value={state.drafts[reportSectionKey(project, "certificate-name")] ?? ""} onChange={e => setDraft(reportSectionKey(project, "certificate-name"), e.target.value)} placeholder="Your name" /></label><div className="project-actions"><button className="rx-btn" onClick={() => setPanel("preview")}>Preview report</button><button className="rx-btn primary" disabled={!complete || exporting || saveFailed} onClick={() => void exportReport()}>{exporting ? "Creating PDF…" : "Download certificate & report"}</button></div>{exportError && <p role="alert">{exportError}</p>}</section>;
-  const textField = (label: string, key: string, prompt?: string, rows = 3) => <label className="rx-project-field"><span className="rx-label">{label}</span>{prompt && <span className="rx-small">{prompt}</span>}<textarea className="rx-project-textarea" rows={rows} value={state.drafts[key] ?? ""} onChange={e => setDraft(key, e.target.value)} /></label>;
+  const textField = (label: string, key: string, prompt?: string, rows = 3, ref?: Ref<HTMLTextAreaElement>) => <label className="rx-project-field"><span className="rx-label">{label}</span>{prompt && <span className="rx-small">{prompt}</span>}<textarea ref={ref} className="rx-project-textarea" rows={rows} value={state.drafts[key] ?? ""} onChange={e => setDraft(key, e.target.value)} /></label>;
   const savedList = <div className="project-findings">{collected.length ? collected.map(f => <section key={f.id}>
     <h3>{f.stage.title}</h3><p>{f.finding}</p><p className="rx-small">Saved from Stage {f.stageNumber}{fingerprint(state.drafts[`${draftPrefix(project, f.stage.id)}-sql`] ?? f.query) !== fingerprint(f.query) ? " · Saved from an earlier query" : ""}</p>
     <details><summary>View query</summary><SqlCode source={f.query} label="Saved query" /></details>
     <details><summary>View result</summary><Output query={f.query} res={{ result: f.result, total: f.total }} /></details>
   </section>) : <p>No saved findings yet.</p>}</div>;
-  const continuation = <div className="rx-project-nav"><button className="rx-btn amber" disabled={!canContinue || saveFailed || busy !== null} onClick={next}>{isBrief ? "Begin project →" : stage.type === "orientation" ? "Continue to analysis →" : stage.type === "report" ? "Complete project" : stage.type === "synthesis" ? project.stages[stageIndex + 1]?.type === "report" ? "Continue to report →" : "Continue →" : isExploration ? "Continue →" : "Save & continue →"}</button></div>;
+  /** Why a stage still blocks the report, in the learner's terms. */
+  const openReason = (s: ProjectStage) => {
+    const pre = draftPrefix(project, s.id);
+    if (s.type === "orientation") return "open it and press Continue";
+    if (s.type === "synthesis") return "answer its review questions";
+    if (s.type === "exploration") return "save the findings it asks for";
+    const saved = savedFindings(state.drafts, pre);
+    if (saved.length && !saved.some(f => fingerprint(f.query) === fingerprint(state.drafts[`${pre}-sql`] ?? ""))) return "its query changed after you saved the finding: check it again, then Save & continue";
+    return state.drafts[`${pre}-check`] === "pass" ? "write and save its finding" : "pass its check and save a finding";
+  };
+  const blockers = stage.type === "report" ? project.stages.map((s, i) => ({ s, i })).filter(({ s, i }) => i < stageIndex && !stageDone[i] && s.type !== "report") : [];
+  const missing = stage.type === "report" ? project.reportTemplate.sections.filter(s => s.required && !state.drafts[reportSectionKey(project, s.id)]?.trim()) : [];
+  const reason = canContinue || saveFailed ? "" : stage.type === "report" ? [blockers.length ? `Finish ${blockers.length === 1 ? "this stage" : "these stages"} first.` : "", missing.length ? `Fill in: ${missing.map(m => m.title).join(", ")}.` : ""].filter(Boolean).join(" ")
+    : needsSql ? isExploration ? `Save at least ${minimum} finding${minimum === 1 ? "" : "s"} to continue.` : !checkPass ? `${isBuild ? "Pass validation" : "Pass the check"} to continue.` : "Write what you learned to continue."
+    : stage.type === "synthesis" ? "Answer each question above to continue." : "";
+  const continuation = <div className="rx-project-nav">
+    {blockers.length > 0 && <ul className="project-blockers" aria-label="Stages to finish">{blockers.map(({ s, i }) => <li key={s.id}><button type="button" className="rx-link" onClick={() => go(i)}>Stage {i + 1}: {s.title}</button> <span className="rx-small">· {openReason(s)}</span></li>)}</ul>}
+    {reason ? <p className="rx-small project-continue-reason" id={`${prefix}-reason`}>{reason}</p> : !isBrief && stage.type !== "report" && nextStage && <p className="rx-small project-continue-reason">Next: Stage {stageIndex + 2} · {nextStage.title}</p>}
+    <button className="rx-btn amber" aria-describedby={reason ? `${prefix}-reason` : undefined} disabled={!canContinue || saveFailed || busy !== null} onClick={next}>{isBrief ? "Begin project →" : stage.type === "orientation" ? "Continue to analysis →" : stage.type === "report" ? "Complete project" : stage.type === "synthesis" ? project.stages[stageIndex + 1]?.type === "report" ? "Continue to report →" : "Continue →" : isExploration ? "Continue →" : "Save & continue →"}</button></div>;
+  const nextProject = (() => { const at = allProjects.findIndex(p => p.id === project.id); return [...allProjects.slice(at + 1), ...allProjects.slice(0, at)].find(p => !projectIsComplete(p, state.drafts)); })();
 
   return <Shell path={[{ label: "sql" }, { label: "projects", href: SQL_PROJECTS_LIBRARY_HREF }]} section="projects">
-    <div className="rx-task rx-project project-contract">
+    <div className={`rx-task rx-project project-contract${needsSql && hydrated && !(completeScreen && complete) ? " workspace-bounded" : ""}`}>
       <header className="project-header">
         <ProjectPicker currentId={project.id} />
         <h1>{project.title}</h1>
         <p className="project-subtitle">{project.role} · {datasetName(project.datasetId)}</p>
         {saveFailed && <span className="rx-small" role="alert">Couldn’t save changes · <button className="rx-btn ghost" onClick={() => setDraft(positionKey, String(stageIndex))}>Retry</button></span>}
       </header>
-      <nav className="project-stage-nav" aria-label="Project stages">{project.stages.map((s, i) => <button key={s.id} title={s.title} aria-label={`Stage ${i + 1}: ${s.title}`} aria-current={i === stageIndex ? "step" : undefined} onClick={() => go(i)}>{i + 1}</button>)}</nav>
+      <nav className="project-stage-nav" aria-label="Project stages">{project.stages.map((s, i) => <button key={s.id} title={`${s.title}${stageDone[i] ? " · done" : ""}`} aria-label={`Stage ${i + 1}: ${s.title}`} aria-describedby={stageDone[i] ? `${project.id}-stage-done` : undefined} aria-current={i === stageIndex ? "step" : undefined} data-done={stageDone[i] ? "" : undefined} onClick={() => go(i)}><span className="n">{i + 1}</span>{stageDone[i] && <span className="ok" aria-hidden="true">✓</span>}<span className="t" aria-hidden="true">{s.title}</span></button>)}<span id={`${project.id}-stage-done`} hidden>Done</span></nav>
       {!hydrated ? <p role="status">Loading your project…</p> : completeScreen && complete ? <article className="rx-project-page">
-        <h2>Project complete</h2><p>{project.title}</p><p>You completed the investigation and produced a final report.</p><div className="project-actions"><button className="rx-btn" onClick={() => setCompleteScreen(false)}>View report</button><Link href={SQL_PROJECTS_LIBRARY_HREF}>Back to Projects</Link></div>{reportActions}
+        <p className="project-complete-mark" aria-hidden="true">✓</p><h2>Project complete</h2><p>You finished <strong>{project.title}</strong> and produced a final report.</p>
+        <ul className="project-complete-recap"><li>{project.stages.length} of {project.stages.length} stages done</li><li>{collected.length} saved finding{collected.length === 1 ? "" : "s"} in your report</li><li>{datasetName(project.datasetId)} dataset</li></ul>
+        <div className="project-actions">{nextProject && <Link className="rx-btn primary" href={sqlProjectHref(nextProject.id)}>Next project: {nextProject.title} <ArrowRight size={14} aria-hidden="true" /></Link>}<button className="rx-btn" onClick={() => setCompleteScreen(false)}>View report</button><Link className="rx-btn ghost" href={SQL_PROJECTS_LIBRARY_HREF}>Back to Projects</Link></div>{reportActions}
       </article> : needsSql ? <div className="rx-task-split">
-        <section className="rx-brief"><p className="project-current-stage">Stage {stageIndex + 1} of {project.stages.length}</p><h2>{stage.title}</h2><div className="project-reference-tabs" role="tablist" aria-label="Stage reference" onKeyDown={event => {
+        <section className="rx-brief" aria-label="Project requirements" tabIndex={0}><p className="project-current-stage">Stage {stageIndex + 1} of {project.stages.length}</p><h2>{stage.title}</h2><div className="project-reference-tabs" role="tablist" aria-label="Stage reference" onKeyDown={event => {
           const tabs = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
           const current = tabs.indexOf(document.activeElement as HTMLButtonElement);
           const index = event.key === "ArrowRight" ? (current + 1) % tabs.length : event.key === "ArrowLeft" ? (current - 1 + tabs.length) % tabs.length : event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : -1;
@@ -171,13 +216,16 @@ export function ProjectWorkspace({ project }: { project: Project }) {
         {referenceView === "metrics" && <MetricDefinitions definitions={stage.scaffolding?.metricDefinitions ?? []} />}
         {referenceView === "tables" && <ProjectTables datasetId={project.datasetId} names={tables} />}
         </div></section>
-        <section className="rx-work" aria-label="SQL workspace"><>
+        <section className="rx-work" aria-label="SQL workspace" tabIndex={0} onFocusCapture={focusWorkspaceEditor}><>
           <div className="rx-cell"><div className="rx-cell-head"><span className="name">SQL workspace</span></div><Editor key={stage.id} value={sql} label="SQL workspace" minHeight="320px" tables={tables} seedSql={dataset.seed} onChange={v => { setDraft(`${prefix}-sql`, v); setDraft(`${prefix}-check`, ""); setNotice(""); }} onRun={() => void run(false)} onCheck={!isExploration ? () => void run(true) : undefined} />
-            <div className="rx-cell-foot"><button className="rx-btn" disabled={busy !== null} onClick={() => void run(false)}>{busy === "run" ? "Running…" : isBuild ? "Execute" : "Run"}</button>{!isExploration && <button className="rx-btn primary" disabled={busy !== null} onClick={() => void run(true)}>{busy === "check" ? "Checking…" : isBuild ? "Validate" : "Check"}</button>}</div></div>
+            <div className="rx-cell-foot" ref={footRef}><button className="rx-btn" disabled={busy !== null} onClick={() => void run(false)}>{busy === "run" ? "Running…" : isBuild ? "Execute" : "Run"}</button>{!isExploration && <button className="rx-btn primary" disabled={busy !== null} onClick={() => void run(true)}>{busy === "check" ? "Checking…" : isBuild ? "Validate" : "Check"}</button>}</div></div>
+          {/* The verdict sits right under Run / Check, above the rows it is about. */}
+          <div ref={verdictRef} className="project-verdict">{checkPass ? <><p className="project-check-pass" role="status">✓ {isBuild ? "Validation passed" : "Check passed"}</p>{!finding.trim() && <p className="rx-small">Read the result, then write what you learned under it. <button type="button" className="rx-btn ghost" onClick={() => jumpTo(findingRef.current)}><ArrowDown size={13} aria-hidden="true" /> Write your finding</button></p>}</> : response?.grade && <p className="project-check-fail" role="status">Not quite. {gradeFeedback(response, stage.validation.kind === "checkpoint" && !!stage.validation.ordered, { query: sql, tables })}</p>}</div>
+          <div ref={resultsRef}>
           <h3>{isBuild ? "Database changes" : "Results"}{(response?.result ?? result?.result) ? ` · ${response?.total ?? result?.total ?? 0} ${(response?.total ?? result?.total ?? 0) === 1 ? "row" : "rows"}` : ""}</h3>
-          {response ? <>{response.error && <h4>SQL error</h4>}<Output res={response} query={sql} /></> : result ? <Output res={{ result: result.result, total: result.total }} query={sql} /> : <p className="rx-small">Run your query to see results.</p>}
-          {checkPass ? <p className="project-check-pass" role="status">✓ {isBuild ? "Validation passed" : "Check passed"}</p> : response?.grade && <p role="status">Not quite. {response.grade.message}</p>}
-          {(isExploration || checkPass) && textField(isBuild ? "What decisions did you make?" : isExploration ? "What did you find?" : "What did you learn?", `${prefix}-finding`, stage.findingPrompt ?? "Write 1–3 sentences about what the result means.")}
+          {response ? <>{response.error && <h4>SQL error</h4>}<Output res={response} query={sql} echo={false} tables={dataset.metadata.tables.map(t => t.name)} surface="exercise" /></> : result ? <Output res={{ result: result.result, total: result.total }} query={sql} echo={false} /> : <p className="rx-small">Run your query to see results.</p>}
+          </div>
+          {(isExploration || checkPass) && textField(isBuild ? "What decisions did you make?" : isExploration ? "What did you find?" : "What did you learn?", `${prefix}-finding`, stage.findingPrompt ?? "Write 1–3 sentences about what the result means.", 3, findingRef)}
           {isExploration && <><button className="rx-btn" disabled={!result || !finding.trim()} onClick={() => saveAnalysis()}>Save finding</button><p className="rx-small">Saved findings for this stage: {findings.length} · At least {minimum} saved finding{minimum === 1 ? "" : "s"} required</p></>}
           {findings.map(f => fingerprint(f.query) !== fingerprint(sql) && <p key={f.id} className="rx-small">Saved from an earlier query <button className="rx-btn ghost" disabled={!result || !finding.trim() || (!isExploration && !checkPass)} onClick={() => saveAnalysis(f.id)}>Update saved finding</button></p>)}
           {notice && <p role="status">{notice}</p>}{collected.length > 0 && <button className="rx-btn ghost" onClick={() => setPanel("findings")}>View saved findings</button>}{continuation}

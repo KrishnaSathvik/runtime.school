@@ -1,7 +1,7 @@
 // Copies the pinned Pyodide core into public/vendor/pyodide/<version>/ and verifies every file
 // against the hashes of the official release (cdn.jsdelivr.net/pyodide/v314.0.7/full/).
 // It then fetches the data-library wheels lessons may ask for (NumPy, pandas, matplotlib, DuckDB,
-// scikit-learn) from the same official release and verifies each one against the sha256 recorded in
+// scikit-learn, Polars, PyArrow, tzdata) from the same official release and verifies each one against the sha256 recorded in
 // the release's pyodide-lock.json, which is itself pinned below. No micropip, no runtime CDN:
 // everything is served from our own origin.
 import { createHash } from "node:crypto";
@@ -24,7 +24,7 @@ export const PYODIDE_FILES = {
  * Pyodide packages a lesson may load, with everything they depend on. Must match the worker's
  * PACKAGE_SETS (pyspark is not listed here: it is DuckDB's Spark API under the `pyspark` name).
  */
-export const PYODIDE_PACKAGES = ["numpy", "pandas", "matplotlib", "duckdb", "typing-extensions", "scikit-learn"];
+export const PYODIDE_PACKAGES = ["numpy", "pandas", "matplotlib", "duckdb", "typing-extensions", "scikit-learn", "polars", "pyarrow", "tzdata"];
 
 const RELEASE_URL = `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/`;
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");

@@ -1,0 +1,1283 @@
+{
+ "id": "D06",
+ "title": "NYC Yellow Taxi Trips",
+ "version": 1,
+ "seed": null,
+ "description": "Real New York City yellow taxi trips, January–March 2025, from the TLC trip records: pickup and dropoff times and zones, distance, fare, tip, tolls and surcharges. A deterministic sample of about 1,400 trips a day. Gaps and odd values are as TLC published them.",
+ "licence": {
+  "name": "NYC Open Data Terms of Use (free to use, including commercial use)",
+  "status": "cleared"
+ },
+ "window": [
+  "2025-01-01",
+  "2025-03-31"
+ ],
+ "generator": "datasets/python/D06/dataset.mjs from datasets/mobility/extract",
+ "source": "NYC TLC yellow_tripdata_2025-01..03.parquet and taxi_zone_lookup.csv, via datasets/mobility/extract (datasets/mobility/source.json)",
+ "attribution": "Source: NYC Taxi and Limousine Commission (TLC) Trip Record Data. Sampled by Runtime.",
+ "tables": {
+  "trips": {
+   "description": "One taxi trip.",
+   "primaryKey": [
+    "trip_id"
+   ],
+   "foreignKeys": [
+    {
+     "column": "pickup_zone_id",
+     "references": "zones.zone_id"
+    },
+    {
+     "column": "dropoff_zone_id",
+     "references": "zones.zone_id"
+    },
+    {
+     "column": "payment_type_id",
+     "references": "payment_types.payment_type_id"
+    },
+    {
+     "column": "rate_code_id",
+     "references": "rate_codes.rate_code_id"
+    }
+   ],
+   "columns": [
+    {
+     "name": "trip_id",
+     "type": "integer",
+     "description": "Trip ID",
+     "nullable": false
+    },
+    {
+     "name": "vendor_id",
+     "type": "integer",
+     "description": "Company whose meter system recorded the trip",
+     "nullable": false
+    },
+    {
+     "name": "pickup_at",
+     "type": "timestamp",
+     "description": "When the meter started, New York local time",
+     "nullable": false
+    },
+    {
+     "name": "dropoff_at",
+     "type": "timestamp",
+     "description": "When the meter stopped, New York local time",
+     "nullable": false
+    },
+    {
+     "name": "passenger_count",
+     "type": "integer",
+     "description": "Passengers, as entered by the driver; sometimes missing",
+     "nullable": true
+    },
+    {
+     "name": "trip_distance_miles",
+     "type": "decimal",
+     "description": "Distance on the taximeter, miles",
+     "nullable": false
+    },
+    {
+     "name": "rate_code_id",
+     "type": "integer",
+     "description": "Final rate code; empty when not reported",
+     "nullable": true
+    },
+    {
+     "name": "store_and_fwd_flag",
+     "type": "text",
+     "description": "Y when the car stored the trip and sent it later",
+     "nullable": true
+    },
+    {
+     "name": "pickup_zone_id",
+     "type": "integer",
+     "description": "Pickup taxi zone",
+     "nullable": false
+    },
+    {
+     "name": "dropoff_zone_id",
+     "type": "integer",
+     "description": "Dropoff taxi zone",
+     "nullable": false
+    },
+    {
+     "name": "payment_type_id",
+     "type": "integer",
+     "description": "How the passenger paid",
+     "nullable": false
+    },
+    {
+     "name": "fare_amount",
+     "type": "decimal",
+     "description": "Time-and-distance fare, USD",
+     "nullable": false
+    },
+    {
+     "name": "tip_amount",
+     "type": "decimal",
+     "description": "Tip, USD; cash tips are not recorded",
+     "nullable": false
+    },
+    {
+     "name": "tolls_amount",
+     "type": "decimal",
+     "description": "Tolls, USD",
+     "nullable": false
+    },
+    {
+     "name": "surcharge_amount",
+     "type": "decimal",
+     "description": "Extras and surcharges, USD",
+     "nullable": false
+    },
+    {
+     "name": "congestion_surcharge",
+     "type": "decimal",
+     "description": "New York State congestion surcharge, USD",
+     "nullable": true
+    },
+    {
+     "name": "airport_fee",
+     "type": "decimal",
+     "description": "Airport pickup fee, USD",
+     "nullable": true
+    },
+    {
+     "name": "cbd_congestion_fee",
+     "type": "decimal",
+     "description": "Manhattan congestion-pricing fee, USD (from 5 January 2025)",
+     "nullable": true
+    },
+    {
+     "name": "total_amount",
+     "type": "decimal",
+     "description": "Total charged, USD (excludes cash tips)",
+     "nullable": false
+    }
+   ]
+  },
+  "zones": {
+   "description": "One New York taxi zone.",
+   "primaryKey": [
+    "zone_id"
+   ],
+   "foreignKeys": [],
+   "columns": [
+    {
+     "name": "zone_id",
+     "type": "integer",
+     "description": "Zone ID",
+     "nullable": false
+    },
+    {
+     "name": "zone_name",
+     "type": "text",
+     "description": "Zone name",
+     "nullable": false
+    },
+    {
+     "name": "borough",
+     "type": "text",
+     "description": "Borough (or EWR / Unknown / N/A)",
+     "nullable": false
+    },
+    {
+     "name": "service_zone",
+     "type": "text",
+     "description": "Yellow Zone, Boro Zone, Airports, EWR or N/A",
+     "nullable": true
+    }
+   ]
+  },
+  "payment_types": {
+   "description": "Payment type codes.",
+   "primaryKey": [
+    "payment_type_id"
+   ],
+   "foreignKeys": [],
+   "columns": [
+    {
+     "name": "payment_type_id",
+     "type": "integer",
+     "description": "Code",
+     "nullable": false
+    },
+    {
+     "name": "description",
+     "type": "text",
+     "description": "Meaning",
+     "nullable": false
+    }
+   ]
+  },
+  "rate_codes": {
+   "description": "Rate code meanings.",
+   "primaryKey": [
+    "rate_code_id"
+   ],
+   "foreignKeys": [],
+   "columns": [
+    {
+     "name": "rate_code_id",
+     "type": "integer",
+     "description": "Code",
+     "nullable": false
+    },
+    {
+     "name": "description",
+     "type": "text",
+     "description": "Meaning",
+     "nullable": false
+    }
+   ]
+  }
+ },
+ "editions": {
+  "preview": {
+   "ref": "D06@preview.1",
+   "files": [
+    {
+     "path": "trips.csv",
+     "table": "trips",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 25,
+     "bytes": 2741,
+     "sha256": "df984866d8ac382a65bfb71a732227af20f6a5ec6ef942c7f10fa38da0efc01a",
+     "url": "/datasets/python/D06/preview.1/trips.csv"
+    },
+    {
+     "path": "zones.csv",
+     "table": "zones",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 265,
+     "bytes": 10469,
+     "sha256": "d63ef0265192c96cfb6896bab555ba8e414da4ef67aa79b7b3ec193e2423d36b",
+     "url": "/datasets/python/D06/preview.1/zones.csv"
+    },
+    {
+     "path": "payment_types.csv",
+     "table": "payment_types",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 7,
+     "bytes": 112,
+     "sha256": "5f7f0c75ad0d40367625659831a0da3fa96b3a92a5b93d00b81b5f58771b6e20",
+     "url": "/datasets/python/D06/preview.1/payment_types.csv"
+    },
+    {
+     "path": "rate_codes.csv",
+     "table": "rate_codes",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 7,
+     "bytes": 127,
+     "sha256": "66ced7d6fb4360d5f045a28724ef68e36d89bac58d12e2d73c53b25bc90165f3",
+     "url": "/datasets/python/D06/preview.1/rate_codes.csv"
+    }
+   ],
+   "quality": [
+    {
+     "id": "missing_passengers",
+     "description": "Trips with no passenger count",
+     "count": 3
+    },
+    {
+     "id": "zero_distance",
+     "description": "Trips with a distance of 0 miles",
+     "count": 0
+    },
+    {
+     "id": "negative_fare",
+     "description": "Trips with a negative fare (refunds and voids)",
+     "count": 1
+    },
+    {
+     "id": "zero_passengers",
+     "description": "Trips recorded with 0 passengers",
+     "count": 0
+    },
+    {
+     "id": "dropoff_before_pickup",
+     "description": "Trips whose dropoff time is not after the pickup time",
+     "count": 0
+    },
+    {
+     "id": "unknown_rate",
+     "description": "Trips with rate code 99 (unknown) or none",
+     "count": 3
+    }
+   ],
+   "profile": {
+    "trips": {
+     "trip_id": {
+      "nulls": 0,
+      "distinct": 25,
+      "min": 16126,
+      "max": 16150,
+      "mean": 16138
+     },
+     "vendor_id": {
+      "nulls": 0,
+      "distinct": 2,
+      "min": 1,
+      "max": 2,
+      "mean": 1.76
+     },
+     "pickup_at": {
+      "nulls": 0,
+      "distinct": 25,
+      "min": "2025-01-15 00:12:47",
+      "max": "2025-01-15 04:25:10"
+     },
+     "dropoff_at": {
+      "nulls": 0,
+      "distinct": 25,
+      "min": "2025-01-15 00:24:31",
+      "max": "2025-01-15 04:31:37"
+     },
+     "passenger_count": {
+      "nulls": 3,
+      "distinct": 3,
+      "min": 1,
+      "max": 3,
+      "mean": 1.14
+     },
+     "trip_distance_miles": {
+      "nulls": 0,
+      "distinct": 25,
+      "min": 0.3,
+      "max": 14.95,
+      "mean": 4.66
+     },
+     "rate_code_id": {
+      "nulls": 3,
+      "distinct": 2,
+      "min": 1,
+      "max": 2,
+      "mean": 1.05
+     },
+     "store_and_fwd_flag": {
+      "nulls": 3,
+      "distinct": 1
+     },
+     "pickup_zone_id": {
+      "nulls": 0,
+      "distinct": 18,
+      "min": 39,
+      "max": 264,
+      "mean": 147.28
+     },
+     "dropoff_zone_id": {
+      "nulls": 0,
+      "distinct": 19,
+      "min": 4,
+      "max": 255,
+      "mean": 146.8
+     },
+     "payment_type_id": {
+      "nulls": 0,
+      "distinct": 4,
+      "min": 0,
+      "max": 4,
+      "mean": 1.04
+     },
+     "fare_amount": {
+      "nulls": 0,
+      "distinct": 22,
+      "min": -7.2,
+      "max": 70,
+      "mean": 21.85
+     },
+     "tip_amount": {
+      "nulls": 0,
+      "distinct": 18,
+      "min": 0,
+      "max": 16.34,
+      "mean": 4.71
+     },
+     "tolls_amount": {
+      "nulls": 0,
+      "distinct": 2,
+      "min": 0,
+      "max": 6.94,
+      "mean": 0.83
+     },
+     "surcharge_amount": {
+      "nulls": 0,
+      "distinct": 6,
+      "min": -2.5,
+      "max": 7.5,
+      "mean": 3.09
+     },
+     "congestion_surcharge": {
+      "nulls": 3,
+      "distinct": 3,
+      "min": -2.5,
+      "max": 2.5,
+      "mean": 2.16
+     },
+     "airport_fee": {
+      "nulls": 3,
+      "distinct": 2,
+      "min": 0,
+      "max": 1.75,
+      "mean": 0.08
+     },
+     "cbd_congestion_fee": {
+      "nulls": 0,
+      "distinct": 2,
+      "min": 0,
+      "max": 0.75,
+      "mean": 0.6
+     },
+     "total_amount": {
+      "nulls": 0,
+      "distinct": 25,
+      "min": -12.95,
+      "max": 98.03,
+      "mean": 32.37
+     }
+    },
+    "zones": {
+     "zone_id": {
+      "nulls": 0,
+      "distinct": 265,
+      "min": 1,
+      "max": 265,
+      "mean": 133
+     },
+     "zone_name": {
+      "nulls": 0,
+      "distinct": 262
+     },
+     "borough": {
+      "nulls": 0,
+      "distinct": 8
+     },
+     "service_zone": {
+      "nulls": 0,
+      "distinct": 5
+     }
+    },
+    "payment_types": {
+     "payment_type_id": {
+      "nulls": 0,
+      "distinct": 7,
+      "min": 0,
+      "max": 6,
+      "mean": 3
+     },
+     "description": {
+      "nulls": 0,
+      "distinct": 7
+     }
+    },
+    "rate_codes": {
+     "rate_code_id": {
+      "nulls": 0,
+      "distinct": 7,
+      "min": 1,
+      "max": 99,
+      "mean": 17.14
+     },
+     "description": {
+      "nulls": 0,
+      "distinct": 7
+     }
+    }
+   }
+  },
+  "starter": {
+   "ref": "D06@starter.1",
+   "files": [
+    {
+     "path": "trips.csv",
+     "table": "trips",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 1440,
+     "bytes": 140736,
+     "sha256": "ba5164ea1f884157758c1d4cb994e63d33507b89b66e48bdb489f2099f77a68b",
+     "url": "/datasets/python/D06/starter.1/trips.csv"
+    },
+    {
+     "path": "zones.csv",
+     "table": "zones",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 265,
+     "bytes": 10469,
+     "sha256": "d63ef0265192c96cfb6896bab555ba8e414da4ef67aa79b7b3ec193e2423d36b",
+     "url": "/datasets/python/D06/starter.1/zones.csv"
+    },
+    {
+     "path": "payment_types.csv",
+     "table": "payment_types",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 7,
+     "bytes": 112,
+     "sha256": "5f7f0c75ad0d40367625659831a0da3fa96b3a92a5b93d00b81b5f58771b6e20",
+     "url": "/datasets/python/D06/starter.1/payment_types.csv"
+    },
+    {
+     "path": "rate_codes.csv",
+     "table": "rate_codes",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 7,
+     "bytes": 127,
+     "sha256": "66ced7d6fb4360d5f045a28724ef68e36d89bac58d12e2d73c53b25bc90165f3",
+     "url": "/datasets/python/D06/starter.1/rate_codes.csv"
+    }
+   ],
+   "quality": [
+    {
+     "id": "missing_passengers",
+     "description": "Trips with no passenger count",
+     "count": 188
+    },
+    {
+     "id": "zero_distance",
+     "description": "Trips with a distance of 0 miles",
+     "count": 37
+    },
+    {
+     "id": "negative_fare",
+     "description": "Trips with a negative fare (refunds and voids)",
+     "count": 43
+    },
+    {
+     "id": "zero_passengers",
+     "description": "Trips recorded with 0 passengers",
+     "count": 9
+    },
+    {
+     "id": "dropoff_before_pickup",
+     "description": "Trips whose dropoff time is not after the pickup time",
+     "count": 1
+    },
+    {
+     "id": "unknown_rate",
+     "description": "Trips with rate code 99 (unknown) or none",
+     "count": 212
+    }
+   ],
+   "profile": {
+    "trips": {
+     "trip_id": {
+      "nulls": 0,
+      "distinct": 1440,
+      "min": 16126,
+      "max": 17565,
+      "mean": 16845.5
+     },
+     "vendor_id": {
+      "nulls": 0,
+      "distinct": 4,
+      "min": 1,
+      "max": 7,
+      "mean": 1.78
+     },
+     "pickup_at": {
+      "nulls": 0,
+      "distinct": 1427,
+      "min": "2025-01-15 00:12:47",
+      "max": "2025-01-15 23:50:45"
+     },
+     "dropoff_at": {
+      "nulls": 0,
+      "distinct": 1414,
+      "min": "2025-01-15 00:24:31",
+      "max": "2025-01-16 00:19:59"
+     },
+     "passenger_count": {
+      "nulls": 188,
+      "distinct": 7,
+      "min": 0,
+      "max": 6,
+      "mean": 1.19
+     },
+     "trip_distance_miles": {
+      "nulls": 0,
+      "distinct": 532,
+      "min": 0,
+      "max": 76977.47,
+      "mean": 56.41
+     },
+     "rate_code_id": {
+      "nulls": 188,
+      "distinct": 6,
+      "min": 1,
+      "max": 99,
+      "mean": 2.94
+     },
+     "store_and_fwd_flag": {
+      "nulls": 188,
+      "distinct": 1
+     },
+     "pickup_zone_id": {
+      "nulls": 0,
+      "distinct": 96,
+      "min": 4,
+      "max": 265,
+      "mean": 171.39
+     },
+     "dropoff_zone_id": {
+      "nulls": 0,
+      "distinct": 120,
+      "min": 1,
+      "max": 265,
+      "mean": 164.09
+     },
+     "payment_type_id": {
+      "nulls": 0,
+      "distinct": 5,
+      "min": 0,
+      "max": 4,
+      "mean": 1.03
+     },
+     "fare_amount": {
+      "nulls": 0,
+      "distinct": 261,
+      "min": -85.6,
+      "max": 200,
+      "mean": 16.74
+     },
+     "tip_amount": {
+      "nulls": 0,
+      "distinct": 385,
+      "min": 0,
+      "max": 24.51,
+      "mean": 3.07
+     },
+     "tolls_amount": {
+      "nulls": 0,
+      "distinct": 7,
+      "min": -14.06,
+      "max": 22.06,
+      "mean": 0.48
+     },
+     "surcharge_amount": {
+      "nulls": 0,
+      "distinct": 25,
+      "min": -4,
+      "max": 11.75,
+      "mean": 2.92
+     },
+     "congestion_surcharge": {
+      "nulls": 188,
+      "distinct": 3,
+      "min": -2.5,
+      "max": 2.5,
+      "mean": 2.25
+     },
+     "airport_fee": {
+      "nulls": 188,
+      "distinct": 3,
+      "min": -1.75,
+      "max": 1.75,
+      "mean": 0.12
+     },
+     "cbd_congestion_fee": {
+      "nulls": 0,
+      "distinct": 2,
+      "min": 0,
+      "max": 0.75,
+      "mean": 0.54
+     },
+     "total_amount": {
+      "nulls": 0,
+      "distinct": 815,
+      "min": -101.41,
+      "max": 219.69,
+      "mean": 25.64
+     }
+    },
+    "zones": {
+     "zone_id": {
+      "nulls": 0,
+      "distinct": 265,
+      "min": 1,
+      "max": 265,
+      "mean": 133
+     },
+     "zone_name": {
+      "nulls": 0,
+      "distinct": 262
+     },
+     "borough": {
+      "nulls": 0,
+      "distinct": 8
+     },
+     "service_zone": {
+      "nulls": 0,
+      "distinct": 5
+     }
+    },
+    "payment_types": {
+     "payment_type_id": {
+      "nulls": 0,
+      "distinct": 7,
+      "min": 0,
+      "max": 6,
+      "mean": 3
+     },
+     "description": {
+      "nulls": 0,
+      "distinct": 7
+     }
+    },
+    "rate_codes": {
+     "rate_code_id": {
+      "nulls": 0,
+      "distinct": 7,
+      "min": 1,
+      "max": 99,
+      "mean": 17.14
+     },
+     "description": {
+      "nulls": 0,
+      "distinct": 7
+     }
+    }
+   }
+  },
+  "standard": {
+   "ref": "D06@standard.1",
+   "files": [
+    {
+     "path": "trips.csv",
+     "table": "trips",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 9662,
+     "bytes": 938681,
+     "sha256": "e6f0b5dc4e414ae3ba2874a9a4f52ffbec1a71ce460bb2bba1dfdbd35ca01a18",
+     "url": "/datasets/python/D06/standard.1/trips.csv"
+    },
+    {
+     "path": "trips.parquet",
+     "table": "trips",
+     "layer": "clean",
+     "format": "parquet",
+     "rows": 9662,
+     "bytes": 223869,
+     "sha256": "5909b84960a575b220caf242b625353b2df8ba2fa18083c0344b0b9f7dcb1ef3",
+     "url": "/datasets/python/D06/standard.1/trips.parquet",
+     "from": "e6f0b5dc4e414ae3ba2874a9a4f52ffbec1a71ce460bb2bba1dfdbd35ca01a18"
+    },
+    {
+     "path": "zones.csv",
+     "table": "zones",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 265,
+     "bytes": 10469,
+     "sha256": "d63ef0265192c96cfb6896bab555ba8e414da4ef67aa79b7b3ec193e2423d36b",
+     "url": "/datasets/python/D06/standard.1/zones.csv"
+    },
+    {
+     "path": "payment_types.csv",
+     "table": "payment_types",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 7,
+     "bytes": 112,
+     "sha256": "5f7f0c75ad0d40367625659831a0da3fa96b3a92a5b93d00b81b5f58771b6e20",
+     "url": "/datasets/python/D06/standard.1/payment_types.csv"
+    },
+    {
+     "path": "rate_codes.csv",
+     "table": "rate_codes",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 7,
+     "bytes": 127,
+     "sha256": "66ced7d6fb4360d5f045a28724ef68e36d89bac58d12e2d73c53b25bc90165f3",
+     "url": "/datasets/python/D06/standard.1/rate_codes.csv"
+    }
+   ],
+   "quality": [
+    {
+     "id": "missing_passengers",
+     "description": "Trips with no passenger count",
+     "count": 1781
+    },
+    {
+     "id": "zero_distance",
+     "description": "Trips with a distance of 0 miles",
+     "count": 268
+    },
+    {
+     "id": "negative_fare",
+     "description": "Trips with a negative fare (refunds and voids)",
+     "count": 420
+    },
+    {
+     "id": "zero_passengers",
+     "description": "Trips recorded with 0 passengers",
+     "count": 79
+    },
+    {
+     "id": "dropoff_before_pickup",
+     "description": "Trips whose dropoff time is not after the pickup time",
+     "count": 4
+    },
+    {
+     "id": "unknown_rate",
+     "description": "Trips with rate code 99 (unknown) or none",
+     "count": 1909
+    }
+   ],
+   "profile": {
+    "trips": {
+     "trip_id": {
+      "nulls": 0,
+      "distinct": 9662,
+      "min": 13643,
+      "max": 23304,
+      "mean": 18473.5
+     },
+     "vendor_id": {
+      "nulls": 0,
+      "distinct": 4,
+      "min": 1,
+      "max": 7,
+      "mean": 1.79
+     },
+     "pickup_at": {
+      "nulls": 0,
+      "distinct": 9573,
+      "min": "2025-01-13 00:00:45",
+      "max": "2025-01-19 23:58:05"
+     },
+     "dropoff_at": {
+      "nulls": 0,
+      "distinct": 9545,
+      "min": "2025-01-13 00:06:02",
+      "max": "2025-01-20 00:32:39"
+     },
+     "passenger_count": {
+      "nulls": 1781,
+      "distinct": 7,
+      "min": 0,
+      "max": 6,
+      "mean": 1.27
+     },
+     "trip_distance_miles": {
+      "nulls": 0,
+      "distinct": 1285,
+      "min": 0,
+      "max": 76977.47,
+      "mean": 10.98
+     },
+     "rate_code_id": {
+      "nulls": 1781,
+      "distinct": 6,
+      "min": 1,
+      "max": 99,
+      "mean": 2.67
+     },
+     "store_and_fwd_flag": {
+      "nulls": 1781,
+      "distinct": 2
+     },
+     "pickup_zone_id": {
+      "nulls": 0,
+      "distinct": 170,
+      "min": 4,
+      "max": 265,
+      "mean": 165.7
+     },
+     "dropoff_zone_id": {
+      "nulls": 0,
+      "distinct": 206,
+      "min": 1,
+      "max": 265,
+      "mean": 164.82
+     },
+     "payment_type_id": {
+      "nulls": 0,
+      "distinct": 5,
+      "min": 0,
+      "max": 4,
+      "mean": 0.99
+     },
+     "fare_amount": {
+      "nulls": 0,
+      "distinct": 1340,
+      "min": -700,
+      "max": 277.4,
+      "mean": 16.42
+     },
+     "tip_amount": {
+      "nulls": 0,
+      "distinct": 882,
+      "min": 0,
+      "max": 77.33,
+      "mean": 2.83
+     },
+     "tolls_amount": {
+      "nulls": 0,
+      "distinct": 38,
+      "min": -32.12,
+      "max": 46,
+      "mean": 0.42
+     },
+     "surcharge_amount": {
+      "nulls": 0,
+      "distinct": 37,
+      "min": -7.5,
+      "max": 14,
+      "mean": 2.72
+     },
+     "congestion_surcharge": {
+      "nulls": 1781,
+      "distinct": 3,
+      "min": -2.5,
+      "max": 2.5,
+      "mean": 2.24
+     },
+     "airport_fee": {
+      "nulls": 1781,
+      "distinct": 3,
+      "min": -1.75,
+      "max": 1.75,
+      "mean": 0.12
+     },
+     "cbd_congestion_fee": {
+      "nulls": 0,
+      "distinct": 3,
+      "min": -0.75,
+      "max": 0.75,
+      "mean": 0.55
+     },
+     "total_amount": {
+      "nulls": 0,
+      "distinct": 2740,
+      "min": -704.25,
+      "max": 316.02,
+      "mean": 24.86
+     }
+    },
+    "zones": {
+     "zone_id": {
+      "nulls": 0,
+      "distinct": 265,
+      "min": 1,
+      "max": 265,
+      "mean": 133
+     },
+     "zone_name": {
+      "nulls": 0,
+      "distinct": 262
+     },
+     "borough": {
+      "nulls": 0,
+      "distinct": 8
+     },
+     "service_zone": {
+      "nulls": 0,
+      "distinct": 5
+     }
+    },
+    "payment_types": {
+     "payment_type_id": {
+      "nulls": 0,
+      "distinct": 7,
+      "min": 0,
+      "max": 6,
+      "mean": 3
+     },
+     "description": {
+      "nulls": 0,
+      "distinct": 7
+     }
+    },
+    "rate_codes": {
+     "rate_code_id": {
+      "nulls": 0,
+      "distinct": 7,
+      "min": 1,
+      "max": 99,
+      "mean": 17.14
+     },
+     "description": {
+      "nulls": 0,
+      "distinct": 7
+     }
+    }
+   }
+  },
+  "full": {
+   "ref": "D06@full.1",
+   "files": [
+    {
+     "path": "trips.csv",
+     "table": "trips",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 128620,
+     "bytes": 12489053,
+     "sha256": "20162242e4c83777d7c9953be32dc257d9dd72de1fd281a5d34443ff65f1e15b",
+     "url": "/datasets/python/D06/full.1/trips.csv"
+    },
+    {
+     "path": "trips.parquet",
+     "table": "trips",
+     "layer": "clean",
+     "format": "parquet",
+     "rows": 128620,
+     "bytes": 2960851,
+     "sha256": "6b2452b37333f16cf8b432075db794604f4bcc98af3ca956c6fd8104ac09003f",
+     "url": "/datasets/python/D06/full.1/trips.parquet",
+     "from": "20162242e4c83777d7c9953be32dc257d9dd72de1fd281a5d34443ff65f1e15b"
+    },
+    {
+     "path": "zones.csv",
+     "table": "zones",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 265,
+     "bytes": 10469,
+     "sha256": "d63ef0265192c96cfb6896bab555ba8e414da4ef67aa79b7b3ec193e2423d36b",
+     "url": "/datasets/python/D06/full.1/zones.csv"
+    },
+    {
+     "path": "payment_types.csv",
+     "table": "payment_types",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 7,
+     "bytes": 112,
+     "sha256": "5f7f0c75ad0d40367625659831a0da3fa96b3a92a5b93d00b81b5f58771b6e20",
+     "url": "/datasets/python/D06/full.1/payment_types.csv"
+    },
+    {
+     "path": "rate_codes.csv",
+     "table": "rate_codes",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 7,
+     "bytes": 127,
+     "sha256": "66ced7d6fb4360d5f045a28724ef68e36d89bac58d12e2d73c53b25bc90165f3",
+     "url": "/datasets/python/D06/full.1/rate_codes.csv"
+    }
+   ],
+   "quality": [
+    {
+     "id": "missing_passengers",
+     "description": "Trips with no passenger count",
+     "count": 26020
+    },
+    {
+     "id": "zero_distance",
+     "description": "Trips with a distance of 0 miles",
+     "count": 3359
+    },
+    {
+     "id": "negative_fare",
+     "description": "Trips with a negative fare (refunds and voids)",
+     "count": 6200
+    },
+    {
+     "id": "zero_passengers",
+     "description": "Trips recorded with 0 passengers",
+     "count": 815
+    },
+    {
+     "id": "dropoff_before_pickup",
+     "description": "Trips whose dropoff time is not after the pickup time",
+     "count": 352
+    },
+    {
+     "id": "unknown_rate",
+     "description": "Trips with rate code 99 (unknown) or none",
+     "count": 27436
+    }
+   ],
+   "profile": {
+    "trips": {
+     "trip_id": {
+      "nulls": 0,
+      "distinct": 128620,
+      "min": 1,
+      "max": 128620,
+      "mean": 64310.5
+     },
+     "vendor_id": {
+      "nulls": 0,
+      "distinct": 4,
+      "min": 1,
+      "max": 7,
+      "mean": 1.8
+     },
+     "pickup_at": {
+      "nulls": 0,
+      "distinct": 127150,
+      "min": "2024-12-31 21:33:43",
+      "max": "2025-03-31 23:59:52"
+     },
+     "dropoff_at": {
+      "nulls": 0,
+      "distinct": 127152,
+      "min": "2024-12-31 21:39:00",
+      "max": "2025-04-01 00:15:59"
+     },
+     "passenger_count": {
+      "nulls": 26020,
+      "distinct": 8,
+      "min": 0,
+      "max": 9,
+      "mean": 1.29
+     },
+     "trip_distance_miles": {
+      "nulls": 0,
+      "distinct": 2522,
+      "min": 0,
+      "max": 228782.51,
+      "mean": 9.49
+     },
+     "rate_code_id": {
+      "nulls": 26020,
+      "distinct": 6,
+      "min": 1,
+      "max": 99,
+      "mean": 2.44
+     },
+     "store_and_fwd_flag": {
+      "nulls": 26020,
+      "distinct": 2
+     },
+     "pickup_zone_id": {
+      "nulls": 0,
+      "distinct": 236,
+      "min": 1,
+      "max": 265,
+      "mean": 163.47
+     },
+     "dropoff_zone_id": {
+      "nulls": 0,
+      "distinct": 250,
+      "min": 1,
+      "max": 265,
+      "mean": 162.61
+     },
+     "payment_type_id": {
+      "nulls": 0,
+      "distinct": 5,
+      "min": 0,
+      "max": 4,
+      "mean": 0.98
+     },
+     "fare_amount": {
+      "nulls": 0,
+      "distinct": 4849,
+      "min": -700,
+      "max": 785.6,
+      "mean": 17.17
+     },
+     "tip_amount": {
+      "nulls": 0,
+      "distinct": 2096,
+      "min": -14.95,
+      "max": 220,
+      "mean": 2.86
+     },
+     "tolls_amount": {
+      "nulls": 0,
+      "distinct": 187,
+      "min": -34.88,
+      "max": 56.96,
+      "mean": 0.45
+     },
+     "surcharge_amount": {
+      "nulls": 0,
+      "distinct": 58,
+      "min": -9,
+      "max": 14,
+      "mean": 2.69
+     },
+     "congestion_surcharge": {
+      "nulls": 26020,
+      "distinct": 3,
+      "min": -2.5,
+      "max": 2.5,
+      "mean": 2.22
+     },
+     "airport_fee": {
+      "nulls": 26020,
+      "distinct": 6,
+      "min": -1.75,
+      "max": 6.75,
+      "mean": 0.13
+     },
+     "cbd_congestion_fee": {
+      "nulls": 0,
+      "distinct": 3,
+      "min": -0.75,
+      "max": 0.75,
+      "mean": 0.52
+     },
+     "total_amount": {
+      "nulls": 0,
+      "distinct": 8831,
+      "min": -704.25,
+      "max": 967.09,
+      "mean": 25.6
+     }
+    },
+    "zones": {
+     "zone_id": {
+      "nulls": 0,
+      "distinct": 265,
+      "min": 1,
+      "max": 265,
+      "mean": 133
+     },
+     "zone_name": {
+      "nulls": 0,
+      "distinct": 262
+     },
+     "borough": {
+      "nulls": 0,
+      "distinct": 8
+     },
+     "service_zone": {
+      "nulls": 0,
+      "distinct": 5
+     }
+    },
+    "payment_types": {
+     "payment_type_id": {
+      "nulls": 0,
+      "distinct": 7,
+      "min": 0,
+      "max": 6,
+      "mean": 3
+     },
+     "description": {
+      "nulls": 0,
+      "distinct": 7
+     }
+    },
+    "rate_codes": {
+     "rate_code_id": {
+      "nulls": 0,
+      "distinct": 7,
+      "min": 1,
+      "max": 99,
+      "mean": 17.14
+     },
+     "description": {
+      "nulls": 0,
+      "distinct": 7
+     }
+    }
+   }
+  }
+ }
+}

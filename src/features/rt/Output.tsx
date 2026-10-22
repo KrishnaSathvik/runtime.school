@@ -2,24 +2,34 @@
 
 import { useState, type ReactNode } from "react";
 import type { ExecuteResponse } from "@/engine/sql-client";
-import { explainError, type Explanation } from "@/engine/explain";
+import { explainError, type ErrorSurface, type Explanation } from "@/engine/explain";
 
 /** Rows shown before "Show all", so a large result does not push the page down. */
 const FIRST_ROWS = 10;
 
 /** Query output styled like the database answered: rows, columns, then the table. */
-export function Output({ res, query, actions }: { res: ExecuteResponse; query: string; actions?: ReactNode }) {
+export function Output({ res, query, actions, tables, surface, echo = true }: {
+  res: ExecuteResponse;
+  query: string;
+  /** Repeat the SQL that ran above the rows. Off where the editor right above already shows it. */
+  echo?: boolean;
+  actions?: ReactNode;
+  /** Tables of the dataset this ran on, so an unknown-table error suggests only those. */
+  tables?: string[];
+  /** Where the SQL ran, for wording that fits a graded exercise or an ungraded tool. */
+  surface?: ErrorSurface;
+}) {
   const [expanded, setExpanded] = useState(false);
   const result = res.result;
   const total = res.total ?? result?.values.length ?? 0;
   const returned = result?.values.length ?? 0;
   const rows = result ? (expanded ? result.values : result.values.slice(0, FIRST_ROWS)) : [];
-  const explained = res.error ? explainError(res.error, query, []) : null;
+  const explained = res.error ? explainError(res.error, query, tables ?? [], surface) : null;
   return (
     <div className="rx-out" aria-live="polite">
       <div className="rx-out-meta">
         {explained ? (
-          <span className="bad">{explained.title}</span>
+          <span className={explained.tone === "info" ? "ok" : "bad"}>{explained.title}</span>
         ) : result ? (
           <span className="ok">
             {total.toLocaleString("en-US")} row{total === 1 ? "" : "s"} · {result.columns.length} column{result.columns.length === 1 ? "" : "s"}
@@ -29,7 +39,7 @@ export function Output({ res, query, actions }: { res: ExecuteResponse; query: s
         )}
         {actions && <span className="acts">{actions}</span>}
       </div>
-      {query.trim() && (
+      {echo && query.trim() && (
         <pre className="rx-out-sql" tabIndex={0}><code>{query.trim()}</code></pre>
       )}
       {res.failure && res.failure.completed > 0 && (
@@ -83,10 +93,10 @@ export function Output({ res, query, actions }: { res: ExecuteResponse; query: s
 function ErrorText({ explanation }: { explanation: Explanation }) {
   return (
     <div className="rx-error">
+      {/* Plain language only: the raw engine message is never shown to learners. */}
       <span className="why">
         {explanation.detail} {explanation.next}
       </span>
-      {explanation.technical && <span className="why mono" style={{ fontSize: 12, opacity: 0.75 }}>{explanation.technical}</span>}
     </div>
   );
 }

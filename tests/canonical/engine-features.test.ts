@@ -21,7 +21,7 @@ describe("plan validation", () => {
     const problem = q("qb-0049");
     const r = await send(bankCheckRequest(problem, problem.solution.replace("FROM flights WHERE", "FROM flights NOT INDEXED WHERE")));
     expect(r.grade.checks.map((c: { ok: boolean }) => c.ok)).toEqual([true, true, false]);
-    expect(r.grade.checks[2].label).toMatch(/Access strategy: search/);
+    expect(r.grade.checks[2].label).toBe("Finds rows with the index");
   });
 
   it("does not claim an index or plan passed when output is wrong", async () => {

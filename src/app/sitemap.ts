@@ -5,12 +5,15 @@ import { sqlProjectHref } from "@/content/projects/paths";
 import { lessonIds, practiceSlugs } from "@/platform/seo";
 import { sqlLessonHref } from "@/platform/sql-lesson-href";
 import { TOOL_DATASETS } from "@/content/tools/datasets";
+import { pythonRunnerEnabled } from "@/platform/python-runner";
+import { pySitemapPaths } from "@/platform/python-seo";
 
 const BASE = SITE_URL;
 
 /**
  * Canonical public pages. Guided milestone project URLs are retired;
  * Projects are the catalog under /sql/projects and /sql/projects/<id>.
+ * Python pages are listed only where Python is switched on (platform/python-runner.ts).
  */
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
@@ -31,5 +34,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     entry("/sql/lab", 0.5),
     entry("/sql/query-performance", 0.5),
     entry("/sql/syntax", 0.5),
+    ...(pythonRunnerEnabled() ? pySitemapPaths().map((p) => entry(p.path, p.priority)) : []),
   ];
 }

@@ -101,7 +101,10 @@ export function Lab() {
               task={{ seedSql: d.seed, allowWrites: true }}
               analytics={{ subject: "sql", surface: "lab", dataset, experiment: experiment.id }}
               observe={(res, ran) =>
-                res.error
+                // A script that ran but ends without a SELECT is not an error; the output says so once.
+                res.error && ran !== script.variant?.sql && /^End your lab script with a SELECT/.test(res.error)
+                  ? null
+                  : res.error
                   ? ran === script.variant?.sql
                     ? script.variant.observe
                     : "The script stopped with an error. Statements before it ran on this copy; see where it stopped below. Nothing is kept after the run."

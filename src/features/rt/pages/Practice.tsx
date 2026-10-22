@@ -1,11 +1,13 @@
 "use client";
+
+import { focusWorkspaceEditor } from "../workspace-focus";
 import { preloadDatabase } from "@/engine/sql-client";
 import { parseSchemaDetailed } from "@/engine/explain";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Eye, Lightbulb, List, RotateCcw, X } from "lucide-react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { ArrowRight, Eye, Lightbulb, List, RotateCcw, X } from "lucide-react";
 import { getLesson, isBlankSql } from "@/content";
 import {
   bankBySlug,
@@ -13,7 +15,6 @@ import {
   bankSeed,
   bankMutation,
   bankStarter,
-  DIFFICULTIES,
   DIFFICULTY_LABEL,
   practiceDatasets,
   topicLabel,
@@ -27,14 +28,17 @@ import examples from "@/content/question-bank/examples.json";
 import { Shell } from "../Shell";
 import { Pager } from "../Pager";
 import { TaskCell } from "../Cells";
+import { HelpDialog } from "../HelpDialog";
 import { PRACTICE_EDITOR_HEIGHT } from "../editor-height";
 import { ExpectedResult, Tables } from "../Tables";
 import { Cols, Spec } from "../Spec";
 import { prettySql } from "@/components/editor/pretty-sql";
 import { SqlCode } from "../SqlCode";
 import { sqlLessonHref } from "@/platform/sql-lesson-href";
+import { PracticeIndex } from "../PracticeIndex";
+import { revealRange } from "../reveal";
 
-/** /sql/practice: open the next question straight away. */
+/** /sql/practice: pick up where you left off, or find a question by topic, difficulty or status. */
 export function PracticeEntry() {
   const router = useRouter();
   const ready = useHydrated();
@@ -58,6 +62,34 @@ export function PracticeTask({ slug }: { slug: string }) {
   const q = bankBySlug.get(slug);
   const s = useLearning();
   const [listOpen, setListOpen] = useState(false);
+  const listTrigger = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!listOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") { event.preventDefault(); setListOpen(false); } };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => { window.removeEventListener("keydown", closeOnEscape); listTrigger.current?.focus({ preventScroll: true }); };
+  }, [listOpen]);
+  const [confirmAnswer, setConfirmAnswer] = useState(false);
+  const hintsRef = useRef<HTMLUListElement>(null);
+  const answerRef = useRef<HTMLDivElement>(null);
+  const helpId = q?.id;
+  const helpHints = q ? s.questions[q.id]?.hints ?? 0 : 0;
+  const helpRevealed = !!(q && s.questions[q.id]?.revealed);
+  const helpState = { id: helpId, hints: helpHints, revealed: helpRevealed };
+  const previousHelp = useRef(helpState);
+  const pendingHelp = useRef<"hint" | "answer" | null>(null);
+  useEffect(() => {
+    const old = previousHelp.current;
+    previousHelp.current = { id: helpId, hints: helpHints, revealed: helpRevealed };
+    if (old.id !== helpId) { pendingHelp.current = null; setConfirmAnswer(false); return; }
+    const target = pendingHelp.current === "answer" && helpRevealed && !old.revealed ? answerRef.current : pendingHelp.current === "hint" && helpHints > old.hints ? hintsRef.current : null;
+    if (target) pendingHelp.current = null;
+    if (!target) return;
+    // The newest hint, or the top of the answer, comes into view in its own pane.
+    const shown = target === hintsRef.current ? (target.lastElementChild as HTMLElement | null) ?? target : target;
+    const frame = requestAnimationFrame(() => { target.focus({ preventScroll: true }); revealRange(shown); });
+    return () => cancelAnimationFrame(frame);
+  }, [helpId, helpHints, helpRevealed]);
   const openQuestion = s.openQuestion;
 
   useEffect(() => {
@@ -72,19 +104,11 @@ export function PracticeTask({ slug }: { slug: string }) {
   const index = q ? bankQuestions.findIndex((b) => b.id === q.id) : -1;
   const prev = bankQuestions[index - 1];
   const next = bankQuestions[index + 1];
-  const byDifficulty = useMemo(
-    () => DIFFICULTIES.map((diff) => ({
-      diff,
-      label: DIFFICULTY_LABEL[diff],
-      items: bankQuestions.filter((b) => b.difficulty === diff),
-    })).filter((g) => g.items.length > 0),
-    [],
-  );
 
   if (!q) {
     return (
       <Shell path={[{ label: "sql", href: "/sql" }, { label: "practice" }]} section="practice">
-        <div className="rx-page"><h1 className="rx-title">Question not found</h1><p><Link className="rx-btn" href="/sql/practice">Next question</Link></p></div>
+        <div className="rx-page"><h1 className="rx-title">Question not found</h1><p><Link className="rx-btn" href="/sql/practice">Go to practice</Link></p></div>
       </Shell>
     );
   }
@@ -106,9 +130,9 @@ export function PracticeTask({ slug }: { slug: string }) {
       section="practice"
       status={["SQL", `question ${index + 1}/${bankQuestions.length}`, `sqlite · ${practiceDatasets[q.datasetId]?.name ?? q.datasetId}`, ready ? (status === "solved" ? "✓ solved" : status === "guided" ? "solved with help" : "draft saves as you type") : "…"]}
     >
-      <div className="rx-task rx-canonical-learning rx-lesson">
+      <div className="rx-task rx-canonical-learning rx-lesson workspace-bounded">
         <div className="rx-task-bar">
-          <button type="button" className="rx-btn ghost" onClick={() => setListOpen((o) => !o)} aria-expanded={listOpen}>
+          <button ref={listTrigger} type="button" className="rx-btn ghost" onClick={() => setListOpen((o) => !o)} aria-expanded={listOpen}>
             <List size={14} /> All questions
           </button>
           <span className="mono rx-small" style={{ margin: 0 }}>{String(index + 1).padStart(2, "0")} / {bankQuestions.length}</span>
@@ -125,31 +149,12 @@ export function PracticeTask({ slug }: { slug: string }) {
               <span className="rx-small" style={{ flex: 1, margin: 0 }}>Practice questions</span>
               <button type="button" className="rx-btn ghost" onClick={() => setListOpen(false)} aria-label="Close list"><X size={14} /></button>
             </div>
-            <ol>
-              {byDifficulty.map(({ diff, label, items }) => (
-                <li key={diff}>
-                  <p className="rx-drawer-group mono">{label}</p>
-                  <ul className="rx-drawer-sub">
-                    {items.map((b) => {
-                      const st = questionStatus(s.questions[b.id]);
-                      return (
-                        <li key={b.id}>
-                          <Link href={`/sql/practice/${b.slug}`} aria-current={b.id === q.id ? "page" : undefined} onClick={() => setListOpen(false)}>
-                            <span className={`mono g ${st === "solved" ? "ok" : ""}`}>{st === "solved" ? "✓" : st === "guided" ? "◑" : st === "attempted" ? "◐" : "·"}</span>
-                            <span>{b.title}</span>
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </li>
-              ))}
-            </ol>
+            <PracticeIndex compact currentId={q.id} onPick={() => setListOpen(false)} />
           </div>
         )}
 
         <div className="rx-task-split">
-          <section className="rx-brief" aria-labelledby="task-title">
+          <section className="rx-brief" aria-labelledby="task-title" tabIndex={0}>
             <p className="rx-prompt-line"><b>task</b> {topicLabel[q.primaryTopic]} · {DIFFICULTY_LABEL[q.difficulty].toLowerCase()}</p>
             <h1 id="task-title" className="rx-task-title">{q.title}</h1>
             <p className="rx-lead rx-ask">{q.task}</p>
@@ -180,16 +185,18 @@ export function PracticeTask({ slug }: { slug: string }) {
               return [t, { ...schema, ...sample, columns }];
             }))} />
           </section>
-          <section className="rx-work rx-lesson-work" aria-label="Your solution">
+          <section className="rx-work rx-lesson-work" aria-label="Your solution" tabIndex={0} onFocusCapture={focusWorkspaceEditor}>
             {supported ? (
               <TaskCell
                 name="solution.sql"
                 value={value}
                 onChange={(v) => s.setDraft(dKey, v)}
                 tables={q.tables}
+                feedback={{ visibleExpected: example && supported ? example.rows : undefined }}
                 analytics={{ subject: "sql", surface: "practice", question: q.id }}
                 minHeight={PRACTICE_EDITOR_HEIGHT}
                 checkLabel={q.exerciseType === "debug" ? "Check fix" : "Check"}
+                nextAction={next ? <Link className="rx-btn primary" href={`/sql/practice/${next.slug}`}>Next question: {String(index + 2).padStart(2, "0")} {next.title} <ArrowRight size={14} aria-hidden="true" /></Link> : <button type="button" className="rx-btn" onClick={() => setListOpen(true)}>All questions</button>}
                 task={{
                   seedSql: bankSeed(q),
                   mutationSql: bankMutation(q),
@@ -208,9 +215,9 @@ export function PracticeTask({ slug }: { slug: string }) {
                 footer={
                   <>
                     {hints < q.hints.length && (
-                      <button type="button" className="rx-btn ghost" onClick={() => s.questionHint(q.id)}><Lightbulb size={13} /> Hint</button>
+                      <button type="button" className="rx-btn ghost" onClick={() => { pendingHelp.current = "hint"; s.questionHint(q.id); }}><Lightbulb size={13} /> {hints === 0 ? "Hint" : `Next hint (${hints + 1} of ${q.hints.length})`}</button>
                     )}
-                    {!revealed && <button type="button" className="rx-btn ghost" onClick={() => s.revealQuestion(q.id)}><Eye size={13} /> Answer</button>}
+                    {!revealed && <button type="button" className="rx-btn ghost" onClick={() => setConfirmAnswer(true)}><Eye size={13} /> Answer</button>}
                     {(hints > 0 || revealed) && (
                       <button type="button" className="rx-btn ghost" onClick={() => s.freshQuestionAttempt(q.id, dKey, starter)}><RotateCcw size={13} /> Try without help</button>
                     )}
@@ -223,11 +230,12 @@ export function PracticeTask({ slug }: { slug: string }) {
                 <PredictionWorkspace q={q} nextAction={next ? <Link className="rx-btn" href={`/sql/practice/${next.slug}`}>Next question</Link> : null} />
               </>
             )}
+            <HelpDialog open={confirmAnswer} onClose={() => setConfirmAnswer(false)} onConfirm={() => { pendingHelp.current = "answer"; s.revealQuestion(q.id); }} />
             {hints > 0 && (
-              <ul className="rx-hints">{q.hints.slice(0, hints).map((h) => <li key={h}><span className="mono">hint ›</span> {h}</li>)}</ul>
+              <ul ref={hintsRef} tabIndex={-1} aria-label="Requested hints" className="rx-hints">{q.hints.slice(0, hints).map((h, i) => <li key={h}><span className="mono">hint {i + 1} of {q.hints.length} ›</span> {h}</li>)}</ul>
             )}
             {revealed && (
-              <div className="rx-cell">
+              <div ref={answerRef} tabIndex={-1} role="region" aria-label="Revealed answer" className="rx-cell">
                 <div className="rx-cell-head"><span className="name">one correct answer</span>
                   <span className="acts"><button type="button" className="rx-btn ghost" onClick={() => s.setDraft(dKey, prettySql(q.solution))}>Put in editor</button></span>
                 </div>
@@ -240,7 +248,7 @@ export function PracticeTask({ slug }: { slug: string }) {
                 <p>{q.explanation}</p>
               </div>
             )}
-            {hints === 0 && !revealed && <p className="rx-small">Hints and the answer are always available. Using them counts the question as solved with help.</p>}
+            {hints === 0 && !revealed && !(ready && (progress?.solved || progress?.guidedSolved)) && <p className="rx-small">Hints and the answer are always available. Using them counts the question as solved with help.</p>}
           </section>
         </div>
       </div>

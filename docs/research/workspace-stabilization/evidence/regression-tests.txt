@@ -1,0 +1,113 @@
+
+ RUN  v3.2.4 /Users/krishnasathvikmantripragada/sqlstudio
+
+stderr | tests/sql-client.test.ts > sql-client execution safety > a transient failed boot is retried automatically within the same run
+[sql-engine] boot attempt 1/3 failed after 2ms The SQL engine could not load.
+
+stdout | tests/sql-client.test.ts > sql-client execution safety > a transient failed boot is retried automatically within the same run
+[sql-engine] boot succeeded on attempt 2 after 1ms
+
+stderr | tests/sql-client.test.ts > sql-client execution safety > persistent boot failures exhaust retries then surface the error
+[sql-engine] boot attempt 1/3 failed after 2ms The SQL engine could not load.
+
+stderr | tests/engine-preparation-recovery.test.ts > cancelled SQL preparation > cancelling during retry backoff prevents another worker
+[sql-engine] boot attempt 1/3 failed after 0ms boot failed
+
+ ✓ tests/python-progress-v2.test.ts (7 tests) 39ms
+ ✓ tests/engine-preparation-recovery.test.ts (6 tests) 90ms
+stderr | tests/sql-client.test.ts > sql-client execution safety > persistent boot failures exhaust retries then surface the error
+[sql-engine] boot attempt 2/3 failed after 2ms The SQL engine could not load.
+
+ ✓ tests/sql-check-counts.test.ts (7 tests) 743ms
+   ✓ full-result check counts with capped previews > shared canonical: matching 848 rows shows 848 without expanding previews  353ms
+stderr | tests/sql-client.test.ts > sql-client execution safety > persistent boot failures exhaust retries then surface the error
+[sql-engine] boot attempt 3/3 failed after 1ms The SQL engine could not load.
+
+stderr | tests/sql-client.test.ts > a worker that never announces readiness times out after retries
+[sql-engine] boot attempt 1/3 failed after 12000ms The SQL engine timed out while starting. Press Retry to try again.
+
+stderr | tests/sql-client.test.ts > a worker that never announces readiness times out after retries
+[sql-engine] boot attempt 2/3 failed after 12000ms The SQL engine timed out while starting. Press Retry to try again.
+
+stderr | tests/sql-client.test.ts > a worker that never announces readiness times out after retries
+[sql-engine] boot attempt 3/3 failed after 12000ms The SQL engine timed out while starting. Press Retry to try again.
+
+ ✓ tests/sql-client.test.ts (10 tests) 1886ms
+   ✓ sql-client execution safety > a transient failed boot is retried automatically within the same run  409ms
+   ✓ sql-client execution safety > persistent boot failures exhaust retries then surface the error  1221ms
+ ✓ tests/python-client.test.ts (27 tests) 2273ms
+   ✓ pinned pyodide > package, worker and copy script all name 314.0.7, and hashes match node_modules  1839ms
+ ✓ tests/projects-contract.test.ts (5 tests) 8ms
+ ✓ tests/grading.test.ts (7 tests) 4ms
+ ✓ tests/learning-state.test.ts (23 tests) 57ms
+ ✓ tests/practice-state.test.ts (6 tests) 130ms
+ ✓ tests/python-mounts.test.ts (3 tests) 10681ms
+   ✓ dataset mounts in real Python > reads a mounted edition and never lists it as program output  4176ms
+   ✓ dataset mounts in real Python > mounts binary files byte for byte  2508ms
+   ✓ dataset mounts in real Python > gives the raw export its documented problems  3991ms
+stdout | tests/python-grading-functions.test.ts > authoring helpers in real Pyodide > a time budget separates a linear solution from a quadratic one
+time budget: fast run 13 ms, quadratic run 1225 ms
+
+ ✓ tests/python-grading-functions.test.ts (29 tests) 19797ms
+   ✓ worked sample: dedupe(items) > the reference passes  3306ms
+   ✓ function checks in real Pyodide > an infinite loop in one case times out and names the case without revealing hidden inputs  1009ms
+   ✓ authoring helpers in real Pyodide > DataFrames: rows and columns  9537ms
+   ✓ authoring helpers in real Pyodide > learner-written tests are graded against a correct and defective implementations  829ms
+   ✓ authoring helpers in real Pyodide > an operation budget (counted comparisons) separates linear from quadratic deterministically  3703ms
+   ✓ authoring helpers in real Pyodide > a time budget separates a linear solution from a quadratic one  1256ms
+ ✓ tests/python-sandbox.test.ts (5 tests) 483ms
+   ✓ sandbox runner adapter > starts an opaque-origin iframe for the package set  398ms
+ ✓ tests/python-operation-ownership.test.ts (5 tests) 314ms
+ ✓ tests/python-feedback-context.test.ts (3 tests) 400ms
+   ✓ Python result provenance > helper and input edits label prior checks without deleting a successful report  328ms
+ ✓ tests/python-editor-recovery.test.ts (3 tests) 1498ms
+   ✓ active editor recovery > Reset is undoable, preserving previous selection and file-switch history  1329ms
+ ✓ tests/sql-cell-ownership.test.ts (1 test) 58ms
+ ✓ tests/canonical/engine-features.test.ts (138 tests) 35929ms
+   ✓ plan validation > distinguishes correct output and index structure from a failed access strategy  1511ms
+   ✓ plan validation > reports both original and changed-data checks after success  1262ms
+   ✓ plan validation > an index that leaves a temporary sort is rejected  1192ms
+   ✓ stateful grading > a one-shot load passes its first execution but is rejected on replay  683ms
+   ✓ fixtures and wrong answers > Run and Check use the same per-question overlay without leaking it into other questions  619ms
+   ✓ fixtures and wrong answers > qb-0022 wrong approach is valid SQL that fails grading: Uses the last delivered scan, inflating delivery time when scans repeat.  1147ms
+   ✓ fixtures and wrong answers > qb-0025 wrong approach is valid SQL that fails grading: Compares with the national average instead of the state’s.  328ms
+   ✓ fixtures and wrong answers > qb-0027 wrong approach is valid SQL that fails grading: ROW_NUMBER drops products tied at third place.  477ms
+   ✓ fixtures and wrong answers > qb-0033 wrong approach is valid SQL that fails grading: Integer division truncates the percentage.  417ms
+   ✓ fixtures and wrong answers > qb-0040 wrong approach is valid SQL that fails grading: With a tie at the top, RANK skips 2 and the team returns nothing.  334ms
+   ✓ fixtures and wrong answers > qb-0049 wrong approach is valid SQL that fails grading: The index does not cover the filter columns.  440ms
+   ✓ fixtures and wrong answers > qb-0050 wrong approach is valid SQL that fails grading: Searches by name but still reads every matching table row.  438ms
+   ✓ fixtures and wrong answers > qb-0055 wrong approach is valid SQL that fails grading: Treats every repeat at the same hub as a retry, whatever the time gap.  575ms
+   ✓ fixtures and wrong answers > qb-0061 wrong approach is valid SQL that fails grading: Lists each pair twice and counts repeated lines.  375ms
+   ✓ fixtures and wrong answers > qb-0062 wrong approach is valid SQL that fails grading: Returns customers who bought from any Home category.  405ms
+   ✓ fixtures and wrong answers > qb-0063 wrong approach is valid SQL that fails grading: Without DISTINCT, line counts multiply and inflate the overlap.  367ms
+   ✓ fixtures and wrong answers > qb-0065 wrong approach is valid SQL that fails grading: Leaves '+tag' addresses unnormalized.  1380ms
+   ✓ fixtures and wrong answers > qb-0066 wrong approach is valid SQL that fails grading: Drops thousands separators and parentheses, and truncates floating-point values.  1091ms
+   ✓ fixtures and wrong answers > qb-0068 wrong approach is valid SQL that fails grading: Counts each step independently, ignoring order and the 24-hour window.  587ms
+   ✓ fixtures and wrong answers > qb-0069 wrong approach is valid SQL that fails grading: Uses the latest subscription at any time, not the first within 24 hours.  612ms
+   ✓ fixtures and wrong answers > qb-0078 wrong approach is valid SQL that fails grading: = NULL is never true.  1364ms
+   ✓ fixtures and wrong answers > qb-0079 wrong approach is valid SQL that fails grading: WHERE removes carriers with no next-day shipments.  412ms
+   ✓ fixtures and wrong answers > qb-0080 wrong approach is valid SQL that fails grading: Counts 1 for workspaces with none.  543ms
+   ✓ fixtures and wrong answers > qb-0082 wrong approach is valid SQL that fails grading: Excludes 28 February after midnight.  653ms
+   ✓ fixtures and wrong answers > qb-0091 wrong approach is valid SQL that fails grading: Turns cancellations into positive sales.  504ms
+   ✓ fixtures and wrong answers > qb-0092 wrong approach is valid SQL that fails grading: Pending and reversed amounts change the closing balance.  443ms
+   ✓ fixtures and wrong answers > qb-0094 wrong approach is valid SQL that fails grading: Counts reviews as pull requests.  344ms
+   ✓ fixtures and wrong answers > qb-0098 wrong approach is valid SQL that fails grading: Cancelled and diverted flights count as late.  1023ms
+   ✓ fixtures and wrong answers > qb-0099 wrong approach is valid SQL that fails grading: Uses event time, so late-arriving scans leak into the past view.  386ms
+   ✓ fixtures and wrong answers > qb-0107 wrong approach is valid SQL that fails grading: Cash trips dilute the rate.  620ms
+   ✓ fixtures and wrong answers > qb-0108 wrong approach is valid SQL that fails grading: Counts cancellations as zero delay.  615ms
+   ✓ fixtures and wrong answers > qb-0110 wrong approach is valid SQL that fails grading: Treats archived repositories as active ownership.  309ms
+   ✓ fixtures and wrong answers > qb-0112 wrong approach is valid SQL that fails grading: Counts repeated scans.  439ms
+   ✓ fixtures and wrong answers > qb-0113 wrong approach is valid SQL that fails grading: Merges every warm reading of a device into one run.  613ms
+   ✓ fixtures and wrong answers > qb-0116 wrong approach is valid SQL that fails grading: LAG looks back only one row, so the second NULL in a run stays NULL.  426ms
+   ✓ fixtures and wrong answers > qb-0119 wrong approach is valid SQL that fails grading: Uses one fixed threshold for every device.  394ms
+   ✓ fixtures and wrong answers > qb-0120 wrong approach is valid SQL that fails grading: Counts three late legs even when an on-time leg separates them.  382ms
+   ✓ fixtures and wrong answers > qb-0123 wrong approach is valid SQL that fails grading: Uses one global average for every card.  664ms
+   ✓ fixtures and wrong answers > qb-0129 wrong approach is valid SQL that fails grading: The mean and maximum are not percentiles.  620ms
+   ✓ fixtures and wrong answers > qb-0134 wrong approach is valid SQL that fails grading: Approved retries are counted twice.  528ms
+   ✓ fixtures and wrong answers > qb-0137 wrong approach is valid SQL that fails grading: Counts redeliveries.  569ms
+
+ Test Files  17 passed (17)
+      Tests  285 passed (285)
+   Start at  10:54:12
+   Duration  48.92s (transform 15.14s, setup 0ms, collect 82.41s, tests 74.39s, environment 122.08s, prepare 17.41s)
+

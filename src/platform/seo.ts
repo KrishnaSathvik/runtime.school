@@ -15,13 +15,14 @@ const clip = (s: string, n = 158) => (s.length <= n ? s : `${s.slice(0, n - 1).r
 
 type ShareCard = { url: string; width: number; height: number; alt: string };
 
-const card = (file: string, alt: string): ShareCard => ({ url: `/${file}`, width: 1200, height: 630, alt });
+const card = (file: string, alt: string, width = 1200, height = 630): ShareCard => ({ url: `/${file}`, width, height, alt });
 
 const SHARE = {
   learn: card("og-sql-learn.png", "Learn SQL. Read the idea, run the query, then solve it."),
   practice: card("og-sql-practice.png", "SQL Practice. Write the query and check it on real data."),
   projects: card("og-sql-projects.png", "SQL Projects. Investigate a business problem with real data."),
   playground: card("og-sql-playground.png", "SQL Playground. Explore a real-world dataset with SQL. Nothing is graded."),
+  datasets: card("og-sql-datasets.png", "SQL Datasets. Tables, joins, and what to watch for.", 1280, 720),
   lab: card("og-sql-lab.png", "Database Lab. Create, change, and roll back a temporary database."),
   queryPlans: card("og-sql-query-plans.png", "Query Performance. See why a SQL query is faster."),
   syntax: card("og-sql-syntax.png", "Compare Syntax. One idea in SQLite, PostgreSQL, and SQL Server."),
@@ -38,8 +39,14 @@ function page(title: string, description: string, path: string, image: ShareCard
   };
 }
 
-/** Pages that only redirect to the learner's next step: keep links followable, keep them out of the index. */
-export const redirectPage: Metadata = { robots: { index: false, follow: true } };
+/**
+ * Pages that only open the learner's next step. A new visitor (and a crawler) lands on the first lesson or
+ * question, so that page is the canonical one; a noindex here made Search Console flag the hub as excluded.
+ */
+export const entryPages = {
+  learn: { alternates: { canonical: sqlLessonHref(courseOrder[0]) } } satisfies Metadata,
+  practice: { alternates: { canonical: `/sql/practice/${bankQuestions[0].slug}` } } satisfies Metadata,
+};
 
 export const lessonIds = (): number[] => courseOrder;
 
@@ -96,6 +103,12 @@ export function playgroundDatasetMetadata(id: CanonicalDatasetId): Metadata {
   const m = learningDatasets[id].metadata;
   const path = id === "retail" ? "/sql/playground" : `/sql/playground/${id}`;
   return page(`${canonicalNames[id]} dataset — SQL Playground`, `${m.description} Explore its ${m.totals.tables} tables with SQL in your browser. Nothing is graded.`, path, SHARE.playground);
+}
+
+export function datasetsPageMetadata(id: CanonicalDatasetId): Metadata {
+  const m = learningDatasets[id].metadata;
+  const path = id === "retail" ? "/sql/datasets" : `/sql/datasets/${id}`;
+  return page(`${canonicalNames[id]} dataset — SQL Datasets`, `${m.description} See its ${m.totals.tables} tables, how they join, what to watch for, and where the course uses it.`, path, SHARE.datasets);
 }
 
 /** schema.org data for the course, embedded on lesson pages. */

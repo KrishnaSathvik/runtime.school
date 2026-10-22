@@ -24,6 +24,12 @@ const PACKAGE_SETS = {
   // DuckDB's PySpark-compatible DataFrame API, importable as `pyspark`. Not Apache Spark.
   pyspark: { load: ["duckdb", "pandas", "typing-extensions"], warm: ["pyspark.sql"] },
   "scikit-learn": { load: ["scikit-learn"], warm: ["sklearn"] },
+  // Polars' core DataFrame API. This Pyodide build has no Parquet/JSON readers or streaming engine (scan_*).
+  polars: { load: ["polars"], warm: ["polars"] },
+  // Parquet and Arrow for pandas (read_parquet / to_parquet), and polars.to_pandas().
+  pyarrow: { load: ["pyarrow"], warm: ["pyarrow"] },
+  // IANA time zones for zoneinfo; nothing to import ahead of time.
+  tzdata: { load: ["tzdata"], warm: [] },
 };
 const requested = (new URL(import.meta.url).searchParams.get("packages") ?? "").split(",").filter(Boolean);
 
@@ -153,32 +159,56 @@ def _cell(x):
     return text[:200]
 
 
-def _display(*objs):
-    # display(df) shows a DataFrame or Series as a table in the Console, as notebooks do.
-    for obj in objs:
-        frame = None
-        if _pd is not None and _isinstance(obj, _pd.Series):
-            frame = obj.to_frame()
-        elif _pd is not None and _isinstance(obj, _pd.DataFrame):
-            frame = obj
-        if frame is None or _emit_sink[0] is None:
-            print(obj)
-            continue
-        for stream in (_out0, _err0):
-            stream.flush()
+def _table_payload(obj):
+    # pandas DataFrame/Series, a Polars DataFrame, or a 1-D/2-D NumPy array, as a table; None for anything else.
+    if _pd is not None and _isinstance(obj, (_pd.Series, _pd.DataFrame)):
+        frame = obj.to_frame() if _isinstance(obj, _pd.Series) else obj
         cols = [_str(c) for c in _list(frame.columns)[:MAX_TABLE_COLS]]
         head = frame.iloc[:MAX_TABLE_ROWS, :MAX_TABLE_COLS]
         rows = []
         for idx, row in zip(_list(head.index), head.itertuples(index=False, name=None)):
             rows.append([_cell(idx)] + [_cell(x) for x in row])
         dtypes = [_str(d) for d in _list(frame.dtypes)[:MAX_TABLE_COLS]]
-        payload = {"columns": cols, "dtypes": dtypes, "rows": rows, "shape": [_int(frame.shape[0]), _int(frame.shape[1])],
-                   "index": _str(frame.index.name) if frame.index.name is not None else "", "series": _isinstance(obj, _pd.Series)}
+        return {"columns": cols, "dtypes": dtypes, "rows": rows, "shape": [_int(frame.shape[0]), _int(frame.shape[1])],
+                "index": _str(frame.index.name) if frame.index.name is not None else "", "series": _isinstance(obj, _pd.Series)}
+    pl = _sys.modules.get("polars")
+    if pl is not None and _isinstance(obj, (pl.DataFrame, pl.Series)):
+        frame = obj.to_frame() if _isinstance(obj, pl.Series) else obj
+        cols = [_str(c) for c in frame.columns[:MAX_TABLE_COLS]]
+        rows = [[_str(i)] + [_cell(x) for x in r[:MAX_TABLE_COLS]] for i, r in enumerate(frame.head(MAX_TABLE_ROWS).rows())]
+        return {"columns": cols, "dtypes": [_str(d) for d in frame.dtypes[:MAX_TABLE_COLS]], "rows": rows,
+                "shape": [_int(frame.height), _int(frame.width)], "index": "", "series": _isinstance(obj, pl.Series)}
+    np = _sys.modules.get("numpy")
+    if np is not None and _isinstance(obj, np.ndarray) and obj.ndim in (1, 2):
+        grid = obj.reshape(-1, 1) if obj.ndim == 1 else obj
+        cols = [_str(i) for i in range(min(grid.shape[1], MAX_TABLE_COLS))]
+        rows = [[_str(i)] + [_cell(x) for x in r[:MAX_TABLE_COLS].tolist()] for i, r in enumerate(grid[:MAX_TABLE_ROWS])]
+        return {"columns": cols, "dtypes": [_str(obj.dtype)] * _len(cols), "rows": rows,
+                "shape": [_int(grid.shape[0]), _int(grid.shape[1])], "index": "", "series": obj.ndim == 1, "array": True}
+    return None
+
+
+def _display(*objs):
+    # display(x) shows tables (DataFrames, Series, arrays) as tables, as notebooks do, and anything else readably.
+    for obj in objs:
+        payload = None
+        try:
+            payload = _table_payload(obj)
+        except BaseException:
+            payload = None
+        if payload is None or _emit_sink[0] is None:
+            if _isinstance(obj, (_dict, _list, _tuple, _set)):
+                import pprint
+                pprint.pprint(obj, width=88, sort_dicts=False)
+            else:
+                print(obj)
+            continue
+        for stream in (_out0, _err0):
+            stream.flush()
         _emit_sink[0]("table", _dumps(payload))
 
 
-if _pd is not None:
-    builtins.display = _display
+builtins.display = _display
 
 
 class _OutputLimit(BaseException):
@@ -217,8 +247,32 @@ def _type_name(t):
         return "?"
 
 
+# The learner's own files: the program that runs (main.py unless another entry file is named) and the files beside it.
+_learner = [_frozenset(["main.py"]), "main.py"]  # [names, entry]
+
+
+def _own(filename):
+    # A learner file's name relative to the working folder, or None for library and harness frames.
+    if filename in _learner[0]:
+        return filename
+    if filename.startswith("/"):
+        try:
+            rel = _relpath(filename, _getcwd())
+        except BaseException:
+            return None
+        if rel in _learner[0]:
+            return rel
+    return None
+
+
 def _frames(tb):
-    return [f for f in _extract_tb(tb) if f.filename == "main.py"]
+    out = []
+    for f in _extract_tb(tb):
+        name = _own(f.filename)
+        if name is not None:
+            f.filename = name
+            out.append(f)
+    return out
 
 
 def _error(e):
@@ -229,10 +283,18 @@ def _error(e):
             message = _str(e)
         except BaseException:
             message = ""
+        line = frames[-1].lineno if frames else None
+        file = frames[-1].filename if frames else None
+        # A syntax error in a file the program imported points at that file, not at the import.
+        if _isinstance(e, SyntaxError) and e.filename and _own(e.filename) is not None:
+            file = _own(e.filename)
+            line = e.lineno
+            only = only.replace(e.filename, file)
         return {
             "type": _type_name(_type(e)),
             "message": message,
-            "line": frames[-1].lineno if frames else None,
+            "line": line,
+            "file": file,
             "traceback": ("Traceback (most recent call last):\n" + "".join(_format_list(frames)) + only) if frames else only,
         }
     except BaseException:
@@ -440,14 +502,17 @@ def _write_fixtures(files):
             f.write(text)
 
 
-def _changed_files(files):
+def _changed_files(files, mounted=()):
     # Files the program created or changed, so the page can show and download them.
+    # Mounted dataset files are canonical inputs, not output, so they're never listed.
     found = []
     root = _getcwd()
     for d, dirs, names in _walk(root):
         dirs[:] = [x for x in dirs if not x.startswith(".") and x != "__pycache__"]
         for n in _sorted(names):
             rel = _relpath(d + "/" + n, root)
+            if rel in mounted:
+                continue
             if _len(found) >= MAX_FILES:
                 return found
             try:
@@ -518,10 +583,15 @@ def _probe(ns, probe, progress, source=""):
     return result
 
 
-def run(source, probe_json, progress, figure, files_json=None, emit=None):
+def run(source, probe_json, progress, figure, files_json=None, emit=None, mounted_json=None, entry=None):
     # Parsed before the learner's code runs.
     probe = _loads(probe_json) if probe_json is not None else None
     files = _loads(files_json) if files_json is not None else {}
+    mounted = _frozenset(_loads(mounted_json)) if mounted_json is not None else _frozenset()
+    # The program runs as the entry file (main.py by default); its .py neighbours are learner files too, for tracebacks.
+    entry = entry if _type(entry) is _str and entry.endswith(".py") and "/" not in entry else "main.py"
+    _learner[0] = _frozenset([entry] + [k for k in files if k.endswith(".py")])
+    _learner[1] = entry
     if _plt is not None:
         _figure_sink[0] = figure
         _plt.show = _show_figures
@@ -533,9 +603,9 @@ def run(source, probe_json, progress, figure, files_json=None, emit=None):
     # Fixture modules (pricing.py, …) import like files next to main.py.
     if "" not in _sys.path:
         _sys.path.insert(0, "")
-    _lines["main.py"] = (_len(source), None, source.splitlines(True), "main.py")
+    _lines[entry] = (_len(source), None, source.splitlines(True), entry)
     try:
-        code = compile(source, "main.py", "exec", dont_inherit=True)
+        code = compile(source, entry, "exec", dont_inherit=True)
     except SyntaxError as e:
         return {
             "status": "syntax-error",
@@ -577,7 +647,7 @@ def run(source, probe_json, progress, figure, files_json=None, emit=None):
             except BaseException:
                 pass
     try:
-        changed = _changed_files(files)
+        changed = _changed_files(files, mounted)
     except BaseException:
         changed = []
     if changed:
@@ -655,27 +725,86 @@ onmessage = async ({ data }) => {
     return;
   }
   used = true;
+  // Everything this interpreter needs was loaded during boot, so learner code gets no network API at all.
+  // This backs up the sandbox CSP (docs/python/runner-isolation.md): Firefox let EventSource through it.
+  for (const name of ["fetch", "XMLHttpRequest", "WebSocket", "EventSource", "WebTransport", "importScripts"]) {
+    try { delete globalThis[name]; } catch { /* not configurable here */ }
+    if (name in globalThis) {
+      try { Object.defineProperty(globalThis, name, { value: undefined, writable: false, configurable: false }); } catch { /* already locked */ }
+    }
+  }
   const id = data.id;
   const nonce = String(data.nonce ?? "");
   run = { id, nonce, limit: data.outputLimit, sent: 0, overflowed: false };
   // stdin is whatever the exercise supplies; once it runs out, input() raises EOFError as in real Python.
   const lines = typeof data.stdin === "string" && data.stdin ? data.stdin.split(/(?<=\n)/) : [];
-  pyodideRef.setStdin({ stdin: () => lines.shift(), isatty: false });
+  // Each line input() takes is also reported on its own channel, after the prompt it answers (input() flushes
+  // stdout first), so a console can show what was typed. It is never written to stdout.
+  pyodideRef.setStdin({
+    stdin: () => {
+      const line = lines.shift();
+      if (line !== undefined) post({ type: "stdin", id, nonce, text: line });
+      return line;
+    },
+    isatty: false,
+  });
   const progress = (call, index) => post({ type: "case", id, nonce, call: String(call), index: Number(index) });
   // undefined, not null: Pyodide turns JS null into jsnull, which is not Python's None.
   const probeJson = data.probe ? stringify(data.probe) : undefined;
   const figure = (png) => post({ type: "figure", id, nonce, src: "data:image/png;base64," + String(png) });
   const emit = (kind, json) => post({ type: "rich", id, nonce, kind: String(kind), json: String(json) });
   const filesJson = data.files && typeof data.files === "object" ? stringify(data.files) : undefined;
+  // Dataset files arrive as bytes, already fetched and hash-checked by the page: this worker never fetches data.
+  // Learner-owned binary files (a Database Lab .db) arrive the same way. They are the program's own state, not output.
+  const inputs = [...(Array.isArray(data.mounts) ? data.mounts : []), ...(Array.isArray(data.blobs) ? data.blobs : [])];
+  let mountedJson;
+  if (inputs.length) {
+    const paths = [];
+    try {
+      for (const m of inputs) {
+        const rel = String(m.path);
+        if (!/^[\w.-]+(\/[\w.-]+)*$/.test(rel) || rel.split("/").includes("..")) throw new Error(`bad mount path ${rel}`);
+        const dir = rel.split("/").slice(0, -1);
+        for (let i = 1; i <= dir.length; i++) {
+          const p = dir.slice(0, i).join("/");
+          if (!pyodideRef.FS.analyzePath(p).exists) pyodideRef.FS.mkdir(p);
+        }
+        pyodideRef.FS.writeFile(rel, new Uint8Array(m.bytes));
+        paths.push(rel);
+      }
+    } catch (err) {
+      post({ type: "done", id, nonce, result: { status: "crashed", message: "could not prepare the dataset files: " + String(err?.message ?? err) } });
+      return;
+    }
+    mountedJson = stringify(paths);
+  }
   const started = now();
   let result;
   try {
-    const proxy = harnessRun(String(data.code ?? ""), probeJson, progress, figure, filesJson, emit);
+    const entry = typeof data.entry === "string" ? data.entry : undefined;
+    const proxy = harnessRun(String(data.code ?? ""), probeJson, progress, figure, filesJson, emit, mountedJson, entry);
     result = proxy.toJs({ dict_converter: fromEntries });
     proxy.destroy();
   } catch (err) {
     result = { status: "crashed", message: String(err?.message ?? err) };
   }
   result.durationMs = Math.round(now() - started);
-  post({ type: "done", id, nonce, result });
+  // Binary files the page asked to keep (e.g. every top-level .db), read back after the program ends.
+  const transfer = [];
+  if (Array.isArray(data.collect) && data.collect.length) {
+    const suffixes = data.collect.map(String);
+    const blobs = [];
+    try {
+      for (const name of pyodideRef.FS.readdir(".")) {
+        if (blobs.length >= 8 || !suffixes.some((x) => name.endsWith(x))) continue;
+        const stat = pyodideRef.FS.stat(name);
+        if (!pyodideRef.FS.isFile(stat.mode) || stat.size > 64 * 1024 * 1024) continue;
+        const bytes = pyodideRef.FS.readFile(name).slice();
+        blobs.push({ path: name, bytes: bytes.buffer });
+        transfer.push(bytes.buffer);
+      }
+    } catch { /* the program removed or broke its own files; report what was read */ }
+    result.blobs = blobs;
+  }
+  post({ type: "done", id, nonce, result }, transfer);
 };

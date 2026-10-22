@@ -1,0 +1,49 @@
+# Bounded activity panes — implementation plan only
+
+2026-10-21. Source inspection during sequential stabilization; no CSS/DOM changes made by this author. Implement only after the feedback batch gate. Preserve the already-passing lifecycle/editor behavior and frozen content.
+
+## Scope and actual selectors
+
+| Surface | Current activity split | Current constraint to replace locally |
+| --- | --- | --- |
+| SQL lesson/practice | `.rx-canonical-learning.rx-lesson > .rx-task-split`, direct `.rx-brief` and `.rx-work.rx-lesson-work` | `rt.css` around 640–790 bounds desktop >=1200; <=1199 around792–820 explicitly resets height/overflow to page scroll. More-specific CodeMirror rules around765 win over generic height rules. |
+| SQL project, executable stages | `.project-contract > .rx-task-split`, direct `.rx-brief` / `.rx-work` | `rt.css:1039` overrides equal columns with42fr/58fr;1041 restores work height:auto/overflow:visible; around1100 adds sticky/max-height only>=1024. Orientation/report are separate `.rx-project-page`, not split workspaces. |
+| Python lesson/practice/project milestone | `.p2 > .p2-split`, direct `.p2-read` / `.p2-work` | `p2.css:21` equal columns but only min-height;24 makes work sticky>=900; breakpoint resets allow unbounded stacking. Root header/taskbar/project rail differs in height. |
+
+Minimal safe scope: mark the six activity roots with a dedicated layout class/data attribute, or precisely select the existing canonical SQL roots and explicitly mark only the three Python screen roots. Tools also use `.p2`/Workbench, so never change global `.p2-work`, `.p2-bench`, `.p2-results`, `.py-editor`, `.rx-work` or `.cm-scroller` without an activity ancestor. Python Workbench `layout="stack"` returns sibling bench/status/results through a Fragment; `layout="columns"` creates `.p2-wb-cols` for tools. Do not alter that tool mode.
+
+## Proposed minimal layout contract
+
+1. Activity root fits the available viewport below the shell header, with its own title/taskbar/rail as non-growing rows and split as the remaining `minmax(0,1fr)` row. Prefer flex/grid subtraction of actual header content over hardcoded assumptions that every page header is 140px. Root and split need `min-height:0`, `min-width:0`, border-box sizing and a real bounded height, not only min-height.
+2. Desktop split uses exactly `repeat(2,minmax(0,1fr))`. Equal widths describe outer panes including padding/borders; inner editor text widths can differ with controls. Remove the scoped project42/58 override. Both direct pane children stretch to the split height and scroll independently. Remove sticky positioning inside this bounded split; its containing viewport already establishes the position.
+3. Narrow layouts stack two bounded rows, approximately equal available height by default, each independently scrollable. Keep all instructions in the top pane; do not delete/collapse lesson content to force geometry. Use the same breakpoint across these six surfaces unless a demonstrated surface-specific constraint warrants otherwise. At 768px top/bottom is reasonable; at desktop widths left/right. No new draggable splitter required.
+4. Right-pane structure keeps Run/Check/Stop reachable: existing SQL `.rx-cell-foot` and Python `.p2-actions` remain in flow, cannot shrink to zero, and may be sticky within their own scroll owner with an opaque background. Use explicit scoped region scroll/padding so the sticky row does not cover focused code or results. Do not globally fix actions to the browser viewport. Users must still scroll to project findings and Save & continue.
+5. Avoid nested scroll traps: pane owns navigation through prompts/help/results; CodeMirror owns long code within a bounded editor area; wide tables own horizontal overflow. Results can have a bounded vertical body when needed, but avoid a fourth independently scrolling wrapper. Every flex/grid link between pane and editor must permit shrinkage (`min-height:0`). Current minHeight320 SQL project and180 Python may exceed a short bottom pane: override only within the scoped constrained layout, rather than clipping actions.
+6. Mobile keyboard/short landscape is a deliberate exception to rigid half-height: visual viewport may be much smaller than `100dvh` on mobile browsers. On editor focus/keyboard shrink, prioritize a usable active editor with compact/collapsible reading pane and a visible restoration control, or allow safe page scroll fallback if bounded rows would make controls inaccessible. Do not use `:focus-within` alone as proof of a virtual keyboard; hardware-keyboard and desktop focus also trigger it. Prefer a small shared visual-viewport measurement only if actual-device evidence requires it. Keep native zoom, IME, selection handles and OS shortcuts.
+7. Give each scrolling pane a meaningful accessible label and keyboard access; do not blindly add nested tab stops to every container. Focus moving to offscreen controls should scroll the correct pane. Preserve editor instances, per-file identity, selection and undo when panels resize or results arrive. Project orientation/report and Python project overview stay readable document pages unless explicitly requested otherwise.
+
+The user requested independently scrolling bounded panes, so historical tests insisting on one page scroll and zero nested scrollers are no longer the target contract. Update only layout assertions after approval; never touch curriculum counts/solutions to fit tests.
+
+## Future browser assertions
+
+Run on all six actual editable surfaces; SQL project must be analysis stage, not orientation. Record outer pane boxes, computed overflow, pane/client/scroll height, active editor bounds, action bounds and viewport dimensions.
+
+- Desktop1440×1000 and1280×720: two pane widths differ by at most rounding tolerance1px; same top/height; split stays within available root bounds. Scroll long left content; right pane position/scroll and caret remain unchanged, then reverse.
+- Tablet768×900 and phone390×844,320×640: same x/full width, top pane ends before bottom pane begins; each bounded row scrolls independently; no document horizontal overflow. Switching layout preserves text and editor history. A short-height keyboard scenario may use documented flexible/fallback behavior instead of a rigid50/50 assertion.
+- Long prompt,80-line code, long traceback/table, hints/reveal and concept/prediction tabs: no unscrollable content; Run/Check/Stop and project continuation remain reachable. Entering code at the last line remains visible above sticky actions. Run completion never changes focused element or caret without an explicit navigation action.
+- Keyboard-only: tab into/out of pane/editor, Escape then Tab where indentation applies; scroll labeled overflow regions; activate errors/file tabs and close dialogs with focus restoration. Focus indicators remain unobscured. Test screen reader names/announcements, not merely automated axe.
+- Actual iOS/Android keyboard and IME remain a separate gate; desktop viewport shrinking is only a geometry proxy. At200%/400% zoom, instructions reflow and controls remain reachable.
+- Negative scope: capture Python Playground `.p2-wb-cols`, SQL Playground and Python database/performance tools before/after; no accidental layout or editor-height change. Project orientation/report unchanged.
+- Repeat already-passing lifecycle/editor cases after layout: no remount resets, undo loss, stopped operation stuck state or wrong-file navigation regression. Frozen verification must still pass.
+
+Implementation owner should avoid stacking another broad override over conflicting historic blocks: replace or consolidate the activity-scoped rules for this layout while leaving tool selectors untouched. A compact dedicated scoped rule block is acceptable if cascade inspection confirms old specificity no longer wins. Do not refactor unrelated styles.
+
+## Implemented focus exception awaiting final browser gate
+
+Default rows remain equal. On code focus in a constrained mobile activity pane, the shared helper scrolls only the owning work pane to the editor and, where necessary, allocates a larger lower row while retaining at least64px of reading space. The stored lower-row height is clamped to the current split height on resize. Expansion persists while focus remains anywhere inside the work pane, including Run/Check, and clears only after focus leaves it; a held pointer or keyboard transition to an action must not move that action before activation. A viewport height of600px or less uses the page-scroll fallback. Python editor boxes cannot flex-shrink below their declared bounded height. No caret movement, editor remount, typing-triggered scroll or tools change is involved.
+
+Additional regression: at320×640 focus code, press and hold Run for120ms, assert the button position is unchanged before release, then release and verify execution. At768×900 and320×640, measure at least120px of focused code visible above actions; resize while focused to confirm neither pane escapes its split. Browser results, rather than these implementation intentions, determine the final gate.
+
+## Superseded 2026-10-21: one page scroll on phones and tablets
+
+At the owner's direction, point 3 (two stacked, independently scrolling half-height rows) and the mobile focus exception above are replaced. At 899px wide or less, or 600px tall or less, the six activity screens scroll as one page: the instructions, then the work, at natural height. Neither pane scrolls on its own, only long code scrolls inside its editor, and Run/Check sits under the editor instead of being pinned. Desktop keeps the two equal, independently scrolling panes. `workspace-focus.ts` no longer resizes rows, and `releaseWorkspaceEditor` was removed. The task bar wraps at 480px or less, because the old `overflow: hidden` had been clipping the pager at 320px.

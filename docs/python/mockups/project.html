@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup · Python project milestone</title>
+<script>document.documentElement.dataset.theme = new URLSearchParams(location.search).get("theme") || "light";</script>
+<link rel="stylesheet" href="mockup.css">
+</head>
+<body>
+<header class="hdr">
+  <div class="brand"><span class="mark">&gt;|</span> runtime <span class="cursor"></span> <span class="path">~/ python / projects / P01 Smart Shopping Cart / 3 Totals and discounts</span></div>
+  <nav class="nav"><a>Learn</a><a>Practice</a><a class="on">Projects</a><a class="tools">Tools ▾</a></nav>
+  <div class="hdr-end"><span class="kbd">⌘</span><span class="kbd">K</span><span aria-hidden="true">◐</span></div>
+</header>
+<div class="subbar"><span>☰ All projects <span class="count">P01 · beginner · unlocked after M09</span></span><span class="btn-group"><span>⤓ Export project</span></span></div>
+<div class="rail" aria-label="Milestones">
+  <div class="step done"><span class="n">✓</span><span>Browse products</span></div>
+  <div class="step done"><span class="n">✓</span><span>Cart add and update</span></div>
+  <div class="step now"><span class="n">3</span><span>Totals and discounts</span></div>
+  <div class="step locked"><span class="n">4</span><span>Receipt file</span></div>
+  <div class="step locked"><span class="n">5</span><span>Edge cases</span></div>
+</div>
+
+<main class="split">
+  <article class="read">
+    <div class="eyebrow"><b>milestone 3 of 5</b> P01 Smart Shopping Cart &amp; Receipt Generator · ~25 min</div>
+    <h1>Totals and discounts</h1>
+    <p class="lede">Checkout needs the same numbers Runtime Market's order system records: subtotal, shipping, tax and total.</p>
+    <div class="chips" style="margin-top:12px"><span class="chip mode">interactive</span><span class="chip">R01@starter.1</span><span class="chip">uses: functions, dicts, rounding</span></div>
+
+    <div class="label">The brief</div>
+    <div class="prose"><p>Your cart from milestone 2 holds product IDs and quantities. Add <code>cart_totals(cart, catalogue, promo)</code> in <code>pricing.py</code>. It applies the promo discount to each line, gives free shipping at $50 (or with <code>FREESHIP</code>), adds 7% tax, and rounds every money value to cents.</p></div>
+
+    <div class="label">Done when</div>
+    <ul class="accept">
+      <li><span class="mark p">✓</span><span>Milestones 1–2 still pass (5 locked checks run every time)</span></li>
+      <li><span class="mark p">✓</span><span>Totals match the recorded order for 20 real orders from the edition</span></li>
+      <li><span class="mark p">✓</span><span><code>BFCM25</code>, <code>WELCOME10</code> and no promo each discount correctly</span></li>
+      <li><span class="mark x">✗</span><span>The $50 free-shipping threshold is exact, after discount</span></li>
+    </ul>
+
+    <div class="label">Files</div>
+    <div class="tree">
+      <div class="dir">p01-shopping-cart/</div>
+      <div>&nbsp;&nbsp;cart.py <span class="tag">yours · milestone 2</span></div>
+      <div>&nbsp;&nbsp;<span class="on">pricing.py</span> <span class="tag">yours · this milestone</span></div>
+      <div>&nbsp;&nbsp;main.py <span class="tag">yours</span></div>
+      <div class="dir">&nbsp;&nbsp;data/ <span class="tag">read-only · R01@starter.1</span></div>
+      <div>&nbsp;&nbsp;&nbsp;&nbsp;products.csv · orders.csv · order_items.csv</div>
+      <div class="dir">&nbsp;&nbsp;out/ <span class="tag">written by your program</span></div>
+      <div>&nbsp;&nbsp;&nbsp;&nbsp;receipt_O104839.txt</div>
+    </div>
+  </article>
+
+  <section class="work" aria-label="Project workspace">
+    <div class="bench">
+      <div class="bench-bar">
+        <div class="files"><span>cart.py</span><span class="on">pricing.py</span><span>main.py</span></div>
+        <div class="shortcuts"><span class="kbd">⌘</span><span class="kbd">↵</span> run <span class="kbd">⇧</span><span class="kbd">⌘</span><span class="kbd">↵</span> check</div>
+      </div>
+      <div class="editor"><div class="gutter">1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>13<br>14</div><div class="lines">DISCOUNTS = {<span class="s">"WELCOME10"</span>: <span class="n">0.10</span>, <span class="s">"SPRING15"</span>: <span class="n">0.15</span>, <span class="s">"BFCM25"</span>: <span class="n">0.25</span>}
+
+
+<span class="k">def</span> <span class="f">cart_totals</span>(cart, catalogue, promo=<span class="k">None</span>):
+    rate = DISCOUNTS.get(promo, <span class="n">0</span>)
+    subtotal = <span class="n">0</span>
+    <span class="k">for</span> product_id, qty <span class="k">in</span> cart.items():
+        price = catalogue[product_id][<span class="s">"list_price"</span>]
+        subtotal += <span class="f">round</span>(qty * price * (<span class="n">1</span> - rate), <span class="n">2</span>)
+<span class="cur">    shipping = <span class="n">0</span> <span class="k">if</span> subtotal &gt; <span class="n">50</span> <span class="k">else</span> <span class="n">5.99</span></span>    tax = <span class="f">round</span>(subtotal * <span class="n">0.07</span>, <span class="n">2</span>)
+    <span class="k">return</span> {<span class="s">"subtotal"</span>: <span class="f">round</span>(subtotal, <span class="n">2</span>), <span class="s">"shipping_fee"</span>: shipping,
+            <span class="s">"tax"</span>: tax, <span class="s">"total"</span>: <span class="f">round</span>(subtotal + shipping + tax, <span class="n">2</span>)}
+</div></div>
+      <div class="actions"><div class="left"><span class="b quiet">↺ Reset file</span></div><div class="right"><span class="b quiet">? Hint</span><span class="b line">▷ Run main.py</span><span class="b primary">✓ Check milestone</span></div></div>
+    </div>
+
+    <div class="results">
+      <div class="tabs"><span>Console</span><span class="on">Checks</span><span>Files · 1</span></div>
+      <div class="verdict fail"><span class="mark x">✗</span><div><b>7 of 8 checks pass</b><span class="hint-line">Earlier milestones and all 20 recorded orders pass. A cart worth exactly $50.00 should ship free: look at line 10.</span></div></div>
+      <div class="check"><span class="mark p">✓</span><span>Totals match 20 recorded orders from R01@starter.1</span><span></span></div>
+      <div class="check"><span class="mark x">✗</span><div>Free shipping starts at exactly $50
+        <div class="case"><span>test cart</span><span>2 × 25.00, no promo (subtotal 50.00)</span><span>expected</span><span>shipping_fee 0, total 53.50</span><span>yours</span><span class="bad">shipping_fee 5.99, total 59.49</span></div></div><span></span></div>
+    </div>
+
+    <div class="label" style="margin:6px 0 0">Deliverable preview · out/receipt_O104839.txt</div>
+<div class="deliver">RUNTIME MARKET                order O104839
+2024-08-23 · promo SPRING15 (-15%)
+------------------------------------------
+Travel Train Set         1 × 51.49   43.77
+Compact Speaker 2.0      1 × 59.49   50.57
+Nordic Building Kit      1 × 45.99   39.09
+------------------------------------------
+Subtotal                            133.43
+Shipping                              0.00
+Tax (7%)                              9.34
+Total                               142.77</div>
+  </section>
+</main>
+<footer class="status"><div><span>Python</span><span>P01 · milestone 3/5</span><span>python 3.14 · R01 starter.1 · 3 files</span></div><span>every file saves as you type</span></footer>
+<div class="review-bar"><a href="?theme=light">light</a><a href="?theme=dark">dark</a><a href="index.html">all screens</a></div>
+</body>
+</html>

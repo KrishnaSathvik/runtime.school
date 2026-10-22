@@ -1,0 +1,1 @@
+return {text:(await page.locator('body').innerText()).slice(-5000),frames:page.frames().map(f=>f.url()),editor:await page.locator('.cm-content').innerText(),buttons:await page.getByRole('button').allTextContents()};

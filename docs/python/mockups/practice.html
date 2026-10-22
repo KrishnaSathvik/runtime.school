@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup · Python practice question</title>
+<script>document.documentElement.dataset.theme = new URLSearchParams(location.search).get("theme") || "light";</script>
+<link rel="stylesheet" href="mockup.css">
+</head>
+<body>
+<header class="hdr">
+  <div class="brand"><span class="mark">&gt;|</span> runtime <span class="cursor"></span> <span class="path">~/ python / practice / Collection Algorithms / Revenue by category</span></div>
+  <nav class="nav"><a>Learn</a><a class="on">Practice</a><a>Projects</a><a class="tools">Tools ▾</a></nav>
+  <div class="hdr-end"><span class="kbd">⌘</span><span class="kbd">K</span><span aria-hidden="true">◐</span></div>
+</header>
+<div class="subbar"><span>☰ All questions <span class="count">288 / 1250</span></span><span class="btn-group"><span>← Prev</span><span>Next →</span></span></div>
+
+<main class="split">
+  <article class="read">
+    <div class="eyebrow"><b>PY-Q12-13</b> M12 Collection Algorithms · grouping · medium · ~10 min</div>
+    <h1>Revenue by category</h1>
+    <p class="lede">Finance wants last year's revenue split by product category, from the order lines.</p>
+    <div class="chips" style="margin-top:12px"><span class="chip">data transformation</span><span class="chip mode">interactive</span><span class="chip">R01@starter.1</span><span class="chip">after: grouping</span></div>
+
+    <div class="label">Your task</div>
+    <div class="prose"><p>Write <code>revenue_by_category(items, products)</code>. It returns a dict mapping each category to the sum of <code>line_total</code> for lines in that category, rounded to 2 decimals and sorted from highest to lowest.</p></div>
+    <div class="spec">
+      <div><span class="k2">items</span><span>list of dicts from <code>order_items.csv</code> (numbers already converted)</span></div>
+      <div><span class="k2">products</span><span>list of dicts from <code>products.csv</code></span></div>
+      <div><span class="k2">Returns</span><span><code>dict[str, float]</code>, highest revenue first</span></div>
+      <div><span class="k2">Rules</span><span>A line whose product isn't in the catalogue is skipped. Categories with no sales don't appear.</span></div>
+    </div>
+
+    <div class="label">Examples</div>
+    <div class="data">
+      <div class="table-wrap"><table>
+        <thead><tr><th>call</th><th>returns</th></tr></thead>
+        <tbody>
+          <tr><td>revenue_by_category([], products)</td><td>{}</td></tr>
+          <tr><td>revenue_by_category(lines_O104839, products)</td><td>{"toys": 82.86, "electronics": 50.57}</td></tr>
+          <tr><td>revenue_by_category(starter_items, products)</td><td>{"electronics": 6742.57, "home": 4543.69, "fashion": 3155.85, …}</td></tr>
+        </tbody>
+      </table></div>
+      <div class="data-foot">3 public tests · 5 hidden: empty catalogue, unknown product, duplicate lines, one category, the full standard.1 edition</div>
+    </div>
+
+    <div class="label">Data you can use</div>
+    <div class="data">
+      <div class="data-head"><b>data/order_items.csv</b><span>454 rows · 7 columns</span></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>order_id<small>text</small></th><th>line_no<small>integer</small></th><th>product_id<small>text · links to products</small></th><th>quantity<small>integer</small></th><th>line_total<small>decimal</small></th></tr></thead>
+        <tbody>
+          <tr><td>O100282</td><td class="num">1</td><td>P0164</td><td class="num">1</td><td class="num">27.9</td></tr>
+          <tr><td>O100376</td><td class="num">1</td><td>P0594</td><td class="num">1</td><td class="num">48</td></tr>
+          <tr><td>O104839</td><td class="num">2</td><td>P0787</td><td class="num">1</td><td class="num">50.57</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </article>
+
+  <section class="work" aria-label="Your solution">
+    <div class="bench">
+      <div class="bench-bar">
+        <div class="files"><span class="on">solution.py</span><span>data/ <i class="ro">read-only</i></span></div>
+        <div class="shortcuts"><span class="kbd">⌘</span><span class="kbd">↵</span> run <span class="kbd">⇧</span><span class="kbd">⌘</span><span class="kbd">↵</span> check</div>
+      </div>
+      <div class="editor"><div class="gutter">1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>13</div><div class="lines"><span class="k">from</span> collections <span class="k">import</span> defaultdict
+
+
+<span class="k">def</span> <span class="f">revenue_by_category</span>(items, products):
+    category_of = {p[<span class="s">"product_id"</span>]: p[<span class="s">"category"</span>] <span class="k">for</span> p <span class="k">in</span> products}
+    totals = defaultdict(<span class="f">float</span>)
+    <span class="k">for</span> line <span class="k">in</span> items:
+        category = category_of.get(line[<span class="s">"product_id"</span>])
+        <span class="k">if</span> category <span class="k">is not</span> <span class="k">None</span>:
+            totals[category] += line[<span class="s">"line_total"</span>]
+    ranked = <span class="f">sorted</span>(totals.items(), key=<span class="k">lambda</span> kv: kv[<span class="n">1</span>], reverse=<span class="k">True</span>)
+<span class="cur">    <span class="k">return</span> {c: <span class="f">round</span>(v, <span class="n">2</span>) <span class="k">for</span> c, v <span class="k">in</span> ranked}</span>
+</div></div>
+      <div class="actions"><div class="left"><span class="b quiet">↺ Reset</span></div><div class="right"><span class="b quiet">? Hint</span><span class="b quiet">◎ Answer</span><span class="b line">▷ Run</span><span class="b primary">✓ Check</span></div></div>
+    </div>
+
+    <div class="results">
+      <div class="tabs"><span>Console</span><span class="on">Checks</span></div>
+      <div class="verdict pass"><span class="mark p">✓</span><div><b>Solved on your own</b><span class="hint-line">All 3 public and 5 hidden tests pass, including the 12,401-line standard edition.</span></div></div>
+      <div class="check"><span class="mark p">✓</span><span>Empty input returns <code>{}</code></span><span class="mono">0.4 ms</span></div>
+      <div class="check"><span class="mark p">✓</span><span>One order, two categories</span><span class="mono">0.6 ms</span></div>
+      <div class="check"><span class="mark p">✓</span><span>Whole starter edition, highest first</span><span class="mono">3 ms</span></div>
+      <div class="check"><span class="mark p">✓</span><span>5 hidden tests <span class="hint-line">· inputs stay hidden</span></span><span class="mono">41 ms</span></div>
+    </div>
+
+    <div class="task" style="border-left-color: var(--success)">
+      <div class="label" style="color: var(--success)">Next</div>
+      <p style="font-size:15px">Explanation and other approaches (<code>Counter</code>, pandas <code>groupby</code>) are unlocked.</p>
+      <div class="chips"><span class="chip">PY-Q12-14 Deduplicate a customer list →</span><span class="chip">Compare in Syntax &amp; API Comparator →</span></div>
+    </div>
+  </section>
+</main>
+<footer class="status"><div><span>Python</span><span>question 288/1250</span><span>python 3.14 · R01 starter.1</span></div><span>draft saves as you type</span></footer>
+<div class="review-bar"><a href="?theme=light">light</a><a href="?theme=dark">dark</a><a href="index.html">all screens</a></div>
+</body>
+</html>

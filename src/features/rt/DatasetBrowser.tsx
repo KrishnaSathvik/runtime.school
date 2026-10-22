@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type { CanonicalDatasetId } from "@/data/datasets/learning-map";
 import { TOOL_DATASETS, datasetName, formatCount, relationships, tablesIn, toolDataset } from "@/content/tools/datasets";
+import { courseUsage, type UsageLink } from "@/content/tools/usage";
 import { Select } from "./Select";
 
 /**
@@ -28,8 +30,8 @@ export function DatasetSummary({ id }: { id: CanonicalDatasetId }) {
     <div className="rx-ds-summary">
       <p className="rx-prose">{m.description}</p>
       <p className="rx-ds-facts mono">
-        <span>{formatCount(m.totals.rows)} rows</span>
-        <span>{m.totals.tables} tables</span>
+        <span><b>{formatCount(m.totals.rows)}</b> rows</span>
+        <span><b>{m.totals.tables}</b> tables</span>
         <span>{m.coverage.start.slice(0, 7)} – {m.coverage.end.slice(0, 7)}</span>
       </p>
     </div>
@@ -38,7 +40,7 @@ export function DatasetSummary({ id }: { id: CanonicalDatasetId }) {
 
 type Table = ReturnType<typeof toolDataset>["metadata"]["tables"][number];
 
-function TableCard({ id, table, onQuery }: { id: CanonicalDatasetId; table: Table; onQuery?: (table: string) => void }) {
+function TableCard({ id, table, onQuery, queryLabel }: { id: CanonicalDatasetId; table: Table; onQuery?: (table: string) => void; queryLabel: string }) {
   const [preview, setPreview] = useState(false);
   const d = toolDataset(id);
   const rows = d.metadata.rows[table.name] ?? 0;
@@ -72,7 +74,7 @@ function TableCard({ id, table, onQuery }: { id: CanonicalDatasetId; table: Tabl
             {preview ? "Hide preview" : `Preview ${p.result.values.length} rows`}
           </button>
         )}
-        {onQuery && <button type="button" className="rx-btn" onClick={() => onQuery(table.name)}>Query this table</button>}
+        {onQuery && <button type="button" className="rx-btn" onClick={() => onQuery(table.name)}>{queryLabel}</button>}
       </div>
       {preview && p && (
         <div className="rx-table-wrap rx-ds-preview" tabIndex={0} role="region" aria-label={`${table.name} preview`}>
@@ -92,13 +94,44 @@ function TableCard({ id, table, onQuery }: { id: CanonicalDatasetId; table: Tabl
 }
 
 /** Every table of a dataset (or the named subset), each expandable to its schema and a preview. */
-export function TableList({ id, only, onQuery }: { id: CanonicalDatasetId; only?: string[]; onQuery?: (table: string) => void }) {
+export function TableList({ id, only, onQuery, queryLabel = "Query this table" }: { id: CanonicalDatasetId; only?: string[]; onQuery?: (table: string) => void; queryLabel?: string }) {
   const tables = toolDataset(id).metadata.tables.filter((t) => !only || only.includes(t.name));
   return (
     <div className="rx-schema rx-ds-tables">
-      {tables.map((t) => <TableCard key={`${id}.${t.name}`} id={id} table={t} onQuery={onQuery} />)}
+      {tables.map((t) => <TableCard key={`${id}.${t.name}`} id={id} table={t} onQuery={onQuery} queryLabel={queryLabel} />)}
     </div>
   );
+}
+
+function UsageGroup({ title, links }: { title: string; links: UsageLink[] }) {
+  const [all, setAll] = useState(false);
+  if (links.length === 0) return null;
+  const shown = all ? links : links.slice(0, 4);
+  return (
+    <section className="rx-ds-watch-group" aria-label={title}>
+      <p className="rx-ds-watch-title">{title} · {links.length}</p>
+      <ul>{shown.map((l) => <li key={l.href}><Link href={l.href}>{l.title}</Link></li>)}</ul>
+      {links.length > 4 && <button type="button" className="rx-btn ghost" onClick={() => setAll((x) => !x)}>{all ? "Show fewer" : `Show ${links.length - 4} more`}</button>}
+    </section>
+  );
+}
+
+export type CourseUse = { lessons: UsageLink[]; practice: UsageLink[]; projects: UsageLink[] };
+
+/** Lessons, practice questions and projects, each linked; shared by the SQL and Python Datasets pages. */
+export function UsageLists({ usage }: { usage: CourseUse }) {
+  return (
+    <div className="rx-ds-watch rx-ds-usage">
+      <UsageGroup title="Lessons" links={usage.lessons} />
+      <UsageGroup title="Practice" links={usage.practice} />
+      <UsageGroup title="Projects" links={usage.projects} />
+    </div>
+  );
+}
+
+/** The lessons, practice questions and projects that use a SQL dataset. */
+export function CourseUsage({ id }: { id: CanonicalDatasetId }) {
+  return <UsageLists usage={courseUsage(id)} />;
 }
 
 /** Declared foreign keys as join lines. Optional `only` keeps the project's relevant tables. */
@@ -136,5 +169,28 @@ export function TablesInvolved({ id, sql }: { id: CanonicalDatasetId; sql: strin
     <ul className="rx-ds-involved mono">
       {names.map((t) => <li key={t}><b>{t}</b> <span>{formatCount(rows[t] ?? 0)} rows</span></li>)}
     </ul>
+  );
+}
+
+export type WatchItem = { text: string; count?: number };
+
+/** One group of "what to watch for" notes, shared by the SQL and Python Datasets pages. Long groups show four and open the rest on request. */
+export function WatchList({ title, items }: { title: string; items: WatchItem[] }) {
+  const [all, setAll] = useState(false);
+  if (items.length === 0) return null;
+  const shown = all ? items : items.slice(0, 4);
+  return (
+    <section className="rx-ds-watch-group" aria-label={title}>
+      <p className="rx-ds-watch-title">{title}</p>
+      <ul>
+        {shown.map((w) => (
+          <li key={w.text}>
+            <span>{w.text}</span>
+            {w.count !== undefined && <span className="rx-ds-watch-n mono">{formatCount(w.count)} rows</span>}
+          </li>
+        ))}
+      </ul>
+      {items.length > 4 && <button type="button" className="rx-btn ghost" onClick={() => setAll((x) => !x)}>{all ? "Show fewer" : `Show ${items.length - 4} more`}</button>}
+    </section>
   );
 }

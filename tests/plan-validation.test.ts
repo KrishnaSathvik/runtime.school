@@ -65,14 +65,14 @@ describe('plan-aware grading in the shipped SQLite worker', () => {
   it('rejects an index that exists but is not used by the submitted query', async () => {
     const r = await check(ddl + select.replace('FROM events', 'FROM events NOT INDEXED'));
     expect(r.grade).toMatchObject({ ok: false, planFailed: true });
-    expect(r.grade.message).toContain('SCAN events');
+    expect(r.grade.message).toBe('This task needs SQLite to jump straight to the matching rows of events using the index on events (account). Your query reads every row of events instead.');
   });
 
   it('does not mistake SEARCH on another table for the required access', async () => {
     const sql = ddl + 'SELECT id,amount FROM events NOT INDEXED WHERE account IN (SELECT account FROM other WHERE account=42) ORDER BY id';
     const r = await check(sql);
     expect(r.grade).toMatchObject({ ok: false, planFailed: true });
-    expect(r.grade.message).toContain('SEARCH other');
+    expect(r.grade.message).toContain('reads every row of events');
   });
 
   it('can reject a same-table decoy search alongside an unindexed scan', async () => {
@@ -112,7 +112,7 @@ describe('plan-aware grading in the shipped SQLite worker', () => {
       mutation: 'UPDATE events SET account=42;',
     });
     expect(r.grade).toMatchObject({ ok: false, planFailed: true, variationFailed: true });
-    expect(r.grade.message).toContain('SCAN events');
+    expect(r.grade.message).toContain('reads every row of events');
   });
 
   it('supports index-only contracts on tiny tables without demanding SEARCH', async () => {
@@ -125,7 +125,9 @@ describe('plan-aware grading in the shipped SQLite worker', () => {
     const covering: PlanValidation = { indexes: [{ id: 'cover', table: 'events', columns: ['account','amount'] }],
       access: [{ index: 'cover', strategy: 'covering-search' }] };
     expect((await check('CREATE INDEX cover ON events(account,amount);' + select, { planValidation: covering })).grade.ok).toBe(true);
-    expect((await check(ddl + select, { planValidation: { ...contract, access: [{ index: 'account lookup', strategy: 'covering-search' }] } })).grade.ok).toBe(false);
+    const partial = await check(ddl + select, { planValidation: { ...contract, access: [{ index: 'account lookup', strategy: 'covering-search' }] } });
+    expect(partial.grade.ok).toBe(false);
+    expect(partial.grade.message).toBe('This task needs SQLite to jump straight to the matching rows using the index on events (account) alone, without reading the events table. Your query uses the index but still goes back to the table for the other columns.');
   });
 
   it('allows useful index scans for ordered traversal and checks temporary sorts', async () => {
@@ -133,8 +135,9 @@ describe('plan-aware grading in the shipped SQLite worker', () => {
     const planValidation = { ...contract, access: [{ index: 'account lookup', strategy: 'index-scan' }], noTempSort: true };
     expect((await check(ddl + sql, { answer: ddl + sql, planValidation })).grade.ok).toBe(true);
     const sorted = select.replace('ORDER BY id', 'ORDER BY amount');
-    expect((await check(ddl + sorted, { answer: ddl + sorted, planValidation: { ...contract, noTempSort: true } })).grade)
-      .toMatchObject({ ok: false, planFailed: true });
+    const extraSort = (await check(ddl + sorted, { answer: ddl + sorted, planValidation: { ...contract, noTempSort: true } })).grade;
+    expect(extraSort).toMatchObject({ ok: false, planFailed: true });
+    expect(extraSort.message).toBe('This task needs the rows to come out already in index order. Your query makes SQLite sort them in a separate step.');
   });
 
   it('enforces unique index requirements', async () => {

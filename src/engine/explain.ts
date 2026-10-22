@@ -17,10 +17,16 @@ export type Explanation = {
   detail: string;
   /** One concrete thing to try next. */
   next: string;
-  /** The original database / grader message, shown under "Technical details". */
+  /** The original database / grader message. Never shown to learners. */
   technical?: string;
   kind: "error" | "result";
+  /** "info" when nothing went wrong (a lab script that ran but ends without a SELECT). */
+  tone?: "info";
 };
+
+/** Where the SQL ran: wording differs between a graded exercise and the ungraded tools. */
+export type ErrorSurface = "exercise" | "playground" | "lab";
+
 
 /* ------------------------------------------------------------------ */
 /* Schema of the canonical datasets                                    */
@@ -200,7 +206,15 @@ const list = (xs: string[]) => xs.map((x) => `\`${x}\``).join(", ");
 // The worker appends its own hints to some messages; match on the SQLite part.
 const WORKER_SUFFIX = / (Check the schema and aliases|Qualify the column with its table alias)\.$/;
 
-export function explainError(error: string, query: string, tables: string[] = []): Explanation {
+// Messages the worker writes in plain English itself; repeating them as "technical" text adds nothing.
+const WORKER_TEXT = /^(Write a query first|Use a read-only SELECT|Run one SQL statement|End your lab script|The query must return one table|For a query plan|Limit lab scripts)/;
+
+export function explainError(error: string, query: string, tables: string[] = [], surface?: ErrorSurface): Explanation {
+  const e = explainErrorText(error, query, tables, surface);
+  return WORKER_TEXT.test(error) ? { ...e, technical: undefined } : e;
+}
+
+function explainErrorText(error: string, query: string, tables: string[], surface?: ErrorSurface): Explanation {
   const technical = error;
   const raw = error.replace(WORKER_SUFFIX, "");
   const schema = teachingSchema();
@@ -217,14 +231,24 @@ export function explainError(error: string, query: string, tables: string[] = []
 
   if ((m = raw.match(/^no such table: (?:main\.)?(\S+)/i))) {
     const name = m[1];
-    const available = tables.length ? tables : Object.keys(schema);
-    const guess = closest(name, Object.keys(schema));
+    // Only the current dataset's tables are suggested: a table from another dataset can't be queried here.
+    const available = tables.filter((t) => t.toLowerCase() !== name.toLowerCase());
+    const guess = closest(name, available.length ? available : Object.keys(schema).filter((t) => t.toLowerCase() !== name.toLowerCase()));
+    const elsewhere = available.length > 0 && Object.keys(schema).some((t) => t.toLowerCase() === name.toLowerCase());
+    const shown = available.slice(0, 12);
+    const tableList = `${list(shown)}${available.length > shown.length ? ` and ${available.length - shown.length} more` : ""}`;
     return make(
       `There is no table called \`${name}\``,
       guess
         ? `This database has no \`${name}\` table. \`${guess}\` is a close match — it may be a typo.`
-        : `This database has no \`${name}\` table.`,
-      guess ? `Did you mean \`${guess}\`?` : `Use one of the tables for this exercise: ${list(available)}.`,
+        : elsewhere
+          ? `This dataset has no \`${name}\` table; that table belongs to another dataset.`
+          : `This database has no \`${name}\` table.`,
+      guess
+        ? `Did you mean \`${guess}\`?`
+        : available.length
+          ? `Use one of the tables ${surface === "exercise" || !surface ? "for this exercise" : "in this dataset"}: ${tableList}.`
+          : "Check the table list for the right name.",
     );
   }
 
@@ -490,20 +514,44 @@ export function explainError(error: string, query: string, tables: string[] = []
     }
   }
 
+  const here = surface === "playground" ? "The Playground" : surface === "exercise" || !surface ? "This exercise" : "This editor";
+  const press = surface === "exercise" ? "press Run or Check" : "press Run";
+
   if (/Use a read-only SELECT, WITH, or EXPLAIN query/i.test(raw) || /readonly database/i.test(raw)) {
     return make(
-      "This exercise only reads data",
+      `${here} only reads data`,
       "Here, queries can look at data but can't create or change it.",
       "Start with SELECT (or WITH). To practise CREATE, INSERT or UPDATE, use the Database Lab.",
     );
   }
 
   if (/Run one SQL statement at a time/i.test(raw)) {
+    // Comments alone are zero statements, not two.
+    if (!clean.replace(/[;\s]/g, "")) {
+      return make(
+        "The editor has only comments",
+        "Everything in the editor is a comment, so there's no SQL to run.",
+        `Write a query on a line that doesn't start with \`--\`, then ${press}.`,
+      );
+    }
     return make(
       "One query at a time",
-      "This exercise checks a single query, and the editor contains more than one statement (separated by `;`).",
-      "Keep only the query you want to run, or comment the others out with `--`.",
+      surface === "playground"
+        ? "The Playground runs one query at a time, and the editor contains more than one statement (separated by `;`)."
+        : surface === "exercise" || !surface
+          ? "This exercise checks a single query, and the editor contains more than one statement (separated by `;`)."
+          : "This editor runs one query at a time, and it contains more than one statement (separated by `;`).",
+      `Keep only the query you want to run, or comment the others out with \`--\`.${surface === "playground" ? " To run several statements together, use Database Lab." : ""}`,
     );
+  }
+
+  if (/End your lab script with a SELECT/i.test(raw) && surface === "lab") {
+    // Every statement ran; there is simply no result table to show. Not an error.
+    return { ...make(
+      "The script ran",
+      "Its last statement doesn't return rows, so there's nothing to show.",
+      "Add a SELECT at the end to see the effect, e.g. `SELECT * FROM your_table;`.",
+    ), tone: "info" };
   }
 
   if (/End your lab script with a SELECT/i.test(raw) || /The query must return one table/i.test(raw)) {
@@ -515,7 +563,22 @@ export function explainError(error: string, query: string, tables: string[] = []
   }
 
   if (/Write a query first/i.test(raw)) {
-    return make("The editor is empty", "There's no SQL to run yet.", "Type a query, then press Run query.");
+    return make("The editor is empty", "There's no SQL to run yet.", `Type a query, then ${press}.`);
+  }
+
+  if ((m = raw.match(/^unrecognized token: "(['"`[])/i))) {
+    const quote = m[1];
+    return quote === "'"
+      ? make(
+          "A text value is never closed",
+          "A text value starts with ' but has no closing ', so SQLite read the rest of the query as text.",
+          "Add the closing ' right after the text value.",
+        )
+      : make(
+          "A quoted name is never closed",
+          `A name starts with ${quote} but has no closing ${quote === "[" ? "]" : quote}.`,
+          "Add the closing mark, or remove the opening one.",
+        );
   }
 
   if (/timed out while starting/i.test(raw) || /engine worker failed/i.test(raw)) {
@@ -544,8 +607,8 @@ export function explainError(error: string, query: string, tables: string[] = []
 
   return make(
     "Your SQL couldn't run",
-    "SQLite could not complete this query. Its original error is available in Technical details.",
-    "Review the error and your SQL, then try Run query again.",
+    `SQLite stopped with this message: “${raw}”.`,
+    "Check your SQL near the part the message mentions, then press Run again.",
   );
 }
 
@@ -607,7 +670,7 @@ export function explainGrade(args: {
     return make(
       "Your result is correct, but the performance requirement isn't met",
       `${args.variationFailed ? "With different sample data, the" : "The"} query returns the right rows, but its indexes or query plan do not match the task. A query plan shows how SQLite reads tables and uses indexes to find rows.`,
-      "Check the required index columns and how the task asks SQLite to find rows. Technical details show which requirement was missed and the query plan when available.",
+      "Check the required index columns and how the task asks SQLite to find rows.",
     );
   }
 

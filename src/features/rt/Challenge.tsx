@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Eye, Lightbulb, RotateCcw } from "lucide-react";
 import taskContexts from "@/content/task-context.json";
 import { getLesson, isBlankSql, lessonFixture, starterFor } from "@/content";
+import { SQL_CONSTRUCTS, courseIndex } from "@/content/canonical/constructs";
 import {
   attemptKey,
   classifyFailure,
@@ -11,11 +12,24 @@ import {
   useLearning,
 } from "@/lib/learning-state";
 import { TaskCell } from "./Cells";
+import { HelpDialog } from "./HelpDialog";
 import { CHALLENGE_EDITOR_HEIGHT } from "./editor-height";
 import { prettySql } from "@/components/editor/pretty-sql";
 import { SqlCode } from "./SqlCode";
+import { revealRange } from "./reveal";
 
 type TaskContext = { columns: string[]; tables: string[] };
+
+/** Feedback may name a construct only once this lesson, or an earlier one, has taught it. */
+function taughtBy(lessonId: number) {
+  let here: number;
+  try { here = courseIndex(lessonId); } catch { return undefined; }
+  return (name: string) => {
+    const c = SQL_CONSTRUCTS.find((x) => x.name === name);
+    if (!c) return true;
+    try { return courseIndex(c.taughtIn) <= here; } catch { return true; }
+  };
+}
 
 /** Long prompts read clearer as short paragraphs (build vs return). */
 function PromptText({ text }: { text: string }) {
@@ -37,9 +51,12 @@ function PromptText({ text }: { text: string }) {
 export function Challenge({
   lessonId,
   variant,
+  nextAction,
 }: {
   lessonId: number;
   variant: 0 | 1;
+  /** Shown once every check passes; the learner chooses when to move on. */
+  nextAction?: ReactNode;
 }) {
   const projectId = null;
   const lesson = getLesson(lessonId)!;
@@ -64,6 +81,23 @@ export function Challenge({
   const revealed = !!attempt?.revealed;
   const [confirm, setConfirm] = useState<null | "hint" | "reveal">(null);
 
+  const hintsRef = useRef<HTMLUListElement>(null);
+  const answerRef = useRef<HTMLDivElement>(null);
+  const previousHelp = useRef({ hintsShown, revealed });
+  const pendingHelp = useRef<"hint" | "answer" | null>(null);
+  useEffect(() => { pendingHelp.current = null; }, [lessonId, variant]);
+  useEffect(() => {
+    const old = previousHelp.current;
+    previousHelp.current = { hintsShown, revealed };
+    const target = pendingHelp.current === "answer" && revealed && !old.revealed ? answerRef.current : pendingHelp.current === "hint" && hintsShown > old.hintsShown ? hintsRef.current : null;
+    if (target) pendingHelp.current = null;
+    if (!target) return;
+    // The newest hint, or the top of the answer, comes into view in its own pane.
+    const shown = target === hintsRef.current ? (target.lastElementChild as HTMLElement | null) ?? target : target;
+    const frame = requestAnimationFrame(() => { target.focus({ preventScroll: true }); revealRange(shown); });
+    return () => cancelAnimationFrame(frame);
+  }, [hintsShown, revealed]);
+
   return (
     <div>
       <section className="rx-question" aria-label={`Challenge ${variant + 1}`}>
@@ -86,6 +120,8 @@ export function Challenge({
           setSession(lessonId, projectId, "practice", variant);
         }}
         tables={ctx?.tables}
+        feedback={{ taught: taughtBy(lessonId) }}
+        nextAction={nextAction}
         analytics={{
           subject: "sql",
           lesson: lessonId,
@@ -119,8 +155,8 @@ export function Challenge({
         footer={
           <>
             {hintsShown < lesson.hints.length && (
-              <button type="button" className="rx-btn ghost" onClick={() => (hintsShown === 0 ? setConfirm("hint") : markGuided(key, "hint"))}>
-                <Lightbulb size={13} /> {hintsShown === 0 ? "Hint" : "Another hint"}
+              <button type="button" className="rx-btn ghost" onClick={() => { if (hintsShown === 0) setConfirm("hint"); else { pendingHelp.current = "hint"; markGuided(key, "hint"); } }}>
+                <Lightbulb size={13} /> {hintsShown === 0 ? "Hint" : `Next hint (${hintsShown + 1} of ${lesson.hints.length})`}
               </button>
             )}
             {!revealed && (
@@ -136,26 +172,15 @@ export function Challenge({
           </>
         }
       />
-      {confirm && (
-        <div className="rx-confirm" role="group" aria-label="Confirm help">
-          <p>
-            {confirm === "hint" ? "Showing a hint" : "Showing the answer"} means a correct query counts as solved with help, not toward mastery. You can try again without help afterwards.
-          </p>
-          <div className="rx-confirm-acts">
-            <button type="button" className="rx-btn primary" onClick={() => { markGuided(key, confirm); setConfirm(null); }}>
-              {confirm === "hint" ? "Show hint" : "Show answer"}
-            </button>
-            <button type="button" className="rx-btn" onClick={() => setConfirm(null)}>Keep trying</button>
-          </div>
-        </div>
-      )}
+      <HelpDialog open={confirm !== null} kind={confirm === "hint" ? "hint" : "answer"}
+        onClose={() => setConfirm(null)} onConfirm={() => { if (confirm) { pendingHelp.current = confirm === "reveal" ? "answer" : "hint"; markGuided(key, confirm); } }} />
       {hintsShown > 0 && (
-        <ul className="rx-hints">
-          {lesson.hints.slice(0, hintsShown).map((h) => <li key={h}><span className="mono">hint ›</span> {h}</li>)}
+        <ul ref={hintsRef} tabIndex={-1} aria-label="Requested hints" className="rx-hints">
+          {lesson.hints.slice(0, hintsShown).map((h, i) => <li key={h}><span className="mono">hint {i + 1} of {lesson.hints.length} ›</span> {h}</li>)}
         </ul>
       )}
       {revealed && (
-        <div className="rx-cell">
+        <div ref={answerRef} tabIndex={-1} role="region" aria-label="Revealed answer" className="rx-cell">
           <div className="rx-cell-head"><span className="name">one correct answer</span>
             <span className="acts"><button type="button" className="rx-btn ghost" onClick={() => setDraft(dKey, prettySql(task.answer))}>Put in editor</button></span>
           </div>

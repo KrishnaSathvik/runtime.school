@@ -10,15 +10,17 @@ import { projects as sqlProjects } from "@/content/projects";
 import { sqlProjectHref } from "@/content/projects/paths";
 import { bankQuestions } from "@/content/question-bank";
 import { rtSectionHrefs } from "@/features/rt/entry";
-import { pythonQuestions, pythonTracks, pythonQuestionHref, pythonTrackHref } from "@/content/python/practice";
-import { pythonJourneys, journeyHref } from "@/content/python/journeys";
-import { pythonLessonHref, pythonLessons } from "@/content/python";
+import dynamic from "next/dynamic";
+import { PY_COMPARE_HREF, PY_DATASETS_HREF, PY_DBLAB_HREF, PY_PERF_HREF, PY_PLAYGROUND_HREF } from "@/content/python-v2/paths";
 import { useHydrated, useLearning } from "@/lib/learning-state";
 import { sqlLessonHref } from "@/platform/sql-lesson-href";
 import { useTheme } from "@/lib/theme";
 import { Keys } from "./Keys";
 
 export type Crumb = { label: string; href?: string };
+
+/** Python search loads the course only when it's opened, so SQL pages never carry Python content. */
+const PythonPalette = dynamic(() => import("./PythonPalette").then((m) => m.PythonPalette), { ssr: false });
 type Section = "learn" | "practice" | "projects" | "tools";
 /** Which subject's navigation, tools and search the shell shows. SQL is the default. */
 export type ShellSubject = "sql" | "python";
@@ -32,10 +34,19 @@ const NAV_FALLBACK: { id: Exclude<Section, "tools">; label: string; href: string
 /**
  * Python navigation stays within its own subject. Its playground is available from home and search.
  */
-const PYTHON_NAV: { id: Exclude<Section, "tools">; label: string; href: string }[] = [
+export const PYTHON_NAV: { id: Exclude<Section, "tools">; label: string; href: string }[] = [
   { id: "learn", label: "Learn", href: "/python" },
   { id: "practice", label: "Practice", href: "/python/practice" },
   { id: "projects", label: "Projects", href: "/python/projects" },
+];
+
+/** Python's tools menu (plan §7). */
+export const PYTHON_TOOLS = [
+  { href: PY_PLAYGROUND_HREF, label: "Playground", purpose: "A Python workspace: files, data, libraries, charts." },
+  { href: PY_DBLAB_HREF, label: "Database Lab", purpose: "Program SQLite from Python on ready-made databases." },
+  { href: PY_PERF_HREF, label: "Performance Lab", purpose: "Measure two implementations on the same work." },
+  { href: PY_COMPARE_HREF, label: "Compare Approaches", purpose: "Idioms and APIs side by side, with real output." },
+  { href: PY_DATASETS_HREF, label: "Datasets", purpose: "The data every tool can use." },
 ];
 
 export const TOOLS = [
@@ -43,6 +54,7 @@ export const TOOLS = [
   { href: "/sql/lab", label: "Database Lab", purpose: "Change a disposable copy of a dataset." },
   { href: "/sql/query-performance", label: "Query Performance", purpose: "Compare real SQLite query plans." },
   { href: "/sql/syntax", label: "Compare Syntax", purpose: "One concept in three SQL dialects." },
+  { href: "/sql/datasets", label: "Datasets", purpose: "The data every SQL lesson and tool uses." },
 ];
 
 /**
@@ -76,7 +88,7 @@ export function Shell({
     const hrefs = { learn: learnHref, practice: practiceHref, projects: projectsHref };
     return NAV_FALLBACK.map((n) => ({ ...n, href: hrefs[n.id] }));
   }, [subject, ready, learnHref, practiceHref, projectsHref]);
-  const showTools = subject === "sql";
+  const showTools = !bare;
   const [palette, setPalette] = useState(false);
   const [tools, setTools] = useState(false);
   const toolsRef = useRef<HTMLDivElement>(null);
@@ -132,7 +144,7 @@ export function Shell({
                   <button type="button" className={`rx-tools-btn ${section === "tools" ? "on" : ""}`} aria-expanded={tools} aria-haspopup="true" onClick={() => setTools((t) => !t)}>
                     Tools <ChevronDown size={13} aria-hidden="true" />
                   </button>
-                  {tools && <ToolList onPick={() => setTools(false)} className="rx-tools-menu" />}
+                  {tools && <ToolList onPick={() => setTools(false)} className="rx-tools-menu" items={subject === "python" ? PYTHON_TOOLS : TOOLS} />}
                 </div>
               )}
             </nav>
@@ -164,10 +176,10 @@ export function Shell({
   );
 }
 
-function ToolList({ onPick, className = "" }: { onPick: () => void; className?: string }) {
+function ToolList({ onPick, className = "", items = TOOLS }: { onPick: () => void; className?: string; items?: { href: string; label: string; purpose: string }[] }) {
   return (
     <ul className={`rx-toollist ${className}`}>
-      {TOOLS.map((t) => (
+      {items.map((t) => (
         <li key={t.href}>
           <Link href={t.href} onClick={onPick}>
             <span className="t">{t.label}</span>
@@ -179,22 +191,7 @@ function ToolList({ onPick, className = "" }: { onPick: () => void; className?: 
   );
 }
 
-type Item = { label: string; href: string; kind: string };
-
-/** Search on Python pages: Python destinations that exist, plus the way back to other subjects. No SQL tools. */
-function PythonPalette({ onClose }: { onClose: () => void }) {
-  const all: Item[] = [
-    ...PYTHON_NAV.map((n) => ({ label: `Python · ${n.label}`, href: n.href, kind: "go" })),
-    { label: "Python playground", href: "/python/playground", kind: "tool" },
-    ...pythonQuestions.map(q => ({ label: q.title, href: pythonQuestionHref(q.slug), kind: "practice" })),
-    ...pythonTracks.map(t => ({ label: t.title, href: pythonTrackHref(t.slug), kind: "track" })),
-    ...pythonJourneys.map(j => ({ label: j.title, href: journeyHref(j), kind: j.kind })),
-    ...pythonLessons.map((l) => ({ label: `${String(l.number).padStart(2, "0")} ${l.title}`, href: pythonLessonHref(l.slug), kind: "lesson" })),
-    { label: "Choose a subject", href: "/", kind: "go" },
-    { label: "SQL course", href: "/sql", kind: "subject" },
-  ];
-  return <PaletteDialog all={all} onClose={onClose} />;
-}
+export type Item = { label: string; href: string; kind: string };
 
 function Palette({ onClose }: { onClose: () => void }) {
   const ready = useHydrated();
@@ -220,7 +217,7 @@ function Palette({ onClose }: { onClose: () => void }) {
   return <PaletteDialog all={items} onClose={onClose} />;
 }
 
-function PaletteDialog({ all, onClose }: { all: Item[]; onClose: () => void }) {
+export function PaletteDialog({ all, onClose }: { all: Item[]; onClose: () => void }) {
   const router = useRouter();
   const [q, setQ] = useState("");
   const [sel, setSel] = useState(0);

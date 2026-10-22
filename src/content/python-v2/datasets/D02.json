@@ -1,0 +1,792 @@
+{
+ "id": "D02",
+ "title": "UCI Online Retail II",
+ "version": 1,
+ "seed": null,
+ "description": "Real invoice lines from a UK online gift wholesaler, December 2009 – December 2011, in the source’s own layout. A deterministic 14% sample of customers (and of anonymous invoices). Cancellations, refunds, fees, anonymous buyers and repeated lines are all real.",
+ "licence": {
+  "name": "CC BY 4.0",
+  "status": "cleared"
+ },
+ "window": [
+  "2009-12-01",
+  "2011-12-09"
+ ],
+ "generator": "datasets/python/D02/dataset.mjs from datasets/retail/extract",
+ "source": "UCI Machine Learning Repository, Online Retail II (2019), via datasets/retail/extract (datasets/retail/source.json)",
+ "attribution": "Chen, D. (2012). Online Retail II [Dataset]. UCI Machine Learning Repository. https://doi.org/10.24432/C5CG6D. Sampled and reshaped by Runtime.",
+ "tables": {
+  "invoice_lines": {
+   "description": "One line of an invoice, as the wholesaler’s system recorded it. Not unique: the same line can appear twice.",
+   "primaryKey": [],
+   "foreignKeys": [
+    {
+     "column": "StockCode",
+     "references": "products.stock_code"
+    },
+    {
+     "column": "Customer ID",
+     "references": "customers.customer_id"
+    }
+   ],
+   "columns": [
+    {
+     "name": "Invoice",
+     "type": "text",
+     "description": "Invoice number; a leading C marks a cancellation",
+     "nullable": false
+    },
+    {
+     "name": "StockCode",
+     "type": "text",
+     "description": "Product code; some codes are fees or adjustments, not products",
+     "nullable": false
+    },
+    {
+     "name": "Description",
+     "type": "text",
+     "description": "Line description as typed on the invoice",
+     "nullable": true
+    },
+    {
+     "name": "Quantity",
+     "type": "integer",
+     "description": "Units; negative on cancellations",
+     "nullable": false
+    },
+    {
+     "name": "InvoiceDate",
+     "type": "timestamp",
+     "description": "Invoice date and time (UK local time)",
+     "nullable": false
+    },
+    {
+     "name": "Price",
+     "type": "decimal",
+     "description": "Unit price in pounds sterling",
+     "nullable": false
+    },
+    {
+     "name": "Customer ID",
+     "type": "integer",
+     "description": "Customer number; empty for anonymous invoices",
+     "nullable": true
+    },
+    {
+     "name": "Country",
+     "type": "text",
+     "description": "Customer country",
+     "nullable": false
+    }
+   ]
+  },
+  "products": {
+   "description": "One stock code, with the description and price it most often had.",
+   "primaryKey": [
+    "stock_code"
+   ],
+   "foreignKeys": [],
+   "columns": [
+    {
+     "name": "stock_code",
+     "type": "text",
+     "description": "Stock code",
+     "nullable": false
+    },
+    {
+     "name": "description",
+     "type": "text",
+     "description": "Most common description",
+     "nullable": true
+    },
+    {
+     "name": "list_price",
+     "type": "decimal",
+     "description": "Most common unit price; empty when never sold at a price",
+     "nullable": true
+    },
+    {
+     "name": "first_sold_at",
+     "type": "timestamp",
+     "description": "First invoice with this code",
+     "nullable": true
+    }
+   ]
+  },
+  "customers": {
+   "description": "One registered customer who appears in these invoices.",
+   "primaryKey": [
+    "customer_id"
+   ],
+   "foreignKeys": [],
+   "columns": [
+    {
+     "name": "customer_id",
+     "type": "integer",
+     "description": "Customer number",
+     "nullable": false
+    },
+    {
+     "name": "country",
+     "type": "text",
+     "description": "Country",
+     "nullable": false
+    },
+    {
+     "name": "first_order_at",
+     "type": "timestamp",
+     "description": "First invoice",
+     "nullable": false
+    }
+   ]
+  }
+ },
+ "editions": {
+  "preview": {
+   "ref": "D02@preview.1",
+   "files": [
+    {
+     "path": "invoice_lines.csv",
+     "table": "invoice_lines",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 25,
+     "bytes": 2369,
+     "sha256": "84a43f2694e75f960bde4112f198d22b6c31def88a930abf718bebeac0be1f5e",
+     "url": "/datasets/python/D02/preview.1/invoice_lines.csv"
+    },
+    {
+     "path": "products.csv",
+     "table": "products",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 25,
+     "bytes": 1598,
+     "sha256": "779c1b16f02c10eb57d30d801807f35e3f932e28d09fddcebb56749180046fbf",
+     "url": "/datasets/python/D02/preview.1/products.csv"
+    },
+    {
+     "path": "customers.csv",
+     "table": "customers",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 3,
+     "bytes": 151,
+     "sha256": "d5f0273606d81a32013136f72b1e3b0b2947a7e9c92aa2cd5b549c8b7727242d",
+     "url": "/datasets/python/D02/preview.1/customers.csv"
+    }
+   ],
+   "quality": [
+    {
+     "id": "cancellations",
+     "description": "Cancellation lines: Invoice starts with C and Quantity is negative",
+     "count": 0
+    },
+    {
+     "id": "anonymous",
+     "description": "Lines with no Customer ID (walk-in or unregistered buyers)",
+     "count": 0
+    },
+    {
+     "id": "duplicate_lines",
+     "description": "Lines identical to an earlier line in every column",
+     "count": 0
+    },
+    {
+     "id": "zero_price",
+     "description": "Lines with Price 0 (adjustments, samples, damaged stock)",
+     "count": 0
+    },
+    {
+     "id": "fees",
+     "description": "Non-product codes: postage, carriage, manual adjustments, bank and marketplace fees",
+     "count": 0
+    },
+    {
+     "id": "missing_description",
+     "description": "Lines with an empty Description",
+     "count": 0
+    }
+   ],
+   "profile": {
+    "invoice_lines": {
+     "Invoice": {
+      "nulls": 0,
+      "distinct": 3
+     },
+     "StockCode": {
+      "nulls": 0,
+      "distinct": 25
+     },
+     "Description": {
+      "nulls": 0,
+      "distinct": 25
+     },
+     "Quantity": {
+      "nulls": 0,
+      "distinct": 10,
+      "min": 4,
+      "max": 120,
+      "mean": 20.88
+     },
+     "InvoiceDate": {
+      "nulls": 0,
+      "distinct": 3,
+      "min": "2010-12-01 09:09:00",
+      "max": "2010-12-01 10:03:00"
+     },
+     "Price": {
+      "nulls": 0,
+      "distinct": 15,
+      "min": 0.38,
+      "max": 10.95,
+      "mean": 2.83
+     },
+     "Customer ID": {
+      "nulls": 0,
+      "distinct": 3,
+      "min": 12431,
+      "max": 15100,
+      "mean": 14253.08
+     },
+     "Country": {
+      "nulls": 0,
+      "distinct": 2
+     }
+    },
+    "products": {
+     "stock_code": {
+      "nulls": 0,
+      "distinct": 25
+     },
+     "description": {
+      "nulls": 0,
+      "distinct": 25
+     },
+     "list_price": {
+      "nulls": 0,
+      "distinct": 14,
+      "min": 0.39,
+      "max": 12.75,
+      "mean": 2.91
+     },
+     "first_sold_at": {
+      "nulls": 0,
+      "distinct": 19,
+      "min": "2009-12-01 09:24:00",
+      "max": "2010-10-21 10:47:00"
+     }
+    },
+    "customers": {
+     "customer_id": {
+      "nulls": 0,
+      "distinct": 3,
+      "min": 12431,
+      "max": 15100,
+      "mean": 14073
+     },
+     "country": {
+      "nulls": 0,
+      "distinct": 2
+     },
+     "first_order_at": {
+      "nulls": 0,
+      "distinct": 3,
+      "min": "2010-01-07 14:33:00",
+      "max": "2010-09-09 12:35:00"
+     }
+    }
+   }
+  },
+  "starter": {
+   "ref": "D02@starter.1",
+   "files": [
+    {
+     "path": "invoice_lines.csv",
+     "table": "invoice_lines",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 1875,
+     "bytes": 162333,
+     "sha256": "879f35202af9767e3bf5b1b5fdb0dacb5d286775400be26de956774d19156701",
+     "url": "/datasets/python/D02/starter.1/invoice_lines.csv"
+    },
+    {
+     "path": "products.csv",
+     "table": "products",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 1042,
+     "bytes": 61461,
+     "sha256": "40377fc8f4d74c94ecebf53712644fa57cd3d2bc44c3bb51012cee2cca4c91a9",
+     "url": "/datasets/python/D02/starter.1/products.csv"
+    },
+    {
+     "path": "customers.csv",
+     "table": "customers",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 56,
+     "bytes": 2309,
+     "sha256": "e04146574f09e13c254aa86ce56cacc2d34af69fa53510f8957fd3e62a996745",
+     "url": "/datasets/python/D02/starter.1/customers.csv"
+    }
+   ],
+   "quality": [
+    {
+     "id": "cancellations",
+     "description": "Cancellation lines: Invoice starts with C and Quantity is negative",
+     "count": 11
+    },
+    {
+     "id": "anonymous",
+     "description": "Lines with no Customer ID (walk-in or unregistered buyers)",
+     "count": 819
+    },
+    {
+     "id": "duplicate_lines",
+     "description": "Lines identical to an earlier line in every column",
+     "count": 30
+    },
+    {
+     "id": "zero_price",
+     "description": "Lines with Price 0 (adjustments, samples, damaged stock)",
+     "count": 11
+    },
+    {
+     "id": "fees",
+     "description": "Non-product codes: postage, carriage, manual adjustments, bank and marketplace fees",
+     "count": 6
+    },
+    {
+     "id": "missing_description",
+     "description": "Lines with an empty Description",
+     "count": 10
+    }
+   ],
+   "profile": {
+    "invoice_lines": {
+     "Invoice": {
+      "nulls": 0,
+      "distinct": 82
+     },
+     "StockCode": {
+      "nulls": 0,
+      "distinct": 1042
+     },
+     "Description": {
+      "nulls": 10,
+      "distinct": 1021
+     },
+     "Quantity": {
+      "nulls": 0,
+      "distinct": 80,
+      "min": -9360,
+      "max": 1008,
+      "mean": 5.37
+     },
+     "InvoiceDate": {
+      "nulls": 0,
+      "distinct": 79,
+      "min": "2010-12-01 09:09:00",
+      "max": "2010-12-07 16:43:00"
+     },
+     "Price": {
+      "nulls": 0,
+      "distinct": 108,
+      "min": 0,
+      "max": 13474.79,
+      "mean": 11.99
+     },
+     "Customer ID": {
+      "nulls": 819,
+      "distinct": 56,
+      "min": 12347,
+      "max": 18239,
+      "mean": 15868.1
+     },
+     "Country": {
+      "nulls": 0,
+      "distinct": 4
+     }
+    },
+    "products": {
+     "stock_code": {
+      "nulls": 0,
+      "distinct": 1042
+     },
+     "description": {
+      "nulls": 0,
+      "distinct": 1030
+     },
+     "list_price": {
+      "nulls": 0,
+      "distinct": 84,
+      "min": 0.18,
+      "max": 219.76,
+      "mean": 3.31
+     },
+     "first_sold_at": {
+      "nulls": 0,
+      "distinct": 448,
+      "min": "2009-12-01 07:45:00",
+      "max": "2010-11-26 11:19:00"
+     }
+    },
+    "customers": {
+     "customer_id": {
+      "nulls": 0,
+      "distinct": 56,
+      "min": 12347,
+      "max": 18239,
+      "mean": 15408.18
+     },
+     "country": {
+      "nulls": 0,
+      "distinct": 4
+     },
+     "first_order_at": {
+      "nulls": 0,
+      "distinct": 56,
+      "min": "2009-12-01 09:24:00",
+      "max": "2010-12-07 10:47:00"
+     }
+    }
+   }
+  },
+  "standard": {
+   "ref": "D02@standard.1",
+   "files": [
+    {
+     "path": "invoice_lines.csv",
+     "table": "invoice_lines",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 22454,
+     "bytes": 1959801,
+     "sha256": "36bd67df91cb4b6b3540e7a0d08396e9bd4a1b99dcffc0039aed846d599d56c6",
+     "url": "/datasets/python/D02/standard.1/invoice_lines.csv"
+    },
+    {
+     "path": "invoice_lines.parquet",
+     "table": "invoice_lines",
+     "layer": "clean",
+     "format": "parquet",
+     "rows": 22454,
+     "bytes": 152238,
+     "sha256": "014d8119f21e05782fda414a177e61c4ee4dfa0d2333d2de46afc220928ccb56",
+     "url": "/datasets/python/D02/standard.1/invoice_lines.parquet",
+     "from": "36bd67df91cb4b6b3540e7a0d08396e9bd4a1b99dcffc0039aed846d599d56c6"
+    },
+    {
+     "path": "products.csv",
+     "table": "products",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 2602,
+     "bytes": 153418,
+     "sha256": "146cbfc4cc197161d4be444a8cc32a02448c66d31ee4892381858c67beaec364",
+     "url": "/datasets/python/D02/standard.1/products.csv"
+    },
+    {
+     "path": "customers.csv",
+     "table": "customers",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 402,
+     "bytes": 16315,
+     "sha256": "bed2ff033aabc2f377ce5b6ef0fbde39ce0ff1ea299c63fb2940fcc26ba3b3ce",
+     "url": "/datasets/python/D02/standard.1/customers.csv"
+    }
+   ],
+   "quality": [
+    {
+     "id": "cancellations",
+     "description": "Cancellation lines: Invoice starts with C and Quantity is negative",
+     "count": 304
+    },
+    {
+     "id": "anonymous",
+     "description": "Lines with no Customer ID (walk-in or unregistered buyers)",
+     "count": 6035
+    },
+    {
+     "id": "duplicate_lines",
+     "description": "Lines identical to an earlier line in every column",
+     "count": 338
+    },
+    {
+     "id": "zero_price",
+     "description": "Lines with Price 0 (adjustments, samples, damaged stock)",
+     "count": 133
+    },
+    {
+     "id": "fees",
+     "description": "Non-product codes: postage, carriage, manual adjustments, bank and marketplace fees",
+     "count": 108
+    },
+    {
+     "id": "missing_description",
+     "description": "Lines with an empty Description",
+     "count": 83
+    }
+   ],
+   "profile": {
+    "invoice_lines": {
+     "Invoice": {
+      "nulls": 0,
+      "distinct": 1101
+     },
+     "StockCode": {
+      "nulls": 0,
+      "distinct": 2602
+     },
+     "Description": {
+      "nulls": 83,
+      "distinct": 2660
+     },
+     "Quantity": {
+      "nulls": 0,
+      "distinct": 165,
+      "min": -6400,
+      "max": 9360,
+      "mean": 10.28
+     },
+     "InvoiceDate": {
+      "nulls": 0,
+      "distinct": 1082,
+      "min": "2010-09-01 12:00:00",
+      "max": "2010-11-30 19:35:00"
+     },
+     "Price": {
+      "nulls": 0,
+      "distinct": 244,
+      "min": 0,
+      "max": 10468.8,
+      "mean": 6.69
+     },
+     "Customer ID": {
+      "nulls": 6035,
+      "distinct": 402,
+      "min": 12347,
+      "max": 18256,
+      "mean": 15433.61
+     },
+     "Country": {
+      "nulls": 0,
+      "distinct": 20
+     }
+    },
+    "products": {
+     "stock_code": {
+      "nulls": 0,
+      "distinct": 2602
+     },
+     "description": {
+      "nulls": 1,
+      "distinct": 2557
+     },
+     "list_price": {
+      "nulls": 2,
+      "distinct": 141,
+      "min": 0.04,
+      "max": 165,
+      "mean": 3.48
+     },
+     "first_sold_at": {
+      "nulls": 0,
+      "distinct": 921,
+      "min": "2009-12-01 07:45:00",
+      "max": "2010-11-26 11:19:00"
+     }
+    },
+    "customers": {
+     "customer_id": {
+      "nulls": 0,
+      "distinct": 402,
+      "min": 12347,
+      "max": 18256,
+      "mean": 15332.58
+     },
+     "country": {
+      "nulls": 0,
+      "distinct": 20
+     },
+     "first_order_at": {
+      "nulls": 0,
+      "distinct": 401,
+      "min": "2009-12-01 09:24:00",
+      "max": "2010-11-30 13:23:00"
+     }
+    }
+   }
+  },
+  "full": {
+   "ref": "D02@full.1",
+   "files": [
+    {
+     "path": "invoice_lines.csv",
+     "table": "invoice_lines",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 125613,
+     "bytes": 10956701,
+     "sha256": "0b03925624c769f8770687c12adf625e8d8ea80c0bdb908acb8d525a00498900",
+     "url": "/datasets/python/D02/full.1/invoice_lines.csv"
+    },
+    {
+     "path": "invoice_lines.parquet",
+     "table": "invoice_lines",
+     "layer": "clean",
+     "format": "parquet",
+     "rows": 125613,
+     "bytes": 830158,
+     "sha256": "7b3694d213f55db4e19d23ab535b3c595722006bf15e107c1732d9eb318f69c8",
+     "url": "/datasets/python/D02/full.1/invoice_lines.parquet",
+     "from": "0b03925624c769f8770687c12adf625e8d8ea80c0bdb908acb8d525a00498900"
+    },
+    {
+     "path": "products.csv",
+     "table": "products",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 4528,
+     "bytes": 267397,
+     "sha256": "75745842fafa0cf54cd55637ba47d10ce3c173e7e59b8a072279e8d1b12a5874",
+     "url": "/datasets/python/D02/full.1/products.csv"
+    },
+    {
+     "path": "customers.csv",
+     "table": "customers",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 848,
+     "bytes": 34289,
+     "sha256": "ed698b028770ef9d29fa29b07b45df3cad3ccc09d79a6fc385470c8471c31d1d",
+     "url": "/datasets/python/D02/full.1/customers.csv"
+    }
+   ],
+   "quality": [
+    {
+     "id": "cancellations",
+     "description": "Cancellation lines: Invoice starts with C and Quantity is negative",
+     "count": 1996
+    },
+    {
+     "id": "anonymous",
+     "description": "Lines with no Customer ID (walk-in or unregistered buyers)",
+     "count": 31144
+    },
+    {
+     "id": "duplicate_lines",
+     "description": "Lines identical to an earlier line in every column",
+     "count": 1406
+    },
+    {
+     "id": "zero_price",
+     "description": "Lines with Price 0 (adjustments, samples, damaged stock)",
+     "count": 860
+    },
+    {
+     "id": "fees",
+     "description": "Non-product codes: postage, carriage, manual adjustments, bank and marketplace fees",
+     "count": 654
+    },
+    {
+     "id": "missing_description",
+     "description": "Lines with an empty Description",
+     "count": 611
+    }
+   ],
+   "profile": {
+    "invoice_lines": {
+     "Invoice": {
+      "nulls": 0,
+      "distinct": 6722
+     },
+     "StockCode": {
+      "nulls": 0,
+      "distinct": 4528
+     },
+     "Description": {
+      "nulls": 611,
+      "distinct": 4821
+     },
+     "Quantity": {
+      "nulls": 0,
+      "distinct": 434,
+      "min": -9600,
+      "max": 19152,
+      "mean": 11.81
+     },
+     "InvoiceDate": {
+      "nulls": 0,
+      "distinct": 6592,
+      "min": "2009-12-01 09:24:00",
+      "max": "2011-12-09 11:50:00"
+     },
+     "Price": {
+      "nulls": 0,
+      "distinct": 814,
+      "min": 0,
+      "max": 13474.79,
+      "mean": 4.97
+     },
+     "Customer ID": {
+      "nulls": 31144,
+      "distinct": 848,
+      "min": 12347,
+      "max": 18285,
+      "mean": 15417.44
+     },
+     "Country": {
+      "nulls": 0,
+      "distinct": 29
+     }
+    },
+    "products": {
+     "stock_code": {
+      "nulls": 0,
+      "distinct": 4528
+     },
+     "description": {
+      "nulls": 41,
+      "distinct": 4373
+     },
+     "list_price": {
+      "nulls": 51,
+      "distinct": 203,
+      "min": 0.04,
+      "max": 295,
+      "mean": 3.88
+     },
+     "first_sold_at": {
+      "nulls": 0,
+      "distinct": 1721,
+      "min": "2009-12-01 07:45:00",
+      "max": "2011-11-28 15:31:00"
+     }
+    },
+    "customers": {
+     "customer_id": {
+      "nulls": 0,
+      "distinct": 848,
+      "min": 12347,
+      "max": 18285,
+      "mean": 15341.27
+     },
+     "country": {
+      "nulls": 0,
+      "distinct": 27
+     },
+     "first_order_at": {
+      "nulls": 0,
+      "distinct": 846,
+      "min": "2009-12-01 09:24:00",
+      "max": "2011-12-05 14:49:00"
+     }
+    }
+   }
+  }
+ }
+}

@@ -624,8 +624,12 @@ html[data-theme="dark"] .rx {
 .rx-pager > * + * { border-left: 1px solid var(--rx-line-strong); }
 .rx-pager a:hover { background: var(--rx-cell); }
 .rx-pager a:focus-visible { outline-offset: -2px; }
-.rx-pager [aria-disabled="true"] { color: var(--rx-faint); font-weight: 500; cursor: default; }
-@media (max-width: 480px) { .rx-pager a, .rx-pager span { min-width: 0; padding: 0 10px; } }
+.rx-pager [aria-disabled="true"] { color: var(--rx-faint); font-weight: 500; cursor: not-allowed; background: var(--rx-cell); opacity: 0.55; }
+@media (max-width: 480px) {
+  .rx-pager a, .rx-pager span { min-width: 0; padding: 0 10px; }
+  /* The pager drops to its own line rather than running off a narrow screen. */
+  .rx-task-bar { flex-wrap: wrap; }
+}
 
 /* Desktop (1200px and up) is the only left/right split, and each pane scrolls on its own.
    Phones and tablets stack top then bottom and scroll as one page. */
@@ -1191,8 +1195,10 @@ html[data-theme="dark"] .rx-project-q[data-tone="prep"] .q { color: #a8b0b8; }
 
 /* ── Canonical dataset browser (Playground, Database Lab, Query Performance) ── */
 .rx-ds-summary .rx-prose { margin: 10px 0 0; font-size: 15px; }
-.rx-ds-facts { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 10px 0 0; font-size: 12.5px; color: var(--rx-dim); }
-.rx-ds-facts span + span::before { content: "·"; margin-right: 16px; color: var(--rx-faint); }
+/* Dataset facts as small chips: the number stands out, the unit stays quiet. */
+.rx-ds-facts { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 0; font-size: 12.5px; color: var(--rx-dim); }
+.rx-ds-facts span { display: inline-flex; align-items: baseline; gap: 5px; padding: 3px 10px; border: 1px solid var(--rx-line); border-radius: 999px; background: var(--rx-surface); white-space: nowrap; }
+.rx-ds-facts b { color: var(--rx-ink); font-weight: 600; }
 /* One table per row (same as projects). Beat .rx-lesson .rx-schema multi-column so
    expanding one card never stretches a neighbour into empty space. */
 .rx-schema.rx-ds-tables,
@@ -1224,3 +1230,190 @@ html[data-theme="dark"] .rx-project-q[data-tone="prep"] .q { color: #a8b0b8; }
 .rx-ds-involved { display: flex; flex-wrap: wrap; gap: 6px; }
 .rx-ds-involved li { padding: 3px 10px; border: 1px solid var(--rx-line-strong); border-radius: 999px; }
 .rx-ds-involved span { color: var(--rx-faint); }
+
+/* Activity workspaces only: tools and document-only project stages keep their layout. */
+.rx:has(.workspace-bounded) { height: 100dvh; min-height: 0; overflow: hidden; }
+.rx:has(.workspace-bounded) > .rx-bar,
+.rx:has(.workspace-bounded) > .rx-status { flex: 0 0 auto; }
+.rx:has(.workspace-bounded) > .rx-main {
+  flex: 1 1 0; min-height: 0; height: auto; max-height: none;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.rx:has(.workspace-bounded) > .rx-main > :not(.workspace-bounded) { flex: 0 0 auto; }
+.rx .workspace-bounded,
+.rx .workspace-bounded > .rx-task {
+  flex: 1 1 0; min-height: 0; height: auto; max-height: none;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.rx .workspace-bounded > :not(.rx-task-split):not(.p2-split):not(.rx-task),
+.rx .workspace-bounded > .rx-task > :not(.p2-split) { flex: 0 0 auto; }
+.rx .workspace-bounded.project-contract { padding-bottom: 12px; }
+.rx .workspace-bounded.project-contract .project-stage-nav { margin-bottom: 12px; }
+.rx .workspace-bounded > .rx-task-split {
+  flex: 1 1 0; min-height: 0; height: auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: minmax(0, 1fr);
+  align-items: stretch;
+}
+.rx .workspace-bounded > .rx-task-split > :is(.rx-brief, .rx-work) {
+  position: static; align-self: stretch; min-width: 0; min-height: 0;
+  height: auto; max-height: none; overflow: auto; overscroll-behavior: contain;
+  scrollbar-gutter: stable; scroll-padding-block: 12px 64px;
+  display: block;
+}
+.rx .workspace-bounded > .rx-task-split > :focus-visible {
+  outline: 2px solid var(--rx-amber); outline-offset: -3px;
+}
+/* The pane scrolls its prompt/results; only long code gets its own editor scroll. */
+.rx .workspace-bounded.rx-lesson .rx-lesson-work > [role="tabpanel"],
+.rx .workspace-bounded.rx-lesson .rx-lesson-work > [role="tabpanel"] > *,
+.rx .workspace-bounded.rx-lesson .rx-lesson-work > :is(.rx-hints, .rx-why, .rx-small) {
+  display: block; height: auto; min-height: 0; max-height: none; overflow: visible;
+}
+.rx .workspace-bounded .rx-work .rx-cell.rx-cell {
+  display: block; height: auto; min-height: 0; max-height: none; overflow: visible;
+}
+.rx .workspace-bounded .rx-work .rx-editor {
+  display: block; height: clamp(120px, 30dvh, 360px); min-height: 0; overflow: hidden;
+}
+.rx .workspace-bounded .rx-work .rx-editor > *,
+.rx .workspace-bounded .rx-work .rx-editor .cm-editor.cm-editor {
+  height: 100%; min-height: 0 !important; max-height: none; overflow: hidden;
+}
+.rx .workspace-bounded .rx-work .rx-editor .cm-scroller.cm-scroller {
+  height: 100%; min-height: 0; max-height: none; overflow: auto;
+}
+/* Run / Check stays on screen while its cell is: pinned under the pane top while results
+   scroll, pinned to the pane bottom while long code does. Never under the site header. */
+.rx .workspace-bounded .rx-work .rx-cell-foot {
+  position: sticky; top: -20px; bottom: 0; z-index: 2; background: var(--rx-bg);
+}
+/* Sticks to the pane's top edge: minus the pane's own top padding (none on projects). */
+.rx .workspace-bounded.project-contract .rx-work .rx-cell-foot { top: 0; }
+.rx .workspace-bounded > .rx-task-split > .rx-work { scroll-padding-block: 64px 64px; }
+.rx .workspace-bounded .rx-work .rx-result { max-height: none; overflow: visible; }
+@media (max-width: 899px) {
+  .rx .workspace-bounded > .rx-task-split { grid-template-columns: minmax(0, 1fr); }
+  .rx .workspace-bounded > .rx-task-split > .rx-brief {
+    border-right: 0; border-bottom: 1px solid var(--rx-line); padding: 12px;
+  }
+  .rx .workspace-bounded > .rx-task-split > .rx-work { padding: 12px; border-top: 0; }
+  .rx .workspace-bounded.project-contract { padding: 12px 8px 8px; }
+}
+/* Phones, tablets and short screens scroll as one page: the instructions, then the work.
+   Only long code scrolls inside its editor. Run/Check sits under the editor: pinned to the
+   screen bottom it would cover the code being typed and the instructions being read. */
+@media (max-width: 899px), (max-height: 600px) {
+  .rx:has(.workspace-bounded) { height: auto; min-height: 100dvh; overflow: visible; }
+  .rx:has(.workspace-bounded) > .rx-main,
+  .rx .workspace-bounded,
+  .rx .workspace-bounded > .rx-task { flex: 0 0 auto; height: auto; overflow: visible; }
+  .rx .workspace-bounded > .rx-task-split {
+    flex: none; height: auto; grid-template-rows: auto;
+  }
+  .rx .workspace-bounded > .rx-task-split > :is(.rx-brief, .rx-work) {
+    overflow: visible; overscroll-behavior: auto; scrollbar-gutter: auto;
+  }
+  .rx .workspace-bounded .rx-work .rx-cell-foot { position: static; }
+}
+
+/* ── Batch 5 learner UX ─────────────────────────────────────────────── */
+/* Next after a pass: a clear way on, without leaving the result. */
+.rx-next { display: flex; flex-wrap: wrap; gap: 8px; padding: 4px 14px 10px; }
+.rx-quiz + div + .rx-next, .rx-lesson-work [role="tabpanel"] > .rx-next { padding: 10px 0 0; }
+.rx-next .rx-btn { height: auto; min-height: 34px; padding: 6px 12px; white-space: normal; text-align: left; }
+
+/* Practice question list: the /sql/practice page and the All questions drawer. */
+.rx-qindex { display: flex; flex-direction: column; min-height: 0; }
+.rx-qindex-list { list-style: none; margin: 0; padding: 0; }
+.rx-qindex-list a { display: grid; grid-template-columns: 18px 2.4em minmax(0, 1fr); gap: 8px; align-items: baseline; padding: 8px; border-radius: 6px; font-size: 14px; }
+.rx-qindex-list a:hover, .rx-qindex-list a[aria-current="page"] { background: var(--rx-amber-soft); }
+.rx-qindex-list .g { color: var(--rx-faint); }
+.rx-qindex-list .g.ok { color: var(--rx-ok); }
+.rx-qindex-list .n { font-size: 12px; color: var(--rx-faint); }
+.rx-qindex-list .t { min-width: 0; color: var(--rx-ink); }
+.rx-qindex-list .meta { display: block; font-size: 12px; color: var(--rx-dim); }
+.rx-drawer .rx-qindex { flex: 1 1 auto; padding: 0 8px 8px; overflow: auto; min-height: 0; }
+.rx-drawer .rx-qindex-list a { padding: 6px; }
+
+/* Project stages: number, done mark and title; the current stage is filled. */
+.project-stage-nav > button { flex: 0 0 auto; gap: 6px; min-width: 36px; max-width: 164px; padding: 0 10px; }
+.project-stage-nav > button .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 500; }
+.project-stage-nav > button .ok { color: var(--rx-ok); font-weight: 700; }
+.project-stage-nav > button[aria-current] .ok { color: inherit; }
+.project-stage-nav > button[data-done]:not([aria-current]) { border-color: color-mix(in srgb, var(--rx-ok) 45%, var(--rx-line)); }
+@media (max-width: 1279px) { .project-stage-nav > button:not([aria-current]) .t { display: none; } }
+@media (max-width: 700px) { .project-stage-nav > button { min-width: 34px; padding: 0 8px; } .project-stage-nav > button .t { display: none; } }
+.project-verdict:not(:empty) { margin: 12px 0 4px; padding: 10px 12px; border: 1px solid var(--rx-line); border-radius: 8px; background: var(--rx-surface); }
+.project-verdict p { margin: 0; }
+.project-verdict p + p { margin-top: 6px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.project-verdict .project-check-pass { font-weight: 600; }
+.project-check-fail { color: var(--rx-ink); }
+.project-continue-reason { margin: 0 0 10px; }
+.rx-project-nav:has(.project-continue-reason) { flex-direction: column; align-items: flex-end; }
+.rx-project .rx-brief .rx-project-nav:has(.project-continue-reason) { align-items: flex-start; }
+.project-blockers { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 6px; text-align: right; }
+.project-blockers .rx-link { white-space: normal; text-decoration: underline; text-underline-offset: 2px; }
+.project-complete-mark { margin: 0; font-size: 28px; color: var(--rx-ok); }
+.project-complete-recap { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 12px 0 0; padding: 0; list-style: none; color: var(--rx-dim); font-size: 14px; }
+.project-actions .rx-btn { height: auto; min-height: 34px; white-space: normal; }
+
+/* Tools: results get the room once there are results; the editor keeps its own height. */
+@media (min-width: 1200px) {
+  .rx-lesson .rx-tool-work .rx-cell:has(> .rx-result) .rx-editor { flex: 0 0 auto; }
+  .rx-lesson .rx-tool-work .rx-cell > .rx-result { flex: 1 1 auto; max-height: none; min-height: 120px; }
+}
+
+/* SQL Datasets: what to watch for. */
+.rx-ds-watch { display: grid; border: 1px solid var(--rx-line); border-radius: 10px; background: var(--rx-surface); overflow: hidden; }
+.rx-ds-watch-group { padding: 12px 16px; }
+.rx-ds-watch-group + .rx-ds-watch-group { border-top: 1px solid var(--rx-line); }
+.rx-ds-watch-title { margin: 0 0 6px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--rx-amber-ink); }
+.rx-ds-watch-group ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.rx-ds-watch-group li { position: relative; display: flex; justify-content: space-between; gap: 12px; padding-left: 16px; font-size: 14.5px; line-height: 1.5; color: var(--rx-ink); }
+.rx-ds-watch-n { flex: none; font-size: 12.5px; color: var(--rx-dim); }
+.rx-ds-watch-group li::before { content: ""; position: absolute; left: 2px; top: 0.62em; width: 6px; height: 6px; border-radius: 50%; background: var(--rx-amber); }
+.rx-ds-watch-group .rx-btn { margin: 8px 0 0 -8px; height: auto; padding: 4px 8px; font-size: 13px; }
+
+/* Small dialogs (name a query or file, confirm a delete), shared by the SQL and Python tools. */
+.pt-problem { color: var(--rx-bad); font-size: 14px; margin: 8px 0; }
+.pt-modal { border: 1px solid var(--rx-line-strong); border-radius: 12px; padding: 20px 22px; width: min(440px, calc(100vw - 32px)); background: var(--rx-surface); color: var(--rx-ink); box-shadow: var(--rx-shadow); }
+.pt-modal::backdrop { background: rgb(0 0 0 / 0.35); }
+.pt-modal h2 { font-size: 18px; margin: 0 0 14px; }
+.pt-modal p { font-size: 15px; }
+.pt-field { display: grid; gap: 6px; margin: 0 0 14px; border: 0; padding: 0; font-size: 14px; }
+.pt-field > span, .pt-field legend { font-weight: 600; font-size: 13px; padding: 0; margin-bottom: 6px; }
+.pt-field select, .pt-field input { height: 36px; padding: 0 10px; border: 1px solid var(--rx-line-strong); border-radius: 6px; background: var(--rx-bg); color: inherit; font: 14px var(--rx-sans); }
+.pt-field label { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+.pt-modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
+.rx-btn.pt-danger { color: var(--rx-bad); border-color: var(--rx-bad); }
+.pt-modal { margin: auto; }
+
+/* SQL Playground: saved query tabs on top of the editor. */
+.rx-sqltabs { display: flex; overflow-x: auto; margin-top: 14px; background: var(--ide-chrome); border: 1px solid var(--rx-line); border-bottom: 0; border-radius: 8px 8px 0 0; }
+.rx-sqltabs button { border: 0; border-right: 1px solid var(--ide-border); border-bottom: 2px solid transparent; background: none; color: var(--ide-muted); font: 12px var(--rx-mono); padding: 7px 12px; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; }
+.rx-sqltabs button[aria-selected="true"] { color: var(--ide-fg); background: var(--ide-bg); border-bottom-color: var(--rx-amber); }
+.rx-sqltabs + .rx-cell { margin-top: 0; border-top-left-radius: 0; border-top-right-radius: 0; }
+.rx-ds-usage a { color: var(--rx-ink); text-decoration: underline; text-decoration-color: var(--rx-line-strong); text-underline-offset: 3px; }
+.rx-ds-usage a:hover { text-decoration-color: var(--rx-amber); }
+/* SQL Datasets: where the course uses the dataset, in the right column. */
+.rx-lesson .rx-lesson-work.rx-ds-side { overflow: auto; padding-top: 28px; }
+.rx-ds-side .rx-ds-usage { margin-top: 12px; }
+
+/*
+ * Side-by-side examples (Compare Syntax, Query Performance): the work column scrolls as one page instead of
+ * sharing its height between editors, and the examples being compared get one equal row height on desktop.
+ */
+.rx-equal-rows { display: grid; gap: 14px; margin: 8px 0 0; }
+.rx-equal-rows > .rx-cell { margin: 0; }
+@media (min-width: 1200px) {
+  .rx-equal-rows { grid-auto-rows: 1fr; }
+  .rx-lesson .rx-lesson-work.rx-stack-work { overflow: auto; padding-top: 28px; }
+  .rx-lesson .rx-lesson-work.rx-stack-work > * { flex: none; max-height: none; }
+  .rx-lesson .rx-lesson-work.rx-stack-work .rx-cell { flex: none; min-height: 0; overflow: visible; }
+}
+.rx-ds-credit { margin-top: 36px; padding-top: 12px; border-top: 1px solid var(--rx-line); }
+.rx-ds-credit-stacked { display: none; }
+@media (max-width: 1199px) {
+  .rx-ds-credit-side { display: none; }
+  .rx-ds-credit-stacked { display: block; }
+}

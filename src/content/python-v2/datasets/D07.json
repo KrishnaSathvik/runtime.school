@@ -1,0 +1,975 @@
+{
+ "id": "D07",
+ "title": "NOAA Daily Weather",
+ "version": 1,
+ "seed": null,
+ "description": "Real daily weather observations from 100 U.S. airport weather stations, 2022–2024: temperatures, precipitation, snow and wind, from NOAA’s Global Historical Climatology Network (GHCN-Daily). Gaps are real: when a station didn’t report a measurement, it’s empty.",
+ "licence": {
+  "name": "U.S. government work (public domain); credit NOAA NCEI",
+  "status": "cleared"
+ },
+ "window": [
+  "2022-01-01",
+  "2024-12-31"
+ ],
+ "generator": "datasets/python/D07/dataset.mjs from datasets/weather/extract",
+ "source": "NOAA NCEI GHCN-Daily, daily-summaries via https://www.ncei.noaa.gov/access/services/data/v1, retrieved 2026-10-15 (datasets/weather/source.json)",
+ "tables": {
+  "cities": {
+   "description": "A city with weather coverage.",
+   "primaryKey": [
+    "city_id"
+   ],
+   "foreignKeys": [],
+   "columns": [
+    {
+     "name": "city_id",
+     "type": "integer",
+     "description": "City ID",
+     "nullable": false
+    },
+    {
+     "name": "city_name",
+     "type": "text",
+     "description": "City name",
+     "nullable": false
+    },
+    {
+     "name": "state_code",
+     "type": "text",
+     "description": "Two-letter state",
+     "nullable": false
+    },
+    {
+     "name": "latitude",
+     "type": "decimal",
+     "description": "Latitude",
+     "nullable": false
+    },
+    {
+     "name": "longitude",
+     "type": "decimal",
+     "description": "Longitude",
+     "nullable": false
+    },
+    {
+     "name": "land_area_sq_mi",
+     "type": "decimal",
+     "description": "Land area, square miles",
+     "nullable": false
+    }
+   ]
+  },
+  "stations": {
+   "description": "A weather station, usually at an airport. A city can have more than one.",
+   "primaryKey": [
+    "station_id"
+   ],
+   "foreignKeys": [
+    {
+     "column": "city_id",
+     "references": "cities.city_id"
+    }
+   ],
+   "columns": [
+    {
+     "name": "station_id",
+     "type": "text",
+     "description": "Weather station ID",
+     "nullable": false
+    },
+    {
+     "name": "station_name",
+     "type": "text",
+     "description": "Station name",
+     "nullable": false
+    },
+    {
+     "name": "city_id",
+     "type": "integer",
+     "description": "City the station represents",
+     "nullable": false
+    },
+    {
+     "name": "is_primary",
+     "type": "integer",
+     "description": "1 for the station nearest the city centre",
+     "nullable": false
+    },
+    {
+     "name": "latitude",
+     "type": "decimal",
+     "description": "Latitude",
+     "nullable": false
+    },
+    {
+     "name": "longitude",
+     "type": "decimal",
+     "description": "Longitude",
+     "nullable": false
+    },
+    {
+     "name": "elevation_m",
+     "type": "decimal",
+     "description": "Elevation, metres",
+     "nullable": false
+    }
+   ]
+  },
+  "daily_weather": {
+   "description": "One day at one station. A day the station didn’t report has no row.",
+   "primaryKey": [
+    "station_id",
+    "observation_date"
+   ],
+   "foreignKeys": [
+    {
+     "column": "station_id",
+     "references": "stations.station_id"
+    }
+   ],
+   "columns": [
+    {
+     "name": "station_id",
+     "type": "text",
+     "description": "Station",
+     "nullable": false
+    },
+    {
+     "name": "observation_date",
+     "type": "date",
+     "description": "Local observation date",
+     "nullable": false
+    },
+    {
+     "name": "tmax_c",
+     "type": "decimal",
+     "description": "Maximum temperature, °C",
+     "nullable": true
+    },
+    {
+     "name": "tmin_c",
+     "type": "decimal",
+     "description": "Minimum temperature, °C",
+     "nullable": true
+    },
+    {
+     "name": "precipitation_mm",
+     "type": "decimal",
+     "description": "Precipitation, mm (0 with precip_trace = 1 means a trace)",
+     "nullable": true
+    },
+    {
+     "name": "precip_trace",
+     "type": "integer",
+     "description": "1 when precipitation was too small to measure",
+     "nullable": false
+    },
+    {
+     "name": "snowfall_mm",
+     "type": "decimal",
+     "description": "Snowfall, mm; often not reported",
+     "nullable": true
+    },
+    {
+     "name": "snow_depth_mm",
+     "type": "decimal",
+     "description": "Snow depth, mm; often not reported",
+     "nullable": true
+    },
+    {
+     "name": "avg_wind_speed_ms",
+     "type": "decimal",
+     "description": "Average wind speed, m/s",
+     "nullable": true
+    },
+    {
+     "name": "peak_gust_ms",
+     "type": "decimal",
+     "description": "Fastest 2-minute wind, m/s",
+     "nullable": true
+    }
+   ]
+  }
+ },
+ "editions": {
+  "preview": {
+   "ref": "D07@preview.1",
+   "files": [
+    {
+     "path": "cities.csv",
+     "table": "cities",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 1,
+     "bytes": 110,
+     "sha256": "bbcc98aa8ce44b5c85ddb2f4f857fa788be78c3992c1e25c84917cd7faf8b303",
+     "url": "/datasets/python/D07/preview.1/cities.csv"
+    },
+    {
+     "path": "stations.csv",
+     "table": "stations",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 1,
+     "bytes": 136,
+     "sha256": "76119df4474ab5686c451c83de5223adfff32ff3b01e9018e62928119b65614b",
+     "url": "/datasets/python/D07/preview.1/stations.csv"
+    },
+    {
+     "path": "daily_weather.csv",
+     "table": "daily_weather",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 15,
+     "bytes": 875,
+     "sha256": "4201f9d0503a71425add95aa12a5f6613794ae288696d8e89770d337a2e56c63",
+     "url": "/datasets/python/D07/preview.1/daily_weather.csv"
+    }
+   ],
+   "quality": [],
+   "profile": {
+    "cities": {
+     "city_id": {
+      "nulls": 0,
+      "distinct": 1,
+      "min": 47,
+      "max": 47,
+      "mean": 47
+     },
+     "city_name": {
+      "nulls": 0,
+      "distinct": 1
+     },
+     "state_code": {
+      "nulls": 0,
+      "distinct": 1
+     },
+     "latitude": {
+      "nulls": 0,
+      "distinct": 1,
+      "min": 47.502518,
+      "max": 47.502518,
+      "mean": 47.5
+     },
+     "longitude": {
+      "nulls": 0,
+      "distinct": 1,
+      "min": -111.29997,
+      "max": -111.29997,
+      "mean": -111.3
+     },
+     "land_area_sq_mi": {
+      "nulls": 0,
+      "distinct": 1,
+      "min": 23.132,
+      "max": 23.132,
+      "mean": 23.13
+     }
+    },
+    "stations": {
+     "station_id": {
+      "nulls": 0,
+      "distinct": 1
+     },
+     "station_name": {
+      "nulls": 0,
+      "distinct": 1
+     },
+     "city_id": {
+      "nulls": 0,
+      "distinct": 1,
+      "min": 47,
+      "max": 47,
+      "mean": 47
+     },
+     "is_primary": {
+      "nulls": 0,
+      "distinct": 1,
+      "min": 1,
+      "max": 1,
+      "mean": 1
+     },
+     "latitude": {
+      "nulls": 0,
+      "distinct": 1,
+      "min": 47.4733,
+      "max": 47.4733,
+      "mean": 47.47
+     },
+     "longitude": {
+      "nulls": 0,
+      "distinct": 1,
+      "min": -111.3828,
+      "max": -111.3828,
+      "mean": -111.38
+     },
+     "elevation_m": {
+      "nulls": 0,
+      "distinct": 1,
+      "min": 1117.7,
+      "max": 1117.7,
+      "mean": 1117.7
+     }
+    },
+    "daily_weather": {
+     "station_id": {
+      "nulls": 0,
+      "distinct": 1
+     },
+     "observation_date": {
+      "nulls": 0,
+      "distinct": 15,
+      "min": "2024-01-01",
+      "max": "2024-01-15"
+     },
+     "tmax_c": {
+      "nulls": 0,
+      "distinct": 13,
+      "min": -29.9,
+      "max": 7.2,
+      "mean": -5.21
+     },
+     "tmin_c": {
+      "nulls": 0,
+      "distinct": 13,
+      "min": -38.2,
+      "max": -3.2,
+      "mean": -17.79
+     },
+     "precipitation_mm": {
+      "nulls": 0,
+      "distinct": 5,
+      "min": 0,
+      "max": 2.5,
+      "mean": 0.44
+     },
+     "precip_trace": {
+      "nulls": 0,
+      "distinct": 2,
+      "min": 0,
+      "max": 1,
+      "mean": 0.07
+     },
+     "snowfall_mm": {
+      "nulls": 0,
+      "distinct": 5,
+      "min": 0,
+      "max": 61,
+      "mean": 7.47
+     },
+     "snow_depth_mm": {
+      "nulls": 0,
+      "distinct": 3,
+      "min": 0,
+      "max": 50,
+      "mean": 14.67
+     },
+     "avg_wind_speed_ms": {
+      "nulls": 0,
+      "distinct": 14,
+      "min": 1.6,
+      "max": 9.7,
+      "mean": 4.68
+     },
+     "peak_gust_ms": {
+      "nulls": 0,
+      "distinct": 11,
+      "min": 3.6,
+      "max": 17,
+      "mean": 9.39
+     }
+    }
+   }
+  },
+  "starter": {
+   "ref": "D07@starter.1",
+   "files": [
+    {
+     "path": "cities.csv",
+     "table": "cities",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 3,
+     "bytes": 195,
+     "sha256": "479b80d6373ccb352b9cf0694c6195afee0b69e78509c0b345da24fffc72fb29",
+     "url": "/datasets/python/D07/starter.1/cities.csv"
+    },
+    {
+     "path": "stations.csv",
+     "table": "stations",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 3,
+     "bytes": 243,
+     "sha256": "e2f777cde2cfc2e5570ba9a62a8d70ee33d721608741ac537f96f92c8a961fae",
+     "url": "/datasets/python/D07/starter.1/stations.csv"
+    },
+    {
+     "path": "daily_weather.csv",
+     "table": "daily_weather",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 363,
+     "bytes": 17820,
+     "sha256": "a6e04cd2fc7ef1cb44dc386ddfeee94248d7fedf307ed91da606f12e8cefb387",
+     "url": "/datasets/python/D07/starter.1/daily_weather.csv"
+    }
+   ],
+   "quality": [],
+   "profile": {
+    "cities": {
+     "city_id": {
+      "nulls": 0,
+      "distinct": 3,
+      "min": 19,
+      "max": 75,
+      "mean": 42
+     },
+     "city_name": {
+      "nulls": 0,
+      "distinct": 3
+     },
+     "state_code": {
+      "nulls": 0,
+      "distinct": 3
+     },
+     "latitude": {
+      "nulls": 0,
+      "distinct": 3,
+      "min": 28.40865,
+      "max": 43.540696,
+      "mean": 36.55
+     },
+     "longitude": {
+      "nulls": 0,
+      "distinct": 3,
+      "min": -97.345836,
+      "max": -81.254805,
+      "mean": -91.78
+     },
+     "land_area_sq_mi": {
+      "nulls": 0,
+      "distinct": 3,
+      "min": 82.671,
+      "max": 162.941,
+      "mean": 118.95
+     }
+    },
+    "stations": {
+     "station_id": {
+      "nulls": 0,
+      "distinct": 3
+     },
+     "station_name": {
+      "nulls": 0,
+      "distinct": 3
+     },
+     "city_id": {
+      "nulls": 0,
+      "distinct": 3,
+      "min": 19,
+      "max": 75,
+      "mean": 42
+     },
+     "is_primary": {
+      "nulls": 0,
+      "distinct": 1,
+      "min": 1,
+      "max": 1,
+      "mean": 1
+     },
+     "latitude": {
+      "nulls": 0,
+      "distinct": 3,
+      "min": 28.4183,
+      "max": 43.5878,
+      "mean": 36.55
+     },
+     "longitude": {
+      "nulls": 0,
+      "distinct": 3,
+      "min": -97.4431,
+      "max": -81.3242,
+      "mean": -91.83
+     },
+     "elevation_m": {
+      "nulls": 0,
+      "distinct": 3,
+      "min": 27.1,
+      "max": 455.7,
+      "mean": 303.17
+     }
+    },
+    "daily_weather": {
+     "station_id": {
+      "nulls": 0,
+      "distinct": 3
+     },
+     "observation_date": {
+      "nulls": 0,
+      "distinct": 121,
+      "min": "2024-01-01",
+      "max": "2024-04-30"
+     },
+     "tmax_c": {
+      "nulls": 0,
+      "distinct": 80,
+      "min": -22.1,
+      "max": 33.9,
+      "mean": 16.05
+     },
+     "tmin_c": {
+      "nulls": 0,
+      "distinct": 79,
+      "min": -28.2,
+      "max": 22.2,
+      "mean": 3.8
+     },
+     "precipitation_mm": {
+      "nulls": 0,
+      "distinct": 40,
+      "min": 0,
+      "max": 41.7,
+      "mean": 1.39
+     },
+     "precip_trace": {
+      "nulls": 0,
+      "distinct": 2,
+      "min": 0,
+      "max": 1,
+      "mean": 0.16
+     },
+     "snowfall_mm": {
+      "nulls": 0,
+      "distinct": 16,
+      "min": 0,
+      "max": 267,
+      "mean": 2.07
+     },
+     "snow_depth_mm": {
+      "nulls": 0,
+      "distinct": 10,
+      "min": 0,
+      "max": 230,
+      "mean": 14.19
+     },
+     "avg_wind_speed_ms": {
+      "nulls": 0,
+      "distinct": 79,
+      "min": 0.9,
+      "max": 11.9,
+      "mean": 4.71
+     },
+     "peak_gust_ms": {
+      "nulls": 0,
+      "distinct": 28,
+      "min": 4,
+      "max": 19.7,
+      "mean": 9.55
+     }
+    }
+   }
+  },
+  "standard": {
+   "ref": "D07@standard.1",
+   "files": [
+    {
+     "path": "cities.csv",
+     "table": "cities",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 20,
+     "bytes": 930,
+     "sha256": "5638be1108f5731bc0925e044d9cf1296a9bfbbf254eb1320f345ebdb49dfd8d",
+     "url": "/datasets/python/D07/standard.1/cities.csv"
+    },
+    {
+     "path": "stations.csv",
+     "table": "stations",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 20,
+     "bytes": 1373,
+     "sha256": "32986eebbd0413daa14e6867fb28fa40884f4ad0ecb6c8658e6617d352f15c74",
+     "url": "/datasets/python/D07/standard.1/stations.csv"
+    },
+    {
+     "path": "daily_weather.csv",
+     "table": "daily_weather",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 7320,
+     "bytes": 354595,
+     "sha256": "c3ae4b7127bf8aab77df904c2e257ec1509006f305b53c3161d99a2ab0b24c0e",
+     "url": "/datasets/python/D07/standard.1/daily_weather.csv"
+    },
+    {
+     "path": "daily_weather.parquet",
+     "table": "daily_weather",
+     "layer": "clean",
+     "format": "parquet",
+     "rows": 7320,
+     "bytes": 36311,
+     "sha256": "5173d06161269e71550f856f8d056cd602ba3a2423afa0dc82b7f6ac8d955b97",
+     "url": "/datasets/python/D07/standard.1/daily_weather.parquet",
+     "from": "c3ae4b7127bf8aab77df904c2e257ec1509006f305b53c3161d99a2ab0b24c0e"
+    }
+   ],
+   "quality": [],
+   "profile": {
+    "cities": {
+     "city_id": {
+      "nulls": 0,
+      "distinct": 20,
+      "min": 5,
+      "max": 96,
+      "mean": 44.35
+     },
+     "city_name": {
+      "nulls": 0,
+      "distinct": 20
+     },
+     "state_code": {
+      "nulls": 0,
+      "distinct": 17
+     },
+     "latitude": {
+      "nulls": 0,
+      "distinct": 20,
+      "min": 28.40865,
+      "max": 47.502518,
+      "mean": 39.45
+     },
+     "longitude": {
+      "nulls": 0,
+      "distinct": 20,
+      "min": -118.410825,
+      "max": -77.016517,
+      "mean": -98.59
+     },
+     "land_area_sq_mi": {
+      "nulls": 0,
+      "distinct": 20,
+      "min": 23.132,
+      "max": 518.331,
+      "mean": 139.62
+     }
+    },
+    "stations": {
+     "station_id": {
+      "nulls": 0,
+      "distinct": 20
+     },
+     "station_name": {
+      "nulls": 0,
+      "distinct": 20
+     },
+     "city_id": {
+      "nulls": 0,
+      "distinct": 20,
+      "min": 5,
+      "max": 96,
+      "mean": 44.35
+     },
+     "is_primary": {
+      "nulls": 0,
+      "distinct": 1,
+      "min": 1,
+      "max": 1,
+      "mean": 1
+     },
+     "latitude": {
+      "nulls": 0,
+      "distinct": 20,
+      "min": 28.4183,
+      "max": 47.4733,
+      "mean": 39.45
+     },
+     "longitude": {
+      "nulls": 0,
+      "distinct": 20,
+      "min": -118.4472,
+      "max": -77.0344,
+      "mean": -98.61
+     },
+     "elevation_m": {
+      "nulls": 0,
+      "distinct": 20,
+      "min": 4,
+      "max": 1887.6,
+      "mean": 582.64
+     }
+    },
+    "daily_weather": {
+     "station_id": {
+      "nulls": 0,
+      "distinct": 20
+     },
+     "observation_date": {
+      "nulls": 0,
+      "distinct": 366,
+      "min": "2024-01-01",
+      "max": "2024-12-31"
+     },
+     "tmax_c": {
+      "nulls": 26,
+      "distinct": 127,
+      "min": -29.9,
+      "max": 46.1,
+      "mean": 20.28
+     },
+     "tmin_c": {
+      "nulls": 18,
+      "distinct": 135,
+      "min": -38.2,
+      "max": 32.8,
+      "mean": 7.99
+     },
+     "precipitation_mm": {
+      "nulls": 15,
+      "distinct": 171,
+      "min": 0,
+      "max": 109,
+      "mean": 1.77
+     },
+     "precip_trace": {
+      "nulls": 0,
+      "distinct": 2,
+      "min": 0,
+      "max": 1,
+      "mean": 0.12
+     },
+     "snowfall_mm": {
+      "nulls": 1020,
+      "distinct": 56,
+      "min": 0,
+      "max": 259,
+      "mean": 1.53
+     },
+     "snow_depth_mm": {
+      "nulls": 1067,
+      "distinct": 21,
+      "min": 0,
+      "max": 360,
+      "mean": 6.54
+     },
+     "avg_wind_speed_ms": {
+      "nulls": 3,
+      "distinct": 121,
+      "min": 0.2,
+      "max": 13.6,
+      "mean": 3.72
+     },
+     "peak_gust_ms": {
+      "nulls": 3,
+      "distinct": 48,
+      "min": 2.2,
+      "max": 27.7,
+      "mean": 8.74
+     }
+    }
+   }
+  },
+  "full": {
+   "ref": "D07@full.1",
+   "files": [
+    {
+     "path": "cities.csv",
+     "table": "cities",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 96,
+     "bytes": 4263,
+     "sha256": "d3768a8b16c33c64c8a1705ded92cb140405dbc34b929e0329fabf627e8ac13f",
+     "url": "/datasets/python/D07/full.1/cities.csv"
+    },
+    {
+     "path": "stations.csv",
+     "table": "stations",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 100,
+     "bytes": 6441,
+     "sha256": "c595bb2bc980883e2ad8b91842f77fca7af6bbf733477987a91187597a42062d",
+     "url": "/datasets/python/D07/full.1/stations.csv"
+    },
+    {
+     "path": "daily_weather.csv",
+     "table": "daily_weather",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 109214,
+     "bytes": 5233208,
+     "sha256": "213bb4c7d4da65ee3463dabf2e45abbb44f83c28002b602b2db7aba4e9588772",
+     "url": "/datasets/python/D07/full.1/daily_weather.csv"
+    },
+    {
+     "path": "daily_weather.parquet",
+     "table": "daily_weather",
+     "layer": "clean",
+     "format": "parquet",
+     "rows": 109214,
+     "bytes": 462491,
+     "sha256": "15b9fc996a5a3b43acf469b1a05e2d71c9a3ad5d8b25d595f1db98a7639badd5",
+     "url": "/datasets/python/D07/full.1/daily_weather.parquet",
+     "from": "213bb4c7d4da65ee3463dabf2e45abbb44f83c28002b602b2db7aba4e9588772"
+    }
+   ],
+   "quality": [],
+   "profile": {
+    "cities": {
+     "city_id": {
+      "nulls": 0,
+      "distinct": 96,
+      "min": 1,
+      "max": 96,
+      "mean": 48.5
+     },
+     "city_name": {
+      "nulls": 0,
+      "distinct": 94
+     },
+     "state_code": {
+      "nulls": 0,
+      "distinct": 51
+     },
+     "latitude": {
+      "nulls": 0,
+      "distinct": 96,
+      "min": 21.324347,
+      "max": 64.836531,
+      "mean": 38.75
+     },
+     "longitude": {
+      "nulls": 0,
+      "distinct": 96,
+      "min": -157.84764,
+      "max": -70.185305,
+      "mean": -94.47
+     },
+     "land_area_sq_mi": {
+      "nulls": 0,
+      "distinct": 96,
+      "min": 10.303,
+      "max": 1707.004,
+      "mean": 164.76
+     }
+    },
+    "stations": {
+     "station_id": {
+      "nulls": 0,
+      "distinct": 100
+     },
+     "station_name": {
+      "nulls": 0,
+      "distinct": 100
+     },
+     "city_id": {
+      "nulls": 0,
+      "distinct": 96,
+      "min": 1,
+      "max": 96,
+      "mean": 47.92
+     },
+     "is_primary": {
+      "nulls": 0,
+      "distinct": 2,
+      "min": 0,
+      "max": 1,
+      "mean": 0.96
+     },
+     "latitude": {
+      "nulls": 0,
+      "distinct": 100,
+      "min": 21.3239,
+      "max": 64.8031,
+      "mean": 38.78
+     },
+     "longitude": {
+      "nulls": 0,
+      "distinct": 100,
+      "min": -157.9394,
+      "max": -70.3045,
+      "mean": -94.16
+     },
+     "elevation_m": {
+      "nulls": 0,
+      "distinct": 92,
+      "min": 0.9,
+      "max": 1887.6,
+      "mean": 318.91
+     }
+    },
+    "daily_weather": {
+     "station_id": {
+      "nulls": 0,
+      "distinct": 100
+     },
+     "observation_date": {
+      "nulls": 0,
+      "distinct": 1096,
+      "min": "2022-01-01",
+      "max": "2024-12-31"
+     },
+     "tmax_c": {
+      "nulls": 168,
+      "distinct": 180,
+      "min": -38.8,
+      "max": 48.3,
+      "mean": 20.46
+     },
+     "tmin_c": {
+      "nulls": 209,
+      "distinct": 188,
+      "min": -45.5,
+      "max": 36.7,
+      "mean": 9.25
+     },
+     "precipitation_mm": {
+      "nulls": 152,
+      "distinct": 405,
+      "min": 0,
+      "max": 290.3,
+      "mean": 2.38
+     },
+     "precip_trace": {
+      "nulls": 0,
+      "distinct": 2,
+      "min": 0,
+      "max": 1,
+      "mean": 0.12
+     },
+     "snowfall_mm": {
+      "nulls": 31552,
+      "distinct": 121,
+      "min": 0,
+      "max": 678,
+      "mean": 1.66
+     },
+     "snow_depth_mm": {
+      "nulls": 32682,
+      "distinct": 51,
+      "min": 0,
+      "max": 990,
+      "mean": 12.48
+     },
+     "avg_wind_speed_ms": {
+      "nulls": 4299,
+      "distinct": 148,
+      "min": 0,
+      "max": 19.5,
+      "mean": 3.52
+     },
+     "peak_gust_ms": {
+      "nulls": 4276,
+      "distinct": 106,
+      "min": 0.5,
+      "max": 51.4,
+      "mean": 8.32
+     }
+    }
+   }
+  }
+ }
+}

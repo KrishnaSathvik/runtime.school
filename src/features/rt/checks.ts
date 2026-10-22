@@ -1,4 +1,5 @@
 import type { ExecuteResponse } from "@/engine/sql-client";
+import { changedDataDetail, gradeFeedback, rowCountDetail, type FeedbackContext } from "./feedback";
 
 export type CheckState = "pass" | "fail" | "wait";
 export type VisibleCheck = { state: CheckState; label: string; detail?: string };
@@ -8,13 +9,15 @@ const same = (a: string[], b: string[]) =>
 
 /**
  * Turns the real grader's response into the checks a learner can see.
- * Nothing is simulated: every line reads a field the engine returned.
+ * Nothing is simulated: every line reads a field the engine returned. `ctx` only changes the
+ * wording of a failed line (see feedback.ts), never its state.
  */
-export function visibleChecks(res: ExecuteResponse, ordered: boolean): VisibleCheck[] {
+export function visibleChecks(res: ExecuteResponse, ordered: boolean, ctx: FeedbackContext = {}): VisibleCheck[] {
   const grade = res.grade;
   if (res.error) {
     return [
-      { state: "fail", label: "Runs without an error", detail: res.error },
+      // The output below explains the error once; repeating the raw text here added noise.
+      { state: "fail", label: "Runs without an error" },
       { state: "wait", label: "Returns the requested columns" },
       { state: "wait", label: "Returns the right rows" },
       { state: "wait", label: "Still correct on different data" },
@@ -32,11 +35,13 @@ export function visibleChecks(res: ExecuteResponse, ordered: boolean): VisibleCh
       label: `Returns columns ${expected.columns.join(", ")}`,
       detail: colsOk ? undefined : `Yours returned ${actual.columns.join(", ") || "no columns"}.`,
     });
-    const rowsOk = actual.values.length === expected.values.length;
+    const actualCount = res.total ?? actual.values.length;
+    const expectedCount = res.expectedTotal ?? expected.values.length;
+    const rowsOk = actualCount === expectedCount;
     out.push({
       state: !colsOk ? "wait" : rowsOk ? "pass" : "fail",
-      label: `Returns ${expected.values.length} row${expected.values.length === 1 ? "" : "s"}`,
-      detail: colsOk && !rowsOk ? `Yours returned ${actual.values.length}. Check filters, joins and duplicates.` : undefined,
+      label: `Returns ${expectedCount} row${expectedCount === 1 ? "" : "s"}`,
+      detail: colsOk && !rowsOk ? rowCountDetail(actualCount, expectedCount, ctx, actual) : undefined,
     });
     upstream = colsOk && rowsOk;
   }
@@ -47,7 +52,7 @@ export function visibleChecks(res: ExecuteResponse, ordered: boolean): VisibleCh
     out.push({
       state: !upstream ? "wait" : originalOk ? "pass" : "fail",
       label: ordered ? "Values match, in the requested order" : "Values match",
-      detail: upstream && !originalOk ? grade.message : undefined,
+      detail: upstream && !originalOk ? gradeFeedback(res, ordered, ctx) : undefined,
     });
     if (grade.planFailed) {
       out.push({ state: "fail", label: "Uses the required query plan", detail: grade.message });
@@ -55,7 +60,7 @@ export function visibleChecks(res: ExecuteResponse, ordered: boolean): VisibleCh
     out.push({
       state: grade.ok ? "pass" : grade.variationFailed ? "fail" : "wait",
       label: "Still correct on different data",
-      detail: grade.variationFailed ? grade.message : undefined,
+      detail: grade.variationFailed ? (/changed-data check failed/i.test(grade.message) ? changedDataDetail(res, ctx) : grade.message) : undefined,
     });
     for (const c of grade.checks ?? []) {
       out.push({ state: c.ok ? "pass" : "fail", label: c.label, detail: c.ok ? undefined : c.detail });

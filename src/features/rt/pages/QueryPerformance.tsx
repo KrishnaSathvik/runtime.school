@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import type { CanonicalDatasetId } from "@/data/datasets/learning-map";
 import { datasetName, isToolDataset, toolDataset } from "@/content/tools/datasets";
 import { comparisonCases, comparisonsFor, type PerformanceComparison } from "@/content/tools/performance";
-import { executeSql, type ExecuteResponse } from "@/engine/sql-client";
+import { executeSql, isEngineBootError, type ExecuteResponse } from "@/engine/sql-client";
 import { prettySql as formatSql } from "@/components/editor/pretty-sql";
 import { Shell } from "../Shell";
 import { Output } from "../Output";
@@ -30,6 +30,9 @@ function readPlan(o: Observed) {
 const stepTone = (s: string) => (/\bSEARCH\b|MULTI-INDEX/.test(s) ? "ok" : "");
 
 const APPROACH = ["A", "B"] as const;
+/** The comparison runs on its own, so a slow engine start is retried quietly instead of shown as an error. */
+const BOOT_RETRIES = 3;
+const pause = (ms: number) => new Promise((done) => setTimeout(done, ms));
 
 /** Two ways of writing one query on a canonical dataset, their real plans and output side by side. */
 export function QueryPerformance() {
@@ -49,11 +52,15 @@ export function QueryPerformance() {
     const id = ++run.current;
     setBusy(true);
     try {
-      // Retry if another query on the page interrupted this one.
-      for (let attempt = 0; attempt < 3; attempt++) {
+      // Retry if another query on the page interrupted this one, or the engine was slow to start.
+      let boots = 0;
+      for (let attempt = 0; attempt < 3 + BOOT_RETRIES; attempt++) {
         const r = await executeSql({ seed: toolDataset(p.datasetId).seed, query: "SELECT 1", allowWrites: true, compare: comparisonCases(p) });
         if (id !== run.current) return;
-        if (!r.superseded) { setRes({ id: p.id, value: r }); return; }
+        if (r.superseded) continue;
+        if (isEngineBootError(r.error) && boots < BOOT_RETRIES) { boots++; await pause(1000 * boots); if (id !== run.current) return; continue; }
+        setRes({ id: p.id, value: r });
+        return;
       }
     } catch (error) {
       if (id === run.current) setRes({ id: p.id, value: { error: error instanceof Error ? error.message : "Could not run this comparison." } });
@@ -119,31 +126,34 @@ export function QueryPerformance() {
             <p className="rx-label sec">how to read a query plan</p>
             <p className="rx-prose" style={{ marginTop: 0, fontSize: 15 }}>SCAN reads every row, or every entry of an index. SEARCH jumps to just the matching entries of an index; the terms in brackets show which columns the jump used. COVERING INDEX means the index alone answers the query and the table is not read. USE TEMP B-TREE is an extra step where SQLite sorts or groups rows itself. An index does not make every query faster: it helps when it lets SQLite skip work, and it costs space and slower writes.</p>
           </article>
-          <section className="rx-work rx-lesson-work" aria-label="Approaches A and B">
-            {approaches.map((k, i) => {
-              const o = r?.comparison?.[i];
-              const label = APPROACH[i];
-              return (
-                <section key={`${c.id}-${label}`} className="rx-cell" aria-label={`Approach ${label}`} style={i === 0 ? { marginTop: 0 } : undefined}>
-                  <div className="rx-cell-head"><span className="name">{label.toLowerCase()}.sql · {k.label}</span></div>
-                  {k.setup && <div className="rx-cell-in" style={{ paddingBottom: 0 }}><span className="p">setup›</span><SqlCode source={`${formatSql(k.setup)};`} label="Setup SQL" /></div>}
-                  <div className="rx-cell-in"><span className="p">sql›</span><SqlCode source={`${formatSql(k.query)};`} label="Query" /></div>
-                  {o ? (
-                    <>
-                      <div className="rx-out">
-                        <div className="rx-out-meta"><span>explain query plan</span></div>
-                        <ol className="rx-plan mono">
-                          {readPlan(o).steps.map((s, j) => <li key={j} className={stepTone(s)}>{s}</li>)}
-                        </ol>
-                      </div>
-                      <Output res={{ result: { ...o.result, values: o.result.values.slice(0, 5) }, total: o.total ?? o.result.values.length }} query={k.query} />
-                    </>
-                  ) : (
-                    <p className="rx-out-meta">{busy ? "running…" : "waiting for the comparison"}</p>
-                  )}
-                </section>
-              );
-            })}
+          <section className="rx-work rx-lesson-work rx-stack-work" aria-label="Approaches A and B">
+            {/* A and B get the same height, so the two plans and their rows line up for comparison. */}
+            <div className="rx-equal-rows" style={{ marginTop: 0 }}>
+              {approaches.map((k, i) => {
+                const o = r?.comparison?.[i];
+                const label = APPROACH[i];
+                return (
+                  <section key={`${c.id}-${label}`} className="rx-cell" aria-label={`Approach ${label}`}>
+                    <div className="rx-cell-head"><span className="name">{label} · {k.label}</span></div>
+                    {k.setup && <div className="rx-cell-in" style={{ paddingBottom: 0 }}><span className="p">setup›</span><SqlCode source={`${formatSql(k.setup)};`} label="Setup SQL" /></div>}
+                    <div className="rx-cell-in"><span className="p">sql›</span><SqlCode source={`${formatSql(k.query)};`} label="Query" /></div>
+                    {o ? (
+                      <>
+                        <div className="rx-out">
+                          <div className="rx-out-meta"><span>explain query plan</span></div>
+                          <ol className="rx-plan mono">
+                            {readPlan(o).steps.map((s, j) => <li key={j} className={stepTone(s)}>{s}</li>)}
+                          </ol>
+                        </div>
+                        <Output res={{ result: { ...o.result, values: o.result.values.slice(0, 5) }, total: o.total ?? o.result.values.length }} query={k.query} echo={false} />
+                      </>
+                    ) : (
+                      <p className="rx-out-meta">{busy ? "running…" : "waiting for the comparison"}</p>
+                    )}
+                  </section>
+                );
+              })}
+            </div>
           </section>
         </div>
       </div>

@@ -31,10 +31,14 @@ export function ProjectLibrary() {
                 const done = completedStageCount(project, drafts);
                 const complete = done === project.stages.length;
                 const started = done > 0 || Object.keys(drafts).some(k => k.startsWith(`sql-project-${project.id}-`));
-                const next = Math.max(0, project.stages.findIndex(s => !stageIsComplete(s, drafts, draftPrefix(project, s.id), project)));
+                const firstOpen = Math.max(0, project.stages.findIndex(s => !stageIsComplete(s, drafts, draftPrefix(project, s.id), project)));
+                // Continue opens the stage the learner was last on (as the workspace saves it), else the first unfinished one.
+                const saved = Number(drafts[draftPrefix(project, "current-stage")]);
+                const next = Number.isInteger(saved) && saved >= 0 && saved < project.stages.length ? saved : firstOpen;
+                const href = complete ? `${sqlProjectHref(project.id)}?stage=${project.stages[project.stages.length - 1].id}` : started ? `${sqlProjectHref(project.id)}?stage=${project.stages[next].id}` : sqlProjectHref(project.id);
                 return (
                   <li key={project.id}>
-                    <Link className="rx-project-card" href={sqlProjectHref(project.id)}>
+                    <Link className="rx-project-card" href={href}>
                       <span className="rx-project-card-title">{project.title}</span>
                       <span className="rx-project-card-meta">
                         {label} · {datasetName(project.datasetId)}

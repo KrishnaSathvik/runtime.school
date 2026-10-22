@@ -1,8 +1,8 @@
 /**
- * Product analytics (PostHog). Safe no-op when the key is missing or SSR.
- * Never send raw SQL or editor contents — only coarse ids and error kinds.
+ * Product analytics: PostHog and Google Analytics (gtag, loaded in app/layout.tsx) get the same events.
+ * Safe no-op on the server or when neither is set up. Never send raw SQL, Python or editor contents:
+ * only coarse ids and error kinds.
  */
-import posthog from "posthog-js";
 
 export type AnalyticsProps = Record<string, string | number | boolean | null | undefined>;
 
@@ -12,10 +12,15 @@ export function analyticsEnabled(): boolean {
   return typeof window !== "undefined" && !!KEY;
 }
 
+type Gtag = (command: "event", name: string, params?: AnalyticsProps) => void;
+
 export function track(event: string, props?: AnalyticsProps): void {
-  if (!analyticsEnabled()) return;
+  if (typeof window === "undefined") return;
   try {
-    posthog.capture(event, props);
+    // Loaded on first use (the provider has already initialised the same instance), so code that only records
+    // events, like the Python engine, doesn't pull PostHog in when it loads.
+    if (KEY) void import("posthog-js").then(({ default: posthog }) => posthog.capture(event, props)).catch(() => {});
+    (window as unknown as { gtag?: Gtag }).gtag?.("event", event, props);
   } catch {
     // Analytics must never break learning flows.
   }

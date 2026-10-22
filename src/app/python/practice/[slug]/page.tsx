@@ -1,12 +1,19 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { visibleQuestions } from "@/content/python-v2/content";
+import { QuestionScreen } from "@/features/python/Question";
 import { pythonRunnerEnabled } from "@/platform/python-runner";
-import { PracticeQuestion } from "@/features/py/Practice";
-import { pythonQuestions } from "@/content/python/practice";
-export const dynamicParams = false;
-export function generateStaticParams() { return pythonQuestions.map(x => ({slug:x.slug})); }
-export const metadata = { robots: { index:false, follow:false } };
-export default async function Page({params}: {params: Promise<{slug:string}>}) {
- const {slug} = await params;
- if (!pythonRunnerEnabled() || !pythonQuestions.some(x => x.slug === slug)) notFound();
- return <PracticeQuestion key={slug} slug={slug} />;
+import { pyQuestionMetadata } from "@/platform/python-seo";
+
+type Props = { params: Promise<{ slug: string }> };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  return pyQuestionMetadata(slug);
+}
+
+export default async function Page({ params }: Props) {
+  const { slug } = await params;
+  if (!pythonRunnerEnabled() || !visibleQuestions().some((q) => q.slug === slug)) notFound();
+  return <QuestionScreen key={slug} slug={slug} />;
 }

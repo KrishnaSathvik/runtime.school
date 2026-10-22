@@ -38,14 +38,6 @@ export function ExplanationView({ explanation }: { explanation: Explanation }) {
         <strong>Try this: </strong>
         <Rich text={explanation.next} />
       </p>
-      {explanation.technical && explanation.technical !== explanation.detail && (
-        <details className="mt-2">
-          <summary className="metadata cursor-pointer">Technical details</summary>
-          <pre className="sql-mono mt-1 whitespace-pre-wrap text-xs text-[var(--text-secondary)]">
-            {explanation.technical}
-          </pre>
-        </details>
-      )}
     </div>
   );
 }

@@ -1,4 +1,6 @@
 import { pythonRunnerEnabled } from "@/platform/python-runner";
+import { track } from "@/lib/analytics";
+import { createSandboxWorker } from "./sandbox";
 import type { PyValue, WireValue } from "./values";
 
 /**
@@ -17,27 +19,39 @@ export const PY_BOOT_TIMEOUT_MS = 30000;
 /** Loading data libraries (pandas, matplotlib, …) downloads and unpacks several MB the first time. */
 export const PY_PACKAGES_BOOT_TIMEOUT_MS = 120000;
 export const PY_RUN_TIMEOUT_MS = 5000;
+/** Each dataset download/hash check has a separate preparation deadline. */
+export const PY_MOUNT_TIMEOUT_MS = 60000;
 /** Characters of stdout + stderr kept per run. */
 export const PY_OUTPUT_LIMIT = 50000;
-export const PY_WORKER_URL = "/vendor/python-worker.mjs";
+/** Loaded inside the sandbox from /runner/ (a rewrite of public/vendor/). Not fetched by the page itself. */
+export const PY_WORKER_URL = "/runner/python-worker.mjs";
 
 /**
  * Libraries a lesson can load, all self-hosted and hash-checked (scripts/copy-pyodide.mjs).
  * `pyspark` is DuckDB's PySpark-compatible DataFrame API under the `pyspark` name, not Apache Spark.
  */
-export const PY_PACKAGES = ["numpy", "pandas", "matplotlib", "duckdb", "pyspark", "scikit-learn"] as const;
+export const PY_PACKAGES = ["numpy", "pandas", "matplotlib", "duckdb", "pyspark", "scikit-learn", "polars", "pyarrow", "tzdata"] as const;
 export type PyPackage = (typeof PY_PACKAGES)[number];
 
 export type PyStream = "stdout" | "stderr";
 /**
  * Printed text, a matplotlib figure (`text` is then a PNG data URL), or a table from display(df)
- * (`text` is then JSON for a PyTable).
+ * (`text` is then JSON for a PyTable). `stdin` is a line input() read, shown as the typed echo; it is only
+ * present when the run asked for `echoInput`, and it is never part of `stdout`.
  */
-export type PyOutputChunk = { stream: PyStream | "figure" | "table"; text: string };
+export type PyOutputChunk = { stream: PyStream | "stdin" | "figure" | "table"; text: string };
 /** A DataFrame or Series shown with display(): the first rows, as text cells (null = missing). */
 export type PyTable = { columns: string[]; dtypes: string[]; rows: (string | null)[][]; shape: [number, number]; index: string; series: boolean };
 /** A file the program created or changed in its working folder. */
 export type PyFile = { path: string; text: string; truncated?: boolean; changed?: boolean };
+/**
+ * A dataset edition file placed in the program's working folder before it runs (`path`, e.g. `data/orders.csv`).
+ * Fetched once by the page from `url`, checked against `sha256`, cached by hash, and handed to the worker as bytes:
+ * the worker itself never fetches data. Mounted files are never listed as program output.
+ */
+export type PyMount = { path: string; url: string; sha256: string };
+/** Total bytes of dataset files one run may mount. */
+export const PY_MOUNT_LIMIT = 64 * 1024 * 1024;
 
 export type PySyntaxError = {
   type: string;
@@ -48,9 +62,12 @@ export type PySyntaxError = {
   endColumn?: number | null;
   text: string;
 };
-export type PyRuntimeError = { type: string; message: string; line: number | null; traceback: string };
+export type PyRuntimeError = { type: string; message: string; line: number | null; traceback: string; /** The learner file the error is in, when not the entry file. */ file?: string | null };
 
-type Output = { stdout: string; stderr: string; output: PyOutputChunk[]; files?: PyFile[] };
+/** A binary file in the program's working folder (a Database Lab `.db`), passed in or read back after the run. */
+export type PyBlob = { path: string; bytes: ArrayBuffer };
+
+type Output = { stdout: string; stderr: string; output: PyOutputChunk[]; files?: PyFile[]; blobs?: PyBlob[] };
 
 /** What a Check asks the interpreter to report after the program runs. Never contains expected values. */
 export type PyProbe = {
@@ -101,12 +118,24 @@ export type PyStatus = "idle" | "loading" | "ready" | "running" | "failed";
 
 type WorkerLike = Pick<Worker, "postMessage" | "terminate" | "addEventListener" | "removeEventListener">;
 
-const PRODUCTION_HOSTS = new Set(["runtime.school", "www.runtime.school"]);
+/** Where a run happened, from the page address: learn, practice, project or the tool's name. Analytics only. */
+function surfaceHere(): string {
+  const m = typeof location === "undefined" ? null : /^\/python\/(?:tools\/)?([a-z-]+)/.exec(location.pathname);
+  return m ? (m[1] === "projects" ? "project" : m[1]) : "other";
+}
 
+/** One coarse event per finished run (never the code): run or check, how it ended, and the error type if any. */
+function trackRun(r: PyRunResult, check: boolean): void {
+  if (r.status === "superseded" || r.status === "unavailable") return;
+  const props = { subject: "python", surface: surfaceHere(), check, ok: r.status === "ok" };
+  track("code_run", props);
+  if (r.status === "runtime-error" || r.status === "syntax-error") track("code_error", { ...props, kind: r.error.type });
+  else if (r.status !== "ok") track("code_error", { ...props, kind: r.status });
+}
+
+/** Learner code runs only in the isolated sandbox, so the build's switch (platform/python-runner.ts) is the only gate. */
 function allowedHere(): boolean {
-  if (!pythonRunnerEnabled()) return false;
-  // Second guard: never execute on the public site, even if a build was misconfigured.
-  return !(typeof location !== "undefined" && PRODUCTION_HOSTS.has(location.hostname));
+  return pythonRunnerEnabled();
 }
 
 /** Stable key for a package set: sorted, unique, comma-separated ("" for core Python). */
@@ -114,8 +143,11 @@ export function packageKey(packages: readonly PyPackage[] = []): string {
   return [...new Set(packages)].sort().join(",");
 }
 
-let createWorker: (packages: string) => WorkerLike = (packages) =>
-  new Worker(packages ? `${PY_WORKER_URL}?packages=${packages}` : PY_WORKER_URL, { type: "module", name: "runtime-python" });
+/**
+ * Every interpreter runs in the isolated sandbox runner (an opaque-origin iframe; docs/python/runner-isolation.md).
+ * The same-origin worker at PY_WORKER_URL is loaded only inside that sandbox, never directly by the page.
+ */
+let createWorker: (packages: string) => WorkerLike = (packages) => createSandboxWorker(packages);
 let allowed: () => boolean = allowedHere;
 
 /** Test hooks. */
@@ -225,9 +257,72 @@ export function releasePython(): void {
   if (!active) setStatus("idle");
 }
 
+// ---- dataset mounts ----
+
+let fetchBytes: (url: string, signal?: AbortSignal) => Promise<ArrayBuffer> = async (url, signal) => {
+  const res = await fetch(url, { signal });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.arrayBuffer();
+};
+const mountCache = new Map<string, Promise<ArrayBuffer>>();
+
+/** Test hook. */
+export function __setMountFetcher(fetcher: (url: string, signal?: AbortSignal) => Promise<ArrayBuffer>): void {
+  fetchBytes = fetcher;
+  mountCache.clear();
+}
+
+async function sha256Hex(bytes: ArrayBuffer): Promise<string> {
+  const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
+  return Array.from(digest, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/** One verified copy per hash. A failed or mismatched download isn't cached, so a retry fetches again. */
+function loadMount(m: PyMount): Promise<ArrayBuffer> {
+  const key = m.sha256.toLowerCase();
+  let p = mountCache.get(key);
+  if (!p) {
+    const controller = new AbortController();
+    const download = Promise.resolve().then(() => fetchBytes(m.url, controller.signal)).then(async (bytes) => {
+      if ((await sha256Hex(bytes)) !== key) throw new Error(`${m.path} didn't match its published checksum`);
+      return bytes;
+    });
+    p = new Promise<ArrayBuffer>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        reject(new Error(`the dataset download timed out after ${PY_MOUNT_TIMEOUT_MS / 1000} seconds`));
+        controller.abort();
+      }, PY_MOUNT_TIMEOUT_MS);
+      download.then(bytes => { clearTimeout(timer); resolve(bytes); }, error => { clearTimeout(timer); reject(error); });
+    });
+    const pending = p;
+    p.catch(() => { if (mountCache.get(key) === pending) mountCache.delete(key); });
+    mountCache.set(key, p);
+  }
+  return p;
+}
+
+/** Start downloading a lesson's dataset files ahead of the first Run. */
+export function preloadMounts(mounts: readonly PyMount[]): void {
+  if (typeof window === "undefined" || !allowed()) return;
+  for (const m of mounts) loadMount(m).catch(() => {});
+}
+
+async function resolveMounts(mounts: readonly PyMount[], pending?: Map<string, Promise<ArrayBuffer>>): Promise<{ path: string; bytes: ArrayBuffer }[]> {
+  const all = await Promise.all(mounts.map(async (m) => {
+    const key = m.sha256.toLowerCase();
+    const request = loadMount(m);
+    pending?.set(key, request);
+    try { return { path: m.path, bytes: await request }; }
+    finally { if (pending?.get(key) === request) pending.delete(key); }
+  }));
+  const total = all.reduce((s, m) => s + m.bytes.byteLength, 0);
+  if (total > PY_MOUNT_LIMIT) throw new Error(`the dataset files are too large to load (${Math.round(total / 1e6)} MB)`);
+  return all;
+}
+
 // ---- execution ----
 
-type Active = { id: number; out: Output; current?: PyCaseRef; settle: (r: PyRunResult) => void };
+type Active = { id: number; operation?: symbol; out: Output; current?: PyCaseRef; settle: (r: PyRunResult) => void };
 let active: Active | null = null;
 let nextId = 1;
 
@@ -241,6 +336,8 @@ function makeNonce(): string {
 export async function runPython(
   code: string,
   opts: {
+    /** Optional caller identity: scoped Stop never interrupts a different caller. */
+    operation?: symbol;
     timeoutMs?: number;
     outputLimit?: number;
     stdin?: string;
@@ -249,6 +346,16 @@ export async function runPython(
     packages?: readonly PyPackage[];
     /** Text files written to the program's working folder before it runs (CSV, JSON, helper modules). */
     files?: Record<string, string>;
+    /** Dataset edition files, fetched and verified before the run clock starts. */
+    mounts?: readonly PyMount[];
+    /** Learner-owned binary files written to the working folder before the run (copied; the caller keeps its own). */
+    blobs?: readonly PyBlob[];
+    /** Read back every top-level file with one of these suffixes when the program ends (e.g. [".db"]). */
+    collect?: readonly string[];
+    /** The name the program runs as (default main.py), so a multi-file workspace can run any of its files. */
+    entry?: string;
+    /** Add each line input() reads to `output` as a `stdin` chunk, after its prompt, for a console transcript. */
+    echoInput?: boolean;
     onOutput?: (chunk: PyOutputChunk) => void;
   } = {},
 ): Promise<PyRunResult> {
@@ -265,12 +372,22 @@ export async function runPython(
   const result = new Promise<PyRunResult>((resolve) => (settle = resolve));
   const clock: { timer?: ReturnType<typeof setTimeout> } = {};
   let w: WorkerLike | null = null;
+  const pendingMounts = new Map<string, Promise<ArrayBuffer>>();
   const me: Active = {
     id,
+    operation: opts.operation,
     out,
     settle: (r) => {
       if (active !== me) return;
       active = null;
+      // A retry must not inherit a download abandoned by Stop/supersession. Do not abort
+      // shared fetches here: a preload/other consumer may still await them. Their own
+      // deadline aborts transport; identity checks protect a newer same-hash entry.
+      if (r.status === "stopped" || r.status === "superseded") {
+        for (const [key, request] of pendingMounts) {
+          if (mountCache.get(key) === request) mountCache.delete(key);
+        }
+      }
       clearTimeout(clock.timer);
       if (w) {
         w.removeEventListener("message", onMessage);
@@ -278,6 +395,7 @@ export async function runPython(
         w.terminate(); // single use, always
       }
       settle(r);
+      trackRun(r, !!opts.probe);
       // Warm the next interpreter so the next Run starts quickly.
       if (r.status !== "superseded") {
         setStatus("idle");
@@ -308,6 +426,12 @@ export async function runPython(
       const text = String(d.json);
       out.output.push({ stream: "table", text });
       opts.onOutput?.({ stream: "table", text });
+    } else if (d.type === "stdin") {
+      // What was typed, for the transcript only: stdout and stderr (and so grading) never see it.
+      if (!opts.echoInput) return;
+      const chunk: PyOutputChunk = { stream: "stdin", text: String(d.text) };
+      out.output.push(chunk);
+      opts.onOutput?.({ ...chunk });
     } else if (d.type === "output") {
       const stream: PyStream = d.stream === "stderr" ? "stderr" : "stdout";
       const chunk: PyOutputChunk = { stream, text: d.text };
@@ -321,20 +445,33 @@ export async function runPython(
     } else if (d.type === "done") {
       const r = d.result ?? {};
       if (Array.isArray(r.files)) out.files = r.files.filter((f: PyFile) => f && typeof f.path === "string" && typeof f.text === "string");
+      if (Array.isArray(r.blobs)) out.blobs = r.blobs.filter((b: PyBlob) => b && typeof b.path === "string" && b.bytes instanceof ArrayBuffer);
       if (r.status === "ok") me.settle({ ...out, status: "ok", durationMs: r.durationMs, ...(r.probe ? { probe: r.probe } : {}) });
       else if (r.status === "syntax-error")
         me.settle({ ...out, status: "syntax-error", durationMs: r.durationMs, error: { type: r.type, message: r.message, line: r.line ?? null, column: r.column ?? null, endLine: r.endLine ?? null, endColumn: r.endColumn ?? null, text: r.text ?? "" } });
       else if (r.status === "runtime-error")
-        me.settle({ ...out, status: "runtime-error", durationMs: r.durationMs, error: { type: r.type, message: r.message, line: r.line ?? null, traceback: r.traceback ?? "" } });
+        me.settle({ ...out, status: "runtime-error", durationMs: r.durationMs, error: { type: r.type, message: r.message, line: r.line ?? null, traceback: r.traceback ?? "", file: r.file ?? null } });
       else me.settle({ ...out, status: "crashed", message: r.message ?? "Python stopped unexpectedly." });
     }
   };
   const onError = () => me.settle({ ...out, status: "crashed", message: "Python stopped unexpectedly. Run your code again." });
 
+  // Datasets download while the interpreter boots; neither counts against the run clock.
+  const mounting = opts.mounts?.length ? resolveMounts(opts.mounts, pendingMounts) : Promise.resolve(undefined);
+  mounting.catch(() => {});
+  let mounts: { path: string; bytes: ArrayBuffer }[] | undefined;
   try {
     // Stop/supersede must return immediately, even while the interpreter is still loading.
     const started = await Promise.race([s.ready.then(() => true), result.then(() => false)]);
     if (!started) return result;
+    try {
+      const got = await Promise.race([mounting.then((m) => ({ m })), result.then(() => null)]);
+      if (!got) return result;
+      mounts = got.m;
+    } catch (err) {
+      if (active === me) me.settle({ ...out, status: "crashed", message: `Couldn't load the dataset: ${(err as Error).message}. Check your connection and run again.` });
+      return result;
+    }
   } catch (err) {
     if (active === me) {
       active = null;
@@ -350,13 +487,15 @@ export async function runPython(
   w.addEventListener("error", onError);
   const limitMs = opts.timeoutMs ?? PY_RUN_TIMEOUT_MS;
   clock.timer = setTimeout(() => me.settle({ ...out, status: "timeout", limitMs, case: me.current }), limitMs);
-  w.postMessage({ type: "run", id, nonce, code, stdin: opts.stdin ?? "", outputLimit: opts.outputLimit ?? PY_OUTPUT_LIMIT, ...(opts.probe ? { probe: opts.probe } : {}), ...(opts.files ? { files: opts.files } : {}) });
+  w.postMessage({ type: "run", id, nonce, code, stdin: opts.stdin ?? "", outputLimit: opts.outputLimit ?? PY_OUTPUT_LIMIT, ...(opts.probe ? { probe: opts.probe } : {}), ...(opts.files ? { files: opts.files } : {}), ...(mounts ? { mounts } : {}), ...(opts.blobs?.length ? { blobs: opts.blobs.map((b) => ({ path: b.path, bytes: b.bytes.slice(0) })) } : {}), ...(opts.collect?.length ? { collect: [...opts.collect] } : {}), ...(opts.entry ? { entry: opts.entry } : {}) });
   return result;
 }
 
 /** Stop the current run (if any). The interpreter is discarded and a fresh one warms up. */
-export function stopPython(): void {
-  if (!active) return;
+export function stopPython(): void;
+export function stopPython(operation: symbol): void;
+export function stopPython(operation?: symbol): void {
+  if (!active || (typeof operation === "symbol" && active.operation !== operation)) return;
   active.settle({ ...active.out, status: "stopped", case: active.current });
 }
 

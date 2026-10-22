@@ -1,0 +1,867 @@
+{
+ "id": "D15",
+ "title": "NASA Exoplanet Archive",
+ "version": 1,
+ "seed": null,
+ "description": "Every confirmed planet outside the solar system, from NASA’s Exoplanet Archive: how and when it was found, its orbit, size, mass and temperature, and its host star. Many measurements are missing, because they haven’t been made.",
+ "licence": {
+  "name": "NASA data, no copyright restrictions; acknowledgement requested",
+  "status": "cleared"
+ },
+ "window": [
+  "1992-01-01",
+  "2026-10-17"
+ ],
+ "generator": "datasets/python/D15/dataset.mjs from datasets/python/D15/extract",
+ "source": "NASA Exoplanet Archive TAP service, table pscomppars (datasets/python/D15/source.json)",
+ "attribution": "This research has made use of the NASA Exoplanet Archive, which is operated by the California Institute of Technology, under contract with the National Aeronautics and Space Administration under the Exoplanet Exploration Program.",
+ "tables": {
+  "planets": {
+   "description": "One confirmed exoplanet, with facts about the star it orbits.",
+   "primaryKey": [
+    "pl_name"
+   ],
+   "foreignKeys": [],
+   "columns": [
+    {
+     "name": "pl_name",
+     "type": "text",
+     "description": "Planet name",
+     "nullable": false
+    },
+    {
+     "name": "hostname",
+     "type": "text",
+     "description": "Host star name",
+     "nullable": false
+    },
+    {
+     "name": "sy_snum",
+     "type": "integer",
+     "description": "Number of stars in the system",
+     "nullable": true
+    },
+    {
+     "name": "sy_pnum",
+     "type": "integer",
+     "description": "Number of known planets in the system",
+     "nullable": true
+    },
+    {
+     "name": "discoverymethod",
+     "type": "text",
+     "description": "How the planet was found (Transit, Radial Velocity, …)",
+     "nullable": false
+    },
+    {
+     "name": "disc_year",
+     "type": "integer",
+     "description": "Year of discovery",
+     "nullable": true
+    },
+    {
+     "name": "disc_facility",
+     "type": "text",
+     "description": "Observatory or mission that found it",
+     "nullable": true
+    },
+    {
+     "name": "disc_telescope",
+     "type": "text",
+     "description": "Telescope used",
+     "nullable": true
+    },
+    {
+     "name": "pl_orbper",
+     "type": "decimal",
+     "description": "Orbital period, days",
+     "nullable": true
+    },
+    {
+     "name": "pl_orbsmax",
+     "type": "decimal",
+     "description": "Average distance from its star, astronomical units (Earth = 1)",
+     "nullable": true
+    },
+    {
+     "name": "pl_rade",
+     "type": "decimal",
+     "description": "Planet radius, Earth radii",
+     "nullable": true
+    },
+    {
+     "name": "pl_radj",
+     "type": "decimal",
+     "description": "Planet radius, Jupiter radii",
+     "nullable": true
+    },
+    {
+     "name": "pl_bmasse",
+     "type": "decimal",
+     "description": "Planet mass (or minimum mass), Earth masses",
+     "nullable": true
+    },
+    {
+     "name": "pl_bmassj",
+     "type": "decimal",
+     "description": "Planet mass (or minimum mass), Jupiter masses",
+     "nullable": true
+    },
+    {
+     "name": "pl_orbeccen",
+     "type": "decimal",
+     "description": "Orbital eccentricity (0 = circular)",
+     "nullable": true
+    },
+    {
+     "name": "pl_insol",
+     "type": "decimal",
+     "description": "Light received, relative to Earth (Earth = 1)",
+     "nullable": true
+    },
+    {
+     "name": "pl_eqt",
+     "type": "decimal",
+     "description": "Estimated temperature, kelvin",
+     "nullable": true
+    },
+    {
+     "name": "st_spectype",
+     "type": "text",
+     "description": "Host star spectral type",
+     "nullable": true
+    },
+    {
+     "name": "st_teff",
+     "type": "decimal",
+     "description": "Host star temperature, kelvin",
+     "nullable": true
+    },
+    {
+     "name": "st_rad",
+     "type": "decimal",
+     "description": "Host star radius, solar radii",
+     "nullable": true
+    },
+    {
+     "name": "st_mass",
+     "type": "decimal",
+     "description": "Host star mass, solar masses",
+     "nullable": true
+    },
+    {
+     "name": "st_met",
+     "type": "decimal",
+     "description": "Host star metallicity, dex",
+     "nullable": true
+    },
+    {
+     "name": "st_age",
+     "type": "decimal",
+     "description": "Host star age, billions of years",
+     "nullable": true
+    },
+    {
+     "name": "st_lum",
+     "type": "decimal",
+     "description": "Host star luminosity, log10 of the Sun’s",
+     "nullable": true
+    },
+    {
+     "name": "ra",
+     "type": "decimal",
+     "description": "Right ascension, degrees",
+     "nullable": true
+    },
+    {
+     "name": "dec",
+     "type": "decimal",
+     "description": "Declination, degrees",
+     "nullable": true
+    },
+    {
+     "name": "sy_dist",
+     "type": "decimal",
+     "description": "Distance from Earth, parsecs",
+     "nullable": true
+    },
+    {
+     "name": "sy_vmag",
+     "type": "decimal",
+     "description": "Brightness of the system in V band (magnitude; smaller is brighter)",
+     "nullable": true
+    }
+   ]
+  }
+ },
+ "editions": {
+  "preview": {
+   "ref": "D15@preview.1",
+   "files": [
+    {
+     "path": "planets.csv",
+     "table": "planets",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 25,
+     "bytes": 5973,
+     "sha256": "9f7fec67b7555be6ea27bc72e303be17cbd736969e420fa49bc83e25479c088b",
+     "url": "/datasets/python/D15/preview.1/planets.csv"
+    }
+   ],
+   "quality": [
+    {
+     "id": "missing_mass",
+     "description": "Planets with no mass estimate",
+     "count": 0
+    },
+    {
+     "id": "missing_radius",
+     "description": "Planets with no radius estimate",
+     "count": 0
+    },
+    {
+     "id": "missing_age",
+     "description": "Planets whose host star has no age",
+     "count": 6
+    },
+    {
+     "id": "host_inconsistent",
+     "description": "Planet rows whose host-star values differ from another planet of the same star",
+     "count": 0
+    }
+   ],
+   "profile": {
+    "planets": {
+     "pl_name": {
+      "nulls": 0,
+      "distinct": 25
+     },
+     "hostname": {
+      "nulls": 0,
+      "distinct": 24
+     },
+     "sy_snum": {
+      "nulls": 0,
+      "distinct": 3,
+      "min": 1,
+      "max": 3,
+      "mean": 1.28
+     },
+     "sy_pnum": {
+      "nulls": 0,
+      "distinct": 3,
+      "min": 1,
+      "max": 3,
+      "mean": 1.2
+     },
+     "discoverymethod": {
+      "nulls": 0,
+      "distinct": 3
+     },
+     "disc_year": {
+      "nulls": 0,
+      "distinct": 14,
+      "min": 1996,
+      "max": 2024,
+      "mean": 2013.4
+     },
+     "disc_facility": {
+      "nulls": 0,
+      "distinct": 15
+     },
+     "disc_telescope": {
+      "nulls": 0,
+      "distinct": 17
+     },
+     "pl_orbper": {
+      "nulls": 14,
+      "distinct": 11,
+      "min": 30.33,
+      "max": 1766.41,
+      "mean": 629.5
+     },
+     "pl_orbsmax": {
+      "nulls": 0,
+      "distinct": 25,
+      "min": 0.194,
+      "max": 7493,
+      "mean": 497.34
+     },
+     "pl_rade": {
+      "nulls": 0,
+      "distinct": 18,
+      "min": 11.209,
+      "max": 18.647,
+      "mean": 13.33
+     },
+     "pl_radj": {
+      "nulls": 0,
+      "distinct": 16,
+      "min": 1,
+      "max": 1.664,
+      "mean": 1.19
+     },
+     "pl_bmasse": {
+      "nulls": 0,
+      "distinct": 25,
+      "min": 273.32,
+      "max": 9534.85221,
+      "mean": 3470.95
+     },
+     "pl_bmassj": {
+      "nulls": 0,
+      "distinct": 25,
+      "min": 0.86,
+      "max": 30,
+      "mean": 10.86
+     },
+     "pl_orbeccen": {
+      "nulls": 14,
+      "distinct": 11,
+      "min": 0,
+      "max": 0.68,
+      "mean": 0.2
+     },
+     "pl_insol": {
+      "nulls": 2,
+      "distinct": 12,
+      "min": 0,
+      "max": 2001.2754,
+      "mean": 105.99
+     },
+     "pl_eqt": {
+      "nulls": 1,
+      "distinct": 23,
+      "min": 6.27,
+      "max": 2677,
+      "mean": 1086.8
+     },
+     "st_spectype": {
+      "nulls": 5,
+      "distinct": 18
+     },
+     "st_teff": {
+      "nulls": 2,
+      "distinct": 22,
+      "min": 2825,
+      "max": 29564,
+      "mean": 5134.91
+     },
+     "st_rad": {
+      "nulls": 2,
+      "distinct": 22,
+      "min": 0.203,
+      "max": 29.79,
+      "mean": 5.23
+     },
+     "st_mass": {
+      "nulls": 1,
+      "distinct": 23,
+      "min": 0.019,
+      "max": 2.78,
+      "mean": 0.88
+     },
+     "st_met": {
+      "nulls": 13,
+      "distinct": 11,
+      "min": -0.78,
+      "max": 0.43,
+      "mean": -0.08
+     },
+     "st_age": {
+      "nulls": 6,
+      "distinct": 17,
+      "min": 0.001,
+      "max": 7.4,
+      "mean": 1.95
+     },
+     "st_lum": {
+      "nulls": 2,
+      "distinct": 22,
+      "min": -2.59,
+      "max": 2.42951,
+      "mean": -0.22
+     },
+     "ra": {
+      "nulls": 0,
+      "distinct": 24,
+      "min": 15.8992489,
+      "max": 352.82415,
+      "mean": 190.87
+     },
+     "dec": {
+      "nulls": 0,
+      "distinct": 24,
+      "min": -81.6414894,
+      "max": 71.8239428,
+      "mean": 1.33
+     },
+     "sy_dist": {
+      "nulls": 1,
+      "distinct": 23,
+      "min": 17.9323,
+      "max": 396.332,
+      "mean": 91.22
+     },
+     "sy_vmag": {
+      "nulls": 4,
+      "distinct": 20,
+      "min": 4.72307,
+      "max": 20.15,
+      "mean": 10.61
+     }
+    }
+   }
+  },
+  "starter": {
+   "ref": "D15@starter.1",
+   "files": [
+    {
+     "path": "planets.csv",
+     "table": "planets",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 260,
+     "bytes": 59865,
+     "sha256": "062b1fe5fe37f15a075b17b09358082c2613c0642d5862934fc2f1a94a35109c",
+     "url": "/datasets/python/D15/starter.1/planets.csv"
+    }
+   ],
+   "quality": [
+    {
+     "id": "missing_mass",
+     "description": "Planets with no mass estimate",
+     "count": 0
+    },
+    {
+     "id": "missing_radius",
+     "description": "Planets with no radius estimate",
+     "count": 1
+    },
+    {
+     "id": "missing_age",
+     "description": "Planets whose host star has no age",
+     "count": 80
+    },
+    {
+     "id": "host_inconsistent",
+     "description": "Planet rows whose host-star values differ from another planet of the same star",
+     "count": 2
+    }
+   ],
+   "profile": {
+    "planets": {
+     "pl_name": {
+      "nulls": 0,
+      "distinct": 260
+     },
+     "hostname": {
+      "nulls": 0,
+      "distinct": 232
+     },
+     "sy_snum": {
+      "nulls": 0,
+      "distinct": 3,
+      "min": 1,
+      "max": 3,
+      "mean": 1.11
+     },
+     "sy_pnum": {
+      "nulls": 0,
+      "distinct": 5,
+      "min": 1,
+      "max": 5,
+      "mean": 1.44
+     },
+     "discoverymethod": {
+      "nulls": 0,
+      "distinct": 6
+     },
+     "disc_year": {
+      "nulls": 0,
+      "distinct": 1,
+      "min": 2024,
+      "max": 2024,
+      "mean": 2024
+     },
+     "disc_facility": {
+      "nulls": 0,
+      "distinct": 19
+     },
+     "disc_telescope": {
+      "nulls": 0,
+      "distinct": 17
+     },
+     "pl_orbper": {
+      "nulls": 38,
+      "distinct": 221,
+      "min": 0.132935028,
+      "max": 31000,
+      "mean": 346.65
+     },
+     "pl_orbsmax": {
+      "nulls": 14,
+      "distinct": 236,
+      "min": 0.00733,
+      "max": 19000,
+      "mean": 204.4
+     },
+     "pl_rade": {
+      "nulls": 1,
+      "distinct": 227,
+      "min": 0.4,
+      "max": 21.59,
+      "mean": 6.64
+     },
+     "pl_radj": {
+      "nulls": 1,
+      "distinct": 229,
+      "min": 0.03568567,
+      "max": 1.926,
+      "mean": 0.59
+     },
+     "pl_bmasse": {
+      "nulls": 0,
+      "distinct": 242,
+      "min": 0.0364,
+      "max": 8899.195396,
+      "mean": 601.74
+     },
+     "pl_bmassj": {
+      "nulls": 0,
+      "distinct": 247,
+      "min": 0.000115,
+      "max": 28,
+      "mean": 1.89
+     },
+     "pl_orbeccen": {
+      "nulls": 89,
+      "distinct": 86,
+      "min": 0,
+      "max": 0.9412,
+      "mean": 0.13
+     },
+     "pl_insol": {
+      "nulls": 40,
+      "distinct": 215,
+      "min": 0,
+      "max": 3983.4169,
+      "mean": 305.01
+     },
+     "pl_eqt": {
+      "nulls": 36,
+      "distinct": 218,
+      "min": 1.48,
+      "max": 2677,
+      "mean": 912.74
+     },
+     "st_spectype": {
+      "nulls": 165,
+      "distinct": 53
+     },
+     "st_teff": {
+      "nulls": 32,
+      "distinct": 191,
+      "min": 2800,
+      "max": 13646,
+      "mean": 5065.01
+     },
+     "st_rad": {
+      "nulls": 33,
+      "distinct": 184,
+      "min": 0.12,
+      "max": 3.13,
+      "mean": 0.97
+     },
+     "st_mass": {
+      "nulls": 3,
+      "distinct": 197,
+      "min": 0.069,
+      "max": 1.86,
+      "mean": 0.83
+     },
+     "st_met": {
+      "nulls": 66,
+      "distinct": 125,
+      "min": -0.95,
+      "max": 0.501,
+      "mean": 0.07
+     },
+     "st_age": {
+      "nulls": 80,
+      "distinct": 100,
+      "min": 0.0025,
+      "max": 15.9,
+      "mean": 5.06
+     },
+     "st_lum": {
+      "nulls": 33,
+      "distinct": 196,
+      "min": -3.14146,
+      "max": 1.22272,
+      "mean": -0.43
+     },
+     "ra": {
+      "nulls": 0,
+      "distinct": 231,
+      "min": 3.9579137,
+      "max": 358.0920465,
+      "mean": 192.22
+     },
+     "dec": {
+      "nulls": 0,
+      "distinct": 231,
+      "min": -81.6414894,
+      "max": 86.860343,
+      "mean": 10.81
+     },
+     "sy_dist": {
+      "nulls": 3,
+      "distinct": 228,
+      "min": 1.82655,
+      "max": 8030,
+      "mean": 855.93
+     },
+     "sy_vmag": {
+      "nulls": 32,
+      "distinct": 195,
+      "min": 6.15,
+      "max": 17.8,
+      "mean": 11.59
+     }
+    }
+   }
+  },
+  "standard": {
+   "ref": "D15@standard.1",
+   "files": [
+    {
+     "path": "planets.csv",
+     "table": "planets",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 6451,
+     "bytes": 1357254,
+     "sha256": "7968e0db9c307adcac65ff0ce74c5cc9096557ceca7a42a125201f249e3a02e4",
+     "url": "/datasets/python/D15/standard.1/planets.csv"
+    },
+    {
+     "path": "planets.parquet",
+     "table": "planets",
+     "layer": "clean",
+     "format": "parquet",
+     "rows": 6451,
+     "bytes": 569346,
+     "sha256": "78e66e5846c4b445cabae2fbe9fa58308bd5950ab4df00eb4aa11ee8d1efde60",
+     "url": "/datasets/python/D15/standard.1/planets.parquet",
+     "from": "7968e0db9c307adcac65ff0ce74c5cc9096557ceca7a42a125201f249e3a02e4"
+    }
+   ],
+   "quality": [
+    {
+     "id": "missing_mass",
+     "description": "Planets with no mass estimate",
+     "count": 30
+    },
+    {
+     "id": "missing_radius",
+     "description": "Planets with no radius estimate",
+     "count": 50
+    },
+    {
+     "id": "missing_age",
+     "description": "Planets whose host star has no age",
+     "count": 1523
+    },
+    {
+     "id": "host_inconsistent",
+     "description": "Planet rows whose host-star values differ from another planet of the same star",
+     "count": 256
+    }
+   ],
+   "profile": {
+    "planets": {
+     "pl_name": {
+      "nulls": 0,
+      "distinct": 6451
+     },
+     "hostname": {
+      "nulls": 0,
+      "distinct": 4847
+     },
+     "sy_snum": {
+      "nulls": 0,
+      "distinct": 4,
+      "min": 1,
+      "max": 4,
+      "mean": 1.1
+     },
+     "sy_pnum": {
+      "nulls": 0,
+      "distinct": 8,
+      "min": 1,
+      "max": 8,
+      "mean": 1.75
+     },
+     "discoverymethod": {
+      "nulls": 0,
+      "distinct": 11
+     },
+     "disc_year": {
+      "nulls": 0,
+      "distinct": 34,
+      "min": 1992,
+      "max": 2026,
+      "mean": 2017.4
+     },
+     "disc_facility": {
+      "nulls": 0,
+      "distinct": 73
+     },
+     "disc_telescope": {
+      "nulls": 0,
+      "distinct": 84
+     },
+     "pl_orbper": {
+      "nulls": 354,
+      "distinct": 6084,
+      "min": 0.090706293,
+      "max": 402000000,
+      "mean": 70215.8
+     },
+     "pl_orbsmax": {
+      "nulls": 495,
+      "distinct": 3600,
+      "min": 0.0044,
+      "max": 19000,
+      "mean": 15.42
+     },
+     "pl_rade": {
+      "nulls": 50,
+      "distinct": 2304,
+      "min": 0.3098,
+      "max": 87.20586985,
+      "mean": 5.84
+     },
+     "pl_radj": {
+      "nulls": 50,
+      "distinct": 2677,
+      "min": 0.02763855,
+      "max": 7.78,
+      "mean": 0.52
+     },
+     "pl_bmasse": {
+      "nulls": 30,
+      "distinct": 2903,
+      "min": 0.02,
+      "max": 12651.5,
+      "mean": 402.69
+     },
+     "pl_bmassj": {
+      "nulls": 30,
+      "distinct": 2762,
+      "min": 0.00006293,
+      "max": 39.80607058,
+      "mean": 1.27
+     },
+     "pl_orbeccen": {
+      "nulls": 1068,
+      "distinct": 622,
+      "min": 0,
+      "max": 0.95,
+      "mean": 0.08
+     },
+     "pl_insol": {
+      "nulls": 596,
+      "distinct": 5493,
+      "min": 0,
+      "max": 636352.1258,
+      "mean": 531.88
+     },
+     "pl_eqt": {
+      "nulls": 540,
+      "distinct": 3048,
+      "min": 1.48,
+      "max": 7777.78,
+      "mean": 836.38
+     },
+     "st_spectype": {
+      "nulls": 4041,
+      "distinct": 340
+     },
+     "st_teff": {
+      "nulls": 307,
+      "distinct": 2461,
+      "min": 415,
+      "max": 57000,
+      "mean": 5389.43
+     },
+     "st_rad": {
+      "nulls": 332,
+      "distinct": 2003,
+      "min": 0.0115,
+      "max": 88.475,
+      "mean": 1.48
+     },
+     "st_mass": {
+      "nulls": 9,
+      "distinct": 1246,
+      "min": 0.0094,
+      "max": 9.1,
+      "mean": 0.93
+     },
+     "st_met": {
+      "nulls": 699,
+      "distinct": 648,
+      "min": -2.83,
+      "max": 0.79,
+      "mean": 0.02
+     },
+     "st_age": {
+      "nulls": 1523,
+      "distinct": 671,
+      "min": 0,
+      "max": 16.1,
+      "mean": 4.38
+     },
+     "st_lum": {
+      "nulls": 326,
+      "distinct": 4296,
+      "min": -6.09,
+      "max": 3.8,
+      "mean": -0.15
+     },
+     "ra": {
+      "nulls": 0,
+      "distinct": 4844,
+      "min": 0.1856063,
+      "max": 359.9749837,
+      "mean": 230.03
+     },
+     "dec": {
+      "nulls": 0,
+      "distinct": 4844,
+      "min": -89.4715133,
+      "max": 88.8298759,
+      "mean": 17.28
+     },
+     "sy_dist": {
+      "nulls": 28,
+      "distinct": 4724,
+      "min": 1.30119,
+      "max": 8500,
+      "mean": 704.83
+     },
+     "sy_vmag": {
+      "nulls": 313,
+      "distinct": 3379,
+      "min": 0.872,
+      "max": 44.61,
+      "mean": 12.51
+     }
+    }
+   }
+  }
+ }
+}

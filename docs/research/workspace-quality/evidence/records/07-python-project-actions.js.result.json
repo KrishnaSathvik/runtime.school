@@ -1,0 +1,45 @@
+{
+  "at": "2026-10-21T14:31:54.560Z",
+  "script": "docs/research/workspace-quality/scratch/07-python-project-actions.js",
+  "url": "http://localhost:3040/python/projects/smart-shopping-cart",
+  "result": [
+    {
+      "case": "switch away/back then undo",
+      "before": {
+        "text": "answer",
+        "offset": 0
+      },
+      "text": "# file switch sentinel\nanswer = 42"
+    },
+    {
+      "case": "helper error",
+      "text": "Console\nChecks\nFiles\nValueError: helper probe line 2\nTraceback (most recent call last):\n  File \"main.py\", line 5, in <module>\n    catalogue = build_catalogue(products)\n  File \"catalogue.py\", line 2, in build_catalogue\n    raise ValueError(\"helper probe\")\nValueError: helper probe\n\nThe program stopped here. Anything printed above ran before the error.",
+      "buttons": [
+        "Console",
+        "Checks",
+        "Files",
+        "line 2"
+      ]
+    },
+    {
+      "case": "helper error jump",
+      "tab": "main.py",
+      "text": "from store import load_products\nfrom catalogue import build_catalogue, find\n\n\nproducts = load_products(\"data/products.csv\")\ncatalogue = build_catalogue(products)\nprint(len(catalogue), \"products\")\nfor name in find(catalogue, \"speaker\"):\n    print(\"-\", name)\n\n"
+    },
+    {
+      "case": "project refresh",
+      "tab": "catalogue.py",
+      "preserved": true,
+      "step": "Step 1 of 5\n\nBrowse products\n\nCustomers search the catalogue before they buy. store.py alr"
+    },
+    {
+      "case": "check control",
+      "stopCount": 0,
+      "runDisabled": true
+    },
+    {
+      "case": "check failure",
+      "text": "Console\nChecks\nFiles\n✗\nNot yet: 0 of 4 checks pass\nValueError on line 2: helper probe. Your program stopped there, so the checks didn't run.\nValueError: helper probe line 2\nTraceback (most recent call last):\n  File \"main.py\", line 5, in <module>\n    catalogue = build_catalogue(products)\n  File \"catalogue.py\", line 2, in build_catalogue\n    raise ValueError(\"helper probe\")\nValueError: helper probe\n\n·\nNot checked:\nbuild_catalogue holds all 328 starter products\n·\nNot checked:\nProducts are found by product_id\n·\nNot checked:\nfind matches any case, skips discontinued products, sorts A to Z\n·\nNot checked:\nmain.py lists the 10 speakers on sale"
+    }
+  ]
+}

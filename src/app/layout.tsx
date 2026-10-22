@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   description: BRAND_DESCRIPTION,
   metadataBase: new URL(SITE_URL),
   applicationName: BRAND_NAME,
-  keywords: ["learn SQL", "SQL course", "SQL practice", "SQL exercises", "SQL projects", "SQL playground", "SQLite"],
+  keywords: ["learn SQL", "SQL course", "SQL practice", "SQL exercises", "SQL projects", "SQL playground", "SQLite", "learn Python", "Python course", "Python practice", "Python exercises", "Python projects", "Python playground"],
   openGraph: {
     siteName: BRAND_NAME,
     type: "website",

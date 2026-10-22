@@ -1,0 +1,754 @@
+{
+ "id": "D14",
+ "title": "OpenStreetMap Portland Places",
+ "version": 1,
+ "seed": null,
+ "description": "Cafés, restaurants, libraries, schools, clinics, parks, bike rentals, charging stations and shops in Portland, Oregon, mapped by OpenStreetMap volunteers: names, coordinates, opening hours and free-form tags.",
+ "licence": {
+  "name": "Open Database License (ODbL) 1.0",
+  "status": "cleared"
+ },
+ "window": [
+  "2026-10-18",
+  "2026-10-18"
+ ],
+ "generator": "datasets/python/D14/dataset.mjs from datasets/python/D14/extract",
+ "source": "Overpass API query over OSM relation 186579 (Portland, Oregon) (datasets/python/D14/source.json)",
+ "attribution": "© OpenStreetMap contributors, available under the Open Database License (openstreetmap.org/copyright).",
+ "tables": {
+  "places": {
+   "description": "One mapped place. Buildings and areas are reduced to their centre point.",
+   "primaryKey": [
+    "osm_type",
+    "osm_id"
+   ],
+   "foreignKeys": [],
+   "columns": [
+    {
+     "name": "osm_type",
+     "type": "text",
+     "description": "How OpenStreetMap stores it: node (a point), way (an outline) or relation (a group)",
+     "nullable": false
+    },
+    {
+     "name": "osm_id",
+     "type": "integer",
+     "description": "OpenStreetMap ID within its type",
+     "nullable": false
+    },
+    {
+     "name": "category",
+     "type": "text",
+     "description": "amenity, shop or leisure",
+     "nullable": false
+    },
+    {
+     "name": "kind",
+     "type": "text",
+     "description": "The value of that tag: cafe, library, park, …",
+     "nullable": false
+    },
+    {
+     "name": "latitude",
+     "type": "decimal",
+     "description": "Latitude",
+     "nullable": false
+    },
+    {
+     "name": "longitude",
+     "type": "decimal",
+     "description": "Longitude",
+     "nullable": false
+    },
+    {
+     "name": "name",
+     "type": "text",
+     "description": "Name",
+     "nullable": true
+    },
+    {
+     "name": "cuisine",
+     "type": "text",
+     "description": "Cuisine(s), \";\"-separated",
+     "nullable": true
+    },
+    {
+     "name": "opening_hours",
+     "type": "text",
+     "description": "Opening hours in OpenStreetMap’s format, e.g. Mo-Fr 08:00-17:00",
+     "nullable": true
+    },
+    {
+     "name": "website",
+     "type": "text",
+     "description": "Website",
+     "nullable": true
+    },
+    {
+     "name": "phone",
+     "type": "text",
+     "description": "Phone number (business)",
+     "nullable": true
+    },
+    {
+     "name": "wheelchair",
+     "type": "text",
+     "description": "yes, limited, no",
+     "nullable": true
+    },
+    {
+     "name": "outdoor_seating",
+     "type": "text",
+     "description": "yes or no",
+     "nullable": true
+    },
+    {
+     "name": "brand",
+     "type": "text",
+     "description": "Chain or brand",
+     "nullable": true
+    },
+    {
+     "name": "operator",
+     "type": "text",
+     "description": "Who runs it",
+     "nullable": true
+    },
+    {
+     "name": "addr_housenumber",
+     "type": "text",
+     "description": "House number",
+     "nullable": true
+    },
+    {
+     "name": "addr_street",
+     "type": "text",
+     "description": "Street",
+     "nullable": true
+    },
+    {
+     "name": "addr_postcode",
+     "type": "text",
+     "description": "ZIP code",
+     "nullable": true
+    },
+    {
+     "name": "addr_city",
+     "type": "text",
+     "description": "City",
+     "nullable": true
+    },
+    {
+     "name": "tag_count",
+     "type": "integer",
+     "description": "How many tags the place has",
+     "nullable": false
+    }
+   ]
+  },
+  "tags": {
+   "description": "One tag (key = value) on one place: every place’s tags, one per row.",
+   "primaryKey": [
+    "osm_type",
+    "osm_id",
+    "key"
+   ],
+   "foreignKeys": [],
+   "columns": [
+    {
+     "name": "osm_type",
+     "type": "text",
+     "description": "How OpenStreetMap stores it: node (a point), way (an outline) or relation (a group)",
+     "nullable": false
+    },
+    {
+     "name": "osm_id",
+     "type": "integer",
+     "description": "Place ID",
+     "nullable": false
+    },
+    {
+     "name": "key",
+     "type": "text",
+     "description": "Tag key",
+     "nullable": false
+    },
+    {
+     "name": "value",
+     "type": "text",
+     "description": "Tag value",
+     "nullable": false
+    }
+   ]
+  }
+ },
+ "editions": {
+  "preview": {
+   "ref": "D14@preview.1",
+   "files": [
+    {
+     "path": "places.csv",
+     "table": "places",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 25,
+     "bytes": 3090,
+     "sha256": "ccbfa4971a8a02b0904c167b35ad759b781fa71649f54b4a2271dc81fb10c0f3",
+     "url": "/datasets/python/D14/preview.1/places.csv"
+    },
+    {
+     "path": "tags.csv",
+     "table": "tags",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 170,
+     "bytes": 6297,
+     "sha256": "091dd22238ae80cf7298ef4e13ae0d5d0a2f1f86c175b1506133a1c94419365c",
+     "url": "/datasets/python/D14/preview.1/tags.csv"
+    },
+    {
+     "path": "places.geojson",
+     "table": "places",
+     "layer": "clean",
+     "format": "geojson",
+     "rows": 25,
+     "bytes": 7533,
+     "sha256": "869ba5c30a9c737855a08b77e622676fb7dd83440fd7fb8eb6e5848ad95221e4",
+     "url": "/datasets/python/D14/preview.1/places.geojson"
+    },
+    {
+     "path": "overpass.json",
+     "table": "places",
+     "layer": "clean",
+     "format": "json",
+     "rows": 25,
+     "bytes": 6520,
+     "sha256": "90e28973ff023dfbf609eacef6445df5b6b963299df234b38cbc00f7fd948fbf",
+     "url": "/datasets/python/D14/preview.1/overpass.json"
+    }
+   ],
+   "quality": [
+    {
+     "id": "no_name",
+     "description": "Places with no name tag",
+     "count": 9
+    },
+    {
+     "id": "no_hours",
+     "description": "Places with no opening_hours",
+     "count": 22
+    },
+    {
+     "id": "free_text_hours",
+     "description": "Opening hours in OSM’s own syntax (e.g. \"Mo-Fr 07:00-18:00; Sa 08:00-14:00\"), not timestamps",
+     "count": 3
+    },
+    {
+     "id": "mixed_city",
+     "description": "Places whose addr_city is missing or not exactly \"Portland\"",
+     "count": 15
+    },
+    {
+     "id": "multi_cuisine",
+     "description": "Places listing several cuisines separated by \";\"",
+     "count": 0
+    }
+   ],
+   "profile": {
+    "places": {
+     "osm_type": {
+      "nulls": 0,
+      "distinct": 1
+     },
+     "osm_id": {
+      "nulls": 0,
+      "distinct": 25,
+      "min": 324718543,
+      "max": 845466971,
+      "mean": 504477717.8
+     },
+     "category": {
+      "nulls": 0,
+      "distinct": 1
+     },
+     "kind": {
+      "nulls": 0,
+      "distinct": 9
+     },
+     "latitude": {
+      "nulls": 0,
+      "distinct": 25,
+      "min": 45.5118468,
+      "max": 45.526708,
+      "mean": 45.52
+     },
+     "longitude": {
+      "nulls": 0,
+      "distinct": 25,
+      "min": -122.6900902,
+      "max": -122.6743717,
+      "mean": -122.68
+     },
+     "name": {
+      "nulls": 9,
+      "distinct": 16
+     },
+     "cuisine": {
+      "nulls": 18,
+      "distinct": 7
+     },
+     "opening_hours": {
+      "nulls": 22,
+      "distinct": 3
+     },
+     "website": {
+      "nulls": 20,
+      "distinct": 5
+     },
+     "phone": {
+      "nulls": 24,
+      "distinct": 1
+     },
+     "wheelchair": {
+      "nulls": 21,
+      "distinct": 2
+     },
+     "outdoor_seating": {
+      "nulls": 24,
+      "distinct": 1
+     },
+     "brand": {
+      "nulls": 21,
+      "distinct": 4
+     },
+     "operator": {
+      "nulls": 20,
+      "distinct": 5
+     },
+     "addr_housenumber": {
+      "nulls": 15,
+      "distinct": 10
+     },
+     "addr_street": {
+      "nulls": 15,
+      "distinct": 8
+     },
+     "addr_postcode": {
+      "nulls": 15,
+      "distinct": 5
+     },
+     "addr_city": {
+      "nulls": 15,
+      "distinct": 1
+     },
+     "tag_count": {
+      "nulls": 0,
+      "distinct": 14,
+      "min": 1,
+      "max": 18,
+      "mean": 6.8
+     }
+    },
+    "tags": {
+     "osm_type": {
+      "nulls": 0,
+      "distinct": 1
+     },
+     "osm_id": {
+      "nulls": 0,
+      "distinct": 25,
+      "min": 324718543,
+      "max": 845466971,
+      "mean": 488962690.14
+     },
+     "key": {
+      "nulls": 0,
+      "distinct": 41
+     },
+     "value": {
+      "nulls": 0,
+      "distinct": 103
+     }
+    }
+   }
+  },
+  "starter": {
+   "ref": "D14@starter.1",
+   "files": [
+    {
+     "path": "places.csv",
+     "table": "places",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 969,
+     "bytes": 147720,
+     "sha256": "93c4e943d1253cad20f14a9b7ffebf12f44a61045e244a7316e19cd17ebe45ae",
+     "url": "/datasets/python/D14/starter.1/places.csv"
+    },
+    {
+     "path": "tags.csv",
+     "table": "tags",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 9735,
+     "bytes": 382706,
+     "sha256": "1131ea1070fc9c875c2d9c226298cdff02023b0319858691e1e2ac4e35d3eb39",
+     "url": "/datasets/python/D14/starter.1/tags.csv"
+    },
+    {
+     "path": "places.geojson",
+     "table": "places",
+     "layer": "clean",
+     "format": "geojson",
+     "rows": 969,
+     "bytes": 389918,
+     "sha256": "1f524e43de17ed265459424f6cc39aef3e3c69d29cd847b038a04287efd3238c",
+     "url": "/datasets/python/D14/starter.1/places.geojson"
+    },
+    {
+     "path": "overpass.json",
+     "table": "places",
+     "layer": "clean",
+     "format": "json",
+     "rows": 969,
+     "bytes": 345628,
+     "sha256": "b1b746fc4a1d209ad7894995921c7905534bef5d7fd60685fb889724d0032c26",
+     "url": "/datasets/python/D14/starter.1/overpass.json"
+    }
+   ],
+   "quality": [
+    {
+     "id": "no_name",
+     "description": "Places with no name tag",
+     "count": 140
+    },
+    {
+     "id": "no_hours",
+     "description": "Places with no opening_hours",
+     "count": 597
+    },
+    {
+     "id": "free_text_hours",
+     "description": "Opening hours in OSM’s own syntax (e.g. \"Mo-Fr 07:00-18:00; Sa 08:00-14:00\"), not timestamps",
+     "count": 372
+    },
+    {
+     "id": "mixed_city",
+     "description": "Places whose addr_city is missing or not exactly \"Portland\"",
+     "count": 335
+    },
+    {
+     "id": "multi_cuisine",
+     "description": "Places listing several cuisines separated by \";\"",
+     "count": 36
+    }
+   ],
+   "profile": {
+    "places": {
+     "osm_type": {
+      "nulls": 0,
+      "distinct": 3
+     },
+     "osm_id": {
+      "nulls": 0,
+      "distinct": 969,
+      "min": 2130034,
+      "max": 14261888001,
+      "mean": 5235136534.85
+     },
+     "category": {
+      "nulls": 0,
+      "distinct": 3
+     },
+     "kind": {
+      "nulls": 0,
+      "distinct": 31
+     },
+     "latitude": {
+      "nulls": 0,
+      "distinct": 963,
+      "min": 45.5057546,
+      "max": 45.5319779,
+      "mean": 45.52
+     },
+     "longitude": {
+      "nulls": 0,
+      "distinct": 966,
+      "min": -122.6973124,
+      "max": -122.6601698,
+      "mean": -122.68
+     },
+     "name": {
+      "nulls": 140,
+      "distinct": 735
+     },
+     "cuisine": {
+      "nulls": 628,
+      "distinct": 92
+     },
+     "opening_hours": {
+      "nulls": 597,
+      "distinct": 309
+     },
+     "website": {
+      "nulls": 513,
+      "distinct": 416
+     },
+     "phone": {
+      "nulls": 672,
+      "distinct": 277
+     },
+     "wheelchair": {
+      "nulls": 829,
+      "distinct": 3
+     },
+     "outdoor_seating": {
+      "nulls": 885,
+      "distinct": 2
+     },
+     "brand": {
+      "nulls": 813,
+      "distinct": 75
+     },
+     "operator": {
+      "nulls": 843,
+      "distinct": 46
+     },
+     "addr_housenumber": {
+      "nulls": 313,
+      "distinct": 419
+     },
+     "addr_street": {
+      "nulls": 314,
+      "distinct": 92
+     },
+     "addr_postcode": {
+      "nulls": 329,
+      "distinct": 11
+     },
+     "addr_city": {
+      "nulls": 335,
+      "distinct": 1
+     },
+     "tag_count": {
+      "nulls": 0,
+      "distinct": 28,
+      "min": 1,
+      "max": 40,
+      "mean": 10.05
+     }
+    },
+    "tags": {
+     "osm_type": {
+      "nulls": 0,
+      "distinct": 3
+     },
+     "osm_id": {
+      "nulls": 0,
+      "distinct": 969,
+      "min": 2130034,
+      "max": 14261888001,
+      "mean": 5108339747.44
+     },
+     "key": {
+      "nulls": 0,
+      "distinct": 234
+     },
+     "value": {
+      "nulls": 0,
+      "distinct": 3348
+     }
+    }
+   }
+  },
+  "standard": {
+   "ref": "D14@standard.1",
+   "files": [
+    {
+     "path": "places.csv",
+     "table": "places",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 6140,
+     "bytes": 922321,
+     "sha256": "db92031f773fe9ab1a57f05990bf3d1eaa3d3a9c0ce6057715091a2aca9a4527",
+     "url": "/datasets/python/D14/standard.1/places.csv"
+    },
+    {
+     "path": "tags.csv",
+     "table": "tags",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 59981,
+     "bytes": 2307212,
+     "sha256": "282cca2e72c57ea5ed2dcc58e10be178ce0f2531c7c507472287a16a76c6fb09",
+     "url": "/datasets/python/D14/standard.1/tags.csv"
+    },
+    {
+     "path": "places.geojson",
+     "table": "places",
+     "layer": "clean",
+     "format": "geojson",
+     "rows": 6140,
+     "bytes": 2406428,
+     "sha256": "fe7ca139051587c2f5a7e9dceddd6cef731234b8bf84f6ab6c3813dfe72b1171",
+     "url": "/datasets/python/D14/standard.1/places.geojson"
+    },
+    {
+     "path": "overpass.json",
+     "table": "places",
+     "layer": "clean",
+     "format": "json",
+     "rows": 6140,
+     "bytes": 2145126,
+     "sha256": "1f5cb3be57ff5624888e0b53eae445c2126f4533f4c62346e3b0fa68854baaa7",
+     "url": "/datasets/python/D14/standard.1/overpass.json"
+    }
+   ],
+   "quality": [
+    {
+     "id": "no_name",
+     "description": "Places with no name tag",
+     "count": 1105
+    },
+    {
+     "id": "no_hours",
+     "description": "Places with no opening_hours",
+     "count": 3932
+    },
+    {
+     "id": "free_text_hours",
+     "description": "Opening hours in OSM’s own syntax (e.g. \"Mo-Fr 07:00-18:00; Sa 08:00-14:00\"), not timestamps",
+     "count": 2208
+    },
+    {
+     "id": "mixed_city",
+     "description": "Places whose addr_city is missing or not exactly \"Portland\"",
+     "count": 2255
+    },
+    {
+     "id": "multi_cuisine",
+     "description": "Places listing several cuisines separated by \";\"",
+     "count": 205
+    }
+   ],
+   "profile": {
+    "places": {
+     "osm_type": {
+      "nulls": 0,
+      "distinct": 3
+     },
+     "osm_id": {
+      "nulls": 0,
+      "distinct": 6140,
+      "min": 1759347,
+      "max": 14282184250,
+      "mean": 3619934732.67
+     },
+     "category": {
+      "nulls": 0,
+      "distinct": 3
+     },
+     "kind": {
+      "nulls": 0,
+      "distinct": 34
+     },
+     "latitude": {
+      "nulls": 0,
+      "distinct": 6094,
+      "min": 45.4367611,
+      "max": 45.6477002,
+      "mean": 45.52
+     },
+     "longitude": {
+      "nulls": 0,
+      "distinct": 6113,
+      "min": -122.8348802,
+      "max": -122.4801489,
+      "mean": -122.64
+     },
+     "name": {
+      "nulls": 1105,
+      "distinct": 4028
+     },
+     "cuisine": {
+      "nulls": 4304,
+      "distinct": 282
+     },
+     "opening_hours": {
+      "nulls": 3932,
+      "distinct": 1414
+     },
+     "website": {
+      "nulls": 3339,
+      "distinct": 2580
+     },
+     "phone": {
+      "nulls": 4228,
+      "distinct": 1834
+     },
+     "wheelchair": {
+      "nulls": 5645,
+      "distinct": 4
+     },
+     "outdoor_seating": {
+      "nulls": 5625,
+      "distinct": 7
+     },
+     "brand": {
+      "nulls": 5103,
+      "distinct": 214
+     },
+     "operator": {
+      "nulls": 5299,
+      "distinct": 188
+     },
+     "addr_housenumber": {
+      "nulls": 2106,
+      "distinct": 2525
+     },
+     "addr_street": {
+      "nulls": 2093,
+      "distinct": 509
+     },
+     "addr_postcode": {
+      "nulls": 2290,
+      "distinct": 63
+     },
+     "addr_city": {
+      "nulls": 2250,
+      "distinct": 4
+     },
+     "tag_count": {
+      "nulls": 0,
+      "distinct": 35,
+      "min": 1,
+      "max": 41,
+      "mean": 9.77
+     }
+    },
+    "tags": {
+     "osm_type": {
+      "nulls": 0,
+      "distinct": 3
+     },
+     "osm_id": {
+      "nulls": 0,
+      "distinct": 6140,
+      "min": 1759347,
+      "max": 14282184250,
+      "mean": 3342298054.55
+     },
+     "key": {
+      "nulls": 0,
+      "distinct": 493
+     },
+     "value": {
+      "nulls": 0,
+      "distinct": 17864
+     }
+    }
+   }
+  }
+ }
+}

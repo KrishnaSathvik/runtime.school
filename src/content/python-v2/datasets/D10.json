@@ -1,0 +1,1053 @@
+{
+ "id": "D10",
+ "title": "OpenAlex Research Papers",
+ "version": 1,
+ "seed": null,
+ "description": "The 1,200 most-cited research works from 2019–2024 that mention Python, from OpenAlex: titles, venues, citations, open-access status, authors and institutions. Comes as flat tables, as nested JSON Lines and as the API’s own pages.",
+ "licence": {
+  "name": "CC0 1.0",
+  "status": "cleared"
+ },
+ "window": [
+  "2019-01-01",
+  "2024-12-31"
+ ],
+ "generator": "datasets/python/D10/dataset.mjs from datasets/python/D10/extract",
+ "source": "OpenAlex API /works, filter title_and_abstract.search:python, 2019–2024, sorted by citations (datasets/python/D10/source.json)",
+ "attribution": "Data from OpenAlex (openalex.org), CC0.",
+ "tables": {
+  "works": {
+   "description": "One research work (article, chapter or preprint).",
+   "primaryKey": [
+    "work_id"
+   ],
+   "foreignKeys": [],
+   "columns": [
+    {
+     "name": "work_id",
+     "type": "text",
+     "description": "OpenAlex work ID",
+     "nullable": false
+    },
+    {
+     "name": "doi",
+     "type": "text",
+     "description": "DOI link",
+     "nullable": true
+    },
+    {
+     "name": "title",
+     "type": "text",
+     "description": "Title",
+     "nullable": true
+    },
+    {
+     "name": "publication_year",
+     "type": "integer",
+     "description": "Year published",
+     "nullable": false
+    },
+    {
+     "name": "publication_date",
+     "type": "date",
+     "description": "Date published",
+     "nullable": false
+    },
+    {
+     "name": "type",
+     "type": "text",
+     "description": "article, book-chapter or preprint",
+     "nullable": false
+    },
+    {
+     "name": "language",
+     "type": "text",
+     "description": "Language code",
+     "nullable": true
+    },
+    {
+     "name": "cited_by_count",
+     "type": "integer",
+     "description": "Times cited (when collected)",
+     "nullable": false
+    },
+    {
+     "name": "is_retracted",
+     "type": "integer",
+     "description": "1 if retracted",
+     "nullable": false
+    },
+    {
+     "name": "is_oa",
+     "type": "integer",
+     "description": "1 if free to read",
+     "nullable": false
+    },
+    {
+     "name": "oa_status",
+     "type": "text",
+     "description": "How it is free to read: gold, green, hybrid, bronze, diamond, or closed (not free)",
+     "nullable": true
+    },
+    {
+     "name": "source_name",
+     "type": "text",
+     "description": "Journal, conference or repository",
+     "nullable": true
+    },
+    {
+     "name": "source_type",
+     "type": "text",
+     "description": "journal, repository, conference, …",
+     "nullable": true
+    },
+    {
+     "name": "publisher",
+     "type": "text",
+     "description": "Publisher",
+     "nullable": true
+    },
+    {
+     "name": "licence",
+     "type": "text",
+     "description": "Licence of the primary version",
+     "nullable": true
+    },
+    {
+     "name": "topic",
+     "type": "text",
+     "description": "Main research topic",
+     "nullable": true
+    },
+    {
+     "name": "field",
+     "type": "text",
+     "description": "Field of the main topic",
+     "nullable": true
+    },
+    {
+     "name": "referenced_works_count",
+     "type": "integer",
+     "description": "Number of works it cites",
+     "nullable": false
+    },
+    {
+     "name": "volume",
+     "type": "text",
+     "description": "Volume",
+     "nullable": true
+    },
+    {
+     "name": "issue",
+     "type": "text",
+     "description": "Issue",
+     "nullable": true
+    },
+    {
+     "name": "first_page",
+     "type": "text",
+     "description": "First page",
+     "nullable": true
+    },
+    {
+     "name": "last_page",
+     "type": "text",
+     "description": "Last page",
+     "nullable": true
+    }
+   ]
+  },
+  "authorships": {
+   "description": "One author of one work, in the order the paper lists them.",
+   "primaryKey": [
+    "work_id",
+    "author_order"
+   ],
+   "foreignKeys": [
+    {
+     "column": "work_id",
+     "references": "works.work_id"
+    }
+   ],
+   "columns": [
+    {
+     "name": "work_id",
+     "type": "text",
+     "description": "Work",
+     "nullable": false
+    },
+    {
+     "name": "author_order",
+     "type": "integer",
+     "description": "Position in the author list (1 = first)",
+     "nullable": false
+    },
+    {
+     "name": "author_position",
+     "type": "text",
+     "description": "first, middle or last",
+     "nullable": false
+    },
+    {
+     "name": "author_id",
+     "type": "text",
+     "description": "OpenAlex author ID",
+     "nullable": true
+    },
+    {
+     "name": "author_name",
+     "type": "text",
+     "description": "Name as OpenAlex shows it",
+     "nullable": true
+    },
+    {
+     "name": "institutions",
+     "type": "text",
+     "description": "Institutions, separated by \"; \"",
+     "nullable": true
+    },
+    {
+     "name": "countries",
+     "type": "text",
+     "description": "Country codes, separated by \";\"",
+     "nullable": true
+    },
+    {
+     "name": "is_corresponding",
+     "type": "integer",
+     "description": "1 for the author who handles contact about the paper",
+     "nullable": false
+    }
+   ]
+  },
+  "keywords": {
+   "description": "One keyword OpenAlex assigned to a work, with its score.",
+   "primaryKey": [
+    "work_id",
+    "keyword"
+   ],
+   "foreignKeys": [
+    {
+     "column": "work_id",
+     "references": "works.work_id"
+    }
+   ],
+   "columns": [
+    {
+     "name": "work_id",
+     "type": "text",
+     "description": "Work",
+     "nullable": false
+    },
+    {
+     "name": "keyword",
+     "type": "text",
+     "description": "Keyword",
+     "nullable": false
+    },
+    {
+     "name": "score",
+     "type": "decimal",
+     "description": "Relevance, 0–1",
+     "nullable": false
+    }
+   ]
+  }
+ },
+ "editions": {
+  "preview": {
+   "ref": "D10@preview.1",
+   "files": [
+    {
+     "path": "works.csv",
+     "table": "works",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 25,
+     "bytes": 8035,
+     "sha256": "6957c36e467c6deaf61072d2d1ed27b08bf0afb935009adf155ae1105e34baaa",
+     "url": "/datasets/python/D10/preview.1/works.csv"
+    },
+    {
+     "path": "authorships.csv",
+     "table": "authorships",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 346,
+     "bytes": 30491,
+     "sha256": "26f442c0dc4729826e50287636af84a6f78dabf6c01b8aa191f487c6577782b3",
+     "url": "/datasets/python/D10/preview.1/authorships.csv"
+    },
+    {
+     "path": "keywords.csv",
+     "table": "keywords",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 192,
+     "bytes": 9650,
+     "sha256": "5007983a9f6c0cdb8e0238032bfb23ac8810a89dab7b04a9e1171b56c25b1836",
+     "url": "/datasets/python/D10/preview.1/keywords.csv"
+    },
+    {
+     "path": "works.jsonl",
+     "table": "works",
+     "layer": "clean",
+     "format": "jsonl",
+     "rows": 25,
+     "bytes": 219009,
+     "sha256": "b8aedf05ced4fa23dcc9335d064f47a70556fdd7d72bd76bc370c2751b65625d",
+     "url": "/datasets/python/D10/preview.1/works.jsonl"
+    },
+    {
+     "path": "api/works-page-1.json",
+     "table": "works",
+     "layer": "clean",
+     "format": "json",
+     "rows": 25,
+     "bytes": 219130,
+     "sha256": "e82a78054478f839f25092205b51bcb83dc6980a13cd85b392b5177b9c1102d0",
+     "url": "/datasets/python/D10/preview.1/api/works-page-1.json"
+    }
+   ],
+   "quality": [
+    {
+     "id": "no_doi",
+     "description": "Works with no DOI",
+     "count": 1
+    },
+    {
+     "id": "no_source",
+     "description": "Works with no known journal or repository",
+     "count": 0
+    },
+    {
+     "id": "no_pages",
+     "description": "Works with no page numbers",
+     "count": 4
+    },
+    {
+     "id": "no_institution",
+     "description": "Authorships with no institution",
+     "count": 78
+    },
+    {
+     "id": "many_authors",
+     "description": "Works with more than 20 authors",
+     "count": 6
+    }
+   ],
+   "profile": {
+    "works": {
+     "work_id": {
+      "nulls": 0,
+      "distinct": 25
+     },
+     "doi": {
+      "nulls": 1,
+      "distinct": 24
+     },
+     "title": {
+      "nulls": 0,
+      "distinct": 24
+     },
+     "publication_year": {
+      "nulls": 0,
+      "distinct": 5,
+      "min": 2019,
+      "max": 2023,
+      "mean": 2020.28
+     },
+     "publication_date": {
+      "nulls": 0,
+      "distinct": 24,
+      "min": "2019-02-01",
+      "max": "2023-07-18"
+     },
+     "type": {
+      "nulls": 0,
+      "distinct": 2
+     },
+     "language": {
+      "nulls": 0,
+      "distinct": 1
+     },
+     "cited_by_count": {
+      "nulls": 0,
+      "distinct": 25,
+      "min": 1440,
+      "max": 38040,
+      "mean": 7485.2
+     },
+     "is_retracted": {
+      "nulls": 0,
+      "distinct": 1,
+      "min": 0,
+      "max": 0,
+      "mean": 0
+     },
+     "is_oa": {
+      "nulls": 0,
+      "distinct": 1,
+      "min": 1,
+      "max": 1,
+      "mean": 1
+     },
+     "oa_status": {
+      "nulls": 0,
+      "distinct": 4
+     },
+     "source_name": {
+      "nulls": 0,
+      "distinct": 19
+     },
+     "source_type": {
+      "nulls": 0,
+      "distinct": 2
+     },
+     "publisher": {
+      "nulls": 0,
+      "distinct": 14
+     },
+     "licence": {
+      "nulls": 13,
+      "distinct": 3
+     },
+     "topic": {
+      "nulls": 0,
+      "distinct": 16
+     },
+     "field": {
+      "nulls": 0,
+      "distinct": 6
+     },
+     "referenced_works_count": {
+      "nulls": 0,
+      "distinct": 22,
+      "min": 0,
+      "max": 240,
+      "mean": 60.32
+     },
+     "volume": {
+      "nulls": 3,
+      "distinct": 20
+     },
+     "issue": {
+      "nulls": 8,
+      "distinct": 9
+     },
+     "first_page": {
+      "nulls": 4,
+      "distinct": 21
+     },
+     "last_page": {
+      "nulls": 4,
+      "distinct": 21
+     }
+    },
+    "authorships": {
+     "work_id": {
+      "nulls": 0,
+      "distinct": 25
+     },
+     "author_order": {
+      "nulls": 0,
+      "distinct": 100,
+      "min": 1,
+      "max": 100,
+      "mean": 21.36
+     },
+     "author_position": {
+      "nulls": 0,
+      "distinct": 3
+     },
+     "author_id": {
+      "nulls": 107,
+      "distinct": 225
+     },
+     "author_name": {
+      "nulls": 0,
+      "distinct": 314
+     },
+     "institutions": {
+      "nulls": 78,
+      "distinct": 153
+     },
+     "countries": {
+      "nulls": 78,
+      "distinct": 40
+     },
+     "is_corresponding": {
+      "nulls": 0,
+      "distinct": 2,
+      "min": 0,
+      "max": 1,
+      "mean": 0.1
+     }
+    },
+    "keywords": {
+     "work_id": {
+      "nulls": 0,
+      "distinct": 25
+     },
+     "keyword": {
+      "nulls": 0,
+      "distinct": 172
+     },
+     "score": {
+      "nulls": 0,
+      "distinct": 159,
+      "min": 0.35100001096725464,
+      "max": 1,
+      "mean": 0.77
+     }
+    }
+   }
+  },
+  "starter": {
+   "ref": "D10@starter.1",
+   "files": [
+    {
+     "path": "works.csv",
+     "table": "works",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 200,
+     "bytes": 63508,
+     "sha256": "16ac09c117c67fd50000366d133f577002a4136c29d9789290cddaebca39ccd5",
+     "url": "/datasets/python/D10/starter.1/works.csv"
+    },
+    {
+     "path": "authorships.csv",
+     "table": "authorships",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 2007,
+     "bytes": 188707,
+     "sha256": "aaffb13884584b62305c29662f6833efd29288f12e3922bf828b7f16b1fa2539",
+     "url": "/datasets/python/D10/starter.1/authorships.csv"
+    },
+    {
+     "path": "keywords.csv",
+     "table": "keywords",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 1648,
+     "bytes": 82435,
+     "sha256": "85186356ff9c2bef229eb52d5ea316398b1eed21e9e462100fd6d4f73a964f2e",
+     "url": "/datasets/python/D10/starter.1/keywords.csv"
+    },
+    {
+     "path": "works.jsonl",
+     "table": "works",
+     "layer": "clean",
+     "format": "jsonl",
+     "rows": 200,
+     "bytes": 1522416,
+     "sha256": "563c075f1e1c3f31629523d284ad665deb6bec9377660a5cd7d9e71f613b8fa2",
+     "url": "/datasets/python/D10/starter.1/works.jsonl"
+    },
+    {
+     "path": "api/works-page-1.json",
+     "table": "works",
+     "layer": "clean",
+     "format": "json",
+     "rows": 200,
+     "bytes": 1522538,
+     "sha256": "1cd4f42c564aba098a406682b27ae0cc0e79018276b0367f0aa6f356cb205308",
+     "url": "/datasets/python/D10/starter.1/api/works-page-1.json"
+    }
+   ],
+   "quality": [
+    {
+     "id": "no_doi",
+     "description": "Works with no DOI",
+     "count": 3
+    },
+    {
+     "id": "no_source",
+     "description": "Works with no known journal or repository",
+     "count": 0
+    },
+    {
+     "id": "no_pages",
+     "description": "Works with no page numbers",
+     "count": 35
+    },
+    {
+     "id": "no_institution",
+     "description": "Authorships with no institution",
+     "count": 216
+    },
+    {
+     "id": "many_authors",
+     "description": "Works with more than 20 authors",
+     "count": 27
+    }
+   ],
+   "profile": {
+    "works": {
+     "work_id": {
+      "nulls": 0,
+      "distinct": 200
+     },
+     "doi": {
+      "nulls": 3,
+      "distinct": 197
+     },
+     "title": {
+      "nulls": 0,
+      "distinct": 197
+     },
+     "publication_year": {
+      "nulls": 0,
+      "distinct": 6,
+      "min": 2019,
+      "max": 2024,
+      "mean": 2020.54
+     },
+     "publication_date": {
+      "nulls": 0,
+      "distinct": 183,
+      "min": "2019-01-01",
+      "max": "2024-11-12"
+     },
+     "type": {
+      "nulls": 0,
+      "distinct": 3
+     },
+     "language": {
+      "nulls": 2,
+      "distinct": 1
+     },
+     "cited_by_count": {
+      "nulls": 0,
+      "distinct": 177,
+      "min": 281,
+      "max": 38040,
+      "mean": 1435.42
+     },
+     "is_retracted": {
+      "nulls": 0,
+      "distinct": 1,
+      "min": 0,
+      "max": 0,
+      "mean": 0
+     },
+     "is_oa": {
+      "nulls": 0,
+      "distinct": 2,
+      "min": 0,
+      "max": 1,
+      "mean": 0.93
+     },
+     "oa_status": {
+      "nulls": 0,
+      "distinct": 6
+     },
+     "source_name": {
+      "nulls": 0,
+      "distinct": 121
+     },
+     "source_type": {
+      "nulls": 0,
+      "distinct": 4
+     },
+     "publisher": {
+      "nulls": 2,
+      "distinct": 45
+     },
+     "licence": {
+      "nulls": 91,
+      "distinct": 5
+     },
+     "topic": {
+      "nulls": 0,
+      "distinct": 95
+     },
+     "field": {
+      "nulls": 0,
+      "distinct": 19
+     },
+     "referenced_works_count": {
+      "nulls": 0,
+      "distinct": 102,
+      "min": 0,
+      "max": 572,
+      "mean": 62.18
+     },
+     "volume": {
+      "nulls": 24,
+      "distinct": 83
+     },
+     "issue": {
+      "nulls": 66,
+      "distinct": 36
+     },
+     "first_page": {
+      "nulls": 35,
+      "distinct": 160
+     },
+     "last_page": {
+      "nulls": 35,
+      "distinct": 160
+     }
+    },
+    "authorships": {
+     "work_id": {
+      "nulls": 0,
+      "distinct": 200
+     },
+     "author_order": {
+      "nulls": 0,
+      "distinct": 100,
+      "min": 1,
+      "max": 100,
+      "mean": 14.02
+     },
+     "author_position": {
+      "nulls": 0,
+      "distinct": 3
+     },
+     "author_id": {
+      "nulls": 287,
+      "distinct": 1653
+     },
+     "author_name": {
+      "nulls": 0,
+      "distinct": 1912
+     },
+     "institutions": {
+      "nulls": 216,
+      "distinct": 763
+     },
+     "countries": {
+      "nulls": 220,
+      "distinct": 115
+     },
+     "is_corresponding": {
+      "nulls": 0,
+      "distinct": 2,
+      "min": 0,
+      "max": 1,
+      "mean": 0.12
+     }
+    },
+    "keywords": {
+     "work_id": {
+      "nulls": 0,
+      "distinct": 200
+     },
+     "keyword": {
+      "nulls": 0,
+      "distinct": 1347
+     },
+     "score": {
+      "nulls": 0,
+      "distinct": 556,
+      "min": 0.3089999854564667,
+      "max": 1,
+      "mean": 0.76
+     }
+    }
+   }
+  },
+  "standard": {
+   "ref": "D10@standard.1",
+   "files": [
+    {
+     "path": "works.csv",
+     "table": "works",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 1200,
+     "bytes": 388187,
+     "sha256": "42de146675efc8594397ede42474ea46e5f4d94cca970502a4ff6a44269b9de5",
+     "url": "/datasets/python/D10/standard.1/works.csv"
+    },
+    {
+     "path": "authorships.csv",
+     "table": "authorships",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 8143,
+     "bytes": 761918,
+     "sha256": "c662a26c39ee30ddf41fe1538c5aa0ffe21e1f2922db118efec59e18effc2b86",
+     "url": "/datasets/python/D10/standard.1/authorships.csv"
+    },
+    {
+     "path": "keywords.csv",
+     "table": "keywords",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 9989,
+     "bytes": 501301,
+     "sha256": "a0fb69aaf66b496c700f4bc9c4812abe368269499eb9f1ec996aac758bb6909c",
+     "url": "/datasets/python/D10/standard.1/keywords.csv"
+    },
+    {
+     "path": "works.jsonl",
+     "table": "works",
+     "layer": "clean",
+     "format": "jsonl",
+     "rows": 1200,
+     "bytes": 7302328,
+     "sha256": "f85d458faa219b62237f062ca12dfd6b0243402118a92ef281ad344fe0fcd090",
+     "url": "/datasets/python/D10/standard.1/works.jsonl"
+    },
+    {
+     "path": "api/works-page-1.json",
+     "table": "works",
+     "layer": "clean",
+     "format": "json",
+     "rows": 200,
+     "bytes": 1522538,
+     "sha256": "1cd4f42c564aba098a406682b27ae0cc0e79018276b0367f0aa6f356cb205308",
+     "url": "/datasets/python/D10/standard.1/api/works-page-1.json"
+    },
+    {
+     "path": "api/works-page-2.json",
+     "table": "works",
+     "layer": "clean",
+     "format": "json",
+     "rows": 200,
+     "bytes": 1219927,
+     "sha256": "5accc15b85afc69995882cbaba884dd208a3ae235addcb6f16e22e00baa51e60",
+     "url": "/datasets/python/D10/standard.1/api/works-page-2.json"
+    },
+    {
+     "path": "api/works-page-3.json",
+     "table": "works",
+     "layer": "clean",
+     "format": "json",
+     "rows": 200,
+     "bytes": 1186554,
+     "sha256": "4589bb1633d89486b3142c19c1075a5fceda5c7180ffe441b7771ec2452832ea",
+     "url": "/datasets/python/D10/standard.1/api/works-page-3.json"
+    },
+    {
+     "path": "api/works-page-4.json",
+     "table": "works",
+     "layer": "clean",
+     "format": "json",
+     "rows": 200,
+     "bytes": 1117958,
+     "sha256": "46bf7c21367ec25fb11e892f4cd3fb5138548ecb68b486883e6d32d68f66129d",
+     "url": "/datasets/python/D10/standard.1/api/works-page-4.json"
+    },
+    {
+     "path": "api/works-page-5.json",
+     "table": "works",
+     "layer": "clean",
+     "format": "json",
+     "rows": 200,
+     "bytes": 1152275,
+     "sha256": "4a86fc94a32d0fbb9f8616b8f54da546b5cb3880e8b0b4086d34ded43b44926e",
+     "url": "/datasets/python/D10/standard.1/api/works-page-5.json"
+    },
+    {
+     "path": "api/works-page-6.json",
+     "table": "works",
+     "layer": "clean",
+     "format": "json",
+     "rows": 200,
+     "bytes": 1103808,
+     "sha256": "339c4774ad057cd5169f4235cbb6f6e6a726292154dff6164d6148bae5bf0e21",
+     "url": "/datasets/python/D10/standard.1/api/works-page-6.json"
+    }
+   ],
+   "quality": [
+    {
+     "id": "no_doi",
+     "description": "Works with no DOI",
+     "count": 12
+    },
+    {
+     "id": "no_source",
+     "description": "Works with no known journal or repository",
+     "count": 2
+    },
+    {
+     "id": "no_pages",
+     "description": "Works with no page numbers",
+     "count": 174
+    },
+    {
+     "id": "no_institution",
+     "description": "Authorships with no institution",
+     "count": 640
+    },
+    {
+     "id": "many_authors",
+     "description": "Works with more than 20 authors",
+     "count": 52
+    }
+   ],
+   "profile": {
+    "works": {
+     "work_id": {
+      "nulls": 0,
+      "distinct": 1200
+     },
+     "doi": {
+      "nulls": 12,
+      "distinct": 1188
+     },
+     "title": {
+      "nulls": 0,
+      "distinct": 1193
+     },
+     "publication_year": {
+      "nulls": 0,
+      "distinct": 6,
+      "min": 2019,
+      "max": 2024,
+      "mean": 2020.82
+     },
+     "publication_date": {
+      "nulls": 0,
+      "distinct": 809,
+      "min": "2019-01-01",
+      "max": "2024-12-18"
+     },
+     "type": {
+      "nulls": 0,
+      "distinct": 3
+     },
+     "language": {
+      "nulls": 3,
+      "distinct": 4
+     },
+     "cited_by_count": {
+      "nulls": 0,
+      "distinct": 353,
+      "min": 75,
+      "max": 38040,
+      "mean": 345.66
+     },
+     "is_retracted": {
+      "nulls": 0,
+      "distinct": 2,
+      "min": 0,
+      "max": 1,
+      "mean": 0
+     },
+     "is_oa": {
+      "nulls": 0,
+      "distinct": 2,
+      "min": 0,
+      "max": 1,
+      "mean": 0.82
+     },
+     "oa_status": {
+      "nulls": 0,
+      "distinct": 6
+     },
+     "source_name": {
+      "nulls": 2,
+      "distinct": 549
+     },
+     "source_type": {
+      "nulls": 2,
+      "distinct": 5
+     },
+     "publisher": {
+      "nulls": 20,
+      "distinct": 113
+     },
+     "licence": {
+      "nulls": 573,
+      "distinct": 8
+     },
+     "topic": {
+      "nulls": 0,
+      "distinct": 413
+     },
+     "field": {
+      "nulls": 0,
+      "distinct": 24
+     },
+     "referenced_works_count": {
+      "nulls": 0,
+      "distinct": 172,
+      "min": 0,
+      "max": 572,
+      "mean": 53.9
+     },
+     "volume": {
+      "nulls": 99,
+      "distinct": 292
+     },
+     "issue": {
+      "nulls": 436,
+      "distinct": 84
+     },
+     "first_page": {
+      "nulls": 174,
+      "distinct": 912
+     },
+     "last_page": {
+      "nulls": 174,
+      "distinct": 929
+     }
+    },
+    "authorships": {
+     "work_id": {
+      "nulls": 0,
+      "distinct": 1198
+     },
+     "author_order": {
+      "nulls": 0,
+      "distinct": 100,
+      "min": 1,
+      "max": 100,
+      "mean": 9.55
+     },
+     "author_position": {
+      "nulls": 0,
+      "distinct": 3
+     },
+     "author_id": {
+      "nulls": 684,
+      "distinct": 6994
+     },
+     "author_name": {
+      "nulls": 0,
+      "distinct": 7585
+     },
+     "institutions": {
+      "nulls": 640,
+      "distinct": 2426
+     },
+     "countries": {
+      "nulls": 644,
+      "distinct": 267
+     },
+     "is_corresponding": {
+      "nulls": 0,
+      "distinct": 2,
+      "min": 0,
+      "max": 1,
+      "mean": 0.15
+     }
+    },
+    "keywords": {
+     "work_id": {
+      "nulls": 0,
+      "distinct": 1200
+     },
+     "keyword": {
+      "nulls": 0,
+      "distinct": 7009
+     },
+     "score": {
+      "nulls": 0,
+      "distinct": 681,
+      "min": 0.3019999861717224,
+      "max": 1,
+      "mean": 0.78
+     }
+    }
+   }
+  }
+ }
+}

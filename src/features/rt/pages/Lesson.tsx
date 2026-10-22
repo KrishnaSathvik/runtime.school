@@ -1,8 +1,10 @@
 "use client";
 
+import { focusWorkspaceEditor } from "../workspace-focus";
+
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Circle, CircleCheck, List, X } from "lucide-react";
+import { ArrowRight, Circle, CircleCheck, List, X } from "lucide-react";
 import taskContexts from "@/content/task-context.json";
 import lessonPreviews from "@/content/lesson-previews.json";
 import type { DatasetPreview as LessonPreview } from "@/data/datasets/learning";
@@ -19,9 +21,7 @@ import { Pager } from "../Pager";
 import { RunCell } from "../Cells";
 import { Challenge } from "../Challenge";
 import { Tables } from "../Tables";
-
-/** Same order as the course: easier levels first, matching the practice drawer. */
-const LESSON_LEVELS = ["Beginner", "Intermediate", "Advanced"] as const;
+import { revealRange } from "../reveal";
 
 /**
  * A lesson is one session: read, run, observe, then the two challenges and the concept check
@@ -120,6 +120,20 @@ function Session({ lessonId }: { lessonId: number }) {
     setTab(t);
     setSession(lessonId, null, t === "check" ? "review" : "practice", t === "challenge-2" ? 1 : 0);
   };
+  const tabsRef = useRef<HTMLDivElement>(null);
+  /** Next after a pass: the following task, then the next lesson. Focus follows to the new tab. */
+  const goTo = (t: Tab) => {
+    pick(t);
+    requestAnimationFrame(() => {
+      const button = document.getElementById(`tab-${t}`);
+      button?.focus({ preventScroll: true });
+      if (tabsRef.current) revealRange(tabsRef.current);
+    });
+  };
+  const nextLessonTitle = nextLessonId !== undefined ? getLesson(nextLessonId)?.title : undefined;
+  const nextLessonLink = nextLessonId !== undefined && (
+    <Link className="rx-btn primary" href={sqlLessonHref(nextLessonId)}>Next lesson: {nextLessonTitle} <ArrowRight size={14} aria-hidden="true" /></Link>
+  );
   const tabs: { id: Tab; label: string; done: boolean }[] = [
     { id: "challenge-1", label: "Challenge 1", done: solved0 },
     { id: "challenge-2", label: "Challenge 2", done: solved1 },
@@ -139,10 +153,10 @@ function Session({ lessonId }: { lessonId: number }) {
       status={["SQL", `lesson ${position + 1}/${courseOrder.length}`, `sqlite · ${datasetCatalog[lesson.dataset]?.name ?? lesson.dataset}`, mastered ? "✓ mastered" : "drafts save as you type"]}
     >
       <LessonBar lessonId={lessonId} />
-      <div className="rx-task rx-canonical-learning rx-lesson rx-learn-tables">
+      <div className="rx-task rx-canonical-learning rx-lesson rx-learn-tables workspace-bounded">
         <div className="rx-task-split">
           {/* Left: read and run. */}
-          <article className="rx-brief" aria-labelledby="lesson-title">
+          <article className="rx-brief" aria-labelledby="lesson-title" tabIndex={0}>
             <p className="rx-prompt-line"><b>lesson {String(position + 1).padStart(2, "0")}</b> {groups[lesson.group]} · {lesson.difficulty.toLowerCase()}</p>
             <h1 id="lesson-title" className="rx-task-title">{lesson.title}</h1>
             <p className="rx-lead" style={{ fontSize: "1.05rem" }}>{lessonSummaries[lessonId]}</p>
@@ -182,18 +196,20 @@ function Session({ lessonId }: { lessonId: number }) {
           </article>
 
           {/* Right: do the work. Stays in view while the lesson scrolls. */}
-          <section className="rx-work rx-lesson-work" aria-label="Your work">
-            <div className="rx-tabs" role="tablist" aria-label="Lesson tasks">
+          <section className="rx-work rx-lesson-work" aria-label="Your work" tabIndex={0} onFocusCapture={focusWorkspaceEditor}>
+            <div className="rx-tabs" role="tablist" aria-label="Lesson tasks" ref={tabsRef}>
               {tabs.map((t) => (
-                <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} aria-controls={`panel-${t.id}`} onClick={() => pick(t.id)}>
+                <button key={t.id} id={`tab-${t.id}`} type="button" role="tab" aria-selected={tab === t.id} aria-controls={`panel-${t.id}`} onClick={() => pick(t.id)}>
                   {t.done ? <CircleCheck size={15} className="ok" aria-hidden="true" /> : <Circle size={15} className="todo" aria-hidden="true" />} {t.label}
                   {t.done && <span className="sr-only"> (done)</span>}
                 </button>
               ))}
             </div>
             <div id={`panel-${tab}`} role="tabpanel">
-              {tab === "challenge-1" && <Challenge key="c1" lessonId={lessonId} variant={0} />}
-              {tab === "challenge-2" && <Challenge key="c2" lessonId={lessonId} variant={1} />}
+              {tab === "challenge-1" && <Challenge key="c1" lessonId={lessonId} variant={0}
+                nextAction={<button type="button" className="rx-btn primary" onClick={() => goTo("challenge-2")}>Next: Challenge 2 <ArrowRight size={14} aria-hidden="true" /></button>} />}
+              {tab === "challenge-2" && <Challenge key="c2" lessonId={lessonId} variant={1}
+                nextAction={<button type="button" className="rx-btn primary" onClick={() => goTo("check")}>Next: Concept check <ArrowRight size={14} aria-hidden="true" /></button>} />}
               {tab === "check" && (
                 <>
                   <section className="rx-question" aria-label="Concept check">
@@ -222,7 +238,7 @@ function Session({ lessonId }: { lessonId: number }) {
                       <p className={`rx-feedback ${quiz.ok ? "ok" : "bad"}`}>
                         {quiz.ok
                           ? nextLessonId !== undefined
-                            ? "✓ Correct. Use Next when you want the next lesson."
+                            ? "✓ Correct."
                             : "✓ Correct. That’s the last lesson in the course."
                           : "✕ Not quite."}{" "}
                         {lesson.quiz.why}
@@ -230,13 +246,14 @@ function Session({ lessonId }: { lessonId: number }) {
                     )}
                     {!quiz && checkPassed && <p className="rx-feedback ok">✓ Concept check passed earlier.</p>}
                   </div>
+                  {(quiz?.ok || (!quiz && checkPassed)) && nextLessonLink && <div className="rx-next">{nextLessonLink}</div>}
                 </>
               )}
             </div>
             <div className={`rx-lesson-status ${mastered ? "done" : ""}`} aria-live="polite">
               <span>
                 {mastered
-                  ? "✓ Lesson mastered."
+                  ? <>✓ Lesson mastered.{nextLessonId !== undefined && tab !== "check" && <> <Link className="rx-link" href={sqlLessonHref(nextLessonId)}>Next lesson: {nextLessonTitle} →</Link></>}</>
                   : <>To master this lesson, solve both challenges without hints and pass the concept check.{" "}<b>{`${left} of 3 to go.`}</b></>}
               </span>
             </div>
@@ -255,18 +272,17 @@ function LessonBar({ lessonId }: { lessonId: number }) {
   const position = courseOrder.indexOf(lessonId);
   const prev = courseOrder[position - 1];
   const next = courseOrder[position + 1];
-  const byLevel = useMemo(() => {
-    const rows = courseOrder.map((id, i) => ({ id, i, lesson: getLesson(id)! }));
-    const known = new Set<string>(LESSON_LEVELS);
-    const grouped = LESSON_LEVELS.map((level) => ({
-      level,
-      items: rows.filter((r) => r.lesson.difficulty === level),
-    })).filter((g) => g.items.length > 0);
-    const extra = [...new Set(rows.map((r) => r.lesson.difficulty).filter((d) => !known.has(d)))];
-    return [
-      ...grouped,
-      ...extra.map((level) => ({ level, items: rows.filter((r) => r.lesson.difficulty === level) })),
-    ];
+  // Course order, the same order Prev and Next follow, split where the course moves to a new section.
+  const bySection = useMemo(() => {
+    const sections: { label: string; items: { id: number; i: number; lesson: NonNullable<ReturnType<typeof getLesson>> }[] }[] = [];
+    courseOrder.forEach((id, i) => {
+      const lesson = getLesson(id)!;
+      const label = groups[lesson.group] ?? "";
+      const last = sections[sections.length - 1];
+      if (last && last.label === label) last.items.push({ id, i, lesson });
+      else sections.push({ label, items: [{ id, i, lesson }] });
+    });
+    return sections;
   }, []);
 
   useEffect(() => {
@@ -304,16 +320,15 @@ function LessonBar({ lessonId }: { lessonId: number }) {
             <button type="button" className="rx-btn ghost" onClick={() => setOpen(false)} aria-label="Close list"><X size={14} /></button>
           </div>
           <ol ref={listRef}>
-            {byLevel.map(({ level, items }) => (
-              <li key={level}>
-                <p className="rx-drawer-group mono">{level}</p>
+            {bySection.map(({ label, items }) => (
+              <li key={`${items[0].i}-${label}`}>
+                <p className="rx-drawer-group mono">{label}</p>
                 <ul className="rx-drawer-sub">
                   {items.map((r) => (
                     <li key={r.id}>
                       <Link href={sqlLessonHref(r.id)} aria-current={r.id === lessonId ? "page" : undefined} onClick={() => setOpen(false)}>
                         <span className={`mono g ${glyph(r.id) === "✓" ? "ok" : ""}`}>{glyph(r.id)}</span>
-                        <span>{r.lesson.title}</span>
-                        <span className="mono k">{String(r.i + 1).padStart(2, "0")}</span>
+                        <span><span className="mono k">{String(r.i + 1).padStart(2, "0")}</span> {r.lesson.title}</span>
                       </Link>
                     </li>
                   ))}

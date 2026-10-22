@@ -1,18 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { PythonEntry } from "@/features/py/Entry";
-import { PythonHome } from "@/features/py/Home";
+import { PythonLearnEntry } from "@/features/python/Entry";
 import { pythonRunnerEnabled } from "@/platform/python-runner";
+import { pyEntryMetadata } from "@/platform/python-seo";
 
-export const metadata: Metadata = {
-  title: "Python",
-  description: "Learn Python by writing real programs that run in your browser.",
-  // Python is not public yet.
-  robots: { index: false, follow: false },
-};
+// Opens the learner's next lesson, so it has no content of its own; the first lesson is the canonical page.
+export const metadata: Metadata = pyEntryMetadata("learn");
 
-/** Python home. Only exists where the Python runner is allowed (see platform/python-runner.ts). */
-export default async function Page({ searchParams }: { searchParams: Promise<{ browse?: string }> }) {
+/** Learn: opens the next unfinished lesson, like SQL. Only exists where the Python runner is allowed (platform/python-runner.ts). */
+export default function Page() {
   if (!pythonRunnerEnabled()) notFound();
-  return (await searchParams).browse === "1" ? <PythonHome /> : <PythonEntry section="learn" />;
+  return <PythonLearnEntry />;
 }

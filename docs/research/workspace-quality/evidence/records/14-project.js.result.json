@@ -1,0 +1,28 @@
+{
+  "at": "2026-10-21T14:37:59.436Z",
+  "script": "docs/research/workspace-quality/scratch/14-project.js",
+  "url": "http://localhost:3040/sql/projects/retail-performance-review?stage=baseline",
+  "result": {
+    "text": "All projects\nRetail Performance Review\n\nJunior Business Analyst · Retail\n\n1\n2\n3\n4\n5\n6\n7\n8\n\nStage 3 of 8\n\nSize sales and cancellations\nTask\nTables\nMetrics\n\nAcross all invoices, how many sale and cancellation invoices are there, what are gross sales, cancelled value and net sales, and what share of gross sales was cancelled?\n\nContext\n\nBefore comparing years, establish control totals for the whole period: how much was invoiced, and how much was taken back by cancellation invoices.\n\nWhat to return\n\none summary row\n\nsale_invoices\ncancellation_invoices\ngross_sales\ncancelled_value\nnet_sales\ncancellation_rate\nGuidance\n\nInvoices and invoice lines are different units: count invoices with DISTINCT after the join.\n\nUse CASE inside SUM to split sale and cancellation value in one pass.\n\ncancelled_value is already negative, so the rate needs a minus sign to be positive.\n\nSQL workspace\n1\nSELECT * FROM orders LIMIT 20;\nRun\nCheck\nResults\n\nRun your query to see results.\n\nSave & continue →",
+    "buttons": [
+      "All projects",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "Task",
+      "Tables",
+      "Metrics",
+      "Run",
+      "Check",
+      "Save & continue →"
+    ],
+    "editors": [
+      "SELECT * FROM orders LIMIT 20;"
+    ]
+  }
+}

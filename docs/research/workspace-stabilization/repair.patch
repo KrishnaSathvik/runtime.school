@@ -1,0 +1,2236 @@
+--- a/public/vendor/engine.js
++++ b/public/vendor/engine.js
+@@ -130,7 +130,7 @@
+       }
+       const entry = live.get(liveKey);
+       if (entry && db.exec('SELECT total_changes()')[0].values[0][0] !== entry.changes) dropLive(liveKey); // defensive: never reuse a modified connection
+-      postMessage({ result: { columns: result.columns, values: result.values.slice(0, 200) }, total: result.values.length,
++      postMessage({ result: { columns: result.columns, values: result.values.slice(0, 200) }, total: result.values.length, expectedTotal: expected ? expected.values.length : null,
+         grade, expected: expected ? { columns: expected.columns, values: expected.values.slice(0, 200) } : null });
+       return;
+     }
+@@ -201,7 +201,7 @@
+       }
+       if (data.planValidation) grade.checks = checks;
+     }
+-    postMessage({ result: { columns: result.columns, values: result.values.slice(0, 200) }, total: result.values.length,
++    postMessage({ result: { columns: result.columns, values: result.values.slice(0, 200) }, total: result.values.length, expectedTotal: expected ? expected.values.length : null,
+       grade, expected: expected ? { columns: expected.columns, values: expected.values.slice(0, 200) } : null });
+   } catch (e) {
+     if (liveKey) { const entry = live.get(liveKey); if (entry) { try { entry.db.exec('PRAGMA query_only=ON'); } catch { dropLive(liveKey); } } }
+--- a/src/app/python/p2.css
++++ b/src/app/python/p2.css
+@@ -329,3 +329,42 @@
+ @media (max-width: 480px) {
+   .p2-tabs button { padding: 9px 8px 8px; gap: 5px; font-size: 13px; }
+ }
++
++/* Shared bounded activity shell is in rt.css; never apply to tools/Playground. */
++.rx .p2.workspace-bounded .p2-split {
++  flex: 1 1 0; min-height: 0; height: auto;
++  grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: minmax(0, 1fr);
++  align-items: stretch;
++}
++.rx .p2.workspace-bounded .p2-split > :is(.p2-read, .p2-work) {
++  position: static; align-self: stretch; height: auto; max-height: none;
++  min-width: 0; min-height: 0; overflow: auto; overscroll-behavior: contain;
++  scrollbar-gutter: stable; scroll-padding-block: 12px 64px;
++}
++.rx .p2.workspace-bounded .p2-split > :focus-visible {
++  outline: 2px solid var(--rx-amber); outline-offset: -3px;
++}
++.rx .p2.workspace-bounded .p2-work > * { flex-shrink: 0; }
++.rx .p2.workspace-bounded .p2-bench { overflow: visible; }
++.rx .p2.workspace-bounded .p2-bench .py-editor {
++  flex: none; height: clamp(120px, 30dvh, 360px); min-height: 0; overflow: hidden;
++}
++.rx .p2.workspace-bounded .p2-bench .py-editor > *,
++.rx .p2.workspace-bounded .p2-bench .py-editor .cm-editor {
++  height: 100%; min-height: 0 !important; max-height: none; overflow: hidden;
++}
++.rx .p2.workspace-bounded .p2-bench .py-editor .cm-scroller { height: 100%; overflow: auto; }
++.rx .p2.workspace-bounded .p2-actions { position: sticky; bottom: 0; z-index: 2; }
++.rx .p2.workspace-bounded .p2-project-head { padding-block: 12px; }
++@media (max-width: 899px) {
++  .rx .p2.workspace-bounded .p2-split {
++    grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(2, minmax(0, 1fr));
++  }
++  .rx .p2.workspace-bounded .p2-split > :is(.p2-read, .p2-work) { padding: 12px; }
++}
++@media (max-height: 600px) {
++  .rx .p2.workspace-bounded .p2-split { flex: none; height: auto; grid-template-rows: auto; }
++  .rx .p2.workspace-bounded .p2-split > :is(.p2-read, .p2-work) {
++    max-height: 70dvh; min-height: 200px; overflow: auto;
++  }
++}
+--- a/src/app/sql/rt.css
++++ b/src/app/sql/rt.css
+@@ -1224,3 +1224,89 @@
+ .rx-ds-involved { display: flex; flex-wrap: wrap; gap: 6px; }
+ .rx-ds-involved li { padding: 3px 10px; border: 1px solid var(--rx-line-strong); border-radius: 999px; }
+ .rx-ds-involved span { color: var(--rx-faint); }
++
++/* Activity workspaces only: tools and document-only project stages keep their layout. */
++.rx:has(.workspace-bounded) { height: 100dvh; min-height: 0; overflow: hidden; }
++.rx:has(.workspace-bounded) > .rx-bar,
++.rx:has(.workspace-bounded) > .rx-status { flex: 0 0 auto; }
++.rx:has(.workspace-bounded) > .rx-main {
++  flex: 1 1 0; min-height: 0; height: auto; max-height: none;
++  display: flex; flex-direction: column; overflow: hidden;
++}
++.rx:has(.workspace-bounded) > .rx-main > :not(.workspace-bounded) { flex: 0 0 auto; }
++.rx .workspace-bounded,
++.rx .workspace-bounded > .rx-task {
++  flex: 1 1 0; min-height: 0; height: auto; max-height: none;
++  display: flex; flex-direction: column; overflow: hidden;
++}
++.rx .workspace-bounded > :not(.rx-task-split):not(.p2-split):not(.rx-task),
++.rx .workspace-bounded > .rx-task > :not(.p2-split) { flex: 0 0 auto; }
++.rx .workspace-bounded.project-contract { padding-bottom: 12px; }
++.rx .workspace-bounded.project-contract .project-stage-nav { margin-bottom: 12px; }
++.rx .workspace-bounded > .rx-task-split {
++  flex: 1 1 0; min-height: 0; height: auto;
++  grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: minmax(0, 1fr);
++  align-items: stretch;
++}
++.rx .workspace-bounded > .rx-task-split > :is(.rx-brief, .rx-work) {
++  position: static; align-self: stretch; min-width: 0; min-height: 0;
++  height: auto; max-height: none; overflow: auto; overscroll-behavior: contain;
++  scrollbar-gutter: stable; scroll-padding-block: 12px 64px;
++  display: block;
++}
++.rx .workspace-bounded > .rx-task-split > :focus-visible {
++  outline: 2px solid var(--rx-amber); outline-offset: -3px;
++}
++/* The pane scrolls its prompt/results; only long code gets its own editor scroll. */
++.rx .workspace-bounded.rx-lesson .rx-lesson-work > [role="tabpanel"],
++.rx .workspace-bounded.rx-lesson .rx-lesson-work > [role="tabpanel"] > *,
++.rx .workspace-bounded.rx-lesson .rx-lesson-work > :is(.rx-hints, .rx-why, .rx-small) {
++  display: block; height: auto; min-height: 0; max-height: none; overflow: visible;
++}
++.rx .workspace-bounded .rx-work .rx-cell.rx-cell {
++  display: block; height: auto; min-height: 0; overflow: visible;
++}
++.rx .workspace-bounded .rx-work .rx-editor {
++  display: block; height: clamp(120px, 30dvh, 360px); min-height: 0; overflow: hidden;
++}
++.rx .workspace-bounded .rx-work .rx-editor > *,
++.rx .workspace-bounded .rx-work .rx-editor .cm-editor.cm-editor {
++  height: 100%; min-height: 0 !important; max-height: none; overflow: hidden;
++}
++.rx .workspace-bounded .rx-work .rx-editor .cm-scroller.cm-scroller {
++  height: 100%; min-height: 0; max-height: none; overflow: auto;
++}
++.rx .workspace-bounded .rx-work .rx-cell-foot {
++  position: sticky; bottom: 0; z-index: 2; background: var(--rx-bg);
++}
++.rx .workspace-bounded .rx-work .rx-result { max-height: none; overflow: visible; }
++@media (max-width: 899px) {
++  .rx .workspace-bounded > .rx-task-split {
++    grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(2, minmax(0, 1fr));
++  }
++  .rx .workspace-bounded > .rx-task-split > .rx-brief {
++    border-right: 0; border-bottom: 1px solid var(--rx-line); padding: 12px;
++  }
++  .rx .workspace-bounded > .rx-task-split > .rx-work { padding: 12px; border-top: 0; }
++  .rx .workspace-bounded.project-contract { padding: 12px 8px 8px; }
++}
++/* A short viewport (landscape, zoom or a resizing keyboard) needs scroll space,
++   not two unusably tiny fixed panes. No content or action becomes unreachable. */
++@media (max-height: 600px) {
++  .rx:has(.workspace-bounded) { height: auto; min-height: 100dvh; overflow: visible; }
++  .rx:has(.workspace-bounded) > .rx-main,
++  .rx .workspace-bounded,
++  .rx .workspace-bounded > .rx-task { flex: 0 0 auto; height: auto; overflow: visible; }
++  .rx .workspace-bounded > .rx-task-split {
++    flex: none; height: auto; grid-template-rows: auto;
++  }
++  .rx .workspace-bounded > .rx-task-split > :is(.rx-brief, .rx-work) {
++    max-height: 70dvh; min-height: 200px; overflow: auto;
++  }
++}
++@media (max-width: 899px) and (min-height: 601px) {
++  .rx .workspace-bounded > .rx-task-split[data-editor-focus="true"],
++  .rx .p2.workspace-bounded .p2-split[data-editor-focus="true"] {
++    grid-template-rows: minmax(64px, 1fr) minmax(0, min(var(--workspace-work-height), calc(100% - 64px)));
++  }
++}
+--- a/src/engine/python/client.ts
++++ b/src/engine/python/client.ts
+@@ -18,6 +18,8 @@
+ /** Loading data libraries (pandas, matplotlib, …) downloads and unpacks several MB the first time. */
+ export const PY_PACKAGES_BOOT_TIMEOUT_MS = 120000;
+ export const PY_RUN_TIMEOUT_MS = 5000;
++/** Each dataset download/hash check has a separate preparation deadline. */
++export const PY_MOUNT_TIMEOUT_MS = 60000;
+ /** Characters of stdout + stderr kept per run. */
+ export const PY_OUTPUT_LIMIT = 50000;
+ /** Loaded inside the sandbox from /runner/ (a rewrite of public/vendor/). Not fetched by the page itself. */
+@@ -243,15 +245,15 @@
+ 
+ // ---- dataset mounts ----
+ 
+-let fetchBytes: (url: string) => Promise<ArrayBuffer> = async (url) => {
+-  const res = await fetch(url);
++let fetchBytes: (url: string, signal?: AbortSignal) => Promise<ArrayBuffer> = async (url, signal) => {
++  const res = await fetch(url, { signal });
+   if (!res.ok) throw new Error(`HTTP ${res.status}`);
+   return res.arrayBuffer();
+ };
+ const mountCache = new Map<string, Promise<ArrayBuffer>>();
+ 
+ /** Test hook. */
+-export function __setMountFetcher(fetcher: (url: string) => Promise<ArrayBuffer>): void {
++export function __setMountFetcher(fetcher: (url: string, signal?: AbortSignal) => Promise<ArrayBuffer>): void {
+   fetchBytes = fetcher;
+   mountCache.clear();
+ }
+@@ -266,11 +268,20 @@
+   const key = m.sha256.toLowerCase();
+   let p = mountCache.get(key);
+   if (!p) {
+-    p = fetchBytes(m.url).then(async (bytes) => {
++    const controller = new AbortController();
++    const download = Promise.resolve().then(() => fetchBytes(m.url, controller.signal)).then(async (bytes) => {
+       if ((await sha256Hex(bytes)) !== key) throw new Error(`${m.path} didn't match its published checksum`);
+       return bytes;
+     });
+-    p.catch(() => mountCache.delete(key));
++    p = new Promise<ArrayBuffer>((resolve, reject) => {
++      const timer = setTimeout(() => {
++        reject(new Error(`the dataset download timed out after ${PY_MOUNT_TIMEOUT_MS / 1000} seconds`));
++        controller.abort();
++      }, PY_MOUNT_TIMEOUT_MS);
++      download.then(bytes => { clearTimeout(timer); resolve(bytes); }, error => { clearTimeout(timer); reject(error); });
++    });
++    const pending = p;
++    p.catch(() => { if (mountCache.get(key) === pending) mountCache.delete(key); });
+     mountCache.set(key, p);
+   }
+   return p;
+@@ -282,8 +293,14 @@
+   for (const m of mounts) loadMount(m).catch(() => {});
+ }
+ 
+-async function resolveMounts(mounts: readonly PyMount[]): Promise<{ path: string; bytes: ArrayBuffer }[]> {
+-  const all = await Promise.all(mounts.map(async (m) => ({ path: m.path, bytes: await loadMount(m) })));
++async function resolveMounts(mounts: readonly PyMount[], pending?: Map<string, Promise<ArrayBuffer>>): Promise<{ path: string; bytes: ArrayBuffer }[]> {
++  const all = await Promise.all(mounts.map(async (m) => {
++    const key = m.sha256.toLowerCase();
++    const request = loadMount(m);
++    pending?.set(key, request);
++    try { return { path: m.path, bytes: await request }; }
++    finally { if (pending?.get(key) === request) pending.delete(key); }
++  }));
+   const total = all.reduce((s, m) => s + m.bytes.byteLength, 0);
+   if (total > PY_MOUNT_LIMIT) throw new Error(`the dataset files are too large to load (${Math.round(total / 1e6)} MB)`);
+   return all;
+@@ -291,7 +308,7 @@
+ 
+ // ---- execution ----
+ 
+-type Active = { id: number; out: Output; current?: PyCaseRef; settle: (r: PyRunResult) => void };
++type Active = { id: number; operation?: symbol; out: Output; current?: PyCaseRef; settle: (r: PyRunResult) => void };
+ let active: Active | null = null;
+ let nextId = 1;
+ 
+@@ -305,6 +322,8 @@
+ export async function runPython(
+   code: string,
+   opts: {
++    /** Optional caller identity: scoped Stop never interrupts a different caller. */
++    operation?: symbol;
+     timeoutMs?: number;
+     outputLimit?: number;
+     stdin?: string;
+@@ -337,12 +356,22 @@
+   const result = new Promise<PyRunResult>((resolve) => (settle = resolve));
+   const clock: { timer?: ReturnType<typeof setTimeout> } = {};
+   let w: WorkerLike | null = null;
++  const pendingMounts = new Map<string, Promise<ArrayBuffer>>();
+   const me: Active = {
+     id,
++    operation: opts.operation,
+     out,
+     settle: (r) => {
+       if (active !== me) return;
+       active = null;
++      // A retry must not inherit a download abandoned by Stop/supersession. Do not abort
++      // shared fetches here: a preload/other consumer may still await them. Their own
++      // deadline aborts transport; identity checks protect a newer same-hash entry.
++      if (r.status === "stopped" || r.status === "superseded") {
++        for (const [key, request] of pendingMounts) {
++          if (mountCache.get(key) === request) mountCache.delete(key);
++        }
++      }
+       clearTimeout(clock.timer);
+       if (w) {
+         w.removeEventListener("message", onMessage);
+@@ -405,7 +434,7 @@
+   const onError = () => me.settle({ ...out, status: "crashed", message: "Python stopped unexpectedly. Run your code again." });
+ 
+   // Datasets download while the interpreter boots; neither counts against the run clock.
+-  const mounting = opts.mounts?.length ? resolveMounts(opts.mounts) : Promise.resolve(undefined);
++  const mounting = opts.mounts?.length ? resolveMounts(opts.mounts, pendingMounts) : Promise.resolve(undefined);
+   mounting.catch(() => {});
+   let mounts: { path: string; bytes: ArrayBuffer }[] | undefined;
+   try {
+@@ -440,8 +469,10 @@
+ }
+ 
+ /** Stop the current run (if any). The interpreter is discarded and a fresh one warms up. */
+-export function stopPython(): void {
+-  if (!active) return;
++export function stopPython(): void;
++export function stopPython(operation: symbol): void;
++export function stopPython(operation?: symbol): void {
++  if (!active || (typeof operation === "symbol" && active.operation !== operation)) return;
+   active.settle({ ...active.out, status: "stopped", case: active.current });
+ }
+ 
+--- a/src/engine/sql-client.ts
++++ b/src/engine/sql-client.ts
+@@ -22,6 +22,8 @@
+   total?: number;
+   grade?: GradeResult | null;
+   expected?: SqlResult | null;
++  /** Full reference row count, before the expected-result preview is capped. */
++  expectedTotal?: number | null;
+   error?: string;
+   /** Lab scripts only: where a multi-statement script stopped and what had already run. */
+   failure?: { statement: number; sql: string; completed: number; later: boolean; openTransaction: boolean };
+@@ -96,6 +98,8 @@
+ 
+ let worker: WorkerLike | null = null;
+ let ready: Promise<void> | null = null;
++let bootGeneration = 0;
++let abortBoot: (() => void) | null = null;
+ /** The one execution allowed to resolve with real data. */
+ let pending: { settle: (r: ExecuteResponse) => void } | null = null;
+ 
+@@ -105,6 +109,8 @@
+ }
+ 
+ function discardWorker() {
++  bootGeneration++;
++  abortBoot?.();
+   terminateWorker();
+   ready = null;
+ }
+@@ -131,15 +137,16 @@
+   const started = typeof performance !== "undefined" ? performance.now() : Date.now();
+   return new Promise<void>((resolve, reject) => {
+     let settled = false;
+-    const finish = (err?: Error) => {
++    const finish = (err?: Error, cancelled = false) => {
+       if (settled) return;
+       settled = true;
+       clearTimeout(timer);
++      if (abortBoot === cancel) abortBoot = null;
+       w.removeEventListener("message", onMessage);
+       w.removeEventListener("error", onError);
+       const ms = Math.round((typeof performance !== "undefined" ? performance.now() : Date.now()) - started);
+       if (err) {
+-        logBoot("fail", attempt, ms, err.message);
++        if (!cancelled) logBoot("fail", attempt, ms, err.message);
+         // Tear down this attempt only — keep `ready` so concurrent callers
+         // share the outer retry loop instead of spawning parallel boots.
+         if (worker === w) terminateWorker();
+@@ -149,6 +156,8 @@
+         resolve();
+       }
+     };
++    const cancel = () => finish(new Error("SQL engine preparation cancelled."), true);
++    abortBoot = cancel;
+     const timer = setTimeout(
+       () => finish(new Error(BOOT_FAIL_MESSAGE)),
+       BOOT_TIMEOUT_MS,
+@@ -171,13 +180,16 @@
+     return Promise.reject(new Error("SQL engine runs in the browser only."));
+   }
+   if (ready) return ready;
++  const generation = bootGeneration;
+   ready = (async () => {
+     let last: Error = new Error(BOOT_FAIL_MESSAGE);
+     for (let attempt = 1; attempt <= BOOT_ATTEMPTS; attempt++) {
++      if (generation !== bootGeneration) throw new Error("SQL engine preparation cancelled.");
+       try {
+         await bootOnce(attempt);
+         return;
+       } catch (err) {
++        if (generation !== bootGeneration) throw err;
+         last = err instanceof Error ? err : new Error(String(err));
+         if (attempt < BOOT_ATTEMPTS) await sleep(BOOT_BACKOFF_MS * attempt);
+       }
+@@ -185,7 +197,7 @@
+     throw last;
+   })().catch((err) => {
+     // Allow the next run to retry instead of caching a dead promise forever.
+-    ready = null;
++    if (generation === bootGeneration) ready = null;
+     throw err;
+   });
+   return ready;
+--- a/src/features/py/PyEditor.tsx
++++ b/src/features/py/PyEditor.tsx
+@@ -3,7 +3,7 @@
+ import CodeMirror, { type ReactCodeMirrorRef } from "@uiw/react-codemirror";
+ import { python } from "@codemirror/lang-python";
+ import { indentUnit } from "@codemirror/language";
+-import { temporarilySetTabFocusMode } from "@codemirror/commands";
++import { temporarilySetTabFocusMode, isolateHistory } from "@codemirror/commands";
+ import { EditorSelection, Prec, StateEffect, StateField, type Extension } from "@codemirror/state";
+ import { Decoration, EditorView, keymap, placeholder as cmPlaceholder, type DecorationSet } from "@codemirror/view";
+ import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from "react";
+@@ -101,7 +101,7 @@
+     replaceAll: (text: string) => {
+       const view = cm.current?.view;
+       if (!view) return;
+-      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text }, selection: EditorSelection.cursor(text.length) });
++      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text }, selection: EditorSelection.cursor(text.length), annotations: isolateHistory.of("full") });
+     },
+     insert: (text: string) => {
+       const view = cm.current?.view;
+--- a/src/features/python/Help.tsx
++++ b/src/features/python/Help.tsx
+@@ -1,28 +1,39 @@
+ "use client";
+ 
+-import { useState } from "react";
++import { useEffect, useRef, useState } from "react";
+ import { Eye, Lightbulb } from "lucide-react";
+ import { Inline } from "./Md";
++import { HelpDialog } from "@/features/rt/HelpDialog";
+ 
+ /** Hint / Answer buttons for the workbench action bar. */
+ export function HelpButtons({ hintsShown, hintCount, revealed, onHint, onAnswer }: { hintsShown: number; hintCount: number; revealed: boolean; onHint: () => void; onAnswer?: () => void }) {
+   const [confirm, setConfirm] = useState(false);
++  const trigger = useRef<HTMLButtonElement>(null);
++  const frame = useRef<number | null>(null);
++  useEffect(() => () => { if (frame.current !== null) cancelAnimationFrame(frame.current); }, []);
++  const reveal = (action: () => void) => {
++    // Scope to the active exercise, including prediction questions outside Workbench.
++    const scope = trigger.current?.closest(".p2-predict, .p2-work");
++    action();
++    if (frame.current !== null) cancelAnimationFrame(frame.current);
++    frame.current = requestAnimationFrame(() => {
++      const panel = scope?.querySelector<HTMLElement>(".p2-help");
++      if (!panel?.isConnected) return;
++      panel.focus({ preventScroll: true });
++      panel.scrollIntoView({ block: "nearest" });
++    });
++  };
+   return (
+     <>
+-      <button type="button" className="p2-btn" onClick={onHint} disabled={hintsShown >= hintCount}>
++      <button type="button" ref={trigger} className="p2-btn" onClick={() => reveal(onHint)} disabled={hintsShown >= hintCount}>
+         <Lightbulb size={14} aria-hidden="true" /> Hint{hintsShown ? ` ${Math.min(hintsShown + 1, hintCount)}/${hintCount}` : ""}
+       </button>
+       {onAnswer && !revealed && (
+-        confirm ? (
+-          <button type="button" className="p2-btn line" onClick={() => { setConfirm(false); onAnswer(); }}>
+-            Show answer (counts as help)
+-          </button>
+-        ) : (
+-          <button type="button" className="p2-btn" onClick={() => setConfirm(true)}>
+-            <Eye size={14} aria-hidden="true" /> Answer
+-          </button>
+-        )
++        <button type="button" className="p2-btn" onClick={() => setConfirm(true)}>
++          <Eye size={14} aria-hidden="true" /> Answer
++        </button>
+       )}
++      <HelpDialog open={confirm} onClose={() => setConfirm(false)} onConfirm={() => { setConfirm(false); if (onAnswer) reveal(onAnswer); }} />
+     </>
+   );
+ }
+@@ -31,7 +42,7 @@
+ export function HelpPanel({ hints, shown, answer, revealed, assisted, onFresh, free }: { hints: string[]; shown: number; answer?: string; revealed: boolean; assisted: boolean; onFresh?: () => void; free?: boolean }) {
+   if (!shown && !revealed) return null;
+   return (
+-    <div className="p2-help" aria-live="polite">
++    <div className="p2-help" role="region" aria-label={revealed ? "Answer and hints" : "Hints"} tabIndex={-1} aria-live="polite">
+       {shown > 0 && (
+         <>
+           <b>Hints</b>
+--- a/src/features/python/Lesson.tsx
++++ b/src/features/python/Lesson.tsx
+@@ -1,9 +1,11 @@
+ "use client";
++
++import { focusWorkspaceEditor, releaseWorkspaceEditor } from "@/features/rt/workspace-focus";
+ 
+ import Link from "next/link";
+ import { useEffect, useRef, useState } from "react";
+ import { ChevronDown, ChevronRight, Play, RotateCcw } from "lucide-react";
+-import { runPython, type PyPackage, type PyRunResult } from "@/engine/python/client";
++import { runPython, stopPython, type PyPackage, type PyRunResult } from "@/engine/python/client";
+ import { pyRegistry } from "@/content/python-v2/registry";
+ import { pyLessonHref, visibleLessons, visibleQuestions, pyQuestionHref } from "@/content/python-v2/content";
+ import type { PyExercise, PyLesson, PyLessonBlock } from "@/content/python-v2/model";
+@@ -36,18 +38,30 @@
+   const [r, setR] = useState<PyRunResult | null>(null);
+   const [open, setOpen] = useState(true);
+   const [busy, setBusy] = useState(false);
+-  const runId = useRef(0);
++  const operation = useRef<symbol | null>(null);
++  const [interrupted, setInterrupted] = useState(false);
++  useEffect(() => () => {
++    const owned = operation.current;
++    operation.current = null;
++    if (owned) stopPython(owned);
++  }, []);
+   const name = `example-${n}.py`;
+   const run = async () => {
+-    const id = ++runId.current;
++    if (operation.current) return;
++    const owned = Symbol("lesson-example");
++    operation.current = owned;
+     setBusy(true);
+-    const res = await runPython(b.code, { stdin: b.kind === "example" ? b.stdin : undefined, packages });
+-    if (id !== runId.current) return;
+-    if (res.status !== "superseded") {
+-      setR(res);
+-      setOpen(true);
++    setInterrupted(false);
++    try {
++      const res = await runPython(b.code, { operation: owned, stdin: b.kind === "example" ? b.stdin : undefined, packages });
++      if (operation.current !== owned) return;
++      if (res.status === "superseded") setInterrupted(true);
++      else { setR(res); setOpen(true); }
++    } catch (error) {
++      if (operation.current === owned) { setR({ status: "crashed", message: error instanceof Error ? error.message : String(error), stdout: "", stderr: "", output: [] }); setOpen(true); }
++    } finally {
++      if (operation.current === owned) { operation.current = null; setBusy(false); }
+     }
+-    setBusy(false);
+   };
+   return (
+     <div className="p2-example">
+@@ -65,6 +79,7 @@
+         </span>
+       </div>
+       <Code code={b.code} label={name} />
++      {interrupted && <p className="p2-note" role="status">Another program on this page started, so this run was stopped. Run it again.</p>}
+       {r && open && (
+         <>
+           <PythonConsole result={r} />
+@@ -188,7 +203,6 @@
+   const attempt = rec?.attempt ?? { hints: 0, revealed: false };
+   const st = usePy2.getState();
+   const reset = () => {
+-    st.setDraft(where, ex.starter);
+     setResetToken((t) => t + 1);
+   };
+   return (
+@@ -206,7 +220,9 @@
+         <ExpectedOutput task={ex.task} />
+       </div>
+       <Workbench
+-        key={`${ex.id}-${resetToken}`}
++        key={ex.id}
++        resetVersion={resetToken}
++        resetFiles={{ "main.py": ex.starter }}
+         label={ex.title}
+         files={[{ name: "main.py", value: draft, onChange: (v) => { st.setDraft(where, v); if (v !== ex.starter) { try { sessionStorage.setItem(editedKey, "1"); } catch { /* private mode */ } } } }]}
+         task={ex.task}
+@@ -305,7 +321,7 @@
+       section="learn"
+       path={[{ label: "python", href: "/python" }, { label: "learn", href: "/python" }, { label: mod.title }, { label: lesson.title }]}
+     >
+-      <div className="p2">
++      <div className="p2 workspace-bounded">
+         <TaskBar
+           label="All lessons"
+           heading="Course lessons"
+@@ -321,7 +337,7 @@
+           next={next ? { href: pyLessonHref(next.slug), label: next.title } : null}
+         >
+         <div className="p2-split">
+-          <article className="p2-read">
++          <article className="p2-read" aria-label="Lesson explanation" tabIndex={0}>
+             <div className="p2-eyebrow"><b>lesson {String(lesson.number).padStart(2, "0")}</b> {mod.title} · {levelOf(stage.stage)}</div>
+             <h1>{lesson.title}</h1>
+             <p className="p2-lede">{lesson.lede}</p>
+@@ -343,7 +359,7 @@
+               </>
+             )}
+           </article>
+-          <section className="p2-work" aria-label="Practice in this lesson">
++          <section className="p2-work" aria-label="Practice in this lesson" tabIndex={0} onFocusCapture={focusWorkspaceEditor} onBlurCapture={releaseWorkspaceEditor}>
+             <div className="p2-tabs" role="tablist" aria-label="Lesson steps">
+               {tabs.map((t) => (
+                 <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)}>
+--- a/src/features/python/Project.tsx
++++ b/src/features/python/Project.tsx
+@@ -1,4 +1,6 @@
+ "use client";
++
++import { focusWorkspaceEditor, releaseWorkspaceEditor } from "@/features/rt/workspace-focus";
+ 
+ import Link from "next/link";
+ import { useEffect, useRef, useState } from "react";
+@@ -71,7 +73,7 @@
+ 
+   return (
+     <Shell subject="python" section="projects" path={[{ label: "python", href: "/python" }, { label: "projects", href: "/python/projects" }]}>
+-      <div className="p2">
++      <div className={`p2${view !== "overview" && ms ? " workspace-bounded" : ""}`}>
+         <header className="p2-project-head">
+           <Link href="/python/projects">All projects</Link>
+           <h1>{project.title}</h1>
+@@ -122,7 +124,7 @@
+           </article>
+         ) : (
+           <div className="p2-split">
+-            <article className="p2-read">
++            <article className="p2-read" aria-label="Milestone requirements" tabIndex={0}>
+               <p className="p2-eyebrow">Step {index + 1} of {project.milestones.length}</p>
+               <h2>{ms.title}</h2>
+               <Md text={ms.brief} />
+@@ -135,12 +137,15 @@
+               {passed(ms.id) && next && <button type="button" className="rx-btn amber p2-next" onClick={() => open(next.id)}>Next: {next.title} →</button>}
+               {passed(ms.id) && !next && <p className="p2-note p2-next">You've finished this project.</p>}
+             </article>
+-            <section className="p2-work" aria-label="Project workspace">
++            <section className="p2-work" aria-label="Project workspace" tabIndex={0} onFocusCapture={focusWorkspaceEditor} onBlurCapture={releaseWorkspaceEditor}>
+               {!ready ? (
+                 <p className="p2-empty" role="status">Loading your project…</p>
+               ) : (
+                 <Workbench
+-                  key={`${ms.id}-${token}`}
++                  key={ms.id}
++                  resetVersion={token}
++                  resetFiles={ms.starters}
++                  resetLabel="Reset milestone files"
+                   label={`${project.title}`}
+                   files={files}
+                   main="main.py"
+@@ -149,7 +154,7 @@
+                   mounts={ms.task.mounts}
+                   checkLabel="Check step"
+                   dataTab={dataFiles.length ? { label: "data/", content: <ul style={{ margin: 0, paddingLeft: 18 }}>{dataFiles.map((f) => <li key={f.path}><code>data/{f.path}</code> · {f.rows} rows</li>)}</ul> } : undefined}
+-                  onReset={() => { st.setProjectFiles(project.id, ms.starters); setToken((t) => t + 1); }}
++                  onReset={() => setToken((t) => t + 1)}
+                   onChecked={(r) => st.recordMilestone(project.id, ms.id, r.ok)}
+                   help={<HelpButtons hintsShown={rec.attempt.hints} hintCount={ms.hints.length} revealed={false} onHint={() => st.takeProjectHelp(project.id)} />}
+                   status={
+--- a/src/features/python/Question.tsx
++++ b/src/features/python/Question.tsx
+@@ -1,4 +1,6 @@
+ "use client";
++
++import { focusWorkspaceEditor, releaseWorkspaceEditor } from "@/features/rt/workspace-focus";
+ 
+ import { useEffect, useState } from "react";
+ import { runPython, type PyRunResult } from "@/engine/python/client";
+@@ -87,10 +89,12 @@
+     }
+     st.setDraft({ kind: "question", id: q.id }, resolved.replace);
+   }, [resolved.replace, blankKey, q.id, st]);
+-  const reset = () => { st.setDraft(where, c.starter); setToken((t) => t + 1); };
++  const reset = () => { setToken((t) => t + 1); };
+   return (
+     <Workbench
+-      key={token}
++      key={q.id}
++      resetVersion={token}
++      resetFiles={{ "main.py": c.starter }}
+       label={q.title}
+       files={[{ name: "main.py", value: resolved.value, onChange: (v) => { st.setDraft(where, v); if (v !== c.starter) { try { sessionStorage.setItem(editedKey, "1"); } catch { /* private mode */ } } } }]}
+       task={c.task}
+@@ -119,7 +123,7 @@
+       section="practice"
+       path={[{ label: "python", href: "/python" }, { label: "practice", href: "/python/practice" }, { label: mod.title }, { label: q.title }]}
+     >
+-      <div className="p2">
++      <div className="p2 workspace-bounded">
+         <TaskBar
+           label="All questions"
+           heading="Practice questions"
+@@ -135,7 +139,7 @@
+           next={next ? { href: pyQuestionHref(next.slug), label: next.title } : null}
+         >
+         <div className="p2-split">
+-          <article className="p2-read">
++          <article className="p2-read" aria-label="Problem requirements" tabIndex={0}>
+             <h1>{q.title}</h1>
+             <Md text={q.prompt} className="p2-prose p2-lede" />
+             <ModeNote mode={q.entry.mode} />
+@@ -162,7 +166,7 @@
+               </>
+             )}
+           </article>
+-          <section className="p2-work" aria-label="Your solution">
++          <section className="p2-work" aria-label="Your solution" tabIndex={0} onFocusCapture={focusWorkspaceEditor} onBlurCapture={releaseWorkspaceEditor}>
+             {!ready ? <p className="p2-empty" role="status">Loading your progress…</p> : q.predict ? <Prediction q={q} /> : <CodeQuestion q={q} />}
+             {rec?.solved && <p className="p2-note">✓ Solved on your own.</p>}
+             {!rec?.solved && rec?.assisted && <p className="p2-note">Solved with help. Try again without hints to solve it on your own.</p>}
+--- a/src/features/python/Results.tsx
++++ b/src/features/python/Results.tsx
+@@ -11,10 +11,17 @@
+   return r.status === "syntax-error" || r.status === "runtime-error" ? r.error.line : null;
+ }
+ 
+-function LineButton({ line, onLine }: { line?: number | null; onLine?: (n: number) => void }) {
++export function errorFileOf(r: PyRunResult | PyGradeReport | null): string | undefined {
++  if (!r) return undefined;
++  const e = "outcome" in r ? r.error : r.status === "runtime-error" ? r.error : undefined;
++  if (!e) return undefined;
++  return ("file" in e ? e.file ?? undefined : undefined) ?? [...(e.traceback ?? "").matchAll(/File "([^"<>]+)", line \d+/g)].at(-1)?.[1];
++}
++
++function LineButton({ line, file, onLine }: { line?: number | null; file?: string; onLine?: (n: number, file?: string) => void }) {
+   if (!line) return null;
+   return onLine ? (
+-    <button type="button" className="p2-linebtn" onClick={() => onLine(line)} aria-label={`Go to line ${line}`}>
++    <button type="button" className="p2-linebtn" onClick={() => onLine(line, file)} aria-label={`Go to line ${line}`}>
+       line {line}
+     </button>
+   ) : (
+@@ -22,7 +29,7 @@
+   );
+ }
+ 
+-function SyntaxError({ e, onLine }: { e: PySyntaxError; onLine?: (n: number) => void }) {
++function SyntaxError({ e, onLine }: { e: PySyntaxError; onLine?: (n: number, file?: string) => void }) {
+   const caret = e.column && e.text ? " ".repeat(Math.max(0, e.column - 1)) + "^" : "";
+   return (
+     <div className="p2-err" role="alert">
+@@ -33,11 +40,12 @@
+   );
+ }
+ 
+-function RuntimeError({ type, message, line, traceback, onLine }: { type: string; message: string; line?: number | null; traceback?: string; onLine?: (n: number) => void }) {
++function RuntimeError({ type, message, line, file, traceback, onLine }: { type: string; message: string; line?: number | null; file?: string | null; traceback?: string; onLine?: (n: number, file?: string) => void }) {
++  const sourceFile = file ?? [...(traceback ?? "").matchAll(/File "([^"<>]+)", line \d+/g)].at(-1)?.[1];
+   return (
+     <div className="p2-err" role="alert">
+       <b>{type}</b>
+-      {message ? `: ${message}` : ""} <LineButton line={line} onLine={onLine} />
++      {message ? `: ${message}` : ""} <LineButton line={line} file={sourceFile} onLine={onLine} />
+       {traceback && <pre>{traceback}</pre>}
+     </div>
+   );
+@@ -115,7 +123,7 @@
+ }
+ 
+ /** What went wrong in the last run: the error with its line, and anything written to stderr. */
+-export function ErrorsView({ result, onLine }: { result: PyRunResult | null; onLine?: (n: number) => void }) {
++export function ErrorsView({ result, onLine }: { result: PyRunResult | null; onLine?: (n: number, file?: string) => void }) {
+   const stderr = result && "stderr" in result ? result.stderr : "";
+   const failed = result && result.status !== "ok" && result.status !== "superseded";
+   if (!failed && !stderr) return <p className="p2-empty">{result ? "No errors in the last run." : "Errors and warnings from a run appear here."}</p>;
+@@ -150,7 +158,7 @@
+   );
+ }
+ 
+-export function ConsoleView({ live, result, busy, onLine }: { live: PyOutputChunk[]; result: PyRunResult | null; busy: boolean; onLine?: (n: number) => void }) {
++export function ConsoleView({ live, result, busy, onLine }: { live: PyOutputChunk[]; result: PyRunResult | null; busy: boolean; onLine?: (n: number, file?: string) => void }) {
+   const chunks = result && "output" in result ? result.output : live;
+   if (!result && !busy && chunks.length === 0) return null;
+   return (
+@@ -162,7 +170,7 @@
+   );
+ }
+ 
+-export function RunEnd({ r, onLine, empty }: { r: PyRunResult; onLine?: (n: number) => void; empty: boolean }) {
++export function RunEnd({ r, onLine, empty }: { r: PyRunResult; onLine?: (n: number, file?: string) => void; empty: boolean }) {
+   switch (r.status) {
+     case "ok":
+       return empty ? <div className="meta">Finished without printing anything.</div> : null;
+@@ -171,7 +179,7 @@
+     case "runtime-error":
+       return (
+         <>
+-          <RuntimeError type={r.error.type} message={r.error.message} line={r.error.line} traceback={r.error.traceback} onLine={onLine} />
++          <RuntimeError type={r.error.type} message={r.error.message} line={r.error.line} file={r.error.file} traceback={r.error.traceback} onLine={onLine} />
+           <div className="meta">The program stopped here. Anything printed above ran before the error.</div>
+         </>
+       );
+@@ -192,7 +200,7 @@
+ const MARK = { pass: "✓", fail: "✗", "not-run": "·" } as const;
+ const SAY = { pass: "Passed", fail: "Failed", "not-run": "Not checked" } as const;
+ 
+-function CheckRow({ c, onLine }: { c: PyCheckOutcome; onLine?: (n: number) => void }) {
++function CheckRow({ c, onLine }: { c: PyCheckOutcome; onLine?: (n: number, file?: string) => void }) {
+   const visible = c.cases?.filter((k) => !k.hidden) ?? [];
+   const hidden = c.cases?.filter((k) => k.hidden) ?? [];
+   return (
+@@ -224,7 +232,7 @@
+   );
+ }
+ 
+-export function ChecksView({ report, busy, onLine }: { report: PyGradeReport | null; busy: boolean; onLine?: (n: number) => void }) {
++export function ChecksView({ report, busy, onLine }: { report: PyGradeReport | null; busy: boolean; onLine?: (n: number, file?: string) => void }) {
+   if (busy) return <p className="p2-empty" role="status">Checking: running your program from a fresh start…</p>;
+   if (!report) return <p className="p2-empty">Press Check when you think your program is ready. Check runs it again from a fresh start, then tests it.</p>;
+   return (
+--- a/src/features/python/Workbench.tsx
++++ b/src/features/python/Workbench.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
++import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+ import { Play, RotateCcw, Square, Check } from "lucide-react";
+ import {
+   getPythonStatus,
+@@ -14,11 +14,11 @@
+   type PyPackage,
+   type PyRunResult,
+ } from "@/engine/python/client";
+-import { checkPython, type PyGradeReport, type PyTask } from "@/engine/python/grading";
++import { gradePython, probeFor, type PyGradeReport, type PyTask } from "@/engine/python/grading";
+ import { PyEditor, type PyEditorHandle } from "@/features/py/PyEditor";
+ import { Keys } from "@/features/rt/Keys";
+ import { Code } from "./Code";
+-import { ChecksView, ConsoleView, ErrorsView, errorLineOf, FilesView, OnlyView } from "./Results";
++import { ChecksView, ConsoleView, ErrorsView, errorLineOf, errorFileOf, FilesView, OnlyView } from "./Results";
+ 
+ export type WbFile = { name: string; value: string; onChange?: (v: string) => void; readOnly?: boolean };
+ 
+@@ -38,6 +38,9 @@
+   dataTab,
+   onChecked,
+   onReset,
++  resetFiles,
++  resetVersion = 0,
++  resetLabel = "Reset",
+   help,
+   checkLabel = "Check",
+   status,
+@@ -58,6 +61,9 @@
+   dataTab?: { label: string; content: ReactNode };
+   onChecked?: (report: PyGradeReport, code: Record<string, string>) => void;
+   onReset?: () => void;
++  resetFiles?: Record<string, string>;
++  resetVersion?: number;
++  resetLabel?: string;
+   /** Hint / Answer controls, shown on the left of the action bar. */
+   help?: ReactNode;
+   checkLabel?: string;
+@@ -76,13 +82,38 @@
+ }) {
+   const mainName = main ?? files.find((f) => !f.readOnly)?.name ?? files[0].name;
+   const [tab, setTab] = useState(initialTab ?? mainName);
++  const visibleTab = useRef(tab);
++  visibleTab.current = tab;
+   const [panel, setPanel] = useState<"console" | "checks" | "files" | "tables" | "charts" | "errors">("console");
+   const [live, setLive] = useState<PyOutputChunk[]>([]);
+   const [ran, setRan] = useState<PyRunResult | null>(null);
+   const [report, setReport] = useState<PyGradeReport | null>(null);
++  const [runSnapshot, setRunSnapshot] = useState<string | null>(null);
++  const [checkSnapshot, setCheckSnapshot] = useState<string | null>(null);
++  const [markSnapshot, setMarkSnapshot] = useState<string | null>(null);
+   const [busy, setBusy] = useState<"run" | "check" | null>(null);
+-  const [errorMark, setErrorMark] = useState<{ line: number; token: number } | null>(null);
+-  const editor = useRef<PyEditorHandle>(null);
++  const [errorMark, setErrorMark] = useState<{ line: number; token: number; file: string } | null>(null);
++  const editors = useRef<Record<string, PyEditorHandle | null>>({});
++  const resetSeen = useRef(resetVersion);
++  const [resetBackup, setResetBackup] = useState<Record<string, string> | null>(null);
++  useLayoutEffect(() => {
++    if (resetSeen.current === resetVersion) return;
++    resetSeen.current = resetVersion;
++    if (!resetFiles) return;
++    setResetBackup(Object.fromEntries(files.filter(f => !f.readOnly).map(f => [f.name, f.value])));
++    for (const f of files) {
++      if (!f.readOnly && resetFiles[f.name] !== undefined) editors.current[f.name]?.replaceAll(resetFiles[f.name]);
++    }
++    setRan(null); setReport(null); setLive([]); setErrorMark(null);
++    editors.current[tab]?.focus();
++  }, [resetVersion, resetFiles, files, tab]);
++  const operation = useRef<symbol | null>(null);
++  const [interrupted, setInterrupted] = useState(false);
++  useEffect(() => () => {
++    const owned = operation.current;
++    operation.current = null;
++    if (owned) stopPython(owned);
++  }, []);
+   const pyStatus = useSyncExternalStore(subscribePythonStatus, getPythonStatus, () => "idle" as const);
+   const pkgKey = packages.join(",");
+   const mountKey = mounts.map((m) => m.sha256).join(",");
+@@ -96,50 +127,93 @@
+   const current = files.find((f) => f.name === tab) ?? files[0];
+   const others = useMemo(() => Object.fromEntries(files.filter((f) => f.name !== mainName).map((f) => [f.name, f.value])), [files, mainName]);
+   const code = files.find((f) => f.name === mainName)?.value ?? "";
++  // Include every submitted file and input, not just the currently selected editor.
++  const sourceSnapshot = JSON.stringify({
++    main: mainName, files: Object.entries({ ...task?.files, ...Object.fromEntries(files.map(f => [f.name, f.value])) }).sort(([a], [b]) => a.localeCompare(b)),
++    stdin: stdin ?? task?.stdin ?? "", checkStdin: task?.stdin ?? "", packages: [...packages].sort(), mounts: mounts.map(m => [m.path, m.sha256]),
++  });
++  const latestSnapshot = useRef(sourceSnapshot);
++  latestSnapshot.current = sourceSnapshot;
++  const runStale = runSnapshot !== null && runSnapshot !== sourceSnapshot;
++  const checkStale = checkSnapshot !== null && checkSnapshot !== sourceSnapshot;
++
+ 
+   const mark = (r: PyRunResult | PyGradeReport | null) => {
+     const line = errorLineOf(r);
+-    setErrorMark(line ? { line, token: Date.now() } : null);
++    const file = errorFileOf(r);
++    const target = file ? files.find(f => f.name === file || f.name === file.replace(/^.*[\\/]/, ""))?.name : mainName;
++    setErrorMark(line && target ? { line, token: Date.now(), file: target } : null);
+   };
+ 
+   async function run() {
+-    if (busy) return;
++    if (operation.current) return;
++    const owned = Symbol("workbench-run");
++    operation.current = owned;
+     setBusy("run");
++    setInterrupted(false);
+     setPanel("console");
+     setLive([]);
+     setRan(null);
+-    const r = await runPython(code, {
+-      packages,
+-      mounts,
+-      stdin: stdin ?? task?.stdin,
+-      files: { ...task?.files, ...others },
+-      onOutput: (c) => setLive((l) => {
+-        const last = l.at(-1);
+-        return last && last.stream === c.stream && (c.stream === "stdout" || c.stream === "stderr") ? [...l.slice(0, -1), { ...last, text: last.text + c.text }] : [...l, c];
+-      }),
++    setRunSnapshot(sourceSnapshot);
++    try {
++      const r = await runPython(code, {
++        operation: owned, packages, mounts, stdin: stdin ?? task?.stdin,
++        files: { ...task?.files, ...others },
++        onOutput: (c) => {
++          if (operation.current !== owned) return;
++          setLive((l) => {
++            const last = l.at(-1);
++            return last && last.stream === c.stream && (c.stream === "stdout" || c.stream === "stderr") ? [...l.slice(0, -1), { ...last, text: last.text + c.text }] : [...l, c];
++          });
++        },
++      });
++      if (operation.current !== owned) return;
++      if (r.status === "superseded") { setInterrupted(true); return; }
++      setRan(r);
++      if (latestSnapshot.current === sourceSnapshot) { mark(r); setMarkSnapshot(sourceSnapshot); }
++      onResult?.(r);
++    } catch (error) {
++      if (operation.current === owned) setRan({ status: "crashed", message: error instanceof Error ? error.message : String(error), stdout: "", stderr: "", output: [] });
++    } finally {
++      if (operation.current === owned) { operation.current = null; setBusy(null); }
++    }
++  }
++
++  async function check() {
++    if (!task || operation.current) return;
++    const owned = Symbol("workbench-check");
++    operation.current = owned;
++    setBusy("check");
++    setInterrupted(false);
++    setPanel("checks");
++    // Same probe and evaluator as checkPython, with cancellation owned by this invocation.
++    const submitted = { ...task, packages, mounts, files: { ...task.files, ...others } };
++    try {
++      const result = await runPython(code, { operation: owned, probe: probeFor(submitted), stdin: submitted.stdin, timeoutMs: submitted.timeoutMs, packages: submitted.packages, files: submitted.files, mounts: submitted.mounts });
++      if (operation.current !== owned) return;
++      if (result.status === "superseded") { setInterrupted(true); return; }
++      const r = gradePython(submitted, result);
++      setReport(r);
++      setCheckSnapshot(sourceSnapshot);
++      if (latestSnapshot.current === sourceSnapshot) { mark(r); setMarkSnapshot(sourceSnapshot); }
++      if (result.status !== "stopped") onChecked?.(r, { [mainName]: code, ...others });
++    } catch (error) {
++      if (operation.current === owned) {
++        setReport(gradePython(submitted, { status: "crashed", message: error instanceof Error ? error.message : String(error), stdout: "", stderr: "", output: [] }));
++        setCheckSnapshot(sourceSnapshot);
++      }
++    } finally {
++      if (operation.current === owned) { operation.current = null; setBusy(null); }
++    }
++  }
++
++  const goToLine = (n: number, file?: string) => {
++    const target = file ? files.find(f => f.name === file || f.name === file.replace(/^.*[\\/]/, ""))?.name : mainName;
++    if (!target) return;
++    setTab(target);
++    requestAnimationFrame(() => {
++      if (visibleTab.current === target) editors.current[target]?.goToLine(n);
+     });
+-    if (r.status === "superseded") return;
+-    setRan(r);
+-    setBusy(null);
+-    if (tab === mainName) mark(r);
+-    onResult?.(r);
+-  }
+-
+-  async function check() {
+-    if (!task || busy) return;
+-    setBusy("check");
+-    setPanel("checks");
+-    const r = await checkPython({ ...task, packages, mounts, files: { ...task.files, ...others } }, code);
+-    if (r.outcome === "superseded") return;
+-    setReport(r);
+-    setBusy(null);
+-    if (tab === mainName) mark(r);
+-    onChecked?.(r, { [mainName]: code, ...others });
+-  }
+-
+-  const goToLine = (n: number) => {
+-    setTab(mainName);
+-    requestAnimationFrame(() => editor.current?.goToLine(n));
+   };
+ 
+   const filesOut = ran && "files" in ran ? ran.files ?? [] : [];
+@@ -167,41 +241,42 @@
+             <Keys keys={["mod", "enter"]} /> run{task && <> · <Keys keys={["shift", "mod", "enter"]} /> check</>}
+           </div>}
+         </div>
+-        {tab === "__data" && dataTab ? (
+-          <div className="p2-readonly" style={{ whiteSpace: "normal" }}>{dataTab.content}</div>
+-        ) : current.readOnly ? (
+-          current.name.endsWith(".py") ? (
+-            <Code code={current.value} label={`${current.name} (read-only)`} className="p2-readonly" />
+-          ) : (
+-            <pre className="p2-readonly" tabIndex={0} aria-label={`${current.name} (read-only)`}>{current.value}</pre>
+-          )
+-        ) : (
+-          <PyEditor
+-            key={current.name}
+-            ref={current.name === mainName ? editor : undefined}
+-            value={current.value}
+-            onChange={(v) => current.onChange?.(v)}
+-            onRun={run}
+-            onCheck={task ? check : run}
+-            label={`${label}: ${current.name}`}
+-            errorLine={current.name === mainName ? errorMark : null}
+-            minHeight="180px"
+-            placeholder="Write your Python here"
+-          />
+-        )}
++        {tab === "__data" && dataTab && <div className="p2-readonly" style={{ whiteSpace: "normal" }}>{dataTab.content}</div>}
++        {current.readOnly && tab !== "__data" && (current.name.endsWith(".py")
++          ? <Code code={current.value} label={`${current.name} (read-only)`} className="p2-readonly" />
++          : <pre className="p2-readonly" tabIndex={0} aria-label={`${current.name} (read-only)`}>{current.value}</pre>)}
++        {files.filter(f => !f.readOnly).map(f => (
++          <div key={f.name} hidden={tab !== f.name} style={tab === f.name ? { display: "contents" } : undefined}>
++            <PyEditor
++              ref={handle => { editors.current[f.name] = handle; }}
++              value={f.value}
++              onChange={v => f.onChange?.(v)}
++              onRun={() => { if (tab === f.name) void run(); }}
++              onCheck={() => { if (tab === f.name) void (task ? check() : run()); }}
++              label={`${label}: ${f.name}`}
++              errorLine={markSnapshot === sourceSnapshot && f.name === errorMark?.file ? errorMark : null}
++              minHeight="180px"
++              placeholder="Write your Python here"
++            />
++          </div>
++        ))}
+         <div className="p2-actions">
+           <div>
+             {onReset && (
+               <button type="button" className="p2-btn" onClick={onReset} disabled={!!busy}>
+-                <RotateCcw size={14} aria-hidden="true" /> Reset
++                <RotateCcw size={14} aria-hidden="true" /> {resetLabel}
+               </button>
+             )}
++            {resetBackup && <button type="button" className="p2-btn" disabled={!!busy} onClick={() => {
++              for (const [name, text] of Object.entries(resetBackup)) editors.current[name]?.replaceAll(text);
++              setResetBackup(null); editors.current[tab]?.focus();
++            }}>Undo Reset</button>}
+             {help}
+           </div>
+           <div>
+             {pyStatus === "loading" && busy && <span className="p2-note" role="status">Starting Python…</span>}
+-            {busy === "run" ? (
+-              <button type="button" className="p2-btn line" onClick={stopPython}>
++            {busy ? (
++              <button type="button" className="p2-btn line" onClick={() => { if (operation.current) stopPython(operation.current); }}>
+                 <Square size={13} aria-hidden="true" /> Stop
+               </button>
+             ) : (
+@@ -217,6 +292,7 @@
+           </div>
+         </div>
+       </div>
++      {interrupted && <p className="p2-note" role="status">Another program on this page started, so this run was stopped. Run or check it again.</p>}
+       {layout === "stack" && status}
+ 
+       <div className="p2-results">
+@@ -235,12 +311,14 @@
+           )}
+         </div>
+         {toolbarNote && panel === "console" && <div className="p2-results-note">{toolbarNote}</div>}
+-        {panel === "console" && <ConsoleView live={live} result={ran} busy={busy === "run"} onLine={goToLine} />}
+-        {panel === "checks" && <ChecksView report={report} busy={busy === "check"} onLine={goToLine} />}
++        {report && checkStale && panel === "checks" && <p className="p2-note" role="status">Previous check — code changed</p>}
++        {ran && runStale && panel !== "checks" && <p className="p2-note" role="status">Previous run — code changed</p>}
++        {panel === "console" && <ConsoleView live={live} result={ran} busy={busy === "run"} onLine={runStale ? undefined : goToLine} />}
++        {panel === "checks" && <ChecksView report={report} busy={busy === "check"} onLine={checkStale ? undefined : goToLine} />}
+         {panel === "files" && <FilesView files={filesOut} />}
+         {panel === "tables" && <OnlyView chunks={chunks} kind="table" />}
+         {panel === "charts" && <OnlyView chunks={chunks} kind="figure" />}
+-        {panel === "errors" && <ErrorsView result={ran} onLine={goToLine} />}
++        {panel === "errors" && <ErrorsView result={ran} onLine={runStale ? undefined : goToLine} />}
+       </div>
+     </Wrap>
+   );
+--- a/src/features/rt/Cells.tsx
++++ b/src/features/rt/Cells.tsx
+@@ -33,15 +33,22 @@
+   const [res, setRes] = useState<ExecuteResponse | null>(null);
+   const [open, setOpen] = useState(true);
+   const [busy, setBusy] = useState(false);
++  const running = useRef(false);
++  const [interrupted, setInterrupted] = useState(false);
+   const run = async () => {
++    if (running.current) return;
++    running.current = true;
++    setInterrupted(false);
+     setBusy(true);
+     try {
+       const r = await executeSql({ seed: seedSql, query, allowWrites });
+-      if (!r.superseded) {
++      if (r.superseded) setInterrupted(true);
++      else {
+         setRes(r);
+         setOpen(true);
+       }
+     } finally {
++      running.current = false;
+       setBusy(false);
+     }
+   };
+@@ -64,6 +71,7 @@
+         <span className="p" aria-hidden="true">sql›</span>
+         <SqlCode source={prettySql(query)} label={name} />
+       </div>
++      {interrupted && <p className="rx-small" role="status">Another query started, so this run was stopped. Run it again.</p>}
+       {res && open && (
+         <>
+           <Output
+@@ -139,6 +147,8 @@
+   const [open, setOpen] = useState(true);
+   const [busy, setBusy] = useState<"run" | "check" | null>(null);
+   const runGen = useRef(0);
++  const running = useRef(false);
++  const [interrupted, setInterrupted] = useState(false);
+   const resultRef = useRef<HTMLDivElement>(null);
+ 
+   useEffect(() => {
+@@ -147,6 +157,9 @@
+   }, [res, open, ran]);
+ 
+   const exec = async (check: boolean) => {
++    if (running.current) return;
++    running.current = true;
++    setInterrupted(false);
+     const id = ++runGen.current;
+     setBusy(check ? "check" : "run");
+     try {
+@@ -163,7 +176,8 @@
+         validate: check ? task.validate : null,
+         required: check ? task.required : null,
+       });
+-      if (id !== runGen.current || r.superseded) return;
++      if (id !== runGen.current) return;
++      if (r.superseded) { setInterrupted(true); return; }
+       setRes(r);
+       setRan(value);
+       setMode(check ? "check" : "run");
+@@ -175,7 +189,7 @@
+       }
+       if (check) onGraded?.(r, !!r.grade?.ok);
+     } finally {
+-      if (id === runGen.current) setBusy(null);
++      if (id === runGen.current) { running.current = false; setBusy(null); }
+     }
+   };
+ 
+@@ -216,6 +230,7 @@
+           </button>
+         )}
+       </div>
++      {interrupted && <p className="rx-small" role="status">Another query started, so this run was stopped. Run or check it again.</p>}
+       {res && open && (
+         <div className="rx-result" ref={resultRef}>
+           {checks && (
+--- a/src/features/rt/Challenge.tsx
++++ b/src/features/rt/Challenge.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import { useState } from "react";
++import { useEffect, useRef, useState } from "react";
+ import { Eye, Lightbulb, RotateCcw } from "lucide-react";
+ import taskContexts from "@/content/task-context.json";
+ import { getLesson, isBlankSql, lessonFixture, starterFor } from "@/content";
+@@ -11,6 +11,7 @@
+   useLearning,
+ } from "@/lib/learning-state";
+ import { TaskCell } from "./Cells";
++import { HelpDialog } from "./HelpDialog";
+ import { CHALLENGE_EDITOR_HEIGHT } from "./editor-height";
+ import { prettySql } from "@/components/editor/pretty-sql";
+ import { SqlCode } from "./SqlCode";
+@@ -63,6 +64,21 @@
+   const hintsShown = guided ? Math.min(lesson.hints.length, attempt?.hints ?? 0) : 0;
+   const revealed = !!attempt?.revealed;
+   const [confirm, setConfirm] = useState<null | "hint" | "reveal">(null);
++
++  const hintsRef = useRef<HTMLUListElement>(null);
++  const answerRef = useRef<HTMLDivElement>(null);
++  const previousHelp = useRef({ hintsShown, revealed });
++  const pendingHelp = useRef<"hint" | "answer" | null>(null);
++  useEffect(() => { pendingHelp.current = null; }, [lessonId, variant]);
++  useEffect(() => {
++    const old = previousHelp.current;
++    previousHelp.current = { hintsShown, revealed };
++    const target = pendingHelp.current === "answer" && revealed && !old.revealed ? answerRef.current : pendingHelp.current === "hint" && hintsShown > old.hintsShown ? hintsRef.current : null;
++    if (target) pendingHelp.current = null;
++    if (!target) return;
++    const frame = requestAnimationFrame(() => { target.focus({ preventScroll: true }); target.scrollIntoView({ block: "nearest" }); });
++    return () => cancelAnimationFrame(frame);
++  }, [hintsShown, revealed]);
+ 
+   return (
+     <div>
+@@ -119,7 +135,7 @@
+         footer={
+           <>
+             {hintsShown < lesson.hints.length && (
+-              <button type="button" className="rx-btn ghost" onClick={() => (hintsShown === 0 ? setConfirm("hint") : markGuided(key, "hint"))}>
++              <button type="button" className="rx-btn ghost" onClick={() => { if (hintsShown === 0) setConfirm("hint"); else { pendingHelp.current = "hint"; markGuided(key, "hint"); } }}>
+                 <Lightbulb size={13} /> {hintsShown === 0 ? "Hint" : "Another hint"}
+               </button>
+             )}
+@@ -136,26 +152,15 @@
+           </>
+         }
+       />
+-      {confirm && (
+-        <div className="rx-confirm" role="group" aria-label="Confirm help">
+-          <p>
+-            {confirm === "hint" ? "Showing a hint" : "Showing the answer"} means a correct query counts as solved with help, not toward mastery. You can try again without help afterwards.
+-          </p>
+-          <div className="rx-confirm-acts">
+-            <button type="button" className="rx-btn primary" onClick={() => { markGuided(key, confirm); setConfirm(null); }}>
+-              {confirm === "hint" ? "Show hint" : "Show answer"}
+-            </button>
+-            <button type="button" className="rx-btn" onClick={() => setConfirm(null)}>Keep trying</button>
+-          </div>
+-        </div>
+-      )}
++      <HelpDialog open={confirm !== null} kind={confirm === "hint" ? "hint" : "answer"}
++        onClose={() => setConfirm(null)} onConfirm={() => { if (confirm) { pendingHelp.current = confirm === "reveal" ? "answer" : "hint"; markGuided(key, confirm); } }} />
+       {hintsShown > 0 && (
+-        <ul className="rx-hints">
++        <ul ref={hintsRef} tabIndex={-1} aria-label="Requested hints" className="rx-hints">
+           {lesson.hints.slice(0, hintsShown).map((h) => <li key={h}><span className="mono">hint ›</span> {h}</li>)}
+         </ul>
+       )}
+       {revealed && (
+-        <div className="rx-cell">
++        <div ref={answerRef} tabIndex={-1} role="region" aria-label="Revealed answer" className="rx-cell">
+           <div className="rx-cell-head"><span className="name">one correct answer</span>
+             <span className="acts"><button type="button" className="rx-btn ghost" onClick={() => setDraft(dKey, prettySql(task.answer))}>Put in editor</button></span>
+           </div>
+--- /dev/null
++++ b/src/features/rt/HelpDialog.module.css
+@@ -0,0 +1,6 @@
++.dialog { margin: auto; width: min(28rem, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 24px; border: 1px solid var(--rx-line-strong); border-radius: 10px; color: var(--rx-ink); background: var(--rx-bg); box-shadow: 0 16px 60px #0004; font-family: var(--rx-sans); }
++.dialog:not([open]) { display: none; }
++.dialog::backdrop { background: #0007; }
++.dialog h2 { margin: 0 0 12px; font-size: 1.25rem; font-weight: 650; }
++.dialog p { margin: 0 0 20px; line-height: 1.55; }
++.actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+--- /dev/null
++++ b/src/features/rt/HelpDialog.tsx
+@@ -0,0 +1,38 @@
++"use client";
++
++import { useEffect, useId, useRef } from "react";
++import styles from "./HelpDialog.module.css";
++
++/** Native modal supplies focus containment, Escape and restoration to the invoking control. */
++export function HelpDialog({ open, kind = "answer", onConfirm, onClose }: {
++  open: boolean;
++  kind?: "answer" | "hint";
++  onConfirm: () => void;
++  onClose: () => void;
++}) {
++  const ref = useRef<HTMLDialogElement>(null);
++  const title = useId();
++  const description = useId();
++  useEffect(() => {
++    const dialog = ref.current;
++    if (!dialog) return;
++    if (open && !dialog.open) dialog.showModal();
++    if (!open && dialog.open) dialog.close();
++  }, [open]);
++  return (
++    <dialog ref={ref} className={styles.dialog} aria-labelledby={title} aria-describedby={description}
++      onCancel={onClose} onClose={onClose}>
++      <h2 id={title}>{kind === "answer" ? "Show the answer?" : "Show a hint?"}</h2>
++      <p id={description}>
++        {kind === "answer" ? "Revealing the answer" : "Using a hint"} means this attempt counts as assisted. You can try again independently afterward.
++      </p>
++      <div className={styles.actions}>
++        <button type="button" className="rx-btn" autoFocus onClick={() => { ref.current?.close(); onClose(); }}>Keep trying</button>
++        <button type="button" className="rx-btn primary" onClick={() => {
++          // Restore trigger focus before the revealed content schedules its own focus.
++          ref.current?.close(); onClose(); onConfirm();
++        }}>{kind === "answer" ? "Show answer" : "Show hint"}</button>
++      </div>
++    </dialog>
++  );
++}
+--- a/src/features/rt/checks.ts
++++ b/src/features/rt/checks.ts
+@@ -32,11 +32,13 @@
+       label: `Returns columns ${expected.columns.join(", ")}`,
+       detail: colsOk ? undefined : `Yours returned ${actual.columns.join(", ") || "no columns"}.`,
+     });
+-    const rowsOk = actual.values.length === expected.values.length;
++    const actualCount = res.total ?? actual.values.length;
++    const expectedCount = res.expectedTotal ?? expected.values.length;
++    const rowsOk = actualCount === expectedCount;
+     out.push({
+       state: !colsOk ? "wait" : rowsOk ? "pass" : "fail",
+-      label: `Returns ${expected.values.length} row${expected.values.length === 1 ? "" : "s"}`,
+-      detail: colsOk && !rowsOk ? `Yours returned ${actual.values.length}. Check filters, joins and duplicates.` : undefined,
++      label: `Returns ${expectedCount} row${expectedCount === 1 ? "" : "s"}`,
++      detail: colsOk && !rowsOk ? `Yours returned ${actualCount}. Check filters, joins and duplicates.` : undefined,
+     });
+     upstream = colsOk && rowsOk;
+   }
+--- a/src/features/rt/pages/Lesson.tsx
++++ b/src/features/rt/pages/Lesson.tsx
+@@ -1,4 +1,6 @@
+ "use client";
++
++import { focusWorkspaceEditor, releaseWorkspaceEditor } from "../workspace-focus";
+ 
+ import Link from "next/link";
+ import { useEffect, useMemo, useRef, useState } from "react";
+@@ -139,10 +141,10 @@
+       status={["SQL", `lesson ${position + 1}/${courseOrder.length}`, `sqlite · ${datasetCatalog[lesson.dataset]?.name ?? lesson.dataset}`, mastered ? "✓ mastered" : "drafts save as you type"]}
+     >
+       <LessonBar lessonId={lessonId} />
+-      <div className="rx-task rx-canonical-learning rx-lesson rx-learn-tables">
++      <div className="rx-task rx-canonical-learning rx-lesson rx-learn-tables workspace-bounded">
+         <div className="rx-task-split">
+           {/* Left: read and run. */}
+-          <article className="rx-brief" aria-labelledby="lesson-title">
++          <article className="rx-brief" aria-labelledby="lesson-title" tabIndex={0}>
+             <p className="rx-prompt-line"><b>lesson {String(position + 1).padStart(2, "0")}</b> {groups[lesson.group]} · {lesson.difficulty.toLowerCase()}</p>
+             <h1 id="lesson-title" className="rx-task-title">{lesson.title}</h1>
+             <p className="rx-lead" style={{ fontSize: "1.05rem" }}>{lessonSummaries[lessonId]}</p>
+@@ -182,7 +184,7 @@
+           </article>
+ 
+           {/* Right: do the work. Stays in view while the lesson scrolls. */}
+-          <section className="rx-work rx-lesson-work" aria-label="Your work">
++          <section className="rx-work rx-lesson-work" aria-label="Your work" tabIndex={0} onFocusCapture={focusWorkspaceEditor} onBlurCapture={releaseWorkspaceEditor}>
+             <div className="rx-tabs" role="tablist" aria-label="Lesson tasks">
+               {tabs.map((t) => (
+                 <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} aria-controls={`panel-${t.id}`} onClick={() => pick(t.id)}>
+--- a/src/features/rt/pages/Practice.tsx
++++ b/src/features/rt/pages/Practice.tsx
+@@ -1,4 +1,6 @@
+ "use client";
++
++import { focusWorkspaceEditor, releaseWorkspaceEditor } from "../workspace-focus";
+ import { preloadDatabase } from "@/engine/sql-client";
+ import { parseSchemaDetailed } from "@/engine/explain";
+ 
+@@ -27,6 +29,7 @@
+ import { Shell } from "../Shell";
+ import { Pager } from "../Pager";
+ import { TaskCell } from "../Cells";
++import { HelpDialog } from "../HelpDialog";
+ import { PRACTICE_EDITOR_HEIGHT } from "../editor-height";
+ import { ExpectedResult, Tables } from "../Tables";
+ import { Cols, Spec } from "../Spec";
+@@ -58,6 +61,32 @@
+   const q = bankBySlug.get(slug);
+   const s = useLearning();
+   const [listOpen, setListOpen] = useState(false);
++  const listTrigger = useRef<HTMLButtonElement>(null);
++  useEffect(() => {
++    if (!listOpen) return;
++    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") { event.preventDefault(); setListOpen(false); } };
++    window.addEventListener("keydown", closeOnEscape);
++    return () => { window.removeEventListener("keydown", closeOnEscape); listTrigger.current?.focus({ preventScroll: true }); };
++  }, [listOpen]);
++  const [confirmAnswer, setConfirmAnswer] = useState(false);
++  const hintsRef = useRef<HTMLUListElement>(null);
++  const answerRef = useRef<HTMLDivElement>(null);
++  const helpId = q?.id;
++  const helpHints = q ? s.questions[q.id]?.hints ?? 0 : 0;
++  const helpRevealed = !!(q && s.questions[q.id]?.revealed);
++  const helpState = { id: helpId, hints: helpHints, revealed: helpRevealed };
++  const previousHelp = useRef(helpState);
++  const pendingHelp = useRef<"hint" | "answer" | null>(null);
++  useEffect(() => {
++    const old = previousHelp.current;
++    previousHelp.current = { id: helpId, hints: helpHints, revealed: helpRevealed };
++    if (old.id !== helpId) { pendingHelp.current = null; setConfirmAnswer(false); return; }
++    const target = pendingHelp.current === "answer" && helpRevealed && !old.revealed ? answerRef.current : pendingHelp.current === "hint" && helpHints > old.hints ? hintsRef.current : null;
++    if (target) pendingHelp.current = null;
++    if (!target) return;
++    const frame = requestAnimationFrame(() => { target.focus({ preventScroll: true }); target.scrollIntoView({ block: "nearest" }); });
++    return () => cancelAnimationFrame(frame);
++  }, [helpId, helpHints, helpRevealed]);
+   const openQuestion = s.openQuestion;
+ 
+   useEffect(() => {
+@@ -106,9 +135,9 @@
+       section="practice"
+       status={["SQL", `question ${index + 1}/${bankQuestions.length}`, `sqlite · ${practiceDatasets[q.datasetId]?.name ?? q.datasetId}`, ready ? (status === "solved" ? "✓ solved" : status === "guided" ? "solved with help" : "draft saves as you type") : "…"]}
+     >
+-      <div className="rx-task rx-canonical-learning rx-lesson">
++      <div className="rx-task rx-canonical-learning rx-lesson workspace-bounded">
+         <div className="rx-task-bar">
+-          <button type="button" className="rx-btn ghost" onClick={() => setListOpen((o) => !o)} aria-expanded={listOpen}>
++          <button ref={listTrigger} type="button" className="rx-btn ghost" onClick={() => setListOpen((o) => !o)} aria-expanded={listOpen}>
+             <List size={14} /> All questions
+           </button>
+           <span className="mono rx-small" style={{ margin: 0 }}>{String(index + 1).padStart(2, "0")} / {bankQuestions.length}</span>
+@@ -149,7 +178,7 @@
+         )}
+ 
+         <div className="rx-task-split">
+-          <section className="rx-brief" aria-labelledby="task-title">
++          <section className="rx-brief" aria-labelledby="task-title" tabIndex={0}>
+             <p className="rx-prompt-line"><b>task</b> {topicLabel[q.primaryTopic]} · {DIFFICULTY_LABEL[q.difficulty].toLowerCase()}</p>
+             <h1 id="task-title" className="rx-task-title">{q.title}</h1>
+             <p className="rx-lead rx-ask">{q.task}</p>
+@@ -180,7 +209,7 @@
+               return [t, { ...schema, ...sample, columns }];
+             }))} />
+           </section>
+-          <section className="rx-work rx-lesson-work" aria-label="Your solution">
++          <section className="rx-work rx-lesson-work" aria-label="Your solution" tabIndex={0} onFocusCapture={focusWorkspaceEditor} onBlurCapture={releaseWorkspaceEditor}>
+             {supported ? (
+               <TaskCell
+                 name="solution.sql"
+@@ -208,9 +237,9 @@
+                 footer={
+                   <>
+                     {hints < q.hints.length && (
+-                      <button type="button" className="rx-btn ghost" onClick={() => s.questionHint(q.id)}><Lightbulb size={13} /> Hint</button>
++                      <button type="button" className="rx-btn ghost" onClick={() => { pendingHelp.current = "hint"; s.questionHint(q.id); }}><Lightbulb size={13} /> Hint</button>
+                     )}
+-                    {!revealed && <button type="button" className="rx-btn ghost" onClick={() => s.revealQuestion(q.id)}><Eye size={13} /> Answer</button>}
++                    {!revealed && <button type="button" className="rx-btn ghost" onClick={() => setConfirmAnswer(true)}><Eye size={13} /> Answer</button>}
+                     {(hints > 0 || revealed) && (
+                       <button type="button" className="rx-btn ghost" onClick={() => s.freshQuestionAttempt(q.id, dKey, starter)}><RotateCcw size={13} /> Try without help</button>
+                     )}
+@@ -223,11 +252,12 @@
+                 <PredictionWorkspace q={q} nextAction={next ? <Link className="rx-btn" href={`/sql/practice/${next.slug}`}>Next question</Link> : null} />
+               </>
+             )}
++            <HelpDialog open={confirmAnswer} onClose={() => setConfirmAnswer(false)} onConfirm={() => { pendingHelp.current = "answer"; s.revealQuestion(q.id); }} />
+             {hints > 0 && (
+-              <ul className="rx-hints">{q.hints.slice(0, hints).map((h) => <li key={h}><span className="mono">hint ›</span> {h}</li>)}</ul>
++              <ul ref={hintsRef} tabIndex={-1} aria-label="Requested hints" className="rx-hints">{q.hints.slice(0, hints).map((h) => <li key={h}><span className="mono">hint ›</span> {h}</li>)}</ul>
+             )}
+             {revealed && (
+-              <div className="rx-cell">
++              <div ref={answerRef} tabIndex={-1} role="region" aria-label="Revealed answer" className="rx-cell">
+                 <div className="rx-cell-head"><span className="name">one correct answer</span>
+                   <span className="acts"><button type="button" className="rx-btn ghost" onClick={() => s.setDraft(dKey, prettySql(q.solution))}>Put in editor</button></span>
+                 </div>
+--- a/src/features/rt/projects/ProjectWorkspace.tsx
++++ b/src/features/rt/projects/ProjectWorkspace.tsx
+@@ -1,4 +1,6 @@
+ "use client";
++
++import { focusWorkspaceEditor, releaseWorkspaceEditor } from "../workspace-focus";
+ import Link from "next/link";
+ import { Lightbulb } from "lucide-react";
+ import { MetricDefinitions, DataNotes } from "./ProjectGuidance";
+@@ -144,7 +146,7 @@
+   const continuation = <div className="rx-project-nav"><button className="rx-btn amber" disabled={!canContinue || saveFailed || busy !== null} onClick={next}>{isBrief ? "Begin project →" : stage.type === "orientation" ? "Continue to analysis →" : stage.type === "report" ? "Complete project" : stage.type === "synthesis" ? project.stages[stageIndex + 1]?.type === "report" ? "Continue to report →" : "Continue →" : isExploration ? "Continue →" : "Save & continue →"}</button></div>;
+ 
+   return <Shell path={[{ label: "sql" }, { label: "projects", href: SQL_PROJECTS_LIBRARY_HREF }]} section="projects">
+-    <div className="rx-task rx-project project-contract">
++    <div className={`rx-task rx-project project-contract${needsSql && hydrated && !(completeScreen && complete) ? " workspace-bounded" : ""}`}>
+       <header className="project-header">
+         <ProjectPicker currentId={project.id} />
+         <h1>{project.title}</h1>
+@@ -155,7 +157,7 @@
+       {!hydrated ? <p role="status">Loading your project…</p> : completeScreen && complete ? <article className="rx-project-page">
+         <h2>Project complete</h2><p>{project.title}</p><p>You completed the investigation and produced a final report.</p><div className="project-actions"><button className="rx-btn" onClick={() => setCompleteScreen(false)}>View report</button><Link href={SQL_PROJECTS_LIBRARY_HREF}>Back to Projects</Link></div>{reportActions}
+       </article> : needsSql ? <div className="rx-task-split">
+-        <section className="rx-brief"><p className="project-current-stage">Stage {stageIndex + 1} of {project.stages.length}</p><h2>{stage.title}</h2><div className="project-reference-tabs" role="tablist" aria-label="Stage reference" onKeyDown={event => {
++        <section className="rx-brief" aria-label="Project requirements" tabIndex={0}><p className="project-current-stage">Stage {stageIndex + 1} of {project.stages.length}</p><h2>{stage.title}</h2><div className="project-reference-tabs" role="tablist" aria-label="Stage reference" onKeyDown={event => {
+           const tabs = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+           const current = tabs.indexOf(document.activeElement as HTMLButtonElement);
+           const index = event.key === "ArrowRight" ? (current + 1) % tabs.length : event.key === "ArrowLeft" ? (current - 1 + tabs.length) % tabs.length : event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : -1;
+@@ -171,7 +173,7 @@
+         {referenceView === "metrics" && <MetricDefinitions definitions={stage.scaffolding?.metricDefinitions ?? []} />}
+         {referenceView === "tables" && <ProjectTables datasetId={project.datasetId} names={tables} />}
+         </div></section>
+-        <section className="rx-work" aria-label="SQL workspace"><>
++        <section className="rx-work" aria-label="SQL workspace" tabIndex={0} onFocusCapture={focusWorkspaceEditor} onBlurCapture={releaseWorkspaceEditor}><>
+           <div className="rx-cell"><div className="rx-cell-head"><span className="name">SQL workspace</span></div><Editor key={stage.id} value={sql} label="SQL workspace" minHeight="320px" tables={tables} seedSql={dataset.seed} onChange={v => { setDraft(`${prefix}-sql`, v); setDraft(`${prefix}-check`, ""); setNotice(""); }} onRun={() => void run(false)} onCheck={!isExploration ? () => void run(true) : undefined} />
+             <div className="rx-cell-foot"><button className="rx-btn" disabled={busy !== null} onClick={() => void run(false)}>{busy === "run" ? "Running…" : isBuild ? "Execute" : "Run"}</button>{!isExploration && <button className="rx-btn primary" disabled={busy !== null} onClick={() => void run(true)}>{busy === "check" ? "Checking…" : isBuild ? "Validate" : "Check"}</button>}</div></div>
+           <h3>{isBuild ? "Database changes" : "Results"}{(response?.result ?? result?.result) ? ` · ${response?.total ?? result?.total ?? 0} ${(response?.total ?? result?.total ?? 0) === 1 ? "row" : "rows"}` : ""}</h3>
+--- /dev/null
++++ b/src/features/rt/workspace-focus.ts
+@@ -0,0 +1,42 @@
++import type { FocusEvent } from "react";
++
++/** Bring code into a short activity pane on entry, without moving the caret or
++ * the document page. Runs once per focus entry, never on typing or results. */
++export function focusWorkspaceEditor(event: FocusEvent<HTMLElement>) {
++  const content = event.target;
++  const pane = event.currentTarget;
++  if (!(content instanceof HTMLElement) || !content.classList.contains("cm-content")) return;
++  if (pane.clientHeight >= 500 && !window.matchMedia("(max-width: 899px)").matches) return;
++  requestAnimationFrame(() => {
++    if (!pane.isConnected || document.activeElement !== content) return;
++    const editor = content.closest<HTMLElement>(".cm-editor");
++    if (!editor || !pane.contains(editor)) return;
++    const split = pane.parentElement;
++    if (window.matchMedia("(max-width: 899px)").matches && pane.clientHeight < 260 &&
++        split?.matches(".rx-task-split, .p2-split") && split.clientHeight >= 324) {
++      // Default remains 50/50. While typing, retain at least 64px of reading
++      // space and give code/actions enough room in a constrained work pane.
++      split.style.setProperty("--workspace-work-height", `${Math.min(split.clientHeight - 64, Math.max(260, split.clientHeight * 0.65))}px`);
++      split.setAttribute("data-editor-focus", "true");
++    }
++    const top = editor.getBoundingClientRect().top - pane.getBoundingClientRect().top - pane.clientTop;
++    // Leave a little room for the editor's focus outline. Scrolling only the
++    // owning pane also preserves the independent reading pane's position.
++    pane.scrollTop += top - 12;
++  });
++}
++
++/** Keep the editing allocation while focus stays anywhere in this work pane,
++ * including Run/Check. Collapse only on leaving the pane, so a held pointer or
++ * keyboard move to an action never moves that action before activation. */
++export function releaseWorkspaceEditor(event: FocusEvent<HTMLElement>) {
++  const pane = event.currentTarget;
++  requestAnimationFrame(() => {
++    if (!pane.isConnected) return;
++    const active = document.activeElement;
++    if (active && pane.contains(active)) return;
++    const split = pane.parentElement;
++    split?.removeAttribute("data-editor-focus");
++    split?.style.removeProperty("--workspace-work-height");
++  });
++}
+--- /dev/null
++++ b/tests/e2e/workspace-stabilization.mjs
+@@ -0,0 +1,281 @@
++// Real browser stabilization regressions. Uses an existing local server; never generates content.
++// BASE=http://localhost:3040 node tests/e2e/workspace-stabilization.mjs lifecycle
++import assert from 'node:assert/strict';
++import {mkdirSync,writeFileSync,readFileSync} from 'node:fs';
++import {chromium} from 'playwright';
++import AxeBuilder from '@axe-core/playwright';
++const BASE=process.env.BASE??'http://localhost:3040';
++const batch=process.argv[2]??'lifecycle';
++const OUT=process.env.SHOTS??'docs/research/workspace-stabilization/evidence';
++mkdirSync(OUT,{recursive:true});
++const browser=await chromium.launch({...(process.env.CHROME?{executablePath:process.env.CHROME}:{}),headless:true});
++const context=await browser.newContext({viewport:{width:Number(process.env.WIDTH??1440),height:Number(process.env.HEIGHT??1000)}});
++const page=await context.newPage();page.setDefaultTimeout(15000);page.setDefaultNavigationTimeout(60000);
++const mod=process.platform==='darwin'?'Meta':'Control';
++const results=[];const errors=[];page.on('pageerror',e=>errors.push(String(e)));
++const ed=()=>page.locator('.cm-content[contenteditable=true]:visible').first();
++async function code(text){await ed().click();await page.keyboard.press(`${mod}+A`);await page.keyboard.insertText(text);await page.waitForTimeout(150);}
++async function step(name,fn){try{await fn();results.push({name,status:'pass'});console.log('PASS',name);}catch(e){results.push({name,status:'fail',error:String(e)});await page.screenshot({path:`${OUT}/${batch}-failed.png`});throw e;}finally{writeFileSync(`${OUT}/${batch}.json`,JSON.stringify({at:new Date().toISOString(),browser:browser.version(),viewport:page.viewportSize(),results,errors},null,2));}}
++try{
++if(batch==='lifecycle'){
++ await page.goto(`${BASE}/python/learn/python-execution`);
++ await step('Python superseded challenge settles and next run works',async()=>{
++  await code('while True:\n    pass');await page.getByRole('button',{name:'Run',exact:true}).click();
++  await page.getByRole('button',{name:'Run: Three instructions, three lines',exact:true}).click();
++  await page.locator('.p2-py-console').filter({hasText:'Status: delivered'}).waitFor({timeout:45000});
++  await page.getByRole('button',{name:'Run',exact:true}).waitFor();
++  assert.equal(await page.getByRole('button',{name:'Check',exact:true}).isEnabled(),true);
++  await page.getByRole('status').filter({hasText:/interrupt|another|supersed/i}).first().waitFor();
++  await page.screenshot({path:`${OUT}/python-supersession-fixed.png`});
++  await code('print("ownership recovered")');await page.getByRole('button',{name:'Run',exact:true}).click();
++  await page.locator('.p2-results').getByText('ownership recovered',{exact:true}).waitFor({timeout:30000});
++ });
++ await step('Python Check can stop without earned credit and retry',async()=>{
++  await code('while True:\n    pass');await page.getByRole('button',{name:'Check',exact:true}).click();
++  await page.getByRole('button',{name:'Stop',exact:true}).click();
++  await page.getByRole('button',{name:'Run',exact:true}).waitFor();
++  assert.equal(await page.getByRole('button',{name:'Check',exact:true}).isEnabled(),true);
++  assert.doesNotMatch(await page.locator('.p2-results').innerText(),/All \d+ checks pass/);
++  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('runtime-python-v2'))?.state.lessons['PY-L01-01']?.exercises.c1);
++  assert.notEqual(saved?.solved,true);
++ });
++ await step('SQL competing example explains interruption and recovers',async()=>{
++  await page.goto(`${BASE}/sql/lesson/meet-your-first-select`);
++  await code('WITH RECURSIVE n(x) AS (VALUES(1) UNION ALL SELECT x+1 FROM n) SELECT sum(x) FROM n;');
++  await page.getByRole('button',{name:'Run',exact:true}).last().click();
++  await page.getByRole('button',{name:'Run',exact:true}).first().click();
++  await page.getByRole('button',{name:'Check',exact:true}).waitFor();
++  await page.getByText(/interrupt|another.*run|supersed/i).first().waitFor();
++  await code('SELECT 19381 AS recovered;');await page.getByRole('button',{name:'Run',exact:true}).last().click();
++  await page.getByRole('cell',{name:'19381',exact:true}).waitFor({timeout:30000});
++  await page.screenshot({path:`${OUT}/sql-supersession-fixed.png`});
++ });
++}
++if(batch==='editor'){
++ await page.goto(`${BASE}/python/learn/python-execution`);
++ await step('Reset undo restores source and keeps earned state',async()=>{
++  await code('# reset credit probe\nprint("RUNTIME MARKET")\nprint("Order O101217")\nprint("Thank you for shopping with us!")');
++  await page.getByRole('button',{name:'Check',exact:true}).click();
++  await page.locator('.p2-results').getByText(/All 1 checks pass/).waitFor({timeout:30000});
++  await page.getByRole('button',{name:/^Hint/}).click();
++  const progressBefore=await page.evaluate(()=>{const r=JSON.parse(localStorage.getItem('runtime-python-v2')).state.lessons['PY-L01-01'].exercises.c1;return {solved:r.solved,assisted:r.assisted,attempt:r.attempt,checks:r.checks};});
++  await code('# undo marker\nprint(321)');
++  const before=await ed().innerText();
++  await page.getByRole('button',{name:'Reset',exact:true}).click();
++  await ed().click();await page.keyboard.press(`${mod}+z`);
++  assert.equal(await ed().innerText(),before);
++  const progressAfter=await page.evaluate(()=>{const r=JSON.parse(localStorage.getItem('runtime-python-v2')).state.lessons['PY-L01-01'].exercises.c1;return {solved:r.solved,assisted:r.assisted,attempt:r.attempt,checks:r.checks};});
++  assert.deepEqual(progressAfter,progressBefore);
++  await page.screenshot({path:`${OUT}/python-reset-undo-fixed.png`});
++ });
++ await step('Project file switch preserves undo and error filename',async()=>{
++  await page.goto(`${BASE}/python/projects/smart-shopping-cart`);
++  await page.getByRole('button',{name:'Start →',exact:true}).click();
++  const initial=await ed().innerText();
++  await code('# history marker\nanswer = 42');
++  await page.getByRole('tab',{name:'main.py',exact:true}).click();
++  await page.getByRole('tab',{name:'catalogue.py',exact:true}).click();
++  await ed().click();await page.keyboard.press(`${mod}+z`);
++  assert.equal(await ed().innerText(),initial);
++  await code('def build_catalogue(products):\n    raise ValueError("helper probe")\n\ndef find(catalogue, text):\n    return []\n');
++  await page.getByRole('button',{name:'Run',exact:true}).click();
++  await page.locator('.p2-results').getByText(/ValueError/).first().waitFor({timeout:30000});
++  await page.locator('.p2-results button').filter({hasText:/line 2|catalogue.py:2/}).first().click();
++  assert.equal(await page.locator('.p2-files [aria-selected=true]').innerText(),'catalogue.py');
++  assert.match(await ed().innerText(),/helper probe/);
++  await page.screenshot({path:`${OUT}/python-helper-navigation-fixed.png`});
++  const helper=await ed().innerText();
++  await page.getByRole('tab',{name:'main.py',exact:true}).click();await code('print("multi reset marker")');
++  await page.getByRole('button',{name:'Reset milestone files',exact:true}).click();
++  await page.getByRole('button',{name:'Undo Reset',exact:true}).click();
++  assert.match(await ed().innerText(),/multi reset marker/);
++  await page.getByRole('tab',{name:'catalogue.py',exact:true}).click();assert.equal(await ed().innerText(),helper);
++  await page.reload();assert.match(await ed().innerText(),/helper probe/);
++ });
++}
++if(batch==='feedback'){
++ await page.goto(`${BASE}/python/practice/fix-the-note`);
++ await step('Python edited pass is historical and Answer dialog is perceivable',async()=>{
++  await code('# Shipping summary\nprint("Order O108024")\nprint("Items:", 3, "Shipping:", 5.99)\nprint("Total:", 57.34)');
++  await page.getByRole('button',{name:'Check',exact:true}).click();
++  await page.locator('.p2-results').getByText(/All 2 checks pass/).waitFor({timeout:30000});
++  await code('print("changed")');
++  await page.getByText('Previous check — code changed',{exact:true}).waitFor();
++  await page.getByRole('button',{name:'Answer',exact:true}).click();
++  const dialog=page.getByRole('dialog',{name:'Show the answer?'});await dialog.waitFor();
++  assert.equal(await dialog.evaluate(e=>e.contains(document.activeElement)),true);
++  await page.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});
++  await page.getByRole('button',{name:'Answer',exact:true}).click();
++  await dialog.getByRole('button',{name:'Show answer',exact:true}).click();
++  await page.locator('.p2-help').getByText('Answer',{exact:true}).waitFor();
++  assert.equal(await page.locator('.p2-help').evaluate(e=>e.contains(document.activeElement)),true);
++  await page.screenshot({path:`${OUT}/python-answer-fixed.png`});
++ });
++ await step('SQL full result count and Answer focus',async()=>{
++  await page.goto(`${BASE}/sql/practice/customer-list`);
++  await code('SELECT customer_id, country, region FROM customers;');
++  await page.getByRole('button',{name:'Check',exact:true}).click();
++  await page.getByText(/Returns 848 rows/).waitFor({timeout:30000});
++  await page.getByRole('button',{name:'Answer',exact:true}).click();
++  const dialog=page.getByRole('dialog',{name:'Show the answer?'});await dialog.waitFor();
++  assert.equal(await dialog.evaluate(e=>e.contains(document.activeElement)),true);
++  await page.screenshot({path:`${OUT}/sql-answer-dialog-fixed.png`});
++  await dialog.getByRole('button',{name:'Keep trying',exact:true}).click();
++ });
++}
++
++if(batch==='help'){
++ for(const path of ['/sql/lesson/meet-your-first-select','/sql/practice/customer-list','/python/learn/python-execution','/python/practice/fix-the-note']){
++  await step(`${path} Answer/Hint visibility, cancellation, hydration`,async()=>{
++   await page.goto(BASE+path);
++   const python=path.includes('/python/');
++   await code(python?'print("wrong")':'SELECT 1 AS wrong;');
++   await page.getByRole('button',{name:'Check',exact:true}).click();
++   await page.getByText(python?/Not yet:/:/of \d+ checks passed/).first().waitFor({timeout:30000});
++   const feedback=python?page.locator('.p2-results'):page.locator('.rx-checks');
++   const old=await feedback.innerText();
++   const answer=page.getByRole('button',{name:'Answer',exact:true});await answer.click();
++   const d=page.getByRole('dialog',{name:'Show the answer?'});await d.waitFor();
++   assert.equal(await d.evaluate(e=>e.contains(document.activeElement)),true);
++   const a=await new AxeBuilder({page}).include('dialog[open]').analyze();assert.deepEqual(a.violations.map(v=>v.id),[]);
++   await page.keyboard.press('Escape');await d.waitFor({state:'hidden'});
++   assert.equal(await answer.evaluate(e=>e===document.activeElement),true);
++   await answer.click();await d.getByRole('button',{name:'Show answer',exact:true}).click();
++   const reveal=python?page.locator('.p2-help'):page.getByRole('region',{name:'Revealed answer'});
++   await reveal.waitFor();await page.waitForTimeout(100);
++   assert.equal(await reveal.evaluate(e=>e.contains(document.activeElement)),true);
++   assert.equal(await feedback.innerText(),old,'revealing answer discarded feedback');
++   await page.getByRole('button',{name:/^Hint/}).first().click();
++   const hintDialog=page.getByRole('dialog',{name:'Show a hint?'});
++   if(await hintDialog.isVisible())await hintDialog.getByRole('button',{name:'Show hint',exact:true}).click();
++   const hints=python?page.locator('.p2-help'):page.getByLabel('Requested hints');
++   await hints.waitFor();await page.waitForTimeout(100);assert.equal(await hints.evaluate(e=>e.contains(document.activeElement)),true);
++   await page.reload();await ed().waitFor();await page.waitForTimeout(200);
++   assert.equal(await page.evaluate(()=>!!document.activeElement?.closest('.p2-help,.rx-hints,[aria-label="Revealed answer"]')),false,'saved help stole focus');
++  });
++ }
++}
++
++if(batch==='layout'){
++ const geometries=[];
++ for(const path of ['/sql/lesson/meet-your-first-select','/sql/practice/customer-list','/sql/projects/retail-performance-review?stage=baseline','/python/learn/python-execution','/python/practice/fix-the-note','/python/projects/smart-shopping-cart']){
++  await page.setViewportSize({width:1440,height:1000});await page.goto(BASE+path);
++  if(path.includes('smart-shopping'))await page.getByRole('button',{name:'Start →',exact:true}).click();
++  await ed().waitFor();
++  const split=page.locator(path.includes('/python/')?'.p2-split':'.rx-task-split').first();
++  for(const viewport of [{width:1440,height:1000},{width:768,height:900},{width:390,height:844},{width:320,height:640},{width:390,height:440}]){
++   await step(`${path} ${viewport.width}x${viewport.height}`,async()=>{
++    await page.setViewportSize(viewport);await split.evaluate(e=>e.children[0].focus());await page.waitForTimeout(150);
++    const geometry=await split.evaluate(e=>({panes:[...e.children].map(p=>{const r=p.getBoundingClientRect();const c=getComputedStyle(p);return{x:r.x,y:r.y,w:r.width,h:r.height,bottom:r.bottom,overflow:c.overflowY,client:p.clientHeight,scroll:p.scrollHeight};}),pageWidth:document.documentElement.scrollWidth,view:innerWidth}));
++    geometries.push({path,viewport,geometry});writeFileSync(`${OUT}/geometry.json`,JSON.stringify(geometries,null,2));
++    const[a,b]=geometry.panes;
++    assert.ok(geometry.pageWidth<=viewport.width+1,'horizontal page overflow');
++    if(viewport.width>=900){assert.ok(Math.abs(a.w-b.w)<=2,'unequal columns');assert.ok(Math.abs(a.y-b.y)<=2,'desktop pane tops');}
++    else {assert.ok(Math.abs(a.x-b.x)<=2,'stacked pane x');assert.ok(b.y>=a.bottom-2,'overlapping stacked panes');if(viewport.height>=640)assert.ok(Math.abs(a.h-b.h)<=3,'unequal mobile rows');}
++    if(viewport.height>=640){assert.ok(a.h>100&&b.h>100,'collapsed pane');assert.ok(b.bottom<=viewport.height+2,'workspace extends below viewport');}
++    const prior=await split.evaluate(e=>({right:e.children[1].scrollTop,rect:e.children[1].getBoundingClientRect().y}));
++    await split.evaluate(e=>{e.children[0].scrollTop=100;});
++    const after=await split.evaluate(e=>({right:e.children[1].scrollTop,rect:e.children[1].getBoundingClientRect().y}));assert.deepEqual(after,prior,'content scroll moved workspace');
++    await split.evaluate(e=>e.children[0].focus());
++    await ed().click();await page.waitForTimeout(100);await page.keyboard.press('End');
++    if(viewport.width<900&&viewport.height>=640){
++     const visible=await ed().evaluate(e=>{const pane=e.closest('.p2-work,.rx-work');const editor=e.closest('.cm-editor').getBoundingClientRect();const p=pane.getBoundingClientRect();const action=pane.querySelector('.p2-actions,.rx-cell-foot')?.getBoundingClientRect();return Math.min(editor.bottom,p.bottom,action?.top??p.bottom)-Math.max(editor.top,p.top);});
++     assert.ok(visible>=119,`only ${visible}px of focused code visible`);
++    }
++    if(viewport.width===320){
++     const run=page.getByRole('button',{name:'Run',exact:true}).last();await run.scrollIntoViewIfNeeded();const rect=await run.boundingBox();
++     await page.mouse.move(rect.x+rect.width/2,rect.y+rect.height/2);await page.mouse.down();await page.waitForTimeout(120);
++     const held=await run.boundingBox();assert.ok(Math.abs(held.y-rect.y)<2,'Run moved while pointer held');await page.mouse.up();
++     await page.waitForTimeout(150);
++    }
++    await page.getByRole('button',{name:'Run',exact:true}).last().scrollIntoViewIfNeeded();
++    assert.equal(await page.getByRole('button',{name:'Run',exact:true}).last().isVisible(),true);
++    if(viewport.width===390&&viewport.height===844)await page.screenshot({path:`${OUT}/${path.split('?')[0].split('/').slice(1,3).join('-')}-mobile.png`});
++   });
++  }
++  await page.setViewportSize({width:1440,height:1000});
++  const a=await new AxeBuilder({page}).analyze();writeFileSync(`${OUT}/axe-${path.split('?')[0].split('/').slice(1,3).join('-')}.json`,JSON.stringify(a.violations,null,2));
++  await step(`${path} automated accessibility`,async()=>assert.deepEqual(a.violations.map(v=>({id:v.id,targets:v.nodes.map(n=>n.target)})),[]));
++ }
++}
++
++if(batch==='journeys'){
++ for(const [path,answer]of [['/sql/lesson/meet-your-first-select','SELECT customer_id, country FROM customers;'],['/sql/practice/customer-list','SELECT customer_id, country, region FROM customers;']]){
++  await step(`${path} error, wrong check, corrected check, draft recovery`,async()=>{
++   await page.goto(BASE+path);await code('SELEC * FROM customers;');await page.getByRole('button',{name:'Run',exact:true}).last().click();
++   await page.getByText(/SQL syntax error/).first().waitFor({timeout:30000});
++   await code('SELECT 1 AS wrong;');await page.getByRole('button',{name:'Check',exact:true}).click();await page.getByText(/of \d+ checks passed/).waitFor();
++   await code(answer);await page.getByRole('button',{name:'Check',exact:true}).click();await page.getByText(/all checks passed/).first().waitFor();
++   await code('SELECT 927 AS saved_draft;');await page.getByText('edited since the last run',{exact:true}).waitFor();
++   await page.reload();assert.equal(await ed().innerText(),'SELECT 927 AS saved_draft;');
++   await page.getByRole('button',{name:'Run',exact:true}).last().click();await page.getByRole('cell',{name:'927',exact:true}).waitFor();
++  });
++ }
++ for(const path of ['/python/learn/python-execution','/python/practice/fix-the-note']){
++  await step(`${path} syntax error, streaming, runtime recovery`,async()=>{
++   await page.goto(BASE+path);await code('print(');await page.getByRole('button',{name:'Run',exact:true}).click();await page.locator('.p2-results').getByText(/SyntaxError/).first().waitFor({timeout:30000});
++   await code('print("before error")\nraise ValueError("expected probe")');await page.getByRole('button',{name:'Run',exact:true}).click();await page.locator('.p2-results').getByText(/ValueError/).first().waitFor({timeout:30000});
++   assert.match(await page.locator('.p2-results').innerText(),/before error/);
++   await code('print("fresh recovery")');await page.getByRole('button',{name:'Run',exact:true}).click();await page.locator('.p2-results').getByText('fresh recovery',{exact:true}).waitFor({timeout:30000});
++   await page.reload();assert.equal(await ed().innerText(),'print("fresh recovery")');
++  });
++ }
++ await step('SQL project valid checkpoint then edited evidence',async()=>{
++  await page.goto(`${BASE}/sql/projects/retail-performance-review?stage=baseline`);
++  const source=readFileSync('src/content/projects/beginner.ts','utf8');const answer=source.match(/sql: `([\s\S]*?)`/)[1].replace('${SALE_LINES}','orders AS o JOIN order_items AS i ON i.order_id = o.order_id');
++  await code(answer);await page.getByRole('button',{name:'Check',exact:true}).click();await page.getByText('✓ Check passed',{exact:true}).waitFor({timeout:30000});
++  await code('SELECT 44 AS project_probe;');assert.equal(await page.getByText('✓ Check passed',{exact:true}).count(),0);
++  await page.getByRole('button',{name:'Run',exact:true}).click();await page.getByRole('cell',{name:'44',exact:true}).waitFor();
++  await page.reload();assert.equal(await ed().innerText(),'SELECT 44 AS project_probe;');assert.match(page.url(),/stage=baseline/);
++ });
++ await step('Python project checks, next milestone and cumulative files',async()=>{
++  await page.goto(`${BASE}/python/projects/smart-shopping-cart`);await page.getByRole('button',{name:'Start →',exact:true}).click();
++  const source=readFileSync('src/content/python-v2/projects/P01.ts','utf8');const answer=source.match(/const CATALOGUE_M1 = `([\s\S]*?)`;/)[1];
++  await code(answer);await page.getByRole('button',{name:'Check step',exact:true}).click();await page.locator('.p2-results').getByText(/All 4 checks pass/).waitFor({timeout:45000});
++  await page.getByRole('button',{name:/^Next: Cart add/}).click();await page.getByRole('tab',{name:'catalogue.py',exact:true}).click();
++  assert.match(await ed().innerText(),/def build_catalogue/);assert.match(await ed().innerText(),/wanted = text.lower/);
++  await page.reload();assert.match(await ed().innerText(),/wanted = text.lower/);
++ });
++}
++
++if(batch==='preparation'){
++ await step('Python Stop during delayed preparation then retry',async()=>{
++  let release;const gate=new Promise(resolve=>{release=resolve;});let started;const requested=new Promise(resolve=>{started=resolve;});
++  const hold=async route=>{started();await gate;await route.continue().catch(()=>{});};
++  await context.route('**/python-sandbox',hold);
++  await page.goto(`${BASE}/python/practice/fix-the-note`,{waitUntil:'domcontentloaded'});await requested;
++  await code('print("preparation recovered")');await page.getByRole('button',{name:'Check',exact:true}).click();
++  await page.getByRole('button',{name:'Stop',exact:true}).click();await page.getByRole('button',{name:'Run',exact:true}).waitFor();
++  assert.equal(await page.getByRole('button',{name:'Check',exact:true}).isEnabled(),true);
++  assert.doesNotMatch(await page.locator('.p2-results').innerText(),/All \d+ checks pass/);
++  await context.unroute('**/python-sandbox',hold);release();
++  await page.getByRole('button',{name:'Run',exact:true}).click();await page.locator('.p2-results').getByText('preparation recovered',{exact:true}).waitFor({timeout:45000});
++  await page.screenshot({path:`${OUT}/preparation-recovered.png`});
++ });
++ await step('Python unmount during Run leaves next workspace usable',async()=>{
++  await code('while True:\n    pass');await page.getByRole('button',{name:'Run',exact:true}).click();
++  // Click client navigation so cleanup, rather than document teardown, owns cancellation.
++  await page.locator('header').getByRole('link',{name:'Learn',exact:true}).click();
++  await page.goto(`${BASE}/python/learn/python-execution`);
++  await code('print("next workspace")');await page.getByRole('button',{name:'Run',exact:true}).click();
++  await page.locator('.p2-results').getByText('next workspace',{exact:true}).waitFor({timeout:45000});
++ });
++}
++
++if(batch==='navigation'){
++ for(const path of ['/sql/lesson/meet-your-first-select','/sql/practice/customer-list','/python/learn/python-execution','/python/practice/fix-the-note']){
++  await step(`${path} mobile navigation drawer`,async()=>{
++   await page.goto(BASE+path);await page.setViewportSize({width:390,height:844});
++   const name=path.includes('practice')?'All questions':'All lessons';
++   await page.getByRole('button',{name,exact:true}).click();const d=page.getByRole('dialog',{name,exact:true});await d.waitFor();
++   const b=await d.boundingBox();assert.ok(b.x>=-1&&b.x+b.width<=391);assert.ok(b.y>=0&&b.y+b.height<=845);
++   await page.keyboard.press('Escape');await d.waitFor({state:'hidden'});
++  });
++ }
++ for(const path of ['/python/tools/playground','/sql/playground','/python/tools/database-lab']){
++  await step(`${path} retains tool layout`,async()=>{await page.goto(BASE+path);assert.equal(await page.locator('.workspace-bounded').count(),0);assert.ok(await page.locator('main').innerText());});
++ }
++}
++
++assert.equal(errors.length,0,errors.join('\n'));
++}finally{await browser.close();}
+--- /dev/null
++++ b/tests/engine-preparation-recovery.test.ts
+@@ -0,0 +1,105 @@
++import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
++import { createHash } from "node:crypto";
++import * as sql from "@/engine/sql-client";
++import * as py from "@/engine/python/client";
++class DeferredWorker {
++  static all: DeferredWorker[] = [];
++  listeners = new Map<string, Set<(e: MessageEvent) => void>>();
++  requests: Record<string, unknown>[] = [];
++  dead = false;
++  constructor() { DeferredWorker.all.push(this); }
++  addEventListener(t: string, f: (e: MessageEvent) => void) { if (!this.listeners.has(t)) this.listeners.set(t, new Set()); this.listeners.get(t)!.add(f); }
++  removeEventListener(t: string, f: (e: MessageEvent) => void) { this.listeners.get(t)?.delete(f); }
++  emit(data: unknown) { if (!this.dead) for (const f of this.listeners.get("message") ?? []) f({ data } as MessageEvent); }
++  postMessage(r: Record<string, unknown>) { this.requests.push(r); }
++  terminate() { this.dead = true; }
++  pythonDone() { this.emit({ ...this.requests[0], type: "done", result: { status: "ok", durationMs: 1 } }); }
++}
++const latest = () => DeferredWorker.all.at(-1)!;
++const tick = async () => { await vi.advanceTimersByTimeAsync(0); };
++beforeEach(() => {
++  vi.stubGlobal("window", globalThis); vi.useFakeTimers(); DeferredWorker.all = [];
++  sql.__setWorkerFactory(() => new DeferredWorker() as unknown as Worker);
++  py.__setPythonWorkerFactory(() => new DeferredWorker() as unknown as Worker);
++});
++afterEach(() => { sql.cancelSql(); py.stopPython(); py.releasePython(); vi.clearAllTimers(); vi.useRealTimers(); vi.unstubAllGlobals(); });
++
++describe("cancelled SQL preparation", () => {
++  it("never resurrects a cancelled boot after a newer successful run", async () => {
++    const a = sql.executeSql({ seed: "", query: "A" }); sql.cancelSql();
++    expect(await a).toEqual({ superseded: true });
++    const b = sql.executeSql({ seed: "", query: "B" }); const workerB = latest();
++    workerB.emit({ ready: true }); await tick();
++    workerB.emit({ result: { columns: ["x"], values: [["B"]] } }); expect((await b).result?.values).toEqual([["B"]]);
++    await vi.advanceTimersByTimeAsync(sql.BOOT_TIMEOUT_MS + 401);
++    expect(DeferredWorker.all).toHaveLength(2);
++    const c = sql.executeSql({ seed: "", query: "C" }); await tick();
++    expect(workerB.requests.at(-1)?.query).toBe("C");
++    workerB.emit({ result: { columns: ["x"], values: [["C"]] } }); expect((await c).result?.values).toEqual([["C"]]);
++  });
++  it("cancelling during retry backoff prevents another worker", async () => {
++    const a = sql.executeSql({ seed: "", query: "A" }); latest().emit({ error: "boot failed" }); await tick();
++    sql.cancelSql(); expect(await a).toEqual({ superseded: true });
++    await vi.advanceTimersByTimeAsync(401);
++    expect(DeferredWorker.all).toHaveLength(1);
++  });
++});
++
++const csv = "id\n1\n";
++const bytes = () => new TextEncoder().encode(csv).buffer as ArrayBuffer;
++const mount = { path: "data/a.csv", url: "/a.csv", sha256: createHash("sha256").update(csv).digest("hex") };
++describe("Python preparation recovery", () => {
++  it("bounds stalled mounts separately from execution and retries the same hash", async () => {
++    let calls = 0;
++    py.__setMountFetcher(async () => { calls++; return calls === 1 ? new Promise<ArrayBuffer>(() => {}) : bytes(); });
++    const a = py.runPython("A", { mounts: [mount] }); latest().emit({ type: "ready" }); await tick();
++    let result: Awaited<typeof a> | undefined;
++    void a.then(r => { result = r; });
++    await vi.advanceTimersByTimeAsync(60001);
++    expect(result?.status).toBe("crashed");
++    expect(result && "message" in result ? result.message : "").toMatch(/dataset.*too long|dataset.*timed out/i);
++    const b = py.runPython("B", { mounts: [mount] }); const wb = latest(); wb.emit({ type: "ready" });
++    vi.useRealTimers();
++    for (let i = 0; i < 100 && !wb.requests.length; i++) await new Promise(r => setTimeout(r, 5));
++    expect(calls).toBe(2); expect(wb.requests).toHaveLength(1);
++    wb.pythonDone(); expect((await b).status).toBe("ok");
++  });
++  it("Stop immediately retries the same hash; a late old failure cannot evict its replacement", async () => {
++    let calls = 0;
++    let rejectOld!: (error: Error) => void;
++    let finishNew!: (bytes: ArrayBuffer) => void;
++    const signals: (AbortSignal | undefined)[] = [];
++    py.__setMountFetcher((_url, signal) => {
++      signals.push(signal);
++      calls++;
++      return calls === 1 ? new Promise((_resolve, reject) => { rejectOld = reject; }) : new Promise(resolve => { finishNew = resolve; });
++    });
++    const a = py.runPython("A", { mounts: [mount] }); latest().emit({ type: "ready" }); await tick();
++    py.stopPython(); expect((await a).status).toBe("stopped");
++    expect(signals[0]?.aborted).toBe(false); // shared preloads must not be aborted by an operation's Stop
++    const b = py.runPython("B", { mounts: [mount] }); const wb = latest(); wb.emit({ type: "ready" }); await tick();
++    expect(calls).toBe(2);
++    rejectOld(new Error("old network failure")); await tick();
++    py.preloadMounts([mount]); await tick();
++    expect(calls).toBe(2); // replacement remains cached, including while still pending
++    expect(signals[1]?.aborted).toBe(false);
++    vi.useRealTimers(); finishNew(bytes());
++    for (let i = 0; i < 100 && !wb.requests.length; i++) await new Promise(r => setTimeout(r, 5));
++    expect(wb.requests).toHaveLength(1);
++    wb.pythonDone(); expect((await b).status).toBe("ok");
++  });
++  it("package startup times out at its own budget and a later run recovers", async () => {
++    const a = py.runPython("A", { packages: ["pandas"] });
++    await vi.advanceTimersByTimeAsync(py.PY_PACKAGES_BOOT_TIMEOUT_MS + 1);
++    expect((await a).status).toBe("crashed");
++    const b = py.runPython("B", { packages: ["pandas"] }); const wb = latest(); wb.emit({ type: "ready" }); await tick(); wb.pythonDone();
++    expect((await b).status).toBe("ok");
++  });
++  it("a cancelled package boot cannot fail a newer completed operation", async () => {
++    const a = py.runPython("A", { packages: ["pandas"] }); py.stopPython(); expect((await a).status).toBe("stopped");
++    const b = py.runPython("B", { packages: ["pandas"] }); const wb = latest(); wb.emit({ type: "ready" }); await tick(); wb.pythonDone(); expect((await b).status).toBe("ok");
++    latest().emit({ type: "ready" }); await tick();
++    await vi.advanceTimersByTimeAsync(py.PY_PACKAGES_BOOT_TIMEOUT_MS + 1);
++    expect(py.getPythonStatus()).toBe("ready");
++  });
++});
+--- /dev/null
++++ b/tests/python-editor-recovery.test.ts
+@@ -0,0 +1,63 @@
++// @vitest-environment jsdom
++import { act, createElement, useState } from "react";
++import { createRoot, type Root } from "react-dom/client";
++import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
++import { EditorView } from "@codemirror/view";
++import { undo } from "@codemirror/commands";
++import { Workbench } from "@/features/python/Workbench";
++import { ConsoleView, errorFileOf } from "@/features/python/Results";
++import type { PyRunResult } from "@/engine/python/client";
++vi.mock("@/engine/python/client", () => ({ getPythonStatus: () => "idle", subscribePythonStatus: () => () => {}, preloadPython: () => {}, preloadMounts: () => {}, stopPython: () => {}, runPython: vi.fn() }));
++let host: HTMLDivElement, root: Root;
++const button = (name: string) => [...host.querySelectorAll("button")].find(b => b.textContent?.trim() === name)!;
++const view = (name: string) => EditorView.findFromDOM(host.querySelector(`[aria-label="test: ${name}"]`) as HTMLElement)!;
++function Harness() {
++  const [files, setFiles] = useState({ "main.py": "print('main')", "helper.py": "first\nsecond" });
++  const [reset, setReset] = useState(0);
++  return createElement(Workbench, { label: "test", files: Object.entries(files).map(([name, value]) => ({ name, value, onChange: (text: string) => setFiles(prev => ({ ...prev, [name]: text })) })), resetFiles: { "main.py": "", "helper.py": "" }, resetVersion: reset, onReset: () => setReset(n => n + 1) });
++}
++beforeEach(() => {
++  (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
++  Object.defineProperty(Range.prototype, "getClientRects", { configurable: true, value: () => [] });
++  Object.defineProperty(Range.prototype, "getBoundingClientRect", { configurable: true, value: () => new DOMRect() });
++  vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
++  host = document.createElement("div"); document.body.append(host); root = createRoot(host);
++});
++afterEach(async () => { await act(async () => root.unmount()); host.remove(); vi.unstubAllGlobals(); });
++describe("active editor recovery", () => {
++  it("Reset is undoable, preserving previous selection and file-switch history", async () => {
++    await act(async () => root.render(createElement(Harness)));
++    const main = view("main.py");
++    await act(async () => { main.dispatch({ changes: { from: 0, to: main.state.doc.length, insert: "unique draft" }, selection: { anchor: 2, head: 6 } }); });
++    await act(async () => button("Reset").click());
++    expect(main.state.doc.toString()).toBe("");
++    await act(async () => { undo(main); });
++    expect(main.state.doc.toString()).toBe("unique draft");
++    expect(main.state.selection.main.anchor).toBe(2);
++    expect(main.state.selection.main.head).toBe(6);
++    await act(async () => button("helper.py").click());
++    const helper = view("helper.py");
++    await act(async () => { helper.dispatch({ changes: { from: 0, to: helper.state.doc.length, insert: "changed helper" }, selection: { anchor: 3 } }); });
++    await act(async () => button("main.py").click());
++    await act(async () => button("helper.py").click());
++    expect(view("helper.py")).toBe(helper);
++    expect(helper.state.selection.main.head).toBe(3);
++    await act(async () => { undo(helper); });
++    expect(helper.state.doc.toString()).toBe("");
++  });
++  it("Undo Reset restores every editable file", async () => {
++    await act(async () => root.render(createElement(Harness)));
++    await act(async () => button("Reset").click());
++    await act(async () => button("Undo Reset").click());
++    expect(view("main.py").state.doc.toString()).toBe("print('main')");
++    expect(view("helper.py").state.doc.toString()).toBe("first\nsecond");
++  });
++  it("runtime error line links carry the actual helper filename", async () => {
++    const onLine = vi.fn();
++    const result: PyRunResult = { status: "runtime-error", stdout: "", stderr: "", output: [], durationMs: 1, error: { type: "ValueError", message: "bad", line: 2, file: "helper.py", traceback: 'File "main.py", line 1\nFile "helper.py", line 2' } };
++    await act(async () => root.render(createElement(ConsoleView, { live: [], result, busy: false, onLine })));
++    await act(async () => button("line 2").click());
++    expect(onLine).toHaveBeenCalledWith(2, "helper.py");
++    expect(errorFileOf(result)).toBe("helper.py");
++  });
++});
+--- /dev/null
++++ b/tests/python-feedback-context.test.ts
+@@ -0,0 +1,68 @@
++// @vitest-environment jsdom
++import { act, createElement, useState } from "react";
++import { createRoot, type Root } from "react-dom/client";
++import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
++import { Workbench } from "@/features/python/Workbench";
++import { HelpButtons, HelpPanel } from "@/features/python/Help";
++import type { PyRunResult } from "@/engine/python/client";
++const mocks = vi.hoisted(() => ({ run: vi.fn(), editors: new Map<string, { errorLine?: unknown }>() }));
++vi.mock("@/engine/python/client", () => ({ getPythonStatus: () => "idle", subscribePythonStatus: () => () => {}, preloadPython: () => {}, preloadMounts: () => {}, stopPython: () => {}, runPython: mocks.run }));
++vi.mock("@/features/py/PyEditor", () => ({ PyEditor: (props: { label: string; errorLine?: unknown }) => { mocks.editors.set(props.label, props); return null; } }));
++vi.mock("@/features/rt/HelpDialog", () => ({ HelpDialog: () => null }));
++let host: HTMLDivElement, root: Root;
++const button = (name: string) => [...host.querySelectorAll("button")].find(b => b.textContent?.trim() === name)!;
++const task = { checks: [{ kind: "output" as const, expected: "ok\n" }] };
++beforeEach(() => {
++  (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
++  mocks.run.mockReset(); mocks.editors.clear();
++  host = document.createElement("div"); document.body.append(host); root = createRoot(host);
++});
++afterEach(async () => { await act(async () => root.unmount()); host.remove(); vi.restoreAllMocks(); });
++const ok: PyRunResult = { status: "ok", stdout: "ok\n", stderr: "", output: [], durationMs: 1 };
++async function render(helper = "x = 1", stdin = "", checked = vi.fn()) {
++  await act(async () => root.render(createElement(Workbench, { label: "test", task, stdin, onChecked: checked, files: [{ name: "main.py", value: "print('ok')" }, { name: "helper.py", value: helper }] })));
++}
++describe("Python result provenance", () => {
++  it("helper and input edits label prior checks without deleting a successful report", async () => {
++    const checked = vi.fn(); mocks.run.mockResolvedValue(ok);
++    await render("x = 1", "", checked);
++    await act(async () => button("Check").click());
++    expect(checked).toHaveBeenCalledOnce();
++    await render("x = 2", "", checked);
++    expect(host.textContent).toContain("Previous check — code changed");
++    expect(host.textContent).toMatch(/All 1 checks pass/);
++    await render("x = 1", "input changed", checked);
++    expect(host.textContent).toContain("Previous check — code changed");
++    await render("x = 1", "", checked);
++    expect(host.textContent).not.toContain("Previous check — code changed");
++    expect(checked).toHaveBeenCalledOnce();
++  });
++  it("late error from older files has no navigation or editor mark on current source", async () => {
++    let finish!: (r: PyRunResult) => void;
++    mocks.run.mockReturnValue(new Promise<PyRunResult>(resolve => { finish = resolve; }));
++    await render(); await act(async () => button("Run").click());
++    await render("x = 2");
++    await act(async () => finish({ status: "runtime-error", stdout: "", stderr: "", output: [], durationMs: 1, error: { type: "ValueError", message: "old error", line: 1, file: "helper.py", traceback: "old traceback" } }));
++    expect(host.textContent).toContain("Previous run — code changed");
++    expect(host.querySelector('button[aria-label="Go to line 1"]')).toBeNull();
++    expect(mocks.editors.get("test: helper.py")?.errorLine).toBeNull();
++  });
++  it("new help receives focus, but restored help does not steal focus", async () => {
++    const frames: FrameRequestCallback[] = [];
++    vi.spyOn(window, "requestAnimationFrame").mockImplementation(cb => { frames.push(cb); return frames.length; });
++    Element.prototype.scrollIntoView = vi.fn();
++    const panel = (shown: number) => createElement(HelpPanel, { hints: ["Try this"], shown, revealed: false, answer: "answer", assisted: true });
++    await act(async () => root.render(panel(0)));
++    await act(async () => root.render(panel(1))); // hydration/cross-tab update has no user intent
++    expect(frames).toHaveLength(0);
++    function HelpHarness() {
++      const [shown, setShown] = useState(0);
++      return createElement("section", { className: "p2-work" }, createElement(HelpButtons, { hintsShown: shown, hintCount: 1, revealed: false, onHint: () => setShown(1) }), panel(shown));
++    }
++    await act(async () => root.render(createElement(HelpHarness)));
++    await act(async () => button("Hint").click());
++    expect(frames).toHaveLength(1);
++    await act(async () => frames.pop()!(0));
++    expect(host.querySelector('.p2-help')).toBe(document.activeElement);
++  });
++});
+--- /dev/null
++++ b/tests/python-operation-ownership.test.ts
+@@ -0,0 +1,100 @@
++// @vitest-environment jsdom
++import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
++import { act, createElement } from "react";
++import { createRoot, type Root } from "react-dom/client";
++import * as client from "@/engine/python/client";
++import { Workbench } from "@/features/python/Workbench";
++
++const editorHooks = vi.hoisted(() => ({ onRun: undefined as undefined | (() => void), onCheck: undefined as undefined | (() => void) }));
++vi.mock("@/features/py/PyEditor", () => ({ PyEditor: (props: typeof editorHooks) => { Object.assign(editorHooks, props); return null; } }));
++class WorkerStub {
++  static all: WorkerStub[] = [];
++  request?: { id: number; nonce: string };
++  constructor() { WorkerStub.all.push(this); }
++  emit(data: unknown) { for (const fn of this.listeners.get("message") ?? []) fn({ data } as MessageEvent); }
++  listeners = new Map<string, Set<(e: MessageEvent) => void>>();
++  terminated = false;
++  postMessage(request: { id: number; nonce: string }) { this.request = request; }
++  terminate() { this.terminated = true; }
++  addEventListener(type: string, fn: (e: MessageEvent) => void) { if (!this.listeners.has(type)) this.listeners.set(type, new Set()); this.listeners.get(type)!.add(fn); }
++  removeEventListener(type: string, fn: (e: MessageEvent) => void) { this.listeners.get(type)?.delete(fn); }
++}
++let root: Root | undefined;
++let host: HTMLDivElement;
++const task = { checks: [{ kind: "output" as const, expected: "1\n" }] };
++const button = (text: string) => [...host.querySelectorAll("button")].find(b => b.textContent?.trim() === text)!;
++beforeEach(() => {
++  (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
++  vi.useFakeTimers();
++  WorkerStub.all = [];
++  client.__setPythonWorkerFactory(() => new WorkerStub() as unknown as Worker);
++  host = document.createElement("div"); document.body.append(host);
++});
++afterEach(async () => {
++  await act(async () => { root?.unmount(); }); root = undefined;
++  client.stopPython(); client.releasePython(); host.remove(); vi.clearAllTimers(); vi.useRealTimers();
++});
++async function mount(onChecked = vi.fn()) {
++  await act(async () => { root = createRoot(host); root.render(createElement(Workbench, { label: "test", files: [{ name: "main.py", value: "print(1)" }], task, onChecked })); });
++  return onChecked;
++}
++
++describe("owned Python operations", () => {
++  it("an old owner's stop cannot cancel the newer operation", async () => {
++    const a = Symbol("a"), b = Symbol("b");
++    const run = client.runPython as (code: string, options: { operation: symbol }) => ReturnType<typeof client.runPython>;
++    const stop = client.stopPython as (operation?: symbol) => void;
++    const first = run("a", { operation: a });
++    const second = run("b", { operation: b });
++    expect(await first).toEqual({ status: "superseded" });
++    stop(a);
++    expect(client.pythonBusy()).toBe(true);
++    stop(b);
++    expect((await second).status).toBe("stopped");
++  });
++  it("a superseded Workbench recovers controls and explains interruption", async () => {
++    const checked = await mount();
++    await act(async () => { button("Run").click(); });
++    let other!: ReturnType<typeof client.runPython>;
++    await act(async () => { other = client.runPython("example"); });
++    expect(button("Run")?.disabled).toBe(false);
++    expect(button("Check").disabled).toBe(false);
++    expect(host.textContent).toMatch(/another program.*stopped/i);
++    expect(checked).not.toHaveBeenCalled();
++    await act(async () => { client.stopPython(); await other; });
++  });
++  it("Check offers Stop during preparation and never awards interrupted credit", async () => {
++    const checked = await mount();
++    await act(async () => { button("Check").click(); });
++    expect(button("Stop")).toBeDefined();
++    await act(async () => { button("Stop").click(); });
++    expect(button("Run")?.disabled).toBe(false);
++    expect(checked).not.toHaveBeenCalled();
++  });
++  it("guards repeated same-tick keyboard commands and accepts a genuine passing check", async () => {
++    const checked = await mount();
++    const worker = WorkerStub.all[0];
++    await act(async () => { worker.emit({ type: "ready", version: "test" }); });
++    await act(async () => { editorHooks.onCheck!(); editorHooks.onCheck!(); editorHooks.onRun!(); });
++    expect(WorkerStub.all).toHaveLength(1);
++    expect(worker.request).toBeDefined();
++    await act(async () => {
++      worker.emit({ ...worker.request, type: "output", stream: "stdout", text: "1\n" });
++      worker.emit({ ...worker.request, type: "done", result: { status: "ok", durationMs: 1 } });
++    });
++    expect(checked).toHaveBeenCalledOnce();
++    expect(checked.mock.calls[0][0].ok).toBe(true);
++    expect(button("Run").disabled).toBe(false);
++  });
++  it("unmount stops its preparation but does not stop another owner's run", async () => {
++    await mount();
++    await act(async () => { button("Run").click(); root!.unmount(); }); root = undefined;
++    expect(client.pythonBusy()).toBe(false);
++    await mount();
++    await act(async () => { button("Run").click(); });
++    let other!: ReturnType<typeof client.runPython>;
++    await act(async () => { other = client.runPython("other"); root!.unmount(); }); root = undefined;
++    expect(client.pythonBusy()).toBe(true);
++    await act(async () => { client.stopPython(); await other; });
++  });
++});
+--- /dev/null
++++ b/tests/sql-cell-ownership.test.ts
+@@ -0,0 +1,30 @@
++// @vitest-environment jsdom
++import { afterEach, expect, it, vi } from "vitest";
++import { act, createElement } from "react";
++import { createRoot, type Root } from "react-dom/client";
++import { TaskCell } from "@/features/rt/Cells";
++import type { ExecuteResponse } from "@/engine/sql-client";
++const hooks = vi.hoisted(() => ({ onRun: undefined as undefined | (() => void), onCheck: undefined as undefined | (() => void), execute: vi.fn() }));
++vi.mock("@/features/rt/Editor", () => ({ Editor: (props: typeof hooks) => { hooks.onRun = props.onRun; hooks.onCheck = props.onCheck; return null; } }));
++vi.mock("@/engine/sql-client", async (original) => ({ ...await original<typeof import("@/engine/sql-client")>(), executeSql: hooks.execute, isEngineBootError: () => false }));
++vi.mock("@/lib/analytics", () => ({ track: vi.fn(), errorKind: () => "error" }));
++let root: Root;
++let host: HTMLDivElement;
++afterEach(async () => { await act(async () => root.unmount()); host.remove(); hooks.execute.mockReset(); });
++it("ignores repeated keyboard commands while busy and recovers a superseded check without credit", async () => {
++  (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
++  let settle!: (r: ExecuteResponse) => void;
++  hooks.execute.mockImplementation(() => new Promise<ExecuteResponse>(resolve => { settle = resolve; }));
++  const graded = vi.fn();
++  host = document.createElement("div"); document.body.append(host);
++  await act(async () => { root = createRoot(host); root.render(createElement(TaskCell, { name: "query", value: "select 1", onChange: vi.fn(), task: { seedSql: "", answer: "select 1" }, onGraded: graded })); });
++  await act(async () => { hooks.onCheck!(); hooks.onRun!(); hooks.onCheck!(); });
++  expect(hooks.execute).toHaveBeenCalledTimes(1);
++  await act(async () => { settle({ superseded: true }); });
++  expect(host.textContent).toMatch(/another query.*stopped/i);
++  expect(graded).not.toHaveBeenCalled();
++  expect([...host.querySelectorAll("button")].filter(b => /^(Run|Check)$/.test(b.textContent!.trim())).every(b => !b.disabled)).toBe(true);
++  await act(async () => { hooks.onRun!(); });
++  expect(hooks.execute).toHaveBeenCalledTimes(2);
++  await act(async () => { settle({ superseded: true }); });
++});
+--- /dev/null
++++ b/tests/sql-check-counts.test.ts
+@@ -0,0 +1,46 @@
++import { beforeAll, describe, expect, it } from "vitest";
++import { visibleChecks } from "@/features/rt/checks";
++import { learningDatasets } from "@/data/datasets/learning";
++import type { ExecuteResponse } from "@/engine/sql-client";
++import { bootWorker } from "./helpers/original";
++let send: Awaited<ReturnType<typeof bootWorker>>;
++beforeAll(async () => { send = await bootWorker(); });
++const rows = (n: number) => `WITH RECURSIVE n(x) AS (SELECT 1 UNION ALL SELECT x+1 FROM n WHERE x<${n}) SELECT x FROM n`;
++const countCheck = (r: ExecuteResponse) => visibleChecks(r, false).find(c => /^Returns \d+ rows?$/.test(c.label));
++describe("full-result check counts with capped previews", () => {
++  for (const [branch, seed] of [["disposable", ""], ["shared canonical", learningDatasets.retail.seed]] as const) {
++    it(`${branch}: matching 848 rows shows 848 without expanding previews`, async () => {
++      const r = await send({ seed, query: rows(848), answer: rows(848) });
++      expect(r.grade.ok).toBe(true);
++      expect(r.result.values).toHaveLength(200);
++      expect(r.expected.values).toHaveLength(200);
++      expect(r.total).toBe(848);
++      expect(r.expectedTotal).toBe(848);
++      expect(countCheck(r)).toMatchObject({ label: "Returns 848 rows", state: "pass" });
++    });
++    it(`${branch}: unequal counts above the cap fail the count check`, async () => {
++      const r = await send({ seed, query: rows(847), answer: rows(848) });
++      expect(r.grade.ok).toBe(false);
++      expect(r.result.values).toHaveLength(200);
++      expect(r.expected.values).toHaveLength(200);
++      expect(countCheck(r)).toMatchObject({ label: "Returns 848 rows", state: "fail", detail: "Yours returned 847. Check filters, joins and duplicates." });
++    });
++  }
++  it("preserves original counts when only changed-data grading fails", async () => {
++    const r = await send({ seed: `CREATE TABLE source(x); INSERT INTO source ${rows(848)};`, query: "SELECT x FROM source WHERE x<=848", answer: "SELECT x FROM source", mutation: "INSERT INTO source VALUES(849);" });
++    expect(r.grade.variationFailed).toBe(true);
++    expect(r.expectedTotal).toBe(848);
++    expect(countCheck(r)).toMatchObject({ label: "Returns 848 rows", state: "pass" });
++  });
++  it("reports zero and one without losing zero to a fallback", async () => {
++    for (const [query, count, label] of [["SELECT 1 AS x WHERE 0", 0, "Returns 0 rows"], ["SELECT 1 AS x", 1, "Returns 1 row"]] as const) {
++      const r = await send({ seed: "", query, answer: query });
++      expect(r.expectedTotal).toBe(count);
++      expect(countCheck(r)).toMatchObject({ label, state: "pass" });
++    }
++  });
++  it("supports existing complete-result responses without count metadata", () => {
++    const r = { result: { columns: ["x"], values: [[1]] }, expected: { columns: ["x"], values: [[1]] }, grade: { ok: true, message: "correct" } };
++    expect(countCheck(r)).toMatchObject({ label: "Returns 1 row", state: "pass" });
++  });
++});

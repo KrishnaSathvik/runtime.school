@@ -1,0 +1,1157 @@
+{
+ "id": "D08",
+ "title": "USGS Earthquakes",
+ "version": 1,
+ "seed": null,
+ "description": "Every magnitude 2.5+ earthquake (and a few explosions) recorded worldwide by the USGS, January–June 2025: time, location, depth, magnitude, felt reports and alerts. Comes as a flat table, as the nested GeoJSON the USGS API returns, and as paged API responses.",
+ "licence": {
+  "name": "U.S. government work (public domain)",
+  "status": "cleared"
+ },
+ "window": [
+  "2025-01-01",
+  "2025-06-30"
+ ],
+ "generator": "datasets/python/D08/dataset.mjs from datasets/python/D08/extract",
+ "source": "USGS FDSN event web service, format=geojson&minmagnitude=2.5, 2025-01-01..2025-07-01 (datasets/python/D08/source.json)",
+ "attribution": "Earthquake data: U.S. Geological Survey, ANSS Comprehensive Earthquake Catalog.",
+ "tables": {
+  "events": {
+   "description": "One earthquake (or other ground-shaking event, such as a mine blast).",
+   "primaryKey": [
+    "event_id"
+   ],
+   "foreignKeys": [],
+   "columns": [
+    {
+     "name": "event_id",
+     "type": "text",
+     "description": "USGS event ID",
+     "nullable": false
+    },
+    {
+     "name": "time_ms",
+     "type": "integer",
+     "description": "When it happened, as milliseconds since 1 January 1970 (UTC)",
+     "nullable": false
+    },
+    {
+     "name": "time_utc",
+     "type": "timestamp",
+     "description": "When it happened, UTC",
+     "nullable": false
+    },
+    {
+     "name": "updated_utc",
+     "type": "timestamp",
+     "description": "When USGS last updated the event, UTC",
+     "nullable": false
+    },
+    {
+     "name": "magnitude",
+     "type": "decimal",
+     "description": "Magnitude",
+     "nullable": false
+    },
+    {
+     "name": "mag_type",
+     "type": "text",
+     "description": "Magnitude scale (mb, ml, md, mww, …)",
+     "nullable": false
+    },
+    {
+     "name": "place",
+     "type": "text",
+     "description": "Description of the location",
+     "nullable": true
+    },
+    {
+     "name": "latitude",
+     "type": "decimal",
+     "description": "Latitude, degrees",
+     "nullable": false
+    },
+    {
+     "name": "longitude",
+     "type": "decimal",
+     "description": "Longitude, degrees",
+     "nullable": false
+    },
+    {
+     "name": "depth_km",
+     "type": "decimal",
+     "description": "Depth, km below the surface",
+     "nullable": false
+    },
+    {
+     "name": "event_type",
+     "type": "text",
+     "description": "earthquake, mining explosion, explosion, …",
+     "nullable": false
+    },
+    {
+     "name": "status",
+     "type": "text",
+     "description": "reviewed or automatic",
+     "nullable": false
+    },
+    {
+     "name": "tsunami",
+     "type": "integer",
+     "description": "1 when a tsunami message was issued for an oceanic event",
+     "nullable": false
+    },
+    {
+     "name": "significance",
+     "type": "integer",
+     "description": "How significant USGS rates it (0–1000+)",
+     "nullable": false
+    },
+    {
+     "name": "felt_reports",
+     "type": "integer",
+     "description": "Number of “Did You Feel It?” reports",
+     "nullable": true
+    },
+    {
+     "name": "cdi",
+     "type": "decimal",
+     "description": "Strongest shaking people reported (1–10)",
+     "nullable": true
+    },
+    {
+     "name": "mmi",
+     "type": "decimal",
+     "description": "Strongest shaking measured by instruments (1–10)",
+     "nullable": true
+    },
+    {
+     "name": "alert",
+     "type": "text",
+     "description": "Impact alert: green, yellow, orange or red",
+     "nullable": true
+    },
+    {
+     "name": "network",
+     "type": "text",
+     "description": "Seismic network that reported it",
+     "nullable": false
+    },
+    {
+     "name": "stations",
+     "type": "integer",
+     "description": "Number of seismic stations used",
+     "nullable": true
+    },
+    {
+     "name": "min_distance_deg",
+     "type": "decimal",
+     "description": "Distance to the nearest station, degrees",
+     "nullable": true
+    },
+    {
+     "name": "rms",
+     "type": "decimal",
+     "description": "How well the location fits the measurements, seconds (smaller is better)",
+     "nullable": true
+    },
+    {
+     "name": "gap_deg",
+     "type": "decimal",
+     "description": "Largest gap in station coverage around the quake, degrees",
+     "nullable": true
+    },
+    {
+     "name": "title",
+     "type": "text",
+     "description": "Title as shown by USGS",
+     "nullable": false
+    },
+    {
+     "name": "url",
+     "type": "text",
+     "description": "USGS event page",
+     "nullable": false
+    }
+   ]
+  }
+ },
+ "editions": {
+  "preview": {
+   "ref": "D08@preview.1",
+   "files": [
+    {
+     "path": "events.csv",
+     "table": "events",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 20,
+     "bytes": 5768,
+     "sha256": "0791152c7e3e0847189fa2e951498dd8b767359854ff5c19ca45909d17ab68df",
+     "url": "/datasets/python/D08/preview.1/events.csv"
+    },
+    {
+     "path": "earthquakes.geojson",
+     "table": "events",
+     "layer": "clean",
+     "format": "geojson",
+     "rows": 20,
+     "bytes": 12373,
+     "sha256": "c9894ece6dfe6437e1fa98545a85533e8a262bf522e6f40c4e566eaa733e3fc1",
+     "url": "/datasets/python/D08/preview.1/earthquakes.geojson"
+    },
+    {
+     "path": "api/page-001.json",
+     "table": "events",
+     "layer": "clean",
+     "format": "json",
+     "rows": 20,
+     "bytes": 12407,
+     "sha256": "adeada96c072fc9ce3e562ae6ee8d9de90f0511e35337717314e5d0fa7be9e91",
+     "url": "/datasets/python/D08/preview.1/api/page-001.json"
+    }
+   ],
+   "quality": [
+    {
+     "id": "not_earthquakes",
+     "description": "Events that are not earthquakes (mining explosions, explosions, other)",
+     "count": 0
+    },
+    {
+     "id": "mixed_mag_types",
+     "description": "Different magnitude scales in one column (mb, ml, md, mww, …): not directly comparable",
+     "count": 3
+    },
+    {
+     "id": "no_felt_reports",
+     "description": "Events with no “Did You Feel It?” reports (felt_reports empty)",
+     "count": 18
+    },
+    {
+     "id": "no_station_count",
+     "description": "Events with no station count",
+     "count": 2
+    },
+    {
+     "id": "automatic",
+     "description": "Events not yet reviewed by a seismologist (status automatic)",
+     "count": 0
+    }
+   ],
+   "profile": {
+    "events": {
+     "event_id": {
+      "nulls": 0,
+      "distinct": 20
+     },
+     "time_ms": {
+      "nulls": 0,
+      "distinct": 20,
+      "min": 1740789594585,
+      "max": 1740814058516,
+      "mean": 1740802610008.6
+     },
+     "time_utc": {
+      "nulls": 0,
+      "distinct": 20,
+      "min": "2025-03-01 00:39:54",
+      "max": "2025-03-01 07:27:38"
+     },
+     "updated_utc": {
+      "nulls": 0,
+      "distinct": 4,
+      "min": "2025-03-01 03:49:47",
+      "max": "2025-05-08 19:24:50"
+     },
+     "magnitude": {
+      "nulls": 0,
+      "distinct": 15,
+      "min": 2.5,
+      "max": 4.7,
+      "mean": 3.79
+     },
+     "mag_type": {
+      "nulls": 0,
+      "distinct": 3
+     },
+     "place": {
+      "nulls": 0,
+      "distinct": 20
+     },
+     "latitude": {
+      "nulls": 0,
+      "distinct": 20,
+      "min": -32.2923,
+      "max": 80.7069,
+      "mean": 21
+     },
+     "longitude": {
+      "nulls": 0,
+      "distinct": 20,
+      "min": -178.4779,
+      "max": 179.7116,
+      "mean": -53.5
+     },
+     "depth_km": {
+      "nulls": 0,
+      "distinct": 14,
+      "min": 9.6,
+      "max": 585.411,
+      "mean": 87.84
+     },
+     "event_type": {
+      "nulls": 0,
+      "distinct": 1
+     },
+     "status": {
+      "nulls": 0,
+      "distinct": 1
+     },
+     "tsunami": {
+      "nulls": 0,
+      "distinct": 1,
+      "min": 0,
+      "max": 0,
+      "mean": 0
+     },
+     "significance": {
+      "nulls": 0,
+      "distinct": 15,
+      "min": 96,
+      "max": 340,
+      "mean": 229.05
+     },
+     "felt_reports": {
+      "nulls": 18,
+      "distinct": 1,
+      "min": 1,
+      "max": 1,
+      "mean": 1
+     },
+     "cdi": {
+      "nulls": 18,
+      "distinct": 2,
+      "min": 2.7,
+      "max": 3.3,
+      "mean": 3
+     },
+     "mmi": {
+      "nulls": 20,
+      "distinct": 0
+     },
+     "alert": {
+      "nulls": 20,
+      "distinct": 0
+     },
+     "network": {
+      "nulls": 0,
+      "distinct": 3
+     },
+     "stations": {
+      "nulls": 2,
+      "distinct": 15,
+      "min": 10,
+      "max": 63,
+      "mean": 28.33
+     },
+     "min_distance_deg": {
+      "nulls": 2,
+      "distinct": 18,
+      "min": 0.322,
+      "max": 6.601,
+      "mean": 2.01
+     },
+     "rms": {
+      "nulls": 0,
+      "distinct": 18,
+      "min": 0.17,
+      "max": 1.39,
+      "mean": 0.69
+     },
+     "gap_deg": {
+      "nulls": 2,
+      "distinct": 17,
+      "min": 71,
+      "max": 307,
+      "mean": 156.28
+     },
+     "title": {
+      "nulls": 0,
+      "distinct": 20
+     },
+     "url": {
+      "nulls": 0,
+      "distinct": 20
+     }
+    }
+   }
+  },
+  "starter": {
+   "ref": "D08@starter.1",
+   "files": [
+    {
+     "path": "events.csv",
+     "table": "events",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 466,
+     "bytes": 131743,
+     "sha256": "3b248f22566badc96ef3e281ec0084aadd669c1f1f98ae40230b2184f183e7c6",
+     "url": "/datasets/python/D08/starter.1/events.csv"
+    },
+    {
+     "path": "earthquakes.geojson",
+     "table": "events",
+     "layer": "clean",
+     "format": "geojson",
+     "rows": 466,
+     "bytes": 289692,
+     "sha256": "86e9603af7cc613f4f1d91bd9ecf7aeb97b745ef80ccf32d4350abaa59ab558e",
+     "url": "/datasets/python/D08/starter.1/earthquakes.geojson"
+    },
+    {
+     "path": "api/page-001.json",
+     "table": "events",
+     "layer": "clean",
+     "format": "json",
+     "rows": 200,
+     "bytes": 124486,
+     "sha256": "86f11c1670648718b83c125de97f9dbc3cecdf1e65850f62bd8517d2f6023ea5",
+     "url": "/datasets/python/D08/starter.1/api/page-001.json"
+    },
+    {
+     "path": "api/page-002.json",
+     "table": "events",
+     "layer": "clean",
+     "format": "json",
+     "rows": 200,
+     "bytes": 124205,
+     "sha256": "87577ba412da0330610fb85c4fb057960bc3653724415ce113af72373ec9ac8a",
+     "url": "/datasets/python/D08/starter.1/api/page-002.json"
+    },
+    {
+     "path": "api/page-003.json",
+     "table": "events",
+     "layer": "clean",
+     "format": "json",
+     "rows": 66,
+     "bytes": 41403,
+     "sha256": "1c0b7e1324958fc573fcafb311afc4b24663c84578c1bd77c0ee3dbd8024992b",
+     "url": "/datasets/python/D08/starter.1/api/page-003.json"
+    }
+   ],
+   "quality": [
+    {
+     "id": "not_earthquakes",
+     "description": "Events that are not earthquakes (mining explosions, explosions, other)",
+     "count": 5
+    },
+    {
+     "id": "mixed_mag_types",
+     "description": "Different magnitude scales in one column (mb, ml, md, mww, …): not directly comparable",
+     "count": 6
+    },
+    {
+     "id": "no_felt_reports",
+     "description": "Events with no “Did You Feel It?” reports (felt_reports empty)",
+     "count": 374
+    },
+    {
+     "id": "no_station_count",
+     "description": "Events with no station count",
+     "count": 29
+    },
+    {
+     "id": "automatic",
+     "description": "Events not yet reviewed by a seismologist (status automatic)",
+     "count": 0
+    }
+   ],
+   "profile": {
+    "events": {
+     "event_id": {
+      "nulls": 0,
+      "distinct": 466
+     },
+     "time_ms": {
+      "nulls": 0,
+      "distinct": 466,
+      "min": 1740789594585,
+      "max": 1741391003777,
+      "mean": 1741063517085.3
+     },
+     "time_utc": {
+      "nulls": 0,
+      "distinct": 466,
+      "min": "2025-03-01 00:39:54",
+      "max": "2025-03-07 23:43:23"
+     },
+     "updated_utc": {
+      "nulls": 0,
+      "distinct": 49,
+      "min": "2025-03-01 03:49:47",
+      "max": "2026-07-17 19:54:18"
+     },
+     "magnitude": {
+      "nulls": 0,
+      "distinct": 80,
+      "min": 2.5,
+      "max": 6,
+      "mean": 3.81
+     },
+     "mag_type": {
+      "nulls": 0,
+      "distinct": 6
+     },
+     "place": {
+      "nulls": 0,
+      "distinct": 419
+     },
+     "latitude": {
+      "nulls": 0,
+      "distinct": 466,
+      "min": -61.0777,
+      "max": 80.7069,
+      "mean": 19.35
+     },
+     "longitude": {
+      "nulls": 0,
+      "distinct": 465,
+      "min": -179.8781,
+      "max": 179.9447,
+      "mean": -33.46
+     },
+     "depth_km": {
+      "nulls": 0,
+      "distinct": 310,
+      "min": -2.94,
+      "max": 616.344,
+      "mean": 71.27
+     },
+     "event_type": {
+      "nulls": 0,
+      "distinct": 2
+     },
+     "status": {
+      "nulls": 0,
+      "distinct": 1
+     },
+     "tsunami": {
+      "nulls": 0,
+      "distinct": 2,
+      "min": 0,
+      "max": 1,
+      "mean": 0
+     },
+     "significance": {
+      "nulls": 0,
+      "distinct": 112,
+      "min": 96,
+      "max": 732,
+      "mean": 236.38
+     },
+     "felt_reports": {
+      "nulls": 374,
+      "distinct": 32,
+      "min": 0,
+      "max": 11411,
+      "mean": 258.17
+     },
+     "cdi": {
+      "nulls": 374,
+      "distinct": 26,
+      "min": 1,
+      "max": 7.9,
+      "mean": 3.21
+     },
+     "mmi": {
+      "nulls": 442,
+      "distinct": 24,
+      "min": 1,
+      "max": 5.51,
+      "mean": 3.18
+     },
+     "alert": {
+      "nulls": 457,
+      "distinct": 1
+     },
+     "network": {
+      "nulls": 0,
+      "distinct": 9
+     },
+     "stations": {
+      "nulls": 29,
+      "distinct": 109,
+      "min": 6,
+      "max": 267,
+      "mean": 41.66
+     },
+     "min_distance_deg": {
+      "nulls": 29,
+      "distinct": 422,
+      "min": 0,
+      "max": 27.55,
+      "mean": 2.26
+     },
+     "rms": {
+      "nulls": 0,
+      "distinct": 117,
+      "min": 0.05,
+      "max": 1.42,
+      "mean": 0.61
+     },
+     "gap_deg": {
+      "nulls": 29,
+      "distinct": 220,
+      "min": 19,
+      "max": 317,
+      "mean": 142.95
+     },
+     "title": {
+      "nulls": 0,
+      "distinct": 455
+     },
+     "url": {
+      "nulls": 0,
+      "distinct": 466
+     }
+    }
+   }
+  },
+  "standard": {
+   "ref": "D08@standard.1",
+   "files": [
+    {
+     "path": "events.csv",
+     "table": "events",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 2238,
+     "bytes": 628046,
+     "sha256": "4e60ca730ed48ff06bc8bac9a131e2e0bec9dc580b503f06943c6c6f5e53ecd5",
+     "url": "/datasets/python/D08/standard.1/events.csv"
+    },
+    {
+     "path": "earthquakes.geojson",
+     "table": "events",
+     "layer": "clean",
+     "format": "geojson",
+     "rows": 2238,
+     "bytes": 1387101,
+     "sha256": "21c34f3c37a28b0db2c5cc5c3d4e503af30c061845208d368267947a32171baf",
+     "url": "/datasets/python/D08/standard.1/earthquakes.geojson"
+    },
+    {
+     "path": "api/page-001.json",
+     "table": "events",
+     "layer": "clean",
+     "format": "json",
+     "rows": 200,
+     "bytes": 124487,
+     "sha256": "54cbaf8352072c7904612f36c62d0fb35413164c2e5b1089ccc9e71d859d00c0",
+     "url": "/datasets/python/D08/standard.1/api/page-001.json"
+    },
+    {
+     "path": "api/page-002.json",
+     "table": "events",
+     "layer": "clean",
+     "format": "json",
+     "rows": 200,
+     "bytes": 124206,
+     "sha256": "ef31917acbccc14646fdbfa558a3f782cfae68ef159756277a71b95366a29cd7",
+     "url": "/datasets/python/D08/standard.1/api/page-002.json"
+    },
+    {
+     "path": "api/page-003.json",
+     "table": "events",
+     "layer": "clean",
+     "format": "json",
+     "rows": 200,
+     "bytes": 124320,
+     "sha256": "864e0e1b9fe0e78559f4af4c403fa2ffddbc07bb2d4be2015b6ab6a8babd516c",
+     "url": "/datasets/python/D08/standard.1/api/page-003.json"
+    },
+    {
+     "path": "api/page-004.json",
+     "table": "events",
+     "layer": "clean",
+     "format": "json",
+     "rows": 200,
+     "bytes": 124521,
+     "sha256": "028dfea84cbc71171159306e641cec2b4314a4f5706eba2bf04421b67a9d60d6",
+     "url": "/datasets/python/D08/standard.1/api/page-004.json"
+    },
+    {
+     "path": "api/page-005.json",
+     "table": "events",
+     "layer": "clean",
+     "format": "json",
+     "rows": 200,
+     "bytes": 123651,
+     "sha256": "fee0917c91bbac00709102b6911071ec59b7b5a49c9dbfb524bcceb8ec744133",
+     "url": "/datasets/python/D08/standard.1/api/page-005.json"
+    },
+    {
+     "path": "api/page-006.json",
+     "table": "events",
+     "layer": "clean",
+     "format": "json",
+     "rows": 200,
+     "bytes": 124547,
+     "sha256": "01a163baba426a7582b42a77686aeadfc9a57839f5295ce13d83db70b82023e7",
+     "url": "/datasets/python/D08/standard.1/api/page-006.json"
+    },
+    {
+     "path": "api/page-007.json",
+     "table": "events",
+     "layer": "clean",
+     "format": "json",
+     "rows": 200,
+     "bytes": 123953,
+     "sha256": "af2f699792c8234d57d7930c920bac5b88546d2f8a42e963981ee040e67abd61",
+     "url": "/datasets/python/D08/standard.1/api/page-007.json"
+    },
+    {
+     "path": "api/page-008.json",
+     "table": "events",
+     "layer": "clean",
+     "format": "json",
+     "rows": 200,
+     "bytes": 124234,
+     "sha256": "e2ae3237760cd19c6353f21a64f4e5a10ead7ff3acbca57505c383d357a3ac8b",
+     "url": "/datasets/python/D08/standard.1/api/page-008.json"
+    },
+    {
+     "path": "api/page-009.json",
+     "table": "events",
+     "layer": "clean",
+     "format": "json",
+     "rows": 200,
+     "bytes": 123388,
+     "sha256": "640d1859d9851e01584d67edab66be8e92628b6978c155cf6ad9bcf955856df2",
+     "url": "/datasets/python/D08/standard.1/api/page-009.json"
+    },
+    {
+     "path": "api/page-010.json",
+     "table": "events",
+     "layer": "clean",
+     "format": "json",
+     "rows": 200,
+     "bytes": 124287,
+     "sha256": "7b41ea895e41569a20cd815e14433cf09e4b7e306da47534560e3073f85dbec7",
+     "url": "/datasets/python/D08/standard.1/api/page-010.json"
+    },
+    {
+     "path": "api/page-011.json",
+     "table": "events",
+     "layer": "clean",
+     "format": "json",
+     "rows": 200,
+     "bytes": 123831,
+     "sha256": "73ec659a874392032700af1a5c5cd4a6f247b5bce81ee39984bffb7bf3fe5d53",
+     "url": "/datasets/python/D08/standard.1/api/page-011.json"
+    },
+    {
+     "path": "api/page-012.json",
+     "table": "events",
+     "layer": "clean",
+     "format": "json",
+     "rows": 38,
+     "bytes": 23752,
+     "sha256": "73dbd42ab00da378f3f78ce9e6164390395a1d3cc996f382ca46db39c86dc080",
+     "url": "/datasets/python/D08/standard.1/api/page-012.json"
+    }
+   ],
+   "quality": [
+    {
+     "id": "not_earthquakes",
+     "description": "Events that are not earthquakes (mining explosions, explosions, other)",
+     "count": 16
+    },
+    {
+     "id": "mixed_mag_types",
+     "description": "Different magnitude scales in one column (mb, ml, md, mww, …): not directly comparable",
+     "count": 7
+    },
+    {
+     "id": "no_felt_reports",
+     "description": "Events with no “Did You Feel It?” reports (felt_reports empty)",
+     "count": 1859
+    },
+    {
+     "id": "no_station_count",
+     "description": "Events with no station count",
+     "count": 139
+    },
+    {
+     "id": "automatic",
+     "description": "Events not yet reviewed by a seismologist (status automatic)",
+     "count": 0
+    }
+   ],
+   "profile": {
+    "events": {
+     "event_id": {
+      "nulls": 0,
+      "distinct": 2238
+     },
+     "time_ms": {
+      "nulls": 0,
+      "distinct": 2238,
+      "min": 1740789594585,
+      "max": 1743465413173,
+      "mean": 1742159112278.1
+     },
+     "time_utc": {
+      "nulls": 0,
+      "distinct": 2238,
+      "min": "2025-03-01 00:39:54",
+      "max": "2025-03-31 23:56:53"
+     },
+     "updated_utc": {
+      "nulls": 0,
+      "distinct": 190,
+      "min": "2025-03-01 03:49:47",
+      "max": "2026-08-14 03:40:23"
+     },
+     "magnitude": {
+      "nulls": 0,
+      "distinct": 168,
+      "min": 2.5,
+      "max": 7.7,
+      "mean": 3.78
+     },
+     "mag_type": {
+      "nulls": 0,
+      "distinct": 7
+     },
+     "place": {
+      "nulls": 0,
+      "distinct": 1767
+     },
+     "latitude": {
+      "nulls": 0,
+      "distinct": 2228,
+      "min": -64.3844,
+      "max": 85.7899,
+      "mean": 21.27
+     },
+     "longitude": {
+      "nulls": 0,
+      "distinct": 2220,
+      "min": -179.9933,
+      "max": 179.9447,
+      "mean": -42.5
+     },
+     "depth_km": {
+      "nulls": 0,
+      "distinct": 1288,
+      "min": -2.94,
+      "max": 648.298,
+      "mean": 65.24
+     },
+     "event_type": {
+      "nulls": 0,
+      "distinct": 2
+     },
+     "status": {
+      "nulls": 0,
+      "distinct": 1
+     },
+     "tsunami": {
+      "nulls": 0,
+      "distinct": 2,
+      "min": 0,
+      "max": 1,
+      "mean": 0.01
+     },
+     "significance": {
+      "nulls": 0,
+      "distinct": 242,
+      "min": 96,
+      "max": 2910,
+      "mean": 234.74
+     },
+     "felt_reports": {
+      "nulls": 1859,
+      "distinct": 69,
+      "min": 0,
+      "max": 11411,
+      "mean": 121.16
+     },
+     "cdi": {
+      "nulls": 1859,
+      "distinct": 47,
+      "min": 0,
+      "max": 9.1,
+      "mean": 3.16
+     },
+     "mmi": {
+      "nulls": 2088,
+      "distinct": 143,
+      "min": 0,
+      "max": 9.953,
+      "mean": 3.31
+     },
+     "alert": {
+      "nulls": 2183,
+      "distinct": 2
+     },
+     "network": {
+      "nulls": 0,
+      "distinct": 11
+     },
+     "stations": {
+      "nulls": 139,
+      "distinct": 185,
+      "min": 3,
+      "max": 437,
+      "mean": 41.02
+     },
+     "min_distance_deg": {
+      "nulls": 139,
+      "distinct": 1743,
+      "min": 0,
+      "max": 52.015,
+      "mean": 2.35
+     },
+     "rms": {
+      "nulls": 0,
+      "distinct": 161,
+      "min": 0.04,
+      "max": 1.42,
+      "mean": 0.6
+     },
+     "gap_deg": {
+      "nulls": 139,
+      "distinct": 328,
+      "min": 11,
+      "max": 337,
+      "mean": 144.47
+     },
+     "title": {
+      "nulls": 0,
+      "distinct": 2094
+     },
+     "url": {
+      "nulls": 0,
+      "distinct": 2238
+     }
+    }
+   }
+  },
+  "full": {
+   "ref": "D08@full.1",
+   "files": [
+    {
+     "path": "events.csv",
+     "table": "events",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 12855,
+     "bytes": 3605717,
+     "sha256": "e4bd251d0cb3a04ee8701b7e40d30e5b2e2d456039f8fcd064ac4975fcd1bdc5",
+     "url": "/datasets/python/D08/full.1/events.csv"
+    },
+    {
+     "path": "events.parquet",
+     "table": "events",
+     "layer": "clean",
+     "format": "parquet",
+     "rows": 12855,
+     "bytes": 908206,
+     "sha256": "9bbeed63093b6004a467ab3acb96024da0007be46b81a12d0e6ded377c99efd2",
+     "url": "/datasets/python/D08/full.1/events.parquet",
+     "from": "e4bd251d0cb3a04ee8701b7e40d30e5b2e2d456039f8fcd064ac4975fcd1bdc5"
+    },
+    {
+     "path": "earthquakes.geojson",
+     "table": "events",
+     "layer": "clean",
+     "format": "geojson",
+     "rows": 12855,
+     "bytes": 7954410,
+     "sha256": "71fc35d0aaa1e1854b3da5bff6b38c12c5fb0fec36e23c4f8078d8a27286ba88",
+     "url": "/datasets/python/D08/full.1/earthquakes.geojson"
+    }
+   ],
+   "quality": [
+    {
+     "id": "not_earthquakes",
+     "description": "Events that are not earthquakes (mining explosions, explosions, other)",
+     "count": 114
+    },
+    {
+     "id": "mixed_mag_types",
+     "description": "Different magnitude scales in one column (mb, ml, md, mww, …): not directly comparable",
+     "count": 9
+    },
+    {
+     "id": "no_felt_reports",
+     "description": "Events with no “Did You Feel It?” reports (felt_reports empty)",
+     "count": 10727
+    },
+    {
+     "id": "no_station_count",
+     "description": "Events with no station count",
+     "count": 766
+    },
+    {
+     "id": "automatic",
+     "description": "Events not yet reviewed by a seismologist (status automatic)",
+     "count": 12
+    }
+   ],
+   "profile": {
+    "events": {
+     "event_id": {
+      "nulls": 0,
+      "distinct": 12855
+     },
+     "time_ms": {
+      "nulls": 0,
+      "distinct": 12854,
+      "min": 1735690402650,
+      "max": 1751327325119,
+      "mean": 1743271469049.39
+     },
+     "time_utc": {
+      "nulls": 0,
+      "distinct": 12845,
+      "min": "2025-01-01 00:13:22",
+      "max": "2025-06-30 23:48:45"
+     },
+     "updated_utc": {
+      "nulls": 0,
+      "distinct": 1205,
+      "min": "2025-01-01 17:53:36",
+      "max": "2026-10-14 15:06:00"
+     },
+     "magnitude": {
+      "nulls": 0,
+      "distinct": 218,
+      "min": 2.5,
+      "max": 7.7,
+      "mean": 3.88
+     },
+     "mag_type": {
+      "nulls": 0,
+      "distinct": 9
+     },
+     "place": {
+      "nulls": 0,
+      "distinct": 9305
+     },
+     "latitude": {
+      "nulls": 0,
+      "distinct": 12509,
+      "min": -73.2204,
+      "max": 87.0815,
+      "mean": 18.77
+     },
+     "longitude": {
+      "nulls": 0,
+      "distinct": 12666,
+      "min": -179.9933,
+      "max": 179.9855,
+      "mean": -23.81
+     },
+     "depth_km": {
+      "nulls": 0,
+      "distinct": 6250,
+      "min": -3.42,
+      "max": 667.237,
+      "mean": 62.07
+     },
+     "event_type": {
+      "nulls": 0,
+      "distinct": 4
+     },
+     "status": {
+      "nulls": 0,
+      "distinct": 2
+     },
+     "tsunami": {
+      "nulls": 0,
+      "distinct": 2,
+      "min": 0,
+      "max": 1,
+      "mean": 0
+     },
+     "significance": {
+      "nulls": 0,
+      "distinct": 431,
+      "min": 96,
+      "max": 2910,
+      "mean": 246.2
+     },
+     "felt_reports": {
+      "nulls": 10727,
+      "distinct": 212,
+      "min": 0,
+      "max": 45935,
+      "mean": 131.99
+     },
+     "cdi": {
+      "nulls": 10727,
+      "distinct": 69,
+      "min": 0,
+      "max": 9.1,
+      "mean": 3.13
+     },
+     "mmi": {
+      "nulls": 12082,
+      "distinct": 643,
+      "min": 0,
+      "max": 9.953,
+      "mean": 3.26
+     },
+     "alert": {
+      "nulls": 12515,
+      "distinct": 4
+     },
+     "network": {
+      "nulls": 0,
+      "distinct": 13
+     },
+     "stations": {
+      "nulls": 766,
+      "distinct": 257,
+      "min": 0,
+      "max": 475,
+      "mean": 42.52
+     },
+     "min_distance_deg": {
+      "nulls": 768,
+      "distinct": 6287,
+      "min": 0,
+      "max": 55.898,
+      "mean": 2.55
+     },
+     "rms": {
+      "nulls": 0,
+      "distinct": 248,
+      "min": 0,
+      "max": 1.45,
+      "mean": 0.62
+     },
+     "gap_deg": {
+      "nulls": 767,
+      "distinct": 443,
+      "min": 10,
+      "max": 358.17999999999995,
+      "mean": 134.79
+     },
+     "title": {
+      "nulls": 0,
+      "distinct": 11225
+     },
+     "url": {
+      "nulls": 0,
+      "distinct": 12855
+     }
+    }
+   }
+  }
+ }
+}

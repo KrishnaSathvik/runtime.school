@@ -6,7 +6,7 @@ export const coreQuestions = [
     id: "qb-0001", slug: "shopper-contact-list", title: "Customer list", dataset: "retail", decision: "MIGRATE",
     difficulty: "warmup", difficultyWhy: "One table, three named columns, no filter.", primaryTopic: "basics.select",
     objective: "Select named columns from one table.", prerequisites: [0],
-    task: "Find every Retail customer. Return customer_id, country and region.",
+    task: "Find every customer. Return customer_id, country and region.",
     columns: ["customer_id", "country", "region"], tables: ["customers"],
     hints: ["List the three columns after SELECT.", "No WHERE clause is needed."],
     solution: "SELECT customer_id, country, region FROM customers",

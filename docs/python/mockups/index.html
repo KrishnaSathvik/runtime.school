@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python UI mockups</title>
+<script>document.documentElement.dataset.theme = new URLSearchParams(location.search).get("theme") || "light";</script>
+<link rel="stylesheet" href="mockup.css">
+<style>
+  .wrap { max-width: 980px; margin: 0 auto; padding: 36px 20px 60px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-top: 18px; }
+  .card { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; text-decoration: none; display: block; }
+  .card img { width: 100%; display: block; border-bottom: 1px solid var(--border); }
+  .card div { padding: 10px 14px; }
+  .card b { display: block; }
+  ol.decisions li { margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<header class="hdr"><div class="brand"><span class="mark">&gt;|</span> runtime <span class="cursor"></span> <span class="path">~/ python / mockups</span></div><span></span><span></span></header>
+<div class="wrap">
+  <div class="eyebrow"><b>phase 1a</b> for approval · docs/python/curriculum-plan.md §8</div>
+  <h1>Python UI mockups</h1>
+  <p class="lede">Five screens in the shipped SQL design family. Data in the screens comes from the real R01 Runtime Market editions. Run timings and the learner's code are illustrative.</p>
+
+  <div class="cards">
+    <a class="card" href="lesson.html"><img src="screens/lesson-desktop-light.png" alt=""><div><b>Learn · lesson</b><span class="hint-line">Reading left, workbench right; failed check</span></div></a>
+    <a class="card" href="practice.html"><img src="screens/practice-desktop-light.png" alt=""><div><b>Practice · question</b><span class="hint-line">Public examples, hidden tests by kind; solved</span></div></a>
+    <a class="card" href="project.html"><img src="screens/project-desktop-light.png" alt=""><div><b>Projects · milestone</b><span class="hint-line">Milestone rail, files, locked checks, deliverable</span></div></a>
+    <a class="card" href="explorer.html"><img src="screens/explorer-desktop-light.png" alt=""><div><b>Tools · Dataset Explorer</b><span class="hint-line">Editions, dictionary, known problems, licence</span></div></a>
+    <a class="card" href="playground.html"><img src="screens/playground-desktop-light.png" alt=""><div><b>Tools · Playground</b><span class="hint-line">Dataset picker, files, table and figure output</span></div></a>
+  </div>
+
+  <div class="label">Decisions to approve</div>
+  <ol class="decisions prose">
+    <li><b>Same family as SQL.</b> Header with mono path, amber active tab and status bar, split reading/workbench layout, amber mono section labels, Geist Sans and Mono. No new visual language.</li>
+    <li><b>One workbench everywhere.</b> File tabs (data files marked read-only), editor, Run / Check / Stop / Reset, then a results panel with Console and Checks tabs.</li>
+    <li><b>Hidden tests.</b> Shown as a pass count and their kinds ("empty catalogue, unknown product…"), never their inputs or expected values.</li>
+    <li><b>Mode chips.</b> Every lesson, question and milestone shows <span class="chip mode">interactive</span>, simulated or read-and-diagnose.</li>
+    <li><b>Python signal colour.</b> Green <code>#3a6b35</code> / <code>#9fd39a</code> on mode chips only, the way SQL uses blue. Alternative: no subject colour, amber only.</li>
+    <li><b>Code ligatures off.</b> Geist Mono would turn <code>&gt;=</code> into one symbol; learners need to see what they type.</li>
+    <li><b>Projects.</b> A milestone rail under the header, then brief, "done when" list and file tree on the left, multi-file editor and a deliverable preview on the right.</li>
+    <li><b>Tools.</b> The Explorer opens editions in the Playground or Database Lab; the Playground shows mounted data as read-only files.</li>
+  </ol>
+
+  <div class="label">All captures</div>
+  <p class="hint-line">screens/&lt;screen&gt;-&lt;desktop|mobile&gt;-&lt;light|dark&gt;.png · regenerate with <code>node docs/python/mockups/shoot.mjs</code></p>
+</div>
+</body>
+</html>

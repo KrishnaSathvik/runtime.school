@@ -1,0 +1,836 @@
+{
+ "id": "D09",
+ "title": "Open Food Facts Products",
+ "version": 1,
+ "seed": null,
+ "description": "Packaged foods sold in the United States, from the crowd-sourced Open Food Facts database: cereals, chips, plant-based milks, yogurts, chocolates and sodas, with nutrition per 100 g, grades, labels, allergens and categories as nested lists.",
+ "licence": {
+  "name": "Open Database License (ODbL) 1.0; contents DbCL 1.0",
+  "status": "cleared"
+ },
+ "window": [
+  "2012-01-01",
+  "2026-10-18"
+ ],
+ "generator": "datasets/python/D09/dataset.mjs from datasets/python/D09/extract",
+ "source": "Open Food Facts search service, six US categories by scan count (datasets/python/D09/source.json)",
+ "attribution": "Data from Open Food Facts (openfoodfacts.org), © Open Food Facts contributors, available under the Open Database License.",
+ "tables": {
+  "products": {
+   "description": "One packaged food product.",
+   "primaryKey": [
+    "code"
+   ],
+   "foreignKeys": [],
+   "columns": [
+    {
+     "name": "code",
+     "type": "text",
+     "description": "Barcode (keep as text: many start with 0)",
+     "nullable": false
+    },
+    {
+     "name": "product_name",
+     "type": "text",
+     "description": "Name as entered",
+     "nullable": true
+    },
+    {
+     "name": "brands",
+     "type": "text",
+     "description": "Brands, comma-separated as entered",
+     "nullable": true
+    },
+    {
+     "name": "quantity",
+     "type": "text",
+     "description": "Package size as free text",
+     "nullable": true
+    },
+    {
+     "name": "search_category",
+     "type": "text",
+     "description": "Which of the six categories it was collected from",
+     "nullable": false
+    },
+    {
+     "name": "nutriscore_grade",
+     "type": "text",
+     "description": "Nutri-Score a–e, or unknown / not-applicable",
+     "nullable": true
+    },
+    {
+     "name": "nova_group",
+     "type": "integer",
+     "description": "How processed it is, from 1 (unprocessed) to 4 (ultra-processed)",
+     "nullable": true
+    },
+    {
+     "name": "ecoscore_grade",
+     "type": "text",
+     "description": "Environmental score a-plus–f, or unknown",
+     "nullable": true
+    },
+    {
+     "name": "completeness",
+     "type": "decimal",
+     "description": "How complete the record is, 0–1",
+     "nullable": true
+    },
+    {
+     "name": "created_at",
+     "type": "timestamp",
+     "description": "When the product was added, UTC",
+     "nullable": true
+    },
+    {
+     "name": "last_modified_at",
+     "type": "timestamp",
+     "description": "Last edit, UTC",
+     "nullable": true
+    },
+    {
+     "name": "energy_kcal_100g",
+     "type": "decimal",
+     "description": "Energy, kcal per 100 g",
+     "nullable": true
+    },
+    {
+     "name": "fat_100g",
+     "type": "decimal",
+     "description": "Fat, g per 100 g",
+     "nullable": true
+    },
+    {
+     "name": "saturated_fat_100g",
+     "type": "decimal",
+     "description": "Saturated fat, g per 100 g",
+     "nullable": true
+    },
+    {
+     "name": "carbohydrates_100g",
+     "type": "decimal",
+     "description": "Carbohydrates, g per 100 g",
+     "nullable": true
+    },
+    {
+     "name": "sugars_100g",
+     "type": "decimal",
+     "description": "Sugars, g per 100 g",
+     "nullable": true
+    },
+    {
+     "name": "fiber_100g",
+     "type": "decimal",
+     "description": "Fibre, g per 100 g",
+     "nullable": true
+    },
+    {
+     "name": "proteins_100g",
+     "type": "decimal",
+     "description": "Protein, g per 100 g",
+     "nullable": true
+    },
+    {
+     "name": "salt_100g",
+     "type": "decimal",
+     "description": "Salt, g per 100 g",
+     "nullable": true
+    },
+    {
+     "name": "sodium_100g",
+     "type": "decimal",
+     "description": "Sodium, g per 100 g",
+     "nullable": true
+    }
+   ]
+  },
+  "product_tags": {
+   "description": "One tag on one product: categories, labels, allergens, traces, countries and ingredient analysis.",
+   "primaryKey": [
+    "code",
+    "kind",
+    "tag"
+   ],
+   "foreignKeys": [
+    {
+     "column": "code",
+     "references": "products.code"
+    }
+   ],
+   "columns": [
+    {
+     "name": "code",
+     "type": "text",
+     "description": "Product barcode",
+     "nullable": false
+    },
+    {
+     "name": "kind",
+     "type": "text",
+     "description": "category, label, allergen, trace, country or analysis",
+     "nullable": false
+    },
+    {
+     "name": "tag",
+     "type": "text",
+     "description": "Tag, with language prefix (en:organic)",
+     "nullable": false
+    }
+   ]
+  }
+ },
+ "editions": {
+  "preview": {
+   "ref": "D09@preview.1",
+   "files": [
+    {
+     "path": "products.csv",
+     "table": "products",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 25,
+     "bytes": 4508,
+     "sha256": "2373e41c77d80e50a93b40406f9a577f993d91dedd56c2271608b797922d62c9",
+     "url": "/datasets/python/D09/preview.1/products.csv"
+    },
+    {
+     "path": "product_tags.csv",
+     "table": "product_tags",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 546,
+     "bytes": 21751,
+     "sha256": "5a5601fd18517466e98b3c1e159501345e809195084d2331584674b5ad1f46da",
+     "url": "/datasets/python/D09/preview.1/product_tags.csv"
+    },
+    {
+     "path": "products.json",
+     "table": "products",
+     "layer": "clean",
+     "format": "json",
+     "rows": 25,
+     "bytes": 25594,
+     "sha256": "34b6fbeb7c55dbca4a648a36416c9cedcc013fb697cf30bd008d263b4e6ba128",
+     "url": "/datasets/python/D09/preview.1/products.json"
+    },
+    {
+     "path": "products.jsonl",
+     "table": "products",
+     "layer": "clean",
+     "format": "jsonl",
+     "rows": 25,
+     "bytes": 25568,
+     "sha256": "a288554b2f3d2db6963b02312ceb0f82c5fc58957790981a6e8a9f77f864e7f8",
+     "url": "/datasets/python/D09/preview.1/products.jsonl"
+    }
+   ],
+   "quality": [
+    {
+     "id": "no_nutrients",
+     "description": "Products with no nutrition values at all",
+     "count": 0
+    },
+    {
+     "id": "grade_unknown",
+     "description": "Nutri-Score recorded as \"unknown\" or \"not-applicable\" instead of a–e",
+     "count": 1
+    },
+    {
+     "id": "no_quantity",
+     "description": "Products with no package quantity",
+     "count": 3
+    },
+    {
+     "id": "quantity_text",
+     "description": "Quantities as free text in mixed units (\"450g\", \"12 oz\", \"1.89 L\")",
+     "count": 22
+    },
+    {
+     "id": "brand_spaces",
+     "description": "Brand lists with stray spaces around names",
+     "count": 3
+    },
+    {
+     "id": "leading_zeros",
+     "description": "Barcodes that start with 0 (lost if read as numbers)",
+     "count": 14
+    },
+    {
+     "id": "salt_sodium",
+     "description": "Products where salt ≠ 2.5 × sodium (rounded or entered separately)",
+     "count": 0
+    }
+   ],
+   "profile": {
+    "products": {
+     "code": {
+      "nulls": 0,
+      "distinct": 25
+     },
+     "product_name": {
+      "nulls": 0,
+      "distinct": 25
+     },
+     "brands": {
+      "nulls": 0,
+      "distinct": 19
+     },
+     "quantity": {
+      "nulls": 3,
+      "distinct": 20
+     },
+     "search_category": {
+      "nulls": 0,
+      "distinct": 1
+     },
+     "nutriscore_grade": {
+      "nulls": 0,
+      "distinct": 5
+     },
+     "nova_group": {
+      "nulls": 0,
+      "distinct": 3,
+      "min": 1,
+      "max": 4,
+      "mean": 2.8
+     },
+     "ecoscore_grade": {
+      "nulls": 0,
+      "distinct": 4
+     },
+     "completeness": {
+      "nulls": 0,
+      "distinct": 10,
+      "min": 0.6,
+      "max": 1,
+      "mean": 0.83
+     },
+     "created_at": {
+      "nulls": 0,
+      "distinct": 25,
+      "min": "2013-02-08 09:22:42",
+      "max": "2023-09-07 08:59:04"
+     },
+     "last_modified_at": {
+      "nulls": 0,
+      "distinct": 25,
+      "min": "2023-11-15 18:35:00",
+      "max": "2024-12-16 02:13:56"
+     },
+     "energy_kcal_100g": {
+      "nulls": 0,
+      "distinct": 18,
+      "min": 140,
+      "max": 478,
+      "mean": 352.04
+     },
+     "fat_100g": {
+      "nulls": 0,
+      "distinct": 20,
+      "min": 0,
+      "max": 23.2,
+      "mean": 6.51
+     },
+     "saturated_fat_100g": {
+      "nulls": 0,
+      "distinct": 15,
+      "min": 0,
+      "max": 5,
+      "mean": 1.32
+     },
+     "carbohydrates_100g": {
+      "nulls": 0,
+      "distinct": 20,
+      "min": 27,
+      "max": 85.71,
+      "mean": 64.5
+     },
+     "sugars_100g": {
+      "nulls": 0,
+      "distinct": 20,
+      "min": 0.75,
+      "max": 32.4,
+      "mean": 9.04
+     },
+     "fiber_100g": {
+      "nulls": 1,
+      "distinct": 17,
+      "min": 2.3,
+      "max": 17.2,
+      "mean": 8.42
+     },
+     "proteins_100g": {
+      "nulls": 0,
+      "distinct": 18,
+      "min": 5,
+      "max": 13.5,
+      "mean": 9.99
+     },
+     "salt_100g": {
+      "nulls": 1,
+      "distinct": 18,
+      "min": 0,
+      "max": 1.785,
+      "mean": 0.49
+     },
+     "sodium_100g": {
+      "nulls": 1,
+      "distinct": 18,
+      "min": 0,
+      "max": 0.714,
+      "mean": 0.2
+     }
+    },
+    "product_tags": {
+     "code": {
+      "nulls": 0,
+      "distinct": 25
+     },
+     "kind": {
+      "nulls": 0,
+      "distinct": 6
+     },
+     "tag": {
+      "nulls": 0,
+      "distinct": 123
+     }
+    }
+   }
+  },
+  "starter": {
+   "ref": "D09@starter.1",
+   "files": [
+    {
+     "path": "products.csv",
+     "table": "products",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 300,
+     "bytes": 56237,
+     "sha256": "b3c9a2290a722f66f0e836dfea1b8d16566ea817649a39fc344f7031e00199ab",
+     "url": "/datasets/python/D09/starter.1/products.csv"
+    },
+    {
+     "path": "product_tags.csv",
+     "table": "product_tags",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 4919,
+     "bytes": 203206,
+     "sha256": "d9d5d77a4894fc635f5f90111ac8bd38100e751e8ed5e8b9dc59ef26358defdc",
+     "url": "/datasets/python/D09/starter.1/product_tags.csv"
+    },
+    {
+     "path": "products.json",
+     "table": "products",
+     "layer": "clean",
+     "format": "json",
+     "rows": 300,
+     "bytes": 277868,
+     "sha256": "baabf1064535a0bcbc8b2c990ba44a0593b8bb6db94b129cf8beffe99a43870b",
+     "url": "/datasets/python/D09/starter.1/products.json"
+    },
+    {
+     "path": "products.jsonl",
+     "table": "products",
+     "layer": "clean",
+     "format": "jsonl",
+     "rows": 300,
+     "bytes": 277841,
+     "sha256": "61f952afc4aaac4d8576a90937c67721686d2cbeae7ad5282507226cd1aa70cf",
+     "url": "/datasets/python/D09/starter.1/products.jsonl"
+    }
+   ],
+   "quality": [
+    {
+     "id": "no_nutrients",
+     "description": "Products with no nutrition values at all",
+     "count": 6
+    },
+    {
+     "id": "grade_unknown",
+     "description": "Nutri-Score recorded as \"unknown\" or \"not-applicable\" instead of a–e",
+     "count": 38
+    },
+    {
+     "id": "no_quantity",
+     "description": "Products with no package quantity",
+     "count": 69
+    },
+    {
+     "id": "quantity_text",
+     "description": "Quantities as free text in mixed units (\"450g\", \"12 oz\", \"1.89 L\")",
+     "count": 231
+    },
+    {
+     "id": "brand_spaces",
+     "description": "Brand lists with stray spaces around names",
+     "count": 38
+    },
+    {
+     "id": "leading_zeros",
+     "description": "Barcodes that start with 0 (lost if read as numbers)",
+     "count": 254
+    },
+    {
+     "id": "salt_sodium",
+     "description": "Products where salt ≠ 2.5 × sodium (rounded or entered separately)",
+     "count": 0
+    }
+   ],
+   "profile": {
+    "products": {
+     "code": {
+      "nulls": 0,
+      "distinct": 300
+     },
+     "product_name": {
+      "nulls": 1,
+      "distinct": 274
+     },
+     "brands": {
+      "nulls": 4,
+      "distinct": 127
+     },
+     "quantity": {
+      "nulls": 69,
+      "distinct": 167
+     },
+     "search_category": {
+      "nulls": 0,
+      "distinct": 1
+     },
+     "nutriscore_grade": {
+      "nulls": 0,
+      "distinct": 7
+     },
+     "nova_group": {
+      "nulls": 14,
+      "distinct": 3,
+      "min": 1,
+      "max": 4,
+      "mean": 3.42
+     },
+     "ecoscore_grade": {
+      "nulls": 0,
+      "distinct": 6
+     },
+     "completeness": {
+      "nulls": 0,
+      "distinct": 25,
+      "min": 0.375,
+      "max": 1,
+      "mean": 0.71
+     },
+     "created_at": {
+      "nulls": 0,
+      "distinct": 292,
+      "min": "2013-02-08 09:22:42",
+      "max": "2023-09-28 07:15:18"
+     },
+     "last_modified_at": {
+      "nulls": 0,
+      "distinct": 297,
+      "min": "2019-07-18 05:59:29",
+      "max": "2024-12-17 15:04:03"
+     },
+     "energy_kcal_100g": {
+      "nulls": 7,
+      "distinct": 141,
+      "min": 50,
+      "max": 537,
+      "mean": 365.55
+     },
+     "fat_100g": {
+      "nulls": 6,
+      "distinct": 161,
+      "min": 0,
+      "max": 27.3,
+      "mean": 6.46
+     },
+     "saturated_fat_100g": {
+      "nulls": 28,
+      "distinct": 96,
+      "min": 0,
+      "max": 13.3,
+      "mean": 1.3
+     },
+     "carbohydrates_100g": {
+      "nulls": 6,
+      "distinct": 184,
+      "min": 10,
+      "max": 129,
+      "mean": 70.63
+     },
+     "sugars_100g": {
+      "nulls": 17,
+      "distinct": 166,
+      "min": 0,
+      "max": 46.3,
+      "mean": 17.44
+     },
+     "fiber_100g": {
+      "nulls": 28,
+      "distinct": 147,
+      "min": 0,
+      "max": 45,
+      "mean": 8.14
+     },
+     "proteins_100g": {
+      "nulls": 6,
+      "distinct": 146,
+      "min": 0,
+      "max": 400,
+      "mean": 11.51
+     },
+     "salt_100g": {
+      "nulls": 13,
+      "distinct": 190,
+      "min": 0,
+      "max": 10,
+      "mean": 0.84
+     },
+     "sodium_100g": {
+      "nulls": 13,
+      "distinct": 193,
+      "min": 0,
+      "max": 4,
+      "mean": 0.34
+     }
+    },
+    "product_tags": {
+     "code": {
+      "nulls": 0,
+      "distinct": 300
+     },
+     "kind": {
+      "nulls": 0,
+      "distinct": 6
+     },
+     "tag": {
+      "nulls": 0,
+      "distinct": 265
+     }
+    }
+   }
+  },
+  "standard": {
+   "ref": "D09@standard.1",
+   "files": [
+    {
+     "path": "products.csv",
+     "table": "products",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 1799,
+     "bytes": 329022,
+     "sha256": "1a56583b10fe92857e27c9c39a54b32c4385b32ccc90de869e2a4df625add29a",
+     "url": "/datasets/python/D09/standard.1/products.csv"
+    },
+    {
+     "path": "product_tags.csv",
+     "table": "product_tags",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 26741,
+     "bytes": 1075433,
+     "sha256": "542016aab19d4cadc0119380c82d3ba65922b976919bc6b3a6b62ede703390dd",
+     "url": "/datasets/python/D09/standard.1/product_tags.csv"
+    },
+    {
+     "path": "products.json",
+     "table": "products",
+     "layer": "clean",
+     "format": "json",
+     "rows": 1799,
+     "bytes": 1548214,
+     "sha256": "fbc98108a7da8195753d30cb1faf6d6aece73936f6dae7661f86b28bc68d733d",
+     "url": "/datasets/python/D09/standard.1/products.json"
+    },
+    {
+     "path": "products.jsonl",
+     "table": "products",
+     "layer": "clean",
+     "format": "jsonl",
+     "rows": 1799,
+     "bytes": 1548186,
+     "sha256": "b05c354c506b297214c2d2bc1121fb55b8109a408dbca5b72e2a5acc4ff80e7a",
+     "url": "/datasets/python/D09/standard.1/products.jsonl"
+    }
+   ],
+   "quality": [
+    {
+     "id": "no_nutrients",
+     "description": "Products with no nutrition values at all",
+     "count": 52
+    },
+    {
+     "id": "grade_unknown",
+     "description": "Nutri-Score recorded as \"unknown\" or \"not-applicable\" instead of a–e",
+     "count": 221
+    },
+    {
+     "id": "no_quantity",
+     "description": "Products with no package quantity",
+     "count": 794
+    },
+    {
+     "id": "quantity_text",
+     "description": "Quantities as free text in mixed units (\"450g\", \"12 oz\", \"1.89 L\")",
+     "count": 1005
+    },
+    {
+     "id": "brand_spaces",
+     "description": "Brand lists with stray spaces around names",
+     "count": 238
+    },
+    {
+     "id": "leading_zeros",
+     "description": "Barcodes that start with 0 (lost if read as numbers)",
+     "count": 1482
+    },
+    {
+     "id": "salt_sodium",
+     "description": "Products where salt ≠ 2.5 × sodium (rounded or entered separately)",
+     "count": 2
+    }
+   ],
+   "profile": {
+    "products": {
+     "code": {
+      "nulls": 0,
+      "distinct": 1799
+     },
+     "product_name": {
+      "nulls": 11,
+      "distinct": 1601
+     },
+     "brands": {
+      "nulls": 88,
+      "distinct": 797
+     },
+     "quantity": {
+      "nulls": 794,
+      "distinct": 571
+     },
+     "search_category": {
+      "nulls": 0,
+      "distinct": 6
+     },
+     "nutriscore_grade": {
+      "nulls": 0,
+      "distinct": 7
+     },
+     "nova_group": {
+      "nulls": 192,
+      "distinct": 3,
+      "min": 1,
+      "max": 4,
+      "mean": 3.71
+     },
+     "ecoscore_grade": {
+      "nulls": 0,
+      "distinct": 9
+     },
+     "completeness": {
+      "nulls": 0,
+      "distinct": 51,
+      "min": 0.17500000000000002,
+      "max": 1.1,
+      "mean": 0.67
+     },
+     "created_at": {
+      "nulls": 0,
+      "distinct": 1740,
+      "min": "2012-06-20 10:13:11",
+      "max": "2023-11-15 15:47:05"
+     },
+     "last_modified_at": {
+      "nulls": 0,
+      "distinct": 1786,
+      "min": "2015-08-13 19:51:36",
+      "max": "2024-12-17 15:04:03"
+     },
+     "energy_kcal_100g": {
+      "nulls": 65,
+      "distinct": 610,
+      "min": 0,
+      "max": 750,
+      "mean": 256.22
+     },
+     "fat_100g": {
+      "nulls": 58,
+      "distinct": 524,
+      "min": 0,
+      "max": 62.5,
+      "mean": 11.8
+     },
+     "saturated_fat_100g": {
+      "nulls": 197,
+      "distinct": 404,
+      "min": 0,
+      "max": 62.5,
+      "mean": 4.95
+     },
+     "carbohydrates_100g": {
+      "nulls": 57,
+      "distinct": 729,
+      "min": 0,
+      "max": 129,
+      "mean": 33.62
+     },
+     "sugars_100g": {
+      "nulls": 121,
+      "distinct": 622,
+      "min": 0,
+      "max": 93.75,
+      "mean": 13.41
+     },
+     "fiber_100g": {
+      "nulls": 463,
+      "distinct": 293,
+      "min": 0,
+      "max": 46.4,
+      "mean": 3.75
+     },
+     "proteins_100g": {
+      "nulls": 56,
+      "distinct": 388,
+      "min": 0,
+      "max": 400,
+      "mean": 5.77
+     },
+     "salt_100g": {
+      "nulls": 147,
+      "distinct": 706,
+      "min": 0,
+      "max": 714,
+      "mean": 1.25
+     },
+     "sodium_100g": {
+      "nulls": 147,
+      "distinct": 713,
+      "min": 0,
+      "max": 286,
+      "mean": 0.5
+     }
+    },
+    "product_tags": {
+     "code": {
+      "nulls": 0,
+      "distinct": 1799
+     },
+     "kind": {
+      "nulls": 0,
+      "distinct": 6
+     },
+     "tag": {
+      "nulls": 0,
+      "distinct": 885
+     }
+    }
+   }
+  }
+ }
+}

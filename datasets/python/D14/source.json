@@ -1,0 +1,11 @@
+{
+  "publisher": "OpenStreetMap contributors",
+  "service": "https://overpass-api.de/api/interpreter",
+  "query": "[out:json][timeout:120];\narea(id:3600186579)->.city;\n(\n  nwr[\"amenity\"~\"^(cafe|restaurant|bar|pub|fast_food|ice_cream|library|school|pharmacy|hospital|clinic|dentist|bank|post_office|fuel|charging_station|bicycle_rental|drinking_water|toilets|theatre|cinema|community_centre)$\"](area.city);\n  nwr[\"shop\"~\"^(supermarket|bakery|books|bicycle|convenience|greengrocer|hardware)$\"](area.city);\n  nwr[\"leisure\"~\"^(park|playground|sports_centre|dog_park)$\"](area.city);\n);\nout center tags;",
+  "retrieved": "2026-10-18",
+  "osm_base": "2026-10-18T04:05:20Z",
+  "licence": "Open Database License (ODbL) 1.0 (https://www.openstreetmap.org/copyright). This extract is offered under the ODbL.",
+  "attribution": "© OpenStreetMap contributors, available under the Open Database License.",
+  "changes": "Ways and relations reduced to their centre point (Overpass \"out center\"). Tags sorted by key. Values are unchanged.",
+  "elements": 6140
+}

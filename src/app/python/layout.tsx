@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { BRAND_NAME } from "@/platform/brand";
 import "../sql/rt.css";
 import "./py.css";
+import "./p2.css";
+import "./tools.css";
 
 export const metadata: Metadata = {
   title: { default: "Python", template: `%s · ${BRAND_NAME}` },

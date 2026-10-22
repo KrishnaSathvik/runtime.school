@@ -1,0 +1,1 @@
+await page.goto('http://localhost:3040/sql/projects/retail-performance-review');await page.getByRole('button',{name:'Continue to analysis →',exact:true}).click();await page.waitForTimeout(600);return {text:await page.locator('main').innerText(),buttons:await page.locator('main button').allTextContents(),editors:await page.locator('.cm-content').allTextContents()};

@@ -130,7 +130,7 @@ onmessage = async ({ data }) => {
       }
       const entry = live.get(liveKey);
       if (entry && db.exec('SELECT total_changes()')[0].values[0][0] !== entry.changes) dropLive(liveKey); // defensive: never reuse a modified connection
-      postMessage({ result: { columns: result.columns, values: result.values.slice(0, 200) }, total: result.values.length,
+      postMessage({ result: { columns: result.columns, values: result.values.slice(0, 200) }, total: result.values.length, expectedTotal: expected ? expected.values.length : null,
         grade, expected: expected ? { columns: expected.columns, values: expected.values.slice(0, 200) } : null });
       return;
     }
@@ -201,7 +201,7 @@ onmessage = async ({ data }) => {
       }
       if (data.planValidation) grade.checks = checks;
     }
-    postMessage({ result: { columns: result.columns, values: result.values.slice(0, 200) }, total: result.values.length,
+    postMessage({ result: { columns: result.columns, values: result.values.slice(0, 200) }, total: result.values.length, expectedTotal: expected ? expected.values.length : null,
       grade, expected: expected ? { columns: expected.columns, values: expected.values.slice(0, 200) } : null });
   } catch (e) {
     if (liveKey) { const entry = live.get(liveKey); if (entry) { try { entry.db.exec('PRAGMA query_only=ON'); } catch { dropLive(liveKey); } } }

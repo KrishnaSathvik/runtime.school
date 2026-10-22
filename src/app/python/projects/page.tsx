@@ -1,8 +1,12 @@
-import { notFound, redirect } from "next/navigation";
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { ProjectsScreen } from "@/features/python/Project";
 import { pythonRunnerEnabled } from "@/platform/python-runner";
-import { projectsV2 } from "@/content/python/projects-v2";
-export const metadata = { robots: { index:false, follow:false } };
+import { pyToolMetadata } from "@/platform/python-seo";
+
+export const metadata: Metadata = pyToolMetadata.projects;
+
 export default function Page() {
- if (!pythonRunnerEnabled()) notFound();
- redirect(`/python/projects/${projectsV2[0].slug}#overview`);
+  if (!pythonRunnerEnabled()) notFound();
+  return <ProjectsScreen />;
 }

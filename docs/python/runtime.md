@@ -164,6 +164,9 @@ reusing the compiled wasm across workers (its snapshot options are private), so 
 
 ## Security boundary — read before making Python public
 
+> **Update 2026-10-16:** the isolated runner design and its cross-browser validation are in
+> [runner-isolation.md](runner-isolation.md). The worker now also removes its network APIs before learner code runs.
+
 A Web Worker keeps Python off the UI thread. **It is not a sandbox.** Measured from learner code via `import js`:
 
 | Reachable | Result |
@@ -178,19 +181,12 @@ anything this origin's IndexedDB holds, or any same-origin endpoint, is in reach
 code sharing, no accounts and no server secrets. The remaining risk is a learner pasting hostile code they found
 elsewhere.
 
-**Current gate** (`pythonRunnerEnabled` + a hostname check in the client):
+**Current gate** (`pythonRunnerEnabled`), updated 2026-10-22:
 
-- On: `next dev`, or a build with `NEXT_PUBLIC_PYTHON_RUNNER=1`.
-- Always off: `NEXT_PUBLIC_VERCEL_ENV=production`, and on `runtime.school` / `www.runtime.school`
-  whatever the build says.
-- Vercel project `runtime-school` has Vercel Authentication on for **all deployments except custom domains**
-  (checked 2026-10-13). Preview URLs therefore require a Vercel login, which makes them the access-controlled previews
-  the pilot may run on. Set `NEXT_PUBLIC_PYTHON_RUNNER=1` for the Preview environment only.
-
-**Before Python is public:** run learner code on a separate origin with no app data, either an opaque-origin
-`sandbox="allow-scripts"` iframe that hosts the worker or a dedicated runner subdomain, and add a CSP `connect-src`
-that blocks network access from the runner. Then re-run the bridge probe in `tests/e2e/python-runtime.mjs` and confirm
-it can reach nothing of the app's.
+- On everywhere (local, preview and production), because every interpreter runs in the isolated sandbox runner
+  ([runner-isolation.md](runner-isolation.md)): an opaque-origin iframe with its own CSP and the worker's network APIs
+  removed. The client's old hostname block for `runtime.school` is gone.
+- Kill switch: build with `NEXT_PUBLIC_PYTHON_RUNNER=0` to turn Python off without a code change.
 
 Client-side checks are learning feedback, not tamper-proof certification.
 

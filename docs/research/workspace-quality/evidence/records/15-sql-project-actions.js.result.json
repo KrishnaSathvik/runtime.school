@@ -1,0 +1,54 @@
+{
+  "at": "2026-10-21T14:38:50.517Z",
+  "script": "docs/research/workspace-quality/scratch/15-sql-project-actions.js",
+  "url": "http://localhost:3040/sql/projects/retail-performance-review?stage=baseline",
+  "result": [
+    {
+      "case": "starter run",
+      "text": "All projects\nRetail Performance Review\n\nJunior Business Analyst · Retail\n\n1\n2\n3\n4\n5\n6\n7\n8\n\nStage 3 of 8\n\nSize sales and cancellations\nTask\nTables\nMetrics\n\nAcross all invoices, how many sale and cancellation invoices are there, what are gross sales, cancelled value and net sales, and what share of gross sales was cancelled?\n\nContext\n\nBefore comparing years, establish control totals for the whole period: how much was invoiced, and how much was taken back by cancellation invoices.\n\nWhat to return\n\none summary row\n\nsale_invoices\ncancellation_invoices\ngross_sales\ncancelled_value\nnet_sales\ncancellation_rate\nGuidance\n\nInvoices and invoice lines are different units: count invoices with DISTINCT after the join.\n\nUse CASE inside SUM to split sale and cancellation value in one pass.\n\ncancelled_value is already negative, so the rate needs a minus sign to be positive.\n\nSQL workspace\n1\nSELECT * FROM orders LIMIT 20;\nRun\nCheck\nResults · 20 rows\n20 rows · 6 columns\nSELECT * FROM orders LIMIT 20;\n#\torder_id\tinvoice_no\tcustomer_id\tordered_at\tcountry\torder_type\n1\t1\t489438\t18102\t2009-12-01 09:24:00\tUnited Kingdom\tsale\n2\t2\t489517\t16329\t2009-12-01 11:34:00\tUnited Kingdom\tsale\n3\t3\tC489528\t16714\t2009-12-01 11:50:00\tUnited Kingdom\tcancellation\n4\t4\t489529\t17984\t2009-12-01 11:51:00\tUnited Kingdom\tsale\n5\t5\t489532\t13394\t2009-12-01 11:58:00\tUnited Kingdom\tsale\n6\t6\t489540\t12913\t2009-12-01 12:18:00\tUnited Kingdom\tsale\n7\t7\tC489541\t15091\t2009-12-01 12:18:00\tUnited Kingdom\tcancellation\n8\t8\tC489549\t13768\t2009-12-01 12:33:00\tUnited Kingdom\tcancellation\n9\t9\tC489555\t16955\t2009-12-01 12:44:00\tUnited Kingdom\tcancellation\n10\t10\t489559\t17056\t2009-12-01 12:55:00\tUnited Kingdom\tsale\nshowing 10 of 20 rows\nShow all 20\nSave & continue →"
+    },
+    {
+      "case": "starter incorrect check",
+      "text": "All projects\nRetail Performance Review\n\nJunior Business Analyst · Retail\n\n1\n2\n3\n4\n5\n6\n7\n8\n\nStage 3 of 8\n\nSize sales and cancellations\nTask\nTables\nMetrics\n\nAcross all invoices, how many sale and cancellation invoices are there, what are gross sales, cancelled value and net sales, and what share of gross sales was cancelled?\n\nContext\n\nBefore comparing years, establish control totals for the whole period: how much was invoiced, and how much was taken back by cancellation invoices.\n\nWhat to return\n\none summary row\n\nsale_invoices\ncancellation_invoices\ngross_sales\ncancelled_value\nnet_sales\ncancellation_rate\nGuidance\n\nInvoices and invoice lines are different units: count invoices with DISTINCT after the join.\n\nUse CASE inside SUM to split sale and cancellation value in one pass.\n\ncancelled_value is already negative, so the rate needs a minus sign to be positive.\n\nSQL workspace\n1\nSELECT * FROM orders LIMIT 20;\nRun\nCheck\nResults · 20 rows\n20 rows · 6 columns\nSELECT * FROM orders LIMIT 20;\n#\torder_id\tinvoice_no\tcustomer_id\tordered_at\tcountry\torder_type\n1\t1\t489438\t18102\t2009-12-01 09:24:00\tUnited Kingdom\tsale\n2\t2\t489517\t16329\t2009-12-01 11:34:00\tUnited Kingdom\tsale\n3\t3\tC489528\t16714\t2009-12-01 11:50:00\tUnited Kingdom\tcancellation\n4\t4\t489529\t17984\t2009-12-01 11:51:00\tUnited Kingdom\tsale\n5\t5\t489532\t13394\t2009-12-01 11:58:00\tUnited Kingdom\tsale\n6\t6\t489540\t12913\t2009-12-01 12:18:00\tUnited Kingdom\tsale\n7\t7\tC489541\t15091\t2009-12-01 12:18:00\tUnited Kingdom\tcancellation\n8\t8\tC489549\t13768\t2009-12-01 12:33:00\tUnited Kingdom\tcancellation\n9\t9\tC489555\t16955\t2009-12-01 12:44:00\tUnited Kingdom\tcancellation\n10\t10\t489559\t17056\t2009-12-01 12:55:00\tUnited Kingdom\tsale\nshowing 10 of 20 rows\nShow all 20\n\nNot quite. Check the column names and order. Expected: sale_invoices, cancellation_invoices, gross_sales, cancelled_value, net_sales, cancellation_rate. Use AS for the requested aliases.\n\nSave & continue →"
+    },
+    {
+      "case": "custom run",
+      "text": "rformance Review\n\nJunior Business Analyst · Retail\n\n1\n2\n3\n4\n5\n6\n7\n8\n\nStage 3 of 8\n\nSize sales and cancellations\nTask\nTables\nMetrics\n\nAcross all invoices, how many sale and cancellation invoices are there, what are gross sales, cancelled value and net sales, and what share of gross sales was cancelled?\n\nContext\n\nBefore comparing years, establish control totals for the whole period: how much was invoiced, and how much was taken back by cancellation invoices.\n\nWhat to return\n\none summary row\n\nsale_invoices\ncancellation_invoices\ngross_sales\ncancelled_value\nnet_sales\ncancellation_rate\nGuidance\n\nInvoices and invoice lines are different units: count invoices with DISTINCT after the join.\n\nUse CASE inside SUM to split sale and cancellation value in one pass.\n\ncancelled_value is already negative, so the rate needs a minus sign to be positive.\n\nSQL workspace\n1\nSELECT 44 AS project_probe;\nRun\nCheck\nResults · 1 row\n1 row · 1 column\nSELECT 44 AS project_probe;\n#\tproject_probe\n1\t44\nSave & continue →"
+    },
+    {
+      "case": "refresh",
+      "url": "http://localhost:3040/sql/projects/retail-performance-review?stage=baseline",
+      "text": "SELECT 44 AS project_probe;"
+    },
+    {
+      "case": "project geometry",
+      "width": 1440,
+      "geometry": {
+        "w": 758.8125,
+        "h": 320,
+        "y": 355.46875,
+        "page": 1440
+      }
+    },
+    {
+      "case": "project geometry",
+      "width": 768,
+      "geometry": {
+        "w": 388.734375,
+        "h": 320,
+        "y": 342.28125,
+        "page": 768
+      }
+    },
+    {
+      "case": "project geometry",
+      "width": 390,
+      "geometry": {
+        "w": 356,
+        "h": 320,
+        "y": 1265.546875,
+        "page": 390
+      }
+    }
+  ]
+}

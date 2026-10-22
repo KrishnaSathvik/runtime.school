@@ -54,18 +54,21 @@ export function Syntax() {
             <p className="rx-label">in Runtime</p>
             <p className="rx-prose" style={{ marginTop: 0, fontSize: 15 }}>
               {c.runs
-                ? `The SQLite version runs for real on the right${c.runs === "lab" ? ", in a disposable copy" : ""}. PostgreSQL and SQL Server are shown for reference; they do not run here.`
+                ? `The SQLite version runs for real in the editor under the examples${c.runs === "lab" ? ", in a disposable copy" : ""}. PostgreSQL and SQL Server are shown for reference; they do not run here.`
                 : "SQLite has no direct equivalent, so nothing runs here. The three examples are for reading and comparison."}
             </p>
           </article>
-          <section className="rx-work rx-lesson-work" aria-label="Dialect examples">
+          <section className="rx-work rx-lesson-work rx-stack-work" aria-label="Dialect examples">
             <p className="rx-small" style={{ marginTop: 0 }}>Example dataset: <b>{datasetName(c.dataset)}</b></p>
-            {DIALECTS.map(([label, key, tag]) => (
-              <section key={key} className="rx-cell" aria-label={label}>
-                <div className="rx-cell-head"><span className="name">{label}</span><span className="acts mono">{c.runs || key !== "sqlite" ? tag : "reference"}</span></div>
-                <div className="rx-cell-in"><SqlCode source={c.examples[key]} label={label} /></div>
-              </section>
-            ))}
+            {/* The three dialects get the same height (the longest example's), so none is squeezed. */}
+            <div className="rx-equal-rows">
+              {DIALECTS.map(([label, key, tag]) => (
+                <section key={key} className="rx-cell" aria-label={label}>
+                  <div className="rx-cell-head"><span className="name">{label}</span><span className="acts mono">{c.runs || key !== "sqlite" ? tag : "reference"}</span></div>
+                  <div className="rx-cell-in"><SqlCode source={c.examples[key]} label={label} /></div>
+                </section>
+              ))}
+            </div>
             {c.runs ? (
               <>
                 <p className="rx-label">run the sqlite version</p>

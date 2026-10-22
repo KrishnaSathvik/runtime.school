@@ -278,8 +278,10 @@
 
 .py-editor .cm-gutters { color: var(--ide-text); }
 .py-editor .cm-scroller:focus-visible { outline: 2px solid var(--rx-amber); outline-offset: -2px; }
-.py-editor { --ide-line-number: var(--ide-text); --ide-str: #5d43a6; }
-[data-theme="dark"] .py-editor { --ide-str: #e394dc; }
+.py-editor { --ide-line-number: var(--ide-text); --ide-str: #5d43a6; --ide-selection: #f0c14b; }
+[data-theme="dark"] .py-editor { --ide-str: #e394dc; --ide-selection: #6e5424; }
+/* The current-line wash is painted on top of CodeMirror's selection, so a selection on that line was invisible. */
+.py-editor .cm-activeLine { background-color: transparent !important; }
 
 .py-table-scroll table { min-width: 240px; }
 .py-table-scroll caption { white-space: nowrap; }

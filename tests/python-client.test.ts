@@ -191,6 +191,33 @@ describe("python-client execution", () => {
     await p2;
   });
 
+  it("echoes each line input() read as a stdin chunk only when asked, never into stdout", async () => {
+    useFake();
+    const p1 = client.runPython('city = input("City? ")', { stdin: "Austin\n", echoInput: true });
+    await flush();
+    const w = latest();
+    w.print("City? ");
+    w.emit({ type: "stdin", ...w.tag, text: "Austin\n" });
+    w.print("\nShipping to Austin\n");
+    w.finish();
+    const r1 = await p1;
+    expect(r1).toMatchObject({ status: "ok", stdout: "City? \nShipping to Austin\n" });
+    expect("output" in r1 && r1.output).toEqual([
+      { stream: "stdout", text: "City? " },
+      { stream: "stdin", text: "Austin\n" },
+      { stream: "stdout", text: "\nShipping to Austin\n" },
+    ]);
+    const p2 = client.runPython('city = input("City? ")', { stdin: "Austin\n" });
+    await flush();
+    const w2 = latest();
+    w2.print("City? ");
+    w2.emit({ type: "stdin", ...w2.tag, text: "Austin\n" });
+    w2.finish();
+    const r2 = await p2;
+    expect("output" in r2 && r2.output).toEqual([{ stream: "stdout", text: "City? " }]);
+    expect("stdout" in r2 && r2.stdout).toBe("City? ");
+  });
+
   it("ignores messages that belong to another run id", async () => {
     useFake();
     const p = client.runPython("x");
@@ -370,13 +397,13 @@ describe("python-client execution", () => {
 });
 
 describe("python runner gate", () => {
-  it("is on in local development only; off on every Vercel deploy and production build", () => {
+  it("is on everywhere (the runner is isolated), with NEXT_PUBLIC_PYTHON_RUNNER=0 as the kill switch", () => {
     expect(pythonRunnerEnabled({ nodeEnv: "development" })).toBe(true);
-    expect(pythonRunnerEnabled({ nodeEnv: "production" })).toBe(false);
-    expect(pythonRunnerEnabled({ nodeEnv: "production", flag: "1" })).toBe(false);
-    expect(pythonRunnerEnabled({ nodeEnv: "production", vercelEnv: "production", flag: "1" })).toBe(false);
-    expect(pythonRunnerEnabled({ nodeEnv: "development", vercelEnv: "production" })).toBe(false);
-    expect(pythonRunnerEnabled({ nodeEnv: "development", vercelEnv: "preview", flag: "1" })).toBe(false);
+    expect(pythonRunnerEnabled({ nodeEnv: "production" })).toBe(true);
+    expect(pythonRunnerEnabled({ nodeEnv: "production", vercelEnv: "production" })).toBe(true);
+    expect(pythonRunnerEnabled({ nodeEnv: "production", vercelEnv: "preview" })).toBe(true);
+    expect(pythonRunnerEnabled({ nodeEnv: "production", vercelEnv: "production", flag: "0" })).toBe(false);
+    expect(pythonRunnerEnabled({ nodeEnv: "development", flag: "0" })).toBe(false);
   });
 });
 
@@ -404,5 +431,74 @@ describe("pinned pyodide", () => {
     for (const [name, hash] of Object.entries(PYODIDE_FILES as Record<string, string>)) {
       expect(createHash("sha256").update(readFileSync(`node_modules/pyodide/${name}`)).digest("hex")).toBe(hash);
     }
+  });
+});
+
+describe("python-client dataset mounts", () => {
+  const bytes = (text: string) => new TextEncoder().encode(text).buffer as ArrayBuffer;
+  const hash = (text: string) => createHash("sha256").update(text).digest("hex");
+  const CSV = "order_id,total\nO1,9.99\n";
+  const mount = { path: "data/orders.csv", url: "/datasets/python/R01/preview.1/orders.csv", sha256: hash(CSV) };
+  type Sent = Run & { mounts?: { path: string; bytes: ArrayBuffer }[] };
+  /** crypto.subtle hashes off the main thread, so wait on the real event loop rather than a fixed number of ticks. */
+  const until = async (ready: () => boolean) => {
+    for (let i = 0; i < 200 && !ready(); i++) await new Promise((r) => setTimeout(r, 5));
+    expect(ready()).toBe(true);
+  };
+
+  it("fetches each file once, checks it, and hands the worker bytes", async () => {
+    useFake();
+    const urls: string[] = [];
+    client.__setMountFetcher(async (url) => (urls.push(url), bytes(CSV)));
+    for (let i = 0; i < 2; i++) {
+      const p = client.runPython("print(open('data/orders.csv').read())", { mounts: [mount] });
+      await flush();
+      const w = latest();
+      await until(() => w.runs.length === 1);
+      const sent = w.runs[0] as Sent;
+      expect(sent.mounts).toHaveLength(1);
+      expect(sent.mounts![0].path).toBe("data/orders.csv");
+      expect(new TextDecoder().decode(sent.mounts![0].bytes)).toBe(CSV);
+      w.finish();
+      await p;
+    }
+    expect(urls).toEqual([mount.url]); // cached by hash
+  });
+
+  it("rejects a file that doesn't match its checksum, and doesn't cache the failure", async () => {
+    useFake();
+    let calls = 0;
+    client.__setMountFetcher(async () => (calls++, bytes("tampered\n")));
+    const r = await client.runPython("print(1)", { mounts: [mount] });
+    expect(r.status).toBe("crashed");
+    if (r.status === "crashed") expect(r.message).toMatch(/didn't match its published checksum/);
+    await client.runPython("print(1)", { mounts: [mount] });
+    expect(calls).toBe(2);
+  });
+
+  it("starts the run clock only after the data has arrived", async () => {
+    vi.useFakeTimers();
+    useFake();
+    let release!: () => void;
+    client.__setMountFetcher(() => new Promise((resolve) => (release = () => resolve(bytes(CSV)))));
+    const p = client.runPython("print(1)", { mounts: [mount] });
+    await vi.advanceTimersByTimeAsync(client.PY_RUN_TIMEOUT_MS * 3);
+    const w = latest();
+    expect(w.runs).toHaveLength(0); // still downloading, no timeout
+    vi.useRealTimers();
+    release();
+    await until(() => w.runs.length === 1);
+    w.finish();
+    expect((await p).status).toBe("ok");
+  });
+
+  it("refuses more data than one run may load", async () => {
+    useFake();
+    const big = new ArrayBuffer(client.PY_MOUNT_LIMIT + 1);
+    const digest = createHash("sha256").update(new Uint8Array(big)).digest("hex");
+    client.__setMountFetcher(async () => big);
+    const r = await client.runPython("print(1)", { mounts: [{ ...mount, sha256: digest }] });
+    expect(r.status).toBe("crashed");
+    if (r.status === "crashed") expect(r.message).toMatch(/too large/);
   });
 });

@@ -22,6 +22,8 @@ export type ExecuteResponse = {
   total?: number;
   grade?: GradeResult | null;
   expected?: SqlResult | null;
+  /** Full reference row count, before the expected-result preview is capped. */
+  expectedTotal?: number | null;
   error?: string;
   /** Lab scripts only: where a multi-statement script stopped and what had already run. */
   failure?: { statement: number; sql: string; completed: number; later: boolean; openTransaction: boolean };
@@ -96,6 +98,8 @@ export function __setWorkerFactory(factory: () => WorkerLike): void {
 
 let worker: WorkerLike | null = null;
 let ready: Promise<void> | null = null;
+let bootGeneration = 0;
+let abortBoot: (() => void) | null = null;
 /** The one execution allowed to resolve with real data. */
 let pending: { settle: (r: ExecuteResponse) => void } | null = null;
 
@@ -105,6 +109,8 @@ function terminateWorker() {
 }
 
 function discardWorker() {
+  bootGeneration++;
+  abortBoot?.();
   terminateWorker();
   ready = null;
 }
@@ -131,15 +137,16 @@ function bootOnce(attempt: number): Promise<void> {
   const started = typeof performance !== "undefined" ? performance.now() : Date.now();
   return new Promise<void>((resolve, reject) => {
     let settled = false;
-    const finish = (err?: Error) => {
+    const finish = (err?: Error, cancelled = false) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
+      if (abortBoot === cancel) abortBoot = null;
       w.removeEventListener("message", onMessage);
       w.removeEventListener("error", onError);
       const ms = Math.round((typeof performance !== "undefined" ? performance.now() : Date.now()) - started);
       if (err) {
-        logBoot("fail", attempt, ms, err.message);
+        if (!cancelled) logBoot("fail", attempt, ms, err.message);
         // Tear down this attempt only — keep `ready` so concurrent callers
         // share the outer retry loop instead of spawning parallel boots.
         if (worker === w) terminateWorker();
@@ -149,6 +156,8 @@ function bootOnce(attempt: number): Promise<void> {
         resolve();
       }
     };
+    const cancel = () => finish(new Error("SQL engine preparation cancelled."), true);
+    abortBoot = cancel;
     const timer = setTimeout(
       () => finish(new Error(BOOT_FAIL_MESSAGE)),
       BOOT_TIMEOUT_MS,
@@ -171,13 +180,16 @@ function ensureWorker(): Promise<void> {
     return Promise.reject(new Error("SQL engine runs in the browser only."));
   }
   if (ready) return ready;
+  const generation = bootGeneration;
   ready = (async () => {
     let last: Error = new Error(BOOT_FAIL_MESSAGE);
     for (let attempt = 1; attempt <= BOOT_ATTEMPTS; attempt++) {
+      if (generation !== bootGeneration) throw new Error("SQL engine preparation cancelled.");
       try {
         await bootOnce(attempt);
         return;
       } catch (err) {
+        if (generation !== bootGeneration) throw err;
         last = err instanceof Error ? err : new Error(String(err));
         if (attempt < BOOT_ATTEMPTS) await sleep(BOOT_BACKOFF_MS * attempt);
       }
@@ -185,7 +197,7 @@ function ensureWorker(): Promise<void> {
     throw last;
   })().catch((err) => {
     // Allow the next run to retry instead of caching a dead promise forever.
-    ready = null;
+    if (generation === bootGeneration) ready = null;
     throw err;
   });
   return ready;

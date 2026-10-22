@@ -3,9 +3,9 @@
 import CodeMirror, { type ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import { python } from "@codemirror/lang-python";
 import { indentUnit } from "@codemirror/language";
-import { temporarilySetTabFocusMode } from "@codemirror/commands";
+import { temporarilySetTabFocusMode, isolateHistory } from "@codemirror/commands";
 import { EditorSelection, Prec, StateEffect, StateField, type Extension } from "@codemirror/state";
-import { Decoration, EditorView, keymap, type DecorationSet } from "@codemirror/view";
+import { Decoration, EditorView, keymap, placeholder as cmPlaceholder, type DecorationSet } from "@codemirror/view";
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from "react";
 import { editorTheme } from "@/components/editor/editor-theme";
 
@@ -37,6 +37,8 @@ export type PyEditorHandle = {
    * over newer typing.
    */
   replaceAll: (text: string) => void;
+  /** Insert text at the cursor (on its own lines) as an editor change, and focus. */
+  insert: (text: string) => void;
 };
 
 /**
@@ -54,7 +56,9 @@ export const PyEditor = forwardRef<PyEditorHandle, {
   errorLine?: { line: number; token: number } | null;
   minHeight?: string;
   height?: string;
-}>(function PyEditor({ value, onChange, onRun, onCheck, label, errorLine = null, minHeight, height }, ref) {
+  /** Shown while the editor is empty. */
+  placeholder?: string;
+}>(function PyEditor({ value, onChange, onRun, onCheck, label, errorLine = null, minHeight, height, placeholder }, ref) {
   const cm = useRef<ReactCodeMirrorRef>(null);
   const handlers = useRef({ onRun, onCheck });
   handlers.current = { onRun, onCheck };
@@ -66,6 +70,7 @@ export const PyEditor = forwardRef<PyEditorHandle, {
       EditorView.lineWrapping,
       editorTheme,
       errorLineField,
+      ...(placeholder ? [cmPlaceholder(placeholder)] : []),
       EditorView.contentAttributes.of({ "aria-label": label, "aria-multiline": "true", spellcheck: "false", autocorrect: "off", autocapitalize: "off" }),
       Prec.highest(
         keymap.of([
@@ -76,7 +81,7 @@ export const PyEditor = forwardRef<PyEditorHandle, {
         ]),
       ),
     ],
-    [label],
+    [label, placeholder],
   );
 
   useEffect(() => {
@@ -96,7 +101,19 @@ export const PyEditor = forwardRef<PyEditorHandle, {
     replaceAll: (text: string) => {
       const view = cm.current?.view;
       if (!view) return;
-      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text }, selection: EditorSelection.cursor(text.length) });
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text }, selection: EditorSelection.cursor(text.length), annotations: isolateHistory.of("full") });
+    },
+    insert: (text: string) => {
+      const view = cm.current?.view;
+      if (!view) return;
+      const at = view.state.selection.main.head;
+      const line = view.state.doc.lineAt(at);
+      // Start on a fresh line, so inserted code never splits the line the cursor is on.
+      const before = line.text.trim() ? "\n" : "";
+      const pos = line.text.trim() ? line.to : line.from;
+      const insert = before + text;
+      view.dispatch({ changes: { from: pos, insert }, selection: EditorSelection.cursor(pos + insert.length), effects: EditorView.scrollIntoView(pos + insert.length, { y: "center" }) });
+      view.focus();
     },
   }));
 

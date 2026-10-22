@@ -1,0 +1,76 @@
+{
+  "at": "2026-10-21T14:35:03.475Z",
+  "script": "docs/research/workspace-quality/scratch/09-surfaces.js",
+  "url": "http://localhost:3040/python/practice/fix-the-note",
+  "result": [
+    {
+      "url": "http://localhost:3040/sql/practice/customer-list",
+      "text": "All questions\n01 / 139\nPrev\nNext\n\ntask SELECT columns · warm-up\n\nCustomer list\n\nFind every Retail customer. Return customer_id, country and region.\n\nWHAT TO RETURN\n\nColumns\ncustomer_id\ncountry\nregion\n in this order\nRows\n848 rows · any order\nSkill\nSelect named columns from one table. Refresher: Meet your first SELECT →\n\nEXPECTED RESULT\n\nexpected result\n848 rows · any order\ncustomer_id\n\t\ncountry\n\t\nregion\n\n12347\tIceland\tEurope\n12353\tBahrain\tRest of World\n12359\tCyprus\tEurope\n\nfirst 3 of 848 rows\n\nDATA YOU CAN QUERY\n\ncustomers\n4 columns · 848 rows\nsolution.sql\n⌘\n↵\nrun\n⇧\n⌘\n↵\ncheck\n1\n2\nSELECT \nFROM customers;\n \nHint\nAnswer\nRun\nCheck\n\nHints and the answer are always available. Using them counts the question as solved with help.",
+      "editors": [
+        "SELECT FROM customers;"
+      ],
+      "buttons": [
+        " All questions",
+        " Hint",
+        " Answer",
+        " Run",
+        " Check"
+      ]
+    },
+    {
+      "url": "http://localhost:3040/sql/lesson/meet-your-first-select",
+      "text": "All lessons\n01 / 88\nPrev\nNext\n\nlesson 01 SQL foundations · beginner\n\nMeet your first SELECT\n\nChoose columns and read rows from a table.\n\nTHE IDEA\n\nA table is a set of rows with named columns. SELECT lists the columns you want; FROM names the table that holds them. In Retail, every row of customers is one identified wholesale customer and every row of products is one stock code. A query reads rows; it never changes them. Worked steps sometimes end with LIMIT so you only preview a few rows. LIMIT is not part of the pattern, and nothing grades it until its own lesson.\n\nDATASET: RETAIL\n\ncustomers\n4 columns · 848 rows\nproducts\n6 columns · 5,304 rows\n\nWORKED EXAMPLE\n\nThe step marked “the pattern” is what the challenges build on. Running examples doesn’t count toward progress.\n\n1\n\nSee a few customers. Run this first. Each row is one customer. LIMIT 10 only shortens the preview; the challenges ask for every row.\n\nstep-1.sql\nRun\nsql›\nSELECT *\nFROM customers\nLIMIT 10;\n2\n\nKeep only the columns you need. Same customers, but SELECT now lists just two columns—the ones you ask for.the pattern\n\nexample.sql\nRun\nsql›\nSELECT customer_id, first_order_at\nFROM customers;\n\nCOMMON MISTAKE\n\nSELECT * returns every column, including ones the task did not ask for. A checked answer must return exactly the requested columns, in the requested order.\n\nChallenge 1\nChallenge 2\nConcept check\n\nCHALLENGE 1\n\nFind every customer.\n\nReturn customer_id and country.\n\nchallenge-1.sql\n⌘\n↵\nrun\n⇧\n⌘\n↵\ncheck\n1\n2\nSELECT \nFROM customers;\n \nHint\nAnswer\nRun\nCheck\nTo master this lesson, solve both challenges without hints and pass the concept check. 3 of 3 to go.",
+      "editors": [
+        "SELECT FROM customers;"
+      ],
+      "buttons": [
+        " All lessons",
+        " Run",
+        " Run",
+        " Challenge 1",
+        " Challenge 2",
+        " Concept check",
+        " Hint",
+        " Answer",
+        " Run",
+        " Check"
+      ]
+    },
+    {
+      "url": "http://localhost:3040/sql/projects/retail-performance-review",
+      "text": "All projects\nRetail Performance Review\n\nJunior Business Analyst · Retail\n\n1\n2\n3\n4\n5\n6\n7\n8\nProject brief\nThe project\n\nYou support the commercial manager of a UK online gift wholesaler.\n\nSales for 2011 look lower than 2010. The manager wants to know whether trading really weakened, which departments drove the change, how much value is lost to cancellations, and how much of the business can be traced to known customers.\n\nYour question\n\nIs trading weaker in 2011 than in 2010, where does the change come from, and what should the commercial team look at first?\n\nBefore you start\n\nFiltering · Aggregation · Joins · CASE expressions · Dates\n\nBegin project →\nWhat you’ll deliver\n\nA short commercial review with three connected findings, two prioritized follow-up actions and the limits of what invoices can show.\n\nYour data\n\nRetail: two years of real invoice lines (December 2009 to 9 December 2011) for a sample of customers, with products, departments, customers and their regions. Sale invoices and cancellation invoices are both recorded; cancellation lines carry negative quantities.\n\nYour investigations\nSize sales and cancellations\n\nAcross all invoices, how many sale and cancellation invoices are there, what are gross sales, cancelled value and net sales, and what share of gross sales was cancelled?\n\nCompare 2011 with 2010 by month\n\nFor each month from January to November, what were sale-invoice sales in 2010 and in 2011, and by what percentage did 2011 change?\n\nFind the departments behind the change\n\nFor January–November of each year, what were sale-invoice sales by department in 2010 and 2011, and which departments changed most?\n\nCheck who the 2011 sales come from\n\nFor sale invoices from January to November 2011, how many customers and how much of sales come from each region, and from anonymous invoices?",
+      "editors": [],
+      "buttons": [
+        "All projects",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "Begin project →"
+      ]
+    },
+    {
+      "url": "http://localhost:3040/python/practice/fix-the-note",
+      "text": "All questions\n02 / 500\nPrev\nNext\nThe note that broke the program\n\nThis program should print the order, the items with their shipping cost, and the total, but it doesn't run. Fix it, and keep the note at the top as a note.\n\nKeep\nShipping summary as a comment\nEXPECTED OUTPUT\n3 lines\n1\nOrder O108024\n2\nItems: 3 Shipping: 5.99\n3\nTotal: 57.34\nmain.py\n1\n2\n3\n4\n5\nShipping summary\nprint(\"Order O108024\")\n# print(\"Items:\", 3, \"Shipping:\", 5.99)\nprint(\"Total:\", 57.34)\n\n\nReset\nHint\nAnswer\nRun\nCheck\nConsole\nChecks\nFiles",
+      "editors": [
+        "Shipping summaryprint(\"Order O108024\")# print(\"Items:\", 3, \"Shipping:\", 5.99)print(\"Total:\", 57.34)"
+      ],
+      "buttons": [
+        " All questions",
+        "main.py ",
+        " Reset",
+        " Hint",
+        " Answer",
+        " Run",
+        " Check",
+        "Console",
+        "Checks",
+        "Files"
+      ]
+    }
+  ]
+}

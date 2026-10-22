@@ -1,0 +1,51 @@
+{
+  "at": "2026-10-21T14:35:52.124Z",
+  "script": "docs/research/workspace-quality/scratch/10-practice.js",
+  "url": "http://localhost:3040/sql/practice/customer-list",
+  "result": [
+    {
+      "case": "python starter error",
+      "text": "Console\nChecks\nFiles\nSyntaxError: invalid syntax line 1\nShipping summary\n         ^\nPython couldn't read the program, so none of it ran."
+    },
+    {
+      "case": "python corrected check",
+      "text": "Console\nChecks\nFiles\n✓\nAll 2 checks pass\n✓\nPassed:\nPrints exactly the expected lines\n✓\nPassed:\nKeeps the note as a comment"
+    },
+    {
+      "case": "python stale",
+      "text": "Console\nChecks\nFiles\n✓\nAll 2 checks pass\n✓\nPassed:\nPrints exactly the expected lines\n✓\nPassed:\nKeeps the note as a comment"
+    },
+    {
+      "case": "sql valid run",
+      "ms": 42,
+      "text": "All questions\n01 / 139\nPrev\nNext\n\ntask SELECT columns · warm-up\n\nCustomer list\n\nFind every Retail customer. Return customer_id, country and region.\n\nWHAT TO RETURN\n\nColumns\ncustomer_id\ncountry\nregion\n in this order\nRows\n848 rows · any order\nSkill\nSelect named columns from one table. Refresher: Meet your first SELECT →\n\nEXPECTED RESULT\n\nexpected result\n848 rows · any order\ncustomer_id\n\t\ncountry\n\t\nregion\n\n12347\tIceland\tEurope\n12353\tBahrain\tRest of World\n12359\tCyprus\tEurope\n\nfirst 3 of 848 rows\n\nDATA YOU CAN QUERY\n\ncustomers\n4 columns · 848 rows\nsolution.sql\n⌘\n↵\nrun\n⇧\n⌘\n↵\ncheck\n1\nSELECT customer_id, country, region FROM customers;\n \nHint\nAnswer\nRunning…\nCheck\n\nHints and the answer are always available. Using them counts the question as solved with help.",
+      "scroll": 671
+    },
+    {
+      "case": "sql correct check",
+      "text": "All questions\n01 / 139\nPrev\nNext\n\ntask SELECT columns · warm-up\n\nCustomer list\n\nFind every Retail customer. Return customer_id, country and region.\n\nWHAT TO RETURN\n\nColumns\ncustomer_id\ncountry\nregion\n in this order\nRows\n848 rows · any order\nSkill\nSelect named columns from one table. Refresher: Meet your first SELECT →\n\nEXPECTED RESULT\n\nexpected result\n848 rows · any order\ncustomer_id\n\t\ncountry\n\t\nregion\n\n12347\tIceland\tEurope\n12353\tBahrain\tRest of World\n12359\tCyprus\tEurope\n\nfirst 3 of 848 rows\n\nDATA YOU CAN QUERY\n\ncustomers\n4 columns · 848 rows\nsolution.sql\n⌘\n↵\nrun\n⇧\n⌘\n↵\ncheck\n1\nSELECT customer_id, country, region FROM customers;\n \nHint\nAnswer\nRun\nCheck\n\n✓ all checks passed\n\n✓\nPassed:\nRuns without an error\n✓\nPassed:\nReturns columns customer_id, country, region\n✓\nPassed:\nReturns 200 rows\n✓\nPassed:\nValues match\n✓\nPassed:\nStill correct on different data\n848 rows · 3 columns\nHide\nClose\nSELECT customer_id, country, region FROM customers;\n#\tcustomer_id\tcountry\tregion\n1\t12347\tIceland\tEurope\n2\t12353\tBahrain\tRest of World\n3\t12359\tCyprus\tEurope\n4\t12373\tAustria\tEurope\n5\t12374\tAustria\tEurope\n6\t12384\tSwitzerland\tEurope\n7\t12389\tAustralia\tRest of World\n8\t12392\tAustralia\tRest of World\n9\t12404\tFinland\tEurope\n10\t12416\tAustralia\tRest of World\nshowing 10 of 848 rows\nShow first 200\n\nWHY IT WORKS\n\nSELECT chooses columns; every customer row is returned once.\n\nHints and the answer are always available. Using them counts the question as solved with help."
+    },
+    {
+      "case": "sql edited after check",
+      "text": "All questions\n01 / 139\nPrev\nNext\n\ntask SELECT columns · warm-up\n\nCustomer list\n\nFind every Retail customer. Return customer_id, country and region.\n\nWHAT TO RETURN\n\nColumns\ncustomer_id\ncountry\nregion\n in this order\nRows\n848 rows · any order\nSkill\nSelect named columns from one table. Refresher: Meet your first SELECT →\n\nEXPECTED RESULT\n\nexpected result\n848 rows · any order\ncustomer_id\n\t\ncountry\n\t\nregion\n\n12347\tIceland\tEurope\n12353\tBahrain\tRest of World\n12359\tCyprus\tEurope\n\nfirst 3 of 848 rows\n\nDATA YOU CAN QUERY\n\ncustomers\n4 columns · 848 rows\nsolution.sql\n⌘\n↵\nrun\n⇧\n⌘\n↵\ncheck\n1\nSELECT 1 AS probe;\nedited since the last run\nHint\nAnswer\nRun\nCheck\n\n✓ all checks passed\n\n✓\nPassed:\nRuns without an error\n✓\nPassed:\nReturns columns customer_id, country, region\n✓\nPassed:\nReturns 200 rows\n✓\nPassed:\nValues match\n✓\nPassed:\nStill correct on different data\n848 rows · 3 columns\nHide\nClose\nSELECT customer_id, country, region FROM customers;\n#\tcustomer_id\tcountry\tregion\n1\t12347\tIceland\tEurope\n2\t12353\tBahrain\tRest of World\n3\t12359\tCyprus\tEurope\n4\t12373\tAustria\tEurope\n5\t12374\tAustria\tEurope\n6\t12384\tSwitzerland\tEurope\n7\t12389\tAustralia\tRest of World\n8\t12392\tAustralia\tRest of World\n9\t12404\tFinland\tEurope\n10\t12416\tAustralia\tRest of World\nshowing 10 of 848 rows\nShow first 200\n\nWHY IT WORKS\n\nSELECT chooses columns; every customer row is returned once.\n\nHints and the answer are always available. Using them counts the question as solved with help."
+    },
+    {
+      "case": "sql incorrect check",
+      "text": "All questions\n01 / 139\nPrev\nNext\n\ntask SELECT columns · warm-up\n\nCustomer list\n\nFind every Retail customer. Return customer_id, country and region.\n\nWHAT TO RETURN\n\nColumns\ncustomer_id\ncountry\nregion\n in this order\nRows\n848 rows · any order\nSkill\nSelect named columns from one table. Refresher: Meet your first SELECT →\n\nEXPECTED RESULT\n\nexpected result\n848 rows · any order\ncustomer_id\n\t\ncountry\n\t\nregion\n\n12347\tIceland\tEurope\n12353\tBahrain\tRest of World\n12359\tCyprus\tEurope\n\nfirst 3 of 848 rows\n\nDATA YOU CAN QUERY\n\ncustomers\n4 columns · 848 rows\nsolution.sql\n⌘\n↵\nrun\n⇧\n⌘\n↵\ncheck\n1\nSELECT 1 AS probe;\n \nHint\nAnswer\nRun\nCheck\n\n1 of 5 checks passed\n\n✓\nPassed:\nRuns without an error\n✕\nFailed:\nReturns columns customer_id, country, region\nYours returned probe.\n·\nNot checked yet:\nReturns 200 rows\n·\nNot checked yet:\nValues match\n·\nNot checked yet:\nStill correct on different data\n1 row · 1 column\nHide\nClose\nSELECT 1 AS probe;\n#\tprobe\n1\t1\n\nWHY IT WORKS\n\nSELECT chooses columns; every customer row is returned once.\n\nHints and the answer are always available. Using them counts the question as solved with help."
+    },
+    {
+      "case": "sql syntax",
+      "text": "All questions\n01 / 139\nPrev\nNext\n\ntask SELECT columns · warm-up\n\nCustomer list\n\nFind every Retail customer. Return customer_id, country and region.\n\nWHAT TO RETURN\n\nColumns\ncustomer_id\ncountry\nregion\n in this order\nRows\n848 rows · any order\nSkill\nSelect named columns from one table. Refresher: Meet your first SELECT →\n\nEXPECTED RESULT\n\nexpected result\n848 rows · any order\ncustomer_id\n\t\ncountry\n\t\nregion\n\n12347\tIceland\tEurope\n12353\tBahrain\tRest of World\n12359\tCyprus\tEurope\n\nfirst 3 of 848 rows\n\nDATA YOU CAN QUERY\n\ncustomers\n4 columns · 848 rows\nsolution.sql\n⌘\n↵\nrun\n⇧\n⌘\n↵\ncheck\n1\nSELEC * FROM customers;\n \nHint\nAnswer\nRun\nCheck\nSQL syntax error\nHide\nClose\nSELEC * FROM customers;\n`SELEC` isn't a SQL command. Did you mean `SELECT`?\nnear \"SELEC\": syntax error\n\nWHY IT WORKS\n\nSELECT chooses columns; every customer row is returned once.\n\nHints and the answer are always available. Using them counts the question as solved with help."
+    },
+    {
+      "case": "sql completion",
+      "options": [
+        "customer_idcustomersCURSORCURRENT_USERCURRENT_TIMESTAMPCURRENT_DEFAULT_TRANSFORM_GROUPCURRENT_TRANSFORM_GROUP_FOR_TYPEEXCLUSIVERECURSIVE"
+      ]
+    },
+    {
+      "case": "sql refresh",
+      "preserved": true
+    }
+  ]
+}

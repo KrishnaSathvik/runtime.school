@@ -56,7 +56,7 @@ export const foundationLessons: LessonOverrides = {
   3: {
     dataset: "retail", decision: "MIGRATE", reason: "WHERE filters real order types and the merchandise flag.",
     concept: "WHERE keeps only rows whose condition is true. Text values go in single quotes and must match exactly. The filter runs before the SELECT list is produced, so you can filter on a column you do not return.",
-    trap: "Double quotes name columns in SQL. WHERE order_type = \"sale\" compares with a column named sale, not with the text 'sale'.",
+    trap: "Write text in single quotes: 'sale'. In standard SQL, double quotes name a column. SQLite reads \"sale\" as text only because no column has that name, so the habit breaks easily: order_type = \"order_type\" compares the column with itself and keeps every row.",
     grain: "One row per matching order, then one row per matching product.",
     example: "SELECT order_id, invoice_no, ordered_at\nFROM orders\nWHERE country = 'Netherlands';",
     hints: ["Compare order_type with the text 'cancellation'.", "is_merchandise is 1 for goods and 0 for fees and adjustments."],
@@ -64,7 +64,7 @@ export const foundationLessons: LessonOverrides = {
       task("Find every cancellation order. Return order_id, invoice_no, and ordered_at.", "SELECT order_id, invoice_no, ordered_at FROM orders WHERE order_type = 'cancellation'"),
       task("Find every product that is not merchandise (is_merchandise = 0). Return stock_code and description.", "SELECT stock_code, description FROM products WHERE is_merchandise = 0"),
     ],
-    quiz: quiz("Which filter keeps only sale orders?", ["WHERE order_type = 'sale'", "WHERE order_type = \"sale\"", "WHERE 'order_type' = 'sale'"], 0, "Single quotes make a text value; double quotes name an identifier."),
+    quiz: quiz("Why filter sale orders with order_type = 'sale' rather than order_type = \"sale\"?", ["'sale' is always text; \"sale\" is read as a column name first", "\"sale\" is an error in SQLite", "'sale' ignores upper and lower case"], 0, "Single quotes always make text. Double quotes name a column; SQLite falls back to text only when no column has that name."),
     walkthrough: [
       step("Preview the column you will filter", "Run this. order_type tells you whether a row is a sale, cancellation, or adjustment.", "SELECT order_id, invoice_no, order_type FROM orders LIMIT 10;"),
       step("Filter to one country", "Run this. WHERE keeps only orders where country is Netherlands.", "SELECT order_id, invoice_no, ordered_at FROM orders WHERE country = 'Netherlands';"),

@@ -37,6 +37,15 @@ function validatePlan(db, sql, spec, checks = [], fixture = 'original') {
   try { db.exec('PRAGMA automatic_index=OFF; PRAGMA analysis_limit=0; ANALYZE main;'); }
   finally { db.exec(`PRAGMA query_only=${readOnly ? 'ON' : 'OFF'}`); }
   const details = read('EXPLAIN QUERY PLAN ' + sql).map(row => String(row[3]));
+  // What the submitted query actually did, in plain words (learners never see raw plan text).
+  const fullScan = details.map(d => /^SCAN (\S+)/.exec(d)).find((m, i) => m && !/ USING (COVERING )?INDEX /.test(details[i]));
+  const observed = strategy => {
+    if (fullScan) return `Your query reads every row of ${fullScan[1]} instead.`;
+    if (strategy === 'covering-search' && details.some(d => /^SEARCH .+ USING INDEX /.test(d))) return 'Your query uses the index but still goes back to the table for the other columns.';
+    if (details.some(d => /^SCAN .+ USING (COVERING )?INDEX /.test(d))) return 'Your query reads the whole index instead of jumping to the matching rows.';
+    return 'Your query does not use that index.';
+  };
+  const STRATEGY = { 'search': 'Finds rows with the index', 'covering-search': 'Answers from the index alone', 'index-scan': 'Reads rows in index order' };
   for (const assertion of spec.access ?? []) {
     const indexes = names.get(assertion.index);
     if (!indexes || !['search', 'covering-search', 'index-scan'].includes(assertion.strategy)) throw Error('Invalid plan access contract.');
@@ -48,15 +57,22 @@ function validatePlan(db, sql, spec, checks = [], fixture = 'original') {
       return usesIndex && (assertion.strategy === 'index-scan' ? node[1] === 'SCAN' :
         node[1] === 'SEARCH' && (assertion.strategy !== 'covering-search' || !!node[2]));
     });
-    record('Access strategy: ' + assertion.strategy, matched, matched ? 'The submitted query uses the required indexed access.' : 'Review the WHERE conditions and index key order. The required access was not found.');
-    if (!matched) return fail(`The output is correct, but this task requires ${assertion.strategy} using the index for ${assertion.index}. Observed plan: ${details.join('; ')}`);
+    record(STRATEGY[assertion.strategy], matched, matched ? 'The submitted query uses the required indexed access.' : 'Review the WHERE conditions and index key order. The required access was not found.');
+    if (!matched) {
+      const index = spec.indexes.find(i => i.id === assertion.index);
+      const on = `the index on ${index.table} (${index.columns.join(', ')})`;
+      const need = assertion.strategy === 'index-scan' ? `read ${index.table} in the order of ${on}`
+        : assertion.strategy === 'covering-search' ? `jump straight to the matching rows using ${on} alone, without reading the ${index.table} table`
+        : `jump straight to the matching rows of ${index.table} using ${on}`;
+      return fail(`This task needs SQLite to ${need}. ${observed(assertion.strategy)}`);
+    }
   }
   if (spec.noFullScans && details.some(detail => /^SCAN /.test(detail) && !/ USING (COVERING )?INDEX /.test(detail))) {
-    return fail('The output is correct, but this task requires avoiding unindexed scans throughout the query. Observed plan: ' + details.join('; '));
+    return fail(`This task needs every table to be read through an index. Your query reads every row of ${fullScan[1]}.`);
   }
-  if (spec.noTempSort) record('Avoid temporary sorts', !details.some(detail => /\bTEMP B-TREE\b/.test(detail)), 'The task explicitly requires ordering without a temporary B-tree.');
+  if (spec.noTempSort) record('No extra sorting step', !details.some(detail => /\bTEMP B-TREE\b/.test(detail)), 'The rows must come out already in index order, without SQLite sorting them separately.');
   if (spec.noTempSort && details.some(detail => /\bTEMP B-TREE\b/.test(detail))) {
-    return fail('The output is correct, but this task requires avoiding a temporary sorting B-tree. Observed plan: ' + details.join('; '));
+    return fail('This task needs the rows to come out already in index order. Your query makes SQLite sort them in a separate step.');
   }
   return null;
 }

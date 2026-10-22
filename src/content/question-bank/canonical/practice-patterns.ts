@@ -247,7 +247,7 @@ export const patternQuestions = [
     id: "qb-0135", slug: "overlapping-encounters", title: "Encounters that overlap in time", dataset: "healthcare", decision: "NEW",
     difficulty: "medium", difficultyWhy: "Interval overlap test in a self-join, each pair once.", primaryTopic: "joins.self", topicTags: ["dates.diff"],
     objective: "Detect overlapping intervals for the same entity.", prerequisites: [34, 41],
-    task: "Find every pair of the same patient’s encounters whose [start_at, end_at) intervals overlap. Return patient_id, first_encounter, second_encounter (first_encounter < second_encounter) and overlap_minutes.",
+    task: "Find every pair of the same patient’s encounters whose [start_at, end_at) intervals overlap. Return patient_id, first_encounter, second_encounter (first_encounter < second_encounter) and overlap_minutes (rounded to whole minutes).",
     columns: ["patient_id", "first_encounter", "second_encounter", "overlap_minutes"], tables: ["encounters"],
     hints: ["Overlap: a.start_at < b.end_at AND b.start_at < a.end_at.", "Overlap length: MIN(end) − MAX(start)."],
     solution: "SELECT a.patient_id, a.encounter_id AS first_encounter, b.encounter_id AS second_encounter, CAST(ROUND((julianday(MIN(a.end_at, b.end_at)) - julianday(MAX(a.start_at, b.start_at))) * 1440) AS INTEGER) AS overlap_minutes FROM encounters a JOIN encounters b ON b.patient_id = a.patient_id AND a.encounter_id < b.encounter_id AND a.start_at < b.end_at AND b.start_at < a.end_at",

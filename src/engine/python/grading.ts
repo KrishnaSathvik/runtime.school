@@ -1,5 +1,5 @@
-import { runPython, type PyCallCase, type PyExprResult, type PyPackage, type PyProbe, type PyProbeResult, type PyRunResult, type PyVariantResult } from "./client";
-import { formatPy, pyEqual, pyTypeName, sameKind, toWire, type ComparePolicy, type PyValue } from "./values";
+import { runPython, type PyCallCase, type PyExprResult, type PyMount, type PyPackage, type PyProbe, type PyProbeResult, type PyRunResult, type PyVariantResult } from "./client";
+import { formatPy, pyEqual, pyFloatRepr, pyStrRepr, pyTypeName, sameKind, toWire, type ComparePolicy, type PyValue } from "./values";
 
 /**
  * Python grading. Check Answer runs the learner's program once in a fresh interpreter, reads the
@@ -74,10 +74,24 @@ export type PyFunctionCase = {
   kwargs?: Record<string, PyValue>;
   /** The return value; omit when `raises` is given. */
   expected?: PyValue;
-  /** The call must raise this exception type instead of returning. */
+  /** The call must raise this exception type (exact type name) instead of returning. */
   raises?: string;
   /** Hidden cases are never shown: not their inputs, not their expected value. */
   hidden?: boolean;
+  /**
+   * What kind of input this is, e.g. "an empty list" or "mixed-case duplicates". Shown when a hidden case
+   * fails, so feedback can say which kind of input broke without revealing it. Never put the input itself here.
+   */
+  label?: string;
+  /** The call must leave every argument (positional and keyword) exactly as it was passed: no mutation. */
+  unchanged?: boolean;
+  /** For functions that update their input in place: each positional argument's value after the call. */
+  argsAfter?: PyValue[];
+  /**
+   * With `unchanged` or `argsAfter`: judge only what the call did to its arguments, not what it returned (a
+   * separate "doesn't change its input" check, so a wrong return value fails only the check about values).
+   */
+  ignoreReturn?: boolean;
 };
 
 export type PyTask = {
@@ -88,6 +102,8 @@ export type PyTask = {
   packages?: readonly PyPackage[];
   /** Text files placed next to main.py before every Run and Check (fixtures: CSV, JSON, helper modules). */
   files?: Record<string, string>;
+  /** Dataset edition files mounted before every Run and Check (hash-checked, fetched outside the run clock). */
+  mounts?: readonly PyMount[];
 };
 
 export type PyFailure =
@@ -110,6 +126,7 @@ export type PyFailure =
   | "fails-hidden-cases"
   | "not-calculated"
   | "wrong-exception"
+  | "changed-input"
   | "missing-input";
 
 export type PyCaseOutcome = {
@@ -118,6 +135,8 @@ export type PyCaseOutcome = {
   ok: boolean;
   /** e.g. "calculate_total(12, 4)"; omitted for hidden cases. */
   call?: string;
+  /** The author's description of a hidden case's kind of input (never the input itself). */
+  label?: string;
   expected?: string;
   actual?: string;
   category?: PyFailure;
@@ -193,7 +212,8 @@ export function probeFor(task: PyTask): PyProbe {
     byName.set(c.name, list);
   }
   const calls = [...byName].map(([name, cases]) => ({ name, cases }));
-  const exprs = task.checks.filter((c) => c.kind === "expr").map((c) => ({ code: c.expr }));
+  // Argument checks (unchanged / argsAfter) call the function once more, after the authored expressions.
+  const exprs = [...task.checks.filter((c) => c.kind === "expr").map((c) => ({ code: c.expr })), ...argumentProbes(task).map((p) => ({ code: p.code }))];
   const variants = task.checks
     .filter((c) => c.kind === "variant")
     .map((c) => ({ set: Object.fromEntries(Object.entries(c.set).map(([n, v]) => [n, toWire(v)])), vars: Object.keys(c.vars ?? {}) }));
@@ -206,9 +226,69 @@ export function probeFor(task: PyTask): PyProbe {
   };
 }
 
+/** A Python literal for an authored test input (never a learner value). */
+function pyLiteral(v: PyValue): string {
+  switch (v.t) {
+    case "float":
+      return Number.isNaN(v.v) ? "float('nan')" : v.v === Infinity ? "float('inf')" : v.v === -Infinity ? "float('-inf')" : pyFloatRepr(v.v);
+    case "str":
+      return pyStrRepr(v.v);
+    case "list":
+      return `[${v.items.map(pyLiteral).join(", ")}]`;
+    case "tuple":
+      return v.items.length === 1 ? `(${pyLiteral(v.items[0])},)` : `(${v.items.map(pyLiteral).join(", ")})`;
+    case "set":
+      return v.items.length ? `{${v.items.map(pyLiteral).join(", ")}}` : "set()";
+    case "frozenset":
+      return `frozenset([${v.items.map(pyLiteral).join(", ")}])`;
+    case "dict":
+      return `{${v.entries.map(([k, x]) => `${pyLiteral(k)}: ${pyLiteral(x)}`).join(", ")}}`;
+    case "other":
+      throw new Error("Only built-in Python values can be sent as test inputs.");
+    default:
+      return formatPy(v);
+  }
+}
+
+/**
+ * Function cases that check the arguments after the call. Each becomes one extra expression: a fresh copy of
+ * the inputs, one call (its result and any exception ignored: the main call already judged those), and the
+ * inputs as they are afterwards. Order: check order, then case order.
+ */
+function argumentProbes(task: PyTask): { check: number; index: number; code: string }[] {
+  const out: { check: number; index: number; code: string }[] = [];
+  task.checks.forEach((c, check) => {
+    if (c.kind !== "function") return;
+    c.cases.forEach((k, index) => {
+      if (!k.unchanged && !k.argsAfter) return;
+      const kwargs = Object.entries(k.kwargs ?? {}).map(([n, v]) => `${pyStrRepr(n)}: ${pyLiteral(v)}`).join(", ");
+      const code = [
+        `_args = [${k.args.map(pyLiteral).join(", ")}]`,
+        `_kwargs = {${kwargs}}`,
+        "try:",
+        `    ${c.name}(*_args, **_kwargs)`,
+        "except Exception:",
+        "    pass",
+        "result = (_args, _kwargs)",
+      ].join("\n");
+      out.push({ check, index, code });
+    });
+  });
+  return out;
+}
+
+/** The visible function cases, as the learner sees them before checking: the call and what it returns or raises. */
+export function publicExamples(task: PyTask): { call: string; kind: "returns" | "raises"; result: string }[] {
+  return task.checks.flatMap((c) =>
+    c.kind !== "function"
+      ? []
+      : c.cases.filter((k) => !k.hidden && !k.ignoreReturn).map((k) => (k.raises ? { call: callText(c.name, k), kind: "raises" as const, result: k.raises } : { call: callText(c.name, k), kind: "returns" as const, result: formatPy(k.expected ?? { t: "none" }) })),
+  );
+}
+
 /** Check Answer: one fresh interpreter, then judgement on this side. */
 export async function checkPython(task: PyTask, code: string): Promise<PyGradeReport> {
-  const result = await runPython(code, { probe: probeFor(task), stdin: task.stdin, timeoutMs: task.timeoutMs, packages: task.packages, files: task.files });
+  const result = await runPython(code, { probe: probeFor(task), stdin: task.stdin, timeoutMs: task.timeoutMs, packages: task.packages, files: task.files, mounts: task.mounts });
   return gradePython(task, result);
 }
 
@@ -306,16 +386,71 @@ function judgeVariable(c: Extract<PyCheck, { kind: "variable" }>, probe: PyProbe
   return { status: "fail", category: "wrong-value", expected, actual: formatPy(actual), detail: `${c.name} is ${formatPy(actual)}, but it should be ${expected}.` };
 }
 
-function judgeCase(name: string, k: PyFunctionCase, index: number, got: PyCallCase | undefined, policy?: ComparePolicy): PyCaseOutcome {
+/** "argument 1" or "items=": where an argument went in the call. */
+const argName = (i: number, kw?: string) => (kw ? `the keyword argument ${kw}` : `argument ${i + 1}`);
+
+/** Judges the arguments as they were after the call (unchanged / argsAfter). Null when they're as required. */
+function judgeArgs(name: string, k: PyFunctionCase, after: PyExprResult | undefined, policy?: ComparePolicy): Pick<PyCaseOutcome, "category" | "detail" | "expected" | "actual"> | null {
+  const what = k.hidden ? "another input" : callText(name, k);
+  if (!after || !after.ok || after.value.t !== "tuple" || after.value.items.length !== 2) {
+    return { category: "not-run", detail: `What ${what} does to its arguments could not be checked.` };
+  }
+  const [argsV, kwargsV] = after.value.items;
+  const args = argsV.t === "list" ? argsV.items : [];
+  const kwargs = kwargsV.t === "dict" ? kwargsV.entries : [];
+  if (k.argsAfter) {
+    for (let i = 0; i < k.argsAfter.length; i++) {
+      const want = k.argsAfter[i];
+      const got = args[i];
+      if (got && pyEqual(got, want, policy)) continue;
+      return {
+        category: "changed-input",
+        ...(k.hidden ? {} : { expected: `${argName(i)}: ${formatPy(want)}`, actual: `${argName(i)}: ${got ? formatPy(got) : "missing"}` }),
+        detail: k.hidden
+          ? `For another input, the ${pyTypeName(want)} passed in was not updated as required. This function should change its argument in place.`
+          : `After ${what}, ${argName(i)} should be ${formatPy(want)}, but it is ${got ? formatPy(got) : "missing"}. This function should change its argument in place.`,
+      };
+    }
+  }
+  if (k.unchanged) {
+    // Exact comparison; the repr comparison lets a NaN input count as unchanged.
+    const changed = (original: PyValue, now: PyValue | undefined) => !now || !(pyEqual(now, original, { float: "exact" }) || formatPy(now) === formatPy(original));
+    const i = k.args.findIndex((a, j) => changed(a, args[j]));
+    const kw = Object.entries(k.kwargs ?? {}).find(([n, v]) => changed(v, kwargs.find(([kk]) => kk.t === "str" && kk.v === n)?.[1]));
+    if (i >= 0 || kw) {
+      const original = i >= 0 ? k.args[i] : kw![1];
+      const now = i >= 0 ? args[i] : kwargs.find(([kk]) => kk.t === "str" && kk.v === kw![0])?.[1];
+      const where = argName(i, i >= 0 ? undefined : kw![0]);
+      return {
+        category: "changed-input",
+        ...(k.hidden ? {} : { expected: `${where}: ${formatPy(original)} (unchanged)`, actual: `${where}: ${now ? formatPy(now) : "gone"}` }),
+        detail: k.hidden
+          ? `For another input, the function changed the ${pyTypeName(original)} it was given. Leave the input as it is and build a new value to return.`
+          : `${what} changed its input: ${where} was ${formatPy(original)} and is ${now ? formatPy(now) : "gone"} after the call. Leave the input as it is and build a new value to return.`,
+      };
+    }
+  }
+  return null;
+}
+
+/** A TypeError about the call itself (wrong number or names of parameters) rather than the function's work. */
+const signatureError = (name: string, e: { type: string; message: string }) =>
+  e.type === "TypeError" && e.message.startsWith(`${name}()`) && /positional argument|required (?:positional|keyword-only) argument|unexpected keyword argument|keyword argument/.test(e.message);
+
+function judgeCase(name: string, k: PyFunctionCase, index: number, got: PyCallCase | undefined, policy?: ComparePolicy, after?: PyExprResult): PyCaseOutcome {
   const hidden = !!k.hidden;
   const wanted = k.raises ? `raises ${k.raises}` : formatPy(k.expected ?? { t: "none" });
   const base: PyCaseOutcome = hidden
-    ? { index, hidden, ok: false }
+    ? { index, hidden, ok: false, ...(k.label ? { label: k.label } : {}) }
     : { index, hidden, ok: false, call: callText(name, k), expected: wanted };
+  const argsJudged = () => (k.unchanged || k.argsAfter ? judgeArgs(name, k, after, policy) : null);
   const what = hidden ? "another input" : callText(name, k);
   if (!got) return { ...base, category: "not-run", detail: `${what} was not tested.` };
   if (k.raises) {
-    if (!got.ok && got.error.type === k.raises) return { ...base, ...(hidden ? {} : { actual: `raises ${got.error.type}` }), ok: true };
+    if (!got.ok && got.error.type === k.raises) {
+      const bad = argsJudged();
+      return { ...base, ...(hidden ? {} : { actual: `raises ${got.error.type}` }), ...(bad ?? { ok: true }) };
+    }
     const gotText = got.ok ? `returned ${formatPy(got.value)}` : `raised ${got.error.type}${got.error.message ? `: ${got.error.message}` : ""}`;
     return {
       ...base,
@@ -330,18 +465,27 @@ function judgeCase(name: string, k: PyFunctionCase, index: number, got: PyCallCa
   const expectedValue = k.expected ?? ({ t: "none" } as PyValue);
   if (!got.ok) {
     const e = got.error;
+    const signature = signatureError(name, e) ? ` Check that def ${name}(…) has the parameters the task describes.` : "";
     return {
       ...base,
       category: "call-error",
       line: e.line,
       detail: hidden
-        ? `Raised ${e.type} for another input${e.line ? ` (line ${e.line})` : ""}.`
-        : `${what} raised ${e.type}${e.message ? `: ${e.message}` : ""}${e.line ? ` (line ${e.line})` : ""}.`,
+        ? `Raised ${e.type} for another input${e.line ? ` (line ${e.line})` : ""}.${signature}`
+        : `${what} raised ${e.type}${e.message ? `: ${e.message}` : ""}${e.line ? ` (line ${e.line})` : ""}.${signature}`,
     };
   }
   const actual = got.value;
   const shown = hidden ? {} : { actual: formatPy(actual) };
-  if (pyEqual(actual, expectedValue, policy)) return { ...base, ...shown, ok: true };
+  // An in-place function is judged on what it did to its input first: returning a new value instead is the usual mistake.
+  if (k.argsAfter) {
+    const bad = argsJudged();
+    if (bad) return { ...base, ...shown, ...bad };
+  }
+  if (k.ignoreReturn || pyEqual(actual, expectedValue, policy)) {
+    const bad = k.argsAfter ? null : argsJudged();
+    return bad ? { ...base, ...shown, ...bad } : { ...base, ...shown, ok: true };
+  }
   if (actual.t === "none" && expectedValue.t !== "none" && got.stdout) {
     return {
       ...base,
@@ -349,6 +493,9 @@ function judgeCase(name: string, k: PyFunctionCase, index: number, got: PyCallCa
       category: "returned-none-printed",
       detail: `${hidden ? "For another input, the function" : what} printed a value but returned None. Use return to give the result back.`,
     };
+  }
+  if (actual.t === "none" && !hidden) {
+    return { ...base, ...shown, category: "wrong-type", detail: `${what} returned None, but should return ${formatPy(expectedValue)}. Use return to give the result back.` };
   }
   if (!sameKind(actual, expectedValue, policy)) {
     return {
@@ -368,7 +515,7 @@ function judgeCase(name: string, k: PyFunctionCase, index: number, got: PyCallCa
   };
 }
 
-function judgeFunction(c: Extract<PyCheck, { kind: "function" }>, probe: PyProbeResult, offset = 0): Omit<PyCheckOutcome, "id" | "kind" | "label"> {
+function judgeFunction(c: Extract<PyCheck, { kind: "function" }>, probe: PyProbeResult, offset = 0, after: (index: number) => PyExprResult | undefined = () => undefined): Omit<PyCheckOutcome, "id" | "kind" | "label"> {
   const found = probe.calls[c.name];
   if (!found || "missing" in found) {
     const hint = didYouMean(c.name, probe.names);
@@ -383,22 +530,29 @@ function judgeFunction(c: Extract<PyCheck, { kind: "function" }>, probe: PyProbe
   if ("notCallable" in found) {
     return { status: "fail", category: "not-callable", detail: `${c.name} is ${/^[aeiou]/i.test(found.type) ? "an" : "a"} ${found.type}, not a function. Define it with def ${c.name}(…):` };
   }
-  const cases = c.cases.map((k, i) => judgeCase(c.name, k, i, found.cases[offset + i], c.compare));
+  const mine = c.cases.map((_, i) => found.cases[offset + i]);
+  const cases = c.cases.map((k, i) => judgeCase(c.name, k, i, mine[i], c.compare, after(i)));
   if (cases.length > 0 && cases.every((k) => k.ok)) return { status: "pass", cases };
   const visibleFail = cases.find((k) => !k.ok && !k.hidden);
   if (visibleFail) return { status: "fail", category: visibleFail.category, detail: visibleFail.detail, line: visibleFail.line, cases };
   const hiddenFails = cases.filter((k) => !k.ok);
   const hiddenTotal = cases.filter((k) => k.hidden).length;
   const first = hiddenFails[0];
+  const labels = [...new Set(hiddenFails.map((k) => k.label).filter(Boolean))];
+  // The same returned value for every input, visible and hidden, is a typed-in answer.
+  const values = mine.map((g) => (g?.ok ? formatPy(g.value) : null));
+  const fixed = values.length > 1 && values.every((x) => x !== null && x === values[0]);
+  const advice =
+    first?.category === "wrong-value"
+      ? fixed
+        ? "Make sure the function calculates from its parameters instead of returning a fixed value."
+        : "Re-read the requirements and try inputs the examples don't cover."
+      : first?.detail ?? "";
   return {
     status: "fail",
     category: "fails-hidden-cases",
     line: first?.line,
-    detail:
-      `Works for the examples, but not for ${hiddenFails.length} of ${hiddenTotal} other input${hiddenTotal === 1 ? "" : "s"}. ` +
-      (first?.category === "call-error"
-        ? first.detail
-        : "Make sure the function calculates from its parameters instead of returning a fixed value."),
+    detail: `Works for the examples, but not for ${hiddenFails.length} of ${hiddenTotal} other input${hiddenTotal === 1 ? "" : "s"}${labels.length ? ` (${labels.join("; ")})` : ""}. ${advice}`.trim(),
     cases,
   };
 }
@@ -503,12 +657,18 @@ function judgeVariant(c: Extract<PyCheck, { kind: "variant" }>, got: PyVariantRe
 
 function caseLabel(task: PyTask, ref: { call: string; index: number } | undefined): { checkIndex: number; text: string } | null {
   if (!ref) return null;
-  const checkIndex = task.checks.findIndex((c) => c.kind === "function" && c.name === ref.call);
-  const check = task.checks[checkIndex];
-  if (!check || check.kind !== "function") return null;
-  const k = check.cases[ref.index];
-  if (!k) return null;
-  return { checkIndex, text: k.hidden ? `${ref.call} with another input` : callText(ref.call, k) };
+  // Cases of every check that calls this function run as one list, so the index runs on across those checks.
+  let index = ref.index;
+  for (let checkIndex = 0; checkIndex < task.checks.length; checkIndex++) {
+    const check = task.checks[checkIndex];
+    if (check.kind !== "function" || check.name !== ref.call) continue;
+    if (index < check.cases.length) {
+      const k = check.cases[index];
+      return { checkIndex, text: k.hidden ? `${ref.call} with another input` : callText(ref.call, k) };
+    }
+    index -= check.cases.length;
+  }
+  return null;
 }
 
 function interrupted(task: PyTask, r: Extract<PyRunResult, { status: "timeout" | "output-limit" | "stopped" | "crashed" }>, total: number): PyGradeReport {
@@ -575,6 +735,12 @@ export function gradePython(task: PyTask, r: PyRunResult): PyGradeReport {
 
   // status "ok": the program finished. Judge every check from this run only.
   const probe: PyProbeResult = r.probe ?? { names: [], vars: {}, calls: {} };
+  const authoredExprs = task.checks.filter((c) => c.kind === "expr").length;
+  const argProbes = argumentProbes(task);
+  const afterFor = (check: number) => (index: number) => {
+    const at = argProbes.findIndex((p) => p.check === check && p.index === index);
+    return at < 0 ? undefined : probe.exprs?.[authoredExprs + at];
+  };
   let exprIndex = 0;
   let variantIndex = 0;
   const callOffsets = new Map<string, number>();
@@ -591,7 +757,7 @@ export function gradePython(task: PyTask, r: PyRunResult): PyGradeReport {
       : c.kind === "uses-variables" ? judgeUses(c, probe)
       : c.kind === "expr" ? judgeExpr(c, probe.exprs?.[exprIndex++])
       : c.kind === "variant" ? judgeVariant(c, probe.variants?.[variantIndex++])
-      : judgeFunction(c, probe, offsetFor(c));
+      : judgeFunction(c, probe, offsetFor(c), afterFor(i));
     return { ...base, ...judged, ...(judged.status === "fail" && c.tip ? { tip: c.tip } : {}) };
   });
   const passed = checks.filter((c) => c.status === "pass").length;

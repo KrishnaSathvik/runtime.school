@@ -1,0 +1,99 @@
+{
+  "browser": {
+    "mode": "launch",
+    "executable_path": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+  },
+  "start_url": {
+    "url": "http://localhost:3040/python/learn/python-execution"
+  },
+  "actions": [
+    {
+      "step_id": "ready",
+      "action": "wait_for",
+      "locator": {
+        "kind": "css",
+        "selector": ".cm-content[contenteditable=\"true\"] >> nth=0"
+      },
+      "state": "visible",
+      "timeout_ms": 20000
+    },
+    {
+      "step_id": "select",
+      "action": "press",
+      "locator": {
+        "kind": "css",
+        "selector": ".cm-content[contenteditable=\"true\"] >> nth=0"
+      },
+      "key": "Meta+A",
+      "timeout_ms": 5000
+    },
+    {
+      "step_id": "write",
+      "action": "fill",
+      "locator": {
+        "kind": "css",
+        "selector": ".cm-content[contenteditable=\"true\"] >> nth=0"
+      },
+      "value": {
+        "source": "literal",
+        "value": "while True:\n    pass"
+      },
+      "timeout_ms": 5000
+    },
+    {
+      "step_id": "settle_edit",
+      "action": "wait_for_timeout",
+      "duration_ms": 300
+    },
+    {
+      "step_id": "challenge_run",
+      "action": "click",
+      "locator": {
+        "kind": "css",
+        "selector": ".p2-work button:has-text(\"Run\")"
+      },
+      "timeout_ms": 5000
+    },
+    {
+      "step_id": "running",
+      "action": "wait_for_timeout",
+      "duration_ms": 300
+    },
+    {
+      "step_id": "example_run",
+      "action": "click",
+      "locator": {
+        "kind": "css",
+        "selector": "button[aria-label=\"Run: Three instructions, three lines\"]"
+      },
+      "timeout_ms": 5000
+    },
+    {
+      "step_id": "settle",
+      "action": "wait_for_timeout",
+      "duration_ms": 10000
+    }
+  ],
+  "capture": {
+    "after_each_step": [
+      "accessibility",
+      "url"
+    ],
+    "at_end": [
+      "screenshot",
+      "accessibility",
+      "dom",
+      "url"
+    ],
+    "events": [
+      "network"
+    ]
+  },
+  "environment": {
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "service_workers": "allow"
+  }
+}

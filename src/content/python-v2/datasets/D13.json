@@ -1,0 +1,1483 @@
+{
+ "id": "D13",
+ "title": "U.S. Domestic Flights",
+ "version": 1,
+ "seed": null,
+ "description": "Real U.S. domestic flights, January–March 2025: schedules, departure and arrival delays, cancellations, diversions and delay causes, for every flight flown by a 7.5% sample of aircraft. Times are local to each airport.",
+ "licence": {
+  "name": "U.S. government work (public domain); OurAirports data is public domain",
+  "status": "cleared"
+ },
+ "window": [
+  "2025-01-01",
+  "2025-03-31"
+ ],
+ "generator": "datasets/python/D13/dataset.mjs from datasets/flights/extract",
+ "source": "BTS On_Time_Reporting_Carrier_On_Time_Performance 2025-01..03 and OurAirports airports.csv, via datasets/flights/extract (datasets/flights/source.json)",
+ "attribution": "Source: U.S. Bureau of Transportation Statistics, Reporting Carrier On-Time Performance. Airports: OurAirports. Sampled by Runtime.",
+ "tables": {
+  "flights": {
+   "description": "One scheduled flight, including cancelled and diverted flights.",
+   "primaryKey": [
+    "flight_id"
+   ],
+   "foreignKeys": [
+    {
+     "column": "airline_code",
+     "references": "airlines.airline_code"
+    },
+    {
+     "column": "origin",
+     "references": "airports.airport_code"
+    },
+    {
+     "column": "destination",
+     "references": "airports.airport_code"
+    },
+    {
+     "column": "cancellation_code",
+     "references": "cancellation_reasons.code"
+    }
+   ],
+   "columns": [
+    {
+     "name": "flight_id",
+     "type": "integer",
+     "description": "Flight ID",
+     "nullable": false
+    },
+    {
+     "name": "flight_date",
+     "type": "date",
+     "description": "Scheduled departure date (local)",
+     "nullable": false
+    },
+    {
+     "name": "airline_code",
+     "type": "text",
+     "description": "Airline code",
+     "nullable": false
+    },
+    {
+     "name": "flight_number",
+     "type": "integer",
+     "description": "Flight number",
+     "nullable": false
+    },
+    {
+     "name": "tail_number",
+     "type": "text",
+     "description": "Aircraft registration",
+     "nullable": true
+    },
+    {
+     "name": "origin",
+     "type": "text",
+     "description": "Departure airport",
+     "nullable": false
+    },
+    {
+     "name": "destination",
+     "type": "text",
+     "description": "Arrival airport",
+     "nullable": false
+    },
+    {
+     "name": "scheduled_departure",
+     "type": "timestamp",
+     "description": "Scheduled departure, origin local time",
+     "nullable": false
+    },
+    {
+     "name": "actual_departure",
+     "type": "timestamp",
+     "description": "Actual departure, origin local time",
+     "nullable": true
+    },
+    {
+     "name": "departure_delay",
+     "type": "integer",
+     "description": "Minutes late leaving (negative = early)",
+     "nullable": true
+    },
+    {
+     "name": "taxi_out_minutes",
+     "type": "integer",
+     "description": "Minutes from leaving the gate to take-off",
+     "nullable": true
+    },
+    {
+     "name": "scheduled_arrival",
+     "type": "timestamp",
+     "description": "Scheduled arrival, destination local time",
+     "nullable": false
+    },
+    {
+     "name": "actual_arrival",
+     "type": "timestamp",
+     "description": "Actual arrival, destination local time",
+     "nullable": true
+    },
+    {
+     "name": "arrival_delay",
+     "type": "integer",
+     "description": "Minutes late arriving (negative = early)",
+     "nullable": true
+    },
+    {
+     "name": "air_time_minutes",
+     "type": "integer",
+     "description": "Minutes in the air",
+     "nullable": true
+    },
+    {
+     "name": "distance_miles",
+     "type": "integer",
+     "description": "Route distance, miles",
+     "nullable": false
+    },
+    {
+     "name": "cancelled",
+     "type": "integer",
+     "description": "1 if cancelled",
+     "nullable": false
+    },
+    {
+     "name": "cancellation_code",
+     "type": "text",
+     "description": "Why it was cancelled",
+     "nullable": true
+    },
+    {
+     "name": "diverted",
+     "type": "integer",
+     "description": "1 if diverted",
+     "nullable": false
+    },
+    {
+     "name": "carrier_delay",
+     "type": "integer",
+     "description": "Delay minutes blamed on the airline (arrivals 15+ minutes late only)",
+     "nullable": true
+    },
+    {
+     "name": "weather_delay",
+     "type": "integer",
+     "description": "Delay minutes due to weather",
+     "nullable": true
+    },
+    {
+     "name": "nas_delay",
+     "type": "integer",
+     "description": "Delay minutes due to air traffic control and airport congestion",
+     "nullable": true
+    },
+    {
+     "name": "security_delay",
+     "type": "integer",
+     "description": "Delay minutes due to security",
+     "nullable": true
+    },
+    {
+     "name": "late_aircraft_delay",
+     "type": "integer",
+     "description": "Delay minutes because the aircraft arrived late",
+     "nullable": true
+    }
+   ]
+  },
+  "airlines": {
+   "description": "One airline.",
+   "primaryKey": [
+    "airline_code"
+   ],
+   "foreignKeys": [],
+   "columns": [
+    {
+     "name": "airline_code",
+     "type": "text",
+     "description": "Airline code",
+     "nullable": false
+    },
+    {
+     "name": "airline_name",
+     "type": "text",
+     "description": "Airline name",
+     "nullable": false
+    },
+    {
+     "name": "carrier_group",
+     "type": "text",
+     "description": "network, low-cost, ultra-low-cost or regional",
+     "nullable": false
+    }
+   ]
+  },
+  "airports": {
+   "description": "One airport that a flight here departs from or arrives at.",
+   "primaryKey": [
+    "airport_code"
+   ],
+   "foreignKeys": [],
+   "columns": [
+    {
+     "name": "airport_code",
+     "type": "text",
+     "description": "Three-letter airport code",
+     "nullable": false
+    },
+    {
+     "name": "airport_name",
+     "type": "text",
+     "description": "Airport name; sometimes empty",
+     "nullable": true
+    },
+    {
+     "name": "city",
+     "type": "text",
+     "description": "City",
+     "nullable": false
+    },
+    {
+     "name": "state",
+     "type": "text",
+     "description": "State or territory code",
+     "nullable": false
+    },
+    {
+     "name": "state_name",
+     "type": "text",
+     "description": "State or territory",
+     "nullable": false
+    },
+    {
+     "name": "latitude",
+     "type": "decimal",
+     "description": "Latitude",
+     "nullable": true
+    },
+    {
+     "name": "longitude",
+     "type": "decimal",
+     "description": "Longitude",
+     "nullable": true
+    },
+    {
+     "name": "elevation_ft",
+     "type": "integer",
+     "description": "Elevation, feet",
+     "nullable": true
+    }
+   ]
+  },
+  "cancellation_reasons": {
+   "description": "What each cancellation code means.",
+   "primaryKey": [
+    "code"
+   ],
+   "foreignKeys": [],
+   "columns": [
+    {
+     "name": "code",
+     "type": "text",
+     "description": "Code",
+     "nullable": false
+    },
+    {
+     "name": "reason",
+     "type": "text",
+     "description": "Reason",
+     "nullable": false
+    }
+   ]
+  }
+ },
+ "editions": {
+  "preview": {
+   "ref": "D13@preview.1",
+   "files": [
+    {
+     "path": "flights.csv",
+     "table": "flights",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 25,
+     "bytes": 3582,
+     "sha256": "2752290026d5a5f0775c984e8521495767e6caa5b62991aed614d9602843de4d",
+     "url": "/datasets/python/D13/preview.1/flights.csv"
+    },
+    {
+     "path": "airlines.csv",
+     "table": "airlines",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 9,
+     "bytes": 297,
+     "sha256": "62cdf075f2d848eb067b7c6fcdbb8cfa29422bb835b7424fced42f551d5e7321",
+     "url": "/datasets/python/D13/preview.1/airlines.csv"
+    },
+    {
+     "path": "airports.csv",
+     "table": "airports",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 27,
+     "bytes": 2419,
+     "sha256": "f66559a575546ee5647b32889edebfe6af830858516ef1449b57ff9ba553e25b",
+     "url": "/datasets/python/D13/preview.1/airports.csv"
+    },
+    {
+     "path": "cancellation_reasons.csv",
+     "table": "cancellation_reasons",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 4,
+     "bytes": 65,
+     "sha256": "f0be5d0be646223636feb94713e5193cfc96933d5398d7ef5fc697985fb6ac1c",
+     "url": "/datasets/python/D13/preview.1/cancellation_reasons.csv"
+    }
+   ],
+   "quality": [
+    {
+     "id": "cancelled",
+     "description": "Cancelled flights: no actual times or delays (unknown, not zero)",
+     "count": 4
+    },
+    {
+     "id": "diverted",
+     "description": "Diverted flights: departed but never arrived at the scheduled destination",
+     "count": 0
+    },
+    {
+     "id": "early",
+     "description": "Flights that arrived early (negative arrival delay)",
+     "count": 11
+    },
+    {
+     "id": "overnight",
+     "description": "Flights scheduled to arrive on a later calendar date than they departed",
+     "count": 0
+    },
+    {
+     "id": "no_tail",
+     "description": "Flights with no tail number reported",
+     "count": 0
+    }
+   ],
+   "profile": {
+    "flights": {
+     "flight_id": {
+      "nulls": 0,
+      "distinct": 25,
+      "min": 12207,
+      "max": 12231,
+      "mean": 12219
+     },
+     "flight_date": {
+      "nulls": 0,
+      "distinct": 1,
+      "min": "2025-01-10",
+      "max": "2025-01-10"
+     },
+     "airline_code": {
+      "nulls": 0,
+      "distinct": 9
+     },
+     "flight_number": {
+      "nulls": 0,
+      "distinct": 25,
+      "min": 118,
+      "max": 6329,
+      "mean": 2460.84
+     },
+     "tail_number": {
+      "nulls": 0,
+      "distinct": 25
+     },
+     "origin": {
+      "nulls": 0,
+      "distinct": 19
+     },
+     "destination": {
+      "nulls": 0,
+      "distinct": 13
+     },
+     "scheduled_departure": {
+      "nulls": 0,
+      "distinct": 16,
+      "min": "2025-01-10 00:59",
+      "max": "2025-01-10 05:55"
+     },
+     "actual_departure": {
+      "nulls": 4,
+      "distinct": 19,
+      "min": "2025-01-10 00:55",
+      "max": "2025-01-10 08:19"
+     },
+     "departure_delay": {
+      "nulls": 4,
+      "distinct": 14,
+      "min": -9,
+      "max": 177,
+      "mean": 7.95
+     },
+     "taxi_out_minutes": {
+      "nulls": 4,
+      "distinct": 19,
+      "min": 8,
+      "max": 54,
+      "mean": 26.43
+     },
+     "scheduled_arrival": {
+      "nulls": 0,
+      "distinct": 25,
+      "min": "2025-01-10 05:56",
+      "max": "2025-01-10 13:27"
+     },
+     "actual_arrival": {
+      "nulls": 4,
+      "distinct": 20,
+      "min": "2025-01-10 05:52",
+      "max": "2025-01-10 14:07"
+     },
+     "arrival_delay": {
+      "nulls": 4,
+      "distinct": 18,
+      "min": -49,
+      "max": 167,
+      "mean": 6.38
+     },
+     "air_time_minutes": {
+      "nulls": 4,
+      "distinct": 21,
+      "min": 29,
+      "max": 270,
+      "mean": 112.57
+     },
+     "distance_miles": {
+      "nulls": 0,
+      "distinct": 24,
+      "min": 129,
+      "max": 2079,
+      "mean": 814.96
+     },
+     "cancelled": {
+      "nulls": 0,
+      "distinct": 2,
+      "min": 0,
+      "max": 1,
+      "mean": 0.16
+     },
+     "cancellation_code": {
+      "nulls": 21,
+      "distinct": 1
+     },
+     "diverted": {
+      "nulls": 0,
+      "distinct": 1,
+      "min": 0,
+      "max": 0,
+      "mean": 0
+     },
+     "carrier_delay": {
+      "nulls": 20,
+      "distinct": 3,
+      "min": 0,
+      "max": 167,
+      "mean": 43.6
+     },
+     "weather_delay": {
+      "nulls": 20,
+      "distinct": 2,
+      "min": 0,
+      "max": 2,
+      "mean": 0.4
+     },
+     "nas_delay": {
+      "nulls": 20,
+      "distinct": 5,
+      "min": 0,
+      "max": 40,
+      "mean": 19.2
+     },
+     "security_delay": {
+      "nulls": 20,
+      "distinct": 1,
+      "min": 0,
+      "max": 0,
+      "mean": 0
+     },
+     "late_aircraft_delay": {
+      "nulls": 20,
+      "distinct": 1,
+      "min": 0,
+      "max": 0,
+      "mean": 0
+     }
+    },
+    "airlines": {
+     "airline_code": {
+      "nulls": 0,
+      "distinct": 9
+     },
+     "airline_name": {
+      "nulls": 0,
+      "distinct": 9
+     },
+     "carrier_group": {
+      "nulls": 0,
+      "distinct": 4
+     }
+    },
+    "airports": {
+     "airport_code": {
+      "nulls": 0,
+      "distinct": 27
+     },
+     "airport_name": {
+      "nulls": 0,
+      "distinct": 27
+     },
+     "city": {
+      "nulls": 0,
+      "distinct": 27
+     },
+     "state": {
+      "nulls": 0,
+      "distinct": 20
+     },
+     "state_name": {
+      "nulls": 0,
+      "distinct": 20
+     },
+     "latitude": {
+      "nulls": 0,
+      "distinct": 27,
+      "min": 19.7388,
+      "max": 47.4479,
+      "mean": 35.91
+     },
+     "longitude": {
+      "nulls": 0,
+      "distinct": 27,
+      "min": -157.9257,
+      "max": -71.0079,
+      "mean": -99.05
+     },
+     "elevation_ft": {
+      "nulls": 0,
+      "distinct": 25,
+      "min": 8,
+      "max": 4227,
+      "mean": 665.26
+     }
+    },
+    "cancellation_reasons": {
+     "code": {
+      "nulls": 0,
+      "distinct": 4
+     },
+     "reason": {
+      "nulls": 0,
+      "distinct": 4
+     }
+    }
+   }
+  },
+  "starter": {
+   "ref": "D13@starter.1",
+   "files": [
+    {
+     "path": "flights.csv",
+     "table": "flights",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 1301,
+     "bytes": 168722,
+     "sha256": "9c651a04ae604afff0d0435efcab1ed6105e9b2b8b1e9db85195a75ddfa480cf",
+     "url": "/datasets/python/D13/starter.1/flights.csv"
+    },
+    {
+     "path": "airlines.csv",
+     "table": "airlines",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 14,
+     "bytes": 445,
+     "sha256": "d69897e9d0b944ef2f079ee16e199b68b343d6b4e0790fce2c7bd570260e03f8",
+     "url": "/datasets/python/D13/starter.1/airlines.csv"
+    },
+    {
+     "path": "airports.csv",
+     "table": "airports",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 187,
+     "bytes": 15340,
+     "sha256": "ad47cd1ee920dc3bd87c3da961f724e502679d24fa5c88dd70fa722df6236136",
+     "url": "/datasets/python/D13/starter.1/airports.csv"
+    },
+    {
+     "path": "cancellation_reasons.csv",
+     "table": "cancellation_reasons",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 4,
+     "bytes": 65,
+     "sha256": "f0be5d0be646223636feb94713e5193cfc96933d5398d7ef5fc697985fb6ac1c",
+     "url": "/datasets/python/D13/starter.1/cancellation_reasons.csv"
+    }
+   ],
+   "quality": [
+    {
+     "id": "cancelled",
+     "description": "Cancelled flights: no actual times or delays (unknown, not zero)",
+     "count": 228
+    },
+    {
+     "id": "diverted",
+     "description": "Diverted flights: departed but never arrived at the scheduled destination",
+     "count": 3
+    },
+    {
+     "id": "early",
+     "description": "Flights that arrived early (negative arrival delay)",
+     "count": 568
+    },
+    {
+     "id": "overnight",
+     "description": "Flights scheduled to arrive on a later calendar date than they departed",
+     "count": 22
+    },
+    {
+     "id": "no_tail",
+     "description": "Flights with no tail number reported",
+     "count": 18
+    }
+   ],
+   "profile": {
+    "flights": {
+     "flight_id": {
+      "nulls": 0,
+      "distinct": 1301,
+      "min": 12207,
+      "max": 13507,
+      "mean": 12857
+     },
+     "flight_date": {
+      "nulls": 0,
+      "distinct": 1,
+      "min": "2025-01-10",
+      "max": "2025-01-10"
+     },
+     "airline_code": {
+      "nulls": 0,
+      "distinct": 14
+     },
+     "flight_number": {
+      "nulls": 0,
+      "distinct": 1045,
+      "min": 1,
+      "max": 8817,
+      "mean": 2431.07
+     },
+     "tail_number": {
+      "nulls": 18,
+      "distinct": 348
+     },
+     "origin": {
+      "nulls": 0,
+      "distinct": 177
+     },
+     "destination": {
+      "nulls": 0,
+      "distinct": 177
+     },
+     "scheduled_departure": {
+      "nulls": 0,
+      "distinct": 530,
+      "min": "2025-01-10 00:59",
+      "max": "2025-01-10 23:20"
+     },
+     "actual_departure": {
+      "nulls": 228,
+      "distinct": 674,
+      "min": "2025-01-10 00:55",
+      "max": "2025-01-11 13:38"
+     },
+     "departure_delay": {
+      "nulls": 228,
+      "distinct": 196,
+      "min": -30,
+      "max": 1279,
+      "mean": 28.89
+     },
+     "taxi_out_minutes": {
+      "nulls": 228,
+      "distinct": 84,
+      "min": 4,
+      "max": 165,
+      "mean": 22.31
+     },
+     "scheduled_arrival": {
+      "nulls": 0,
+      "distinct": 702,
+      "min": "2025-01-10 05:56",
+      "max": "2025-01-11 07:47"
+     },
+     "actual_arrival": {
+      "nulls": 231,
+      "distinct": 698,
+      "min": "2025-01-10 05:52",
+      "max": "2025-01-11 15:15"
+     },
+     "arrival_delay": {
+      "nulls": 231,
+      "distinct": 222,
+      "min": -63,
+      "max": 1269,
+      "mean": 26.8
+     },
+     "air_time_minutes": {
+      "nulls": 231,
+      "distinct": 262,
+      "min": 8,
+      "max": 387,
+      "mean": 119.2
+     },
+     "distance_miles": {
+      "nulls": 0,
+      "distinct": 580,
+      "min": 31,
+      "max": 3302,
+      "mean": 828.4
+     },
+     "cancelled": {
+      "nulls": 0,
+      "distinct": 2,
+      "min": 0,
+      "max": 1,
+      "mean": 0.18
+     },
+     "cancellation_code": {
+      "nulls": 1073,
+      "distinct": 2
+     },
+     "diverted": {
+      "nulls": 0,
+      "distinct": 2,
+      "min": 0,
+      "max": 1,
+      "mean": 0
+     },
+     "carrier_delay": {
+      "nulls": 968,
+      "distinct": 84,
+      "min": 0,
+      "max": 881,
+      "mean": 34.8
+     },
+     "weather_delay": {
+      "nulls": 968,
+      "distinct": 61,
+      "min": 0,
+      "max": 770,
+      "mean": 24.09
+     },
+     "nas_delay": {
+      "nulls": 968,
+      "distinct": 73,
+      "min": 0,
+      "max": 607,
+      "mean": 21.31
+     },
+     "security_delay": {
+      "nulls": 968,
+      "distinct": 2,
+      "min": 0,
+      "max": 52,
+      "mean": 0.16
+     },
+     "late_aircraft_delay": {
+      "nulls": 968,
+      "distinct": 85,
+      "min": 0,
+      "max": 1269,
+      "mean": 29.28
+     }
+    },
+    "airlines": {
+     "airline_code": {
+      "nulls": 0,
+      "distinct": 14
+     },
+     "airline_name": {
+      "nulls": 0,
+      "distinct": 14
+     },
+     "carrier_group": {
+      "nulls": 0,
+      "distinct": 4
+     }
+    },
+    "airports": {
+     "airport_code": {
+      "nulls": 0,
+      "distinct": 187
+     },
+     "airport_name": {
+      "nulls": 1,
+      "distinct": 186
+     },
+     "city": {
+      "nulls": 0,
+      "distinct": 180
+     },
+     "state": {
+      "nulls": 0,
+      "distinct": 50
+     },
+     "state_name": {
+      "nulls": 0,
+      "distinct": 50
+     },
+     "latitude": {
+      "nulls": 1,
+      "distinct": 186,
+      "min": 18.3371,
+      "max": 61.179,
+      "mean": 36.69
+     },
+     "longitude": {
+      "nulls": 1,
+      "distinct": 186,
+      "min": -159.3371,
+      "max": -64.9773,
+      "mean": -96.56
+     },
+     "elevation_ft": {
+      "nulls": 1,
+      "distinct": 168,
+      "min": 3,
+      "max": 7820,
+      "mean": 1044.47
+     }
+    },
+    "cancellation_reasons": {
+     "code": {
+      "nulls": 0,
+      "distinct": 4
+     },
+     "reason": {
+      "nulls": 0,
+      "distinct": 4
+     }
+    }
+   }
+  },
+  "standard": {
+   "ref": "D13@standard.1",
+   "files": [
+    {
+     "path": "flights.csv",
+     "table": "flights",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 17661,
+     "bytes": 2368481,
+     "sha256": "3e51657e60374ae40a1636a556cc2be603ee991618c608a2059c1d8a176c5869",
+     "url": "/datasets/python/D13/standard.1/flights.csv"
+    },
+    {
+     "path": "flights.parquet",
+     "table": "flights",
+     "layer": "clean",
+     "format": "parquet",
+     "rows": 17661,
+     "bytes": 519055,
+     "sha256": "72dde0a6a29c9f3b79f2ecbcc20e0887b38e2b71945bbbbbd4acab083f6f5399",
+     "url": "/datasets/python/D13/standard.1/flights.parquet",
+     "from": "3e51657e60374ae40a1636a556cc2be603ee991618c608a2059c1d8a176c5869"
+    },
+    {
+     "path": "airlines.csv",
+     "table": "airlines",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 14,
+     "bytes": 445,
+     "sha256": "d69897e9d0b944ef2f079ee16e199b68b343d6b4e0790fce2c7bd570260e03f8",
+     "url": "/datasets/python/D13/standard.1/airlines.csv"
+    },
+    {
+     "path": "airports.csv",
+     "table": "airports",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 293,
+     "bytes": 23946,
+     "sha256": "e43faa1ec108f26bca3557e044bcca33499e894a841f0d66ab52d325b50b2981",
+     "url": "/datasets/python/D13/standard.1/airports.csv"
+    },
+    {
+     "path": "cancellation_reasons.csv",
+     "table": "cancellation_reasons",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 4,
+     "bytes": 65,
+     "sha256": "f0be5d0be646223636feb94713e5193cfc96933d5398d7ef5fc697985fb6ac1c",
+     "url": "/datasets/python/D13/standard.1/cancellation_reasons.csv"
+    }
+   ],
+   "quality": [
+    {
+     "id": "cancelled",
+     "description": "Cancelled flights: no actual times or delays (unknown, not zero)",
+     "count": 739
+    },
+    {
+     "id": "diverted",
+     "description": "Diverted flights: departed but never arrived at the scheduled destination",
+     "count": 50
+    },
+    {
+     "id": "early",
+     "description": "Flights that arrived early (negative arrival delay)",
+     "count": 11125
+    },
+    {
+     "id": "overnight",
+     "description": "Flights scheduled to arrive on a later calendar date than they departed",
+     "count": 404
+    },
+    {
+     "id": "no_tail",
+     "description": "Flights with no tail number reported",
+     "count": 87
+    }
+   ],
+   "profile": {
+    "flights": {
+     "flight_id": {
+      "nulls": 0,
+      "distinct": 17661,
+      "min": 7109,
+      "max": 24769,
+      "mean": 15939
+     },
+     "flight_date": {
+      "nulls": 0,
+      "distinct": 14,
+      "min": "2025-01-06",
+      "max": "2025-01-19"
+     },
+     "airline_code": {
+      "nulls": 0,
+      "distinct": 14
+     },
+     "flight_number": {
+      "nulls": 0,
+      "distinct": 4992,
+      "min": 1,
+      "max": 8817,
+      "mean": 2420.04
+     },
+     "tail_number": {
+      "nulls": 87,
+      "distinct": 409
+     },
+     "origin": {
+      "nulls": 0,
+      "distinct": 293
+     },
+     "destination": {
+      "nulls": 0,
+      "distinct": 293
+     },
+     "scheduled_departure": {
+      "nulls": 0,
+      "distinct": 7389,
+      "min": "2025-01-06 00:59",
+      "max": "2025-01-19 23:57"
+     },
+     "actual_departure": {
+      "nulls": 739,
+      "distinct": 9847,
+      "min": "2025-01-06 00:49",
+      "max": "2025-01-20 12:41"
+     },
+     "departure_delay": {
+      "nulls": 739,
+      "distinct": 383,
+      "min": -36,
+      "max": 1555,
+      "mean": 11.11
+     },
+     "taxi_out_minutes": {
+      "nulls": 738,
+      "distinct": 122,
+      "min": 2,
+      "max": 175,
+      "mean": 19.37
+     },
+     "scheduled_arrival": {
+      "nulls": 0,
+      "distinct": 9449,
+      "min": "2025-01-06 04:22",
+      "max": "2025-01-20 07:53"
+     },
+     "actual_arrival": {
+      "nulls": 789,
+      "distinct": 10219,
+      "min": "2025-01-06 04:10",
+      "max": "2025-01-20 15:08"
+     },
+     "arrival_delay": {
+      "nulls": 789,
+      "distinct": 422,
+      "min": -87,
+      "max": 1537,
+      "mean": 4.53
+     },
+     "air_time_minutes": {
+      "nulls": 789,
+      "distinct": 398,
+      "min": 8,
+      "max": 600,
+      "mean": 120.49
+     },
+     "distance_miles": {
+      "nulls": 0,
+      "distinct": 1261,
+      "min": 31,
+      "max": 4983,
+      "mean": 867.09
+     },
+     "cancelled": {
+      "nulls": 0,
+      "distinct": 2,
+      "min": 0,
+      "max": 1,
+      "mean": 0.04
+     },
+     "cancellation_code": {
+      "nulls": 16922,
+      "distinct": 3
+     },
+     "diverted": {
+      "nulls": 0,
+      "distinct": 2,
+      "min": 0,
+      "max": 1,
+      "mean": 0
+     },
+     "carrier_delay": {
+      "nulls": 14529,
+      "distinct": 239,
+      "min": 0,
+      "max": 1537,
+      "mean": 28.72
+     },
+     "weather_delay": {
+      "nulls": 14529,
+      "distinct": 143,
+      "min": 0,
+      "max": 873,
+      "mean": 8.7
+     },
+     "nas_delay": {
+      "nulls": 14529,
+      "distinct": 134,
+      "min": 0,
+      "max": 607,
+      "mean": 14.31
+     },
+     "security_delay": {
+      "nulls": 14529,
+      "distinct": 7,
+      "min": 0,
+      "max": 52,
+      "mean": 0.05
+     },
+     "late_aircraft_delay": {
+      "nulls": 14529,
+      "distinct": 223,
+      "min": 0,
+      "max": 1269,
+      "mean": 25.4
+     }
+    },
+    "airlines": {
+     "airline_code": {
+      "nulls": 0,
+      "distinct": 14
+     },
+     "airline_name": {
+      "nulls": 0,
+      "distinct": 14
+     },
+     "carrier_group": {
+      "nulls": 0,
+      "distinct": 4
+     }
+    },
+    "airports": {
+     "airport_code": {
+      "nulls": 0,
+      "distinct": 293
+     },
+     "airport_name": {
+      "nulls": 1,
+      "distinct": 292
+     },
+     "city": {
+      "nulls": 0,
+      "distinct": 282
+     },
+     "state": {
+      "nulls": 0,
+      "distinct": 52
+     },
+     "state_name": {
+      "nulls": 0,
+      "distinct": 52
+     },
+     "latitude": {
+      "nulls": 1,
+      "distinct": 292,
+      "min": -14.331,
+      "max": 71.2854,
+      "mean": 38.37
+     },
+     "longitude": {
+      "nulls": 1,
+      "distinct": 292,
+      "min": -170.71,
+      "max": -64.8026,
+      "mean": -98.32
+     },
+     "elevation_ft": {
+      "nulls": 1,
+      "distinct": 260,
+      "min": 3,
+      "max": 7820,
+      "mean": 1256.57
+     }
+    },
+    "cancellation_reasons": {
+     "code": {
+      "nulls": 0,
+      "distinct": 4
+     },
+     "reason": {
+      "nulls": 0,
+      "distinct": 4
+     }
+    }
+   }
+  },
+  "full": {
+   "ref": "D13@full.1",
+   "files": [
+    {
+     "path": "flights.csv",
+     "table": "flights",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 124460,
+     "bytes": 16844419,
+     "sha256": "e93ae934cc78603859546f6541f48e04b36f5a0df1ae83e4d180835eb1c45efa",
+     "url": "/datasets/python/D13/full.1/flights.csv"
+    },
+    {
+     "path": "flights.parquet",
+     "table": "flights",
+     "layer": "clean",
+     "format": "parquet",
+     "rows": 124460,
+     "bytes": 3604266,
+     "sha256": "0f07b25debc02d3eb76592f58f0e7aad4c85cd6098d28db64aca30556de1feac",
+     "url": "/datasets/python/D13/full.1/flights.parquet",
+     "from": "e93ae934cc78603859546f6541f48e04b36f5a0df1ae83e4d180835eb1c45efa"
+    },
+    {
+     "path": "airlines.csv",
+     "table": "airlines",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 14,
+     "bytes": 445,
+     "sha256": "d69897e9d0b944ef2f079ee16e199b68b343d6b4e0790fce2c7bd570260e03f8",
+     "url": "/datasets/python/D13/full.1/airlines.csv"
+    },
+    {
+     "path": "airports.csv",
+     "table": "airports",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 326,
+     "bytes": 26727,
+     "sha256": "087ece2acbcb5e42d03abadae18694615db7c2be43b8717b6c97c07728f6d3cd",
+     "url": "/datasets/python/D13/full.1/airports.csv"
+    },
+    {
+     "path": "cancellation_reasons.csv",
+     "table": "cancellation_reasons",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 4,
+     "bytes": 65,
+     "sha256": "f0be5d0be646223636feb94713e5193cfc96933d5398d7ef5fc697985fb6ac1c",
+     "url": "/datasets/python/D13/full.1/cancellation_reasons.csv"
+    }
+   ],
+   "quality": [
+    {
+     "id": "cancelled",
+     "description": "Cancelled flights: no actual times or delays (unknown, not zero)",
+     "count": 2409
+    },
+    {
+     "id": "diverted",
+     "description": "Diverted flights: departed but never arrived at the scheduled destination",
+     "count": 337
+    },
+    {
+     "id": "early",
+     "description": "Flights that arrived early (negative arrival delay)",
+     "count": 78803
+    },
+    {
+     "id": "overnight",
+     "description": "Flights scheduled to arrive on a later calendar date than they departed",
+     "count": 3715
+    },
+    {
+     "id": "no_tail",
+     "description": "Flights with no tail number reported",
+     "count": 306
+    }
+   ],
+   "profile": {
+    "flights": {
+     "flight_id": {
+      "nulls": 0,
+      "distinct": 124460,
+      "min": 1,
+      "max": 124460,
+      "mean": 62230.5
+     },
+     "flight_date": {
+      "nulls": 0,
+      "distinct": 90,
+      "min": "2025-01-01",
+      "max": "2025-03-31"
+     },
+     "airline_code": {
+      "nulls": 0,
+      "distinct": 14
+     },
+     "flight_number": {
+      "nulls": 0,
+      "distinct": 6230,
+      "min": 1,
+      "max": 8817,
+      "mean": 2467.37
+     },
+     "tail_number": {
+      "nulls": 306,
+      "distinct": 434
+     },
+     "origin": {
+      "nulls": 0,
+      "distinct": 325
+     },
+     "destination": {
+      "nulls": 0,
+      "distinct": 326
+     },
+     "scheduled_departure": {
+      "nulls": 0,
+      "distinct": 50584,
+      "min": "2025-01-01 00:25",
+      "max": "2025-03-31 23:59"
+     },
+     "actual_departure": {
+      "nulls": 2409,
+      "distinct": 68841,
+      "min": "2025-01-01 00:37",
+      "max": "2025-04-01 11:09"
+     },
+     "departure_delay": {
+      "nulls": 2409,
+      "distinct": 686,
+      "min": -52,
+      "max": 3403,
+      "mean": 10.79
+     },
+     "taxi_out_minutes": {
+      "nulls": 2396,
+      "distinct": 156,
+      "min": 1,
+      "max": 175,
+      "mean": 18.63
+     },
+     "scheduled_arrival": {
+      "nulls": 0,
+      "distinct": 64085,
+      "min": "2025-01-01 05:16",
+      "max": "2025-04-01 09:30"
+     },
+     "actual_arrival": {
+      "nulls": 2746,
+      "distinct": 70436,
+      "min": "2025-01-01 04:44",
+      "max": "2025-04-01 14:00"
+     },
+     "arrival_delay": {
+      "nulls": 2746,
+      "distinct": 716,
+      "min": -87,
+      "max": 3407,
+      "mean": 4.76
+     },
+     "air_time_minutes": {
+      "nulls": 2746,
+      "distinct": 542,
+      "min": 8,
+      "max": 679,
+      "mean": 121.31
+     },
+     "distance_miles": {
+      "nulls": 0,
+      "distinct": 1459,
+      "min": 31,
+      "max": 5095,
+      "mean": 872.28
+     },
+     "cancelled": {
+      "nulls": 0,
+      "distinct": 2,
+      "min": 0,
+      "max": 1,
+      "mean": 0.02
+     },
+     "cancellation_code": {
+      "nulls": 122051,
+      "distinct": 3
+     },
+     "diverted": {
+      "nulls": 0,
+      "distinct": 2,
+      "min": 0,
+      "max": 1,
+      "mean": 0
+     },
+     "carrier_delay": {
+      "nulls": 100896,
+      "distinct": 475,
+      "min": 0,
+      "max": 3403,
+      "mean": 24.72
+     },
+     "weather_delay": {
+      "nulls": 100896,
+      "distinct": 310,
+      "min": 0,
+      "max": 1188,
+      "mean": 5.77
+     },
+     "nas_delay": {
+      "nulls": 100896,
+      "distinct": 276,
+      "min": 0,
+      "max": 1009,
+      "mean": 15.4
+     },
+     "security_delay": {
+      "nulls": 100896,
+      "distinct": 36,
+      "min": 0,
+      "max": 512,
+      "mean": 0.08
+     },
+     "late_aircraft_delay": {
+      "nulls": 100896,
+      "distinct": 420,
+      "min": 0,
+      "max": 1289,
+      "mean": 26.07
+     }
+    },
+    "airlines": {
+     "airline_code": {
+      "nulls": 0,
+      "distinct": 14
+     },
+     "airline_name": {
+      "nulls": 0,
+      "distinct": 14
+     },
+     "carrier_group": {
+      "nulls": 0,
+      "distinct": 4
+     }
+    },
+    "airports": {
+     "airport_code": {
+      "nulls": 0,
+      "distinct": 326
+     },
+     "airport_name": {
+      "nulls": 1,
+      "distinct": 325
+     },
+     "city": {
+      "nulls": 0,
+      "distinct": 314
+     },
+     "state": {
+      "nulls": 0,
+      "distinct": 52
+     },
+     "state_name": {
+      "nulls": 0,
+      "distinct": 52
+     },
+     "latitude": {
+      "nulls": 1,
+      "distinct": 325,
+      "min": -14.331,
+      "max": 71.2854,
+      "mean": 38.57
+     },
+     "longitude": {
+      "nulls": 1,
+      "distinct": 325,
+      "min": -176.6428,
+      "max": 144.7973,
+      "mean": -97.3
+     },
+     "elevation_ft": {
+      "nulls": 1,
+      "distinct": 289,
+      "min": 3,
+      "max": 7820,
+      "mean": 1267.56
+     }
+    },
+    "cancellation_reasons": {
+     "code": {
+      "nulls": 0,
+      "distinct": 4
+     },
+     "reason": {
+      "nulls": 0,
+      "distinct": 4
+     }
+    }
+   }
+  }
+ }
+}

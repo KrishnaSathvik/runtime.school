@@ -1,0 +1,30 @@
+// @vitest-environment jsdom
+import { afterEach, expect, it, vi } from "vitest";
+import { act, createElement } from "react";
+import { createRoot, type Root } from "react-dom/client";
+import { TaskCell } from "@/features/rt/Cells";
+import type { ExecuteResponse } from "@/engine/sql-client";
+const hooks = vi.hoisted(() => ({ onRun: undefined as undefined | (() => void), onCheck: undefined as undefined | (() => void), execute: vi.fn() }));
+vi.mock("@/features/rt/Editor", () => ({ Editor: (props: typeof hooks) => { hooks.onRun = props.onRun; hooks.onCheck = props.onCheck; return null; } }));
+vi.mock("@/engine/sql-client", async (original) => ({ ...await original<typeof import("@/engine/sql-client")>(), executeSql: hooks.execute, isEngineBootError: () => false }));
+vi.mock("@/lib/analytics", () => ({ track: vi.fn(), errorKind: () => "error" }));
+let root: Root;
+let host: HTMLDivElement;
+afterEach(async () => { await act(async () => root.unmount()); host.remove(); hooks.execute.mockReset(); });
+it("ignores repeated keyboard commands while busy and recovers a superseded check without credit", async () => {
+  (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+  let settle!: (r: ExecuteResponse) => void;
+  hooks.execute.mockImplementation(() => new Promise<ExecuteResponse>(resolve => { settle = resolve; }));
+  const graded = vi.fn();
+  host = document.createElement("div"); document.body.append(host);
+  await act(async () => { root = createRoot(host); root.render(createElement(TaskCell, { name: "query", value: "select 1", onChange: vi.fn(), task: { seedSql: "", answer: "select 1" }, onGraded: graded })); });
+  await act(async () => { hooks.onCheck!(); hooks.onRun!(); hooks.onCheck!(); });
+  expect(hooks.execute).toHaveBeenCalledTimes(1);
+  await act(async () => { settle({ superseded: true }); });
+  expect(host.textContent).toMatch(/another query.*stopped/i);
+  expect(graded).not.toHaveBeenCalled();
+  expect([...host.querySelectorAll("button")].filter(b => /^(Run|Check)$/.test(b.textContent!.trim())).every(b => !b.disabled)).toBe(true);
+  await act(async () => { hooks.onRun!(); });
+  expect(hooks.execute).toHaveBeenCalledTimes(2);
+  await act(async () => { settle({ superseded: true }); });
+});

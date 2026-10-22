@@ -1,0 +1,645 @@
+{
+ "id": "D03",
+ "title": "CFPB Consumer Complaints",
+ "version": 1,
+ "seed": null,
+ "description": "Real complaints people sent the U.S. Consumer Financial Protection Bureau in 2024 about credit reports, debt collection, cards, bank accounts and loans: the product, issue, company, state and how the company responded.",
+ "licence": {
+  "name": "U.S. government work (public domain)",
+  "status": "cleared"
+ },
+ "window": [
+  "2024-01-15",
+  "2024-12-15"
+ ],
+ "generator": "datasets/python/D03/dataset.mjs from datasets/python/D03/extract",
+ "source": "CFPB Consumer Complaint Database search API, first 600 complaints received on the 15th of each month of 2024 (datasets/python/D03/source.json)",
+ "attribution": "Source: Consumer Financial Protection Bureau, Consumer Complaint Database. Complaints are not verified by the CFPB.",
+ "tables": {
+  "complaints": {
+   "description": "One complaint, as the CFPB published it. Most are about credit reports, as in the full database.",
+   "primaryKey": [
+    "complaint_id"
+   ],
+   "foreignKeys": [],
+   "columns": [
+    {
+     "name": "complaint_id",
+     "type": "integer",
+     "description": "CFPB complaint ID",
+     "nullable": false
+    },
+    {
+     "name": "date_received",
+     "type": "timestamp",
+     "description": "When the CFPB received it (date and time as text, UTC)",
+     "nullable": false
+    },
+    {
+     "name": "product",
+     "type": "text",
+     "description": "Financial product",
+     "nullable": false
+    },
+    {
+     "name": "sub_product",
+     "type": "text",
+     "description": "More specific product",
+     "nullable": true
+    },
+    {
+     "name": "issue",
+     "type": "text",
+     "description": "What went wrong",
+     "nullable": false
+    },
+    {
+     "name": "sub_issue",
+     "type": "text",
+     "description": "More specific issue",
+     "nullable": true
+    },
+    {
+     "name": "company",
+     "type": "text",
+     "description": "Company the complaint is about",
+     "nullable": false
+    },
+    {
+     "name": "state",
+     "type": "text",
+     "description": "Consumer’s state",
+     "nullable": true
+    },
+    {
+     "name": "zip_code",
+     "type": "text",
+     "description": "Consumer’s ZIP code; partly masked for small areas",
+     "nullable": true
+    },
+    {
+     "name": "tags",
+     "type": "text",
+     "description": "Older American and/or Servicemember",
+     "nullable": true
+    },
+    {
+     "name": "submitted_via",
+     "type": "text",
+     "description": "Web, Phone, Referral, …",
+     "nullable": false
+    },
+    {
+     "name": "date_sent_to_company",
+     "type": "timestamp",
+     "description": "When the CFPB sent it to the company (date and time as text, UTC)",
+     "nullable": false
+    },
+    {
+     "name": "company_response",
+     "type": "text",
+     "description": "How the company closed it",
+     "nullable": false
+    },
+    {
+     "name": "company_public_response",
+     "type": "text",
+     "description": "Company’s optional public statement",
+     "nullable": true
+    },
+    {
+     "name": "timely",
+     "type": "text",
+     "description": "Yes if the company responded within 15 days",
+     "nullable": false
+    }
+   ]
+  }
+ },
+ "editions": {
+  "preview": {
+   "ref": "D03@preview.1",
+   "files": [
+    {
+     "path": "complaints.csv",
+     "table": "complaints",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 25,
+     "bytes": 8607,
+     "sha256": "7777f335ffc2f0ed4a77fce1abd32b26b788af524f28d8ffc9e0d6446afef8ff",
+     "url": "/datasets/python/D03/preview.1/complaints.csv"
+    },
+    {
+     "path": "complaints.jsonl",
+     "table": "complaints",
+     "layer": "clean",
+     "format": "jsonl",
+     "rows": 25,
+     "bytes": 14369,
+     "sha256": "77d9db2822c7b9d9cf8d726bbf0ea3da9e777275951c214797d62b32fc661d7e",
+     "url": "/datasets/python/D03/preview.1/complaints.jsonl"
+    },
+    {
+     "path": "api/complaints-2024-01-15.json",
+     "table": "complaints",
+     "layer": "clean",
+     "format": "json",
+     "rows": 25,
+     "bytes": 16300,
+     "sha256": "3f70e09e9d7e0deb95d19bca32ffa52ed73d456117829bffea12c02f23f00d2d",
+     "url": "/datasets/python/D03/preview.1/api/complaints-2024-01-15.json"
+    }
+   ],
+   "quality": [
+    {
+     "id": "masked_zip",
+     "description": "ZIP codes partly masked for privacy (e.g. \"891XX\")",
+     "count": 2
+    },
+    {
+     "id": "missing_state",
+     "description": "Complaints with no state",
+     "count": 0
+    },
+    {
+     "id": "missing_sub_issue",
+     "description": "Complaints with no sub-issue",
+     "count": 0
+    },
+    {
+     "id": "multi_tags",
+     "description": "Several tags in one text field (\"Older American, Servicemember\")",
+     "count": 0
+    },
+    {
+     "id": "untimely",
+     "description": "Company did not respond in time (timely = \"No\")",
+     "count": 0
+    },
+    {
+     "id": "iso_dates",
+     "description": "Dates as ISO 8601 text with a Z (UTC) suffix and milliseconds",
+     "count": 25
+    }
+   ],
+   "profile": {
+    "complaints": {
+     "complaint_id": {
+      "nulls": 0,
+      "distinct": 25,
+      "min": 8160315,
+      "max": 8187744,
+      "mean": 8179032.6
+     },
+     "date_received": {
+      "nulls": 0,
+      "distinct": 22,
+      "min": "2024-01-15T00:01:21.000Z",
+      "max": "2024-01-15T00:26:59.000Z"
+     },
+     "product": {
+      "nulls": 0,
+      "distinct": 4
+     },
+     "sub_product": {
+      "nulls": 0,
+      "distinct": 5
+     },
+     "issue": {
+      "nulls": 0,
+      "distinct": 7
+     },
+     "sub_issue": {
+      "nulls": 0,
+      "distinct": 10
+     },
+     "company": {
+      "nulls": 0,
+      "distinct": 8
+     },
+     "state": {
+      "nulls": 0,
+      "distinct": 11
+     },
+     "zip_code": {
+      "nulls": 0,
+      "distinct": 15
+     },
+     "tags": {
+      "nulls": 24,
+      "distinct": 1
+     },
+     "submitted_via": {
+      "nulls": 0,
+      "distinct": 1
+     },
+     "date_sent_to_company": {
+      "nulls": 0,
+      "distinct": 23,
+      "min": "2024-01-15T00:01:26.000Z",
+      "max": "2024-01-17T18:18:22.000Z"
+     },
+     "company_response": {
+      "nulls": 0,
+      "distinct": 3
+     },
+     "company_public_response": {
+      "nulls": 9,
+      "distinct": 1
+     },
+     "timely": {
+      "nulls": 0,
+      "distinct": 1
+     }
+    }
+   }
+  },
+  "starter": {
+   "ref": "D03@starter.1",
+   "files": [
+    {
+     "path": "complaints.csv",
+     "table": "complaints",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 600,
+     "bytes": 203014,
+     "sha256": "5bc1981d3930dc1c4718f41cbe48e45199ee289db9289257ef1af1271908067e",
+     "url": "/datasets/python/D03/starter.1/complaints.csv"
+    },
+    {
+     "path": "complaints.jsonl",
+     "table": "complaints",
+     "layer": "clean",
+     "format": "jsonl",
+     "rows": 600,
+     "bytes": 345290,
+     "sha256": "46117873e10b9d5ab381b37d802bba134243ebae5db433405407f2456416cdee",
+     "url": "/datasets/python/D03/starter.1/complaints.jsonl"
+    },
+    {
+     "path": "api/complaints-2024-01-15.json",
+     "table": "complaints",
+     "layer": "clean",
+     "format": "json",
+     "rows": 600,
+     "bytes": 389196,
+     "sha256": "c7496d1f45e15261d3c1c94b82ba471080231af6f0abcd8abdaa7ece7494a618",
+     "url": "/datasets/python/D03/starter.1/api/complaints-2024-01-15.json"
+    }
+   ],
+   "quality": [
+    {
+     "id": "masked_zip",
+     "description": "ZIP codes partly masked for privacy (e.g. \"891XX\")",
+     "count": 56
+    },
+    {
+     "id": "missing_state",
+     "description": "Complaints with no state",
+     "count": 0
+    },
+    {
+     "id": "missing_sub_issue",
+     "description": "Complaints with no sub-issue",
+     "count": 6
+    },
+    {
+     "id": "multi_tags",
+     "description": "Several tags in one text field (\"Older American, Servicemember\")",
+     "count": 1
+    },
+    {
+     "id": "untimely",
+     "description": "Company did not respond in time (timely = \"No\")",
+     "count": 1
+    },
+    {
+     "id": "iso_dates",
+     "description": "Dates as ISO 8601 text with a Z (UTC) suffix and milliseconds",
+     "count": 600
+    }
+   ],
+   "profile": {
+    "complaints": {
+     "complaint_id": {
+      "nulls": 0,
+      "distinct": 600,
+      "min": 8156301,
+      "max": 8400947,
+      "mean": 8166858.91
+     },
+     "date_received": {
+      "nulls": 0,
+      "distinct": 488,
+      "min": "2024-01-15T00:01:21.000Z",
+      "max": "2024-01-15T06:18:24.000Z"
+     },
+     "product": {
+      "nulls": 0,
+      "distinct": 8
+     },
+     "sub_product": {
+      "nulls": 0,
+      "distinct": 19
+     },
+     "issue": {
+      "nulls": 0,
+      "distinct": 24
+     },
+     "sub_issue": {
+      "nulls": 6,
+      "distinct": 40
+     },
+     "company": {
+      "nulls": 0,
+      "distinct": 59
+     },
+     "state": {
+      "nulls": 0,
+      "distinct": 34
+     },
+     "zip_code": {
+      "nulls": 0,
+      "distinct": 246
+     },
+     "tags": {
+      "nulls": 577,
+      "distinct": 2
+     },
+     "submitted_via": {
+      "nulls": 0,
+      "distinct": 1
+     },
+     "date_sent_to_company": {
+      "nulls": 0,
+      "distinct": 495,
+      "min": "2024-01-15T00:01:26.000Z",
+      "max": "2024-01-23T18:45:18.000Z"
+     },
+     "company_response": {
+      "nulls": 0,
+      "distinct": 3
+     },
+     "company_public_response": {
+      "nulls": 243,
+      "distinct": 3
+     },
+     "timely": {
+      "nulls": 0,
+      "distinct": 2
+     }
+    }
+   }
+  },
+  "standard": {
+   "ref": "D03@standard.1",
+   "files": [
+    {
+     "path": "complaints.csv",
+     "table": "complaints",
+     "layer": "clean",
+     "format": "csv",
+     "rows": 7200,
+     "bytes": 2435772,
+     "sha256": "fc5f7f61c4db3b93f35fe52b25df021fb91f7f4788dd686fc1a031fd21743f0f",
+     "url": "/datasets/python/D03/standard.1/complaints.csv"
+    },
+    {
+     "path": "complaints.jsonl",
+     "table": "complaints",
+     "layer": "clean",
+     "format": "jsonl",
+     "rows": 7200,
+     "bytes": 4145004,
+     "sha256": "ff90a0b36f83385fea4593c1d74919ef915370f24251356f216ef03a4f12128e",
+     "url": "/datasets/python/D03/standard.1/complaints.jsonl"
+    },
+    {
+     "path": "api/complaints-2024-01-15.json",
+     "table": "complaints",
+     "layer": "clean",
+     "format": "json",
+     "rows": 600,
+     "bytes": 389196,
+     "sha256": "c7496d1f45e15261d3c1c94b82ba471080231af6f0abcd8abdaa7ece7494a618",
+     "url": "/datasets/python/D03/standard.1/api/complaints-2024-01-15.json"
+    },
+    {
+     "path": "api/complaints-2024-02-15.json",
+     "table": "complaints",
+     "layer": "clean",
+     "format": "json",
+     "rows": 600,
+     "bytes": 388917,
+     "sha256": "45fffe23a7b838c58394edddba3710ccdeac45ae7deecc2c5196a42eb67b55b8",
+     "url": "/datasets/python/D03/standard.1/api/complaints-2024-02-15.json"
+    },
+    {
+     "path": "api/complaints-2024-03-15.json",
+     "table": "complaints",
+     "layer": "clean",
+     "format": "json",
+     "rows": 600,
+     "bytes": 385318,
+     "sha256": "47160bce148286ad8d5278b102ba1f23cb8054f9517fbb1b72675f73fad573db",
+     "url": "/datasets/python/D03/standard.1/api/complaints-2024-03-15.json"
+    },
+    {
+     "path": "api/complaints-2024-04-15.json",
+     "table": "complaints",
+     "layer": "clean",
+     "format": "json",
+     "rows": 600,
+     "bytes": 388661,
+     "sha256": "04d80533967a85f7cd5d6ac4ad1ef9e82ae2503fd2e202bcc37b6381edde4cbf",
+     "url": "/datasets/python/D03/standard.1/api/complaints-2024-04-15.json"
+    },
+    {
+     "path": "api/complaints-2024-05-15.json",
+     "table": "complaints",
+     "layer": "clean",
+     "format": "json",
+     "rows": 600,
+     "bytes": 391451,
+     "sha256": "4edb8d88a617d13416cfd06bdbfdae8975605d5402d8ceedd3e2a559c275e44c",
+     "url": "/datasets/python/D03/standard.1/api/complaints-2024-05-15.json"
+    },
+    {
+     "path": "api/complaints-2024-06-15.json",
+     "table": "complaints",
+     "layer": "clean",
+     "format": "json",
+     "rows": 600,
+     "bytes": 390551,
+     "sha256": "fcc0885e71ee666497404edebe1a6b5d8b259f3e797fd67fa96a779b2f1391ac",
+     "url": "/datasets/python/D03/standard.1/api/complaints-2024-06-15.json"
+    },
+    {
+     "path": "api/complaints-2024-07-15.json",
+     "table": "complaints",
+     "layer": "clean",
+     "format": "json",
+     "rows": 600,
+     "bytes": 393041,
+     "sha256": "db9cdf6372fab861408ffc393b433516e9b459513ce17006bbfa55c2c63107e5",
+     "url": "/datasets/python/D03/standard.1/api/complaints-2024-07-15.json"
+    },
+    {
+     "path": "api/complaints-2024-08-15.json",
+     "table": "complaints",
+     "layer": "clean",
+     "format": "json",
+     "rows": 600,
+     "bytes": 388954,
+     "sha256": "74510502be14c88162a1bd5c5d0887358258bd3c5c026f6fdafb8f2c60276837",
+     "url": "/datasets/python/D03/standard.1/api/complaints-2024-08-15.json"
+    },
+    {
+     "path": "api/complaints-2024-09-15.json",
+     "table": "complaints",
+     "layer": "clean",
+     "format": "json",
+     "rows": 600,
+     "bytes": 390711,
+     "sha256": "703a2cc47578f249cd97ccb38e7988493cb95da66033240d2b5a6ce562e77b86",
+     "url": "/datasets/python/D03/standard.1/api/complaints-2024-09-15.json"
+    },
+    {
+     "path": "api/complaints-2024-10-15.json",
+     "table": "complaints",
+     "layer": "clean",
+     "format": "json",
+     "rows": 600,
+     "bytes": 387619,
+     "sha256": "2fbbaf3e62f0e6b41c6654224da6891343bf059fc889c1c4a44b7325bf9b72cb",
+     "url": "/datasets/python/D03/standard.1/api/complaints-2024-10-15.json"
+    },
+    {
+     "path": "api/complaints-2024-11-15.json",
+     "table": "complaints",
+     "layer": "clean",
+     "format": "json",
+     "rows": 600,
+     "bytes": 393459,
+     "sha256": "3c62cd72af913eb6e095442789d81a7f1d6c28c465796e07cb721f4fd8ca35cd",
+     "url": "/datasets/python/D03/standard.1/api/complaints-2024-11-15.json"
+    },
+    {
+     "path": "api/complaints-2024-12-15.json",
+     "table": "complaints",
+     "layer": "clean",
+     "format": "json",
+     "rows": 600,
+     "bytes": 386401,
+     "sha256": "38d603454fe697877572a81133863d188dc393384055a16c1e8c52c2c6408026",
+     "url": "/datasets/python/D03/standard.1/api/complaints-2024-12-15.json"
+    }
+   ],
+   "quality": [
+    {
+     "id": "masked_zip",
+     "description": "ZIP codes partly masked for privacy (e.g. \"891XX\")",
+     "count": 491
+    },
+    {
+     "id": "missing_state",
+     "description": "Complaints with no state",
+     "count": 11
+    },
+    {
+     "id": "missing_sub_issue",
+     "description": "Complaints with no sub-issue",
+     "count": 87
+    },
+    {
+     "id": "multi_tags",
+     "description": "Several tags in one text field (\"Older American, Servicemember\")",
+     "count": 16
+    },
+    {
+     "id": "untimely",
+     "description": "Company did not respond in time (timely = \"No\")",
+     "count": 20
+    },
+    {
+     "id": "iso_dates",
+     "description": "Dates as ISO 8601 text with a Z (UTC) suffix and milliseconds",
+     "count": 7200
+    }
+   ],
+   "profile": {
+    "complaints": {
+     "complaint_id": {
+      "nulls": 0,
+      "distinct": 7200,
+      "min": 8156301,
+      "max": 11169968,
+      "mean": 9493640.16
+     },
+     "date_received": {
+      "nulls": 0,
+      "distinct": 5894,
+      "min": "2024-01-15T00:01:21.000Z",
+      "max": "2024-12-15T02:36:17.000Z"
+     },
+     "product": {
+      "nulls": 0,
+      "distinct": 11
+     },
+     "sub_product": {
+      "nulls": 0,
+      "distinct": 41
+     },
+     "issue": {
+      "nulls": 0,
+      "distinct": 59
+     },
+     "sub_issue": {
+      "nulls": 87,
+      "distinct": 134
+     },
+     "company": {
+      "nulls": 0,
+      "distinct": 299
+     },
+     "state": {
+      "nulls": 11,
+      "distinct": 51
+     },
+     "zip_code": {
+      "nulls": 0,
+      "distinct": 2238
+     },
+     "tags": {
+      "nulls": 6942,
+      "distinct": 3
+     },
+     "submitted_via": {
+      "nulls": 0,
+      "distinct": 3
+     },
+     "date_sent_to_company": {
+      "nulls": 0,
+      "distinct": 5998,
+      "min": "2024-01-15T00:01:26.000Z",
+      "max": "2024-12-23T19:08:03.000Z"
+     },
+     "company_response": {
+      "nulls": 0,
+      "distinct": 4
+     },
+     "company_public_response": {
+      "nulls": 2783,
+      "distinct": 7
+     },
+     "timely": {
+      "nulls": 0,
+      "distinct": 2
+     }
+    }
+   }
+  }
+ }
+}

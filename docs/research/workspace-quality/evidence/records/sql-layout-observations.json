@@ -1,0 +1,351 @@
+[
+  {
+    "case": "sql lesson check",
+    "text": "All lessons\n01 / 88\nPrev\nNext\n\nlesson 01 SQL foundations · beginner\n\nMeet your first SELECT\n\nChoose columns and read rows from a table.\n\nTHE IDEA\n\nA table is a set of rows with named columns. SELECT lists the columns you want; FROM names the table that holds them. In Retail, every row of customers is one identified wholesale customer and every row of products is one stock code. A query reads rows; it never changes them. Worked steps sometimes end with LIMIT so you only preview a few rows. LIMIT is not part of the pattern, and nothing grades it until its own lesson.\n\nDATASET: RETAIL\n\ncustomers\n4 columns · 848 rows\nproducts\n6 columns · 5,304 rows\n\nWORKED EXAMPLE\n\nThe step marked “the pattern” is what the challenges build on. Running examples doesn’t count toward progress.\n\n1\n\nSee a few customers. Run this first. Each row is one customer. LIMIT 10 only shortens the preview; the challenges ask for every row.\n\nstep-1.sql\nRun\nsql›\nSELECT *\nFROM customers\nLIMIT 10;\n2\n\nKeep only the columns you need. Same customers, but SELECT now lists just two columns—the ones you ask for.the pattern\n\nexample.sql\nRun\nsql›\nSELECT customer_id, first_order_at\nFROM customers;\n\nCOMMON MISTAKE\n\nSELECT * returns every column, including ones the task did not ask for. A checked answer must return exactly the requested columns, in the requested order.\n\nChallenge 1\n(done)\nChallenge 2\nConcept check\n\nCHALLENGE 1\n\n✓ solved without help\n\nFind every customer.\n\nReturn customer_id and country.\n\nchallenge-1.sql\n⌘\n↵\nrun\n⇧\n⌘\n↵\ncheck\n1\nSELECT customer_id, country FROM customers;\n \nHint\nAnswer\nRun\nCheck\n\n✓ all checks passed\n\n✓\nPassed:\nRuns without an error\n✓\nPassed:\nReturns columns customer_id, country\n✓\nPassed:\nReturns 200 rows\n✓\nPassed:\nValues match\n✓\nPassed:\nStill correct on different data\n848 rows · 2 columns\nHide\nClose\nSELECT customer_id, country FROM customers;\n#\tcustomer_id\tcountry\n1\t12389\tAustralia\n2\t12392\tAustralia\n3\t12416\tAustralia\n4\t12373\tAustria\n5\t12374\tAustria\n6\t12817\tAustria\n7\t12865\tAustria\n8\t12353\tBahrain\n9\t12431\tBelgium\n10\t12447\tBelgium\nshowing 10 of 848 rows\nShow first 200\nTo master this lesson, solve both challenges without hints and pass the concept check. 2 of 3 to go."
+  },
+  {
+    "case": "sql competing cells",
+    "text": "OM names the table that holds them. In Retail, every row of customers is one identified wholesale customer and every row of products is one stock code. A query reads rows; it never changes them. Worked steps sometimes end with LIMIT so you only preview a few rows. LIMIT is not part of the pattern, and nothing grades it until its own lesson.\n\nDATASET: RETAIL\n\ncustomers\n4 columns · 848 rows\nproducts\n6 columns · 5,304 rows\n\nWORKED EXAMPLE\n\nThe step marked “the pattern” is what the challenges build on. Running examples doesn’t count toward progress.\n\n1\n\nSee a few customers. Run this first. Each row is one customer. LIMIT 10 only shortens the preview; the challenges ask for every row.\n\nstep-1.sql\nHide\nRun again\nsql›\nSELECT *\nFROM customers\nLIMIT 10;\n10 rows · 4 columns\nClose\nSELECT * FROM customers LIMIT 10;\n#\tcustomer_id\tcountry\tregion\tfirst_order_at\n1\t12347\tIceland\tEurope\t2010-10-31 14:20:00\n2\t12353\tBahrain\tRest of World\t2010-10-27 12:44:00\n3\t12359\tCyprus\tEurope\t2009-12-05 13:32:00\n4\t12373\tAustria\tEurope\t2010-02-04 12:08:00\n5\t12374\tAustria\tEurope\t2010-04-30 14:01:00\n6\t12384\tSwitzerland\tEurope\t2011-08-10 11:23:00\n7\t12389\tAustralia\tRest of World\t2010-02-22 10:15:00\n8\t12392\tAustralia\tRest of World\t2010-04-27 14:04:00\n9\t12404\tFinland\tEurope\t2010-01-26 16:25:00\n10\t12416\tAustralia\tRest of World\t2010-02-21 10:19:00\n2\n\nKeep only the columns you need. Same customers, but SELECT now lists just two columns—the ones you ask for.the pattern\n\nexample.sql\nRun\nsql›\nSELECT customer_id, first_order_at\nFROM customers;\n\nCOMMON MISTAKE\n\nSELECT * returns every column, including ones the task did not ask for. A checked answer must return exactly the requested columns, in the requested order.\n\nChallenge 1\n(done)\nChallenge 2\nConcept check\n\nCHALLENGE 1\n\n✓ solved without help\n\nFind every customer.\n\nReturn customer_id and country.\n\nchallenge-1.sql\n⌘\n↵\nrun\n⇧\n⌘\n↵\ncheck\n1\nWITH RECURSIVE n(x) AS (VALUES(1) UNION ALL SELECT x+1 FROM n) SELECT sum(x) FROM n;\nedited since the last run\nHint\nAnswer\nRun\nCheck\n\n✓ all checks passed\n\n✓\nPassed:\nRuns without an error\n✓\nPassed:\nReturns columns customer_id, country\n✓\nPassed:\nReturns 200 rows\n✓\nPassed:\nValues match\n✓\nPassed:\nStill correct on different data\n848 rows · 2 columns\nHide\nClose\nSELECT customer_id, country FROM customers;\n#\tcustomer_id\tcountry\n1\t12389\tAustralia\n2\t12392\tAustralia\n3\t12416\tAustralia\n4\t12373\tAustria\n5\t12374\tAustria\n6\t12817\tAustria\n7\t12865\tAustria\n8\t12353\tBahrain\n9\t12431\tBelgium\n10\t12447\tBelgium\nshowing 10 of 848 rows\nShow first 200\nTo master this lesson, solve both challenges without hints and pass the concept check. 2 of 3 to go.",
+    "buttons": [
+      " All lessons",
+      " Hide",
+      " Run again",
+      " Close",
+      " Run",
+      " Challenge 1 (done)",
+      " Challenge 2",
+      " Concept check",
+      " Hint",
+      " Answer",
+      " Run",
+      " Check",
+      "Hide",
+      " Close",
+      "Show first 200"
+    ]
+  },
+  {
+    "case": "sql project start",
+    "text": "All projects\nRetail Performance Review\n\nJunior Business Analyst · Retail\n\n1\n2\n3\n4\n5\n6\n7\n8\nUnderstand the Retail invoices\n\nFollow one invoice from orders to its lines in order_items and its products. Which columns identify a sale versus a cancellation, and which rows have no customer?\n\nRetail · 5 related tables\n\nTABLES\n\ncategories\n17 rows · 3 columns\nproducts\n5,304 rows · 6 columns\ncustomers\n848 rows · 4 columns\norders\n6,722 rows · 6 columns\norder_items\n125,613 rows · 7 columns\n\nRELATIONSHIPS\n\nHow to join these tables. Left column matches the right column.\n\nproducts.category_id → \njoins to\ncategories.category_id\norders.customer_id → \njoins to\ncustomers.customer_id\norder_items.order_id → \njoins to\norders.order_id\norder_items.stock_code → \njoins to\nproducts.stock_code\nBefore you analyze\norders has one row per invoice header; order_type is 'sale' or 'cancellation'. order_items has one row per invoice line and joins to orders on order_id.\nLine value is quantity × unit_price: cancellation lines are negative, and a few lines on sale invoices are negative adjustments too. customer_id is NULL on anonymous invoices. products.category_id links to categories, which groups products into departments; some products have no category.\nThe data ends on 9 December 2011, so December 2011 is incomplete.\nContinue to analysis →",
+    "buttons": [
+      "All projects",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "Preview 12 rows",
+      "Preview 12 rows",
+      "Preview 12 rows",
+      "Preview 12 rows",
+      "Preview 12 rows",
+      "Continue to analysis →"
+    ]
+  },
+  {
+    "case": "geometry",
+    "path": "/sql/lesson/meet-your-first-select",
+    "width": 1440,
+    "geometry": {
+      "pageWidth": 1440,
+      "view": 1440,
+      "editors": [
+        {
+          "x": 749,
+          "y": 355.453125,
+          "w": 662,
+          "h": 392.546875
+        }
+      ],
+      "separators": 0
+    }
+  },
+  {
+    "case": "geometry",
+    "path": "/sql/lesson/meet-your-first-select",
+    "width": 768,
+    "geometry": {
+      "pageWidth": 768,
+      "view": 768,
+      "editors": [
+        {
+          "x": 20.1875,
+          "y": 1608.390625,
+          "w": 727.625,
+          "h": 340
+        }
+      ],
+      "separators": 0
+    }
+  },
+  {
+    "case": "geometry",
+    "path": "/sql/lesson/meet-your-first-select",
+    "width": 390,
+    "geometry": {
+      "pageWidth": 390,
+      "view": 390,
+      "editors": [
+        {
+          "x": 9,
+          "y": 1785.09375,
+          "w": 372,
+          "h": 340
+        }
+      ],
+      "separators": 0
+    }
+  },
+  {
+    "case": "geometry",
+    "path": "/sql/practice/customer-list",
+    "width": 1440,
+    "geometry": {
+      "pageWidth": 1440,
+      "view": 1440,
+      "editors": [
+        {
+          "x": 749,
+          "y": 159,
+          "w": 662,
+          "h": 494.09375
+        }
+      ],
+      "separators": 0
+    }
+  },
+  {
+    "case": "geometry",
+    "path": "/sql/practice/customer-list",
+    "width": 768,
+    "geometry": {
+      "pageWidth": 768,
+      "view": 768,
+      "editors": [
+        {
+          "x": 20.1875,
+          "y": 906.28125,
+          "w": 727.625,
+          "h": 420
+        }
+      ],
+      "separators": 0
+    }
+  },
+  {
+    "case": "geometry",
+    "path": "/sql/practice/customer-list",
+    "width": 390,
+    "geometry": {
+      "pageWidth": 390,
+      "view": 390,
+      "editors": [
+        {
+          "x": 9,
+          "y": 972.46875,
+          "w": 372,
+          "h": 420
+        }
+      ],
+      "separators": 0
+    }
+  },
+  {
+    "case": "geometry",
+    "path": "/sql/projects/retail-performance-review",
+    "width": 1440,
+    "geometry": {
+      "pageWidth": 1440,
+      "view": 1440,
+      "editors": [],
+      "separators": 0
+    }
+  },
+  {
+    "case": "geometry",
+    "path": "/sql/projects/retail-performance-review",
+    "width": 768,
+    "geometry": {
+      "pageWidth": 768,
+      "view": 768,
+      "editors": [],
+      "separators": 0
+    }
+  },
+  {
+    "case": "geometry",
+    "path": "/sql/projects/retail-performance-review",
+    "width": 390,
+    "geometry": {
+      "pageWidth": 390,
+      "view": 390,
+      "editors": [],
+      "separators": 0
+    }
+  },
+  {
+    "case": "geometry",
+    "path": "/python/learn/python-execution",
+    "width": 1440,
+    "geometry": {
+      "pageWidth": 1440,
+      "view": 1440,
+      "editors": [
+        {
+          "x": 749,
+          "y": 438.921875,
+          "w": 662,
+          "h": 180
+        }
+      ],
+      "separators": 0
+    }
+  },
+  {
+    "case": "geometry",
+    "path": "/python/learn/python-execution",
+    "width": 768,
+    "geometry": {
+      "pageWidth": 768,
+      "view": 768,
+      "editors": [
+        {
+          "x": 20.1875,
+          "y": 1706.984375,
+          "w": 727.625,
+          "h": 180
+        }
+      ],
+      "separators": 0
+    }
+  },
+  {
+    "case": "geometry",
+    "path": "/python/learn/python-execution",
+    "width": 390,
+    "geometry": {
+      "pageWidth": 390,
+      "view": 390,
+      "editors": [
+        {
+          "x": 17,
+          "y": 2178,
+          "w": 356,
+          "h": 180
+        }
+      ],
+      "separators": 0
+    }
+  },
+  {
+    "case": "geometry",
+    "path": "/python/practice/fix-the-note",
+    "width": 1440,
+    "geometry": {
+      "pageWidth": 1440,
+      "view": 1440,
+      "editors": [
+        {
+          "x": 749,
+          "y": 156,
+          "w": 662,
+          "h": 180
+        }
+      ],
+      "separators": 0
+    }
+  },
+  {
+    "case": "geometry",
+    "path": "/python/practice/fix-the-note",
+    "width": 768,
+    "geometry": {
+      "pageWidth": 768,
+      "view": 768,
+      "editors": [
+        {
+          "x": 20.1875,
+          "y": 645.8125,
+          "w": 727.625,
+          "h": 180
+        }
+      ],
+      "separators": 0
+    }
+  },
+  {
+    "case": "geometry",
+    "path": "/python/practice/fix-the-note",
+    "width": 390,
+    "geometry": {
+      "pageWidth": 390,
+      "view": 390,
+      "editors": [
+        {
+          "x": 17,
+          "y": 813.34375,
+          "w": 356,
+          "h": 180
+        }
+      ],
+      "separators": 0
+    }
+  },
+  {
+    "case": "geometry",
+    "path": "/python/projects/smart-shopping-cart",
+    "width": 1440,
+    "geometry": {
+      "pageWidth": 1440,
+      "view": 1440,
+      "editors": [
+        {
+          "x": 749,
+          "y": 304.984375,
+          "w": 662,
+          "h": 180
+        }
+      ],
+      "separators": 0
+    }
+  },
+  {
+    "case": "geometry",
+    "path": "/python/projects/smart-shopping-cart",
+    "width": 768,
+    "geometry": {
+      "pageWidth": 768,
+      "view": 768,
+      "editors": [
+        {
+          "x": 20.1875,
+          "y": 715.46875,
+          "w": 727.625,
+          "h": 180
+        }
+      ],
+      "separators": 0
+    }
+  },
+  {
+    "case": "geometry",
+    "path": "/python/projects/smart-shopping-cart",
+    "width": 390,
+    "geometry": {
+      "pageWidth": 390,
+      "view": 390,
+      "editors": [
+        {
+          "x": 17,
+          "y": 946.859375,
+          "w": 356,
+          "h": 180
+        }
+      ],
+      "separators": 0
+    }
+  }
+]
