@@ -42,6 +42,16 @@ export function Lesson({ lessonId }: { lessonId: number }) {
 
 type Tab = "challenge-1" | "challenge-2" | "check";
 
+/**
+ * Filtering lessons that introduce a column. The table starts open so its name and sample
+ * values are visible. Later lessons leave every table closed; the column was already taught.
+ */
+const INTRO_FILTER_TABLES: Record<number, string[]> = {
+  3: ["orders", "products"],
+  5: ["orders", "products"],
+  7: ["orders", "products"],
+};
+
 /** Sample rows of the scenario tables a lesson's setup creates. */
 function overlayPreviews(lessonId: number): Record<string, LessonPreview> {
   const data = lessonPreviews as unknown as { lessons: Record<string, number>; overlays: Record<string, LessonPreview>[] };
@@ -167,7 +177,7 @@ function Session({ lessonId }: { lessonId: number }) {
             {tables.length > 0 && (
               <>
                 <p className="rx-label sec">Dataset: {datasetCatalog[lesson.dataset]?.name}</p>
-                <Tables tables={tables} previews={{ ...lessonFixture(lesson).previews, ...overlayPreviews(lessonId) }} />
+                <Tables tables={tables} openTables={INTRO_FILTER_TABLES[lessonId]} previews={{ ...lessonFixture(lesson).previews, ...overlayPreviews(lessonId) }} />
               </>
             )}
 

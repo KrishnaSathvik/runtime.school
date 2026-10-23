@@ -59,9 +59,9 @@ export const foundationLessons: LessonOverrides = {
     trap: "Write text in single quotes: 'sale'. In standard SQL, double quotes name a column. SQLite reads \"sale\" as text only because no column has that name, so the habit breaks easily: order_type = \"order_type\" compares the column with itself and keeps every row.",
     grain: "One row per matching order, then one row per matching product.",
     example: "SELECT order_id, invoice_no, ordered_at\nFROM orders\nWHERE country = 'Netherlands';",
-    hints: ["Compare order_type with the text 'cancellation'.", "is_merchandise is 1 for goods and 0 for fees and adjustments."],
+    hints: ["The worked example lists the values stored in order_type. A cancellation is the text cancellation, written in single quotes. The column does not have to appear in the result.", "0 marks fees and adjustments rather than goods. Filter with the flag the question names, even though you do not return it."],
     tasks: [
-      task("Find every cancellation order. Return order_id, invoice_no, and ordered_at.", "SELECT order_id, invoice_no, ordered_at FROM orders WHERE order_type = 'cancellation'"),
+      task("Find orders marked as cancellations in the order_type column. Return order_id, invoice_no, and ordered_at.", "SELECT order_id, invoice_no, ordered_at FROM orders WHERE order_type = 'cancellation'"),
       task("Find every product that is not merchandise (is_merchandise = 0). Return stock_code and description.", "SELECT stock_code, description FROM products WHERE is_merchandise = 0"),
     ],
     quiz: quiz("Why filter sale orders with order_type = 'sale' rather than order_type = \"sale\"?", ["'sale' is always text; \"sale\" is read as a column name first", "\"sale\" is an error in SQLite", "'sale' ignores upper and lower case"], 0, "Single quotes always make text. Double quotes name a column; SQLite falls back to text only when no column has that name."),
@@ -93,9 +93,9 @@ export const foundationLessons: LessonOverrides = {
     trap: "order_type = 'sale' AND country = 'Germany' OR country = 'France' also returns French cancellations, because AND binds first.",
     grain: "One row per matching order, then one row per matching product.",
     example: "SELECT order_id, country, order_type\nFROM orders\nWHERE country = 'Spain' AND order_type = 'cancellation';",
-    hints: ["Wrap the two countries in parentheses.", "Group the price and category alternatives in parentheses, then AND with is_merchandise = 1."],
+    hints: ["AND is evaluated before OR. Parentheses make Germany and France the alternatives, so the sale condition applies to both countries.", "AND is applied before OR, so the category test is currently attached only to the price test. Parentheses make the price and the category the two alternatives, and merchandise a requirement for both."],
     tasks: [
-      task("Find sale orders shipped to Germany or France. Return order_id, country, and ordered_at.", "SELECT order_id, country, ordered_at FROM orders WHERE order_type = 'sale' AND (country = 'Germany' OR country = 'France')"),
+      task("Find orders marked as sales in the order_type column that shipped to Germany or France. Return order_id, country, and ordered_at.", "SELECT order_id, country, ordered_at FROM orders WHERE order_type = 'sale' AND (country = 'Germany' OR country = 'France')"),
       task("The query in the editor should find merchandise that either costs more than 50 or is in the Jewellery category. The conditions are grouped wrong. Fix it. Return stock_code, description, and list_price.", "SELECT stock_code, description, list_price FROM products WHERE is_merchandise = 1 AND (list_price > 50 OR category_id = 7)", { starter: "SELECT stock_code, description, list_price\nFROM products\nWHERE is_merchandise = 1\n   OR list_price > 50\n  AND category_id = 7;" }),
     ],
     quiz: quiz("How is a = 1 AND b = 2 OR c = 3 evaluated?", ["(a = 1 AND b = 2) OR c = 3", "a = 1 AND (b = 2 OR c = 3)", "It is a syntax error"], 0, "AND has higher precedence than OR. Parentheses make the intended grouping explicit."),
@@ -127,10 +127,10 @@ export const foundationLessons: LessonOverrides = {
     trap: "WHERE customer_id = NULL returns nothing. Anonymous orders are found with customer_id IS NULL.",
     grain: "One row per product with no description, then one row per anonymous sale.",
     example: "SELECT stock_code, COALESCE(description, '(no description)') AS label\nFROM products\nWHERE list_price IS NULL;",
-    hints: ["Use description IS NULL.", "Combine customer_id IS NULL with order_type = 'sale'."],
+    hints: ["A missing description is unknown, not a text you can compare with =. The worked example uses the test for an unknown value.", "Comparing a column with NULL is never true, so this filter matches no rows. Test for a missing customer_id instead, and leave the sale condition that is already written."],
     tasks: [
       task("Find products with no description. Return stock_code and first_sold_at.", "SELECT stock_code, first_sold_at FROM products WHERE description IS NULL"),
-      task("The query in the editor should find sale orders with no customer, but it returns nothing. Fix it. Return order_id, invoice_no, and country.", "SELECT order_id, invoice_no, country FROM orders WHERE customer_id IS NULL AND order_type = 'sale'", { starter: "SELECT order_id, invoice_no, country\nFROM orders\nWHERE customer_id = NULL AND order_type = 'sale';" }),
+      task("The query in the editor should find sale orders with no customer_id, but it returns nothing. Fix it. Return order_id, invoice_no, and country.", "SELECT order_id, invoice_no, country FROM orders WHERE customer_id IS NULL AND order_type = 'sale'", { starter: "SELECT order_id, invoice_no, country\nFROM orders\nWHERE customer_id = NULL AND order_type = 'sale';" }),
     ],
     quiz: quiz("What does WHERE description = NULL return?", ["Products with no description", "No rows", "Every product"], 1, "Comparing with NULL is unknown, never true. IS NULL is the test for missing values."),
     walkthrough: [
@@ -144,7 +144,7 @@ export const foundationLessons: LessonOverrides = {
     trap: "The most expensive stock codes include non-merchandise items such as bad-debt adjustments. Filter before ranking when the question is about merchandise.",
     grain: "Ten products, then twenty orders, in a defined order.",
     example: "SELECT stock_code, list_price\nFROM products\nWHERE is_merchandise = 0\nORDER BY list_price DESC, stock_code\nLIMIT 5;",
-    hints: ["Keep merchandise only, sort by price from high to low, and break ties with stock_code.", "Sort cancellations from newest to oldest and break ties with the higher order_id."],
+    hints: ["Fees and adjustments sit among the highest list prices. The merchandise flag from Filter with WHERE keeps them out before the sort.", "The current sort puts the oldest cancellations first, and equal times have no tie-breaker. Newest first means the later ordered_at comes first, and the higher order_id wins a tie."],
     tasks: [
       task("Find the 10 most expensive merchandise products, highest list_price first. Break ties by stock_code. Return stock_code, description, and list_price.", "SELECT stock_code, description, list_price FROM products WHERE is_merchandise = 1 ORDER BY list_price DESC, stock_code LIMIT 10", { ordered: true }),
       task("The query should return the 20 most recent cancellations, newest ordered_at first. Break ties by the higher order_id. It sorts the wrong way and ignores ties. Fix it. Return order_id, invoice_no, and ordered_at.", "SELECT order_id, invoice_no, ordered_at FROM orders WHERE order_type = 'cancellation' ORDER BY ordered_at DESC, order_id DESC LIMIT 20", { ordered: true, starter: "SELECT order_id, invoice_no, ordered_at\nFROM orders\nWHERE order_type = 'cancellation'\nORDER BY ordered_at\nLIMIT 20;" }),

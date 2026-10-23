@@ -23,7 +23,7 @@ const cell = (v: unknown, j: number) =>
   v === null ? <td key={j} className="null">NULL</td> : <td key={j} title={String(v)}>{String(v)}</td>;
 
 /** Tables as cards: each column header shows its name with its type underneath, then sample rows. */
-export function Tables({ tables, open = false, previews }: { tables: string[]; open?: boolean; previews: Record<string, Preview> }) {
+export function Tables({ tables, open = false, openTables, previews }: { tables: string[]; open?: boolean; /** Start these tables expanded. Other tables stay closed until the learner opens them. */ openTables?: string[]; previews: Record<string, Preview> }) {
   return (
     <div className="rx-schema">
       {tables.map((t) => {
@@ -32,7 +32,7 @@ export function Tables({ tables, open = false, previews }: { tables: string[]; o
         const rows = p?.result.values.slice(0, PREVIEW_ROWS) ?? [];
         const label = (column: string) => describe(byName.get(column), p?.result.values.find((r) => r[p.result.columns.indexOf(column)] !== null)?.[p.result.columns.indexOf(column)]);
         return (
-          <details key={t} className={`rx-schema-table${p && (p.columns?.length ?? 0) > 5 ? " rx-schema-dense" : ""}`} open={open}>
+          <details key={t} className={`rx-schema-table${p && (p.columns?.length ?? 0) > 5 ? " rx-schema-dense" : ""}`} open={open || openTables?.includes(t) || false}>
             <summary>
               <b>{t}</b>
               <span>{p ? `${p.columns?.length ?? p.result.columns.length} columns · ${p.total.toLocaleString("en-US")} rows` : "created by the task"}</span>
