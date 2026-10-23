@@ -122,7 +122,7 @@ export function Shell({
           <Image src="/logo.png" alt="" width={26} height={26} className="rx-brand-mark" priority />
           runtime<span className="rx-caret" aria-hidden="true" />
         </Link>
-        {path.length > 0 && (
+        {bare && path.length > 0 && (
           <nav className="rx-path" aria-label="You are here">
             <span className="sep">~</span>
             {path.map((c, i) => (

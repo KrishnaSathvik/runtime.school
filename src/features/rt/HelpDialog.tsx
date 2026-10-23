@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef } from "react";
+import { useId, useLayoutEffect, useRef } from "react";
 import styles from "./HelpDialog.module.css";
 
 /** Native modal supplies focus containment, Escape and restoration to the invoking control. */
@@ -13,12 +13,14 @@ export function HelpDialog({ open, kind = "answer", onConfirm, onClose }: {
   const ref = useRef<HTMLDialogElement>(null);
   const title = useId();
   const description = useId();
-  useEffect(() => {
+  useLayoutEffect(() => {
     const dialog = ref.current;
-    if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
-    if (!open && dialog.open) dialog.close();
+    if (!open || !dialog || dialog.open) return;
+    dialog.showModal();
   }, [open]);
+  // Stay out of the server HTML. useId() does not match across this render, so a closed
+  // dialog in the SSR markup hydrates with different aria ids.
+  if (!open) return null;
   return (
     <dialog ref={ref} className={styles.dialog} aria-labelledby={title} aria-describedby={description}
       onCancel={onClose} onClose={onClose}>
