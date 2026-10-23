@@ -108,7 +108,7 @@ def log_calls(func):
 @log_calls
 def parse_depth(text, unit="km"):
     value = float(text)
-    return value * 1000 if unit == "m" else value
+    return value / 1000 if unit == "m" else value
 
 parse_depth("22")
 parse_depth("10", unit="m")
@@ -119,7 +119,7 @@ except ValueError:
 for line in log:
     print(line)
 `,
-        output: "parse_depth('22',) -> 22.0\nparse_depth('10',) -> 10000.0\nparse_depth('n/a',) raised ValueError\n",
+        output: "parse_depth('22',) -> 22.0\nparse_depth('10',) -> 0.01\nparse_depth('n/a',) raised ValueError\n",
         note: "`args` is a tuple, which is why one argument prints as `('22',)`. The keyword argument went through `**kwargs` to the original. The bare `raise` sends the ValueError on to the caller after logging it.",
       },
       {
