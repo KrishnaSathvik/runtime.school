@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0213",
+  "slug": "what-would-spark-guess",
+  "lesson": "PS-L043",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 6,
+  "title": "What would Spark guess?",
+  "dataset": {
+    "id": "PS-D03",
+    "version": "1.0.0"
+  },
+  "prompt": "Before agreeing a schema with HR, you want to see what Spark would guess for each column of an export, and where the guess goes wrong. Write `solve(employees_raw)` so it returns one row per column with the type Spark infers.",
+  "rules": [
+    "The starter saves the export as a file. Fields are separated by `;`, the first line is a header, and quoted values can contain `;`.",
+    "Return `column_name` and `guessed_type`, both text, with one row per column of the header, in any order.",
+    "`guessed_type` is the type name as `dtypes` shows it, such as `int`, `double`, `date` or `string`, from asking Spark to infer the schema.",
+    "An export with no employees still has its columns."
+  ],
+  "hints": [
+    "`inferSchema=True` asks Spark to read the data and guess each column's type.",
+    "`df.dtypes` is a plain Python list of `(name, type)` pairs.",
+    "`spark.createDataFrame(rows, \"column_name STRING, guessed_type STRING\")` turns that list into a DataFrame."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "employees_raw"
+  ],
+  "starter": "def solve(employees_raw):\n    path = \"/tmp/hr/export\"\n    employees_raw.write.mode(\"overwrite\").text(path)\n    # Read the file at `path`, let Spark guess the types, and return one row per column.\n    return employees_raw\n",
+  "output": {
+    "columns": [
+      "column_name",
+      "guessed_type"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Read with the guess turned on, then turn the guess itself into data: `guessed = spark.read.csv(path, sep=\";\", header=True, inferSchema=True)` and `spark.createDataFrame(guessed.dtypes, \"column_name STRING, guessed_type STRING\")`. The interesting part is what Spark decides. Salaries with cents become `double`; salaries without cents become `int`, or `bigint` when one is too big for an `int`; one value such as `n/a` turns the whole column into `string`, and so does one impossible date. A column that's always empty is `string`, and so is every column of an export with no rows. That's why the lesson recommends a schema for anything that matters."
+}

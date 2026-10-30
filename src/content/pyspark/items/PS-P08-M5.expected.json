@@ -1,0 +1,730 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "example": {
+   "schema": [
+    {
+     "name": "account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "account_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "industry",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "country",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "segment",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "account_owner",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "credit_limit",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "created_on",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "is_active",
+     "type": "boolean",
+     "nullable": true
+    },
+    {
+     "name": "valid_from",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "valid_to",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "is_current",
+     "type": "boolean",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "ACC-0001",
+     "Kelderby Energy Inc",
+     "energy",
+     "CA",
+     "smb",
+     "Priya Venkat",
+     "15000.00",
+     "2022-09-18",
+     true,
+     "2026-01-01T00:00:00",
+     "2026-01-12T10:00:00",
+     false
+    ],
+    [
+     "ACC-0001",
+     "Kelderby Energy Inc",
+     "energy",
+     "CA",
+     "mid_market",
+     "Mei Lindqvist",
+     "30000.00",
+     "2022-09-18",
+     true,
+     "2026-01-12T10:00:00",
+     "2026-02-10T11:00:00",
+     false
+    ],
+    [
+     "ACC-0002",
+     "Nettlecombe Manufacturing Inc",
+     "manufacturing",
+     "US",
+     "smb",
+     "Jonas Ekberg",
+     "15000.00",
+     "2025-08-24",
+     true,
+     "2026-01-01T00:00:00",
+     "2026-03-15T15:00:00",
+     false
+    ],
+    [
+     "ACC-0005",
+     "Ellowby Textiles Inc",
+     "consumer goods",
+     "US",
+     "smb",
+     "Jonas Ekberg",
+     "3750.00",
+     "2026-01-08",
+     true,
+     "2026-01-08T14:00:00",
+     "2026-02-14T09:30:00",
+     false
+    ],
+    [
+     "ACC-0003",
+     "Hesketh Vale Labs GmbH",
+     "technology",
+     "DE",
+     "enterprise",
+     "Rafael Ibarra",
+     "250000.00",
+     "2022-01-12",
+     true,
+     "2026-01-01T00:00:00",
+     "2026-01-20T16:00:00",
+     false
+    ],
+    [
+     "ACC-0004",
+     "Grisford Marine Pty Ltd",
+     "transport",
+     "AU",
+     "mid_market",
+     "Rafael Ibarra",
+     "30000.00",
+     "2021-12-10",
+     true,
+     "2026-01-01T00:00:00",
+     null,
+     true
+    ],
+    [
+     "ACC-0001",
+     "Kelderby Energy Inc",
+     "energy",
+     "CA",
+     "enterprise",
+     "Mei Lindqvist",
+     "120000.00",
+     "2022-09-18",
+     true,
+     "2026-02-10T11:00:00",
+     null,
+     true
+    ],
+    [
+     "ACC-0005",
+     "Ellowby Textiles Inc",
+     "consumer goods",
+     "US",
+     "smb",
+     "Jonas Ekberg",
+     "7500.00",
+     "2026-01-08",
+     true,
+     "2026-02-14T09:30:00",
+     null,
+     true
+    ]
+   ],
+   "row_count": 8,
+   "inputs": {
+    "accounts": [
+     [
+      "ACC-0001",
+      "Kelderby Energy Inc",
+      "energy",
+      "CA",
+      "smb",
+      "Priya Venkat",
+      "15000.00",
+      "2022-09-18",
+      "true"
+     ],
+     [
+      "ACC-0002",
+      "Nettlecombe Manufacturing Inc",
+      "manufacturing",
+      "US",
+      "smb",
+      "Jonas Ekberg",
+      "15000.00",
+      "2025-08-24",
+      "true"
+     ],
+     [
+      "ACC-0003",
+      "Hesketh Vale Labs GmbH",
+      "technology",
+      "DE",
+      "enterprise",
+      "Rafael Ibarra",
+      "250000.00",
+      "2022-01-12",
+      "true"
+     ],
+     [
+      "ACC-0004",
+      "Grisford Marine Pty Ltd",
+      "transport",
+      "AU",
+      "mid_market",
+      "Rafael Ibarra",
+      "30000.00",
+      "2021-12-10",
+      "true"
+     ]
+    ],
+    "customer_cdc": [
+     [
+      "U",
+      "200003",
+      "2026-01-12T10:00:00",
+      "ACC-0001",
+      "Kelderby Energy Inc",
+      "energy",
+      "CA",
+      "mid_market",
+      "Mei Lindqvist",
+      "30000.00",
+      "2022-09-18",
+      "true"
+     ],
+     [
+      "U",
+      "200001",
+      "2026-01-05T09:00:00",
+      "ACC-0001",
+      "Kelderby Energy Inc",
+      "energy",
+      "CA",
+      "smb",
+      "Priya Venkat",
+      "20000.00",
+      "2022-09-18",
+      "true"
+     ],
+     [
+      "I",
+      "200002",
+      "2026-01-08T14:00:00",
+      "ACC-0005",
+      "Ellowby Textiles Inc",
+      "consumer goods",
+      "US",
+      "smb",
+      "Jonas Ekberg",
+      "3750.00",
+      "2026-01-08",
+      "true"
+     ],
+     [
+      "D",
+      "200004",
+      "2026-01-20T16:00:00",
+      "ACC-0003",
+      "Hesketh Vale Labs GmbH",
+      "technology",
+      "DE",
+      "enterprise",
+      "Rafael Ibarra",
+      "250000.00",
+      "2022-01-12",
+      "true"
+     ],
+     [
+      "U",
+      "200006",
+      "2026-02-10T11:00:00",
+      "ACC-0001",
+      "Kelderby Energy Inc",
+      "energy",
+      "CA",
+      "enterprise",
+      "Mei Lindqvist",
+      "120000.00",
+      "2022-09-18",
+      "true"
+     ],
+     [
+      "U",
+      "200006",
+      "2026-02-10T11:00:00",
+      "ACC-0001",
+      "Kelderby Energy Inc",
+      "energy",
+      "CA",
+      "enterprise",
+      "Mei Lindqvist",
+      "120000.00",
+      "2022-09-18",
+      "true"
+     ],
+     [
+      "U",
+      "200007",
+      "2026-02-14T09:30:00",
+      "ACC-0005",
+      "Ellowby Textiles Inc",
+      "consumer goods",
+      "US",
+      "smb",
+      "Jonas Ekberg",
+      "7500.00",
+      "2026-01-08",
+      "true"
+     ],
+     [
+      "I",
+      "200008",
+      "2026-03-02T08:00:00",
+      "ACC-0006",
+      "Amberloch Logistics Pvt Ltd",
+      "transport",
+      "IN",
+      "mid_market",
+      "Rafael Ibarra",
+      "120000.00",
+      "2026-03-02",
+      "true"
+     ],
+     [
+      "D",
+      "200009",
+      "2026-03-09T12:00:00",
+      "ACC-0006",
+      "Amberloch Logistics Pvt Ltd",
+      "transport",
+      "IN",
+      "mid_market",
+      "Rafael Ibarra",
+      "120000.00",
+      "2026-03-02",
+      "true"
+     ],
+     [
+      "D",
+      "200010",
+      "2026-03-15T15:00:00",
+      "ACC-0002",
+      "Nettlecombe Manufacturing Inc",
+      "manufacturing",
+      "US",
+      "smb",
+      "Jonas Ekberg",
+      "15000.00",
+      "2025-08-24",
+      "true"
+     ]
+    ]
+   }
+  },
+  "project": {
+   "schema": [
+    {
+     "name": "account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "account_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "industry",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "country",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "segment",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "account_owner",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "credit_limit",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "created_on",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "is_active",
+     "type": "boolean",
+     "nullable": true
+    },
+    {
+     "name": "valid_from",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "valid_to",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "is_current",
+     "type": "boolean",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "ACC-0007",
+     "Fennick Energy Ltd",
+     "energy",
+     "GB",
+     "smb",
+     "Priya Venkat",
+     "15000.00",
+     "2021-04-13",
+     true,
+     "2026-01-01T00:00:00",
+     "2026-01-17T00:25:37",
+     false
+    ],
+    [
+     "ACC-0007",
+     "Fennick Energy Ltd",
+     "energy",
+     "GB",
+     "smb",
+     "Jonas Ekberg",
+     "15000.00",
+     "2021-04-13",
+     true,
+     "2026-01-17T00:25:37",
+     "2026-02-14T20:20:05",
+     false
+    ],
+    [
+     "ACC-0011",
+     "Sablewick Systems Inc",
+     "technology",
+     "CA",
+     "enterprise",
+     "Priya Venkat",
+     "250000.00",
+     "2023-02-22",
+     true,
+     "2026-01-01T00:00:00",
+     "2026-02-04T09:51:44",
+     false
+    ],
+    [
+     "ACC-0018",
+     "Calloway Bend Energy Pty Ltd",
+     "energy",
+     "AU",
+     "enterprise",
+     "Mei Lindqvist",
+     "250000.00",
+     "2022-04-03",
+     true,
+     "2026-01-01T00:00:00",
+     "2026-01-01T15:00:59",
+     false
+    ],
+    [
+     "ACC-0018",
+     "Calloway Bend Energy Pty Ltd",
+     "energy",
+     "AU",
+     "enterprise",
+     "Mei Lindqvist",
+     "250000.00",
+     "2022-04-03",
+     false,
+     "2026-01-01T15:00:59",
+     "2026-03-07T09:41:36",
+     false
+    ],
+    [
+     "ACC-0025",
+     "Tamsley Partners Pvt Ltd",
+     "professional services",
+     "IN",
+     "mid_market",
+     "Mei Lindqvist",
+     "37500.00",
+     "2023-07-17",
+     true,
+     "2026-01-01T00:00:00",
+     "2026-01-20T22:39:08",
+     false
+    ],
+    [
+     "ACC-0025",
+     "Tamsley Partners Group Pvt Ltd",
+     "professional services",
+     "IN",
+     "smb",
+     "Dana Whitlock",
+     "37500.00",
+     "2023-07-17",
+     true,
+     "2026-01-20T22:39:08",
+     "2026-03-13T18:29:40",
+     false
+    ],
+    [
+     "ACC-0026",
+     "Brackenmoor Logistics Inc",
+     "transport",
+     "US",
+     "mid_market",
+     "Priya Venkat",
+     "75000.00",
+     "2024-04-16",
+     true,
+     "2026-01-01T00:00:00",
+     "2026-01-15T00:47:03",
+     false
+    ],
+    [
+     "ACC-0026",
+     "Brackenmoor Logistics Inc",
+     "transport",
+     "US",
+     "mid_market",
+     "Priya Venkat",
+     "93750.00",
+     "2024-04-16",
+     true,
+     "2026-01-15T00:47:03",
+     "2026-02-08T00:29:03",
+     false
+    ],
+    [
+     "ACC-0028",
+     "Ashbury Row Partners Lda",
+     "professional services",
+     "PT",
+     "enterprise",
+     "Mei Lindqvist",
+     "125000.00",
+     "2023-04-09",
+     true,
+     "2026-01-01T00:00:00",
+     "2026-01-31T04:59:58",
+     false
+    ],
+    [
+     "ACC-0028",
+     "Ashbury Row Partners Lda",
+     "professional services",
+     "PT",
+     "smb",
+     "Mei Lindqvist",
+     "62500.00",
+     "2023-04-09",
+     true,
+     "2026-01-31T04:59:58",
+     "2026-02-24T08:20:18",
+     false
+    ],
+    [
+     "ACC-0029",
+     "Ostley Systems Inc",
+     "technology",
+     "CA",
+     "smb",
+     "Jonas Ekberg",
+     "15000.00",
+     "2021-06-07",
+     true,
+     "2026-01-01T00:00:00",
+     "2026-01-22T04:47:32",
+     false
+    ],
+    [
+     "ACC-0031",
+     "Dunmarrow Marine GmbH",
+     "transport",
+     "DE",
+     "mid_market",
+     "Tobias Achterberg",
+     "75000.00",
+     "2024-06-01",
+     true,
+     "2026-01-01T00:00:00",
+     "2026-03-30T23:50:21",
+     false
+    ],
+    [
+     "ACC-0036",
+     "Hesketh Vale Manufacturing Inc",
+     "manufacturing",
+     "US",
+     "mid_market",
+     "Rafael Ibarra",
+     "75000.00",
+     "2025-07-27",
+     true,
+     "2026-01-01T00:00:00",
+     "2026-01-25T10:37:48",
+     false
+    ],
+    [
+     "ACC-0039",
+     "Pemberlin Health Pty Ltd",
+     "healthcare",
+     "AU",
+     "smb",
+     "Priya Venkat",
+     "30000.00",
+     "2023-12-16",
+     true,
+     "2026-01-01T00:00:00",
+     "2026-01-20T18:10:57",
+     false
+    ],
+    [
+     "ACC-0039",
+     "Pemberlin Health Pty Ltd",
+     "healthcare",
+     "AU",
+     "smb",
+     "Priya Venkat",
+     "30000.00",
+     "2023-12-16",
+     true,
+     "2026-01-20T18:10:57",
+     "2026-02-16T23:26:31",
+     false
+    ],
+    [
+     "ACC-0041",
+     "Hesketh Vale Labs GmbH",
+     "technology",
+     "DE",
+     "enterprise",
+     "Rafael Ibarra",
+     "250000.00",
+     "2022-01-12",
+     true,
+     "2026-01-01T00:00:00",
+     "2026-01-01T03:51:41",
+     false
+    ],
+    [
+     "ACC-0042",
+     "Pellacott Systems Pvt Ltd",
+     "technology",
+     "IN",
+     "mid_market",
+     "Rafael Ibarra",
+     "75000.00",
+     "2023-02-26",
+     true,
+     "2026-01-01T00:00:00",
+     "2026-03-19T16:31:40",
+     false
+    ],
+    [
+     "ACC-0044",
+     "Wrenfield Health Lda",
+     "healthcare",
+     "PT",
+     "enterprise",
+     "Mei Lindqvist",
+     "500000.00",
+     "2021-01-24",
+     true,
+     "2026-01-01T00:00:00",
+     "2026-01-14T17:38:34",
+     false
+    ],
+    [
+     "ACC-0044",
+     "Wrenfield Health Lda",
+     "healthcare",
+     "PT",
+     "smb",
+     "Mei Lindqvist",
+     "500000.00",
+     "2021-01-24",
+     true,
+     "2026-01-14T17:38:34",
+     "2026-03-06T05:20:08",
+     false
+    ]
+   ],
+   "row_count": 690
+  }
+ },
+ "hidden": [
+  "an account deleted in batch 1 and inserted again in batch 2, changes either side of the batch boundary, an insert and update in one batch, and a delete sent twice",
+  "an empty snapshot and feed"
+ ]
+}

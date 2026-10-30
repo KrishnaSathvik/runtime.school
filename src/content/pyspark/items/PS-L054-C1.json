@@ -1,0 +1,48 @@
+{
+  "id": "PS-L054-C1",
+  "slug": "device-index-for-members",
+  "lesson": "PS-L054",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Number the devices",
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0"
+  },
+  "prompt": "A churn model needs each member's preferred device as a number. Write `solve(users)` so it returns `user_id`, `preferred_device` and `device_index`, numbering the devices by how many members use them.",
+  "rules": [
+    "The most common device gets 0.0, the next 1.0, and so on. Devices used by the same number of members are numbered alphabetically.",
+    "A member with no `preferred_device` gets the number after the last device. Missing values don't count as a device.",
+    "Return `user_id`, `preferred_device` and `device_index` (a double), in that order. Keep every member."
+  ],
+  "hints": [
+    "`StringIndexer` numbers values by frequency, most frequent first, and breaks ties alphabetically.",
+    "By default it stops on a missing value. Which `handleInvalid` setting gives missing values an extra index instead of dropping the row?",
+    "`fit` the indexer on `users`, `transform` the same DataFrame, then `select` the three columns."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "users"
+  ],
+  "starter": "from pyspark.ml.feature import StringIndexer\n\n\ndef solve(users):\n    # Return user_id, preferred_device and device_index.\n    return users\n",
+  "output": {
+    "columns": [
+      "user_id",
+      "preferred_device",
+      "device_index"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

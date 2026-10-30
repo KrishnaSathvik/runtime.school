@@ -1,0 +1,196 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "reading_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "device_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "event_time",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "temperature_c",
+     "type": "double",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "R0503",
+     "DEV-002",
+     "2026-04-14T09:00:00",
+     21.4
+    ],
+    [
+     "R0501",
+     "DEV-003",
+     "2026-04-14T09:00:00",
+     28.7
+    ],
+    [
+     "R0505",
+     "DEV-003",
+     "2026-04-14T09:15:00",
+     29.6
+    ],
+    [
+     "R0504",
+     "DEV-004",
+     "2026-04-14T09:15:00",
+     25.1
+    ],
+    [
+     "R0508",
+     "DEV-004",
+     "2026-04-14T09:30:00",
+     26.0
+    ],
+    [
+     "R0509",
+     "DEV-004",
+     "2026-04-14T09:45:00",
+     27.0
+    ],
+    [
+     "R0510",
+     "DEV-003",
+     "2026-04-14T09:20:00",
+     30.2
+    ]
+   ],
+   "row_count": 7,
+   "inputs": {
+    "sensor_readings": [
+     [
+      "R0502",
+      "DEV-004",
+      "2026-04-14T09:00:00",
+      "2026-04-14T09:00:43",
+      "0",
+      "{\"temperature_c\":null,\"humidity_pct\":37.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"critical\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0503",
+      "DEV-002",
+      "2026-04-14T09:00:00",
+      "2026-04-14T09:00:44",
+      "0",
+      "{\"temperature_c\":21.4,\"humidity_pct\":41.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"hvac\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0501",
+      "DEV-003",
+      "2026-04-14T09:00:00",
+      "2026-04-14T09:00:46",
+      "0",
+      "{\"temperature_c\":28.7,\"humidity_pct\":80.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"outdoor\",\"greenhouse\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0505",
+      "DEV-003",
+      "2026-04-14T09:15:00",
+      "2026-04-14T09:15:07",
+      "1",
+      "{\"temperature_c\":29.6,\"humidity_pct\":80.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"outdoor\",\"greenhouse\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0504",
+      "DEV-004",
+      "2026-04-14T09:15:00",
+      "2026-04-14T09:15:49",
+      "1",
+      "{\"temperature_c\":25.1,\"humidity_pct\":37.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"critical\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0505",
+      "DEV-003",
+      "2026-04-14T09:15:00",
+      "2026-04-14T09:21:07",
+      "1",
+      "{\"temperature_c\":29.6,\"humidity_pct\":80.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"outdoor\",\"greenhouse\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0506",
+      "DEV-003",
+      "2026-04-14T09:30:00",
+      "2026-04-14T09:30:15",
+      "2",
+      "{\"temperature_c\":29.0,\"humidity_pct\":80.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"outdoor\",\"greenhouse\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0507",
+      "DEV-002",
+      "2026-04-14T09:30:00",
+      "2026-04-14T09:30:25",
+      "2",
+      "{\"temperature_c\":21.4,\"humidity_pct\":41.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"hvac\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0509",
+      "DEV-004",
+      "2026-04-14T09:45:00",
+      "2026-04-14T09:45:10",
+      "2",
+      "{\"temperature_c\":27.0,\"humidity_pct\":37.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"critical\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0511",
+      "DEV-002",
+      "2026-04-14T09:45:00",
+      "2026-04-14T09:45:20",
+      "2",
+      "{\"temperature_c\":999.0,\"humidity_pct\":41.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"hvac\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0508",
+      "DEV-004",
+      "2026-04-14T09:30:00",
+      "2026-04-14T09:46:00",
+      "2",
+      "{\"temperature_c\":26.0,\"humidity_pct\":37.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"critical\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0510",
+      "DEV-003",
+      "2026-04-14T09:20:00",
+      "2026-04-14T10:01:00",
+      "3",
+      "{\"temperature_c\":30.2,\"humidity_pct\":80.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"outdoor\",\"greenhouse\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "two days of practice readings with glitches, copies and late readings, in five micro-batches",
+  "sensors whose first readings are missing or glitches, one with no valid reading at all, ties and a copy",
+  "a sensor's readings out of order in one file, and late readings above and below the high"
+ ]
+}

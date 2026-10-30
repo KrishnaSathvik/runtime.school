@@ -1,0 +1,62 @@
+{
+  "id": "PS-Q0057",
+  "slug": "budget-cost-per-person",
+  "lesson": "PS-L012",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Budget cost per person",
+  "dataset": {
+    "id": "PS-D03",
+    "version": "1.0.0"
+  },
+  "prompt": "Finance budgets each person at their salary plus 12,000 a year for benefits. Write `solve(employees)` so it returns the employees table for the budget file.",
+  "rules": [
+    "Remove `email` and `phone`. Keep every other column in its place.",
+    "Rename `salary` to `base_salary`, in the same position.",
+    "Add `budget_cost` at the end: the salary plus 12000, still an exact decimal. A missing salary gives a missing cost.",
+    "Keep every row, duplicates included."
+  ],
+  "hints": [
+    "Three changes, three methods: `drop`, `withColumnRenamed` and `withColumn`.",
+    "Once a column is renamed, later steps must use its new name.",
+    "Write the amount as a whole number, `+ 12000`. `12000.0` is a floating-point number and turns the result into a `double`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "employees"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(employees):\n    # The employees table for the budget file.\n    return employees\n",
+  "output": {
+    "columns": [
+      "employee_id",
+      "first_name",
+      "last_name",
+      "job_title",
+      "level",
+      "department_id",
+      "manager_id",
+      "hire_date",
+      "employment_type",
+      "base_salary",
+      "status",
+      "termination_date",
+      "budget_cost"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Chain the three changes: `employees.drop(\"email\", \"phone\").withColumnRenamed(\"salary\", \"base_salary\").withColumn(\"budget_cost\", F.col(\"base_salary\") + 12000)`. Computing `budget_cost` from `salary` before the rename works too; after it, only the new name exists. Adding a whole number to a decimal keeps it exact (`decimal(11,2)`, one more digit for the larger total), while `+ 12000.0` makes a `double`. A missing salary gives a missing cost. A typo in `drop` is the quiet mistake here: dropping a column that isn't there does nothing, so the phone numbers would still be in the file."
+}

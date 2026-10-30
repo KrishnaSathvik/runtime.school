@@ -1,0 +1,55 @@
+{
+  "id": "PS-Q0127",
+  "slug": "unused-active-accounts",
+  "lesson": "PS-L026",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Open accounts never used",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "Operations wants to contact the holders of open accounts that have never been used. Write `solve(accounts, transactions)` to return every active account with no transactions at all.",
+  "rules": [
+    "An account is open when its `status` is `active`. Leave out closed and frozen accounts.",
+    "Any transaction counts as use, even a pending or declined one.",
+    "A transaction whose `account_id` isn't in `accounts` doesn't count for any account.",
+    "Return `account_id`, `customer_id`, `account_type`, `currency` and `opened_date`, in that order."
+  ],
+  "hints": [
+    "Two steps: keep the active accounts, then keep only those with no match in `transactions`.",
+    "A left anti join keeps the left rows that have no match: `active.join(transactions, on=\"account_id\", how=\"left_anti\")`.",
+    "Don't filter `transactions` by status: a declined attempt still means the account was used. Select the five columns at the end."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "accounts",
+    "transactions"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(accounts, transactions):\n    # Return the active accounts that have no transactions.\n    return accounts\n",
+  "output": {
+    "columns": [
+      "account_id",
+      "customer_id",
+      "account_type",
+      "currency",
+      "opened_date"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Filter the accounts first, then anti join: `accounts.filter(F.col(\"status\") == \"active\").join(transactions, on=\"account_id\", how=\"left_anti\")`, and select the five columns. A left anti join returns the left rows with no match on the right, which is exactly \"never used\". Orphan transactions match no account, so they can't hide one. Two slips are common: filtering `transactions` to posted ones, which wrongly lists an account whose only attempt was declined, and filtering with `status != \"closed\"`, which lets frozen accounts through."
+}

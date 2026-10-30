@@ -1,0 +1,129 @@
+{
+ "id": "PS-P02",
+ "workspace": "guided",
+ "file": "pipeline.py",
+ "dataset": {
+  "id": "PS-D03",
+  "version": "1.0.0",
+  "edition": "project"
+ },
+ "inputs": [
+  "employees",
+  "departments",
+  "salary_history"
+ ],
+ "task": "The people team pulls payroll and org-chart numbers out of the HR system by hand each quarter, and they never match. Titles are typed five ways, one reporting line goes round in a circle, and the salary history has copies and rows dated before people were hired. Build a pipeline that cleans the employee records, maps every reporting line, ranks salaries as of 31 March 2026, and publishes the department payroll with a summary that accounts for every employee.",
+ "skills": [
+  "text standardisation",
+  "self joins",
+  "window ranking with tie-breaks",
+  "as-of salary lookup",
+  "group and aggregate"
+ ],
+ "problems": [
+  "Job titles in the wrong case or with extra spaces; emails with capitals; phone numbers in five formats.",
+  "One manager loop: a team manager's manager is one of their own reports, so neither chain reaches the chief executive.",
+  "Three salary history rows repeated exactly.",
+  "Two salary history rows dated before the employee's hire date.",
+  "Salaries are multiples of 2,500, so many people in a department earn the same amount.",
+  "Some people marked terminated left after the payroll date, and the employee table's salary already includes April's raises."
+ ],
+ "revenue": "Payroll is reported as of 31 March 2026. A person is on it when they were hired on or before that day, hadn't left by it, and have a salary history row dated between their hire date and that day; their salary is the latest such row. Rankings are within each department, highest salary first: equal salaries share a rank, and positions break ties by earlier hire date, then employee id.",
+ "milestones": [
+  {
+   "step": 1,
+   "summary": "Look at the employee export and shape the pipeline's columns.",
+   "label": "Explore employees"
+  },
+  {
+   "step": 2,
+   "summary": "Standardise job titles, emails, phone numbers and department ids.",
+   "label": "Standardise fields"
+  },
+  {
+   "step": 3,
+   "summary": "Join each employee to their manager and department, and mark broken lines.",
+   "label": "Join managers"
+  },
+  {
+   "step": 4,
+   "summary": "Find each person's salary on the payroll date and rank it in the department.",
+   "label": "Rank salaries"
+  },
+  {
+   "step": 5,
+   "summary": "Publish department payroll and a workforce summary that checks it.",
+   "label": "Publish payroll"
+  }
+ ],
+ "artifacts": [
+  {
+   "name": "employee_view",
+   "inputs": [
+    "employees"
+   ],
+   "step": 1,
+   "about": "The employee columns the pipeline uses, with a full name."
+  },
+  {
+   "name": "employee_clean",
+   "inputs": [
+    "employees"
+   ],
+   "step": 2,
+   "about": "Every employee with standard titles, emails, phones and department ids.",
+   "deliverable": true
+  },
+  {
+   "name": "reporting_lines",
+   "inputs": [
+    "employees",
+    "departments"
+   ],
+   "step": 3,
+   "about": "Each employee's department, manager and whether the line is sound."
+  },
+  {
+   "name": "current_salaries",
+   "inputs": [
+    "employees",
+    "salary_history"
+   ],
+   "step": 4,
+   "about": "The salary in force on the payroll date for each person employed then."
+  },
+  {
+   "name": "salary_rankings",
+   "inputs": [
+    "employees",
+    "departments",
+    "salary_history"
+   ],
+   "step": 4,
+   "about": "Each department's people ranked by current salary, with a fixed position.",
+   "deliverable": true
+  },
+  {
+   "name": "department_payroll",
+   "inputs": [
+    "employees",
+    "departments",
+    "salary_history"
+   ],
+   "step": 5,
+   "about": "Headcount and total salary per department.",
+   "deliverable": true
+  },
+  {
+   "name": "workforce_summary",
+   "inputs": [
+    "employees",
+    "departments",
+    "salary_history"
+   ],
+   "step": 5,
+   "about": "Every employee accounted for, each problem counted, and the payroll checked.",
+   "deliverable": true
+  }
+ ]
+}

@@ -1,0 +1,55 @@
+{
+  "id": "PS-Q0380",
+  "slug": "one-gate-for-two-feeds",
+  "lesson": "PS-L076",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "One gate for two feeds",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "The bank's nightly gate checks two feeds with one piece of code. The starter holds each feed's contract and value rules as data. Write `solve(transactions, transfers)` so it returns one row per feed and rule: `table`, `rule`, `failed`, `checked` and `decision`.",
+  "rules": [
+    "Each column a contract marks `False` gets a rule named `required_` plus the column, for example `required_account_id`, with the action quarantine. Columns marked `True` get no rule. Then come the feed's value rules.",
+    "`checked` is the number of rows in that feed. A missing value breaks a rule.",
+    "`decision`: `pass` when nothing fails, `quarantine` for a quarantine rule while at most 10% of the feed's rows fail it, otherwise `stop`.",
+    "`failed` and `checked` are bigints."
+  ],
+  "hints": [
+    "Put the two DataFrames in a dict by name, so one loop handles both feeds and finds their contracts and rules by the same name.",
+    "Build the required rules with a list comprehension over `contracts[table].items()`, keeping the columns marked `False`.",
+    "Count `checked` inside the feed's loop, from that feed's DataFrame."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "transactions",
+    "transfers"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n# For each feed: its columns, and whether each one may be empty (True) or must have a value (False).\ncontracts = {\n    \"transactions\": {\"account_id\": False, \"merchant_id\": True, \"amount\": False},\n    \"transfers\": {\"from_account_id\": False, \"to_account_id\": False, \"reversal_of\": True},\n}\n\n# Rules on the values: (name, action, condition true for a good row).\nvalue_rules = {\n    \"transactions\": [\n        (\"known_currency\", \"quarantine\", F.col(\"currency\").isin(\"USD\", \"EUR\", \"GBP\")),\n        (\"positive_amount\", \"fail\", F.col(\"amount\") > 0),\n    ],\n    \"transfers\": [\n        (\"different_accounts\", \"quarantine\", F.col(\"from_account_id\") != F.col(\"to_account_id\")),\n        (\"positive_amount\", \"fail\", F.col(\"amount\") > 0),\n    ],\n}\n\n\ndef solve(transactions, transfers):\n    # One row per feed and rule: required columns from the contract, then the value rules.\n    results = []\n    return spark.createDataFrame(results, \"table STRING, rule STRING, failed BIGINT, checked BIGINT, decision STRING\")\n",
+  "output": {
+    "columns": [
+      "table",
+      "rule",
+      "failed",
+      "checked",
+      "decision"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Keeping contracts and rules as data lets one loop gate any number of feeds: a dict maps each feed's name to its DataFrame, and the same name finds its contract and rules. The required rules come from the contract, `F.col(column).isNotNull()` for each column marked `False`, so a new required column needs no new code. Each feed's limit is a share of its own rows, so `checked` is counted inside the loop; counting both feeds together lets a small feed hide a broken one. `F.coalesce(condition, F.lit(False))` makes a transfer with no `from_account_id` break `different_accounts` as well as its required rule, because a comparison with NULL proves nothing. A fail rule never quarantines: one transfer with a 0.00 amount stops the gate."
+}

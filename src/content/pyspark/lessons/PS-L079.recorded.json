@@ -1,0 +1,38 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D15",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "api_requests"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "local[2]\nclient\nruntime-school\n12 requests\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "exit code: 0\napp: name daily-requests\napp: master local[1]\napp: deploy mode client\napp: shuffle partitions 8\napp: arguments ['2026-01-15', 'eu-west']\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "exit code: 0\napp: master local[1]\napp: shuffle partitions 3\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "exit code: 1\nModuleNotFoundError: No module named 'request_rules'\nexit code: 0\napp: 2 server errors\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "exit code: 1\nCluster deploy mode is not compatible with master \"local\"\nexit code: 1\nWhen running with master 'yarn' either HADOOP_CONF_DIR or YARN_CONF_DIR must be set in the environment.\n",
+   "error": null
+  }
+ }
+}

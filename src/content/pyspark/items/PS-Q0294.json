@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0294",
+  "slug": "salted-join-loses-teams",
+  "lesson": "PS-L059",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "The salted join that loses teams",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "Most requests hit `catalog-api`, so this join of requests to their owning team is salted. But some requests come back with no team although their service has an owner. Fix `solve(api_requests)` so it returns `request_id`, `service` and `team` for every request.",
+  "rules": [
+    "Every request appears exactly once, with the team that owns its service in `OWNERS`.",
+    "`team` is missing only when the service isn't in `OWNERS` or isn't recorded.",
+    "Return only these three columns, in this order."
+  ],
+  "hints": [
+    "Look at the salts that the requests get, and the salts that the owner copies get. Do they cover the same numbers?",
+    "`F.pmod(..., F.lit(4))` makes salts 0 to 3. How many copies of each owner does `spark.range(3)` make?",
+    "Every salt a request can have needs a matching owner copy. Keep the left join, so requests with no owner stay."
+  ],
+  "explanation": "The requests get salts 0 to 3 from `F.pmod(F.hash(\"request_id\"), F.lit(4))`, but `spark.range(3)` copies each owner only for salts 0, 1 and 2. A request with salt 3 finds no owner copy, and the left join keeps it with a missing team. Copy the owners once per salt the requests can have: `spark.range(4)`. (Salting the requests by 3 instead also works: what matters is that the two sides use the same salt values.) Switching to an inner join hides the bug by dropping those requests, and joining on `service` alone matches every copy, so each request comes back several times. The check from the lesson catches all of these: a salted join must return exactly the rows of the plain join.",
+  "entry": "solve",
+  "inputs": [
+    "api_requests"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\nOWNERS = [\n    (\"catalog-api\", \"catalog\"),\n    (\"checkout-api\", \"payments\"),\n    (\"auth-service\", \"identity\"),\n    (\"search-api\", \"search\"),\n    (\"iot-gateway\", \"devices\"),\n]\n\n\ndef solve(api_requests):\n    owners = spark.createDataFrame(OWNERS, \"service string, team string\")\n    salts = spark.range(3).select(F.col(\"id\").alias(\"salt\"))\n    owners_salted = owners.crossJoin(salts)\n    requests_salted = api_requests.select(\"request_id\", \"service\", F.pmod(F.hash(\"request_id\"), F.lit(4)).alias(\"salt\"))\n    joined = requests_salted.join(owners_salted, [\"service\", \"salt\"], \"left\")\n    return joined.select(\"request_id\", \"service\", \"team\")\n",
+  "output": {
+    "columns": [
+      "request_id",
+      "service",
+      "team"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

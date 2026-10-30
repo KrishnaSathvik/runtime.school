@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0250",
+  "slug": "attribute-usage-across-logs",
+  "lesson": "PS-L050",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Attribute usage across the logs",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "Before choosing which log attributes to index, the logging team wants to know how widely each one is used. Write `solve(application_logs_raw)` so it parses the raw lines and returns, for every attribute key, how many records carry it and how many different services those records come from.",
+  "rules": [
+    "Only lines that are JSON objects count; skip the rest. A record whose `attributes` is missing, null, empty or not an object carries no keys.",
+    "`records` counts the records that carry the key; a record shipped twice counts twice.",
+    "`services` counts the different `service` values among those records. A record with no `service` adds to `records` but not to `services`.",
+    "Return `attribute` (text), `records` and `services` (both `bigint`), in that order. An empty file gives an empty result."
+  ],
+  "hints": [
+    "Parse safely with `flatMap`, then use a second `flatMap` to turn each record into one pair per attribute key.",
+    "A value can hold a Python set: `(1, {service})`. Two sets combine with `|`, whatever the order.",
+    "After `reduceByKey`, `len()` of the set is the number of services. Leave a missing service out of the set."
+  ],
+  "explanation": "Parse each line with a function that returns `[record]` or `[]`, then `flatMap` every record into `(key, (1, {service}))` pairs, one per attribute key, with an empty set when the service is missing and no pairs when `attributes` isn't a dict. `reduceByKey(lambda a, b: (a[0] + b[0], a[1] | b[1]))` adds the counts and unions the sets, which works in any order, and `len` of the set gives the services. Counting 1 per record for services counts records again, and `attributes or {}` would walk through a list's items as if they were keys.",
+  "entry": "solve",
+  "inputs": [
+    "application_logs_raw"
+  ],
+  "starter": "import json\n\n\ndef solve(application_logs_raw):\n    # Records and distinct services per attribute key.\n    return application_logs_raw\n",
+  "output": {
+    "columns": [
+      "attribute",
+      "records",
+      "services"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

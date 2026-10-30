@@ -1,0 +1,140 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "employee_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "full_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "job_title",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "department",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "salary",
+     "type": "decimal(10,2)",
+     "nullable": true
+    },
+    {
+     "name": "hire_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "bad_line",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "E0001",
+     "Tomas Haddad",
+     "Chief Executive Officer",
+     "Executive",
+     "260000.00",
+     "2025-01-06",
+     null
+    ],
+    [
+     "E0002",
+     "Noor Novak",
+     "Head of Engineering",
+     "Engineering",
+     "200000.00",
+     "2025-05-26",
+     null
+    ],
+    [
+     "E0003",
+     "Lena Duarte",
+     "Software Engineer",
+     "Engineering",
+     "75000.00",
+     "2025-07-15",
+     null
+    ],
+    [
+     "E0004",
+     "Anika Silva",
+     "Senior Software Engineer",
+     "Engineering",
+     "70000.00",
+     "2025-08-15",
+     null
+    ],
+    [
+     "E0005",
+     "Elif Rao",
+     "Senior Software Engineer",
+     null,
+     null,
+     null,
+     "E0005;Elif Rao;Senior Software Engineer"
+    ],
+    [
+     "E0006",
+     "Maya Rao",
+     "Senior Software Engineer",
+     "Engineering",
+     "62500.00",
+     "2025-08-10",
+     null
+    ],
+    [
+     "E0007",
+     "Ines Novak",
+     "Head of Finance; Onboarding",
+     "Finance",
+     "150000.00",
+     "2025-01-06",
+     null
+    ],
+    [
+     "E0008",
+     "Elif Weber",
+     "Senior Financial Analyst",
+     "Finance",
+     "75000.00",
+     "2025-05-20",
+     null
+    ],
+    [
+     "E0009",
+     "Anika Grant",
+     "Senior Financial Analyst",
+     "Finance",
+     "90000.00",
+     "2025-05-08",
+     null
+    ]
+   ],
+   "row_count": 9
+  }
+ },
+ "hidden": [
+  "the full practice export",
+  "lines with extra fields, missing fields, or a salary or date that isn't valid",
+  "values that contain the separator inside quotes",
+  "an export with no bad lines",
+  "an export with only the header line"
+ ]
+}

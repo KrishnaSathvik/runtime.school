@@ -1,0 +1,163 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "micro_batch",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "event_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "step",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "payment_method",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "coupon",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     0,
+     "CO-0002",
+     "payment",
+     "card",
+     "SPRING10"
+    ],
+    [
+     0,
+     "CO-0003",
+     "complete",
+     "card",
+     "SPRING10"
+    ],
+    [
+     2,
+     "CO-0005",
+     "begin",
+     null,
+     "WELCOME5"
+    ],
+    [
+     2,
+     "CO-0006",
+     "payment",
+     "card",
+     "WELCOME5"
+    ]
+   ],
+   "row_count": 4,
+   "inputs": {
+    "checkout_events": [
+     [
+      "CO-0001",
+      "SES-0001",
+      "CU-001",
+      "2026-03-14T10:06:00",
+      "2026-03-14T10:06:02",
+      "1",
+      "begin",
+      null,
+      null,
+      "[{\"sku\":\"SKU-1001\",\"qty\":1,\"price\":89.0},{\"sku\":\"SKU-1013\",\"qty\":2,\"price\":11.99}]",
+      "112.98",
+      "{}"
+     ],
+     [
+      "CO-0002",
+      "SES-0001",
+      "CU-001",
+      "2026-03-14T10:08:30",
+      "2026-03-14T10:08:33",
+      "1",
+      "payment",
+      null,
+      "{\"method\":\"card\",\"provider\":\"paycore\"}",
+      "[{\"sku\":\"SKU-1001\",\"qty\":1,\"price\":89.0},{\"sku\":\"SKU-1013\",\"qty\":2,\"price\":11.99}]",
+      "112.98",
+      "{\"coupon\":\"SPRING10\"}"
+     ],
+     [
+      "CO-0003",
+      "SES-0001",
+      "CU-001",
+      "2026-03-14T10:09:40",
+      "2026-03-14T10:09:42",
+      "1",
+      "complete",
+      "ORD-0001",
+      "{\"method\":\"card\",\"provider\":\"paycore\"}",
+      "[{\"sku\":\"SKU-1001\",\"qty\":1,\"price\":89.0},{\"sku\":\"SKU-1013\",\"qty\":2,\"price\":11.99}]",
+      "112.98",
+      "{\"coupon\":\"SPRING10\"}"
+     ],
+     [
+      "CO-0004",
+      "SES-0003",
+      "CU-002",
+      "2026-03-14T10:19:55",
+      "2026-03-14T10:19:59",
+      "2",
+      "begin",
+      null,
+      null,
+      "[{\"sku\":\"SKU-1002\",\"qty\":1,\"price\":119.95}]",
+      "119.95",
+      "{\"gift_wrap\":\"true\"}"
+     ],
+     [
+      "CO-0005",
+      "SES-0006",
+      null,
+      "2026-03-14T10:41:00",
+      "2026-03-14T10:41:20",
+      "4",
+      "begin",
+      null,
+      null,
+      "[{\"sku\":\"SKU-1001\",\"qty\":1,\"price\":89.0}]",
+      "89.0",
+      "{\"coupon\":\"WELCOME5\",\"gift_wrap\":\"true\"}"
+     ],
+     [
+      "CO-0006",
+      "SES-0006",
+      null,
+      "2026-03-14T10:43:00",
+      "2026-03-14T10:43:20",
+      "4",
+      "payment",
+      null,
+      "{\"method\":\"card\",\"provider\":\"paycore\"}",
+      "[{\"sku\":\"SKU-1001\",\"qty\":1,\"price\":89.0}]",
+      "89.0",
+      "{\"coupon\":\"WELCOME5\",\"gift_wrap\":\"true\"}"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice checkout events",
+  "checkouts with other flags but no coupon",
+  "a coupon that appears only at the last step, in a later delivery"
+ ]
+}

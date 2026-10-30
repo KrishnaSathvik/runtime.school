@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0428",
+  "kind": "predict",
+  "slug": "files-from-odd-writes",
+  "lesson": "PS-L086",
+  "role": "edge",
+  "format": "concept_or_trace",
+  "difficulty": "medium",
+  "minutes": 6,
+  "title": "Files from odd writes",
+  "prompt": "`invoice_lines` has the 10 rows shown, read from one small file. This program makes three Delta writes at their edges: no rows, more partitions than rows, and `coalesce` asked for more partitions than there are. What does it print? Type each line on its own line.",
+  "program": "from delta.tables import DeltaTable\n\n\ndef files(path):\n    return DeltaTable.forPath(spark, path).detail().first().numFiles\n\ninvoice_lines.limit(0).write.format(\"delta\").save(\"/tmp/invoices/none\")\ninvoice_lines.limit(2).repartition(4).write.format(\"delta\").save(\"/tmp/invoices/two\")\ninvoice_lines.coalesce(4).write.format(\"delta\").save(\"/tmp/invoices/coalesced\")\n\nprint(invoice_lines.rdd.getNumPartitions(), invoice_lines.coalesce(4).rdd.getNumPartitions())\nprint(files(\"/tmp/invoices/none\"), files(\"/tmp/invoices/two\"), files(\"/tmp/invoices/coalesced\"))\n",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "A write makes a file only for a partition that has rows; a table with no rows has no data files.",
+    "`repartition(4)` of two rows leaves two partitions empty.",
+    "`coalesce` merges partitions and never adds any."
+  ],
+  "explanation": "`invoice_lines` is one partition, and `coalesce(4)` can't make more, so it stays at 1. Writing no rows gives a table with no data files. `repartition(4)` spreads two rows over two of the four partitions, and the empty ones write nothing: 2 files. The coalesced write has one partition, so one file."
+}

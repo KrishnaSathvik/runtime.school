@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0110",
+  "slug": "transfer-audit-for-2026",
+  "lesson": "PS-L022",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Transfer audit for 2026",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "The auditors review every transfer requested in 2026. Write `solve(transfers)` so it returns `transfer_id`, `status`, `reference` and `check` for those transfers.",
+  "rules": [
+    "Keep transfers whose `requested_at` is on or after 1 January 2026 00:00:00.",
+    "`check` is the first problem found, in this order: `missing account` (either account missing), `same account`, `bad amount` (missing or not more than 0), `bad reversal` (`reversal_of` is set but `status` isn't exactly `completed`). Otherwise it's `ok`.",
+    "A missing `reference` shows as `(none)`. Return the four columns, in that order, keeping duplicates."
+  ],
+  "hints": [
+    "Filter first with `F.col(\"requested_at\") >= \"2026-01-01\"`. A transfer with no time isn't on or after anything, so it drops out.",
+    "In the reversal rule, a missing status isn't `completed`, but `status != \"completed\"` is NULL for it. Add `F.col(\"status\").isNull() |`.",
+    "`F.coalesce(F.col(\"reference\"), F.lit(\"(none)\"))` or `na.fill` fills the missing references."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "transfers"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(transfers):\n    # Return transfer_id, status, reference and check for transfers requested in 2026.\n    return transfers\n",
+  "output": {
+    "columns": [
+      "transfer_id",
+      "status",
+      "reference",
+      "check"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Three earlier lessons meet here. A filter keeps 2026: `F.col(\"requested_at\") >= \"2026-01-01\"`. A `when` chain gives the first problem: `F.when(F.col(\"from_account_id\").isNull() | F.col(\"to_account_id\").isNull(), \"missing account\").when(F.col(\"from_account_id\") == F.col(\"to_account_id\"), \"same account\").when(F.col(\"amount\").isNull() | (F.col(\"amount\") <= 0), \"bad amount\").when(F.col(\"reversal_of\").isNotNull() & (F.col(\"status\").isNull() | (F.col(\"status\") != \"completed\")), \"bad reversal\").otherwise(\"ok\")`. The missing-account rule comes first so the same-account test only meets two real ids. In the reversal rule, a missing status would make `!= \"completed\"` NULL and the transfer would pass as `ok`, so it's caught with `isNull()`. Finally `F.coalesce(F.col(\"reference\"), F.lit(\"(none)\"))` fills the reference; `transfers.na.fill(\"(none)\", subset=[\"reference\"])` before the `select` works too."
+}

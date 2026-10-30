@@ -1,0 +1,133 @@
+{
+  "id": "PS-L057",
+  "minutes": 30,
+  "lede": "A shuffle decides which partition every row goes to, and how many partitions there are afterwards. Those two choices set how much work each task gets, so knowing them is the start of tuning any job that groups, joins or repartitions.",
+  "objectives": [
+    "Change the number of partitions with `repartition` and `coalesce`, and say which one shuffles",
+    "See which partition each row lands in with `spark_partition_id()`",
+    "Explain hash partitioning by key: the same key always lands in the same partition",
+    "Control partitions after a shuffle with `spark.sql.shuffle.partitions`, and say when adaptive execution merges them"
+  ],
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "trips"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`trips` above has the 12 lesson trips, read from one small file, so it's one partition. `F` is `pyspark.sql.functions`.\n\nThere are two ways to change how many partitions a DataFrame has:\n\n- **`repartition(n)`** shuffles: every row may move to a new partition, and the rows come out spread evenly. It can make more partitions or fewer. In the plan it's an `Exchange`.\n- **`coalesce(n)`** doesn't shuffle: it glues existing partitions together, so it can only make fewer. Asking for more than there are leaves the count as it is. In the plan it's a `Coalesce` step, with no `Exchange`.\n\nThis environment is local mode with two cores, so moving rows here is cheap. On a cluster a shuffle sends rows over the network between machines, which is why `coalesce` is the usual way to reduce partitions, for example before writing a few files instead of many."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "repartition and coalesce",
+      "code": "spread = trips.repartition(4)\nprint(spread.rdd.getNumPartitions(), \"after repartition(4)\")\nprint(spread.coalesce(2).rdd.getNumPartitions(), \"after coalesce(2)\")\nprint(spread.coalesce(8).rdd.getNumPartitions(), \"after coalesce(8)\")\nprint(spread.repartition(8).rdd.getNumPartitions(), \"after repartition(8)\")\n\nplan = spread.coalesce(2)._jdf.queryExecution().executedPlan().toString()\nprint(\"Coalesce 2\" in plan, plan.count(\"Exchange\"), \"Exchange\")\n",
+      "note": "`coalesce(8)` can't add partitions, so it stays at 4. The plan of `spread.coalesce(2)` has a `Coalesce 2` step and only one `Exchange`: the one `repartition(4)` made. Coalescing added no shuffle."
+    },
+    {
+      "kind": "text",
+      "md": "`F.spark_partition_id()` is a column holding the number of the partition each row is in, counting from 0. Grouping by it (lesson 31) counts the rows in every partition, so you can see how evenly a shuffle spread the work.\n\n`repartition(n)` with no column deals rows out in turn, like cards: **round-robin** partitioning. Every partition gets the same number of rows, give or take one."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Rows per partition after repartition(3)",
+      "code": "from pyspark.sql import functions as F\n\nspread = trips.repartition(3).withColumn(\"partition\", F.spark_partition_id())\nspread.groupBy(\"partition\").count().orderBy(\"partition\").show()\n",
+      "note": "12 rows dealt into 3 partitions: 4 each. Round-robin is even, but rows for the same driver or zone end up scattered across partitions."
+    },
+    {
+      "kind": "text",
+      "md": "Grouping, joining and `repartition(n, \"col\")` need the opposite: all rows with the same key in the same partition. They use **hash partitioning**. Spark computes a hash of the key (a number made from its value) and takes it modulo the number of partitions, in Spark's terms `pmod(hash(key), n)`. The same key always gives the same hash, so it always lands in the same partition.\n\nThe price: partitions get as many rows as their keys happen to have. A busy key makes a big partition, and several keys can share one while another is empty. Lesson 59 is about what to do when that gets bad."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Hash partitioning by pickup zone",
+      "code": "from pyspark.sql import functions as F\n\nby_zone = trips.repartition(3, \"pickup_zone_id\").withColumn(\"partition\", F.spark_partition_id())\nby_zone.groupBy(\"pickup_zone_id\", \"partition\").count().orderBy(\"pickup_zone_id\").show()\n\nby_zone.groupBy(\"partition\").count().orderBy(\"partition\").show()\n\nmismatched = by_zone.filter(F.col(\"partition\") != F.pmod(F.hash(\"pickup_zone_id\"), 3)).count()\nprint(mismatched, \"rows where the partition isn't pmod(hash, 3)\")\n",
+      "note": "Each zone appears once in the first table: all its trips are in one partition. The second table shows the cost: partition 0 got four zones and 9 trips, the other two got one zone each. The last line checks the rule: `F.hash` is the same hash Spark partitions with, and no row disagrees with it."
+    },
+    {
+      "kind": "text",
+      "md": "A grouping shuffle doesn't ask you for a number. It makes `spark.sql.shuffle.partitions` partitions: 200 by default in Spark, 4 in this environment because its data is small. You can change it for the session with `spark.conf.set`.\n\nThat number is fixed before Spark knows how much data the shuffle will carry. Too many partitions for a little data means lots of tiny tasks; too few for a lot of data means a few huge ones. The next example turns adaptive execution off, so you see the setting itself."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "The shuffle partitions setting",
+      "code": "spark.conf.set(\"spark.sql.adaptive.enabled\", \"false\")\nprint(spark.conf.get(\"spark.sql.shuffle.partitions\"), \"shuffle partitions\")\n\nby_driver = trips.groupBy(\"driver_id\").count()\nprint(by_driver.rdd.getNumPartitions(), \"partitions after groupBy\")\nplan = by_driver._jdf.queryExecution().executedPlan().toString()\nprint(\"hashpartitioning(driver_id\" in plan)\n\nspark.conf.set(\"spark.sql.shuffle.partitions\", \"6\")\nprint(trips.groupBy(\"driver_id\").count().rdd.getNumPartitions(), \"partitions with the setting at 6\")\nprint(trips.repartition(\"driver_id\").rdd.getNumPartitions(), \"partitions for repartition by a column, no number\")\n",
+      "note": "Grouping shuffles by `hashpartitioning(driver_id, ...)` into the setting's number of partitions. Only 3 drivers, so most of those partitions are empty. `repartition` with a column and no number uses the same setting."
+    },
+    {
+      "kind": "text",
+      "md": "**Adaptive query execution** (AQE), on by default, fixes part of that problem. It runs the stage before a shuffle first (lesson 55), looks at how much data each partition really got, and **merges neighbouring small partitions** into fewer, bigger ones before the next stage starts. The target size is `spark.sql.adaptive.advisoryPartitionSizeInBytes`, 64 MB by default, so the lesson's few rows end up in a single partition.\n\nAQE only merges partitions whose number Spark chose. When you give `repartition` a number, you get that number. Lesson 58 covers AQE's other tricks."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Adaptive execution merges small partitions",
+      "code": "spark.conf.set(\"spark.sql.adaptive.enabled\", \"true\")\nprint(spark.conf.get(\"spark.sql.shuffle.partitions\"), \"shuffle partitions\")\nprint(trips.groupBy(\"driver_id\").count().rdd.getNumPartitions(), \"after groupBy\")\nprint(trips.repartition(\"driver_id\").rdd.getNumPartitions(), \"after repartition by a column\")\nprint(trips.repartition(3, \"driver_id\").rdd.getNumPartitions(), \"after repartition(3, column)\")\n\nspark.conf.set(\"spark.sql.adaptive.enabled\", \"false\")\nprint(trips.groupBy(\"driver_id\").count().rdd.getNumPartitions(), \"after groupBy, adaptive off\")\n",
+      "note": "With AQE on, the 4 small partitions after grouping or repartitioning by a column become 1. `repartition(3, ...)` keeps its 3 because you asked for them. With AQE off, the setting's 4 is back. When you show partition counts, set AQE yourself, so the number means what you think."
+    }
+  ],
+  "challenges": [
+    "PS-L057-C1",
+    "PS-L057-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "A DataFrame has 4 partitions. What does `df.coalesce(8).rdd.getNumPartitions()` return?",
+      "choices": [
+        "8",
+        "4",
+        "2",
+        "200"
+      ],
+      "answer": 1,
+      "why": "`coalesce` only glues existing partitions together without a shuffle, so it can't make more. Use `repartition(8)` to get 8."
+    },
+    {
+      "id": "k2",
+      "prompt": "After `trips.repartition(3, \"pickup_zone_id\")`, what is true of the trips from one zone?",
+      "choices": [
+        "They're spread evenly over the 3 partitions",
+        "They're all in the same partition, picked by a hash of the zone id",
+        "They're in partition 0",
+        "They go wherever there's room"
+      ],
+      "answer": 1,
+      "why": "Hash partitioning sends a row to `pmod(hash(key), n)`. The same key always hashes the same way, so one zone's rows share a partition, though a partition may hold several zones."
+    },
+    {
+      "id": "k3",
+      "prompt": "Shuffle partitions is 4, yet `trips.groupBy(\"driver_id\").count().rdd.getNumPartitions()` prints 1. Why?",
+      "choices": [
+        "`groupBy` never shuffles",
+        "Adaptive execution saw how little data the shuffle produced and merged the small partitions",
+        "There is only one driver",
+        "`count()` always returns one partition"
+      ],
+      "answer": 1,
+      "why": "With AQE on, Spark measures the shuffle output and merges neighbouring small partitions toward its target size. Turn AQE off and you get the setting's 4."
+    }
+  ],
+  "review": [
+    "`repartition(n)` shuffles and can raise or lower the count; `coalesce(n)` merges without a shuffle and can only lower it.",
+    "`F.spark_partition_id()` shows which partition each row is in; group by it to see how even the partitions are.",
+    "`repartition(n)` without a column deals rows round-robin: even partitions, keys scattered.",
+    "Hash partitioning puts a row in `pmod(hash(key), n)`: one key, one partition, but partitions can be uneven.",
+    "Grouping and `repartition(col)` shuffle into `spark.sql.shuffle.partitions` partitions (200 by default, 4 here).",
+    "Adaptive execution merges small shuffle partitions unless you asked for a number; set it explicitly when you count partitions."
+  ],
+  "practice": [
+    "PS-Q0281",
+    "PS-Q0282",
+    "PS-Q0283",
+    "PS-Q0284",
+    "PS-Q0285"
+  ]
+}

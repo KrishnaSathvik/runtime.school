@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0020",
+  "kind": "predict",
+  "slug": "orders-over-two-hundred",
+  "lesson": "PS-L004",
+  "role": "integration",
+  "format": "concept_or_trace",
+  "difficulty": "easy",
+  "minutes": 4,
+  "title": "Orders over 200",
+  "prompt": "This program finds the orders worth more than 200 and then makes one number per order with `spark.range`. What does it print? Type each line on its own line.",
+  "program": "from pyspark.sql import functions as F\n\nbig = orders.filter(F.col(\"total\") > 200).select(\"order_id\", \"total\")\nprint(big.columns)\nprint(big.count(), orders.count())\nnums = spark.range(big.count())\nprint(nums.take(2))\n",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "`columns` lists only the columns the `select` kept, in that order.",
+    "Count the orders whose total is above 200; `filter` never changes `orders`.",
+    "`spark.range(n)` starts at 0, and `take` returns a list of `Row`s, printed like `Row(id=...)`."
+  ],
+  "explanation": "The `select` keeps `order_id` and `total`, and five orders are worth more than 200 (O00003, O00004, O00007, O00010 and O00011), while `orders` still has 12. `spark.range(5)` holds 0 to 4, and `take(2)` returns its first two rows as `Row` objects."
+}

@@ -1,0 +1,57 @@
+{
+  "id": "PS-Q0130",
+  "slug": "unused-accounts-review",
+  "lesson": "PS-L026",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 17,
+  "title": "Review of unused accounts",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "The bank is reviewing every account that has never had a transaction. Write `solve(accounts, transactions, customers)` to list those accounts with the holder's name and what to do next.",
+  "rules": [
+    "An account is unused when no transaction at all has its `account_id`, whatever the transaction's status.",
+    "`full_name` comes from `customers`. If the holder isn't in `customers`, still list the account, with an empty `full_name`.",
+    "Show a missing `overdraft_limit` as 0.00, keeping the column's type.",
+    "`action` is `send reminder` for an active account, `archive` for a closed one and `review` for any other status.",
+    "Return `account_id`, `full_name`, `status`, `overdraft_limit` and `action`, one row per unused account."
+  ],
+  "hints": [
+    "Start with a left anti join of `accounts` against `transactions` to find the unused accounts.",
+    "Bring in the name with a join on `customer_id`. An inner join would drop an account whose holder is missing; pick the join that keeps every account.",
+    "`F.coalesce(F.col(\"overdraft_limit\"), F.lit(0))` fills the gap; Spark widens the 0 to the column's decimal type, so the type doesn't change. Chain `F.when(...).when(...).otherwise(\"review\")` for the action."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "accounts",
+    "transactions",
+    "customers"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(accounts, transactions, customers):\n    # List the accounts with no transactions, the holder's name and the next action.\n    return accounts\n",
+  "output": {
+    "columns": [
+      "account_id",
+      "full_name",
+      "status",
+      "overdraft_limit",
+      "action"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Three steps. First `accounts.join(transactions, on=\"account_id\", how=\"left_anti\")` keeps the accounts with no transaction. Then a left join to `customers` on `customer_id` adds `full_name` and keeps an account even when its holder is missing (an inner join would drop it). Finally select the columns: `F.coalesce(F.col(\"overdraft_limit\"), F.lit(0))` (or `fillna`) turns a missing limit into 0.00 and keeps it decimal, and `F.when(F.col(\"status\") == \"active\", \"send reminder\").when(F.col(\"status\") == \"closed\", \"archive\").otherwise(\"review\")` gives the action. Order doesn't matter: anti joining after the customer join gives the same rows."
+}

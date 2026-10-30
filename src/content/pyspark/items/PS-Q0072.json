@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0072",
+  "slug": "product-sku-codes",
+  "lesson": "PS-L015",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Product SKU codes",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "The warehouse labels shelves with a SKU made from the category and the product number, like `KIT-001` for product `P001` in `kitchen`. Write `solve(products)` so it returns `product_id`, `name` and `sku`.",
+  "rules": [
+    "`sku` is the first three letters of `category` in capitals, a `-`, then the digits of `product_id`: `P001` in `kitchen` gives `KIT-001`.",
+    "A category shorter than three letters is used whole: `tv` gives `TV`.",
+    "If the category or the product id is missing, the whole `sku` is missing. Return the three columns, in that order, for every product."
+  ],
+  "hints": [
+    "`F.substring(\"category\", 1, 3)` takes the first three characters; positions start at 1.",
+    "`F.regexp_extract(\"product_id\", r\"\\d+\", 0)` pulls out the digits.",
+    "Join the pieces with `F.concat`, not `concat_ws`: only `concat` makes the result missing when a part is missing."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "products"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(products):\n    # product_id, name, sku\n    return products\n",
+  "output": {
+    "columns": [
+      "product_id",
+      "name",
+      "sku"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Build three pieces and join them with `concat`: `F.concat(F.upper(F.substring(\"category\", 1, 3)), F.lit(\"-\"), F.regexp_extract(\"product_id\", r\"\\d+\", 0))`. `substring` simply stops at the end of a short category, so `tv` stays `TV`. `F.substring(\"product_id\", 2, 10)` gives the same digits as `regexp_extract`. `concat_ws(\"-\", ...)` looks neater but skips a missing category and returns `-001` or `001`, where the rule wants a missing SKU. A missing product id is a trap for `regexp_extract` alone: it returns missing for a missing value, so `concat` makes the SKU missing too."
+}

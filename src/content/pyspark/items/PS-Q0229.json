@@ -1,0 +1,58 @@
+{
+  "id": "PS-Q0229",
+  "slug": "fix-accounts-xml-export",
+  "lesson": "PS-L046",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Fix the accounts XML export",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "The partner imports our accounts file by the row tag `account`, but it rejects the file, and the nightly rerun fails. Fix `save(accounts, path)`. `solve` saves the file and imports it the way the partner does.",
+  "rules": [
+    "Each account is one `<account>` element, inside an `<accounts>` root element.",
+    "Every column of `accounts` is saved, so the partner's read gets them back with the same types.",
+    "The file may already exist from last night: replace it.",
+    "Keep repeated rows. An empty table gives a file with no accounts."
+  ],
+  "hints": [
+    "Two options name the elements: one is the element for each row, the other wraps the whole file. Which is which?",
+    "Run the starter on the sample and read the error: what does the partner expect the root element to be, and what is it now?",
+    "The first run passes, the next fails: writing to a path that exists needs a mode."
+  ],
+  "explanation": "The starter swaps the two tags: it writes each account as `<accounts>` inside an `<account>` root, so the partner's check on the root element fails. Fixing only `rowTag` isn't enough either: without `rootTag` Spark wraps the rows in its default root, `<ROWS>`. The fix is `option(\"rowTag\", \"account\").option(\"rootTag\", \"accounts\")`. The second bug shows up only on a rerun: without a mode the write refuses because the folder exists, so add `.mode(\"overwrite\")`. `append` isn't right either: it keeps last night's accounts next to tonight's.",
+  "entry": "solve",
+  "inputs": [
+    "accounts"
+  ],
+  "starter": "import glob\n\n\ndef partner_read(path, schema):\n    # The partner's import. Don't change it: it rejects a file whose root element isn't <accounts>.\n    for name in glob.glob(path + \"/part-*.xml\"):\n        body = open(name).read().split(\"?>\", 1)[-1].strip()\n        if body and not body.startswith(\"<accounts>\"):\n            raise ValueError(\"the partner rejected the file: its root element isn't <accounts>\")\n    return spark.read.option(\"rowTag\", \"account\").schema(schema).xml(path)\n\n\ndef save(accounts, path):\n    accounts.write.option(\"rowTag\", \"accounts\").option(\"rootTag\", \"account\").xml(path)\n\n\ndef solve(accounts):\n    path = \"/tmp/partner/accounts_xml\"\n    save(accounts, path)\n    return partner_read(path, accounts.schema)\n",
+  "output": {
+    "columns": [
+      "account_id",
+      "account_name",
+      "industry",
+      "country",
+      "segment",
+      "account_owner",
+      "credit_limit",
+      "created_on",
+      "is_active"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

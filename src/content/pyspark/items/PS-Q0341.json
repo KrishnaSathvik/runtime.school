@@ -1,0 +1,56 @@
+{
+ "id": "PS-Q0341",
+ "slug": "impressions-every-fifteen-minutes",
+ "lesson": "PS-L069",
+ "role": "foundation",
+ "format": "dataframe_coding",
+ "difficulty": "easy",
+ "minutes": 6,
+ "title": "Impressions every fifteen minutes",
+ "dataset": {
+  "id": "PS-D12",
+  "version": "1.0.0"
+ },
+ "prompt": "The ad server team watches traffic per channel in 15-minute windows. Write `solve(impressions)` so a streaming query keeps the count of impressions per 15-minute window and channel in a memory table, and return `window_start`, `window_end`, `channel` and `impressions` from it once the deliveries are done.",
+ "rules": [
+  "Windows are 15 minutes long, don't overlap, and go by `event_time`, when the ad was shown.",
+  "After the last delivery the table has one row per window and channel, with the final count.",
+  "The counts must come from that streaming query: grouping `impressions` itself doesn't count."
+ ],
+ "hints": [
+  "`F.window(\"event_time\", \"15 minutes\")` gives each row its window; group by it and `channel`, then `count()`.",
+  "A late impression changes a window that was already sent. Which output mode leaves the memory table with one row per window?",
+  "Read the table back with `spark.table(name)` and take `window.start` and `window.end`."
+ ],
+ "explanation": "`stream.groupBy(F.window(\"event_time\", \"15 minutes\"), \"channel\").count()` keeps a running count per window and channel in the query's state. In complete mode the memory table is replaced by the whole result after every micro-batch, so after the last one it holds each window once with its final count. Update mode would add the changed window again whenever a late impression arrives, so the table holds it twice. Windows on `arrival_time` put a late impression in the window it arrived in, not the one it was shown in. Windows line up with the clock (:00, :15, :30, :45), and an impression at exactly 09:15:00 opens the 09:15 window.",
+ "entry": "solve",
+ "inputs": [
+  "impressions"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef solve(impressions):\n    spark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")  # small data: one partition keeps the stream fast\n    make_batches(impressions, \"/tmp/ads\")\n    stream = spark.readStream.schema(impressions.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/ads\")\n    # Count impressions per 15-minute window and channel, keep the counts in a memory table,\n    # and return window_start, window_end, channel and impressions from it.\n    return impressions\n",
+ "output": {
+  "columns": [
+   "window_start",
+   "window_end",
+   "channel",
+   "impressions"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

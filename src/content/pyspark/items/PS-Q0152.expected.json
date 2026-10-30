@@ -1,0 +1,104 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "channel",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "orders",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "revenue",
+     "type": "decimal(20,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "delivered",
+     "app",
+     1,
+     "79.96"
+    ],
+    [
+     "delivered",
+     "web",
+     1,
+     "243.00"
+    ],
+    [
+     "paid",
+     "app",
+     2,
+     "591.86"
+    ],
+    [
+     "shipped",
+     "app",
+     2,
+     "490.93"
+    ],
+    [
+     "refunded",
+     "app",
+     1,
+     "57.00"
+    ],
+    [
+     "delivered",
+     "store",
+     1,
+     "39.98"
+    ],
+    [
+     "placed",
+     "web",
+     1,
+     "227.48"
+    ],
+    [
+     "paid",
+     "store",
+     1,
+     "117.99"
+    ],
+    [
+     "paid",
+     "web",
+     1,
+     "59.50"
+    ],
+    [
+     "shipped",
+     "store",
+     1,
+     "105.49"
+    ]
+   ],
+   "row_count": 10
+  }
+ },
+ "hidden": [
+  "the full practice orders",
+  "orders with a missing total, including a combination with no totals at all",
+  "orders with a missing status or channel",
+  "one status spread over several channels",
+  "an empty orders table"
+ ]
+}

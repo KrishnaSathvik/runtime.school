@@ -1,0 +1,206 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "order_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "line_no",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "order_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "product_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "quantity",
+     "type": "int",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "O00001",
+     1,
+     "2026-06-11",
+     "paid",
+     "P005",
+     3
+    ],
+    [
+     "O00001",
+     2,
+     "2026-06-11",
+     "paid",
+     "P005",
+     3
+    ],
+    [
+     "O00002",
+     1,
+     "2026-03-11",
+     "delivered",
+     "P001",
+     3
+    ],
+    [
+     "O00002",
+     1,
+     "2026-03-11",
+     "delivered",
+     "P001",
+     3
+    ],
+    [
+     "O00003",
+     1,
+     "2026-08-28",
+     "paid",
+     "P001",
+     2
+    ],
+    [
+     "O00003",
+     2,
+     "2026-08-28",
+     "paid",
+     "P007",
+     3
+    ],
+    [
+     "O00015",
+     1,
+     null,
+     null,
+     "P004",
+     2
+    ]
+   ],
+   "row_count": 7,
+   "inputs": {
+    "order_items": [
+     [
+      "O00001",
+      "1",
+      "P005",
+      "3",
+      "19.99"
+     ],
+     [
+      "O00001",
+      "2",
+      "P005",
+      "3",
+      "17.99"
+     ],
+     [
+      "O00002",
+      "1",
+      "P001",
+      "3",
+      "19.99"
+     ],
+     [
+      "O00002",
+      "1",
+      "P001",
+      "3",
+      "19.99"
+     ],
+     [
+      "O00003",
+      "1",
+      "P001",
+      "2",
+      "19.99"
+     ],
+     [
+      "O00003",
+      "2",
+      "P007",
+      "3",
+      "59.99"
+     ],
+     [
+      "O00015",
+      "1",
+      "P004",
+      "2",
+      "4.50"
+     ]
+    ],
+    "orders": [
+     [
+      "O00001",
+      "C0001",
+      "2026-06-11",
+      "paid",
+      "store",
+      "117.99"
+     ],
+     [
+      "O00002",
+      "C0001",
+      "2026-03-11",
+      "delivered",
+      "app",
+      "79.96"
+     ],
+     [
+      "O00002",
+      "C0001",
+      "2026-03-11",
+      "delivered",
+      "app",
+      "79.96"
+     ],
+     [
+      "O00003",
+      "C0002",
+      "2026-08-28",
+      "paid",
+      "app",
+      "291.95"
+     ],
+     [
+      "O00004",
+      "C0004",
+      "2026-03-24",
+      "shipped",
+      "app",
+      "418.96"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice orders and order lines",
+  "orders delivered twice",
+  "lines for orders that don't exist or have no order id",
+  "two identical order lines",
+  "orders with no lines",
+  "an empty orders table"
+ ]
+}

@@ -1,0 +1,56 @@
+{
+  "id": "PS-Q0163",
+  "slug": "rank-dense-rank-row-number",
+  "lesson": "PS-L033",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Three ways to number ties",
+  "dataset": {
+    "id": "PS-D03",
+    "version": "1.0.0"
+  },
+  "prompt": "Salaries come in steps of 2,500, so ties are common. Write `solve(employees)` to number each department's people from the highest salary down in three ways, side by side.",
+  "rules": [
+    "Work within each `department_id`, highest `salary` first.",
+    "`rank`: equal salaries share a number and the next one skips (1, 1, 3). `dense_rank`: equal salaries share a number and the next one doesn't skip (1, 1, 2).",
+    "`row_number`: everyone gets a different number. Among equal salaries, the earlier `hire_date` comes first; if that's the same too, the smaller `employee_id` comes first.",
+    "Return `department_id`, `employee_id`, `salary`, `hire_date`, `rank`, `dense_rank` and `row_number`."
+  ],
+  "hints": [
+    "All three are window functions over the same groups, so they can share most of one window: `Window.partitionBy(\"department_id\")`.",
+    "`rank` and `dense_rank` only need the salary order. `row_number` needs extra sort keys after the salary so no two rows tie.",
+    "Order the `row_number` window by `F.col(\"salary\").desc(), \"hire_date\", \"employee_id\"`. Without the last key, two people hired the same day could come out in either order."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "employees"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(employees):\n    # Number each department's people in three ways: rank, dense_rank and row_number.\n    return employees\n",
+  "output": {
+    "columns": [
+      "department_id",
+      "employee_id",
+      "salary",
+      "hire_date",
+      "rank",
+      "dense_rank",
+      "row_number"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Use two windows over the same departments. `by_pay = Window.partitionBy(\"department_id\").orderBy(F.col(\"salary\").desc())` serves `F.rank()` and `F.dense_rank()`: on equal salaries both repeat the number, and only `rank` leaves a gap after. `row_number` must never tie, so its window needs a full tie-breaker: `.orderBy(F.col(\"salary\").desc(), F.col(\"hire_date\"), F.col(\"employee_id\"))`. Without `employee_id`, two people with the same salary and hire date are numbered in whatever order Spark happens to read them, which can change from run to run. (Using the full tie-breaker for `rank` and `dense_rank` too would be wrong: it would break their ties.)"
+}

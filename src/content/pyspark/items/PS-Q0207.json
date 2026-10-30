@@ -1,0 +1,55 @@
+{
+  "id": "PS-Q0207",
+  "slug": "readings-by-the-sites-local-day",
+  "lesson": "PS-L042",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Readings by the site's local day",
+  "dataset": {
+    "id": "PS-D09",
+    "version": "1.0.0"
+  },
+  "prompt": "The site team in Chicago reports by their own calendar day, not by UTC. Write `solve(sensor_readings)` so it returns each reading flattened, with the local day on which it was measured.",
+  "rules": [
+    "Return `reading_id`, `device_id`, `local_date`, `temperature_c`, `humidity_pct` and `status`, in that order.",
+    "`event_time` is in UTC. `local_date` is the date of `event_time` in the `America/Chicago` time zone, with daylight saving as that zone applies it.",
+    "`temperature_c`, `humidity_pct` and `status` come from `payload`. A missing struct or field gives a missing value.",
+    "Keep every reading, including repeated deliveries."
+  ],
+  "hints": [
+    "Pull the three measurement fields out of `payload` with paths and aliases, as in the lesson.",
+    "`F.from_utc_timestamp(col, \"America/Chicago\")` turns a UTC time into Chicago's wall-clock time.",
+    "Take the date after converting, not before. Use the zone name rather than a fixed offset, because the offset changes in March."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "sensor_readings"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(sensor_readings):\n    # Return each reading with its Chicago local date.\n    return sensor_readings\n",
+  "output": {
+    "columns": [
+      "reading_id",
+      "device_id",
+      "local_date",
+      "temperature_c",
+      "humidity_pct",
+      "status"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "The measurement columns are paths with aliases, as in any flattening. The day is the part to get right: `F.to_date(F.from_utc_timestamp(\"event_time\", \"America/Chicago\")).alias(\"local_date\")`. Converting first moves a reading taken at 02:00 UTC back to the evening before in Chicago, so it belongs to the previous local day. Taking `F.to_date(\"event_time\")` gives the UTC day, which is wrong for every reading between midnight and 05:00 or 06:00 UTC. A fixed offset such as `-05:00` is right in summer but an hour off in winter, and the zone name handles the change in March. The day comes from `event_time` (when the sensor measured), not from `arrival_time`."
+}

@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0424",
+  "slug": "the-profile-that-skipped-the-scan",
+  "lesson": "PS-L085",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "The profile that skipped the scan",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "prompt": "A teammate's `checked_profile` checks that a report returns rows and then profiles it. For the shared-rides report it says the scan opened no file and read no rows. Fix `checked_profile` so `solve(trips)` returns the profile of one complete run of the report.",
+  "rules": [
+    "Every step of one complete run, with the rows it produced (shuffled rows for `Exchange`) and, for the scan, the files it opened.",
+    "Don't change `profile`, `riders_by_rate`, `as_table` or `solve`."
+  ],
+  "hints": [
+    "Run the starter and read the profile from the bottom: which steps show 0?",
+    "The rows check already ran the report. Running the same DataFrame again reuses the shuffle files the first run wrote.",
+    "Give the profile a DataFrame that hasn't run yet: call `build(trips)` again."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "trips"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\nspark.conf.set(\"spark.sql.adaptive.enabled\", \"false\")\n\n\ndef profile(df):\n    \"\"\"Run df once, then list the plan steps Spark ran with the counts it kept.\"\"\"\n    df.collect()\n    labels = {\"numOutputRows\": \"rows\", \"shuffleRecordsWritten\": \"shuffled rows\", \"numFiles\": \"files\", \"filesSize\": \"bytes\"}\n    steps = []\n\n    def walk(node, depth):\n        name = node.nodeName().strip()\n        if name == \"AdaptiveSparkPlan\":\n            return walk(node.executedPlan(), depth)\n        if name.endswith(\"QueryStage\"):\n            return walk(node.plan(), depth)\n        metrics = node.metrics()\n        counts = {label: metrics.apply(key).value() for key, label in labels.items() if metrics.contains(key)}\n        if counts:\n            steps.append((\"  \" * depth + name, counts))\n            depth += 1\n        children = node.children()\n        for i in range(children.size()):\n            walk(children.apply(i), depth)\n\n    walk(df._jdf.queryExecution().executedPlan(), 0)\n    return steps\n\n\ndef riders_by_rate(trips):\n    shared = trips.filter(F.col(\"passenger_count\") >= 2)\n    return shared.groupBy(\"rate_code\").count()\n\n\ndef checked_profile(build, trips):\n    \"\"\"Check that the report returns rows, then profile one run of it.\"\"\"\n    report = build(trips)\n    rows = report.collect()\n    print(len(rows), \"rate codes\")\n    return profile(report)\n\n\ndef as_table(steps):\n    rows = [(i + 1, step.strip(), counts.get(\"rows\", counts.get(\"shuffled rows\")), counts.get(\"files\")) for i, (step, counts) in enumerate(steps)]\n    return spark.createDataFrame(rows, \"position INT, step STRING, rows LONG, files LONG\")\n\n\ndef solve(trips):\n    return as_table(checked_profile(riders_by_rate, trips))\n",
+  "output": {
+    "columns": [
+      "position",
+      "step",
+      "rows",
+      "files"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`report.collect()` ran the report once, and that run wrote its shuffle files. `profile(report)` then ran the same DataFrame again: Spark found those files, skipped the stage that makes them, and ran only the last aggregate, so the scan, the filter, the first aggregate and the shuffle show 0. Spark clears the counts at the start of each run, so the first run's numbers are gone too. The fix is to profile a fresh DataFrame: `profile(build(trips))`. A cache isn't the answer: `cache()` changes the plan, and the profile then shows a cache read instead of the file scan. The same trap catches benchmarks: time a second `collect()` of one DataFrame and you time half the work."
+}

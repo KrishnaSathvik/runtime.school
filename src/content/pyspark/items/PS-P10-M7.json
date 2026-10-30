@@ -1,0 +1,82 @@
+{
+ "id": "PS-P10-M7",
+ "slug": "validate-recovery-and-incidents",
+ "project": "PS-P10",
+ "milestone": "PS-P10.m7",
+ "difficulty": "hard",
+ "minutes": 50,
+ "title": "Validate the recovery, the state and the final incidents",
+ "dataset": {
+  "id": "PS-D09",
+  "version": "1.0.0"
+ },
+ "also": [
+  {
+   "id": "PS-D15",
+   "version": "1.1.0",
+   "tables": [
+    "error_events"
+   ]
+  }
+ ],
+ "prompt": "Before the pipeline goes live, the team wants proof that the outage changed nothing: the recovered alerts match a run that never failed, nothing was delivered twice, the checkpoint's state agrees, and every device error still has an explanation.\n\nWrite `recovery_report(sensor_readings, devices, device_locations, maintenance_events, alerts, error_events)`. It runs `recovery_run`, reads the sink, runs `anomaly_events` as the uninterrupted run, and returns one row per check with its value and whether it passed.",
+ "rules": [
+  "`runs`: how many runs `recovery_run` made; passed when the last one finished.",
+  "`micro-batches committed`: the last run's `committed`; passed when it is 0, 1, 2, … with no gap.",
+  "`alerts delivered`: the rows in the sink (without `batch_id`); passed when it equals the uninterrupted run's count. `duplicate alerts`: rows minus distinct `device_id`, `rule_id`, `reading_id`; passed when 0.",
+  "`same as an uninterrupted run`: `true` or `false`, comparing the two sets of alert rows, copies included; passed when true.",
+  "`episode keys in state`: rows in the state of the `applyInPandasWithState` operator in the recovery checkpoint; passed when it equals the same count in the uninterrupted run's checkpoint.",
+  "`device errors explained`: `correlate` on the recovered alerts, written `\"<explained> of <errors>\"`, where explained means a cause other than `unexplained`; passed when all are.",
+  "Values are text; return `REPORT_SCHEMA`'s columns."
+ ],
+ "hints": [
+  "Collect both alert tables and compare `sorted(tuple(r) for r in ...)` in Python: one job each, and the counts come for free. Select the same columns in the same order first.",
+  "`spark.read.format(\"state-metadata\").load(ck)` lists a checkpoint's stateful operators with their `operatorId`. Read one with `spark.read.format(\"statestore\").option(\"operatorId\", n).load(ck)`.",
+  "Build the rows as `(check, value, passed)` tuples and pass the list to `spark.createDataFrame(rows, REPORT_SCHEMA)`."
+ ],
+ "explanation": "A recovery test is only convincing when it compares against a run that didn't fail. Both runs read the same files in the same micro-batches, and the episode state was restored to its state before the failed batch, so the alerts must be equal row for row, which a multiset comparison checks. Counting distinct alert keys catches a sink that delivered twice. The state store reader looks inside the checkpoint itself: the `applyInPandasWithState` operator keeps one row per sensor and rule, and the recovered checkpoint must hold the same keys as the uninterrupted one. The dedup operator has its own state, so picking the right `operatorId` matters. Finally, running `correlate` on the recovered alerts proves the incident view built downstream is unaffected. Every value is a deterministic fact from Spark, never a timing or a run id, so the report reads the same on every run.",
+ "entry": "recovery_report",
+ "inputs": [
+  "sensor_readings",
+  "devices",
+  "device_locations",
+  "maintenance_events",
+  "alerts",
+  "error_events"
+ ],
+ "file": "pipeline.py",
+ "append": "\n\nREPORT_SCHEMA = \"check STRING, value STRING, passed BOOLEAN\"\n\n\ndef recovery_report(sensor_readings, devices, device_locations, maintenance_events, alerts, error_events):\n    # Step 7: check the recovered alerts against an uninterrupted run, the checkpoint's state, and the incidents.\n    report = [(\"runs\", \"0\", False)]\n    return spark.createDataFrame(report, REPORT_SCHEMA)\n",
+ "prerequisites": [
+  "PS-L072",
+  "PS-L081",
+  "PS-L084"
+ ],
+ "output": {
+  "columns": [
+   "check",
+   "value",
+   "passed"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "example",
+   "sample": true
+  },
+  {
+   "id": "project",
+   "edition": "project"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

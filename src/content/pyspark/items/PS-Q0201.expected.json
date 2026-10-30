@@ -1,0 +1,80 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "event_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "step",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "qtys",
+     "type": "array<int>",
+     "nullable": true
+    },
+    {
+     "name": "single_units_only",
+     "type": "boolean",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "CO-0001",
+     "begin",
+     [
+      1,
+      2
+     ],
+     false
+    ],
+    [
+     "CO-0002",
+     "payment",
+     [
+      1,
+      2
+     ],
+     false
+    ],
+    [
+     "CO-0003",
+     "complete",
+     [
+      1,
+      2
+     ],
+     false
+    ],
+    [
+     "CO-0004",
+     "begin",
+     [
+      1
+     ],
+     true
+    ]
+   ],
+   "row_count": 4
+  }
+ },
+ "hidden": [
+  "the full practice checkout steps",
+  "baskets whose quantities aren't in order",
+  "baskets where several items share the same quantity",
+  "an empty basket and a step with no items list",
+  "the same checkout step delivered twice",
+  "no checkout steps"
+ ]
+}

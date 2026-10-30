@@ -1,0 +1,149 @@
+{
+  "id": "PS-L080",
+  "minutes": 25,
+  "lede": "Most \"Spark ran out of memory\" stories come down to a few settings: how big the driver is, how big each executor is, and how much of that memory Spark keeps for its own work. Knowing which setting controls which process tells you what to change and when the change takes effect.",
+  "objectives": [
+    "Name the settings that size the driver and the executors, and what each process uses its memory for",
+    "Work out Spark's unified memory pool from the heap size, and check it on a real JVM",
+    "Explain why memory and core settings must be set before the application starts",
+    "Diagnose a driver that is asked to hold too much with `collect()`"
+  ],
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "trips"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "Lesson 2 named the processes: one **driver** and some **executors**. Each is a Java process (a JVM) with its own memory, set when it starts:\n\n- `spark.driver.memory` (`--driver-memory`): the driver's heap. It holds your program's objects, the plans, and every row you bring back with `collect()`, `toPandas()` or `take()`.\n- `spark.executor.memory` (`--executor-memory`): each executor's heap. It holds the rows tasks are working on, shuffle and sort buffers, and cached data.\n- `spark.executor.cores` (`--executor-cores`): how many tasks one executor runs at once. They share its memory.\n- `spark.executor.instances` (`--num-executors`): how many executors to start, unless dynamic allocation adds and removes them as the work changes.\n\nOn YARN or Kubernetes, each executor's container also needs room outside the heap, `spark.executor.memoryOverhead`, for the JVM itself and for the Python worker processes that run your Python functions. On YARN it defaults to the larger of 384 MiB and 10% of the executor memory, so `--executor-memory 8g` asks the cluster for about 8.8 GiB per executor. A container killed for using more than that is an overhead problem, not a heap problem."
+    },
+    {
+      "kind": "text",
+      "md": "This environment has no cluster. In local mode the driver and the one executor are the **same JVM**, so `spark.driver.memory` sizes everything, and the cores come from the master: `local[2]` runs 2 tasks at a time. `trips` above is the 12 lesson trips; it's here to show the cores and partitions you met in lesson 2."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "This environment's memory settings",
+      "code": "sc = spark.sparkContext\nheap = sc._jvm.java.lang.Runtime.getRuntime().maxMemory()\n\nprint(\"driver memory setting:\", spark.conf.get(\"spark.driver.memory\"))\nprint(\"driver heap:\", heap // 1024**2, \"MiB\")\nprint(\"executor memory setting:\", sc.getConf().get(\"spark.executor.memory\", \"not set\"))\nprint(\"cores for tasks:\", sc.defaultParallelism)\nprint(\"trips partitions:\", trips.rdd.getNumPartitions())\n",
+      "note": "This environment starts Spark with 2 GiB of driver memory, and the JVM's heap is exactly that. `spark.executor.memory` was never set, because there is no separate executor to size. Two cores means two tasks at a time; `trips` is one partition, so a step over it uses only one of them."
+    },
+    {
+      "kind": "text",
+      "md": "Inside each heap, Spark doesn't use everything for itself. It sets aside **300 MiB** of reserved memory, then takes `spark.memory.fraction` (default 0.6) of the rest as its **unified pool**. The pool is shared by:\n\n- **execution** memory: shuffles, joins, sorts and aggregations while they run,\n- **storage** memory: cached data (lesson 60). `spark.memory.storageFraction` (default 0.5) is the part of the pool that cached data keeps even when execution needs space.\n\nThe other 40% is user memory, for Spark's internal metadata and other objects on the heap. When execution needs more than the pool has, it **spills** to disk, which is slow but not fatal. A JVM that runs out of heap altogether fails with `OutOfMemoryError`.\n\nEach executor reports its pool size to the driver. `sc._jsc.sc().getExecutorMemoryStatus()` reaches into Spark's JVM (like `_jdf` in lesson 55) to read those reports: one entry per executor, here just one."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Spark's memory pool, measured",
+      "code": "sc = spark.sparkContext\nheap = sc._jvm.java.lang.Runtime.getRuntime().maxMemory()\nstatus = sc._jsc.sc().getExecutorMemoryStatus()\npool = status.values().head()._1()\n\nprint(\"executors reporting memory:\", status.size())\nprint(\"unified pool:\", pool // 1024**2, \"MiB\")\nprint(\"matches (heap - 300 MiB) * 0.6:\", pool == int((heap - 300 * 1024**2) * 0.6))\n",
+      "note": "One executor, with a pool of 1048 MiB: (2048 - 300) × 0.6 = 1048.8, rounded down. The comparison checks the formula against the exact byte count the JVM reported."
+    },
+    {
+      "kind": "text",
+      "md": "A JVM's heap is fixed when the process starts. So memory and core settings can't change once the application is running. Spark refuses instead of pretending:"
+    },
+    {
+      "kind": "error-example",
+      "id": "e3",
+      "title": "Changing executor memory in a running session",
+      "code": "spark.conf.set(\"spark.executor.memory\", \"4g\")\n",
+      "error": "AnalysisException",
+      "note": "`CANNOT_MODIFY_CONFIG`: `spark.executor.memory` is read when executors start, so a running session can't change it. Set it on the `spark-submit` command line or in the cluster's defaults instead."
+    },
+    {
+      "kind": "text",
+      "md": "`spark.conf.isModifiable(key)` tells you in advance whether a setting can change while the application runs. Settings for queries, such as `spark.sql.shuffle.partitions`, can: they're read again for every query. Settings for processes can't."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Which settings can change now?",
+      "code": "for key in [\"spark.driver.memory\", \"spark.executor.memory\", \"spark.executor.cores\",\n            \"spark.sql.shuffle.partitions\"]:\n    print(key, spark.conf.isModifiable(key))\n\nspark.conf.set(\"spark.sql.shuffle.partitions\", \"8\")\nprint(spark.conf.get(\"spark.sql.shuffle.partitions\"))\n",
+      "note": "Driver memory, executor memory and executor cores are fixed for the life of the application. The number of shuffle partitions is a query setting, so it changes for the next query at once."
+    },
+    {
+      "kind": "text",
+      "md": "To try other sizes, start a new application. The next example submits a script with `spark-submit` (lesson 79): it writes the script to `/tmp`, runs the command, and prints the exit code and the lines starting with `app:`. `SPARK_LOCAL_IP` is there because this environment has no network."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Submit with less driver memory",
+      "code": "import os, subprocess\n\ndef submit(*args):\n    env = {**os.environ, \"SPARK_LOCAL_IP\": \"127.0.0.1\"}\n    run = subprocess.run([\"spark-submit\", *args], capture_output=True, text=True, env=env)\n    print(\"exit code:\", run.returncode)\n    for line in run.stdout.splitlines():\n        if line.startswith(\"app:\"):\n            print(line)\n    return run\n\nopen(\"/tmp/memory.py\", \"w\").write(\"\"\"\nfrom pyspark.sql import SparkSession\n\nspark = SparkSession.builder.getOrCreate()\nsc = spark.sparkContext\nheap = sc._jvm.java.lang.Runtime.getRuntime().maxMemory()\npool = sc._jsc.sc().getExecutorMemoryStatus().values().head()._1()\nprint(\"app: heap MiB\", heap // 1024**2)\nprint(\"app: pool MiB\", pool // 1024**2)\nprint(\"app: executor memory\", sc.getConf().get(\"spark.executor.memory\", \"not set\"))\nprint(\"app: cores\", sc.defaultParallelism)\nspark.stop()\n\"\"\")\n\nsubmit(\"--master\", \"local[3]\", \"--driver-memory\", \"1g\", \"--executor-memory\", \"4g\", \"/tmp/memory.py\")\n",
+      "note": "`--driver-memory 1g` gave a 1024 MiB heap and a pool of (1024 - 300) × 0.6 = 434 MiB. `--executor-memory 4g` changed nothing: in local mode spark-submit doesn't even pass it on, because there's no separate executor. `local[3]` gave 3 cores."
+    },
+    {
+      "kind": "text",
+      "md": "The driver has one more guard. `spark.driver.maxResultSize` (default 1g) caps the total size of the results that tasks send back to the driver in one action. When `collect()` would bring back more, Spark stops the job rather than let the driver run out of memory. Raising the limit only moves the problem; the fix is usually to keep the work on the executors: aggregate first, `limit` the rows, or write the result to files."
+    },
+    {
+      "kind": "example",
+      "id": "e6",
+      "title": "When the driver is asked to hold too much",
+      "code": "import os, subprocess\n\ndef submit(*args):\n    env = {**os.environ, \"SPARK_LOCAL_IP\": \"127.0.0.1\"}\n    run = subprocess.run([\"spark-submit\", *args], capture_output=True, text=True, env=env)\n    print(\"exit code:\", run.returncode)\n    for line in run.stdout.splitlines():\n        if line.startswith(\"app:\"):\n            print(line)\n    return run\n\nopen(\"/tmp/collect.py\", \"w\").write(\"\"\"\nfrom pyspark.sql import SparkSession\n\nspark = SparkSession.builder.getOrCreate()\nids = spark.range(0, 50000, 1, 2)\nprint(\"app: count\", ids.count())\ntry:\n    rows = ids.collect()\n    print(\"app: collected\", len(rows))\nexcept Exception as e:\n    print(\"app: collect failed with\", type(e).__name__)\nspark.stop()\n\"\"\")\n\nrun = submit(\"--master\", \"local[2]\", \"--conf\", \"spark.driver.maxResultSize=64k\", \"/tmp/collect.py\")\nprint(\"log names maxResultSize:\", \"is bigger than spark.driver.maxResultSize\" in run.stderr)\n",
+      "note": "The limit is set very low, 64 KiB, so the failure shows on small data. `count()` works: each task sends back one number. `collect()` sends back all 50,000 rows, the results pass the limit, and the job fails. In a submitted script the error arrives as a `Py4JJavaError`; the driver's log says why."
+    }
+  ],
+  "challenges": [
+    "PS-L080-C1",
+    "PS-L080-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "With `spark.memory.fraction` at its default 0.6, how big is Spark's unified pool on a 4096 MiB heap?",
+      "choices": [
+        "2457 MiB",
+        "2277 MiB",
+        "2048 MiB",
+        "3796 MiB"
+      ],
+      "answer": 1,
+      "why": "Spark first sets aside 300 MiB, then takes 0.6 of the rest: (4096 - 300) × 0.6 = 2277.6, so about 2277 MiB."
+    },
+    {
+      "id": "k2",
+      "prompt": "A running session calls `spark.conf.set(\"spark.executor.memory\", \"8g\")`. What happens?",
+      "choices": [
+        "The executors restart with 8 GiB",
+        "Only executors started from now on get 8 GiB",
+        "Spark raises an error: the setting can't change while the application runs",
+        "Nothing, silently"
+      ],
+      "answer": 2,
+      "why": "`spark.executor.memory` isn't modifiable at run time, so Spark raises `CANNOT_MODIFY_CONFIG`. Set it when you submit the application."
+    },
+    {
+      "id": "k3",
+      "prompt": "A job fails with \"Total size of serialized results ... is bigger than spark.driver.maxResultSize\". What is the usual fix?",
+      "choices": [
+        "Give the executors more memory",
+        "Bring back fewer rows: aggregate, limit, or write the result out instead of collecting it",
+        "Add more executor cores",
+        "Raise `spark.sql.shuffle.partitions`"
+      ],
+      "answer": 1,
+      "why": "The limit protects the driver from receiving too much in one action. Executor settings don't change what is sent back; sending back less does."
+    }
+  ],
+  "review": [
+    "The driver's memory holds your program, the plans and every collected row; executor memory holds the rows tasks work on, shuffle buffers and cache.",
+    "On a cluster, `--executor-memory`, `--executor-cores` and `--num-executors` size the executors; each container also needs `memoryOverhead` outside the heap.",
+    "In local mode the driver and the executor are one JVM: `spark.driver.memory` sizes it and `local[n]` sets the cores.",
+    "Unified pool = (heap - 300 MiB) × `spark.memory.fraction` (0.6), shared by execution and cached data.",
+    "Memory and core settings are fixed at start: `spark.conf.isModifiable` says False and `spark.conf.set` raises `CANNOT_MODIFY_CONFIG`.",
+    "`spark.driver.maxResultSize` stops a `collect()` that would swamp the driver; send back less rather than raising it."
+  ],
+  "practice": [
+    "PS-Q0396",
+    "PS-Q0397",
+    "PS-Q0398",
+    "PS-Q0399",
+    "PS-Q0400"
+  ]
+}

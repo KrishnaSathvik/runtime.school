@@ -31,6 +31,8 @@ export function Editor({
   onCheck,
   label,
   minHeight = "96px",
+  height,
+  maxHeight,
   autoFocus = false,
   tables,
   seedSql,
@@ -41,6 +43,9 @@ export function Editor({
   onCheck?: () => void;
   label: string;
   minHeight?: string;
+  /** Pass `"auto"` so the editor grows with the SQL instead of a fixed empty pane. */
+  height?: string;
+  maxHeight?: string;
   autoFocus?: boolean;
   /** Prefer these tables for completion; omit to offer the full teaching schema. */
   tables?: string[];
@@ -98,13 +103,15 @@ export function Editor({
   }, [label, tableKey, activateOnTyping, seedSql]);
 
   return (
-    <div className="rx-editor">
+    <div className={`rx-editor${height === "auto" ? " rx-editor-auto" : ""}`}>
       <CodeMirror
         value={value}
         onChange={onChange}
         extensions={extensions}
         theme="none"
         minHeight={minHeight}
+        height={height}
+        maxHeight={maxHeight}
         autoFocus={autoFocus}
         basicSetup={{ lineNumbers: true, foldGutter: false, autocompletion: false, highlightActiveLine: true }}
       />

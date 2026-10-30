@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0146",
+  "slug": "check-the-join-keys",
+  "lesson": "PS-L030",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Check the join keys",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "Before joining orders to customers, measure the join. Write `solve(orders, customers)` so it returns one row with four counts: the rows of each table, the different customer ids in `customers`, and the rows an inner join gives.",
+  "rules": [
+    "`order_rows` and `customer_rows` count every row of `orders` and `customers`.",
+    "`unique_customer_ids` is the number of different `customer_id` values in `customers`. A missing id counts as one value.",
+    "`joined_rows` counts the rows of `orders` inner joined to `customers` on `customer_id`, exactly as the tables are.",
+    "Return a single row with `order_rows`, `customer_rows`, `unique_customer_ids` and `joined_rows`, each a `bigint`."
+  ],
+  "hints": [
+    "`count()` returns a Python number. `dropDuplicates([\"customer_id\"]).count()` counts the different ids.",
+    "Join with `orders.join(customers, on=\"customer_id\")` and count the result.",
+    "Build the answer with `spark.createDataFrame([(a, b, c, d)], \"order_rows BIGINT, customer_rows BIGINT, unique_customer_ids BIGINT, joined_rows BIGINT\")`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "orders",
+    "customers"
+  ],
+  "starter": "def solve(orders, customers):\n    # Count both tables, the different customer ids, and the joined rows.\n    order_rows = orders.count()\n    return spark.createDataFrame([(order_rows,)], \"order_rows BIGINT\")\n",
+  "output": {
+    "columns": [
+      "order_rows",
+      "customer_rows",
+      "unique_customer_ids",
+      "joined_rows"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Each count is a Python number: `orders.count()`, `customers.count()`, `customers.dropDuplicates([\"customer_id\"]).count()` and `orders.join(customers, on=\"customer_id\").count()`. Put them in one tuple and build the row with `spark.createDataFrame([(...)], \"order_rows BIGINT, customer_rows BIGINT, unique_customer_ids BIGINT, joined_rows BIGINT\")`; Python whole numbers also become `bigint` without a schema. If `unique_customer_ids` is smaller than `customer_rows`, some customer is listed twice and the join gives more rows than there are matching orders. Removing duplicates before joining would hide exactly the problem this check is meant to show."
+}

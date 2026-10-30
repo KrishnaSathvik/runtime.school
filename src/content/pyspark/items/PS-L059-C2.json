@@ -1,0 +1,26 @@
+{
+  "id": "PS-L059-C2",
+  "slug": "fix-the-salted-endpoint-totals",
+  "lesson": "PS-L059",
+  "difficulty": "easy",
+  "minutes": 6,
+  "title": "Fix the salted endpoint totals",
+  "dataset": { "id": "PS-D15", "version": "1.0.0" },
+  "prompt": "This salted aggregation should give, per endpoint, exactly what a plain `groupBy(\"endpoint\")` would: `requests`, `total_latency_ms` and `slowest_ms`. Its numbers are wrong for the busy endpoints. Fix `solve(api_requests)`.",
+  "rules": [
+    "One row per endpoint, with columns `endpoint`, `requests`, `total_latency_ms` and `slowest_ms`, in this order.",
+    "`requests` counts every request, including requests with no `latency_ms`.",
+    "`total_latency_ms` is the sum of `latency_ms` and `slowest_ms` the largest `latency_ms`, over all of the endpoint's requests."
+  ],
+  "hints": [
+    "Compare the busy endpoint with the plain `groupBy` result. Which numbers are off, and by how much?",
+    "The second step sees one row per salt group, not one row per request.",
+    "Combine partial counts with a sum, and partial maximums with a maximum."
+  ],
+  "entry": "solve",
+  "inputs": ["api_requests"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(api_requests):\n    salted = api_requests.select(\"*\", F.pmod(F.hash(\"request_id\"), F.lit(4)).alias(\"salt\"))\n    partial = salted.groupBy(\"endpoint\", \"salt\").agg(\n        F.count(\"*\").alias(\"requests\"),\n        F.sum(\"latency_ms\").alias(\"total_latency_ms\"),\n        F.max(\"latency_ms\").alias(\"slowest_ms\"),\n    )\n    return partial.groupBy(\"endpoint\").agg(\n        F.count(\"*\").alias(\"requests\"),\n        F.sum(\"total_latency_ms\").alias(\"total_latency_ms\"),\n        F.sum(\"slowest_ms\").alias(\"slowest_ms\"),\n    )\n",
+  "output": { "columns": ["endpoint", "requests", "total_latency_ms", "slowest_ms"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

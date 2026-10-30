@@ -108,7 +108,7 @@ export function CodeCell({ title, value, onChange, onRun, errorLine, minHeight =
 }
 
 /** A few real rows of a dataset file, in a box that scrolls inside itself. */
-export function DataPreview({ url, rows = 6, label }: { url: string; rows?: number; label: string }) {
+export function DataPreview({ url, rows = 10, label }: { url: string; rows?: number; label: string }) {
   const [data, setData] = useState<{ url: string; rows: string[][] | null }>({ url, rows: null });
   useEffect(() => {
     let live = true;

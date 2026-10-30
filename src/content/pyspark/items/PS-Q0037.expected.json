@@ -1,0 +1,54 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "column_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "missing",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "order_id",
+     0
+    ],
+    [
+     "line_no",
+     0
+    ],
+    [
+     "product_id",
+     0
+    ],
+    [
+     "quantity",
+     0
+    ],
+    [
+     "unit_price",
+     0
+    ]
+   ],
+   "row_count": 5
+  }
+ },
+ "hidden": [
+  "the full practice order lines table",
+  "order lines with gaps in several columns, some far down the table",
+  "a line where every value is missing",
+  "the same order line delivered twice",
+  "an empty order lines table"
+ ]
+}

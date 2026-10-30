@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0102",
+  "slug": "numbers-for-the-phone-system",
+  "lesson": "PS-L021",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Numbers for the phone system",
+  "dataset": {
+    "id": "PS-D03",
+    "version": "1.0.0"
+  },
+  "prompt": "The new phone system needs every employee's number as `+1` followed by ten digits, plus a four-digit extension. Write `solve(employees)` so it returns `employee_id`, `dial_number` and `extension`.",
+  "rules": [
+    "Phone numbers arrive with dashes, dots, spaces, brackets, a leading `+1`, or as ten digits in a row.",
+    "`dial_number` is `+1` and then the last ten digits of the phone, with nothing in between: `555-201-3344` becomes `+15552013344`.",
+    "`extension` is the last four digits. A missing phone gives a missing `dial_number` and `extension`. Return one row per employee, with only these three columns."
+  ],
+  "hints": [
+    "First keep only the digits: `F.regexp_replace(\"phone\", \"[^0-9]\", \"\")`.",
+    "A number written with `+1` has eleven digits, so take the last ten with `F.substring(digits, -10, 10)`. A negative start counts from the end; the extension works the same way.",
+    "Join with `F.concat(F.lit(\"+1\"), ...)`. `concat_ws` would turn a missing phone into just `+1`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "employees"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(employees):\n    # Return employee_id, dial_number and extension.\n    return employees\n",
+  "output": {
+    "columns": [
+      "employee_id",
+      "dial_number",
+      "extension"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Every format reduces to the same digits once everything else is removed: `digits = F.regexp_replace(\"phone\", \"[^0-9]\", \"\")`. The `+1` form leaves eleven digits, so `F.substring(digits, -10, 10)` keeps the last ten, and `F.concat(F.lit(\"+1\"), last_ten)` builds the dial number. The extension is `F.substring(digits, -4, 4)`. A missing phone stays missing all the way through, because string functions give `NULL` for `NULL` and `concat` gives `NULL` if any part is missing. Gluing `+1` onto all the digits would give `+115552013344` for numbers that already had the country code, and `concat_ws` would print a bare `+1` for someone with no phone."
+}

@@ -1,0 +1,227 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "check",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "failures",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "passed",
+     "type": "boolean",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "lines with no order",
+     2,
+     false
+    ],
+    [
+     "orders with no lines",
+     1,
+     false
+    ],
+    [
+     "totals that differ from their lines",
+     2,
+     false
+    ],
+    [
+     "orders sent twice",
+     2,
+     false
+    ],
+    [
+     "channels gone quiet",
+     1,
+     false
+    ]
+   ],
+   "row_count": 5,
+   "inputs": {
+    "orders": [
+     [
+      "O00101",
+      "C0001",
+      "2026-03-20",
+      "paid",
+      "web",
+      "20.00"
+     ],
+     [
+      "O00102",
+      "C0002",
+      "2026-03-17",
+      "shipped",
+      "app",
+      "15.00"
+     ],
+     [
+      "O00103",
+      "C0003",
+      "2026-03-16",
+      "delivered",
+      "store",
+      "9.00"
+     ],
+     [
+      "O00104",
+      "C0004",
+      "2026-03-19",
+      "placed",
+      "web",
+      null
+     ],
+     [
+      "O00105",
+      "C0005",
+      "2026-03-18",
+      "paid",
+      "web",
+      "30.00"
+     ],
+     [
+      "O00106",
+      "C0006",
+      "2026-03-18",
+      "paid",
+      "web",
+      "24.00"
+     ],
+     [
+      "O00102",
+      "C0002",
+      "2026-03-17",
+      "shipped",
+      "app",
+      "15.00"
+     ],
+     [
+      "O00106",
+      "C0006",
+      "2026-03-18",
+      "paid",
+      "web",
+      "24.00"
+     ],
+     [
+      "O00107",
+      "C0001",
+      "2026-01-01",
+      "cancelled",
+      null,
+      "5.00"
+     ],
+     [
+      "O00106",
+      "C0006",
+      "2026-03-18",
+      "paid",
+      "web",
+      "24.00"
+     ],
+     [
+      "O00108",
+      "C0002",
+      "2026-03-15",
+      "paid",
+      "app",
+      "40.00"
+     ]
+    ],
+    "order_items": [
+     [
+      "O00101",
+      "1",
+      "P006",
+      "2",
+      "10.00"
+     ],
+     [
+      "O00102",
+      "1",
+      "P006",
+      "1",
+      "12.00"
+     ],
+     [
+      "O00103",
+      "1",
+      "P004",
+      "2",
+      "4.50"
+     ],
+     [
+      "O00104",
+      "1",
+      "P005",
+      "1",
+      "19.99"
+     ],
+     [
+      "O00106",
+      "1",
+      "P006",
+      "2",
+      "12.00"
+     ],
+     [
+      "O00107",
+      "1",
+      "P004",
+      "1",
+      "5.00"
+     ],
+     [
+      "O00108",
+      "1",
+      "P007",
+      "1",
+      "40.00"
+     ],
+     [
+      "O00108",
+      "1",
+      "P007",
+      "1",
+      "40.00"
+     ],
+     [
+      "O00199",
+      "1",
+      "P001",
+      "1",
+      "19.99"
+     ],
+     [
+      null,
+      "1",
+      "P002",
+      "1",
+      "32.50"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice orders and lines, with a few orders sent twice",
+  "the shop's raw export, with totals that don't match their lines",
+  "channels just inside and just outside the three days, across a month end and a year end",
+  "empty orders and lines"
+ ]
+}

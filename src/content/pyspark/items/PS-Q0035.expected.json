@@ -1,0 +1,54 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "spark_version",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "cores",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "shuffle_partitions",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "order_rows",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "order_columns",
+     "type": "int",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "4.0.1",
+     2,
+     4,
+     12,
+     6
+    ]
+   ],
+   "row_count": 1
+  }
+ },
+ "hidden": [
+  "the full practice orders table",
+  "the same order rows delivered twice",
+  "an empty orders table"
+ ]
+}

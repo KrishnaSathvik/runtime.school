@@ -1,12 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FilePlus2, Pencil, Trash2 } from "lucide-react";
+import { Download, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { STARTERS, STARTER_GROUPS, BLANK_MAIN, type PyStarter } from "@/content/python-v2/tools/starters";
 import { allFiles, loadSnippet, sizeFor, toolDataset } from "@/content/python-v2/tools/friendly";
 import type { PyEditionFile } from "@/content/python-v2/datasets";
 import { PY_MOUNT_LIMIT, preloadMounts, preloadPython, runPython, stopPython, type PyFile, type PyOutputChunk, type PyRunResult } from "@/engine/python/client";
 import type { PyEditorHandle } from "@/features/py/PyEditor";
+import { Keys, MacOnly } from "@/features/rt/Keys";
 import { Shell } from "@/features/rt/Shell";
 import { Select } from "@/features/rt/Select";
 import { PLAYGROUND_EDITOR_HEIGHT } from "@/features/rt/editor-height";
@@ -20,9 +21,9 @@ type Dialog = null | { kind: "new" } | { kind: "rename"; name: string } | { kind
 const isPy = (name: string) => name.endsWith(".py");
 
 /**
- * T01 Playground, laid out like the SQL Playground: what you're working with on the left (a starter, a dataset and
- * its files, your files), the code on the right. Several files, any of them runnable; dataset files under data/;
- * libraries load from your imports; everything is saved in this browser as you type.
+ * T01 Playground, laid out like the SQL Playground: starter/dataset on the left, file tabs + editor on the right.
+ * Rename/delete live on the tab strip (not next to Run). Several files, any of them runnable; dataset files under
+ * data/; libraries load from your imports; everything is saved in this browser as you type.
  */
 export function Playground() {
   const ready = usePy2Ready();
@@ -200,17 +201,6 @@ export function Playground() {
     </>
   );
 
-  const tabs = (
-    <div className="py-filetabs">
-      <div role="tablist" aria-label="Your files" style={{ display: "contents" }}>
-        {ws.files.map((f) => (
-          <button key={f.name} type="button" role="tab" aria-selected={f.name === active.name} onClick={() => open(f.name)}>{f.name}</button>
-        ))}
-      </div>
-      <button type="button" onClick={() => setDialog({ kind: "new" })} aria-label="New file"><FilePlus2 size={13} aria-hidden="true" /></button>
-    </div>
-  );
-
   return (
     <Shell subject="python" section="tools" path={[{ label: "python", href: "/python" }, { label: "playground" }, { label: active.name }]} status={status}>
       <div className="rx-task rx-lesson">
@@ -218,7 +208,7 @@ export function Playground() {
           <article className="rx-brief" aria-labelledby="pg-title">
             <p className="rx-prompt-line"><b>playground</b> write any Python · no grades</p>
             <h1 id="pg-title" className="rx-task-title">Python Playground</h1>
-            <p className="rx-prose" style={{ margin: "10px 0" }}>Write and run Python with real datasets and libraries. Nothing here affects course progress.</p>
+            <p className="rx-prose" style={{ margin: "10px 0" }}>Write and run Python with real datasets and libraries. Keep several files side by side; they&apos;re saved in this browser. Nothing here affects course progress.</p>
 
             <Select
               id="pg-starter"
@@ -242,22 +232,11 @@ export function Playground() {
               <p className="rx-small">Choose a dataset to read its files from your code under <code>data/</code>. Plain Python works without one.</p>
             )}
 
-            <p className="rx-label sec">your files</p>
-            <p className="rx-cap">Any <code>.py</code> file can run, and files can import each other (<code>from helpers import total</code>). Saved in this browser as you type.</p>
-            <ul className="py-myfiles">
-              {ws.files.map((f) => (
-                <li key={f.name} className={f.name === active.name ? "on" : undefined}>
-                  <button type="button" className="n mono" onClick={() => open(f.name)}>{f.name}</button>
-                  <span className="mono">{f.code.split("\n").length} lines</span>
-                  <button type="button" className="rx-btn ghost" aria-label={`Rename ${f.name}`} onClick={() => setDialog({ kind: "rename", name: f.name })}><Pencil size={13} /></button>
-                  <button type="button" className="rx-btn ghost" aria-label={`Delete ${f.name}`} disabled={ws.files.length <= 1} onClick={() => setDialog({ kind: "delete", name: f.name })}><Trash2 size={13} /></button>
-                </li>
-              ))}
-            </ul>
+            <p className="rx-label sec">your workspace</p>
+            <p className="rx-cap">Any <code>.py</code> file can run, and files can import each other (<code>from helpers import total</code>). Manage them with the tabs above the editor.</p>
             <p className="py-row">
-              <button type="button" className="rx-btn" onClick={() => setDialog({ kind: "new" })}><FilePlus2 size={13} /> New file</button>
-              <button type="button" className="rx-btn ghost" onClick={() => downloadFile("playground.zip", zipFiles(ws.files.map((f) => ({ name: f.name, data: f.code }))) as BlobPart, "application/zip")}>Download my files</button>
-              <button type="button" className="rx-btn ghost" onClick={() => setDialog({ kind: "reset" })}>Start over</button>
+              <button type="button" className="p2-btn line" onClick={() => downloadFile("playground.zip", zipFiles(ws.files.map((f) => ({ name: f.name, data: f.code }))) as BlobPart, "application/zip")}><Download size={14} aria-hidden="true" /> Download my files</button>
+              <button type="button" className="p2-btn line" onClick={() => setDialog({ kind: "reset" })}><RotateCcw size={14} aria-hidden="true" /> Start over</button>
             </p>
 
             <p className="rx-label sec">libraries</p>
@@ -269,10 +248,30 @@ export function Playground() {
 
           <section className="rx-work rx-lesson-work rx-tool-work" aria-label="Code editor">
             {notice && <p className="rx-note" role="status" style={{ margin: "0 0 12px" }}>{notice}</p>}
+            {/* File tabs + rename/delete match SQL Playground: file actions live with the tabs, not Run. */}
+            <div className="py-filetabs">
+              <div role="tablist" aria-label="Your files" style={{ display: "contents" }}>
+                {ws.files.map((f) => (
+                  <button key={f.name} type="button" role="tab" aria-selected={f.name === active.name} onClick={() => open(f.name)}>{f.name}</button>
+                ))}
+              </div>
+              {ws.files.length < 20 && (
+                <button type="button" onClick={() => setDialog({ kind: "new" })} aria-label="New file"><Plus size={13} aria-hidden="true" /></button>
+              )}
+              <span className="py-filetabs-acts">
+                <span className="py-filetabs-keys" aria-hidden="true"><MacOnly><Keys keys={["mod", "enter"]} /> <span>run</span></MacOnly></span>
+                <button type="button" aria-label={`Rename ${active.name}`} onClick={() => setDialog({ kind: "rename", name: active.name })}><Pencil size={13} aria-hidden="true" /></button>
+                {ws.files.length > 1 && (
+                  <button type="button" aria-label={`Delete ${active.name}`} onClick={() => setDialog({ kind: "delete", name: active.name })}><Trash2 size={13} aria-hidden="true" /></button>
+                )}
+              </span>
+            </div>
             <PyCell
               key={`${active.name}-${token}`}
               ref={editor}
               name={active.name}
+              head={false}
+              resultsBar
               value={active.code}
               onChange={(v) => setCode(active.name, v)}
               onRun={run}
@@ -285,7 +284,6 @@ export function Playground() {
               runLabel={entry && entry.name !== active.name ? `Run ${entry.name}` : "Run"}
               onLine={goTo}
               onCloseOutput={() => { setResult(null); setLive([]); }}
-              top={ws.files.length > 1 ? tabs : undefined}
               after={after}
             />
             {showInput && (
@@ -303,9 +301,6 @@ export function Playground() {
                 />
               </div>
             )}
-            <p className="rx-small">
-              Run starts {entry?.name ?? "your .py file"}.
-            </p>
           </section>
         </div>
 

@@ -1,0 +1,64 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "service",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "request_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "latency_ms",
+     "type": "int",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "catalog-api",
+     "REQ-000009",
+     51
+    ],
+    [
+     "auth-service",
+     "REQ-000003",
+     61
+    ],
+    [
+     "checkout-api",
+     "REQ-000008",
+     1240
+    ],
+    [
+     "search-api",
+     "REQ-000011",
+     162
+    ],
+    [
+     "iot-gateway",
+     "REQ-000007",
+     24
+    ]
+   ],
+   "row_count": 5
+  }
+ },
+ "hidden": [
+  "the full practice requests",
+  "two requests that tie for the slowest, listed in either order",
+  "requests with a missing latency, including a service with no latency at all",
+  "services with a single request",
+  "an empty requests table"
+ ]
+}

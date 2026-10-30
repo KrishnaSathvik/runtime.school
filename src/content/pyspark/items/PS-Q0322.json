@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0322",
+  "slug": "make-room-for-bulk-quantities",
+  "lesson": "PS-L065",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Make room for bulk quantities",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "prompt": "Since 2026 the prescriptions feed sends `quantity` as a `bigint`, and a wholesale pharmacy now sends quantities too big for an `int`. Write `create_table(rows, path)` and `add_batch(batch, path)` so every batch gets into the Delta table. `solve` is written for you.",
+  "rules": [
+    "Every prescription from 2025, 2026 and the wholesale batch is in the table, and each `quantity` keeps its exact value.",
+    "The table's `quantity` ends up a `bigint`. The other columns keep their types."
+  ],
+  "hints": [
+    "Run it first: the table's `quantity` is an `int`, and Delta refuses a `bigint` batch, even with `mergeSchema`.",
+    "Casting the batch down to `int` can't work: 3,000,000,000 doesn't fit in an `int`. The table's column has to get wider.",
+    "A table created with the property `delta.enableTypeWidening` set to `true` lets a `mergeSchema` append widen `int` to `bigint`."
+  ],
+  "explanation": "The fix is on the table, not the batch. Create it with `.option(\"delta.enableTypeWidening\", \"true\")`, then append each batch with `.option(\"mergeSchema\", \"true\")`: the first `bigint` batch widens `quantity` to `bigint`, and the later ones match. Without the property, `mergeSchema` refuses the change. Casting the batch to `int` fails on the wholesale rows, because 3,000,000,000 is bigger than the largest `int` (2,147,483,647), and `try_cast` would quietly turn those quantities into NULL. Creating the table with `quantity` already cast to `bigint` also works, if you know in advance. Replacing the table with `overwriteSchema` gives the right type but throws away the rows already there.",
+  "entry": "solve",
+  "inputs": [
+    "medications"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef create_table(rows, path):\n    # Save the 2025 prescriptions as a new Delta table.\n    rows.write.format(\"delta\").save(path)\n\n\ndef add_batch(batch, path):\n    # Append a batch of newer prescriptions to the table.\n    batch.write.format(\"delta\").mode(\"append\").save(path)\n\n\ndef solve(medications):\n    import shutil\n    from datetime import date\n    path = \"/tmp/clinic/prescriptions\"\n    shutil.rmtree(path, ignore_errors=True)  # every run starts from an empty folder\n\n    cols = [\"prescription_id\", \"patient_id\", \"drug_name\", \"quantity\", \"prescribed_date\"]\n    # filter keeps the rows where a condition is true: prescriptions before and after 1 January 2026.\n    old = medications.filter(F.col(\"prescribed_date\") < \"2026-01-01\").select(cols)\n    new = medications.filter(F.col(\"prescribed_date\") >= \"2026-01-01\").select(\n        \"prescription_id\", \"patient_id\", \"drug_name\", F.col(\"quantity\").cast(\"bigint\").alias(\"quantity\"), \"prescribed_date\"\n    )\n    bulk = spark.createDataFrame(\n        [(\"RX900001\", \"PAT00005\", \"saline 0.9% 10 ml flush\", 3000000000, date(2026, 2, 2)),\n         (\"RX900002\", \"PAT00002\", \"gauze swab 5 cm\", 2147483648, date(2026, 2, 3))],\n        \"prescription_id STRING, patient_id STRING, drug_name STRING, quantity BIGINT, prescribed_date DATE\",\n    )\n\n    create_table(old, path)  # the 2025 prescriptions: quantity is an int\n    add_batch(new, path)     # since 2026 the feed sends quantity as a bigint\n    add_batch(bulk, path)    # and the wholesale pharmacy's quantities don't fit an int\n    return spark.read.format(\"delta\").load(path)\n",
+  "output": {
+    "columns": [
+      "prescription_id",
+      "patient_id",
+      "drug_name",
+      "quantity",
+      "prescribed_date"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

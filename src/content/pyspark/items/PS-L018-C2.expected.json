@@ -1,0 +1,80 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "forecast_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "issued_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "valid_hour",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "lead_hours",
+     "type": "int",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "FC-000001",
+     "2026-03-08",
+     6,
+     6
+    ],
+    [
+     "FC-000002",
+     "2026-03-08",
+     12,
+     12
+    ],
+    [
+     "FC-000003",
+     "2026-03-08",
+     6,
+     6
+    ],
+    [
+     "FC-000004",
+     "2026-03-08",
+     6,
+     6
+    ],
+    [
+     "FC-000005",
+     "2026-03-08",
+     6,
+     6
+    ],
+    [
+     "FC-000006",
+     "2026-03-08",
+     12,
+     12
+    ]
+   ],
+   "row_count": 6
+  }
+ },
+ "hidden": [
+  "the full practice forecasts table",
+  "forecasts that aren't a whole number of hours ahead",
+  "forecasts for the next day or the next year",
+  "forecasts with a missing time",
+  "an empty forecasts table"
+ ]
+}

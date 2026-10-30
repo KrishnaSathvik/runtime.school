@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0187",
+  "slug": "claim-amounts-and-dates",
+  "lesson": "PS-L038",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Claim amounts and dates, grouped",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "prompt": "The billing API returns each claim with its money and its dates grouped into two nested records, and adds what is still unpaid. Write `solve(claims)` to build that shape.",
+  "rules": [
+    "`amounts` has the fields `billed`, `allowed`, `paid` and `unpaid`, in that order. The first three come from `billed_amount`, `allowed_amount` and `paid_amount`; `unpaid` is billed minus paid.",
+    "`unpaid` is missing when the billed or paid amount is missing.",
+    "`dates` has the fields `service` and `submitted`, from `service_date` and `submitted_date`.",
+    "Return `claim_id`, `claim_status`, `amounts` and `dates`."
+  ],
+  "hints": [
+    "Arithmetic works inside `F.struct` like anywhere else: `(F.col(\"billed_amount\") - F.col(\"paid_amount\"))`.",
+    "Rename each field with `alias` inside the struct, and the struct itself with `alias` outside.",
+    "A calculation with a missing value is missing, so `unpaid` needs no special handling."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "claims"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(claims):\n    # Return claim_id, claim_status, an amounts struct and a dates struct.\n    return claims\n",
+  "output": {
+    "columns": [
+      "claim_id",
+      "claim_status",
+      "amounts",
+      "dates"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Two structs, each built with `F.struct` and renamed fields. `amounts` is `F.struct(F.col(\"billed_amount\").alias(\"billed\"), F.col(\"allowed_amount\").alias(\"allowed\"), F.col(\"paid_amount\").alias(\"paid\"), (F.col(\"billed_amount\") - F.col(\"paid_amount\")).alias(\"unpaid\"))` and `dates` is `F.struct(F.col(\"service_date\").alias(\"service\"), F.col(\"submitted_date\").alias(\"submitted\"))`. The subtraction of two decimals stays an exact decimal, and a claim that hasn't been paid has no paid amount, so its `unpaid` is missing without extra code. Subtracting the allowed amount instead answers a different question."
+}

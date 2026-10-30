@@ -1,0 +1,119 @@
+{
+  "id": "PS-L012",
+  "minutes": 20,
+  "lede": "Most work on a table is a small change to its columns: one more value worked out, one renamed for a report, one removed before it's shared. `withColumn`, `withColumnRenamed` and `drop` do exactly that and leave everything else in place.",
+  "objectives": [
+    "Add a new column, or replace one, with `withColumn`",
+    "Put the same value on every row with `F.lit`",
+    "Rename columns with `withColumnRenamed` and `withColumnsRenamed`",
+    "Remove columns with `drop`, and know which mistakes Spark doesn't warn you about"
+  ],
+  "dataset": {
+    "id": "PS-D03",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "employees"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "The `employees` table above has one row per person at a small company. On this page it's loaded as a DataFrame called `employees`, and `F` is `pyspark.sql.functions`.\n\n`select` (lesson 9) gives back only the columns you list. When you want to keep **all** the columns and change just one, listing all fourteen gets old fast. `df.withColumn(\"name\", column)` keeps every column and adds one more at the end, worked out for each row."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Add a column",
+      "code": "from pyspark.sql import functions as F\n\nraised = employees.withColumn(\"new_salary\", F.col(\"salary\") + 2500)\nraised.select(\"employee_id\", \"salary\", \"new_salary\").show(4)\nprint(len(employees.columns), \"columns before,\", len(raised.columns), \"after\")\n",
+      "note": "`withColumn` returned all fourteen columns plus `new_salary`; `select` only trims what's printed. `employees` itself still has fourteen."
+    },
+    {
+      "kind": "text",
+      "md": "If the name is one the table already has, `withColumn` **replaces** that column instead, and it stays in the same position.\n\nThe second argument must be a column, not a plain Python value. For the same value on every row, wrap it in `F.lit(...)`. `withColumns` takes a dict of names and columns and adds several in one step."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Replace a column and add fixed values",
+      "code": "from pyspark.sql import functions as F\n\nnext_year = employees.withColumn(\"level\", F.col(\"level\") + 1)\nnext_year.select(\"employee_id\", \"job_title\", \"level\").show(3)\n\ntagged = employees.withColumns({\"currency\": F.lit(\"USD\"), \"review_year\": F.lit(2026)})\ntagged.select(\"employee_id\", \"salary\", \"currency\", \"review_year\").show(3)\ntagged.printSchema()\n",
+      "note": "`level` is changed where it was, not added again. `F.lit(\"USD\")` is a text column and `F.lit(2026)` a whole number, the same on every row."
+    },
+    {
+      "kind": "error-example",
+      "id": "e3",
+      "title": "A plain value instead of a column",
+      "code": "employees.withColumn(\"bonus\", 5000)\n",
+      "error": "PySparkTypeError",
+      "note": "`withColumn` needs a column as its second argument. Write `F.lit(5000)` for a fixed value."
+    },
+    {
+      "kind": "text",
+      "md": "`withColumnRenamed(\"old\", \"new\")` renames one column and keeps it where it was; `withColumnsRenamed` takes a dict to rename several. `drop(\"a\", \"b\")` removes columns.\n\nBoth are forgiving in a way that can hide a typo: **renaming or dropping a column that doesn't exist does nothing**, with no error. Check `columns` when it matters."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Rename and drop",
+      "code": "renamed = employees.withColumnsRenamed({\"employee_id\": \"emp_id\", \"department_id\": \"dept_id\"})\nprint(renamed.columns)\n\nshared = employees.drop(\"email\", \"phone\", \"salary\")\nprint(shared.columns)\n",
+      "note": "The renamed columns keep their places. The three dropped columns are gone and the rest keep their order."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "A typo that Spark lets through",
+      "code": "oops = employees.withColumnRenamed(\"dept_id\", \"department\").drop(\"phone_number\")\nprint(oops.columns == employees.columns)\n",
+      "note": "There's no `dept_id` and no `phone_number` in `employees`, so nothing was renamed or dropped and nothing complained. The columns are exactly as before."
+    }
+  ],
+  "challenges": [
+    "PS-L012-C1",
+    "PS-L012-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "`employees` already has a `level` column. What does `employees.withColumn(\"level\", F.col(\"level\") + 1)` give back?",
+      "choices": [
+        "A second `level` column at the end",
+        "The same columns, with `level` replaced in its usual position",
+        "An error, because `level` already exists",
+        "Only the `level` column"
+      ],
+      "answer": 1,
+      "why": "When the name already exists, `withColumn` replaces that column and keeps its position. A new name is added at the end."
+    },
+    {
+      "id": "k2",
+      "prompt": "Which line adds a column with the text `USD` on every row?",
+      "choices": [
+        "employees.withColumn(\"currency\", \"USD\")",
+        "employees.withColumn(\"currency\", F.col(\"USD\"))",
+        "employees.withColumn(\"currency\", F.lit(\"USD\"))",
+        "employees.withColumnRenamed(\"currency\", \"USD\")"
+      ],
+      "answer": 2,
+      "why": "`F.lit` turns a plain value into a column. A bare `\"USD\"` is refused, and `F.col(\"USD\")` looks for a column named USD."
+    },
+    {
+      "id": "k3",
+      "prompt": "What happens with `employees.drop(\"phone_number\")` when there's no column with that name?",
+      "choices": [
+        "It stops with an error naming the missing column",
+        "It drops the column that is closest in name, `phone`",
+        "Nothing: the DataFrame comes back unchanged",
+        "It drops every column"
+      ],
+      "answer": 2,
+      "why": "`drop` and `withColumnRenamed` quietly ignore names that aren't there, so a typo doesn't raise an error. Check `columns` if you're not sure."
+    }
+  ],
+  "review": [
+    "`withColumn(\"name\", column)` keeps every column and adds one at the end, or replaces it in place if the name exists.",
+    "`withColumns({...})` adds or replaces several columns at once.",
+    "The second argument must be a column. Use `F.lit(value)` for the same value on every row.",
+    "`withColumnRenamed(\"old\", \"new\")` and `withColumnsRenamed({...})` rename and keep the position.",
+    "`drop(\"a\", \"b\")` removes columns. Renaming or dropping a name that isn't there does nothing, with no error."
+  ],
+  "practice": ["PS-Q0056", "PS-Q0057", "PS-Q0058", "PS-Q0059", "PS-Q0060"]
+}

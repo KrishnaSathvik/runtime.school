@@ -70,15 +70,22 @@ export const PyCell = forwardRef<PyEditorHandle, {
   /** Above the editor, inside the cell (file tabs). */
   top?: ReactNode;
   focus?: boolean;
-}>(function PyCell({ name, value, onChange, onRun, onStop, busy, result, live = [], minHeight = "220px", errorLine = null, footer, runLabel = "Run", onLine, onCloseOutput, after, top, focus }, ref) {
-  return (
+  /** The file name bar. Off when a tab above the editor already shows the name. */
+  head?: boolean;
+  /** Output bar under the editor, as in the SQL playground. Output stays in the cell otherwise. */
+  resultsBar?: boolean;
+}>(function PyCell({ name, value, onChange, onRun, onStop, busy, result, live = [], minHeight = "220px", errorLine = null, footer, runLabel = "Run", onLine, onCloseOutput, after, top, focus, head = true, resultsBar = false }, ref) {
+  const output = (busy || result) ? <PyOut result={result} live={live} busy={busy} onLine={onLine} onClose={onCloseOutput}>{after}</PyOut> : null;
+  const cell = (
     <div className={`rx-cell ${focus ? "focus" : ""}`}>
-      <div className="rx-cell-head">
-        <span className="name">{name}</span>
-        <span className="acts" aria-hidden="true">
-          <MacOnly><Keys keys={["mod", "enter"]} /> <span>run</span></MacOnly>
-        </span>
-      </div>
+      {head && (
+        <div className="rx-cell-head">
+          <span className="name">{name}</span>
+          <span className="acts" aria-hidden="true">
+            <MacOnly><Keys keys={["mod", "enter"]} /> <span>run</span></MacOnly>
+          </span>
+        </div>
+      )}
       {top}
       <PyEditor ref={ref} value={value} onChange={onChange} onRun={onRun} onCheck={onRun} label={name} minHeight={minHeight} errorLine={errorLine} />
       <div className="rx-cell-foot">
@@ -90,8 +97,20 @@ export const PyCell = forwardRef<PyEditorHandle, {
           <button type="button" className="rx-btn" disabled={busy} onClick={onRun}><Play size={13} /> {busy ? "Running…" : runLabel}</button>
         )}
       </div>
-      {(busy || result) && <div className="rx-result"><PyOut result={result} live={live} busy={busy} onLine={onLine} onClose={onCloseOutput}>{after}</PyOut></div>}
+      {!resultsBar && output && <div className="rx-result">{output}</div>}
     </div>
+  );
+  if (!resultsBar) return cell;
+  return (
+    <>
+      {cell}
+      <div className="rx-results">
+        <div className="rx-results-tabs" role="tablist" aria-label="Output">
+          <span role="tab" aria-selected="true">Output</span>
+        </div>
+        {output && <div className="rx-results-pane" role="tabpanel">{output}</div>}
+      </div>
+    </>
   );
 });
 
@@ -212,7 +231,7 @@ function PyFileCard({ d, f, action, actionLabel }: { d: ToolDataset; f: PyEditio
         {f.format !== "parquet" && <button type="button" className="rx-btn" aria-expanded={preview} onClick={() => setPreview((v) => !v)}>{preview ? "Hide preview" : "Preview"}</button>}
         {action && <button type="button" className="rx-btn" onClick={() => action(f)}>{actionLabel}</button>}
       </div>
-      {preview && <div className="py-ds-preview"><FilePreview file={f} columns={t?.columns} rows={12} /></div>}
+      {preview && <div className="py-ds-preview"><FilePreview file={f} columns={t?.columns} rows={10} /></div>}
     </details>
   );
 }

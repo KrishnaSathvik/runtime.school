@@ -1,0 +1,27 @@
+{
+  "id": "PS-L076-C1",
+  "slug": "quality-gate-decisions",
+  "lesson": "PS-L076",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Quality gate decisions",
+  "dataset": { "id": "PS-D02", "version": "1.0.0" },
+  "prompt": "Before the daily transactions load is published, a quality gate decides what to do about each rule. Write `solve(transactions)` so it returns one row per rule below with its name in `rule`, the number of transactions that break it in `failed`, and the gate's `decision`.",
+  "rules": [
+    "`has_account` (quarantine): `account_id` is present. `known_currency` (quarantine): `currency` is USD, EUR or GBP; a missing currency breaks it.",
+    "`positive_amount` (fail): `amount` is present and more than 0. `merchant_on_card_types` (warn): every `purchase` and `refund` has a `merchant_id`.",
+    "`decision` is `pass` when nothing breaks the rule. Otherwise a warn rule gives `warn`, a quarantine rule gives `quarantine` while at most 10% of the transactions break it, and anything else gives `stop`.",
+    "Return all four rules. `failed` is a bigint."
+  ],
+  "hints": [
+    "Keep the rules as `(name, action, condition)` tuples, each condition true for a good transaction, and count the failures in a loop.",
+    "`F.coalesce(condition, F.lit(False))` makes a rule that comes out NULL count as broken, such as a missing currency.",
+    "Compare `failed * 100 <= 10 * checked` so exactly 10% still counts as within the limit, and an empty load never divides by zero."
+  ],
+  "entry": "solve",
+  "inputs": ["transactions"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(transactions):\n    # Return one row per rule: its name, how many transactions break it, and the decision.\n    results = []\n    return spark.createDataFrame(results, \"rule STRING, failed BIGINT, decision STRING\")\n",
+  "output": { "columns": ["rule", "failed", "decision"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "sample": true }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

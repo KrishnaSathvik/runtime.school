@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0179",
+  "slug": "fix-session-play-counter",
+  "lesson": "PS-L036",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Fix the play counter",
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0"
+  },
+  "prompt": "This function should number each member's viewing sessions and the plays inside each session. But every member's first play has no session number, the rest start from 0, and the play counter never starts again. Fix `solve(watch_sessions)`.",
+  "rules": [
+    "Go through each `user_id`'s plays in `started_at` order (`watch_id` settles a tie). A play starts a new session when it starts more than 30 minutes after the previous play's `ended_at`; exactly 30 minutes still continues it. A member's first play starts session 1.",
+    "If the previous play has no `ended_at`, the play continues the session.",
+    "`play_no` counts the plays within a session from 1, in the same order.",
+    "Return `watch_id`, `user_id`, `session_no` and `play_no`."
+  ],
+  "hints": [
+    "Look at a member's first play. Its previous play doesn't exist, so what is `gap_s`, and what is its mark?",
+    "`lag` takes a default as its third argument, used when there is no previous row. With 0 the first play's gap is huge, so it gets a 1.",
+    "The play counter needs a window of its own that restarts for every session: partition it by `user_id` and `session_no`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "watch_sessions"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(watch_sessions):\n    w = Window.partitionBy(\"user_id\").orderBy(\"started_at\", \"watch_id\")\n    gap_s = F.col(\"started_at\").cast(\"long\") - F.lag(F.col(\"ended_at\").cast(\"long\")).over(w)\n    marked = watch_sessions.select(\"*\", (gap_s > 30 * 60).cast(\"int\").alias(\"new_session\"))\n    numbered = marked.select(\"*\", F.sum(\"new_session\").over(w).alias(\"session_no\"))\n    return numbered.select(\n        \"watch_id\",\n        \"user_id\",\n        \"session_no\",\n        F.row_number().over(w).alias(\"play_no\"),\n    )\n",
+  "output": {
+    "columns": [
+      "watch_id",
+      "user_id",
+      "session_no",
+      "play_no"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "There are two bugs. `F.lag(F.col(\"ended_at\").cast(\"long\"))` has no default, so the first play's gap and mark are missing; the running sum skips it, which leaves that play without a session number and starts the next ones at 0. Give `lag` a default of 0 so every first play is marked 1. And `play_no` uses the member's window, so it counts across the member's whole history; it needs `Window.partitionBy(\"user_id\", \"session_no\").orderBy(\"started_at\", \"watch_id\")`, which restarts in each session. Both windows keep `watch_id` in the order so plays that start together are numbered one after another."
+}

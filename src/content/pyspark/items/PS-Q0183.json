@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0183",
+  "slug": "search-filter-and-listing-counts",
+  "lesson": "PS-L037",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Filters and listed products per search",
+  "dataset": {
+    "id": "PS-D06",
+    "version": "1.0.0"
+  },
+  "prompt": "The search team wants to know, for every search, how many filters were ticked and how many products the page listed. Write `solve(searches)` so it returns those two counts per search.",
+  "rules": [
+    "Return `event_id`, `user_id`, `query`, `filters_ticked` and `products_listed`, in that order.",
+    "Count the entries in `filters` and in `result_skus`. An empty list counts 0; a list that is missing altogether gives a missing count.",
+    "Count every entry, even when the same filter appears twice.",
+    "Don't copy `results_count`: it comes from the search engine and doesn't always match the list."
+  ],
+  "hints": [
+    "`printSchema()` shows that `filters` and `result_skus` are arrays of strings.",
+    "`F.size(...)` returns how many elements an array holds.",
+    "Check what `F.size` gives for an empty array and for a missing one before adding any extra handling."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "searches"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(searches):\n    # Count the filters ticked and the products listed for each search.\n    return searches\n",
+  "output": {
+    "columns": [
+      "event_id",
+      "user_id",
+      "query",
+      "filters_ticked",
+      "products_listed"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`F.size` counts the elements of an array: `searches.select(\"event_id\", \"user_id\", \"query\", F.size(\"filters\").alias(\"filters_ticked\"), F.size(\"result_skus\").alias(\"products_listed\"))`. An empty array gives 0. On Spark 4 a missing array gives a missing size, which is what the rules ask for, so no special case is needed. `F.size` counts repeated entries too. Copying `results_count` looks the same on most rows but goes wrong when the engine's number and the list disagree, or when the list is missing."
+}

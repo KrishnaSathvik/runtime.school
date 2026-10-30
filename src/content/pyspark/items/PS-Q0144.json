@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0144",
+  "slug": "fix-the-price-list",
+  "lesson": "PS-L029",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Fix the price list",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "This function should list every price each product has been listed or sold at, but it stops with an error about casting a product id. Find the bug and fix `solve(product_cdc, invoice_lines)`.",
+  "rules": [
+    "A price counts if it is a `list_price` in `product_cdc` or a `unit_price` on a row of `invoice_lines`.",
+    "Return `product_id` and `price`, with each pair once. `price` keeps its decimal type.",
+    "A missing value counts as a value, so a missing price is listed once like any other."
+  ],
+  "hints": [
+    "Look at the order of the columns in `listed` and in `sold`.",
+    "`union` lines columns up by position, not by name, so a price lands under `product_id`.",
+    "Select `sold` in the same order as `listed`, or keep it and use `unionByName`, which matches the names."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "product_cdc",
+    "invoice_lines"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(product_cdc, invoice_lines):\n    listed = product_cdc.select(\"product_id\", F.col(\"list_price\").alias(\"price\"))\n    sold = invoice_lines.select(F.col(\"unit_price\").alias(\"price\"), \"product_id\")\n    return listed.union(sold).distinct()\n",
+  "output": {
+    "columns": [
+      "product_id",
+      "price"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`union` stacks columns by position. `listed` is `(product_id, price)` but `sold` is `(price, product_id)`, so Spark tries to put prices and ids in the same column and fails when it casts an id to a number. Select `sold` in the same order, `invoice_lines.select(\"product_id\", F.col(\"unit_price\").alias(\"price\"))`, or keep it and write `listed.unionByName(sold)`, which matches by name. Keep `distinct()`, because the same price usually appears on the product feed and on many invoice lines. `unionByName` without the alias fails too, since `unit_price` and `price` are different names."
+}

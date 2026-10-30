@@ -1,0 +1,138 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "customer_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "first_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "last_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "initials",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "C0001",
+     "Ines",
+     "Okafor",
+     "IO"
+    ],
+    [
+     "C0002",
+     "Kofi",
+     "Mori",
+     "KM"
+    ],
+    [
+     "C0003",
+     "Tomas",
+     "Okafor",
+     "TO"
+    ],
+    [
+     "C0004",
+     "Ines",
+     "Costa",
+     "IC"
+    ],
+    [
+     "C0005",
+     "Maya",
+     "Rao",
+     "MR"
+    ],
+    [
+     "C0006",
+     "Hana",
+     "Rao",
+     "HR"
+    ],
+    [
+     "C0007",
+     null,
+     null,
+     null
+    ]
+   ],
+   "row_count": 7,
+   "inputs": {
+    "customers": [
+     [
+      "C0001",
+      "Ines Okafor",
+      "Leeds",
+      "consumer",
+      "2025-04-30"
+     ],
+     [
+      "C0002",
+      "Kofi Mori",
+      "Lisbon",
+      "consumer",
+      "2024-11-19"
+     ],
+     [
+      "C0003",
+      "Tomas Okafor",
+      "Denver",
+      "consumer",
+      "2024-05-08"
+     ],
+     [
+      "C0004",
+      "Ines Costa",
+      "Denver",
+      "business",
+      "2024-11-15"
+     ],
+     [
+      "C0005",
+      "Maya Rao",
+      "Perth",
+      "consumer",
+      "2024-05-01"
+     ],
+     [
+      "C0006",
+      "Hana Rao",
+      "Osaka",
+      "consumer",
+      "2025-11-07"
+     ],
+     [
+      "C0007",
+      null,
+      "Leeds",
+      "consumer",
+      "2025-01-02"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice customers table",
+  "customers with a missing name",
+  "the same customer row twice",
+  "an empty customers table"
+ ]
+}

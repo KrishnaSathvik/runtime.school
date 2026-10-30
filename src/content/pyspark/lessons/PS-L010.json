@@ -1,0 +1,134 @@
+{
+  "id": "PS-L010",
+  "minutes": 20,
+  "lede": "Most questions about data start with \"only the rows where…\". In PySpark that's `filter`: you describe a condition, and Spark keeps the rows where it's true.",
+  "objectives": [
+    "Keep the rows that match a condition with `filter` (or its twin, `where`)",
+    "Write conditions with `F.col`, comparisons and `isin`, on text, numbers and dates",
+    "Combine conditions with `&`, `|` and `~`, wrapping each one in parentheses",
+    "Predict which rows a filter keeps, including rows with a missing value"
+  ],
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0",
+    "edition": "lesson",
+    "tables": [
+      "orders"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "The `orders` table above has one row per order in a small shop. In every example on this page it's already loaded as a DataFrame called `orders`, and `F` is `pyspark.sql.functions`, the usual short name.\n\n`orders.filter(condition)` gives back a **new** DataFrame with only the rows where `condition` is true. The columns stay exactly as they were, and `orders` itself doesn't change. A condition is built from a column, written `F.col(\"name\")`, and a comparison."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Keep only the paid orders",
+      "code": "from pyspark.sql import functions as F\n\npaid = orders.filter(F.col(\"status\") == \"paid\")\npaid.show()\n",
+      "note": "Four of the twelve orders are paid. `show()` prints the rows, so you can see what the filter kept: all six columns, untouched."
+    },
+    {
+      "kind": "text",
+      "md": "The comparisons are the ones you know from Python: `==`, `!=`, `>`, `>=`, `<` and `<=`. They work on text, on numbers like `total`, and on dates. For a date column, write the date as text in `\"YYYY-MM-DD\"` form and Spark compares it as a date.\n\nText comparisons are exact: `\"Paid\"` is not `\"paid\"`."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Compare numbers and dates",
+      "code": "from pyspark.sql import functions as F\n\nbig = orders.filter(F.col(\"total\") >= 200)\nbig.select(\"order_id\", \"status\", \"total\").show()\n\nearly = orders.filter(F.col(\"order_date\") < \"2026-02-01\")\nearly.select(\"order_id\", \"order_date\").show()\n",
+      "note": "`select` (lesson 9) only trims what's printed here; the filter decides which rows there are. `>=` keeps a total of exactly 200; `>` wouldn't."
+    },
+    {
+      "kind": "text",
+      "md": "To ask for two things at once, combine conditions with `&` (and) or `|` (or). **Put each condition in its own parentheses.** Python works out `&` and `|` before `==` and `>=`, so without parentheses it combines the wrong pieces."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Two conditions at once",
+      "code": "from pyspark.sql import functions as F\n\npaid_in_app = orders.filter((F.col(\"status\") == \"paid\") & (F.col(\"channel\") == \"app\"))\npaid_in_app.select(\"order_id\", \"status\", \"channel\").show()\n\nstore_or_big = orders.filter((F.col(\"channel\") == \"store\") | (F.col(\"total\") >= 250))\nstore_or_big.select(\"order_id\", \"channel\", \"total\").show()\n",
+      "note": "With `&` a row must pass both conditions; with `|` either one is enough."
+    },
+    {
+      "kind": "error-example",
+      "id": "e4",
+      "title": "Forgetting the parentheses",
+      "code": "from pyspark.sql import functions as F\n\norders.filter(F.col(\"status\") == \"paid\" & F.col(\"total\") >= 100).show()\n",
+      "error": "PySparkValueError",
+      "note": "Without parentheses Python reads this as one long chain and asks a column for a plain `True` or `False`, which it can't give. The same error appears if you write Python's `and` or `or` between conditions: on columns, always use `&` and `|`."
+    },
+    {
+      "kind": "text",
+      "md": "When the allowed values are a list, `isin` is shorter than several `==` joined with `|`. Put `~` in front of a condition to turn it around: `~` means \"not\"."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "A list of values, and not",
+      "code": "from pyspark.sql import functions as F\n\non_the_way = orders.filter(F.col(\"status\").isin(\"paid\", \"shipped\"))\non_the_way.select(\"order_id\", \"status\").show()\n\nkept = orders.filter(~F.col(\"status\").isin(\"cancelled\", \"refunded\"))\nprint(kept.count(), \"of\", orders.count(), \"orders were not cancelled or refunded\")\n",
+      "note": "`count()` counts the rows of a DataFrame."
+    },
+    {
+      "kind": "text",
+      "md": "`where` is the same method as `filter` under another name, so `orders.where(F.col(\"status\") == \"paid\")` gives the same rows.\n\nOne more rule matters with real data: **a comparison with a missing value isn't true.** If an order's `total` is missing, `F.col(\"total\") >= 100` is not true for it, so `filter` drops that row. Lesson 19 shows how to find and handle missing values on purpose."
+    }
+  ],
+  "challenges": [
+    "PS-L010-C1",
+    "PS-L010-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "Which line keeps the paid orders with a total of at least 100?",
+      "choices": [
+        "orders.filter(F.col(\"status\") == \"paid\" & F.col(\"total\") >= 100)",
+        "orders.filter((F.col(\"status\") == \"paid\") & (F.col(\"total\") >= 100))",
+        "orders.filter((F.col(\"status\") == \"paid\") and (F.col(\"total\") >= 100))",
+        "orders.filter((F.col(\"status\") == \"paid\") | (F.col(\"total\") >= 100))"
+      ],
+      "answer": 1,
+      "why": "Each condition needs its own parentheses, joined with `&`. Without parentheses, or with Python's `and`, PySpark raises an error; `|` would keep orders that pass either condition."
+    },
+    {
+      "id": "k2",
+      "prompt": "What does `orders.filter(F.col(\"channel\") == \"web\")` give back?",
+      "choices": [
+        "A new DataFrame with the web orders and all of orders' columns",
+        "Nothing: it removes the other rows from orders",
+        "A column of True and False values",
+        "Only the channel column, for web orders"
+      ],
+      "answer": 0,
+      "why": "`filter` returns a new DataFrame with the matching rows and every column unchanged. `orders` itself stays as it was."
+    },
+    {
+      "id": "k3",
+      "prompt": "An order's `total` is missing. Does `orders.filter(F.col(\"total\") >= 100)` keep it?",
+      "choices": [
+        "Yes, missing totals always pass",
+        "No: a comparison with a missing value isn't true, so the row is dropped",
+        "It stops with an error",
+        "Yes, with the total changed to 0"
+      ],
+      "answer": 1,
+      "why": "A comparison with a missing value is not true, so `filter` leaves the row out. No error is raised."
+    }
+  ],
+  "review": [
+    "`df.filter(condition)` returns a new DataFrame with the rows where the condition is true. The columns don't change, and neither does `df`.",
+    "`where` is the same method as `filter`.",
+    "Build conditions from `F.col(\"name\")` and `==`, `!=`, `>`, `>=`, `<`, `<=`. Compare a date column with a date written as `\"YYYY-MM-DD\"`.",
+    "`isin(...)` checks against a list of values, and `~` means not.",
+    "Join conditions with `&` (and) and `|` (or), each in its own parentheses. Python's `and` and `or` don't work on columns.",
+    "A comparison with a missing value isn't true, so `filter` drops that row."
+  ],
+  "practice": [
+    "PS-Q0046",
+    "PS-Q0047",
+    "PS-Q0048",
+    "PS-Q0049",
+    "PS-Q0050"
+  ]
+}

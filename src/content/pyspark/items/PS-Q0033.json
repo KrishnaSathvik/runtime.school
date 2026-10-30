@@ -1,0 +1,49 @@
+{
+  "id": "PS-Q0033",
+  "slug": "packing-slip-numbers",
+  "lesson": "PS-L007",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Packing slip numbers",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "The warehouse prints one packing slip for every row of `orders`, numbered from 1001 upwards. Write `solve(orders)` so it returns the slip numbers in one column called `id`.",
+  "rules": [
+    "Slip numbers start at 1001 and go up by one: a table with 12 rows gets 1001 to 1012, both included.",
+    "Every row gets a slip, including duplicate rows and rows with missing values. An empty table gets no slips.",
+    "Return one column, `id`, of type `bigint`."
+  ],
+  "hints": [
+    "`orders.count()` gives the number of rows as a Python number, and `spark.range(start, end)` builds the `id` column for you.",
+    "Like Python's `range`, `spark.range` leaves out `end`. Work out which `end` makes the last slip number the right one.",
+    "Check your `end` on a small case: with 3 rows the slips are 1001, 1002 and 1003, and with 0 rows there are none."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "orders"
+  ],
+  "starter": "def solve(orders):\n    # Return one slip number per row of orders, starting at 1001.\n    return orders\n",
+  "output": {
+    "columns": [
+      "id"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Count the rows, then let `spark.range` make the numbers: `spark.range(1001, 1001 + orders.count())`. `spark.range` stops just before `end`, so with 12 rows the end is 1013 and the last slip is 1012. With 0 rows, start and end are both 1001 and the result is empty, which is right. `count()` counts every row, duplicates and rows with missing values included. The traps are the edges: `1001 + orders.count() + 1` adds one slip too many, `spark.range(1000, ...)` starts too low, and building the numbers in Python with an `INT` schema gives `int` instead of `bigint`."
+}

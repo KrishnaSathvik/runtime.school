@@ -1,0 +1,47 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D15",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "application_logs_raw"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "+------------------------------------------------------------+\n|                                                       value|\n+------------------------------------------------------------+\n|{\"log_id\":\"LOG-000001\",\"logged_at\":\"2026-04-14T10:00:02.1...|\n|{\"log_id\":\"LOG-000002\",\"logged_at\":\"2026-04-14T10:00:09.0...|\n|{\"log_id\":\"LOG-000003\",\"logged_at\":\"2026-04-14T10:00:14.9...|\n|{\"log_id\":\"LOG-000004\",\"logged_at\":\"2026-04-14T10:00:21.4...|\n|{\"log_id\":\"LOG-000004\",\"logged_at\":\"2026-04-14T10:00:21.4...|\n|{\"log_id\":\"LOG-000005\",\"logged_at\":\"2026-04-14T10:00:47.2...|\n|{\"log_id\":\"LOG-000006\",\"logged_at\":\"2026-04-14T10:01:00.1...|\n|{\"log_id\":\"LOG-000007\",\"logged_at\":\"2026-04-14T10:01:03\",...|\n|{\"log_id\":\"LOG-000007\",\"logged_at\":\"2026-04-14T10:01:03\",...|\n|{\"log_id\":\"LOG-000008\",\"logged_at\":\"2026-04-14T10:01:12.5...|\n|{\"log_id\":\"LOG-000009\",\"logged_at\":\"2026-04-14T10:01:21.5...|\n|2026-04-14 10:01:28 ERROR notification-worker Traceback (...|\n|{\"log_id\":\"LOG-000010\",\"logged_at\":\"2026-04-14T10:01:28\",...|\n+------------------------------------------------------------+\n\n13 lines\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "root\n |-- _corrupt_record: string (nullable = true)\n |-- attributes: struct (nullable = true)\n |    |-- cache: string (nullable = true)\n |    |-- device_id: string (nullable = true)\n |    |-- error_type: string (nullable = true)\n |    |-- firmware: string (nullable = true)\n |    |-- grant_type: string (nullable = true)\n |    |-- host: string (nullable = true)\n |    |-- latency_ms: string (nullable = true)\n |    |-- order_ref: string (nullable = true)\n |    |-- payment_provider: string (nullable = true)\n |    |-- query_terms: string (nullable = true)\n |    |-- region: string (nullable = true)\n |    |-- result_count: string (nullable = true)\n |-- level: string (nullable = true)\n |-- log_id: string (nullable = true)\n |-- logged_at: string (nullable = true)\n |-- message: string (nullable = true)\n |-- service: string (nullable = true)\n |-- trace_id: string (nullable = true)\n\n+----------+-----+--------------------------------------------------+\n|    log_id|level|                                   _corrupt_record|\n+----------+-----+--------------------------------------------------+\n|LOG-000001| INFO|                                              NULL|\n|LOG-000002| INFO|                                              NULL|\n|LOG-000003| INFO|                                              NULL|\n|      NULL| NULL|{\"log_id\":\"LOG-000004\",\"logged_at\":\"2026-04-14T...|\n|LOG-000004| INFO|                                              NULL|\n|LOG-000005| INFO|                                              NULL|\n|LOG-000006|ERROR|                                              NULL|\n|      NULL| NULL|{\"log_id\":\"LOG-000007\",\"logged_at\":\"2026-04-14T...|\n|LOG-000007| WARN|                                              NULL|\n|LOG-000008| INFO|                                              NULL|\n|LOG-000009| INFO|                                              NULL|\n|      NULL| NULL|2026-04-14 10:01:28 ERROR notification-worker T...|\n|LOG-000010|ERROR|                                              NULL|\n+----------+-----+--------------------------------------------------+\n\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "+----------+-----+--------------------------------------------------+\n|    log_id|level|                                        bad_record|\n+----------+-----+--------------------------------------------------+\n|LOG-000001| INFO|                                              NULL|\n|LOG-000002| INFO|                                              NULL|\n|LOG-000003| INFO|                                              NULL|\n|      NULL| NULL|{\"log_id\":\"LOG-000004\",\"logged_at\":\"2026-04-14T...|\n|LOG-000004| INFO|                                              NULL|\n|LOG-000005| INFO|                                              NULL|\n|LOG-000006|ERROR|                                              NULL|\n|      NULL| NULL|{\"log_id\":\"LOG-000007\",\"logged_at\":\"2026-04-14T...|\n|LOG-000007| WARN|                                              NULL|\n|LOG-000008| INFO|                                              NULL|\n|LOG-000009| INFO|                                              NULL|\n|      NULL| NULL|2026-04-14 10:01:28 ERROR notification-worker T...|\n|LOG-000010|ERROR|                                              NULL|\n+----------+-----+--------------------------------------------------+\n\n+----------+-----------------------+-----+-------------------+-------------------------------------------+\n|log_id    |logged_at              |level|service            |message                                    |\n+----------+-----------------------+-----+-------------------+-------------------------------------------+\n|LOG-000001|2026-04-14 10:00:02.142|INFO |catalog-api        |GET /v1/catalog/items 200                  |\n|LOG-000002|2026-04-14 10:00:09.061|INFO |auth-service       |POST /v1/auth/token 200                    |\n|LOG-000003|2026-04-14 10:00:14.936|INFO |checkout-api       |POST /v1/checkout 201                      |\n|LOG-000004|2026-04-14 10:00:21.418|INFO |search-api         |GET /v1/search 200                         |\n|LOG-000005|2026-04-14 10:00:47.224|INFO |iot-gateway        |POST /v1/devices/{device_id}/telemetry 201 |\n|LOG-000006|2026-04-14 10:01:00.14 |ERROR|checkout-api       |POST /v1/payments/authorize failed with 500|\n|LOG-000007|2026-04-14 10:01:03    |WARN |iot-gateway        |no heartbeat for 10 minutes                |\n|LOG-000008|2026-04-14 10:01:12.522|INFO |iot-gateway        |POST /v1/devices/{device_id}/telemetry 201 |\n|LOG-000009|2026-04-14 10:01:21.562|INFO |search-api         |GET /v1/search 200                         |\n|LOG-000010|2026-04-14 10:01:28    |ERROR|notification-worker|email provider did not answer within 10 s  |\n+----------+-----------------------+-----+-------------------+-------------------------------------------+\n\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "+------+-----+----------+-------------------------------------------------------+\n|log_id|level|latency_ms|bad_record                                             |\n+------+-----+----------+-------------------------------------------------------+\n|T1    |INFO |42        |NULL                                                   |\n|T2    |WARN |NULL      |NULL                                                   |\n|T3    |INFO |NULL      |{\"log_id\": \"T3\", \"level\": \"INFO\", \"latency_ms\": \"slow\"}|\n|T4    |ERROR|1240      |NULL                                                   |\n+------+-----+----------+-------------------------------------------------------+\n\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "+---------------+-----+------+\n|_corrupt_record|level|log_id|\n+---------------+-----+------+\n|              [| NULL|  NULL|\n|           NULL| INFO|    A1|\n|           NULL| WARN|    A2|\n|              ]| NULL|  NULL|\n+---------------+-----+------+\n\n+-----+------+\n|level|log_id|\n+-----+------+\n| INFO|    A1|\n| WARN|    A2|\n+-----+------+\n\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "",
+   "error": {
+    "type": "AnalysisException",
+    "message": "[UNSUPPORTED_FEATURE.QUERY_ONLY_CORRUPT_RECORD_COLUMN] The feature is not supported: Queries from raw JSON/CSV/XML files are disallowed when the",
+    "line": 5,
+    "condition": "UNSUPPORTED_FEATURE.QUERY_ONLY_CORRUPT_RECORD_COLUMN"
+   }
+  }
+ }
+}

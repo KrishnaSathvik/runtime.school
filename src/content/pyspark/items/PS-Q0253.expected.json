@@ -1,0 +1,79 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "product_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "unit_price",
+     "type": "decimal(10,2)",
+     "nullable": true
+    },
+    {
+     "name": "sale_price",
+     "type": "decimal(10,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "P001",
+     "19.99",
+     "16.99"
+    ],
+    [
+     "P002",
+     "32.50",
+     "27.63"
+    ],
+    [
+     "P003",
+     "24.00",
+     "20.40"
+    ],
+    [
+     "P004",
+     "4.50",
+     "3.83"
+    ],
+    [
+     "P005",
+     "19.99",
+     "16.99"
+    ],
+    [
+     "P006",
+     "12.00",
+     "10.20"
+    ],
+    [
+     "P007",
+     "59.99",
+     "50.99"
+    ],
+    [
+     "P008",
+     "89.00",
+     "75.65"
+    ]
+   ],
+   "row_count": 8
+  }
+ },
+ "hidden": [
+  "the full practice products",
+  "prices whose sale price lands exactly on half a cent",
+  "a free product and the largest price the column holds",
+  "products with no price yet",
+  "an empty products table"
+ ]
+}

@@ -1,0 +1,375 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "example": {
+   "schema": [
+    {
+     "name": "rows_in",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "duplicates",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "bad_timestamps",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "clean_attempts",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "enrolments",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "enrolled_total",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "completed_total",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "learners",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "inactive",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "never_active",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "inactive_plus",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "inactive_days_total",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     10,
+     1,
+     2,
+     7,
+     6,
+     6,
+     2,
+     7,
+     4,
+     2,
+     3,
+     109
+    ]
+   ],
+   "row_count": 1,
+   "inputs": {
+    "attempts": [
+     [
+      "A001",
+      "L01",
+      "C01-L01",
+      "1",
+      "2026-06-01T09:00:00",
+      "12",
+      "82.0",
+      "true"
+     ],
+     [
+      "A002",
+      "L01",
+      "C01-L02",
+      "1",
+      "2026-06-28T21:00:00",
+      "20",
+      "75.0",
+      "true"
+     ],
+     [
+      "A002",
+      "L01",
+      "C01-L02",
+      "1",
+      "2026-06-28T21:00:00",
+      "20",
+      "75.0",
+      "true"
+     ],
+     [
+      "A003",
+      "L02",
+      "C01-L01",
+      "1",
+      "2026-05-30T08:00:00",
+      "15",
+      "71.0",
+      "true"
+     ],
+     [
+      "A004",
+      "L02",
+      "C01-L02",
+      "1",
+      null,
+      "18",
+      "66.0",
+      "false"
+     ],
+     [
+      "A005",
+      "L03",
+      "C01-L01",
+      "1",
+      "2026-05-29T22:00:00",
+      "19",
+      "58.0",
+      "false"
+     ],
+     [
+      "A006",
+      "L05",
+      "C02-L01",
+      "1",
+      "2026-04-10T10:00:00",
+      "25",
+      "80.0",
+      "true"
+     ],
+     [
+      "A007",
+      "L05",
+      "C01-L01",
+      "1",
+      "2026-06-29T09:00:00",
+      "14",
+      "77.0",
+      "true"
+     ],
+     [
+      "A008",
+      "L06",
+      "C01-L01",
+      "1",
+      "2026-06-20T17:00:00",
+      "2",
+      null,
+      "false"
+     ],
+     [
+      "A009",
+      "L06",
+      "C02-L01",
+      "1",
+      "2026-06-21T17:00:00",
+      "3",
+      null,
+      "false"
+     ]
+    ],
+    "lessons": [
+     [
+      "C01-L01",
+      "C01",
+      "1",
+      "Your first SELECT",
+      "20"
+     ],
+     [
+      "C01-L02",
+      "C01",
+      "2",
+      "Filtering rows",
+      "25"
+     ],
+     [
+      "C02-L01",
+      "C02",
+      "1",
+      "Variables and types",
+      "25"
+     ]
+    ],
+    "courses": [
+     [
+      "C01",
+      "SQL Foundations",
+      "sql",
+      "beginner",
+      "2",
+      "2025-04-01"
+     ],
+     [
+      "C02",
+      "Python for Data",
+      "python",
+      "beginner",
+      "1",
+      "2025-06-01"
+     ]
+    ],
+    "learners": [
+     [
+      "L01",
+      "Aiko M.",
+      "JP",
+      "2026-01-08",
+      "plus"
+     ],
+     [
+      "L02",
+      "Bruno S.",
+      "BR",
+      "2026-02-02",
+      "free"
+     ],
+     [
+      "L03",
+      "Chidi O.",
+      "NG",
+      "2026-02-17",
+      "plus"
+     ],
+     [
+      "L04",
+      "Dana K.",
+      "CA",
+      "2026-03-09",
+      "free"
+     ],
+     [
+      "L05",
+      "Elif T.",
+      "DE",
+      "2026-03-23",
+      "plus"
+     ],
+     [
+      "L06",
+      "Farah N.",
+      "IN",
+      "2026-04-01",
+      "free"
+     ],
+     [
+      "L07",
+      "Goran P.",
+      "PL",
+      "2026-06-20",
+      "plus"
+     ]
+    ]
+   }
+  },
+  "project": {
+   "schema": [
+    {
+     "name": "rows_in",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "duplicates",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "bad_timestamps",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "clean_attempts",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "enrolments",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "enrolled_total",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "completed_total",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "learners",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "inactive",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "never_active",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "inactive_plus",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "inactive_days_total",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     5063,
+     118,
+     0,
+     4945,
+     579,
+     579,
+     459,
+     200,
+     70,
+     29,
+     22,
+     2455
+    ]
+   ],
+   "row_count": 1
+  }
+ },
+ "hidden": [
+  "the full practice tables",
+  "last activity exactly 29, 30 and 31 days before the as-of date, and on its last minute",
+  "learners who never attempted anything",
+  "copies, abandoned attempts, a missing start time and an attempt after the as-of date",
+  "empty tables"
+ ]
+}

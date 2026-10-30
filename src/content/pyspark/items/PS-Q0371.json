@@ -1,0 +1,58 @@
+{
+ "id": "PS-Q0371",
+ "slug": "accounts-on-1-march",
+ "lesson": "PS-L075",
+ "role": "foundation",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 10,
+ "title": "Accounts on 1 March",
+ "dataset": {
+  "id": "PS-D14",
+  "version": "1.0.0"
+ },
+ "prompt": "The account history is a type 2 table: every version of an account, with `effective_from`, `effective_to` and `is_current`. Write `as_of(history, when)` so it returns the accounts as they were at that moment.",
+ "rules": [
+  "A version was valid at `when` if it had started by then (`effective_from` at or before `when`) and hadn't ended yet (`effective_to` is NULL or after `when`).",
+  "Return one row per account that existed at `when`, with the columns in `COLS`.",
+  "Don't change `build_history` or `solve`."
+ ],
+ "hints": [
+  "`F.lit(when).cast(\"timestamp\")` turns the text into a timestamp you can compare with.",
+  "`is_current` describes today, not 1 March.",
+  "An open version has `effective_to` NULL, and a comparison with NULL is never true: test for NULL with `isNull()` and combine with `|`."
+ ],
+ "entry": "solve",
+ "inputs": [
+  "accounts",
+  "customer_cdc"
+ ],
+ "starter": "import shutil\n\nfrom pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\nfrom delta.tables import DeltaTable\n\nPATH = \"/tmp/crm/dim_accounts\"\nCOLS = [\"account_id\", \"account_name\", \"industry\", \"country\", \"segment\", \"account_owner\", \"credit_limit\", \"created_on\", \"is_active\"]\n\n\ndef build_history(accounts, customer_cdc):\n    # The type 2 history: the 1 January snapshot, then the change feed applied as one batch. Don't change this.\n    shutil.rmtree(PATH, ignore_errors=True)  # start from an empty folder on every run\n    (accounts\n        .withColumn(\"effective_from\", F.lit(\"2026-01-01 00:00:00\").cast(\"timestamp\"))\n        .withColumn(\"effective_to\", F.lit(None).cast(\"timestamp\"))\n        .withColumn(\"is_current\", F.lit(True))\n        .write.format(\"delta\").save(PATH))\n    newest_first = Window.partitionBy(\"account_id\").orderBy(F.col(\"sequence\").desc())\n    latest = customer_cdc.withColumn(\"rn\", F.row_number().over(newest_first)).filter(F.col(\"rn\") == 1).drop(\"rn\")\n    (DeltaTable.forPath(spark, PATH).alias(\"t\")\n        .merge(latest.alias(\"s\"), \"t.account_id = s.account_id AND t.is_current\")\n        .whenMatchedUpdate(set={\"effective_to\": \"s.changed_at\", \"is_current\": \"false\"})\n        .execute())\n    (latest.filter(F.col(\"op\") != \"D\")\n        .select(*COLS, F.col(\"changed_at\").alias(\"effective_from\"),\n                F.lit(None).cast(\"timestamp\").alias(\"effective_to\"), F.lit(True).alias(\"is_current\"))\n        .write.format(\"delta\").mode(\"append\").save(PATH))\n\n\ndef as_of(history, when):\n    # The accounts as they were at `when`: one row per account that existed then, with COLS.\n    return history.select(COLS)\n\ndef solve(accounts, customer_cdc):\n    build_history(accounts, customer_cdc)\n    history = spark.read.format(\"delta\").load(PATH)\n    return as_of(history, \"2026-03-01 00:00:00\")\n",
+ "output": {
+  "columns": [
+   "account_id",
+   "account_name",
+   "industry",
+   "country",
+   "segment",
+   "account_owner",
+   "credit_limit",
+   "created_on",
+   "is_active"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 180,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "explanation": "Filter the history to the versions that cover the moment: `(F.col(\"effective_from\") <= t) & (F.col(\"effective_to\").isNull() | (t < F.col(\"effective_to\")))`, then select `COLS`. Each version covers from its start up to, but not including, its end, so at any moment an account has at most one valid version, and none if it didn't exist yet or had been deleted. `is_current` gives today's accounts: ACC-0001's owner changed on 10 March, so on 1 March it still belonged to Dana Whitlock. Without the `isNull()` test every open version drops out, and `<=` on `effective_to` would give two versions of an account that changed exactly at that moment."
+}

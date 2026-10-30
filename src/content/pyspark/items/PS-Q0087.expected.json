@@ -1,0 +1,69 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "alert_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "alert_type",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "warning_minutes",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "start_weekday",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "AL-0001",
+     "frost",
+     120,
+     "Monday"
+    ],
+    [
+     "AL-0002",
+     "heat",
+     120,
+     "Sunday"
+    ],
+    [
+     "AL-0003",
+     "heavy_rain",
+     120,
+     "Sunday"
+    ],
+    [
+     "AL-0004",
+     "high_wind",
+     120,
+     "Sunday"
+    ]
+   ],
+   "row_count": 4
+  }
+ },
+ "hidden": [
+  "the full practice alerts table",
+  "warnings that aren't a whole number of minutes",
+  "alerts issued before midnight that start after it",
+  "alerts issued more than a day ahead, and across the clock change",
+  "alerts with a missing issue or start time",
+  "an empty alerts table"
+ ]
+}

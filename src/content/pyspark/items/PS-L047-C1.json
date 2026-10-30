@@ -1,0 +1,56 @@
+{
+  "id": "PS-L047-C1",
+  "slug": "rerunnable-daily-load",
+  "lesson": "PS-L047",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "A load that's safe to rerun",
+  "dataset": {
+    "id": "PS-D13",
+    "version": "1.0.0"
+  },
+  "prompt": "The nightly job saves the observations to `/tmp/weather/daily` as Parquet, one folder per `observation_date`, and the scheduler sometimes runs it twice. Write `save(observations, path)` so that each run leaves exactly the observations it was given, however many times it runs. `solve` is written for you: it saves twice and reads the folder back.",
+  "rules": [
+    "Partition the folder by `observation_date`.",
+    "After a run, the folder holds exactly that run's observations: no copies from an earlier run, and no days left over from older data.",
+    "`solve` returns what reading the folder gives: the other columns in their order, then `observation_date` last, as a date.",
+    "Keep repeated rows that are in the input itself."
+  ],
+  "hints": [
+    "`observations.write.partitionBy(...).parquet(path)` writes one folder per day.",
+    "Which mode replaces what's already in the folder instead of adding to it?",
+    "Dynamic overwrite keeps days that aren't in the new data, and here those must go: use a plain `.mode(\"overwrite\")`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "observations"
+  ],
+  "starter": "def save(observations, path):\n    # Save the observations at `path`, partitioned by observation_date.\n    observations.write.mode(\"append\").parquet(path)\n\n\ndef solve(observations):\n    path = \"/tmp/weather/daily\"\n    save(observations, path)\n    save(observations, path)  # the scheduler ran the job twice\n    return spark.read.parquet(path)\n",
+  "output": {
+    "columns": [
+      "observation_id",
+      "station_id",
+      "observed_at",
+      "temperature_c",
+      "humidity_pct",
+      "precipitation_mm",
+      "wind_speed_kph",
+      "pressure_hpa",
+      "quality_flag",
+      "observation_date"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "id": "PS-Q0137",
+  "slug": "purchase-order-change-log",
+  "lesson": "PS-L028",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Purchase order change log",
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0"
+  },
+  "prompt": "Buyers want to see what each update to a purchase order changed. Write `solve(purchase_orders)` so it returns every version of every order next to the version just before it.",
+  "rules": [
+    "A version's previous version is the row with the same `po_id` and a `version` exactly one lower.",
+    "If there is no such row (version 1, or a version whose predecessor is missing), the three `previous_` columns are missing. Every row appears exactly once.",
+    "Return `po_id`, `version`, `quantity`, `status`, `expected_date`, `previous_quantity`, `previous_status` and `previous_expected_date`, in that order."
+  ],
+  "hints": [
+    "Join `purchase_orders` with itself. Give the two copies names with `alias`, such as `cur` and `prev`.",
+    "The match needs two conditions, joined with `&` and each in parentheses: the same `po_id`, and `prev.version` equal to `cur.version - 1`.",
+    "Version 1 has no previous version but must still appear, so use a left join from `cur`, and rename the `prev` columns with `.alias(...)`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "purchase_orders"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(purchase_orders):\n    # Each version next to the version just before it.\n    return purchase_orders\n",
+  "output": {
+    "columns": [
+      "po_id",
+      "version",
+      "quantity",
+      "status",
+      "expected_date",
+      "previous_quantity",
+      "previous_status",
+      "previous_expected_date"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "A purchase order row is identified by two columns, `po_id` and `version`, so the match is a condition on both: `(F.col(\"cur.po_id\") == F.col(\"prev.po_id\")) & (F.col(\"prev.version\") == F.col(\"cur.version\") - 1)`. Name two copies with `alias` and left join from `cur`, so version 1, which has nothing before it, keeps its row with NULL `previous_` columns. Matching on `po_id` alone pairs every version with every version of the same order, and `prev.version < cur.version` pairs version 4 with versions 1, 2 and 3. Getting the arithmetic the wrong way round, `cur.version + 1`, shows the next version instead of the previous one."
+}

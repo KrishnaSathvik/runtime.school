@@ -1,0 +1,63 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "symbol",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "days",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "best_change",
+     "type": "decimal(11,2)",
+     "nullable": true
+    },
+    {
+     "name": "worst_change",
+     "type": "decimal(11,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "ALDR.SX",
+     5,
+     "4.42",
+     "-98.89"
+    ],
+    [
+     "BRVO.SX",
+     4,
+     "0.72",
+     "0.35"
+    ],
+    [
+     "CYPH.SX",
+     5,
+     "3.09",
+     "-0.96"
+    ]
+   ],
+   "row_count": 3
+  }
+ },
+ "hidden": [
+  "the full practice prices",
+  "a stock with a single trading day",
+  "a stock that rises every day",
+  "rows that arrive out of date order",
+  "a day with a missing close",
+  "no prices"
+ ]
+}

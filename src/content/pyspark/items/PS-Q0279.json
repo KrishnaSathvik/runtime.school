@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0279",
+  "slug": "does-filter-order-matter",
+  "lesson": "PS-L056",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Does filter order matter?",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "This function returns the paid web orders and checks a claim: writing the two filters in either order gives Catalyst the same plan. Its check says `False`, but the claim is true. Find the bug in the check and fix `solve(orders)`.",
+  "rules": [
+    "Keep orders whose `status` is `paid` and whose `channel` is `web`. Orders with a missing status or channel are left out.",
+    "Return `order_id` and `total`, plus `same_plan`: whether the two versions' optimized logical plans compute the same result, ignoring differences that don't change it (the order of conditions joined by `AND`, `#n` tags). `with_fact` adds it.",
+    "Keep both versions of the query in the function, `status` first and `channel` first."
+  ],
+  "hints": [
+    "Print `status_first._jdf.queryExecution().optimizedPlan()` for both versions. What's different in the text, and does it change the result?",
+    "Plan text can differ in ways that don't matter: the order of conditions joined by `AND`, `#n` tags, `plan_id` numbers.",
+    "`plan_a.sameResult(plan_b)` compares two plans by what they compute. Use it on the optimized plans."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "orders"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef with_fact(df, name, value):\n    # Adds a column called name holding the same value on every row.\n    return df.withColumn(name, F.lit(value))\n\n\ndef solve(orders):\n    status_first = orders.filter(F.col(\"status\") == \"paid\").filter(F.col(\"channel\") == \"web\").select(\"order_id\", \"total\")\n    channel_first = orders.filter(F.col(\"channel\") == \"web\").filter(F.col(\"status\") == \"paid\").select(\"order_id\", \"total\")\n    a = status_first._jdf.queryExecution().executedPlan().toString()\n    b = channel_first._jdf.queryExecution().executedPlan().toString()\n    return with_fact(status_first, \"same_plan\", a == b)\n",
+  "output": {
+    "columns": [
+      "order_id",
+      "total",
+      "same_plan"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Both versions are merged into one `Filter` with the same four conditions, but the conditions keep the order they were written in, so the plan texts differ: `status = paid AND channel = web` in one, the reverse in the other. Comparing text with `==` says `False` for a difference that doesn't change a single row. `status_first._jdf.queryExecution().optimizedPlan().sameResult(channel_first._jdf.queryExecution().optimizedPlan())` compares what the plans compute, ignoring `#n` tags and the order of `AND`ed conditions, and gives `True`. Comparing the optimized plans' text with `==` still says `False`, for the same reason."
+}

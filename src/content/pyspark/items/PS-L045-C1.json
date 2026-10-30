@@ -1,0 +1,21 @@
+{
+  "id": "PS-L045-C1",
+  "kind": "predict",
+  "slug": "types-after-the-round-trip",
+  "lesson": "PS-L045",
+  "difficulty": "easy",
+  "minutes": 4,
+  "title": "Types after the round trip",
+  "prompt": "This program saves the 12 lesson trips twice, as CSV and as Parquet, and reads both back without a schema. What does it print? Type each line on its own line.",
+  "program": "trips.select(\"trip_id\", \"passenger_count\", \"fare\").write.mode(\"overwrite\").csv(\"/tmp/c1/csv\", header=True)\ntrips.select(\"trip_id\", \"passenger_count\", \"fare\").write.mode(\"overwrite\").parquet(\"/tmp/c1/parquet\")\n\nfrom_csv = spark.read.csv(\"/tmp/c1/csv\", header=True)\nfrom_parquet = spark.read.parquet(\"/tmp/c1/parquet\")\nprint(from_csv.dtypes)\nprint(from_parquet.dtypes)\nprint(from_csv.count(), from_parquet.count())\n",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "`dtypes` is a list of `(name, type)` pairs, in column order.",
+    "A CSV file has no types: read without a schema or `inferSchema`, every column is text.",
+    "Parquet keeps the schema it was written with. Neither format adds or drops rows."
+  ]
+}

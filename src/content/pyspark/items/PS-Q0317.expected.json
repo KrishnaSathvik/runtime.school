@@ -1,0 +1,273 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "updated",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "inserted",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "deleted",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     3,
+     2,
+     1
+    ]
+   ],
+   "row_count": 1,
+   "inputs": {
+    "accounts": [
+     [
+      "ACC-0001",
+      "Quillfen Analytics Inc",
+      "technology",
+      "US",
+      "mid_market",
+      "Dana Whitlock",
+      "75000.00",
+      "2022-03-14",
+      "true"
+     ],
+     [
+      "ACC-0002",
+      "Brackenmoor Foods Ltd",
+      "consumer goods",
+      "GB",
+      "smb",
+      "Jonas Ekberg",
+      "15000.00",
+      "2023-06-02",
+      "true"
+     ],
+     [
+      "ACC-0003",
+      "Tamsley Logistics GmbH",
+      "transport",
+      "DE",
+      "enterprise",
+      "Mei Lindqvist",
+      "250000.00",
+      "2021-09-20",
+      "true"
+     ],
+     [
+      "ACC-0004",
+      "Corvane Health Pty Ltd",
+      "healthcare",
+      "AU",
+      "mid_market",
+      "Rafael Ibarra",
+      "75000.00",
+      "2024-01-08",
+      "true"
+     ],
+     [
+      "ACC-0005",
+      "Ellowby Energy Inc",
+      "energy",
+      "US",
+      "smb",
+      "Dana Whitlock",
+      "15000.00",
+      "2025-04-30",
+      "true"
+     ]
+    ],
+    "customer_cdc": [
+     [
+      "U",
+      "200001",
+      "2026-01-06T10:15:00",
+      "ACC-0001",
+      "Quillfen Analytics Inc",
+      "technology",
+      "US",
+      "mid_market",
+      "Dana Whitlock",
+      "100000.00",
+      "2022-03-14",
+      "true"
+     ],
+     [
+      "U",
+      "200004",
+      "2026-01-12T14:02:00",
+      "ACC-0002",
+      "Brackenmoor Foods Ltd",
+      "consumer goods",
+      "GB",
+      "smb",
+      "Priya Venkat",
+      "15000.00",
+      "2023-06-02",
+      "true"
+     ],
+     [
+      "I",
+      "200007",
+      "2026-01-19T09:40:00",
+      "ACC-0006",
+      "Fennick Labs B.V.",
+      "technology",
+      "NL",
+      "smb",
+      "Priya Venkat",
+      "15000.00",
+      "2026-01-19",
+      "true"
+     ],
+     [
+      "U",
+      "200009",
+      "2026-01-27T16:05:00",
+      "ACC-0001",
+      "Quillfen Analytics Inc",
+      "technology",
+      "US",
+      "enterprise",
+      "Dana Whitlock",
+      "100000.00",
+      "2022-03-14",
+      "true"
+     ],
+     [
+      "D",
+      "200012",
+      "2026-02-03T11:30:00",
+      "ACC-0003",
+      "Tamsley Logistics GmbH",
+      "transport",
+      "DE",
+      "enterprise",
+      "Mei Lindqvist",
+      "250000.00",
+      "2021-09-20",
+      "true"
+     ],
+     [
+      "I",
+      "200015",
+      "2026-02-09T08:55:00",
+      "ACC-0007",
+      "Marrowind Retail Lda",
+      "consumer goods",
+      "PT",
+      "smb",
+      "Tobias Achterberg",
+      "15000.00",
+      "2026-02-09",
+      "true"
+     ],
+     [
+      "U",
+      "200016",
+      "2026-02-17T13:20:00",
+      "ACC-0006",
+      "Fennick Labs B.V.",
+      "technology",
+      "NL",
+      "smb",
+      "Priya Venkat",
+      "30000.00",
+      "2026-01-19",
+      "true"
+     ],
+     [
+      "U",
+      "200019",
+      "2026-03-02T10:00:00",
+      "ACC-0004",
+      "Corvane Health Pty Ltd",
+      "healthcare",
+      "AU",
+      "mid_market",
+      "Rafael Ibarra",
+      "75000.00",
+      "2024-01-08",
+      "false"
+     ],
+     [
+      "U",
+      "200019",
+      "2026-03-02T10:00:00",
+      "ACC-0004",
+      "Corvane Health Pty Ltd",
+      "healthcare",
+      "AU",
+      "mid_market",
+      "Rafael Ibarra",
+      "75000.00",
+      "2024-01-08",
+      "false"
+     ],
+     [
+      "U",
+      "200023",
+      "2026-03-10T15:45:00",
+      "ACC-0001",
+      "Quillfen Analytics Inc",
+      "technology",
+      "US",
+      "enterprise",
+      "Mei Lindqvist",
+      "100000.00",
+      "2022-03-14",
+      "true"
+     ],
+     [
+      "U",
+      "200026",
+      "2026-03-18T09:10:00",
+      "ACC-0007",
+      "Marrowind Retail Group Lda",
+      "consumer goods",
+      "PT",
+      "smb",
+      "Tobias Achterberg",
+      "15000.00",
+      "2026-02-09",
+      "true"
+     ],
+     [
+      "D",
+      "200028",
+      "2026-03-20T11:00:00",
+      "ACC-0009",
+      "Hollin Paper Co",
+      "consumer goods",
+      "IE",
+      "smb",
+      "Jonas Ekberg",
+      "15000.00",
+      "2026-03-01",
+      "true"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice accounts and change feed",
+  "a large feed with late arrivals and changes delivered twice",
+  "an empty change feed",
+  "a feed that only deletes accounts the table doesn't have",
+  "accounts deleted and added again, and new accounts updated before the sync"
+ ]
+}

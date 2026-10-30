@@ -1,0 +1,43 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D04",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "encounters"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "root\n |-- encounter_id: string (nullable = true)\n |-- patient_id: string (nullable = true)\n |-- provider_id: string (nullable = true)\n |-- encounter_class: string (nullable = true)\n |-- start_time: timestamp (nullable = true)\n |-- end_time: timestamp (nullable = true)\n |-- reason: string (nullable = true)\n |-- vitals: struct (nullable = true)\n |    |-- heart_rate: integer (nullable = true)\n |    |-- systolic: integer (nullable = true)\n |    |-- diastolic: integer (nullable = true)\n |    |-- temperature_c: double (nullable = true)\n |-- diagnosis_codes: array (nullable = true)\n |    |-- element: string (containsNull = true)\n |-- discharge_disposition: string (nullable = true)\n\nstruct<heart_rate:int,systolic:int,diastolic:int,temperature_c:double>\narray<string>\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "+------------+----------+---------------+\n|encounter_id|    vitals|diagnosis_codes|\n+------------+----------+---------------+\n|          T1|{88, 36.9}|        [J06.9]|\n|          T2|      NULL|[Z00.00, E78.5]|\n+------------+----------+---------------+\n\nroot\n |-- encounter_id: string (nullable = false)\n |-- vitals: struct (nullable = true)\n |    |-- heart_rate: integer (nullable = true)\n |    |-- temperature_c: double (nullable = true)\n |-- diagnosis_codes: array (nullable = true)\n |    |-- element: string (containsNull = true)\n\nstruct<encounter_id:string,vitals:struct<heart_rate:int,temperature_c:double>,diagnosis_codes:array<string>>\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "",
+   "error": {
+    "type": "PySparkValueError",
+    "message": "[FIELD_NOT_NULLABLE_WITH_NAME] field encounter_id: This field is not nullable, but got None.",
+    "line": 4,
+    "condition": "FIELD_NOT_NULLABLE_WITH_NAME"
+   }
+  },
+  "e4": {
+   "stdout": "+------------+----------+--------+\n|encounter_id|heart_rate|systolic|\n+------------+----------+--------+\n|   ENC000001|        96|     115|\n|   ENC000002|       104|     107|\n|   ENC000003|        92|     144|\n|   ENC000004|        91|     100|\n|   ENC000005|       102|     131|\n|   ENC000006|        96|     125|\n|   ENC000007|      NULL|    NULL|\n|   ENC000008|      NULL|    NULL|\n+------------+----------+--------+\n\n+------------+----------+--------+---------+-------------+\n|encounter_id|heart_rate|systolic|diastolic|temperature_c|\n+------------+----------+--------+---------+-------------+\n|   ENC000001|        96|     115|       72|         36.2|\n|   ENC000002|       104|     107|       65|         37.2|\n|   ENC000003|        92|     144|       66|         37.2|\n+------------+----------+--------+---------+-------------+\nonly showing top 3 rows\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "+------------+-----------------------+----------+----------+\n|encounter_id|diagnosis_codes        |first_code|code_count|\n+------------+-----------------------+----------+----------+\n|ENC000001   |[J45.909, E78.5, J06.9]|J45.909   |3         |\n|ENC000002   |[Z00.00, E78.5]        |Z00.00    |2         |\n|ENC000003   |[K21.9]                |K21.9     |1         |\n|ENC000004   |[K21.9]                |K21.9     |1         |\n|ENC000005   |[N39.0, S93.401A]      |N39.0     |2         |\n|ENC000006   |[S93.401A, J06.9]      |S93.401A  |2         |\n|ENC000007   |[N39.0]                |N39.0     |1         |\n|ENC000008   |[M54.5]                |M54.5     |1         |\n+------------+-----------------------+----------+----------+\n\n",
+   "error": null
+  }
+ }
+}

@@ -1,0 +1,67 @@
+{
+  "id": "trusted-retail-warehouse",
+  "task": "The retail commercial team's analysts query raw invoice tables directly, and their numbers disagree. Build a small star schema with staging, dimensions and a sales fact, make the daily load safe to rerun, add quality checks, and publish one reporting view. Prove with checks that its monthly sales reconcile exactly to the source invoices.",
+  "produce": [
+    {
+      "name": "Control totals",
+      "about": "Invoices, lines, customers, products, anonymous lines and net value from the source."
+    },
+    {
+      "name": "Star schema",
+      "about": "Staging copies, customer, product and date dimensions, and a sales fact with one row per line."
+    },
+    {
+      "name": "Rerunnable load",
+      "about": "An insert that adds only missing lines and changes nothing on a second run."
+    },
+    {
+      "name": "Quality checks and reporting view",
+      "about": "A view of four named checks and a monthly sales view built on the fact."
+    },
+    {
+      "name": "Warehouse handoff",
+      "about": "Build decisions, validation results and known limitations."
+    }
+  ],
+  "labels": {
+    "understand-data": "Explore sources",
+    "profile": "Profile",
+    "build-staging": "Staging",
+    "build-dimensions": "Dimensions",
+    "build-fact": "Sales fact",
+    "incremental-load": "Rerunnable load",
+    "quality-checks": "Quality checks",
+    "publish-reporting": "Reporting view",
+    "synthesis": "Conclusions",
+    "report": "Handoff"
+  },
+  "summaries": {
+    "understand-data": "Count the rows in each source table and find the keys the fact will need.",
+    "profile": "Record the control totals the warehouse must reproduce.",
+    "build-staging": "Copy the raw invoices and lines into staging tables, unchanged.",
+    "build-dimensions": "Build customer, product and date dimensions with surrogate keys.",
+    "build-fact": "Build a sales fact with one row per invoice line.",
+    "incremental-load": "Load the missing last month so a second run adds nothing.",
+    "quality-checks": "Publish four named checks as a view anyone can query.",
+    "publish-reporting": "Publish a monthly sales view that reconciles to the source.",
+    "synthesis": "Decide what makes the warehouse trustworthy and which risk remains.",
+    "report": "Hand over decisions, validation evidence and limitations."
+  },
+  "problems": [
+    "About a quarter of invoice lines have no customer, so an inner join to customers drops them.",
+    "Cancellation invoices, and some lines on sale invoices, have negative quantities, so net and gross sales differ.",
+    "Some products have no category, so an inner join to departments drops their lines.",
+    "Many customers have several segment versions, so joining the full history multiplies their lines.",
+    "December 2011 holds only its first nine days."
+  ],
+  "preparation": [
+    "ddl-create-alter-and-inspect-a-table",
+    "dml-insert-update-and-delete",
+    "constraints-protect-the-data-contract",
+    "views-reusable-query-definitions",
+    "gold-dimensions-facts-and-quality-gates",
+    "automated-star-schema-quality-tests",
+    "idempotent-incremental-upsert-and-stale-updates",
+    "reconcile-extraction-and-bronze-ingestion"
+  ]
+}

@@ -1,0 +1,79 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "overdraft_limit",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "limit_units",
+     "type": "int",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "A00001",
+     "0.00",
+     0
+    ],
+    [
+     "A00002",
+     "250.00",
+     250
+    ],
+    [
+     "A00003",
+     null,
+     null
+    ],
+    [
+     "A00004",
+     null,
+     null
+    ],
+    [
+     "A00005",
+     null,
+     null
+    ],
+    [
+     "A00006",
+     "500.00",
+     500
+    ],
+    [
+     "A00007",
+     "0.00",
+     0
+    ],
+    [
+     "A00008",
+     "250.00",
+     250
+    ]
+   ],
+   "row_count": 8
+  }
+ },
+ "hidden": [
+  "the full practice accounts table",
+  "limits with cents, including just under a whole number",
+  "accounts with no overdraft limit",
+  "the same account delivered twice",
+  "an empty accounts table"
+ ]
+}

@@ -1,0 +1,139 @@
+{
+  "id": "PS-L042",
+  "minutes": 25,
+  "lede": "Device and app events arrive as nested payloads, but reports, joins and most tools want flat columns with clear names. Flattening is the step that turns one into the other.",
+  "objectives": [
+    "Pull struct fields up into top-level columns with clear, prefixed names",
+    "Flatten every struct of a schema with a short loop over `df.schema`",
+    "Turn an array inside a payload into one row per item with `explode`",
+    "Add time columns such as the reading's day and how late it arrived"
+  ],
+  "dataset": {
+    "id": "PS-D09",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "sensor_readings"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`sensor_readings` has one row per measurement from a small set of sensors. Two of its columns are structs: `payload` holds what the sensor measured, and `firmware` holds the software it was running. Inside `payload`, `tags` is an array of text."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "A nested reading",
+      "code": "sensor_readings.printSchema()\nsensor_readings.select(\"reading_id\", \"payload\", \"firmware\").show(3, truncate=False)\n",
+      "note": "Each reading packs five measurement fields and two firmware fields into two columns. To sort, filter or report on a temperature, it's easier as a column of its own."
+    },
+    {
+      "kind": "text",
+      "md": "To flatten by hand, `select` each field you want with its path and give it a name with `alias`. Prefixing the name with the struct it came from, like `firmware_version`, keeps names unique and tells the reader where the value lived.\n\n`\"payload.*\"` is a shortcut that takes every field of a struct, but it keeps the inner names as they are. That's fine for one struct, and a problem when two structs share a field name."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Pick fields out by path",
+      "code": "from pyspark.sql import functions as F\n\nflat = sensor_readings.select(\n    \"reading_id\",\n    \"device_id\",\n    F.col(\"payload.temperature_c\").alias(\"temperature_c\"),\n    F.col(\"payload.status\").alias(\"status\"),\n    F.col(\"firmware.version\").alias(\"firmware_version\"),\n)\nflat.show(5)\n\nsensor_readings.select(\"reading_id\", \"payload.*\").show(3)\n",
+      "note": "Every row is still one reading; only the shape changed. The second table shows what `\"payload.*\"` gives: the struct's five fields, under their own names."
+    },
+    {
+      "kind": "text",
+      "md": "A real payload can have dozens of fields, and new ones appear over time. Rather than typing each path, build the list of columns from the schema. `df.schema.fields` lists every column with its `dataType`; when that type is a `StructType`, its own `fields` are the ones to pull up."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Flatten every struct from the schema",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.sql.types import StructType\n\ncols = []\nfor field in sensor_readings.schema.fields:\n    if isinstance(field.dataType, StructType):\n        for inner in field.dataType.fields:\n            cols.append(F.col(field.name + \".\" + inner.name).alias(field.name + \"_\" + inner.name))\n    else:\n        cols.append(F.col(field.name))\n\nflat = sensor_readings.select(cols)\nprint(flat.columns)\nflat.select(\"reading_id\", \"payload_temperature_c\", \"payload_tags\", \"firmware_version\").show(3, truncate=False)\n",
+      "note": "Two structs became seven columns, each named after where it came from. Run it again on a payload with a new field and the new column appears without changing the code. `payload_tags` is still an array: flattening a struct doesn't touch the lists inside it."
+    },
+    {
+      "kind": "text",
+      "md": "Arrays are the other half of a nested payload. `F.explode` gives one row per item and copies the rest of the row onto each one. Do it once, on purpose, and only for the array you need as rows: exploding two arrays in one table multiplies them together.\n\nA reading whose array is empty, or missing, has no item, so `explode` gives it no rows at all."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "One row per tag",
+      "code": "from pyspark.sql import functions as F\n\ntags = sensor_readings.select(\"reading_id\", \"device_id\", F.explode(\"payload.tags\").alias(\"tag\"))\ntags.show(6)\nprint(sensor_readings.count(), \"readings,\", tags.count(), \"tag rows\")\n",
+      "note": "R0001 has three tags, so it becomes three rows. Every reading in this table has at least one tag, so none disappears."
+    },
+    {
+      "kind": "text",
+      "md": "Event payloads usually carry two times: when the thing happened and when the platform got it. Here those are `event_time` and `arrival_time`. Flat tables usually add a few columns from them: the day, and how late the event arrived. Cast both timestamps to `long` to get seconds, then subtract."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "The day and the delay",
+      "code": "from pyspark.sql import functions as F\n\nlate_s = F.col(\"arrival_time\").cast(\"long\") - F.col(\"event_time\").cast(\"long\")\nsensor_readings.select(\n    \"reading_id\",\n    \"event_time\",\n    F.to_date(\"event_time\").alias(\"reading_date\"),\n    late_s.alias(\"late_s\"),\n).show()\n",
+      "note": "Most readings arrive within a minute. R0006 was measured at 09:15 but arrived at 09:52: 2227 seconds late. The second copy of R0011 arrived six minutes after the first."
+    },
+    {
+      "kind": "error-example",
+      "id": "e6",
+      "title": "A field the struct doesn't have",
+      "code": "sensor_readings.select(\"reading_id\", \"payload.temp\").show()\n",
+      "error": "AnalysisException",
+      "note": "The struct has `temperature_c`, not `temp`. The error lists the fields that do exist, which is often the quickest way to see a payload's real names."
+    },
+    {
+      "kind": "text",
+      "md": "When a whole struct is missing from a reading, every field you read from it is missing too: no error, just empty columns. That's why flat tables keep the path in the name: a missing `firmware_version` tells you the firmware block was absent, not that the version was blank."
+    }
+  ],
+  "challenges": [
+    "PS-L042-C1",
+    "PS-L042-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "Why name a flattened column `firmware_version` rather than `version`?",
+      "choices": [
+        "Spark refuses short names",
+        "It keeps names unique when two structs share a field, and shows where the value came from",
+        "`alias` needs an underscore",
+        "It makes the column a struct again"
+      ],
+      "answer": 1,
+      "why": "Two structs can both have a field such as `status` or `version`. A prefix keeps the flat names unique and readable."
+    },
+    {
+      "id": "k2",
+      "prompt": "A reading has an empty `tags` array. How many rows does `select(\"reading_id\", F.explode(\"payload.tags\"))` give for it?",
+      "choices": [
+        "One, with a missing tag",
+        "None",
+        "One, with an empty tag",
+        "It raises an error"
+      ],
+      "answer": 1,
+      "why": "`explode` gives one row per item; with no items there are no rows, so the reading disappears from the result."
+    },
+    {
+      "id": "k3",
+      "prompt": "A reading has no `firmware` struct at all. What does `F.col(\"firmware.version\")` give for it?",
+      "choices": [
+        "An error",
+        "The text \"null\"",
+        "A missing value",
+        "The previous reading's version"
+      ],
+      "answer": 2,
+      "why": "Reading a field of a missing struct gives a missing value; there's no error."
+    }
+  ],
+  "review": [
+    "Flatten a struct by selecting `F.col(\"struct.field\").alias(\"struct_field\")` for each field you need.",
+    "`\"struct.*\"` takes every field under its own name; prefixes avoid clashes between structs.",
+    "Loop over `df.schema.fields` and check for `StructType` to flatten every struct without typing each path.",
+    "`F.explode` turns an array into one row per item. Rows with an empty or missing array disappear.",
+    "Add time columns while flattening: `F.to_date` for the day, and timestamps cast to `long` and subtracted for a delay in seconds.",
+    "A field read from a missing struct is missing, not an error."
+  ],
+  "practice": ["PS-Q0206", "PS-Q0207", "PS-Q0208", "PS-Q0209", "PS-Q0210"]
+}

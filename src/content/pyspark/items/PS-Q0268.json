@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0268",
+  "slug": "maturity-ratings-unseen",
+  "lesson": "PS-L054",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Maturity ratings the model never saw",
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0"
+  },
+  "prompt": "A model trained on the catalogue before 2024 describes each film's maturity rating as a one-hot vector. Write `solve(movies)` so it returns `movie_id`, `maturity_rating` and `rating_vec` for every film, including new films whose rating the model never saw.",
+  "rules": [
+    "Learn the ratings from films with a `release_year` before 2024: the most common gets position 0, the next position 1, and so on, with ties in alphabetical order.",
+    "`rating_vec` has exactly one position per learned rating: 1.0 at the film's rating and 0.0 elsewhere.",
+    "A film whose rating wasn't learned, or whose rating is missing, gets all zeros.",
+    "Return `movie_id`, `maturity_rating` and `rating_vec` (an array of doubles), in that order. Keep every film."
+  ],
+  "hints": [
+    "Fit the pipeline on the older films only, and transform all of them.",
+    "`handleInvalid=\"keep\"` on the indexer gives unseen and missing ratings one extra index, after the learned ones.",
+    "`OneHotEncoder` drops the last index by default, and with `keep` that last index is the extra one. Count the positions in your result."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "movies"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.ml import Pipeline\nfrom pyspark.ml.feature import StringIndexer, OneHotEncoder\nfrom pyspark.ml.functions import vector_to_array\n\n\ndef solve(movies):\n    # Learn the ratings from films released before 2024, then encode every film.\n    return movies\n",
+  "output": {
+    "columns": [
+      "movie_id",
+      "maturity_rating",
+      "rating_vec"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`StringIndexer(..., handleInvalid=\"keep\")` followed by a default `OneHotEncoder`, fitted on films before 2024 and applied to all. The indexer learns the ratings and keeps one extra index, after them, for anything else. The encoder's default `dropLast=True` drops the last index, which is now exactly that extra one, so every learned rating keeps its own position and an unseen or missing rating becomes all zeros. In the sample the older films are PG-13 four times and PG twice, so the vectors have two positions; the new R and G films get [0.0, 0.0]. `dropLast=False`, or `handleInvalid=\"keep\"` on the encoder, adds a position for unknown ratings, and fitting on every film gives the new ratings positions the model was never trained with. Without `keep` on the indexer, the first new rating stops the job."
+}

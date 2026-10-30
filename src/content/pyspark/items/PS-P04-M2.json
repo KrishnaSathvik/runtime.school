@@ -1,0 +1,66 @@
+{
+  "id": "PS-P04-M2",
+  "slug": "validate-transactions",
+  "project": "PS-P04",
+  "milestone": "PS-P04.m2",
+  "difficulty": "medium",
+  "minutes": 25,
+  "title": "Validate amounts and account references",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "A raw feed carries rows the books can't take: a negative amount, a currency code nobody uses, a transaction for an account the bank doesn't have, or no account at all. Write `valid_transactions(transactions, accounts)`. It starts from your `transaction_view(transactions)` and keeps only the rows that pass every check below.",
+  "rules": [
+    "`amount` is more than 0. A missing, zero or negative amount fails.",
+    "`account_id` is an account in `accounts`. A missing `account_id` fails.",
+    "`currency` is that account's own currency, written exactly the same. Any other currency, or none, fails.",
+    "Return `transaction_view`'s columns, in the same order. Checking an account never adds a row, and repeated rows stay for now: the next step removes them."
+  ],
+  "hints": [
+    "Start with `view = transaction_view(transactions)` and filter `F.col(\"amount\") > 0`. A missing amount fails any comparison on its own.",
+    "A left semi join keeps the rows that have a match, without adding columns or copies. Join `accounts.select(\"account_id\", \"currency\")` on both columns and the two account checks happen at once.",
+    "A join on a list of columns moves those columns to the front. Finish with `.select(*view.columns)` to put them back in order."
+  ],
+  "explanation": "`filter(F.col(\"amount\") > 0)` drops negative, zero and missing amounts in one test, because a comparison with NULL is never true. The account checks are a left semi join on `account_id` and `currency` together: a row survives only if some account has that id and that currency, so orphans, rows with no account and rows in the wrong or an unknown currency all go. A semi join adds no columns and never repeats a row, even if an account were listed twice; an inner join would do both. Checking only that the currency is one of USD, EUR or GBP would let a euro payment onto a pound account. Repeated rows are left alone here so that the next step can remove them on purpose.",
+  "entry": "valid_transactions",
+  "inputs": [
+    "transactions",
+    "accounts"
+  ],
+  "file": "pipeline.py",
+  "append": "\n\ndef valid_transactions(transactions, accounts):\n    # Step 2: start from transaction_view(transactions) and keep only the valid rows.\n    return transaction_view(transactions)\n",
+  "prerequisites": [
+    "PS-L022",
+    "PS-L026"
+  ],
+  "output": {
+    "columns": [
+      "transaction_id",
+      "account_id",
+      "posted_at",
+      "txn_type",
+      "status",
+      "currency",
+      "amount",
+      "signed_amount"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "example",
+      "sample": true
+    },
+    {
+      "id": "project",
+      "edition": "project"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "id": "PS-P06-M5",
+  "slug": "compare-execution-strategies",
+  "project": "PS-P06",
+  "milestone": "PS-P06.m5",
+  "difficulty": "hard",
+  "minutes": 60,
+  "title": "Compare three ways to run the same query",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "prompt": "The analysts will run one query again and again: one week's trips with their pickup zone's name. Before anyone tunes it, find out which version does the least work, from facts Spark records rather than timings. On an export this small, a timing would mostly measure whatever else the machine is doing.\n\nWrite `benchmark_report(trips, taxi_zones)`. It saves `trip_metrics(trips)` as Parquet two ways, runs the week's query three ways under the same settings, checks that all three return the same rows, and reports one row of plan facts per way. `plan_text` and `scan_counts` are written for you.",
+  "rules": [
+    "Save `trip_metrics(trips)` twice, overwriting: to `PLAIN_PATH` as one file (`coalesce(1)`), and to `BY_DAY_PATH` with `partitionBy(\"pickup_date\")`, one file per day (`repartition(\"pickup_date\")` before writing).",
+    "The week's query reads one copy back with `trip_metrics`'s schema, keeps `pickup_date` from `WEEK_START` to `WEEK_END`, both included, and left-joins `taxi_zones` on `pickup_zone_id` = `zone_id`. It returns `trip_id`, `pickup_date`, `zone_name` and `borough`.",
+    "Three strategies: `baseline` reads the plain copy and joins `taxi_zones` as it is; `broadcast` reads the plain copy and joins `F.broadcast(taxi_zones)`; `pruned` reads the copy by day and joins `F.broadcast(taxi_zones)`.",
+    "Run all three with adaptive execution off and automatic broadcasting off (`spark.sql.autoBroadcastJoinThreshold` set to -1), so the hint is the only thing that changes the join.",
+    "Each row has the `strategy`; `result_rows`, the rows its query returns; `same_rows`, whether its rows, sorted, equal the baseline's; `join_type`, `BroadcastHashJoin` if that's in its plan and `SortMergeJoin` if not; `shuffles`, how many times `Exchange hashpartitioning` appears in its plan; and `files_read` and `rows_read` from `scan_counts`.",
+    "Return the three rows with `REPORT_SCHEMA`. No timings."
+  ],
+  "hints": [
+    "Write a small function inside, `week_zones(path, broadcast)`, that builds the query from scratch, and call it for each strategy. A new DataFrame runs afresh, so `scan_counts` counts its own scan.",
+    "Start with `spark.conf.set(\"spark.sql.adaptive.enabled\", \"false\")` and `spark.conf.set(\"spark.sql.autoBroadcastJoinThreshold\", \"-1\")`. Keep the old values from `spark.conf.get` and set them back at the end, so the rest of the session isn't changed.",
+    "With `plan = plan_text(df)`, `\"BroadcastHashJoin\" in plan` and `plan.count(\"Exchange hashpartitioning\")` give the join and the shuffles. `sorted(df.collect())` compared with the baseline's gives `same_rows`."
+  ],
+  "explanation": "A comparison is only fair when one thing changes at a time under fixed settings. With adaptive execution off, the plan you read is the plan that runs; with automatic broadcasting off, your hint alone decides the join. The baseline's sort-merge join shuffles both sides by zone id: two `Exchange hashpartitioning` steps. The broadcast hint sends the 30-row zone table to every task instead, and the trips aren't shuffled at all. Partitioning the copy by day lets Spark skip whole folders: the plan's `PartitionFilters` keep only the week, so the scan opens 7 of the 21 day files and reads about a third of the rows, while the plain file has to be read whole and then filtered. All three return the same rows, and that is what makes their facts worth comparing. How many seconds this saves is a question for a benchmark where the job really runs, with warm-ups and repeats.",
+  "entry": "benchmark_report",
+  "inputs": [
+    "trips",
+    "taxi_zones"
+  ],
+  "file": "pipeline.py",
+  "append": "\n\nWEEK_START, WEEK_END = \"2026-05-11\", \"2026-05-17\"\nPLAIN_PATH = \"/tmp/taxi/metrics_plain\"\nBY_DAY_PATH = \"/tmp/taxi/metrics_by_day\"\nREPORT_SCHEMA = (\n    \"strategy STRING, result_rows BIGINT, same_rows BOOLEAN, join_type STRING, \"\n    \"shuffles INT, files_read BIGINT, rows_read BIGINT\"\n)\n\n\ndef plan_text(df):\n    \"\"\"The physical plan Spark runs for df, as text.\"\"\"\n    return df._jdf.queryExecution().executedPlan().toString()\n\n\ndef scan_counts(df):\n    \"\"\"Run df once; return (files, rows) that its Parquet scan read.\"\"\"\n    df.collect()\n    found = []\n\n    def walk(node):\n        if node.nodeName().strip() == \"Scan parquet\":\n            metrics = node.metrics()\n            found.append((metrics.apply(\"numFiles\").value(), metrics.apply(\"numOutputRows\").value()))\n        children = node.children()\n        for i in range(children.size()):\n            walk(children.apply(i))\n\n    walk(df._jdf.queryExecution().executedPlan())\n    return found[0]\n\n\ndef benchmark_report(trips, taxi_zones):\n    # Step 5: save trip_metrics two ways, run the week's query three ways, and report what Spark did.\n    row = (\"baseline\", 0, True, \"SortMergeJoin\", 0, 0, 0)\n    return spark.createDataFrame([row], REPORT_SCHEMA)\n",
+  "prerequisites": [
+    "PS-L045",
+    "PS-L047",
+    "PS-L055",
+    "PS-L056",
+    "PS-L057",
+    "PS-L058",
+    "PS-L080",
+    "PS-L085"
+  ],
+  "output": {
+    "columns": [
+      "strategy",
+      "result_rows",
+      "same_rows",
+      "join_type",
+      "shuffles",
+      "files_read",
+      "rows_read"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "example",
+      "sample": true
+    },
+    {
+      "id": "project",
+      "edition": "project"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 240,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

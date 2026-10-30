@@ -1,0 +1,47 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D04",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "claims"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "7 rows, 14 columns\n+---------+------------+--------------+------------+---------------------+---------+\n|claim_id |service_date|submitted_date|claim_status|_source_file         |_batch_id|\n+---------+------------+--------------+------------+---------------------+---------+\n|CLM000001|2025-12-03  |2025-12-18    |submitted   |claims_2026-02-28.csv|1        |\n|CLM000002|2025-12-18  |2026-01-01    |denied      |claims_2026-02-28.csv|1        |\n|CLM000003|2025-12-20  |2025-12-17    |paid        |claims_2026-02-28.csv|1        |\n|CLM000004|2026-01-13  |2026-01-26    |approved    |claims_2026-02-28.csv|1        |\n|CLM000005|2026-01-16  |2026-01-19    |paid        |claims_2026-02-28.csv|1        |\n|CLM000006|2026-01-17  |2026-02-13    |paid        |claims_2026-02-28.csv|1        |\n|CLM000007|2026-01-30  |2026-02-27    |paid        |claims_2026-02-28.csv|1        |\n+---------+------------+--------------+------------+---------------------+---------+\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "7 in bronze = 6 in silver + 1 in quarantine\n+---------+------------+--------------+------------------------+---------------------+---------+\n|claim_id |service_date|submitted_date|_problem                |_source_file         |_batch_id|\n+---------+------------+--------------+------------------------+---------------------+---------+\n|CLM000003|2025-12-20  |2025-12-17    |submitted before service|claims_2026-02-28.csv|1        |\n+---------+------------+--------------+------------------------+---------------------+---------+\n\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "+-----------------------+------+--------+--------+\n|payer                  |claims|billed  |paid    |\n+-----------------------+------+--------+--------+\n|Bluebird Health        |5     |26960.60|11020.02|\n|Summit Senior Advantage|1     |154.34  |134.08  |\n+-----------------------+------+--------+--------+\n\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "+---------+-----------------------+---------------------+---------+\n|claim_id |payer                  |_source_file         |_batch_id|\n+---------+-----------------------+---------------------+---------+\n|CLM000001|Bluebird Health        |claims_2026-01-19.csv|1        |\n|CLM000002|Bluebird Health        |claims_2026-01-19.csv|1        |\n|CLM000004|Bluebird Health        |claims_2026-02-28.csv|2        |\n|CLM000005|Bluebird Health        |claims_2026-01-19.csv|1        |\n|CLM000006|Bluebird Health        |claims_2026-02-28.csv|2        |\n|CLM000007|Summit Senior Advantage|claims_2026-02-28.csv|2        |\n+---------+-----------------------+---------------------+---------+\n\n+-----------------------+------+--------+\n|payer                  |claims|billed  |\n+-----------------------+------+--------+\n|Bluebird Health        |5     |26960.60|\n|Summit Senior Advantage|1     |154.34  |\n+-----------------------+------+--------+\n\n/tmp/clinic/bronze/claims [(0, 'Append'), (1, 'Append')]\n/tmp/clinic/silver/claims [(0, 'Overwrite'), (1, 'Overwrite')]\n/tmp/clinic/gold/payer_totals [(0, 'Overwrite'), (1, 'Overwrite')]\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "+-----------------------+------+------+\n|payer                  |claims|billed|\n+-----------------------+------+------+\n|Summit Senior Advantage|1     |154.34|\n+-----------------------+------+------+\n\n+---------+-------------+---------------------+---------+\n|claim_id |billed_amount|_source_file         |_batch_id|\n+---------+-------------+---------------------+---------+\n|CLM000007|154.34       |claims_2026-02-28.csv|2        |\n+---------+-------------+---------------------+---------+\n\n+---------+-------------+------------------------+---------------------+\n|claim_id |billed_amount|problem                 |_source_file         |\n+---------+-------------+------------------------+---------------------+\n|CLM000003|200.80       |submitted before service|claims_2026-01-19.csv|\n+---------+-------------+------------------------+---------------------+\n\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "",
+   "error": {
+    "type": "AnalysisException",
+    "message": "[_LEGACY_ERROR_TEMP_DELTA_0007] A schema mismatch detected when writing to the Delta table (Table ID: d6cfabe9-aef5-482d-95fb-08e36f7e2e99).",
+    "line": 21,
+    "condition": "_LEGACY_ERROR_TEMP_DELTA_0007"
+   }
+  }
+ }
+}

@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0269",
+  "slug": "fix-the-scaler-for-new-films",
+  "lesson": "PS-L054",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Fix the scaler for new films",
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0"
+  },
+  "prompt": "A model was trained on films released before 2024, with runtime and year scaled to 0–1. This code scales the newer films for it, but every value it gives lands between 0 and 1, even for the latest year. Fix `solve(movies)`.",
+  "rules": [
+    "Learn each feature's minimum and maximum from the films released before 2024 only, and scale a value as (value − minimum) / (maximum − minimum). Any approach passes; `MinMaxScaler` does exactly this.",
+    "Return the films released in 2024 or later, scaled with what was learned. Values outside 0–1 are expected.",
+    "`scaled` holds the scaled `runtime_min`, then the scaled `release_year`, as an array of doubles. Films with a missing runtime or year are left out everywhere.",
+    "Return `movie_id`, `runtime_min`, `release_year` and `scaled`, in that order."
+  ],
+  "hints": [
+    "Which rows does `pipeline.fit(...)` see? Everything it sees shapes the minimum and maximum.",
+    "Fit on the older films, then call the fitted model's `transform` on the newer ones.",
+    "A year after the training maximum should scale above 1.0. Check 2025 in your result."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "movies"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.ml import Pipeline\nfrom pyspark.ml.feature import VectorAssembler, MinMaxScaler\nfrom pyspark.ml.functions import vector_to_array\n\n\ndef solve(movies):\n    known = movies.filter(F.col(\"runtime_min\").isNotNull() & F.col(\"release_year\").isNotNull())\n    older = known.filter(F.col(\"release_year\") < 2024)\n    newer = known.filter(F.col(\"release_year\") >= 2024)\n    pipeline = Pipeline(stages=[\n        VectorAssembler(inputCols=[\"runtime_min\", \"release_year\"], outputCol=\"raw\"),\n        MinMaxScaler(inputCol=\"raw\", outputCol=\"scaled\"),\n    ])\n    model = pipeline.fit(known)\n    out = model.transform(newer)\n    return out.select(\"movie_id\", \"runtime_min\", \"release_year\", vector_to_array(\"scaled\").alias(\"scaled\"))\n",
+  "output": {
+    "columns": [
+      "movie_id",
+      "runtime_min",
+      "release_year",
+      "scaled"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "The pipeline was fitted on `known`, every film, so the newest year was already the maximum and nothing could go past 1.0. The new films were shaping the features the model is supposed to apply to them, a quiet kind of leak that makes results look better than they will be. Fit on `older` and transform `newer`: `model = pipeline.fit(older)` and `model.transform(newer)`. In the sample the older films run from 2019 to 2023 and from 88 to 131 minutes, so 2024 scales to 1.25 and 2025 to 1.5, while the runtimes of the new films sit inside the old range. The rest of the code was already right: missing values are removed before anything is fitted, since `VectorAssembler` stops on a NULL, and the new films include 2024."
+}

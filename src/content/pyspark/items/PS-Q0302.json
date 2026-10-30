@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0302",
+  "slug": "what-each-invoice-file-holds",
+  "lesson": "PS-L061",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "What each invoice file holds",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "The billing table is a Delta table partitioned by `status`. Before planning its reports, the team wants to know what each data file holds without opening any of them. Write `solve` so it reads the table's first commit and returns one row per data file.",
+  "rules": [
+    "One row per data file: its `status`, its number of `invoices`, its earliest and latest `invoice_date`, and its `largest_total`.",
+    "The file of invoices with no status has a missing `status`.",
+    "Missing dates and totals don't count. If every total in a file is missing, `largest_total` is missing.",
+    "Use the column types in `SCHEMA`. A table with no invoices has no data files. Don't change `build_table`."
+  ],
+  "hints": [
+    "Open `_delta_log/00000000000000000000.json` and read it line by line with `json.loads`. The `add` actions are the data files.",
+    "An `add` has `partitionValues` and `stats`. `stats` is JSON text again: it holds `numRecords`, `minValues` and `maxValues`.",
+    "A column whose values are all missing isn't in `minValues` or `maxValues`, so use `.get`. `json.loads(text, parse_float=Decimal)` keeps the totals exact, and `date.fromisoformat` turns the dates' text into dates."
+  ],
+  "explanation": "Each `add` action in the commit describes one data file: `partitionValues` says which status folder it's in, and its `stats` (JSON text) give the row count and per-column min and max. Loop over the commit's lines, keep the `add` actions, and build one tuple per file: `partitionValues[\"status\"]`, `numRecords`, the dates from `minValues` and `maxValues` turned into `date`s, and the largest total from `maxValues`, read as a `Decimal`. Partition columns aren't in the stats, because every row of the file has the same value. Read the status from `partitionValues`, not the folder name: missing values live in a folder called `status=__HIVE_DEFAULT_PARTITION__`, but the log records them as `null`. A column whose values are all missing has no min or max, so `.get` returns `None` for it.",
+  "entry": "solve",
+  "inputs": [
+    "invoices"
+  ],
+  "starter": "import json\nimport shutil\nfrom datetime import date\nfrom decimal import Decimal\n\n\ndef build_table(invoices, path):\n    # The billing table, partitioned by status. Don't change this.\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty folder on every run\n    invoices.write.format(\"delta\").partitionBy(\"status\").save(path)\n\n\nSCHEMA = \"status STRING, invoices BIGINT, first_invoice_date DATE, last_invoice_date DATE, largest_total DECIMAL(12,2)\"\n\n\ndef solve(invoices):\n    path = \"/tmp/billing/invoices_by_status\"\n    build_table(invoices, path)\n    rows = []\n    # Read the table's first commit and add one tuple per data file.\n    return spark.createDataFrame(rows, SCHEMA)\n",
+  "output": {
+    "columns": [
+      "status",
+      "invoices",
+      "first_invoice_date",
+      "last_invoice_date",
+      "largest_total"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

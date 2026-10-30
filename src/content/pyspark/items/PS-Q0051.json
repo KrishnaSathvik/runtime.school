@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0051",
+  "slug": "newest-films-first",
+  "lesson": "PS-L011",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Newest films first",
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0"
+  },
+  "prompt": "The catalogue page lists films with the newest first. Write `solve(movies)` so it returns each film's `movie_id`, `title` and `release_year` in that order.",
+  "rules": [
+    "Return three columns, in this order: `movie_id`, `title`, `release_year`.",
+    "Sort by `release_year`, newest first. Films from the same year are sorted by `movie_id`, from A to Z.",
+    "A film with no release year goes after every film that has one. Keep every row, duplicates included."
+  ],
+  "hints": [
+    "`orderBy` sorts by one or more columns. The first one decides, and the next only breaks ties.",
+    "Sorting is A to Z, smallest first, unless you ask for `F.col(\"release_year\").desc()`.",
+    "When sorting newest first, Spark already puts missing values last."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "movies"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(movies):\n    # Return movie_id, title and release_year, newest first.\n    return movies\n",
+  "output": {
+    "columns": [
+      "movie_id",
+      "title",
+      "release_year"
+    ],
+    "order_sensitive": true
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Select the three columns, then sort by two keys: `movies.select(\"movie_id\", \"title\", \"release_year\").orderBy(F.col(\"release_year\").desc(), \"movie_id\")`. The year decides first, newest first, and `movie_id` only matters for films from the same year, which makes the order unique. A descending sort puts missing years last by itself. `sort` is another name for `orderBy`, and `orderBy(\"release_year\", ascending=False)` alone leaves films from the same year in no fixed order. Sorting before or after `select` gives the same rows."
+}

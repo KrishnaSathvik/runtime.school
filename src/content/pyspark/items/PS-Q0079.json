@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0079",
+  "slug": "fix-the-short-trip-charge",
+  "lesson": "PS-L016",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Fix the short-trip charge",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "prompt": "A trip is charged at least 7.00 on the meter, plus its surcharge. The function below was written for the charge report, but it fails, and its idea of a minimum is wrong too. Fix `solve(trips)`.",
+  "rules": [
+    "Return three columns, in this order: `trip_id`, `fare` and `charged`.",
+    "`charged` is the larger of `fare` and 7.00, plus `surcharge`, as a `decimal(9,2)`: a fare of 5.00 with a 0.50 surcharge is charged 7.50, a fare of 16.38 is charged 16.88.",
+    "A missing fare counts as under the minimum: it's charged 7.00 plus its surcharge. A missing surcharge gives a missing charge. Keep every trip, duplicates included."
+  ],
+  "hints": [
+    "Press Run and read the error: Spark tried to turn the text `surcharge` into a number.",
+    "A plain string next to `+` is a value, not a column. Write `F.col(\"surcharge\")`.",
+    "`F.least` picks the smaller value, which makes 7.00 a cap. A minimum needs the larger of the two: `F.greatest`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "trips"
+  ],
+  "starter": "from decimal import Decimal\nfrom pyspark.sql import functions as F\n\n\ndef solve(trips):\n    minimum = F.lit(Decimal(\"7.00\"))\n    return trips.select(\n        \"trip_id\",\n        \"fare\",\n        (F.least(\"fare\", minimum) + \"surcharge\").alias(\"charged\"),\n    )\n",
+  "output": {
+    "columns": [
+      "trip_id",
+      "fare",
+      "charged"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Two bugs. `+ \"surcharge\"` adds the text `surcharge`, not the column, and Spark 4 stops when it can't turn that text into a number; it must be `F.col(\"surcharge\")`. Then `F.least(\"fare\", minimum)` picks the smaller value, so every fare above 7.00 is cut down to 7.00: that's a cap, not a minimum. A minimum is `F.greatest(\"fare\", minimum)`. Fixed: `(F.greatest(\"fare\", F.lit(Decimal(\"7.00\"))) + F.col(\"surcharge\")).alias(\"charged\")`, which is already a `decimal(9,2)`. A fare of exactly 7.00 is charged 7.00 either way."
+}

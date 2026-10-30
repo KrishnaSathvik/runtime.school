@@ -1,0 +1,55 @@
+{
+  "id": "PS-L053-C1",
+  "slug": "sensor-tags-as-rows",
+  "lesson": "PS-L053",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Sensor tags as rows",
+  "dataset": {
+    "id": "PS-D09",
+    "version": "1.0.0"
+  },
+  "prompt": "The facilities dashboard filters readings by placement tag, so it needs one row per tag. Write `solve(sensor_readings)` with `mapInPandas` so it returns `reading_id`, `device_id` and `tag`, one row for each tag of each reading.",
+  "rules": [
+    "A reading with three tags gives three rows. A reading with an empty or missing tag list gives no rows.",
+    "Keep every delivered row: a reading delivered twice gives its tag rows twice.",
+    "Make the tag rows with `mapInPandas`: the check looks for it in the plan Spark runs.",
+    "Return `reading_id`, `device_id` and `tag`, all text, in that order."
+  ],
+  "hints": [
+    "The starter already pulls the tag list out of `payload` into a `tags` column. Each value arrives in pandas as an array.",
+    "pandas' `explode(\"tags\")` gives one row per list element. An empty or missing list becomes a single row with a missing value; drop those with `dropna`.",
+    "Don't remove duplicates inside the function: the rules keep every delivery."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "sensor_readings"
+  ],
+  "starter": "import pandas as pd\nfrom pyspark.sql import functions as F\n\n\ndef solve(sensor_readings):\n    # The tag list from inside the payload struct, as a plain column.\n    readings = sensor_readings.select(\"reading_id\", \"device_id\", F.col(\"payload.tags\").alias(\"tags\"))\n    # Return one row per tag: reading_id, device_id, tag.\n    return readings\n",
+  "output": {
+    "columns": [
+      "reading_id",
+      "device_id",
+      "tag"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "technique": {
+    "name": "mapInPandas",
+    "plan": [
+      "MapInPandas"
+    ]
+  }
+}

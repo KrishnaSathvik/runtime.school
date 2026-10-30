@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0152",
+  "slug": "sales-by-status-and-channel",
+  "lesson": "PS-L031",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Sales by status and channel",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "Finance wants to see where money is stuck: for every order status on every channel, how many orders there are and what they're worth. Write `solve(orders)` to build that table.",
+  "rules": [
+    "Return one row per combination of `status` and `channel` that has at least one order.",
+    "`orders` counts every row of the combination, including orders with a missing total.",
+    "`revenue` is the sum of `total`; missing totals add nothing, and a combination with no known total has a missing `revenue`.",
+    "A missing `status` or `channel` is a value of its own. Return `status`, `channel`, `orders` and `revenue`."
+  ],
+  "hints": [
+    "Pass both columns to `groupBy` to get one row per combination.",
+    "`F.count(\"*\")` counts every row; `F.count(\"total\")` would skip unpriced orders.",
+    "`F.sum(\"total\")` skips missing totals and gives a missing result when there is nothing to add."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "orders"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(orders):\n    # Return status, channel, orders and revenue, one row per combination.\n    return orders\n",
+  "output": {
+    "columns": [
+      "status",
+      "channel",
+      "orders",
+      "revenue"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Group by both columns and aggregate: `orders.groupBy(\"status\", \"channel\").agg(F.count(\"*\").alias(\"orders\"), F.sum(\"total\").alias(\"revenue\"))`. Each combination that occurs gets one row, and one that never occurs has none. `F.count(\"*\")` keeps unpriced orders in the count, while `F.sum` skips their missing totals, so a combination of only unpriced orders shows a missing revenue rather than 0. Grouping by `status` alone would merge the channels."
+}

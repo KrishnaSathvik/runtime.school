@@ -1,0 +1,124 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "promotion_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "employee_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "effective_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "from_title",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "to_title",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "from_level",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "to_level",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "raise_amount",
+     "type": "decimal(10,2)",
+     "nullable": true
+    },
+    {
+     "name": "levels_gained",
+     "type": "int",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "PR0001",
+     "E0008",
+     "2025-11-23",
+     "Financial Analyst",
+     "Senior Financial Analyst",
+     1,
+     2,
+     "10000.00",
+     1
+    ],
+    [
+     "PR0002",
+     "E0009",
+     "2026-01-06",
+     "Financial Analyst",
+     "Senior Financial Analyst",
+     1,
+     2,
+     "12500.00",
+     1
+    ],
+    [
+     "PR0003",
+     "E0006",
+     "2026-01-13",
+     "Software Engineer",
+     "Senior Software Engineer",
+     1,
+     2,
+     "7500.00",
+     1
+    ],
+    [
+     "PR0004",
+     "E0005",
+     "2026-03-18",
+     "Software Engineer",
+     "Senior Software Engineer",
+     1,
+     2,
+     "2500.00",
+     1
+    ],
+    [
+     "PR0005",
+     "E0004",
+     "2026-05-13",
+     "Software Engineer",
+     "Senior Software Engineer",
+     1,
+     2,
+     "12500.00",
+     1
+    ]
+   ],
+   "row_count": 5
+  }
+ },
+ "hidden": [
+  "the full practice promotions table",
+  "a promotion that skips a level",
+  "promotions with a missing level or raise",
+  "the same promotion delivered twice",
+  "an empty promotions table"
+ ]
+}

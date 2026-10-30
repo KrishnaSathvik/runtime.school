@@ -1,0 +1,75 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "observation_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "value",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "band",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "T1",
+     5.6,
+     "normal"
+    ],
+    [
+     "T2",
+     5.7,
+     "prediabetes"
+    ],
+    [
+     "T3",
+     6.4,
+     "prediabetes"
+    ],
+    [
+     "T4",
+     6.5,
+     "diabetes"
+    ],
+    [
+     "T5",
+     null,
+     null
+    ],
+    [
+     "T6",
+     "NaN",
+     null
+    ]
+   ],
+   "row_count": 6,
+   "inputs": {
+    "cutoffs": [
+     [
+      "5.7",
+      "6.5"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "a lab with higher cut-offs",
+  "cut-offs only 0.1 apart",
+  "a lab with lower cut-offs"
+ ]
+}

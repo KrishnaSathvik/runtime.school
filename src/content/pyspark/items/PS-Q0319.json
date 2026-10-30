@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0319",
+  "slug": "active-accounts-per-owner",
+  "lesson": "PS-L064",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Active accounts per owner",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "Sales wants to know how many active accounts each owner has today. This job applies the change feed to the snapshot and counts, but its numbers are wrong. Fix `solve(accounts, customer_cdc)`.",
+  "rules": [
+    "Today's accounts are the snapshot with each account's newest change by `sequence` applied: a delete removes the account, a delete for an account the table doesn't have changes nothing, and any other change updates or adds it.",
+    "Count only accounts whose `is_active` is true. An owner with no active account is left out.",
+    "Return `account_owner` and `active_accounts`, a whole number."
+  ],
+  "hints": [
+    "Compare the sample's owners with the feed: whose change does the job keep for ACC-0001?",
+    "A window ordered by `sequence` puts the oldest change first. The newest needs `.desc()`.",
+    "ACC-0008 was added and then deleted, yet it's counted. Which MERGE clause puts it in the table?"
+  ],
+  "explanation": "There are two bugs. The window orders by `sequence` ascending, so `row_number` 1 is each account's oldest change: ACC-0001 keeps its first update and still belongs to Dana Whitlock. Order by `F.col(\"sequence\").desc()`. And the insert clause has no condition, so an account whose newest change is a delete, but which was never in the snapshot, is inserted from the delete's row image: ACC-0008 comes back as an active account. Add `condition=\"s.op != 'D'\"` to `whenNotMatchedInsertAll`. With both fixed, the count is right: filter on `is_active`, group by owner, count.",
+  "entry": "solve",
+  "inputs": [
+    "accounts",
+    "customer_cdc"
+  ],
+  "starter": "import shutil\nfrom pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\nfrom delta.tables import DeltaTable\n\n\ndef solve(accounts, customer_cdc):\n    path = \"/tmp/crm/accounts\"\n    shutil.rmtree(path, ignore_errors=True)  # every run starts from an empty folder\n    accounts.write.format(\"delta\").save(path)\n\n    w = Window.partitionBy(\"account_id\").orderBy(\"sequence\")\n    latest = customer_cdc.distinct().withColumn(\"rn\", F.row_number().over(w)).filter(F.col(\"rn\") == 1).drop(\"rn\")  # one row per account\n\n    (DeltaTable.forPath(spark, path).alias(\"t\")\n        .merge(latest.alias(\"s\"), \"t.account_id = s.account_id\")\n        .whenMatchedDelete(condition=\"s.op = 'D'\")\n        .whenMatchedUpdateAll()\n        .whenNotMatchedInsertAll()\n        .execute())\n\n    today = spark.read.format(\"delta\").load(path)\n    return today.filter(F.col(\"is_active\")).groupBy(\"account_owner\").agg(F.count(\"*\").alias(\"active_accounts\"))\n",
+  "output": {
+    "columns": [
+      "account_owner",
+      "active_accounts"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0384",
+  "slug": "last-nights-outputs-tonight",
+  "lesson": "PS-L077",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Last night's outputs, tonight",
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0"
+  },
+  "prompt": "The nightly job's rerun support works, but since it shipped, tonight's tables never change: they always match last night's. Fix `solve(shipments, shipment_events, deliveries)` so it returns tonight's tables, one row per task with `task` and the number of rows in its output in `rows`.",
+  "rules": [
+    "Last night's run saw every event loaded before the latest `load_date`. Tonight's run sees every event loaded so far, the latest day included.",
+    "Tonight every task builds its output from tonight's data. A saved output can only be reused by a rerun of the same night.",
+    "`rows` is a bigint."
+  ],
+  "hints": [
+    "Run the starter on the sample and compare tonight's counts with what the lesson tables give for all their events.",
+    "`run` reuses a task's saved output when its status is `ok`. Which statuses does tonight's run start with?",
+    "A new night starts with no finished tasks."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "shipments",
+    "shipment_events",
+    "deliveries"
+  ],
+  "starter": "import shutil\nfrom pyspark.sql import functions as F\n\n\ndef make_tasks(shipments, events):\n    def clean_events():\n        # One row per event: the copies of a re-sent event differ only in load_date.\n        return events.select([c for c in events.columns if c != \"load_date\"]).distinct()\n\n    def known_events(clean_events):\n        ids = [r.shipment_id for r in shipments.select(\"shipment_id\").collect()]\n        return clean_events.filter(F.coalesce(F.col(\"shipment_id\").isin(ids), F.lit(False)))\n\n    def delivered(known_events):\n        return known_events.filter(F.col(\"event_type\") == \"delivered\")\n\n    def in_flight(delivered):\n        done = [r.shipment_id for r in delivered.select(\"shipment_id\").collect()]\n        return shipments.filter(~F.col(\"shipment_id\").isin(done))\n\n    return {\n        \"in_flight\": (in_flight, [\"delivered\"]),\n        \"delivered\": (delivered, [\"known_events\"]),\n        \"known_events\": (known_events, [\"clean_events\"]),\n        \"clean_events\": (clean_events, []),\n    }\n\n\ndef run_order(deps):\n    order = []\n    while len(order) < len(deps):\n        ready = [t for t in deps if t not in order and all(d in order for d in deps[t])]\n        if not ready:\n            raise ValueError(\"these tasks wait on each other: \" + \", \".join(t for t in deps if t not in order))\n        order += ready\n    return order\n\n\nSTORE = \"/tmp/nightly_store\"\n\n\ndef run(tasks, status):\n    # Runs every task; a task that's ok in `status` already finished, so its saved output is reused.\n    deps = {name: needs for name, (fn, needs) in tasks.items()}\n    outputs = {}\n    for name in run_order(deps):\n        fn, needs = tasks[name]\n        path = f\"{STORE}/{name}\"\n        if status.get(name) == \"ok\":\n            outputs[name] = spark.read.parquet(path)\n            continue\n        if any(status[d] != \"ok\" for d in needs):\n            status[name] = \"skipped\"\n            continue\n        try:\n            fn(*[outputs[d] for d in needs]).write.mode(\"overwrite\").parquet(path)\n            outputs[name] = spark.read.parquet(path)\n            status[name] = \"ok\"\n        except Exception:\n            status[name] = \"failed\"\n    return outputs\n\n\ndef solve(shipments, shipment_events, deliveries):\n    shutil.rmtree(STORE, ignore_errors=True)\n    dates = [r.load_date for r in shipment_events.select(\"load_date\").distinct().collect()]\n    last = max(dates) if dates else None\n    status = {}\n\n    # Last night: every load before today's.\n    run(make_tasks(shipments, shipment_events.filter(F.col(\"load_date\") < F.lit(last))), status)\n\n    # Tonight: everything loaded so far, today's loads included.\n    outputs = run(make_tasks(shipments, shipment_events), status)\n    return spark.createDataFrame([(name, df.count()) for name, df in outputs.items()], \"task STRING, rows BIGINT\")\n",
+  "output": {
+    "columns": [
+      "task",
+      "rows"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`run` reuses a saved output whenever the status dict says `ok`, which is what a rerun after a failure needs. The starter passed the same dict to both nights, so tonight began with every task already `ok`, and each output was read back from last night's folder. Giving each night its own empty dict fixes it; clearing `STORE` between the nights would too. Appending tonight's output to last night's double-counts the events both nights saw, and running tonight on today's loads only gives just the newest events: the job's tasks, like `in_flight`, need every event so far."
+}

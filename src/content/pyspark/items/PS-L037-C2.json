@@ -1,0 +1,26 @@
+{
+  "id": "PS-L037-C2",
+  "slug": "flatten-page-views",
+  "lesson": "PS-L037",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Flatten page views",
+  "dataset": { "id": "PS-D06", "version": "1.0.0" },
+  "prompt": "A reporting tool can't read nested columns. Write `solve(page_views)` so it returns every page view with each nested field pulled up into its own top-level column, keeping the field's own name.",
+  "rules": [
+    "Return `event_id`, `page_type`, `type`, `os`, `referrer`, `source` and `campaign`, in that order.",
+    "`type` and `os` come from `device`; `referrer` from `context`; `source` and `campaign` from `context.utm`.",
+    "A nested value that is missing at any level gives a missing value. Keep every page view."
+  ],
+  "hints": [
+    "`page_views.printSchema()` shows which fields sit inside `device`, `context` and `context.utm`.",
+    "A dot path ending in `.*` expands every field of a struct into its own column.",
+    "One `select` can mix plain names, `.*` paths and single-field dot paths. Expanding all of `context` would bring the `utm` struct along as one column, so take `context`'s plain field on its own."
+  ],
+  "entry": "solve",
+  "inputs": ["page_views"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(page_views):\n    # Every page view with its nested fields as top-level columns.\n    return page_views\n",
+  "output": { "columns": ["event_id", "page_type", "type", "os", "referrer", "source", "campaign"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

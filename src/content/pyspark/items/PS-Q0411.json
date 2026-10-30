@@ -1,0 +1,24 @@
+{
+ "id": "PS-Q0411",
+ "kind": "predict",
+ "slug": "run-each-write-twice",
+ "lesson": "PS-L083",
+ "role": "foundation",
+ "format": "concept_or_trace",
+ "difficulty": "medium",
+ "minutes": 7,
+ "title": "Run each write twice",
+ "prompt": "`transactions` has 14 rows, 6 of them posted from 20 February on. Two Delta tables start with the 8 older rows, then get the newer 6 written twice, the way a retry would: one by an append, one by an insert-only merge on `transaction_id`. The program prints the row count after the first and second write, then how many versions the table has. What does it print? Type each line on its own line.",
+ "program": "from delta.tables import DeltaTable\nfrom pyspark.sql import functions as F\n\nolder = transactions.filter(F.col(\"posted_at\") < \"2026-02-20\")\nfeed = transactions.filter(F.col(\"posted_at\") >= \"2026-02-20\")\n\n\ndef append(path):\n    feed.write.format(\"delta\").mode(\"append\").save(path)\n\n\ndef merge(path):\n    table = DeltaTable.forPath(spark, path)\n    table.alias(\"t\").merge(feed.alias(\"s\"), \"t.transaction_id = s.transaction_id\").whenNotMatchedInsertAll().execute()\n\n\nfor name, step in ((\"append\", append), (\"merge\", merge)):\n    path = f\"/tmp/bank/{name}\"\n    older.write.format(\"delta\").save(path)\n    step(path)\n    once = spark.read.format(\"delta\").load(path).count()\n    step(path)\n    twice = spark.read.format(\"delta\").load(path).count()\n    print(name, once, twice, DeltaTable.forPath(spark, path).history().count())\n",
+ "dataset": {
+  "id": "PS-D02",
+  "version": "1.0.0"
+ },
+ "edition": "lesson",
+ "hints": [
+  "Creating the table is version 0, and every write that changes something adds a version.",
+  "An append adds what it's given every time, whatever the table already holds.",
+  "On the second merge, every feed row finds its `transaction_id` in the table. What does an insert-only merge do then, and does a write that changes nothing commit?"
+ ],
+ "explanation": "The append adds the 6 rows each time: 14, then 20, and three versions (the first write and two appends). Nothing failed and nothing warned. The insert-only merge adds the 6 missing transactions the first time; the second time every feed row matches a table row, so nothing is inserted, and a merge that changes nothing writes no version: two versions, 14 rows. The merge is idempotent, rerunning it leaves the same table; the append isn't. An overwrite with `replaceWhere` would also give 14 both times, but each overwrite commits, so it would add a version per run: idempotent means the same content, not no commit."
+}

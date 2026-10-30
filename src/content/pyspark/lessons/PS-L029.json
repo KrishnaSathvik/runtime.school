@@ -1,0 +1,126 @@
+{
+  "id": "PS-L029",
+  "minutes": 20,
+  "lede": "Joins put tables side by side. Set operations stack them: everything from both, only what both have, or what one has that the other doesn't. They're the quickest way to compare two lists.",
+  "objectives": [
+    "Stack DataFrames with `union`, and match columns by name with `unionByName`",
+    "Remove repeats with `distinct` when you want each value once",
+    "Find what two DataFrames share with `intersect` and what one lacks with `subtract`",
+    "Explain whole-row comparison, NULL matching and the `All` variants that keep duplicates"
+  ],
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "accounts",
+      "customer_cdc",
+      "invoices"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`accounts` is a CRM snapshot taken on 1 January. `customer_cdc` is every change since then: updates, deletes and new accounts, one row per change. Both have an `account_id`.\n\n`a.union(b)` returns the rows of `a` followed by the rows of `b`. The two must have the same number of columns. It keeps every row, repeats included; add `distinct()` when you want each row once."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Every account id, once",
+      "code": "snapshot_ids = accounts.select(\"account_id\")\nfeed_ids = customer_cdc.select(\"account_id\")\n\nboth = snapshot_ids.union(feed_ids)\nprint(snapshot_ids.count(), \"+\", feed_ids.count(), \"=\", both.count())\n\nboth.distinct().orderBy(\"account_id\").show()\n",
+      "note": "15 rows stacked, 7 distinct accounts: the snapshot's five plus two added by the feed."
+    },
+    {
+      "kind": "text",
+      "md": "`union` matches columns **by position**, not by name. If the second DataFrame has its columns in another order, values land in the wrong column and Spark doesn't complain as long as the types fit. `unionByName` matches by name instead."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "By position or by name",
+      "code": "a = accounts.select(\"account_id\", \"account_name\")\nb = customer_cdc.select(\"account_name\", \"account_id\")\n\na.union(b).show(truncate=False)\n\na.unionByName(b).orderBy(\"account_id\").show(truncate=False)\n",
+      "note": "In the first result the feed's names sit under `account_id`. `unionByName` lines them up. With `allowMissingColumns=True` it also accepts columns that only one side has and fills the other side with NULL."
+    },
+    {
+      "kind": "error-example",
+      "id": "e3",
+      "title": "Different numbers of columns",
+      "code": "accounts.select(\"account_id\").union(invoices.select(\"account_id\", \"invoice_id\")).show()\n",
+      "error": "AnalysisException",
+      "note": "Every set operation needs the same columns on both sides. Select them first so the two shapes match."
+    },
+    {
+      "kind": "text",
+      "md": "`a.intersect(b)` keeps the rows that appear in both. `a.subtract(b)` keeps the rows of `a` that don't appear in `b`; the order matters. Both return each row once."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "In both, in one only",
+      "code": "snapshot_ids = accounts.select(\"account_id\")\nfeed_ids = customer_cdc.select(\"account_id\")\n\nsnapshot_ids.intersect(feed_ids).orderBy(\"account_id\").show()\nsnapshot_ids.subtract(feed_ids).show()\nfeed_ids.subtract(snapshot_ids).orderBy(\"account_id\").show()\n",
+      "note": "Four snapshot accounts changed, ACC-0005 didn't, and ACC-0006 and ACC-0007 are new. Three questions, three one-liners."
+    },
+    {
+      "kind": "text",
+      "md": "Set operations compare **whole rows**: every column must be equal. One different value, like an updated credit limit, makes two rows different. Unlike a join, two NULLs count as equal here, so a missing value can match a missing value.\n\nA delete in the feed carries the last row before the delete, so only that row still equals its snapshot row."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Whole rows, and repeats",
+      "code": "accounts.intersect(customer_cdc.select(accounts.columns)).select(\"account_id\", \"account_name\", \"credit_limit\").show()\n\ninvoice_ids = invoices.select(\"account_id\")\nsnapshot_ids = accounts.select(\"account_id\")\n\ninvoice_ids.subtract(snapshot_ids).show()\ninvoice_ids.exceptAll(snapshot_ids).show()\n",
+      "note": "Only ACC-0003 is unchanged in the feed. ACC-0001 has two invoices: `subtract` removes it entirely, while `exceptAll` takes away one copy per matching row and leaves one. `intersectAll` keeps repeats the same way."
+    }
+  ],
+  "challenges": [
+    "PS-L029-C1",
+    "PS-L029-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "`a` has columns `(id, name)` and `b` has `(name, id)`, both strings. What does `a.union(b)` do?",
+      "choices": [
+        "Lines them up by name",
+        "Raises an error",
+        "Stacks them by position, so b's names end up in the id column",
+        "Keeps only rows that appear in both"
+      ],
+      "answer": 2,
+      "why": "`union` matches by position. Use `unionByName` to match by column name."
+    },
+    {
+      "id": "k2",
+      "prompt": "`x` has the ids `A` and NULL; `y` has NULL and `B`. What does `x.intersect(y)` return?",
+      "choices": [
+        "No rows: NULL never equals NULL",
+        "One row with NULL",
+        "A and B",
+        "It raises an error"
+      ],
+      "answer": 1,
+      "why": "Set operations treat two NULLs as equal, so the NULL row is in both. An inner join on the same column would match nothing."
+    },
+    {
+      "id": "k3",
+      "prompt": "`a` has the id ACC-0001 twice and `b` has it once. What does `a.exceptAll(b)` return?",
+      "choices": [
+        "ACC-0001 once",
+        "No rows",
+        "ACC-0001 twice",
+        "ACC-0001 three times"
+      ],
+      "answer": 0,
+      "why": "`exceptAll` removes one copy per matching row in `b`, leaving one. `subtract` would remove it completely."
+    }
+  ],
+  "review": [
+    "`union` stacks rows by position and keeps repeats; add `distinct()` to keep each row once.",
+    "`unionByName` matches columns by name; `allowMissingColumns=True` fills missing ones with NULL.",
+    "`intersect` keeps rows in both; `subtract` keeps rows of the first that aren't in the second. Both remove repeats.",
+    "`intersectAll` and `exceptAll` keep repeats, counting copies.",
+    "Set operations compare whole rows and treat two NULLs as equal.",
+    "Both sides need the same number of columns, with compatible types: select the columns first."
+  ],
+  "practice": ["PS-Q0141", "PS-Q0142", "PS-Q0143", "PS-Q0144", "PS-Q0145"]
+}

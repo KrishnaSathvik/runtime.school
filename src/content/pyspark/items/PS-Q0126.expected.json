@@ -1,0 +1,86 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "customer_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "account_type",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "currency",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "opened_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "overdraft_limit",
+     "type": "decimal(12,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "A00001",
+     "C0001",
+     "checking",
+     "USD",
+     "active",
+     "2025-08-24",
+     "0.00"
+    ],
+    [
+     "A00006",
+     "C0003",
+     "checking",
+     "GBP",
+     "active",
+     "2025-02-26",
+     "500.00"
+    ],
+    [
+     "A00008",
+     "C0005",
+     "checking",
+     "USD",
+     "active",
+     "2025-06-21",
+     "250.00"
+    ]
+   ],
+   "row_count": 3
+  }
+ },
+ "hidden": [
+  "the full practice accounts and transactions",
+  "an account with many transactions",
+  "accounts whose only transactions are pending or declined",
+  "transactions for accounts that don't exist or have no account",
+  "an empty transactions table"
+ ]
+}

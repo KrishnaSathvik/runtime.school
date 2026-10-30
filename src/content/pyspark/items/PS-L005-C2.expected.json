@@ -1,0 +1,98 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "request_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "service",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "is_server_error",
+     "type": "boolean",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "REQ-000001",
+     "catalog-api",
+     false
+    ],
+    [
+     "REQ-000002",
+     "catalog-api",
+     false
+    ],
+    [
+     "REQ-000003",
+     "auth-service",
+     false
+    ],
+    [
+     "REQ-000004",
+     "checkout-api",
+     false
+    ],
+    [
+     "REQ-000005",
+     "search-api",
+     false
+    ],
+    [
+     "REQ-000006",
+     "catalog-api",
+     false
+    ],
+    [
+     "REQ-000007",
+     "iot-gateway",
+     false
+    ],
+    [
+     "REQ-000008",
+     "checkout-api",
+     true
+    ],
+    [
+     "REQ-000009",
+     "catalog-api",
+     false
+    ],
+    [
+     "REQ-000010",
+     "iot-gateway",
+     false
+    ],
+    [
+     "REQ-000011",
+     "search-api",
+     false
+    ],
+    [
+     "REQ-000012",
+     "catalog-api",
+     false
+    ]
+   ],
+   "row_count": 12
+  }
+ },
+ "hidden": [
+  "the full practice requests table",
+  "status codes just below, at and above 500",
+  "the same request logged twice",
+  "a day with no requests"
+ ]
+}

@@ -1,0 +1,18 @@
+{
+  "id": "PS-L002-C1",
+  "kind": "predict",
+  "slug": "count-the-partitions",
+  "lesson": "PS-L002",
+  "difficulty": "easy",
+  "minutes": 4,
+  "title": "Count the partitions",
+  "prompt": "This program asks Spark about its cores and about the partitions of `api_requests`, before and after a `repartition`. What does it print? Type each line on its own line.",
+  "program": "print(spark.sparkContext.defaultParallelism)\nrequests = api_requests.repartition(3)\nprint(requests.rdd.getNumPartitions())\nprint(api_requests.rdd.getNumPartitions())\n",
+  "dataset": { "id": "PS-D15", "version": "1.0.0" },
+  "edition": "lesson",
+  "hints": [
+    "Spark here runs as `local[2]`, and `defaultParallelism` follows the number of cores.",
+    "`repartition(3)` gives back a new DataFrame with exactly 3 partitions.",
+    "`repartition` never changes `api_requests` itself, so it still has the partitions it was read with."
+  ]
+}

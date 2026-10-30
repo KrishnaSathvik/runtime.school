@@ -1,0 +1,56 @@
+{
+ "id": "PS-Q0346",
+ "slug": "each-sensor-reading-once",
+ "lesson": "PS-L070",
+ "role": "foundation",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 12,
+ "title": "Each sensor reading once",
+ "dataset": {
+  "id": "PS-D09",
+  "version": "1.0.0"
+ },
+ "prompt": "The archive must hold each sensor reading once, but gateways sometimes deliver a reading twice. Write `solve(sensor_readings)` so it streams the readings and returns `reading_id`, `device_id` and `event_time`, one row per reading.",
+ "rules": [
+  "Copies of a reading have the same `reading_id` and a later `arrival_time`. Keep one. Copies arrive within a few minutes of the first.",
+  "Use a 10-minute watermark on `event_time`. A reading that comes too late for it is dropped.",
+  "Return these three columns.",
+  "The rows must come from a streaming query over the delivery files: working on `sensor_readings` itself doesn't count."
+ ],
+ "hints": [
+  "`withWatermark(\"event_time\", \"10 minutes\")` comes first, then the duplicate check.",
+  "The copies differ in `arrival_time`, so a check over whole rows keeps both. Name the key column.",
+  "`dropDuplicatesWithinWatermark([\"reading_id\"])` keeps the first copy and drops readings older than the watermark. Write in append mode to a memory table and read it back with `spark.table`."
+ ],
+ "explanation": "`readings.withWatermark(\"event_time\", \"10 minutes\").dropDuplicatesWithinWatermark([\"reading_id\"])` keeps the first copy of each reading and remembers its id only until the watermark has passed it, so the state stays small. The same watermark makes the step drop readings that arrive too late: R0107 was measured at 09:00 but arrived after the 09:45 readings, behind the watermark, so it never reaches the archive. A plain `dropDuplicates([\"reading_id\"])` would keep it and remember every id forever, and a whole-row check keeps the copies because their `arrival_time` differs. Rows come out in append mode as soon as they pass the check.",
+ "entry": "solve",
+ "inputs": [
+  "sensor_readings"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\ndef solve(sensor_readings):\n    spark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\n    make_batches(sensor_readings, \"/tmp/in\")         # one file per batch; clears the folder first\n    shutil.rmtree(\"/tmp/ck\", ignore_errors=True)     # a fresh checkpoint for every run\n    readings = spark.readStream.schema(sensor_readings.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\n    # Drop repeated deliveries within a 10-minute watermark, write the rows to a memory table,\n    # run the stream, and return reading_id, device_id and event_time from that table.\n\n    return sensor_readings\n",
+ "output": {
+  "columns": [
+   "reading_id",
+   "device_id",
+   "event_time"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

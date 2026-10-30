@@ -1,0 +1,53 @@
+{
+  "id": "PS-L061-C1",
+  "slug": "replace-the-invoice-table",
+  "lesson": "PS-L061",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Replace the invoice table",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "Billing keeps its invoices in a Delta table, and each night the table is replaced with that night's invoices. Fix `save(invoices, path)` and `load(path)` so `solve` gets back exactly tonight's invoices. `solve` is written for you: it starts the table with last night's two invoices, saves tonight's and reads the table back.",
+  "rules": [
+    "After `save`, the table holds tonight's invoices only: none of last night's.",
+    "`load` reads the table's current rows, with every column and its type.",
+    "Keep repeated rows that are in tonight's invoices. A night with no invoices leaves an empty table.",
+    "Don't change `start_table`."
+  ],
+  "hints": [
+    "Run the starter on the sample: which of the rows came from last night?",
+    "Replacing a table is a write mode. Appending keeps what was there.",
+    "An overwrite leaves last night's file on disk and marks it removed in the log. Which reader follows the log?"
+  ],
+  "entry": "solve",
+  "inputs": [
+    "invoices"
+  ],
+  "starter": "import shutil\nfrom datetime import date\nfrom decimal import Decimal\n\n\ndef start_table(invoices, path):\n    # Last night's table, with two invoices. Don't change this.\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty folder on every run\n    last_night = spark.createDataFrame(\n        [\n            (\"INV-000001\", \"ACC-0001\", date(2025, 10, 14), date(2025, 11, 13), \"open\", Decimal(\"244.00\")),\n            (\"INV-000090\", \"ACC-0004\", date(2025, 9, 30), date(2025, 10, 30), \"void\", Decimal(\"99.00\")),\n        ],\n        invoices.schema,\n    )\n    last_night.write.format(\"delta\").save(path)\n\n\ndef save(invoices, path):\n    # Replace the table with tonight's invoices.\n    invoices.write.format(\"delta\").mode(\"append\").save(path)\n\n\ndef load(path):\n    # Read the table the way the reports do.\n    return spark.read.parquet(path)\n\n\ndef solve(invoices):\n    path = \"/tmp/billing/invoices\"\n    start_table(invoices, path)\n    save(invoices, path)\n    return load(path)\n",
+  "output": {
+    "columns": [
+      "invoice_id",
+      "account_id",
+      "invoice_date",
+      "due_date",
+      "status",
+      "total_amount"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

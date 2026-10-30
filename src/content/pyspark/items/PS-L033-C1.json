@@ -1,0 +1,26 @@
+{
+  "id": "PS-L033-C1",
+  "slug": "latest-salary-change",
+  "lesson": "PS-L033",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Latest salary change",
+  "dataset": { "id": "PS-D03", "version": "1.0.0" },
+  "prompt": "Payroll wants each employee's most recent salary change, with its reason. Write `solve(salary_history)` so it returns exactly one row per employee: their latest change.",
+  "rules": [
+    "The latest change is the one with the most recent `effective_date` for that `employee_id`.",
+    "If an employee has two changes on that same date, keep the one with the higher `salary`.",
+    "Return `employee_id`, `effective_date`, `salary` and `change_reason`, one row per employee. The latest salary can be lower than an earlier one."
+  ],
+  "hints": [
+    "Number each employee's changes with a window, so the row you want gets 1, then keep only number 1.",
+    "Partition by `employee_id` and order by `effective_date` descending, then by `salary` descending for same-day changes.",
+    "Use `F.row_number()`: `rank` would keep two rows when they tie, and a `groupBy` with `max` mixes values from different rows."
+  ],
+  "entry": "solve",
+  "inputs": ["salary_history"],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(salary_history):\n    # One row per employee: their latest salary change.\n    return salary_history\n",
+  "output": { "columns": ["employee_id", "effective_date", "salary", "change_reason"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

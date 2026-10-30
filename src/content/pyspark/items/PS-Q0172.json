@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0172",
+  "slug": "typical-purchase-before",
+  "lesson": "PS-L035",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Typical purchase before this one",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "The fraud team compares each card purchase with what the account usually spends. Write `solve(transactions)` so every posted purchase comes back with the average of the account's three purchases just before it.",
+  "rules": [
+    "Only rows with `txn_type` `purchase` and `status` `posted` count, both as the purchases returned and as the ones averaged.",
+    "Within each `account_id`, go in `posted_at` order, then `transaction_id` order for purchases at the same moment. Rows with a missing `account_id` form one group of their own.",
+    "`typical_before` is the `avg` of `amount` over up to three purchases just before this one, not counting this one. An account's first purchase has none, so its value is missing.",
+    "Return `account_id`, `transaction_id`, `posted_at`, `amount` and `typical_before`."
+  ],
+  "hints": [
+    "Filter to posted purchases first, so other rows don't take up places in the frame.",
+    "A frame can end before the current row: offsets count rows relative to it, so `-1` is the row just before.",
+    "`rowsBetween(-3, -1)` on a window ordered by `posted_at` and `transaction_id`, then `F.avg(\"amount\").over(w)`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "transactions"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(transactions):\n    # Add the average of the three previous posted purchases to each posted purchase.\n    return transactions\n",
+  "output": {
+    "columns": [
+      "account_id",
+      "transaction_id",
+      "posted_at",
+      "amount",
+      "typical_before"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Keep the posted purchases, then average over a frame that stops one row before the current one: `w = Window.partitionBy(\"account_id\").orderBy(\"posted_at\", \"transaction_id\").rowsBetween(-3, -1)` and `F.avg(\"amount\").over(w)`. The frame holds up to three earlier purchases; the second purchase averages one, the third two. The first has an empty frame, and `avg` of nothing is missing. Filtering after the window would let deposits and declined attempts take places in the frame. `rowsBetween(-3, 0)` would include the purchase being judged, and `rowsBetween(-2, -1)` looks back only two."
+}

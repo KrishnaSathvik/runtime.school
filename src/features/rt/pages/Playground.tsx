@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import type { CanonicalDatasetId } from "@/data/datasets/learning-map";
 import { CANONICAL_VERSION } from "@/data/datasets/learning";
 import { CENTRAL_TABLE, STARTER_QUERY, datasetName, tableQuery, toolDataset } from "@/content/tools/datasets";
 import { preloadDatabase } from "@/engine/sql-client";
 import { useLearning } from "@/lib/learning-state";
 import { ConfirmDialog, NameDialog } from "@/features/python/Dialogs";
+import { Keys, MacOnly } from "../Keys";
 import { Shell } from "../Shell";
 import { TaskCell } from "../Cells";
 import { PLAYGROUND_EDITOR_HEIGHT } from "../editor-height";
@@ -122,10 +123,18 @@ export function Playground({ dataset }: { dataset: CanonicalDatasetId }) {
               {tabs.tabs.length < MAX_TABS && (
                 <button type="button" onClick={() => setDialog({ kind: "new" })} aria-label="New query"><Plus size={13} aria-hidden="true" /></button>
               )}
+              <span className="rx-sqltabs-acts">
+                <span className="rx-sqltabs-keys" aria-hidden="true"><MacOnly><Keys keys={["mod", "enter"]} /> <span>run</span></MacOnly></span>
+                <button type="button" aria-label={`Rename ${tabs.activeTab.name}`} onClick={() => setDialog({ kind: "rename", tab: tabs.activeTab })}><Pencil size={13} aria-hidden="true" /></button>
+                {tabs.tabs.length > 1 && (
+                  <button type="button" aria-label={`Delete ${tabs.activeTab.name}`} onClick={() => setDialog({ kind: "delete", tab: tabs.activeTab })}><Trash2 size={13} aria-hidden="true" /></button>
+                )}
+              </span>
             </div>
             <TaskCell
               key={`${dataset}-${tabs.activeTab.id}`}
               name={tabs.activeTab.name}
+              head={false}
               value={slot.value}
               onChange={slot.set}
               graded={false}
@@ -133,14 +142,7 @@ export function Playground({ dataset }: { dataset: CanonicalDatasetId }) {
               tables={tables}
               task={{ seedSql: d.seed }}
               analytics={{ subject: "sql", surface: "playground", dataset }}
-              footer={
-                <>
-                  <button type="button" className="rx-btn ghost" onClick={() => setDialog({ kind: "rename", tab: tabs.activeTab })}>Rename</button>
-                  {tabs.tabs.length > 1 && <button type="button" className="rx-btn ghost" onClick={() => setDialog({ kind: "delete", tab: tabs.activeTab })}>Delete</button>}
-                </>
-              }
             />
-            <p className="rx-small">Runs one SELECT or WITH query at a time on all {d.metadata.totals.rows.toLocaleString("en-US")} rows. Results show up to 200 rows. To change data, use Database Lab.</p>
           </section>
         </div>
         <NameDialog

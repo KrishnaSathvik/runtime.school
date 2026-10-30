@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0328",
+  "kind": "predict",
+  "slug": "zones-no-trip-starts-in",
+  "lesson": "PS-L066",
+  "role": "edge",
+  "format": "concept_or_trace",
+  "difficulty": "medium",
+  "minutes": 6,
+  "title": "Zones no trip starts in",
+  "prompt": "`trips` has the 12 rows shown, in that order. No trip starts in zone 12 or zone 23. This program writes them in files of at most 3 rows, counts the files three reads would open and the rows one of them finds, then Z-orders the table by `pickup_zone_id` into two files and counts again. What does it print? Type each line on its own line.",
+  "program": "from delta.tables import DeltaTable\n\npath = \"/tmp/delta/trips\"\ntrips.write.format(\"delta\").option(\"maxRecordsPerFile\", 3).save(path)\n\n\ndef files_read(condition):\n    return len(spark.read.format(\"delta\").load(path).where(condition).inputFiles())\n\nprint(files_read(\"pickup_zone_id = 12\"), files_read(\"pickup_zone_id = 23\"), files_read(\"pickup_zone_id >= 20\"))\nprint(spark.read.format(\"delta\").load(path).where(\"pickup_zone_id = 12\").count())\n\n# Aim for files of about 6,000 bytes, so these 12 rows make two files.\nspark.conf.set(\"spark.databricks.delta.optimize.maxFileSize\", 6000)\nDeltaTable.forPath(spark, path).optimize().executeZOrderBy(\"pickup_zone_id\")\nprint(files_read(\"pickup_zone_id = 12\"), files_read(\"pickup_zone_id = 23\"), files_read(\"pickup_zone_id >= 20\"))\n",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "Write down each file's smallest and largest `pickup_zone_id`: rows 1 to 3, 4 to 6, and so on.",
+    "A file is skipped only when the condition can't be true anywhere between its min and max. Delta doesn't know which values are missing in between.",
+    "Z-ordering puts close zones together: one file ends up with the low zones, the other with the high ones."
+  ],
+  "explanation": "The four files' `pickup_zone_id` ranges are 4 to 10, 4 to 16, 1 to 22 and 4 to 22. Zone 12 falls inside the last three ranges, so the read opens three files and finds no rows: the log has only each file's min and max, not the values in between. Zone 23 is above every maximum, so no file is opened, and `>= 20` needs a maximum of 20 or more: two files. After Z-ordering, one file holds zones 1 to 5 and the other 10 to 22, so zone 12 and `>= 20` open one file each, and zone 23 still opens none."
+}

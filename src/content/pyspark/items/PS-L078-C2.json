@@ -1,0 +1,25 @@
+{
+  "id": "PS-L078-C2",
+  "slug": "steps-that-pass-alone",
+  "lesson": "PS-L078",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Steps that pass alone",
+  "dataset": { "id": "PS-D04", "version": "1.0.0" },
+  "prompt": "The claims pipeline has two steps, and each passes its own unit test. The integration test fails: a valid submitted claim with no allowed amount never comes out. Fix the steps so `solve(claims)` returns `claim_id`, `claim_status` and `billed_amount` for every valid claim still waiting for the payer.",
+  "rules": [
+    "A claim is valid when both dates are present and `service_date` is not after `submitted_date`. Other empty values are normal: `allowed_amount`, `paid_amount` and `denial_reason` stay empty until the payer acts.",
+    "A claim is waiting for the payer when `allowed_amount` is missing."
+  ],
+  "hints": [
+    "Run the starter on the sample. Which claims should come out, and which step removes them?",
+    "`dropna()` with no arguments drops a row with a missing value in any column, and most claims have some.",
+    "Step 1 only needs to check the dates. A NULL comparison isn't true, so `filter` already drops a claim with a missing date."
+  ],
+  "entry": "solve",
+  "inputs": ["claims"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef valid_claims(claims):\n    # Step 1: drop incomplete claims and claims whose dates are out of order.\n    return claims.dropna().filter(F.col(\"service_date\") <= F.col(\"submitted_date\"))\n\n\ndef awaiting_decision(claims):\n    # Step 2: the payer hasn't decided a claim that has no allowed_amount.\n    return claims.filter(F.col(\"allowed_amount\").isNull()).select(\"claim_id\", \"claim_status\", \"billed_amount\")\n\n\ndef solve(claims):\n    return awaiting_decision(valid_claims(claims))\n",
+  "output": { "columns": ["claim_id", "claim_status", "billed_amount"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "sample": true }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

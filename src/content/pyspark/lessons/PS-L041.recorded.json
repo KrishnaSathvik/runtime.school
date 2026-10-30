@@ -1,0 +1,49 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D06",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "cart_events",
+   "checkout_events",
+   "searches"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "+--------+------+--------------------+\n|event_id|action|skus                |\n+--------+------+--------------------+\n|CA-0001 |add   |[SKU-1001]          |\n|CA-0002 |add   |[SKU-1013]          |\n|CA-0003 |add   |[SKU-1002, SKU-1008]|\n|CA-0004 |remove|[SKU-1008]          |\n|CA-0005 |add   |[SKU-1005]          |\n+--------+------+--------------------+\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "+--------+---------------+\n|event_id|line_values    |\n+--------+---------------+\n|CA-0001 |[89.0]         |\n|CA-0002 |[23.98]        |\n|CA-0003 |[119.95, 34.99]|\n|CA-0004 |[34.99]        |\n|CA-0005 |[72.0]         |\n+--------+---------------+\n\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "+--------+-------------------------------------+-------------------------------------+\n|event_id|filters                              |other_filters                        |\n+--------+-------------------------------------+-------------------------------------+\n|SR-0001 |[size:M, color:black]                |[size:M, color:black]                |\n|SR-0002 |[in_stock]                           |[]                                   |\n|SR-0003 |[]                                   |[]                                   |\n|SR-0004 |[price:<50, brand:fernway, rating:4+]|[price:<50, brand:fernway, rating:4+]|\n|SR-0005 |[]                                   |[]                                   |\n+--------+-------------------------------------+-------------------------------------+\n\n+--------+----------+\n|event_id|multi_skus|\n+--------+----------+\n| CO-0001|[SKU-1013]|\n| CO-0002|[SKU-1013]|\n| CO-0003|[SKU-1013]|\n| CO-0004|        []|\n+--------+----------+\n\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "+--------+------------+-------------+\n|event_id|any_multiple|all_under_100|\n+--------+------------+-------------+\n| CO-0001|        true|         true|\n| CO-0002|        true|         true|\n| CO-0003|        true|         true|\n| CO-0004|       false|        false|\n+--------+------------+-------------+\n\n+--------+-------------------------------------+------------+-----------+\n|event_id|filters                              |has_in_stock|no_in_stock|\n+--------+-------------------------------------+------------+-----------+\n|SR-0001 |[size:M, color:black]                |false       |true       |\n|SR-0002 |[in_stock]                           |true        |false      |\n|SR-0003 |[]                                   |false       |true       |\n|SR-0004 |[price:<50, brand:fernway, rating:4+]|false       |true       |\n|SR-0005 |[]                                   |false       |true       |\n+--------+-------------------------------------+------------+-----------+\n\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "+--------+-----+------------+\n|event_id|units|basket_value|\n+--------+-----+------------+\n| CO-0001|    3|      112.98|\n| CO-0002|    3|      112.98|\n| CO-0003|    3|      112.98|\n| CO-0004|    1|      119.95|\n+--------+-----+------------+\n\n+--------+-----+\n|event_id|units|\n+--------+-----+\n| CO-0001|    3|\n| CO-0002|    3|\n| CO-0003|    3|\n| CO-0004|    1|\n+--------+-----+\n\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "",
+   "error": {
+    "type": "AnalysisException",
+    "message": "[DATATYPE_MISMATCH.UNEXPECTED_INPUT_TYPE] Cannot resolve \"aggregate(items, 0, lambdafunction((namedlambdavariable() + namedlambdavariable().price), namedlambdavariable(), namedlambdavariable()), lambdafunction(namedlambdavariable(), namedlambdavariable()))\" due to data type mismatch: The third parameter requires the \"INT\" type, however \"lambdafunction((namedlambdavariable() + namedlambdavariable().price), namedlambdavariable(), namedlambdavariable())\" has the type \"DOUBLE\". SQLSTATE: 42K09",
+    "line": 3,
+    "condition": "DATATYPE_MISMATCH.UNEXPECTED_INPUT_TYPE"
+   }
+  }
+ }
+}

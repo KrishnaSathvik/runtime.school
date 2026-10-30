@@ -1,0 +1,34 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D15",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "application_logs"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "run 1\n  micro-batch 0 [('INFO', 3)]\n  micro-batch 1 [('INFO', 4)]\n  micro-batch 2 [('INFO', 5)]\nrun 2, after two more files\n  micro-batch 3 [('ERROR', 1), ('INFO', 6), ('WARN', 1)]\n  micro-batch 4 [('ERROR', 2), ('INFO', 7)]\nrun 3, nothing new\n  rows read: 0\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "checkpoint: ['commits', 'metadata', 'offsets', 'sources', 'state']\noffsets: ['0', '1', '2', '3', '4'] commits: ['0', '1', '2', '3', '4']\nstate now: [('ERROR', 2), ('INFO', 7), ('WARN', 1)]\nstate after micro-batch 2: [('INFO', 5)]\nstateStoreSave partitions 1 batches 0 to 4\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "run 1\n  wrote micro-batch 0\n  wrote micro-batch 1\n  wrote micro-batch 2\n  stopped: StreamingQueryException STREAM_FAILED | sink down: True\n  committed: ['0', '1']\nrun 2, same checkpoint\n  wrote micro-batch 2\n  wrote micro-batch 3\n  wrote micro-batch 4\n  committed: ['0', '1', '2', '3', '4']\nlog lines: 10 | append sink: 11 | per-batch sink: 10\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "count by level\n  micro-batch 0 [('INFO', 3)]\n  micro-batch 1 [('INFO', 4)]\n  micro-batch 2 [('INFO', 5)]\nrestart, now counting by service\n  micro-batch 3 [('checkout-api', 1), ('iot-gateway', 2)]\n  state now: [('INFO', 5), ('checkout-api', 1), ('iot-gateway', 2)]\nrestart, now counting by level and service\n  stopped: StreamingQueryException STREAM_FAILED\n  key schema doesn't match: True\n",
+   "error": null
+  }
+ }
+}

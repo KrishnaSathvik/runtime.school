@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0117",
+  "slug": "quarantine-by-reason",
+  "lesson": "PS-L024",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Quarantine counts by reason",
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0"
+  },
+  "prompt": "The carrier's account manager wants to know why tracking events are held back. Write `solve(shipment_events, shipments)` so it returns how many events were clean and how many went to quarantine for each reason.",
+  "rules": [
+    "Each event gets the first reason that applies, in this order: `unknown shipment` (`shipment_id` missing or not in `shipments`), `unknown event type` (missing, or not one of created, picked, departed, in_transit, out_for_delivery, delivered, exception), `missing event time`. Events with no reason are `clean`.",
+    "Event types are exact: `Delivered` is not `delivered`. Every event is counted once, under one bucket, duplicates included.",
+    "Return `bucket` and `events` (bigint) with exactly four rows: `clean`, `unknown shipment`, `unknown event type`, `missing event time`. Keep a bucket even when its count is 0."
+  ],
+  "hints": [
+    "Tag every event with a `F.when` chain, as for a quarantine table. The first true condition wins, so an event lands in one bucket only.",
+    "Count each bucket in a loop: the clean rows have a NULL reason, the others have `reason == bucket`.",
+    "Build the result with `spark.createDataFrame(rows, \"bucket STRING, events BIGINT\")` from a Python list, so a bucket with no events still gets its 0."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "shipment_events",
+    "shipments"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\nEVENT_TYPES = [\"created\", \"picked\", \"departed\", \"in_transit\", \"out_for_delivery\", \"delivered\", \"exception\"]\n\n\ndef solve(shipment_events, shipments):\n    # One row per bucket: bucket, events.\n    return shipment_events\n",
+  "output": {
+    "columns": [
+      "bucket",
+      "events"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Tag first, count second. The `F.when` chain gives each event the first reason that applies, so an event with an unknown shipment and no event time counts only as `unknown shipment`; counting each rule with its own filter would count it twice and the buckets would add up to more than the feed. Then count `tagged.filter(F.col(\"reason\").isNull())` for `clean` and `tagged.filter(F.col(\"reason\") == bucket)` for each reason, and build the four rows with `spark.createDataFrame`. Because the list of buckets is fixed in your code, a reason with no events still appears with 0. The four counts add up to the number of events received."
+}

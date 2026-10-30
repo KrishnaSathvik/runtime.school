@@ -1,0 +1,131 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "invoice_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "total_amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "INV-000003",
+     "ACC-0003",
+     "overdue",
+     "469.50"
+    ],
+    [
+     "INV-000004",
+     "ACC-0001",
+     "open",
+     "283.50"
+    ],
+    [
+     "INV-000004",
+     "ACC-0001",
+     "open",
+     "283.50"
+    ]
+   ],
+   "row_count": 3,
+   "inputs": {
+    "invoices": [
+     [
+      "INV-000001",
+      "ACC-0001",
+      "2025-10-14",
+      "2025-11-13",
+      "paid",
+      "244.00"
+     ],
+     [
+      "INV-000002",
+      "ACC-0002",
+      "2025-11-20",
+      "2025-12-20",
+      "paid",
+      "232.00"
+     ],
+     [
+      "INV-000003",
+      "ACC-0003",
+      "2025-12-09",
+      "2026-01-08",
+      "overdue",
+      "469.50"
+     ],
+     [
+      "INV-000004",
+      "ACC-0001",
+      "2026-02-05",
+      "2026-03-07",
+      "open",
+      "283.50"
+     ],
+     [
+      "INV-000005",
+      "ACC-0005",
+      "2026-03-04",
+      "2026-04-03",
+      "draft",
+      "245.00"
+     ],
+     [
+      "INV-000004",
+      "ACC-0001",
+      "2026-02-05",
+      "2026-03-07",
+      "open",
+      "283.50"
+     ],
+     [
+      "INV-000006",
+      "ACC-0004",
+      "2026-03-10",
+      "2026-04-09",
+      "void",
+      "80.00"
+     ],
+     [
+      "INV-000007",
+      "ACC-0002",
+      "2026-03-15",
+      "2026-04-14",
+      null,
+      "55.00"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice invoices",
+  "every status, including invoices with no status",
+  "an invoice stored twice in billing",
+  "unpaid invoices with no account or no total",
+  "a day when every invoice is paid",
+  "an empty invoices table"
+ ]
+}

@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0267",
+  "slug": "country-numbers-from-last-year",
+  "lesson": "PS-L054",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Country numbers learned from last year",
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0"
+  },
+  "prompt": "The churn model was trained on members who joined before 2026, and it now scores everyone. Write `solve(users)` so it returns `user_id`, `country` and `country_index` for every member, with the country numbers learned from the earlier members only.",
+  "rules": [
+    "Learn the numbers from members whose `signup_date` is before 2026-01-01: the most common country gets 0.0, the next 1.0, and so on, with ties in alphabetical order.",
+    "Every member gets a number. A country no earlier member had, or a missing country, gets the number after the last learned one.",
+    "Return `user_id`, `country` and `country_index` (a double), in that order."
+  ],
+  "hints": [
+    "Fit `StringIndexer` on the filtered members only, then call the fitted model's `transform` on all of them.",
+    "By default a fitted indexer stops on a value it never saw. `handleInvalid=\"keep\"` gives such values one extra number instead.",
+    "Look at the 2026 members in the sample: their countries never appear before 2026."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "users"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.ml.feature import StringIndexer\n\n\ndef solve(users):\n    # Learn the country numbers from members who signed up before 2026, then number every member.\n    return users\n",
+  "output": {
+    "columns": [
+      "user_id",
+      "country",
+      "country_index"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Fit on the past, transform everyone: `StringIndexer(inputCol=\"country\", outputCol=\"country_index\", handleInvalid=\"keep\").fit(users.filter(F.col(\"signup_date\") < \"2026-01-01\"))`, then `.transform(users)`. In the sample, the four earlier members come from four countries, one member each, so the ties go alphabetically: BR 0.0, GB 1.0, IN 2.0, US 3.0. CA and DE only appear in 2026, so both get 4.0, the extra number `keep` adds. That's what the model saw during training: it never learned anything about those countries. Fitting on every member would give CA and DE their own numbers and shift the others, so the numbers would no longer mean what they meant when the model was trained. `\"skip\"` would drop the new members, and the default `\"error\"` stops the job."
+}

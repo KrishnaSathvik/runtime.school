@@ -1,0 +1,54 @@
+{
+ "id": "PS-L087-C2",
+ "slug": "two-hot-readings-in-a-row",
+ "lesson": "PS-L087",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 12,
+ "title": "Two hot readings in a row",
+ "dataset": {
+  "id": "PS-D09",
+  "version": "1.0.0"
+ },
+ "prompt": "The greenhouse team wants an alert when a sensor sends two hot readings in a row. Write `solve(sensor_readings)` so it streams the readings and returns `device_id`, `alert_time` and `temperature_c` for every alert.",
+ "rules": [
+  "A reading is hot when `payload.temperature_c` is above 30.0. A sensor alerts on its second hot reading in a row, and not again until a reading that isn't hot ends the run.",
+  "Skip glitches (999.0) and readings with no temperature: they don't count and don't end a run.",
+  "Take each sensor's new readings in `event_time` order. Ignore a reading that isn't newer than the newest one already taken for that sensor: it's a copy or it came too late.",
+  "`alert_time` and `temperature_c` come from the reading that raised the alert."
+ ],
+ "hints": [
+  "Keep two values per sensor in its `GroupState`: how many hot readings in a row, and the newest `event_time` taken so far.",
+  "A micro-batch's rows come in no fixed order, so sort each pandas DataFrame by `event_time` first. A missing temperature is NaN in pandas, and `pd.isna(x)` tests for it.",
+  "Use `applyInPandasWithState` with output mode `\"append\"` and `GroupStateTimeout.NoTimeout`, write to a memory table with `run_stream`, and return `spark.table(name)`."
+ ],
+ "entry": "solve",
+ "inputs": [
+  "sensor_readings"
+ ],
+ "starter": "import json, os, shutil\nimport pandas as pd\nfrom pyspark.sql import functions as F\nfrom pyspark.sql.streaming.state import GroupStateTimeout\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\ndef solve(sensor_readings):\n    spark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\n    make_batches(sensor_readings, \"/tmp/in\")         # one file per batch; clears the folder first\n    shutil.rmtree(\"/tmp/ck\", ignore_errors=True)     # a fresh checkpoint for every run\n    readings = spark.readStream.schema(sensor_readings.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\n    flat = readings.select(\"device_id\", \"reading_id\", \"event_time\", F.col(\"payload.temperature_c\").alias(\"temperature_c\"))\n\n    # Keep, per sensor, how many hot readings in a row it has sent and the newest event time taken.\n    # Return one row per alert from a memory table: device_id, alert_time, temperature_c.\n\n    return sensor_readings\n",
+ "output": {
+  "columns": [
+   "device_id",
+   "alert_time",
+   "temperature_c"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

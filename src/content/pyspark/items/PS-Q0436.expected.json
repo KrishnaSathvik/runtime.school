@@ -1,0 +1,238 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "movie_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "primary_genre",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "release_year",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "predicted_runtime",
+     "type": "double",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "M01",
+     "Drama",
+     2019,
+     122.7
+    ],
+    [
+     "M02",
+     "Thriller",
+     2024,
+     107.1
+    ],
+    [
+     "M03",
+     "Comedy",
+     2021,
+     93.8
+    ],
+    [
+     "M04",
+     "Drama",
+     2016,
+     129.9
+    ],
+    [
+     "M05",
+     "Drama",
+     2024,
+     110.8
+    ],
+    [
+     "M06",
+     "Thriller",
+     2018,
+     121.4
+    ],
+    [
+     "M07",
+     "Comedy",
+     2021,
+     93.8
+    ],
+    [
+     "M08",
+     "Comedy",
+     2023,
+     89.0
+    ],
+    [
+     "M09",
+     "Thriller",
+     2022,
+     111.9
+    ],
+    [
+     "M10",
+     "Drama",
+     2022,
+     115.6
+    ],
+    [
+     "M11",
+     "Comedy",
+     2017,
+     103.4
+    ],
+    [
+     "M12",
+     "Thriller",
+     2020,
+     116.6
+    ]
+   ],
+   "row_count": 12,
+   "inputs": {
+    "movies": [
+     [
+      "M01",
+      "The Glass Orchard",
+      "2019",
+      "Drama",
+      "Drama|Romance",
+      "118",
+      "en",
+      "PG-13"
+     ],
+     [
+      "M02",
+      "Midnight Ferry",
+      "2024",
+      "Thriller",
+      "Thriller|Mystery",
+      "104",
+      "en",
+      "R"
+     ],
+     [
+      "M03",
+      "Paper Comet",
+      "2021",
+      "Comedy",
+      "Comedy|Animation",
+      "92",
+      "ja",
+      "PG"
+     ],
+     [
+      "M04",
+      "Iron Meadow",
+      "2016",
+      "Drama",
+      "Drama|Action",
+      "131",
+      "en",
+      "PG-13"
+     ],
+     [
+      "M05",
+      "Salt Harbour",
+      "2024",
+      "Drama",
+      "Drama",
+      "109",
+      "fr",
+      "PG-13"
+     ],
+     [
+      "M06",
+      "Quiet Signal",
+      "2018",
+      "Thriller",
+      "Thriller|Sci-Fi",
+      "126",
+      "ko",
+      "PG-13"
+     ],
+     [
+      "M07",
+      "Little Parade",
+      "2021",
+      "Comedy",
+      "Comedy",
+      "88",
+      "es",
+      "PG"
+     ],
+     [
+      "M08",
+      "Lantern Street",
+      "2023",
+      "Comedy",
+      "Comedy|Romance",
+      "97",
+      "en",
+      "PG"
+     ],
+     [
+      "M09",
+      "Copper Tide",
+      "2022",
+      "Thriller",
+      "Thriller|Action",
+      "112",
+      "de",
+      "R"
+     ],
+     [
+      "M10",
+      "Velvet Season",
+      "2022",
+      "Drama",
+      "Drama|Romance",
+      "121",
+      "hi",
+      "PG-13"
+     ],
+     [
+      "M11",
+      "Bright Errands",
+      "2017",
+      "Comedy",
+      "Comedy",
+      "103",
+      "en",
+      "PG"
+     ],
+     [
+      "M12",
+      "Cold Harbour",
+      "2020",
+      "Thriller",
+      "Thriller",
+      "115",
+      "sv",
+      "R"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice catalogue",
+  "a genre with only one film",
+  "three genres with several films each, some sharing a year"
+ ]
+}

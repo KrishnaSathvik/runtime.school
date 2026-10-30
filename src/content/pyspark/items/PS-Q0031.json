@@ -1,0 +1,59 @@
+{
+  "id": "PS-Q0031",
+  "slug": "aisles-for-each-category",
+  "lesson": "PS-L007",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Aisles for each category",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "The shop's floor plan needs a small table that says where each category of product is shelved. Write `solve()` so it builds this table with `spark.createDataFrame` and returns it.",
+  "rules": [
+    "Three columns, in this order: `category` (text), `aisle` (a whole number of type `int`) and `fragile` (true or false, type `boolean`).",
+    "Four rows: `kitchen`, 3, true; `outdoor`, 7, false; `office`, 5, false; `home`, 2, true.",
+    "Text is exact and lowercase: `kitchen`, not `Kitchen`."
+  ],
+  "hints": [
+    "Write each row as a tuple, like `(\"kitchen\", 3, True)`. Python's `True` and `False` become Spark's true and false.",
+    "Give a schema string that names the three columns and their types, in order.",
+    "Without a schema Spark guesses `bigint` for whole numbers. Write `aisle INT` and `fragile BOOLEAN` to get the types the rules ask for."
+  ],
+  "entry": "solve",
+  "inputs": [],
+  "starter": "def solve():\n    # Build and return the category table.\n    rows = []\n    return spark.createDataFrame(rows, \"category STRING\")\n",
+  "output": {
+    "columns": [
+      "category",
+      "aisle",
+      "fragile"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Put one tuple per row in a list and pass a schema string that names and types each column: `spark.createDataFrame([(\"kitchen\", 3, True), ...], \"category STRING, aisle INT, fragile BOOLEAN\")`. The tuple's values fill the columns in the order the schema lists them. Python's `True` and `False` fit a `BOOLEAN` column. Passing only the names, `[\"category\", \"aisle\", \"fragile\"]`, makes Spark guess the types, and it guesses `bigint` for `aisle`. Writing `\"true\"` in quotes is text, which a `BOOLEAN` column won't accept.",
+  "technique": {
+    "name": "spark.createDataFrame",
+    "plan": [
+      "Scan",
+      "LocalTableScan"
+    ],
+    "source": [
+      "createDataFrame"
+    ]
+  }
+}

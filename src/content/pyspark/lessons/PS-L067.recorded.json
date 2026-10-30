@@ -1,0 +1,43 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D06",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "page_views"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "['part-0.json', 'part-1.json', 'part-2.json', 'part-3.json', 'part-4.json']\nDataFrame True False\nTrue\nroot\n |-- event_id: string (nullable = true)\n |-- event_time: timestamp (nullable = true)\n |-- device: string (nullable = true)\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "",
+   "error": {
+    "type": "AnalysisException",
+    "message": "Queries with streaming sources must be executed with writeStream.start()",
+    "line": 5,
+    "condition": "_LEGACY_ERROR_TEMP_3102"
+   }
+  },
+  "e3": {
+   "stdout": "micro-batch 0 False ['PV-0001', 'PV-0002', 'PV-0004', 'PV-0005']\nmicro-batch 1 False ['PV-0006', 'PV-0007', 'PV-0008']\nmicro-batch 2 False ['PV-0003', 'PV-0009', 'PV-0010']\nmicro-batch 3 False ['PV-0011']\nmicro-batch 4 False ['PV-0012']\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "micro-batch 0 -> 1 product views [('PV-0005', '10:05', 1)]\nmicro-batch 1 -> 1 product views [('PV-0007', '10:12', 2)]\nmicro-batch 2 -> 2 product views [('PV-0003', '10:03', 3), ('PV-0010', '10:24', 3)]\nmicro-batch 3 -> 1 product views [('PV-0011', '10:38', 4)]\nmicro-batch 4 -> 0 product views []\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "1 micro-batch\nTrue\n",
+   "error": null
+  }
+ }
+}

@@ -1,0 +1,202 @@
+/* PySpark-only pieces. Everything else comes from rt.css (shell, pages) and p2.css (lessons, workbench). Tokens only. */
+
+/* tools menu: a tool that isn't available is listed, not linked */
+.rx-toollist-off { display: flex; flex-direction: column; gap: 1px; padding: 9px 10px; border-radius: 6px; opacity: 0.55; cursor: default; }
+
+/* notices */
+.ps-planned, .ps-offline { margin: 14px 0; padding: 10px 14px; border: 1px dashed var(--rx-line-strong); border-radius: 8px; font-size: 14px; line-height: 1.5; color: var(--rx-dim); max-width: 46rem; }
+.ps-offline { border-style: solid; border-color: color-mix(in srgb, var(--rx-amber) 60%, var(--rx-line)); background: var(--rx-amber-soft); color: var(--rx-ink); margin: 10px 0; }
+.ps-offline code { font-size: 12.5px; }
+
+/* question brief: PySpark lesson titles run long, so the refresher link wraps instead of widening the page */
+.p2-read .rx-spec .rx-link { white-space: normal; }
+
+
+/* dataset tables and schemas */
+.ps-tables { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14px; }
+.ps-tables li { display: grid; grid-template-columns: minmax(6.5rem, max-content) minmax(0, 1fr); gap: 10px; align-items: baseline; }
+.ps-tables span { color: var(--rx-dim); }
+.ps-table { margin: 10px 0; }
+.ps-table-note { margin: 0; padding: 8px 14px; font-size: 13.5px; color: var(--rx-dim); border-bottom: 1px solid var(--rx-line); }
+.ps-schema { list-style: none; margin: 0; padding: 8px 14px; display: flex; flex-wrap: wrap; gap: 4px 14px; font: 12px var(--rx-mono); color: var(--rx-dim); border-bottom: 1px solid var(--rx-line); }
+.ps-schema code { color: var(--rx-ink); }
+.ps-rels { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 13px; }
+.ps-rels b { font-weight: 600; }
+
+/* job status and results */
+.ps-job { display: inline-flex; align-items: center; gap: 6px; font: 12.5px var(--rx-mono); color: var(--rx-dim); }
+.ps-job i { width: 8px; height: 8px; border-radius: 50%; background: var(--rx-amber); animation: ps-pulse 1s ease-in-out infinite; }
+.ps-job-time { color: var(--rx-faint); }
+@keyframes ps-pulse { 50% { opacity: 0.3; } }
+@media (prefers-reduced-motion: reduce) { .ps-job i { animation: none; } }
+.ps-frame { border-bottom: 1px solid var(--rx-line); }
+.ps-frame:last-of-type { border-bottom: 0; }
+.ps-run .ps-err, .ps-err { margin: 10px 14px; }
+.ps-err details { margin-top: 6px; font-size: 12.5px; }
+.ps-ranon { margin: 0; padding: 8px 14px; font: 12px var(--rx-mono); color: var(--rx-faint); border-top: 1px solid var(--rx-line); }
+.ps-stale { padding: 6px 14px; margin: 0; }
+.ps-rows { margin-top: 8px; border: 1px solid var(--rx-line); border-radius: 6px; overflow: hidden; }
+.ps-rows-title { display: block; padding: 6px 10px; font: 600 11.5px var(--rx-mono); letter-spacing: 0.04em; text-transform: uppercase; color: var(--rx-amber-ink); background: var(--rx-cell); }
+
+/* dataset index search: a labelled field like the tools' pickers */
+.ps-search { margin: 8px 0 22px; }
+.ps-search input { display: block; width: 100%; max-width: 26rem; height: 38px; padding: 0 12px; border: 1px solid var(--rx-line-strong); border-radius: 6px; background: var(--rx-surface); color: var(--rx-ink); font: 14px var(--rx-sans); }
+.ps-search input:hover { border-color: var(--rx-ink); }
+.ps-search input:focus-visible { outline: 2px solid var(--rx-amber); outline-offset: 2px; }
+
+/* lessons, projects, playground (step 5) */
+.ps-example .p2-example-acts { flex-wrap: wrap; justify-content: flex-end; }
+.ps-example-state { padding: 8px 12px; border-top: 1px solid var(--ide-border); }
+.ps-console { overflow-x: auto; white-space: pre; }
+.ps-editions { margin: 10px 0 4px; flex-wrap: wrap; }
+
+/* A code snippet inside lesson text (shown, not run). */
+.ps-snippet { border: 1px solid var(--ide-border); border-radius: 8px; margin: 10px 0; overflow-x: auto; }
+
+/* ---- Projects (docs/pyspark/NEXT_SESSION.md: project workspace) ---- */
+/* library cards: what the project uses and makes, and how far you are */
+.ps-card-planned { opacity: 0.75; }
+
+/* brief and review */
+.p2-brief .ps-rels { margin: 10px 0 0; }
+.p2-brief h2 + .p2-note { margin: -2px 0 8px; }
+.ps-approach { font-size: 14.5px; line-height: 1.55; padding: 10px 14px; border-left: 3px solid var(--rx-ok); background: var(--p2-ok-soft); border-radius: 0 6px 6px 0; }
+.ps-approach-step { margin: 8px 0; }
+.ps-approach-step summary { cursor: pointer; font-size: 14.5px; font-weight: 600; padding: 4px 0; }
+.ps-refresher { margin: 16px 0 0; padding: 10px 14px; border: 1px solid var(--rx-line); border-radius: 8px; font-size: 14px; line-height: 1.5; }
+
+/* workspace header: back link and the data drawer on one row */
+
+/* workspace: the task and the file side by side, half each, as in SQL and Python */
+.ps-pane { display: contents; }
+
+/* milestones: vertical on wide screens */
+
+/* the whole-pipeline actions above the results */
+.p2-actions.ps-project-acts { border: 1px solid var(--rx-line); border-radius: 8px; background: var(--rx-cell); }
+.ps-project-acts-label { font: 600 12px var(--rx-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--rx-amber-ink); }
+.ps-result-tabs { align-items: center; }
+.ps-result-tabs .ps-clear { margin-left: auto; font-size: 13px; font-weight: 500; color: var(--rx-dim); }
+
+/* artifacts: every table the pipeline built */
+.ps-artifacts { display: grid; grid-template-columns: minmax(170px, 220px) minmax(0, 1fr); min-height: 0; }
+.ps-artifact-list { list-style: none; margin: 0; padding: 6px; border-right: 1px solid var(--rx-line); display: grid; align-content: start; gap: 2px; }
+.ps-artifact-list button { display: grid; grid-template-columns: 16px minmax(0, 1fr); column-gap: 6px; width: 100%; padding: 6px 8px; border: 0; border-radius: 6px; background: none; color: inherit; text-align: left; cursor: pointer; }
+.ps-artifact-list button code { font-size: 12.5px; overflow-wrap: anywhere; }
+.ps-artifact-list button:hover { background: var(--rx-cell); }
+.ps-artifact-list button[aria-pressed="true"] { background: var(--rx-amber-soft); }
+.ps-artifact-list button:focus-visible { outline: 2px solid var(--rx-amber); outline-offset: 1px; }
+.ps-artifact-meta { grid-column: 2; font: 11.5px var(--rx-mono); color: var(--rx-faint); }
+.ps-artifact-detail { min-width: 0; }
+.ps-artifact-detail .p2-data-head span { font-family: var(--rx-sans); color: var(--rx-dim); }
+.ps-artifact-cause { margin: 10px 14px 0; }
+@media (max-width: 640px) {
+  .ps-artifacts { grid-template-columns: minmax(0, 1fr); }
+  .ps-artifact-list { border-right: 0; border-bottom: 1px solid var(--rx-line); grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+}
+
+/* project checks: one block per step */
+.ps-project-checks { list-style: none; margin: 0; padding: 0; }
+.ps-project-checks > li { border-bottom: 1px solid var(--rx-line); }
+.ps-project-checks summary { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 8px; align-items: baseline; padding: 10px 14px; cursor: pointer; font-size: 14px; }
+.ps-project-checks summary .ps-artifact-meta { grid-column: auto; }
+.ps-project-checks .p2-check { padding-left: 44px; }
+.ps-project-checks .ps-err { margin: 6px 14px 12px 44px; }
+.ps-project-stopped { padding: 10px 14px; border-bottom: 0 !important; }
+
+/* the project data drawer: a sheet from the right, over the workspace */
+
+/* phones and tablets: Task / Code / Results tabs, one part at a time */
+/* every section heading on the brief and review pages gets the same space above it */
+.rx .p2.workspace-bounded .p2-actions.ps-project-acts { position: static; }
+
+/* ---- Tools: the SQL/Python tool layout (rx-task, rx-brief, rx-work, rx-cell). Only Spark-specific parts here. ---- */
+.ps-tool .ps-intro { margin: 10px 0; }
+.ps-tool .rx-brief .rx-ds-facts { margin-top: 16px; }
+.ps-tool .ps-exp-title { margin-top: 26px; font-size: 1.4rem; }
+.ps-tool .ps-exp-lead { margin-top: 8px; font-size: 1.02rem; }
+.ps-tool .ps-areas { margin: 22px 0 0; }
+.ps-tool .ps-areas button { background: none; cursor: pointer; font-family: var(--rx-sans); }
+.ps-tool .ps-areas button:disabled { cursor: default; }
+.ps-tool .p2-list a { overflow-wrap: anywhere; }
+.ps-rules li { font-size: 14.5px; line-height: 1.5; }
+.ps-tool-links { margin: 10px 0; font-size: 14px; }
+.ps-tool-links summary { cursor: pointer; color: var(--rx-dim); }
+.ps-tool-links ul { margin-top: 8px; }
+.rx-ds-side .ps-tool-links summary { display: none; }
+
+/* pipeline stages and stream events: a numbered list you pick a step from */
+.ps-stage-list { list-style: none; padding: 0; margin: 0 0 10px; display: grid; gap: 4px; }
+.ps-stage-list button { display: flex; align-items: baseline; gap: 10px; width: 100%; padding: 8px 12px; border: 1px solid var(--rx-line); border-radius: 6px; background: var(--rx-surface); color: var(--rx-ink); font: 14px/1.45 var(--rx-sans); text-align: left; cursor: pointer; }
+.ps-stage-list button:hover { border-color: var(--rx-line-strong); }
+.ps-stage-list .n { flex: none; min-width: 1.4em; font-size: 12px; color: var(--rx-faint); }
+.ps-stage-list [aria-pressed="true"] { border-color: var(--rx-amber); background: var(--rx-amber-soft); }
+.ps-stage-list [aria-pressed="true"] .n { color: var(--rx-amber-ink); }
+.ps-stage-list button:focus-visible { outline: 2px solid var(--rx-amber); outline-offset: 2px; }
+.ps-check { display: flex; gap: 8px; align-items: baseline; margin: 18px 0 0; font-size: 14.5px; }
+
+/* the work column: language picker, editor cells, results */
+.ps-tool-work > .rx-field:first-child .rx-label { margin-top: 0; }
+.ps-tool-work .rx-cell { margin: 0 0 14px; }
+.ps-tool-work .rx-field + .rx-cell { margin-top: 0; }
+.ps-tool-work .rx-field .rx-label { margin-top: 0; }
+.ps-approach-editor + .ps-approach-editor .rx-field .rx-label { margin-top: 6px; }
+.ps-cell .rx-cell-foot .hint { display: inline-flex; align-items: center; }
+/* the editor fills its cell, as in the Python tools; results take only the room they need */
+.ps-cell > .cm-theme-none, .ps-cell > .py-editor { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.ps-cell > .cm-theme-none > .cm-editor, .ps-cell > .py-editor > div { flex: 1 1 auto; }
+.rx-lesson .rx-lesson-work.ps-tool-work > .rx-cell ~ .rx-cell { flex: none; min-height: 0; max-height: none; overflow: visible; }
+.rx-lesson .rx-lesson-work.ps-tool-work { overflow-y: auto; }
+.rx-lesson .rx-lesson-work.ps-tool-work > .ps-run-bar { flex: none; min-height: 0; }
+.ps-run-bar .rx-cell-foot { border-top: 0; }
+@media (min-width: 1200px) {
+  .rx-lesson .rx-lesson-work.ps-tool-work .ps-cell > .cm-theme-none, .rx-lesson .rx-lesson-work.ps-tool-work .ps-cell > .py-editor { min-height: clamp(220px, 40dvh, 480px); }
+  /* Compare: both approaches and Run both fit on one screen, as in Python's Compare */
+  .rx-lesson .rx-lesson-work.ps-tool-work .ps-approach-editor .ps-cell > .cm-theme-none, .rx-lesson .rx-lesson-work.ps-tool-work .ps-approach-editor .ps-cell > .py-editor { min-height: 0; }
+}
+.ps-approach-editor .cm-editor { min-height: 120px !important; max-height: 32dvh; }
+/* .p2 restyles buttons for lessons; tool buttons keep the rx look */
+.ps-tool-work .rx-btn, .ps-tool-work button.rx-btn { font: 600 13px var(--rx-sans); }
+.ps-cell > .p2-code, .ps-cell pre { margin: 0; border: 0; border-radius: 0; }
+.ps-results { background: var(--rx-surface); }
+.ps-results > .rx-out-meta { border-bottom: 1px solid var(--rx-line); }
+.ps-results .ps-empty { margin: 0; padding: 18px 14px; font-size: 14px; color: var(--rx-faint); }
+.ps-results .ps-problem { margin: 0; padding: 12px 14px; font-size: 14px; color: var(--rx-bad); }
+.ps-results .ps-stale { margin: 0; padding: 8px 14px; border-bottom: 1px solid var(--rx-line); }
+.ps-results > section > h3, .ps-comparison h3 { margin: 0; padding: 12px 14px 4px; font-size: 15px; }
+.ps-results > section > .p2-note { margin: 0; padding: 0 14px 6px; }
+.ps-results details > summary { cursor: pointer; padding: 8px 14px; font-size: 13.5px; }
+.ps-tool-work .ps-offline { margin: 0 0 14px; max-width: none; }
+.ps-tool-work > .rx-cap { margin: 0 0 12px; }
+/* a result table scrolls inside its own box, so plans, verdicts and later steps stay close */
+.ps-results .p2-table-wrap { max-height: none; overflow: visible; }
+.ps-results .p2-table-wrap th { position: sticky; top: 0; z-index: 1; }
+.ps-results .ps-frame { border-bottom: 1px solid var(--rx-line); }
+.ps-results .ps-frame:last-child { border-bottom: 0; }
+.ps-results .ps-step { border-bottom: 1px solid var(--rx-line); }
+.ps-results .ps-step > h3 { margin: 0; padding: 12px 14px 4px; font-size: 15px; }
+.ps-results .ps-step > .p2-note { margin: 0; padding: 0 14px 6px; }
+.ps-results details.ps-step > summary { font-weight: 600; font-size: 14px; padding: 10px 14px; }
+.ps-bench-note { margin-top: 22px; }
+.ps-preview { margin-top: 10px; border: 1px solid var(--rx-line); border-radius: 6px; overflow: hidden; font-family: var(--rx-sans); }
+
+/* Playground: several programs as file tabs above the workbench */
+.ps-programs { border: 1px solid var(--ide-border); border-bottom: 0; border-radius: 8px 8px 0 0; }
+.ps-programs + .p2-bench { border-top-left-radius: 0; border-top-right-radius: 0; }
+.ps-tool-work .p2-bench { margin-bottom: 14px; }
+.ps-tool-work .p2-bench .py-editor .cm-editor { min-height: clamp(260px, 45dvh, 520px); max-height: 62dvh; }
+.ps-tool .rx-small a { color: var(--rx-amber-ink); text-decoration: underline; text-underline-offset: 2px; }
+.ps-tool-work .p2-results { background: var(--rx-surface); }
+
+.ps-plan, .ps-comparison { padding: 12px 14px; }
+.ps-plan ul { padding-left: 20px; font: 13px var(--rx-mono); }
+.ps-plan pre { white-space: pre; overflow-x: auto; max-width: 100%; padding: 10px; font: 12px var(--rx-mono); }
+.ps-plan details { margin: 6px 0; }
+.ps-comparison h3 { padding: 0 0 4px; }
+.ps-comparison p { margin: 4px 0; font-size: 14px; }
+.ps-nested summary { cursor: pointer; font-size: 12px; }
+.ps-nested dl { margin: 4px 0; font-size: 12px; }
+.ps-nested dl > div { display: flex; gap: 8px; }
+.ps-nested dd { margin: 0; overflow-wrap: anywhere; }
+.ps-nested dt { font-weight: 600; }
+.ps-return { padding: 8px 20px; font-size: 13px; border-bottom: 1px solid var(--rx-line); }

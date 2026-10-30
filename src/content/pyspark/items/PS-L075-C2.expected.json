@@ -1,0 +1,343 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "account_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "industry",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "country",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "segment",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "account_owner",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "credit_limit",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "created_on",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "is_active",
+     "type": "boolean",
+     "nullable": true
+    },
+    {
+     "name": "effective_from",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "effective_to",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "is_current",
+     "type": "boolean",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "ACC-0201",
+     "Hollin Freight AB",
+     "transport",
+     "SE",
+     "smb",
+     "Jonas Ekberg",
+     "15000.00",
+     "2024-02-01",
+     true,
+     "2026-01-01T00:00:00",
+     "2026-02-01T10:00:00",
+     false
+    ],
+    [
+     "ACC-0202",
+     "Varrow Media SAS",
+     "media",
+     "FR",
+     "mid_market",
+     "Mei Lindqvist",
+     "75000.00",
+     "2024-02-01",
+     true,
+     "2026-01-01T00:00:00",
+     "2026-01-20T12:00:00",
+     false
+    ],
+    [
+     "ACC-0203",
+     "Tessaly Clinics Ltd",
+     "healthcare",
+     "GB",
+     "enterprise",
+     "Rafael Ibarra",
+     "250000.00",
+     "2024-02-01",
+     true,
+     "2026-01-01T00:00:00",
+     null,
+     true
+    ],
+    [
+     "ACC-0201",
+     "Hollin Freight AB",
+     "transport",
+     "SE",
+     "enterprise",
+     "Dana Whitlock",
+     "250000.00",
+     "2024-02-01",
+     true,
+     "2026-03-11T15:00:00",
+     null,
+     true
+    ],
+    [
+     "ACC-0202",
+     "Varrow Media SAS",
+     "media",
+     "FR",
+     "smb",
+     "Priya Venkat",
+     "15000.00",
+     "2026-03-02",
+     true,
+     "2026-03-02T08:30:00",
+     null,
+     true
+    ],
+    [
+     "ACC-0204",
+     "Ombrel Studio Lda",
+     "media",
+     "PT",
+     "smb",
+     "Tobias Achterberg",
+     "30000.00",
+     "2026-02-14",
+     true,
+     "2026-02-15T00:00:00",
+     null,
+     true
+    ],
+    [
+     "ACC-0201",
+     "Hollin Freight AB",
+     "transport",
+     "SE",
+     "mid_market",
+     "Jonas Ekberg",
+     "30000.00",
+     "2024-02-01",
+     true,
+     "2026-02-01T10:00:00",
+     "2026-03-11T15:00:00",
+     false
+    ],
+    [
+     "ACC-0204",
+     "Ombrel Studio Lda",
+     "media",
+     "PT",
+     "smb",
+     "Tobias Achterberg",
+     "15000.00",
+     "2026-02-14",
+     true,
+     "2026-02-14T23:59:00",
+     "2026-02-15T00:00:00",
+     false
+    ]
+   ],
+   "row_count": 8,
+   "inputs": {
+    "accounts": [
+     [
+      "ACC-0201",
+      "Hollin Freight AB",
+      "transport",
+      "SE",
+      "smb",
+      "Jonas Ekberg",
+      "15000.00",
+      "2024-02-01",
+      "true"
+     ],
+     [
+      "ACC-0202",
+      "Varrow Media SAS",
+      "media",
+      "FR",
+      "mid_market",
+      "Mei Lindqvist",
+      "75000.00",
+      "2024-02-01",
+      "true"
+     ],
+     [
+      "ACC-0203",
+      "Tessaly Clinics Ltd",
+      "healthcare",
+      "GB",
+      "enterprise",
+      "Rafael Ibarra",
+      "250000.00",
+      "2024-02-01",
+      "true"
+     ]
+    ],
+    "customer_cdc": [
+     [
+      "U",
+      "400001",
+      "2026-01-05T09:00:00",
+      "ACC-0201",
+      "Hollin Freight AB",
+      "transport",
+      "SE",
+      "smb",
+      "Jonas Ekberg",
+      "30000.00",
+      "2024-02-01",
+      "true"
+     ],
+     [
+      "U",
+      "400004",
+      "2026-02-01T10:00:00",
+      "ACC-0201",
+      "Hollin Freight AB",
+      "transport",
+      "SE",
+      "mid_market",
+      "Jonas Ekberg",
+      "30000.00",
+      "2024-02-01",
+      "true"
+     ],
+     [
+      "U",
+      "400007",
+      "2026-02-20T10:00:00",
+      "ACC-0201",
+      "Hollin Freight AB",
+      "transport",
+      "SE",
+      "mid_market",
+      "Dana Whitlock",
+      "75000.00",
+      "2024-02-01",
+      "true"
+     ],
+     [
+      "U",
+      "400009",
+      "2026-03-11T15:00:00",
+      "ACC-0201",
+      "Hollin Freight AB",
+      "transport",
+      "SE",
+      "enterprise",
+      "Dana Whitlock",
+      "250000.00",
+      "2024-02-01",
+      "true"
+     ],
+     [
+      "D",
+      "400003",
+      "2026-01-20T12:00:00",
+      "ACC-0202",
+      "Varrow Media SAS",
+      "media",
+      "FR",
+      "mid_market",
+      "Mei Lindqvist",
+      "75000.00",
+      "2024-02-01",
+      "true"
+     ],
+     [
+      "I",
+      "400008",
+      "2026-03-02T08:30:00",
+      "ACC-0202",
+      "Varrow Media SAS",
+      "media",
+      "FR",
+      "smb",
+      "Priya Venkat",
+      "15000.00",
+      "2026-03-02",
+      "true"
+     ],
+     [
+      "I",
+      "400005",
+      "2026-02-14T23:59:00",
+      "ACC-0204",
+      "Ombrel Studio Lda",
+      "media",
+      "PT",
+      "smb",
+      "Tobias Achterberg",
+      "15000.00",
+      "2026-02-14",
+      "true"
+     ],
+     [
+      "U",
+      "400006",
+      "2026-02-15T00:00:00",
+      "ACC-0204",
+      "Ombrel Studio Lda",
+      "media",
+      "PT",
+      "smb",
+      "Tobias Achterberg",
+      "30000.00",
+      "2026-02-14",
+      "true"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice accounts and change feed"
+ ]
+}

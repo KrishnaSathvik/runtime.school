@@ -1,0 +1,85 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "employee_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "salary",
+     "type": "decimal(10,2)",
+     "nullable": true
+    },
+    {
+     "name": "hire_date",
+     "type": "date",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "E0001",
+     "260000.00",
+     "2025-01-06"
+    ],
+    [
+     "E0002",
+     "200000.00",
+     "2025-05-26"
+    ],
+    [
+     "E0003",
+     "75000.00",
+     "2025-07-15"
+    ],
+    [
+     "E0004",
+     "70000.00",
+     "2025-08-15"
+    ],
+    [
+     "E0005",
+     null,
+     null
+    ],
+    [
+     "E0006",
+     "62500.00",
+     "2025-08-10"
+    ],
+    [
+     "E0007",
+     "150000.00",
+     "2025-01-06"
+    ],
+    [
+     "E0008",
+     "75000.00",
+     "2025-05-20"
+    ],
+    [
+     "E0009",
+     "90000.00",
+     "2025-05-08"
+    ]
+   ],
+   "row_count": 9
+  }
+ },
+ "hidden": [
+  "the full practice export",
+  "a salary that isn't a number and a date that doesn't exist",
+  "lines that stop early",
+  "job titles in quotes that contain the separator",
+  "the same line exported twice",
+  "an export with a header and no employees"
+ ]
+}

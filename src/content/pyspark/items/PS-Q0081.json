@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0081",
+  "slug": "channel-groups",
+  "lesson": "PS-L017",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Channel groups",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "The digital team compares money moved in person with money moved online. Write `solve(transactions)` so it returns `transaction_id`, `channel` and a new `channel_group` for every transaction.",
+  "rules": [
+    "`card_present`, `atm` and `branch` are `in_person`. `online` and `mobile` are `digital`. `system` is `automatic`.",
+    "Any other channel, or a missing one, is `unknown`. Channels are matched exactly: `Online` isn't `online`.",
+    "Return the three columns, in that order, for every transaction, duplicates included."
+  ],
+  "hints": [
+    "This is one new column built from a rule, so it's `F.when(...)` inside a `select`, named with `.alias(\"channel_group\")`.",
+    "`F.col(\"channel\").isin(\"card_present\", \"atm\", \"branch\")` checks a value against a list, so each group needs one `when`.",
+    "Rows that match no `when` get `NULL` unless you add `.otherwise(\"unknown\")`. A missing channel matches nothing, so it lands there too."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "transactions"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(transactions):\n    # Return transaction_id, channel and channel_group.\n    return transactions\n",
+  "output": {
+    "columns": [
+      "transaction_id",
+      "channel",
+      "channel_group"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Each group is one `when`, and `isin` keeps each condition short: `F.when(F.col(\"channel\").isin(\"card_present\", \"atm\", \"branch\"), \"in_person\").when(F.col(\"channel\").isin(\"online\", \"mobile\"), \"digital\").when(F.col(\"channel\") == \"system\", \"automatic\").otherwise(\"unknown\")`, selected next to `transaction_id` and `channel` with `.alias(\"channel_group\")`. The groups don't overlap, so their order doesn't matter here. `otherwise` is what turns a missing or unexpected channel into `unknown`; without it those rows get `NULL`. The SQL form `CASE WHEN channel IN ('card_present', 'atm', 'branch') THEN 'in_person' ... ELSE 'unknown' END` in `selectExpr` gives the same result."
+}

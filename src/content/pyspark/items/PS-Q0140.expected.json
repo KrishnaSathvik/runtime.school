@@ -1,0 +1,385 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "po_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "version",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "supplier",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "warehouse_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "sku",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "projected",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "check",
+     "type": "string",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "PO00001",
+     2,
+     "Copperleaf Tools",
+     "WH01",
+     "SKU-1012",
+     379,
+     "ok"
+    ],
+    [
+     "PO00001",
+     3,
+     "Copperleaf Tools",
+     "WH01",
+     "SKU-1012",
+     379,
+     "ok"
+    ],
+    [
+     "PO00003",
+     2,
+     "Bluefin Components",
+     "WH03",
+     "SKU-1003",
+     488,
+     "ok"
+    ],
+    [
+     "PO00006",
+     1,
+     null,
+     "WH02",
+     "SKU-1014",
+     306,
+     "ok"
+    ],
+    [
+     "PO00007",
+     1,
+     "Kestrel Packaging Co",
+     "WH01",
+     "SKU-1099",
+     null,
+     "no stock record"
+    ],
+    [
+     "PO00008",
+     1,
+     "Bluefin Components",
+     "WH02",
+     "SKU-1030",
+     50,
+     "ok"
+    ]
+   ],
+   "row_count": 6,
+   "inputs": {
+    "purchase_orders": [
+     [
+      "PO00001",
+      "1",
+      "SUP04",
+      "WH01",
+      "SKU-1012",
+      "100",
+      "2.50",
+      "open",
+      "2026-03-17",
+      "2026-03-03T16:05:00"
+     ],
+     [
+      "PO00001",
+      "2",
+      "SUP04",
+      "WH01",
+      "SKU-1012",
+      "100",
+      "2.50",
+      "confirmed",
+      "2026-03-18",
+      "2026-03-05T14:05:00"
+     ],
+     [
+      "PO00001",
+      "3",
+      "SUP04",
+      "WH01",
+      "SKU-1012",
+      "100",
+      "2.50",
+      "shipped",
+      "2026-03-18",
+      "2026-03-06T05:05:00"
+     ],
+     [
+      "PO00001",
+      "4",
+      "SUP04",
+      "WH01",
+      "SKU-1012",
+      "100",
+      "2.50",
+      "received",
+      "2026-03-18",
+      "2026-03-07T23:05:00"
+     ],
+     [
+      "PO00002",
+      "1",
+      "SUP01",
+      "WH03",
+      "SKU-1003",
+      "250",
+      "14.50",
+      "open",
+      "2026-03-10",
+      "2026-03-03T14:48:00"
+     ],
+     [
+      "PO00003",
+      "1",
+      "SUP02",
+      "WH03",
+      "SKU-1003",
+      "100",
+      "9.90",
+      "open",
+      "2026-03-07",
+      "2026-03-02T12:00:00"
+     ],
+     [
+      "PO00003",
+      "2",
+      "SUP02",
+      "WH03",
+      "SKU-1003",
+      "100",
+      "9.90",
+      "confirmed",
+      "2026-03-08",
+      "2026-03-03T03:00:00"
+     ],
+     [
+      "PO00004",
+      "1",
+      "SUP01",
+      "WH01",
+      "SKU-1012",
+      "100",
+      "3.75",
+      "open",
+      "2026-03-10",
+      "2026-03-03T11:23:00"
+     ],
+     [
+      "PO00005",
+      "1",
+      "SUP03",
+      "WH02",
+      "SKU-1014",
+      "500",
+      "0.85",
+      "open",
+      "2026-03-09",
+      "2026-03-02T14:01:00"
+     ],
+     [
+      "PO00006",
+      "1",
+      "SUP05",
+      "WH02",
+      "SKU-1014",
+      "40",
+      "1.10",
+      "confirmed",
+      "2026-03-12",
+      "2026-03-04T09:10:00"
+     ],
+     [
+      "PO00007",
+      "1",
+      "SUP01",
+      "WH01",
+      "SKU-1099",
+      "60",
+      "4.20",
+      "shipped",
+      "2026-03-11",
+      "2026-03-04T10:30:00"
+     ],
+     [
+      "PO00008",
+      "1",
+      "SUP02",
+      "WH02",
+      "SKU-1030",
+      "30",
+      "6.75",
+      "confirmed",
+      "2026-03-13",
+      "2026-03-04T11:45:00"
+     ]
+    ],
+    "inventory": [
+     [
+      "WH01",
+      "SKU-1003",
+      "Packing tape 48mm",
+      "560",
+      "100",
+      "100",
+      "2026-03-10"
+     ],
+     [
+      "WH01",
+      "SKU-1012",
+      "Bath mat",
+      "279",
+      "19",
+      "200",
+      "2026-03-10"
+     ],
+     [
+      "WH01",
+      "SKU-1019",
+      "Notebook A5",
+      "160",
+      "72",
+      "100",
+      "2026-03-10"
+     ],
+     [
+      "WH02",
+      "SKU-1003",
+      "Packing tape 48mm",
+      "265",
+      "117",
+      "200",
+      "2026-03-10"
+     ],
+     [
+      "WH02",
+      "SKU-1014",
+      "Extension lead",
+      "266",
+      "80",
+      "50",
+      "2026-03-10"
+     ],
+     [
+      "WH02",
+      "SKU-1021",
+      "Water bottle",
+      "620",
+      "32",
+      "50",
+      "2026-03-10"
+     ],
+     [
+      "WH03",
+      "SKU-1003",
+      "Packing tape 48mm",
+      "388",
+      "72",
+      "50",
+      "2026-03-10"
+     ],
+     [
+      "WH03",
+      "SKU-1009",
+      "Ceramic mug",
+      "131",
+      "45",
+      "50",
+      "2026-03-10"
+     ],
+     [
+      "WH03",
+      "SKU-1029",
+      "Step stool",
+      "436",
+      "71",
+      "50",
+      "2026-03-10"
+     ],
+     [
+      "WH02",
+      "SKU-1030",
+      "Storage box",
+      "20",
+      "5",
+      "50",
+      "2026-03-10"
+     ]
+    ],
+    "suppliers": [
+     [
+      "SUP01",
+      "Kestrel Packaging Co",
+      "PL",
+      "7",
+      "0.86"
+     ],
+     [
+      "SUP02",
+      "Bluefin Components",
+      "PT",
+      "5",
+      "0.99"
+     ],
+     [
+      "SUP03",
+      "Amberline Textiles",
+      "TR",
+      "7",
+      "0.83"
+     ],
+     [
+      "SUP04",
+      "Copperleaf Tools",
+      "DE",
+      "14",
+      "0.94"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice purchase orders, stock and suppliers",
+  "orders in every status, and one in capitals",
+  "projected stock just below, at and above the reorder point",
+  "orders for a stock line that isn't on file, or has no on-hand count",
+  "a SKU stocked in several warehouses",
+  "an order from a supplier that isn't on file",
+  "no purchase orders"
+ ]
+}

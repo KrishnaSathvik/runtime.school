@@ -1,0 +1,123 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "reg_param",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "avg_rmse",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "best",
+     "type": "boolean",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     0.0,
+     0.876,
+     false
+    ],
+    [
+     1.0,
+     0.493,
+     true
+    ]
+   ],
+   "row_count": 2,
+   "inputs": {
+    "ratings": [
+     [
+      "U01",
+      "M01",
+      "4.0",
+      "2025-03-02T21:14:00"
+     ],
+     [
+      "U02",
+      "M01",
+      "4.5",
+      "2026-02-14T23:01:00"
+     ],
+     [
+      "U01",
+      "M02",
+      "3.0",
+      "2025-06-11T22:40:00"
+     ],
+     [
+      "U03",
+      "M02",
+      "3.5",
+      "2026-01-01T00:00:00"
+     ],
+     [
+      "U02",
+      "M03",
+      "2.5",
+      "2025-07-19T18:45:00"
+     ],
+     [
+      "U04",
+      "M03",
+      "3.5",
+      "2026-04-16T21:05:00"
+     ],
+     [
+      "U03",
+      "M04",
+      "4.5",
+      "2025-06-30T21:55:00"
+     ],
+     [
+      "U05",
+      "M04",
+      "3.5",
+      "2026-02-02T17:48:00"
+     ],
+     [
+      "U04",
+      "M05",
+      "3.5",
+      "2025-11-02T20:10:00"
+     ],
+     [
+      "U01",
+      "M05",
+      "4.0",
+      "2026-03-21T22:18:00"
+     ],
+     [
+      "U05",
+      "M08",
+      "1.5",
+      "2025-08-09T19:02:00"
+     ],
+     [
+      "U03",
+      "M10",
+      "5.0",
+      "2026-06-27T20:20:00"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice ratings",
+  "films rated in only one of the two years",
+  "ratings a second before and exactly at midnight on 1 January 2026"
+ ]
+}

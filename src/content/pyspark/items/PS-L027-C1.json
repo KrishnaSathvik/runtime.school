@@ -1,0 +1,26 @@
+{
+  "id": "PS-L027-C1",
+  "slug": "employees-and-their-managers",
+  "lesson": "PS-L027",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Employees and their managers",
+  "dataset": { "id": "PS-D03", "version": "1.0.0" },
+  "prompt": "The org chart needs every employee next to their manager's name. Write `solve(employees)` so it returns `employee_id`, `first_name`, `last_name`, `manager_first_name` and `manager_last_name`.",
+  "rules": [
+    "An employee's manager is the employee whose `employee_id` equals their `manager_id`.",
+    "Every employee appears exactly once. If `manager_id` is missing or names nobody in the table, the manager's names are missing.",
+    "Return only these five columns, in this order."
+  ],
+  "hints": [
+    "Make two copies with `employees.alias(\"e\")` and `employees.alias(\"m\")`.",
+    "Match `F.col(\"e.manager_id\")` with `F.col(\"m.employee_id\")`. Which join type keeps employees with no manager?",
+    "Rename the manager's columns: `F.col(\"m.first_name\").alias(\"manager_first_name\")`."
+  ],
+  "entry": "solve",
+  "inputs": ["employees"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(employees):\n    # Return each employee with their manager's first and last name.\n    return employees.select(\"employee_id\", \"first_name\", \"last_name\")\n",
+  "output": { "columns": ["employee_id", "first_name", "last_name", "manager_first_name", "manager_last_name"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

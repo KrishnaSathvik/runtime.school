@@ -1,0 +1,146 @@
+{
+ "id": "PS-L077",
+ "minutes": 30,
+ "lede": "A pipeline is several steps, and most need another step's output. Writing down what each step needs lets a program work out the order, run each step once, stop only what depends on a failure, and rerun just the part that broke.",
+ "objectives": [
+  "Write each step as a task function and its dependencies as a plain Python dict",
+  "Work out a run order where every task runs after the tasks it needs, and catch a cycle",
+  "Run the tasks in order, passing each task's output DataFrame to the tasks that need it",
+  "Skip what depends on a failed task, and rerun only the failed and affected tasks"
+ ],
+ "dataset": {
+  "id": "PS-D08",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "shipments",
+   "shipment_events"
+  ]
+ },
+ "blocks": [
+  {
+   "kind": "text",
+   "md": "The logistics team's nightly job turns `shipment_events` into a few tables: the events with re-sent copies removed, the events for shipments we know, the ones we don't (to look into), the delivered events, and the shipments still in flight.\n\nEach of those is a **task**, and most need another task's output: `delivered` reads the known events, which read the clean events. Write the needs down as a dict from each task to the list of tasks it needs. That dict is a **dependency graph**, and the order can be worked out from it instead of being kept in someone's head.\n\nThe rule is simple: a task can run once everything it needs has run. Repeat until every task is placed. If no task is ready but some are left, they wait on each other in a cycle, and no order exists."
+  },
+  {
+   "kind": "example",
+   "id": "e1",
+   "title": "A run order from the dependencies",
+   "code": "deps = {\n    \"in_flight\": [\"delivered\"],\n    \"delivered\": [\"known_events\"],\n    \"unknown_events\": [\"clean_events\"],\n    \"known_events\": [\"clean_events\"],\n    \"clean_events\": [],\n}\n\n\ndef run_order(deps):\n    order = []\n    while len(order) < len(deps):\n        ready = [t for t in deps if t not in order and all(d in order for d in deps[t])]\n        if not ready:\n            waiting = [t for t in deps if t not in order]\n            raise ValueError(\"these tasks wait on each other: \" + \", \".join(waiting))\n        order += ready\n    return order\n\n\nprint(run_order(deps))\n",
+   "note": "The dict lists the tasks backwards on purpose. `clean_events` needs nothing, so it goes first; the two tasks that need only it come next; then `delivered`, then `in_flight`."
+  },
+  {
+   "kind": "text",
+   "md": "Now make each task a function. Its parameters are the outputs it needs, named after those tasks; tables it reads straight from the source, such as `shipments`, it uses directly. The runner keeps every task's output in a dict and passes the right ones in.\n\nTwo tasks need to know which shipments exist. Without a join, `collect()` brings the ids back as a Python list and `isin` checks against it. That's fine for a few thousand ids; for big tables a join does the same job. `F.coalesce(..., F.lit(False))` makes an event with no `shipment_id` count as unknown instead of falling out of both tables."
+  },
+  {
+   "kind": "example",
+   "id": "e2",
+   "title": "Run the tasks and pass their outputs",
+   "code": "from pyspark.sql import functions as F\n\n\ndef clean_events():\n    # One row per event: the copies of a re-sent event differ only in load_date.\n    return shipment_events.select([c for c in shipment_events.columns if c != \"load_date\"]).distinct()\n\n\ndef known():\n    ids = [r.shipment_id for r in shipments.select(\"shipment_id\").collect()]\n    return F.coalesce(F.col(\"shipment_id\").isin(ids), F.lit(False))\n\n\ndef known_events(clean_events):\n    return clean_events.filter(known())\n\n\ndef unknown_events(clean_events):\n    return clean_events.filter(~known())\n\n\ndef delivered(known_events):\n    return known_events.filter(F.col(\"event_type\") == \"delivered\")\n\n\ndef in_flight(delivered):\n    done = [r.shipment_id for r in delivered.select(\"shipment_id\").collect()]\n    return shipments.filter(~F.col(\"shipment_id\").isin(done))\n\n\ntasks = {\n    \"in_flight\": (in_flight, [\"delivered\"]),\n    \"delivered\": (delivered, [\"known_events\"]),\n    \"unknown_events\": (unknown_events, [\"clean_events\"]),\n    \"known_events\": (known_events, [\"clean_events\"]),\n    \"clean_events\": (clean_events, []),\n}\ndeps = {name: needs for name, (fn, needs) in tasks.items()}\n\n\ndef run_order(deps):\n    order = []\n    while len(order) < len(deps):\n        ready = [t for t in deps if t not in order and all(d in order for d in deps[t])]\n        if not ready:\n            waiting = [t for t in deps if t not in order]\n            raise ValueError(\"these tasks wait on each other: \" + \", \".join(waiting))\n        order += ready\n    return order\n\n\noutputs = {}\nfor name in run_order(deps):\n    fn, needs = tasks[name]\n    outputs[name] = fn(*[outputs[d] for d in needs])\n    print(name, outputs[name].count())\n\noutputs[\"unknown_events\"].select(\"event_id\", \"shipment_id\", \"event_type\").show()\n",
+   "note": "The 14 raw events become 13: event E0000007 arrived twice. 12 belong to known shipments and one is for SH9999, which isn't in `shipments`. Every shipment has been delivered, so none is in flight."
+  },
+  {
+   "kind": "text",
+   "md": "A dependency graph must not loop. Here someone made `known_events` wait for `in_flight`, which (through `delivered`) waits for `known_events`. Nothing in the loop can ever start, so the run order function stops with an error before any Spark work runs."
+  },
+  {
+   "kind": "error-example",
+   "id": "e3",
+   "title": "A cycle",
+   "code": "def run_order(deps):\n    order = []\n    while len(order) < len(deps):\n        ready = [t for t in deps if t not in order and all(d in order for d in deps[t])]\n        if not ready:\n            waiting = [t for t in deps if t not in order]\n            raise ValueError(\"these tasks wait on each other: \" + \", \".join(waiting))\n        order += ready\n    return order\n\n\ndeps = {\n    \"clean_events\": [],\n    \"known_events\": [\"clean_events\", \"in_flight\"],\n    \"delivered\": [\"known_events\"],\n    \"in_flight\": [\"delivered\"],\n}\nprint(run_order(deps))\n",
+   "error": "ValueError",
+   "note": "`clean_events` is placed, then nothing else is ready. The message lists the tasks that are stuck."
+  },
+  {
+   "kind": "text",
+   "md": "When a task fails, the tasks that need its output can't run, but the others can. Give every task a status:\n\n- `failed` when its function raised an error;\n- `skipped` when something it needs isn't `ok`. Skipping passes down the graph: a task that needs a skipped task is skipped too;\n- `ok` otherwise.\n\nHere `known_events` is a quality gate: it raises when any event belongs to an unknown shipment."
+  },
+  {
+   "kind": "example",
+   "id": "e4",
+   "title": "A failure stops only what depends on it",
+   "code": "from pyspark.sql import functions as F\n\n\ndef clean_events():\n    # One row per event: the copies of a re-sent event differ only in load_date.\n    return shipment_events.select([c for c in shipment_events.columns if c != \"load_date\"]).distinct()\n\n\ndef known():\n    ids = [r.shipment_id for r in shipments.select(\"shipment_id\").collect()]\n    return F.coalesce(F.col(\"shipment_id\").isin(ids), F.lit(False))\n\n\ndef known_events(clean_events):\n    unknown = clean_events.filter(~known()).count()\n    if unknown > 0:\n        raise ValueError(f\"{unknown} events for unknown shipments\")\n    return clean_events.filter(known())\n\n\ndef unknown_events(clean_events):\n    return clean_events.filter(~known())\n\n\ndef delivered(known_events):\n    return known_events.filter(F.col(\"event_type\") == \"delivered\")\n\n\ndef in_flight(delivered):\n    done = [r.shipment_id for r in delivered.select(\"shipment_id\").collect()]\n    return shipments.filter(~F.col(\"shipment_id\").isin(done))\n\n\ntasks = {\n    \"in_flight\": (in_flight, [\"delivered\"]),\n    \"delivered\": (delivered, [\"known_events\"]),\n    \"unknown_events\": (unknown_events, [\"clean_events\"]),\n    \"known_events\": (known_events, [\"clean_events\"]),\n    \"clean_events\": (clean_events, []),\n}\ndeps = {name: needs for name, (fn, needs) in tasks.items()}\n\n\ndef run_order(deps):\n    order = []\n    while len(order) < len(deps):\n        ready = [t for t in deps if t not in order and all(d in order for d in deps[t])]\n        if not ready:\n            waiting = [t for t in deps if t not in order]\n            raise ValueError(\"these tasks wait on each other: \" + \", \".join(waiting))\n        order += ready\n    return order\n\n\noutputs, status = {}, {}\nfor name in run_order(deps):\n    fn, needs = tasks[name]\n    if any(status[d] != \"ok\" for d in needs):\n        status[name] = \"skipped\"\n        continue\n    try:\n        outputs[name] = fn(*[outputs[d] for d in needs])\n        status[name] = \"ok\"\n    except Exception as e:\n        status[name] = \"failed\"\n        print(f\"{name} failed: {e}\")\n\nprint(status)\n",
+   "note": "`known_events` failed, so `delivered` and `in_flight` were skipped. `unknown_events` needs only `clean_events`, so it still ran: the team gets the list of problem events even on a bad night."
+  },
+  {
+   "kind": "text",
+   "md": "When a task's code changes, its output changes, and so does the output of every task that needs it, directly or further down. Those are the tasks to run again; the rest can keep yesterday's output. Walking the tasks in run order finds them in one pass."
+  },
+  {
+   "kind": "example",
+   "id": "e5",
+   "title": "What a change affects",
+   "code": "from pyspark.sql import functions as F\n\n\ndef clean_events():\n    # One row per event: the copies of a re-sent event differ only in load_date.\n    return shipment_events.select([c for c in shipment_events.columns if c != \"load_date\"]).distinct()\n\n\ndef known():\n    ids = [r.shipment_id for r in shipments.select(\"shipment_id\").collect()]\n    return F.coalesce(F.col(\"shipment_id\").isin(ids), F.lit(False))\n\n\ndef known_events(clean_events):\n    return clean_events.filter(known())\n\n\ndef unknown_events(clean_events):\n    return clean_events.filter(~known())\n\n\ndef delivered(known_events):\n    return known_events.filter(F.col(\"event_type\") == \"delivered\")\n\n\ndef in_flight(delivered):\n    done = [r.shipment_id for r in delivered.select(\"shipment_id\").collect()]\n    return shipments.filter(~F.col(\"shipment_id\").isin(done))\n\n\ntasks = {\n    \"in_flight\": (in_flight, [\"delivered\"]),\n    \"delivered\": (delivered, [\"known_events\"]),\n    \"unknown_events\": (unknown_events, [\"clean_events\"]),\n    \"known_events\": (known_events, [\"clean_events\"]),\n    \"clean_events\": (clean_events, []),\n}\ndeps = {name: needs for name, (fn, needs) in tasks.items()}\n\n\ndef run_order(deps):\n    order = []\n    while len(order) < len(deps):\n        ready = [t for t in deps if t not in order and all(d in order for d in deps[t])]\n        if not ready:\n            waiting = [t for t in deps if t not in order]\n            raise ValueError(\"these tasks wait on each other: \" + \", \".join(waiting))\n        order += ready\n    return order\n\n\ndef downstream(task, deps):\n    # Every task that needs `task`, directly or through another task.\n    found = []\n    for name in run_order(deps):\n        if any(d == task or d in found for d in deps[name]):\n            found.append(name)\n    return found\n\n\nprint(\"a change to clean_events affects:\", downstream(\"clean_events\", deps))\nprint(\"a change to delivered affects:\", downstream(\"delivered\", deps))\n",
+   "note": "A change to `clean_events` affects every other task. A change to `delivered` affects only `in_flight`: rerunning the clean, known and unknown events would redo work for nothing."
+  },
+  {
+   "kind": "text",
+   "md": "Rerunning after a failure works the same way, but it needs the outputs of the tasks that finished. A dict of DataFrames is gone when the job ends, so each task writes its output to storage (Parquet here) and the next task reads it back. On the rerun, a task that's `ok` is loaded from its folder instead of being run; the failed task and the skipped ones run.\n\nOrchestration tools do this for you on a schedule: they store the graph, the statuses and each run's history, retry failed tasks, and let you rerun from a failure. The ideas are the ones here: a dependency graph, a run order, statuses, and outputs saved between tasks."
+  },
+  {
+   "kind": "example",
+   "id": "e6",
+   "title": "Rerun only what failed",
+   "code": "import shutil\nfrom pyspark.sql import functions as F\n\n\ndef clean_events():\n    # One row per event: the copies of a re-sent event differ only in load_date.\n    return shipment_events.select([c for c in shipment_events.columns if c != \"load_date\"]).distinct()\n\n\ndef known():\n    ids = [r.shipment_id for r in shipments.select(\"shipment_id\").collect()]\n    return F.coalesce(F.col(\"shipment_id\").isin(ids), F.lit(False))\n\n\ndef known_events(clean_events):\n    return clean_events.filter(known())\n\n\ndef unknown_events(clean_events):\n    return clean_events.filter(~known())\n\n\ndef delivered(known_events):\n    return known_events.filter(F.col(\"event_type\") == \"delivered\")\n\n\ndef in_flight(delivered):\n    done = [r.shipment_id for r in delivered.select(\"shipment_id\").collect()]\n    return shipments.filter(~F.col(\"shipment_id\").isin(done))\n\n\ntasks = {\n    \"in_flight\": (in_flight, [\"delivered\"]),\n    \"delivered\": (delivered, [\"known_events\"]),\n    \"unknown_events\": (unknown_events, [\"clean_events\"]),\n    \"known_events\": (known_events, [\"clean_events\"]),\n    \"clean_events\": (clean_events, []),\n}\ndeps = {name: needs for name, (fn, needs) in tasks.items()}\n\n\ndef run_order(deps):\n    order = []\n    while len(order) < len(deps):\n        ready = [t for t in deps if t not in order and all(d in order for d in deps[t])]\n        if not ready:\n            waiting = [t for t in deps if t not in order]\n            raise ValueError(\"these tasks wait on each other: \" + \", \".join(waiting))\n        order += ready\n    return order\n\n\nSTORE = \"/tmp/pipeline\"\nshutil.rmtree(STORE, ignore_errors=True)\nbroken = {\"delivered\"}  # on the first run this task fails\n\n\ndef run(status):\n    outputs = {}\n    for name in run_order(deps):\n        fn, needs = tasks[name]\n        if status.get(name) == \"ok\":\n            outputs[name] = spark.read.parquet(f\"{STORE}/{name}\")  # done before: reuse its saved output\n            continue\n        if any(status[d] != \"ok\" for d in needs):\n            status[name] = \"skipped\"\n            continue\n        try:\n            if name in broken:\n                raise RuntimeError(\"the warehouse disk was full\")\n            fn(*[outputs[d] for d in needs]).write.mode(\"overwrite\").parquet(f\"{STORE}/{name}\")\n            outputs[name] = spark.read.parquet(f\"{STORE}/{name}\")\n            status[name] = \"ok\"\n            print(\"  ran\", name)\n        except Exception:\n            status[name] = \"failed\"\n    return outputs\n\n\nstatus = {}\nprint(\"first run\")\nrun(status)\nprint(status)\n\nbroken.clear()\nprint(\"rerun\")\noutputs = run(status)\nprint(status)\nprint(outputs[\"in_flight\"].count(), \"shipments in flight\")\n",
+   "note": "The first run did three tasks and then `delivered` failed, so `in_flight` was skipped. The rerun read the three finished tasks back from Parquet and ran only `delivered` and `in_flight`. A rerun that redid everything would give the same tables, just with more work."
+  }
+ ],
+ "challenges": [
+  "PS-L077-C1",
+  "PS-L077-C2"
+ ],
+ "concept": [
+  {
+   "id": "k1",
+   "prompt": "The dependencies are `{\"a\": [], \"b\": [\"a\"], \"c\": [\"a\"], \"d\": [\"b\", \"c\"]}`. Which run order is not allowed?",
+   "choices": [
+    "a, b, c, d",
+    "a, c, b, d",
+    "a, b, d, c",
+    "Both of the first two are allowed"
+   ],
+   "answer": 2,
+   "why": "`d` needs both `b` and `c`, so it can't run before `c`. `b` and `c` need only `a`, so either can go first."
+  },
+  {
+   "id": "k2",
+   "prompt": "In the same graph, `b` fails. What happens to `c` and `d`?",
+   "choices": [
+    "Both are skipped",
+    "`c` runs and `d` is skipped",
+    "Both run, and `d` uses yesterday's `b`",
+    "The whole run stops at `b`"
+   ],
+   "answer": 1,
+   "why": "`c` needs only `a`, which is fine, so it runs. `d` needs `b`, which isn't `ok`, so `d` is skipped."
+  },
+  {
+   "id": "k3",
+   "prompt": "Why does each task save its output to storage when you want to rerun from a failure?",
+   "choices": [
+    "Spark can't pass a DataFrame from one function to another",
+    "Saving makes every task faster",
+    "A rerun is a new job; the DataFrames of the failed run are gone, but saved outputs can be read back",
+    "Parquet files can't fail"
+   ],
+   "answer": 2,
+   "why": "Outputs kept in a Python dict live only as long as the job. Saved outputs let the rerun reuse finished tasks instead of running them again."
+  }
+ ],
+ "review": [
+  "Write each step as a task function and its dependencies as a dict: task to the list of tasks it needs.",
+  "A task can run once everything it needs has run; if nothing is ready but tasks are left, the graph has a cycle.",
+  "Run the tasks in order, keep each output in a dict, and pass a task the outputs it names.",
+  "A failed task makes everything below it `skipped`; tasks that don't need it still run.",
+  "A change affects the task and everything downstream of it: rerun those and keep the rest.",
+  "Save task outputs (for example as Parquet) so a rerun can reuse the tasks that finished."
+ ],
+ "practice": [
+  "PS-Q0381",
+  "PS-Q0382",
+  "PS-Q0383",
+  "PS-Q0384",
+  "PS-Q0385"
+ ]
+}

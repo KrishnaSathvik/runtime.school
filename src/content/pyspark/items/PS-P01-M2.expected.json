@@ -1,0 +1,357 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "example": {
+   "schema": [
+    {
+     "name": "order_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "order_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "customer_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "order_total",
+     "type": "decimal(10,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "O90001",
+     "2026-01-15",
+     "C0101",
+     "paid",
+     "25.00"
+    ],
+    [
+     "O90009",
+     "2026-12-31",
+     "C0109",
+     "refunded",
+     "18.00"
+    ],
+    [
+     "O90010",
+     "2026-01-01",
+     "C0110",
+     "cancelled",
+     "0.00"
+    ],
+    [
+     "O90001",
+     "2026-01-15",
+     "C0101",
+     "paid",
+     "25.00"
+    ],
+    [
+     "O90011",
+     "2026-06-20",
+     "C0111",
+     "shipped",
+     "55.00"
+    ]
+   ],
+   "row_count": 5,
+   "inputs": {
+    "orders": [
+     [
+      "O90001",
+      "C0101",
+      "2026-01-15",
+      "paid",
+      "web",
+      "25.00"
+     ],
+     [
+      "O90002",
+      "C0102",
+      "2026-02-03",
+      "Shipped",
+      "app",
+      "40.00"
+     ],
+     [
+      "O90003",
+      "C0103",
+      "2026-02-10",
+      "pending",
+      "web",
+      "12.00"
+     ],
+     [
+      "O90004",
+      "C0104",
+      "2026-03-01",
+      "delivered",
+      "store",
+      "-15.00"
+     ],
+     [
+      "O90005",
+      "C0105",
+      "2026-03-05",
+      "placed",
+      "web",
+      null
+     ],
+     [
+      "O90006",
+      "C0106",
+      null,
+      "paid",
+      "web",
+      "30.00"
+     ],
+     [
+      "O90007",
+      "C0107",
+      "2025-12-31",
+      "delivered",
+      "app",
+      "20.00"
+     ],
+     [
+      "O90008",
+      "C0108",
+      "2027-01-01",
+      "paid",
+      "web",
+      "10.00"
+     ],
+     [
+      "O90009",
+      "C0109",
+      "2026-12-31",
+      "refunded",
+      "store",
+      "18.00"
+     ],
+     [
+      "O90010",
+      "C0110",
+      "2026-01-01",
+      "cancelled",
+      "web",
+      "0.00"
+     ],
+     [
+      "O90001",
+      "C0101",
+      "2026-01-15",
+      "paid",
+      "web",
+      "25.00"
+     ],
+     [
+      "O90011",
+      "C0111",
+      "2026-06-20",
+      "shipped",
+      "app",
+      "55.00"
+     ]
+    ]
+   }
+  },
+  "project": {
+   "schema": [
+    {
+     "name": "order_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "order_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "customer_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "order_total",
+     "type": "decimal(10,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "O00001",
+     "2026-02-16",
+     "C0327",
+     "delivered",
+     "404.47"
+    ],
+    [
+     "O00002",
+     "2026-07-20",
+     "C0029",
+     "paid",
+     "23.49"
+    ],
+    [
+     "O00003",
+     "2026-01-28",
+     "C0074",
+     "delivered",
+     "59.99"
+    ],
+    [
+     "O00004",
+     "2026-07-10",
+     "C0384",
+     "paid",
+     "179.97"
+    ],
+    [
+     "O00005",
+     "2026-05-18",
+     "C0013",
+     "delivered",
+     "233.93"
+    ],
+    [
+     "O00007",
+     "2026-02-12",
+     "C0221",
+     "shipped",
+     "240.47"
+    ],
+    [
+     "O00008",
+     "2026-05-12",
+     "C0148",
+     "cancelled",
+     "195.47"
+    ],
+    [
+     "O00009",
+     "2026-09-02",
+     "C0255",
+     "shipped",
+     "78.89"
+    ],
+    [
+     "O00010",
+     "2026-02-23",
+     "C0288",
+     "paid",
+     "270.96"
+    ],
+    [
+     "O00011",
+     "2026-07-30",
+     "C0400",
+     "cancelled",
+     "54.97"
+    ],
+    [
+     "O00012",
+     "2026-04-21",
+     "C0139",
+     "delivered",
+     "112.97"
+    ],
+    [
+     "O00013",
+     "2026-08-07",
+     "C0070",
+     "delivered",
+     "149.23"
+    ],
+    [
+     "O00014",
+     "2026-01-08",
+     "C0061",
+     "delivered",
+     "199.57"
+    ],
+    [
+     "O00015",
+     "2026-02-19",
+     "C0197",
+     "delivered",
+     "119.98"
+    ],
+    [
+     "O00016",
+     "2026-03-20",
+     "C0075",
+     "paid",
+     "119.98"
+    ],
+    [
+     "O00017",
+     "2026-02-10",
+     "C0223",
+     "paid",
+     "7.99"
+    ],
+    [
+     "O00018",
+     "2026-02-03",
+     "C0356",
+     "delivered",
+     "82.50"
+    ],
+    [
+     "O00019",
+     "2026-09-06",
+     "C0069",
+     "delivered",
+     "414.93"
+    ],
+    [
+     "O00020",
+     "2026-05-24",
+     "C0309",
+     "refunded",
+     "311.97"
+    ],
+    [
+     "O00021",
+     "2026-04-01",
+     "C0212",
+     "delivered",
+     "622.67"
+    ]
+   ],
+   "row_count": 2742
+  }
+ },
+ "hidden": [
+  "the full practice orders table",
+  "orders on the edges of 2026, and one with no date",
+  "zero, tiny, negative and missing totals",
+  "every valid status, and five that aren't",
+  "a valid and an invalid row, each delivered twice",
+  "an empty orders table"
+ ]
+}

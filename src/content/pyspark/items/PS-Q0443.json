@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0443",
+  "slug": "yesterdays-close-or-nothing",
+  "lesson": "PS-L089",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 23,
+  "title": "Yesterday's close or nothing",
+  "dataset": {
+    "id": "PS-D10",
+    "version": "1.0.0"
+  },
+  "prompt": "When a symbol's price is missing for a trading day, the row after it shouldn't quietly reach back to an older close. Write `solve(daily_prices, market_calendar)` so each price row gets the market's previous trading day and the symbol's close on exactly that day.",
+  "rules": [
+    "`prev_trading_day` is the latest `cal_date` before `trade_date` whose `is_trading_day` is true. Weekends and holidays are skipped; it is NULL on the calendar's first trading day.",
+    "`prev_close` is the symbol's `close` on `prev_trading_day`. It is NULL when the symbol has no price row that day: a data gap, a halt, or the days before it was listed.",
+    "Return `symbol`, `trade_date`, `close`, `prev_trading_day` and `prev_close`, in that order, one row per price row."
+  ],
+  "hints": [
+    "Work out the previous trading day on the calendar first: keep the trading days and `F.lag(\"cal_date\")` over `Window.orderBy(\"cal_date\")`.",
+    "Join that onto the prices by date, then look up the close with a second join on `symbol` and the previous trading day.",
+    "Both joins must keep every price row. A missing close should stay NULL, so don't fill it from an older row."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "daily_prices",
+    "market_calendar"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(daily_prices, market_calendar):\n    # Previous trading day from the calendar, then the close on exactly that day.\n    return daily_prices\n",
+  "output": {
+    "columns": [
+      "symbol",
+      "trade_date",
+      "close",
+      "prev_trading_day",
+      "prev_close"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "\"Previous row\" and \"previous trading day\" are the same until a price is missing. The calendar knows which days the market was open, so the previous trading day comes from `F.lag(\"cal_date\")` over the trading days in date order (a window without `partitionBy` is fine for one small calendar). A left join puts it on every price row, and a second left join on `symbol` and that day fetches the close if there is one. In the sample, ALDR.SX on 2026-01-20 reads 2026-01-16 because the weekend and the holiday Monday are skipped, while BRVO.SX on 2026-01-21 gets NULL: its 2026-01-20 price is missing. `F.lag(\"close\")` over the price rows would hand it the 2026-01-16 close instead, a stale value that looks like a normal one. Taking the day before the date, or the calendar without filtering trading days, finds weekends and holidays with no prices."
+}

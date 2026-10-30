@@ -1,0 +1,18 @@
+{
+  "id": "PS-L004-C2",
+  "kind": "predict",
+  "slug": "take-first-web-orders",
+  "lesson": "PS-L004",
+  "difficulty": "easy",
+  "minutes": 4,
+  "title": "Taking web orders",
+  "prompt": "What does this program print? The lesson's `orders` table has three web orders: O00007 (227.48), O00008 (59.50) and O00011 (243.00), in that order.",
+  "program": "from pyspark.sql import functions as F\n\nweb = orders.filter(F.col(\"channel\") == \"web\").select(\"order_id\", \"total\")\nrows = web.take(2)\nprint(len(rows))\nprint(rows[0][\"order_id\"], rows[0][\"total\"])\nprint(web.limit(5).count())\n",
+  "dataset": { "id": "PS-D01", "version": "1.1.0" },
+  "edition": "lesson",
+  "hints": [
+    "`take(2)` is an action that returns a Python list of at most two rows.",
+    "`rows[0]` is the first row; `row[\"name\"]` reads one of its values.",
+    "`limit(5)` keeps at most five rows. It can't make rows that aren't there."
+  ]
+}

@@ -1,0 +1,69 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "event_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "step",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "value_under_50",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "value_50_plus",
+     "type": "double",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "CO-0001",
+     "begin",
+     23.98,
+     89.0
+    ],
+    [
+     "CO-0002",
+     "payment",
+     23.98,
+     89.0
+    ],
+    [
+     "CO-0003",
+     "complete",
+     23.98,
+     89.0
+    ],
+    [
+     "CO-0004",
+     "begin",
+     0.0,
+     119.95
+    ]
+   ],
+   "row_count": 4
+  }
+ },
+ "hidden": [
+  "the full practice checkout steps",
+  "items priced just below, at and just above 50.00",
+  "baskets with items in only one group",
+  "items with a missing price or quantity, and a step with no items list",
+  "an empty basket",
+  "no checkout steps"
+ ]
+}

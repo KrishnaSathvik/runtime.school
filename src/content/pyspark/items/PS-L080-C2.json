@@ -1,0 +1,21 @@
+{
+  "id": "PS-L080-C2",
+  "kind": "predict",
+  "slug": "settings-a-running-app-can-change",
+  "lesson": "PS-L080",
+  "difficulty": "medium",
+  "minutes": 6,
+  "title": "Settings a running app can change",
+  "prompt": "This program runs in the lesson's session, which started with 2g of driver memory. It asks which settings can change at run time, then tries to change two of them. What does it print? Type each line on its own line.",
+  "program": "for key in [\"spark.executor.instances\", \"spark.sql.adaptive.enabled\", \"spark.driver.maxResultSize\"]:\n    print(spark.conf.isModifiable(key))\n\ntry:\n    spark.conf.set(\"spark.driver.maxResultSize\", \"4g\")\n    print(\"changed\")\nexcept Exception as e:\n    print(type(e).__name__)\n\nspark.conf.set(\"spark.sql.shuffle.partitions\", \"12\")\nprint(spark.conf.get(\"spark.sql.shuffle.partitions\"))\nprint(spark.conf.get(\"spark.driver.memory\"))\n",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "Settings that size or start processes are fixed when the application starts; query settings are read again for every query.",
+    "`spark.driver.maxResultSize` is a driver setting. What does `spark.conf.set` do with a setting it can't change?",
+    "The error is the same one the lesson showed for executor memory; print only its type name."
+  ]
+}

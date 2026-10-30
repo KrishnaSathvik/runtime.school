@@ -1,0 +1,63 @@
+{
+  "id": "PS-Q0337",
+  "slug": "hot-readings-without-the-glitches",
+  "lesson": "PS-L068",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Hot readings, without the glitches",
+  "dataset": {
+    "id": "PS-D09",
+    "version": "1.0.0"
+  },
+  "prompt": "Facilities wants every reading above 30 °C, but some sensors glitch and report 999.0. Write `solve(sensor_readings)` so a streaming query reads the delivery files into a memory table, and return `reading_id`, `device_id`, `event_time` and `temperature_c` for every real hot reading.",
+  "rules": [
+    "A reading is hot when `temperature_c` (in the `payload` struct) is above 30; exactly 30.0 isn't.",
+    "A temperature of 999.0 is a glitch, not a reading: leave it out. A missing temperature isn't hot.",
+    "Keep every delivery: a reading delivered twice appears twice.",
+    "The rows must come from a streaming query: write it to a memory table and read that back with `spark.table`."
+  ],
+  "hints": [
+    "Name the nested field first with `F.col(\"payload.temperature_c\").alias(...)`, then filter on it.",
+    "Two conditions: above 30, and not the glitch value. Wrap each in parentheses and join them with `&`.",
+    "`writeStream.format(\"memory\").queryName(name)`, `availableNow`, `awaitTermination()`, then `spark.table(name)`."
+  ],
+  "explanation": "Select the columns on the stream, filter with `(F.col(\"temperature_c\") > 30) & (F.col(\"temperature_c\") != 999.0)`, and write to a memory sink. After `awaitTermination()`, `spark.table` gives the batch table. `> 30` leaves out a reading of exactly 30.0, and a missing temperature drops out because a comparison with a missing value isn't true. Without the glitch test, every 999.0 shows up as the hottest room in the building. A reading delivered twice is in two delivery files, so the stream reads it twice and the table has it twice; removing repeats is a later lesson. Writing `< 999` instead of `!= 999.0` gives the same rows here.",
+  "entry": "solve",
+  "inputs": [
+    "sensor_readings"
+  ],
+  "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef solve(sensor_readings):\n    make_batches(sensor_readings, \"/tmp/readings\")\n    # Stream /tmp/readings, keep the real hot readings in a memory table,\n    # wait for the stream to finish, and return the table.\n    return sensor_readings\n",
+  "output": {
+    "columns": [
+      "reading_id",
+      "device_id",
+      "event_time",
+      "temperature_c"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 150,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "technique": {
+    "name": "a streaming query's memory table",
+    "streams": true,
+    "plan": [
+      "LocalTableScan"
+    ],
+    "source": [
+      "writeStream"
+    ]
+  }
+}

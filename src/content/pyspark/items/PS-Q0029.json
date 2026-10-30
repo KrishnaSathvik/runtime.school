@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0029",
+  "kind": "predict",
+  "slug": "the-repartition-that-did-nothing",
+  "lesson": "PS-L006",
+  "role": "debugging",
+  "format": "concept_or_trace",
+  "difficulty": "medium",
+  "minutes": 6,
+  "title": "Jobs counted in the wrong place",
+  "prompt": "A teammate wants to know how many jobs it takes to collect the cash trips, but called `setJobGroup` in the wrong place. What does this program print? Two of the lesson's trips were paid in cash.",
+  "program": "from pyspark.sql import functions as F\n\nsc = spark.sparkContext\ntracker = sc.statusTracker()\n\ncash = trips.filter(F.col(\"payment_type\") == \"cash\").select(\"trip_id\", \"tip\")\nrows = cash.collect()\nsc.setJobGroup(\"cash\", \"collect the cash trips\")\nprint(len(rows), len(tracker.getJobIdsForGroup(\"cash\")))\n\nagain = cash.collect()\nprint(len(again), len(tracker.getJobIdsForGroup(\"cash\")))\n",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "`setJobGroup` labels the jobs that start after it. It can't reach back to a job that already ran.",
+    "Building `cash` runs nothing. Each `collect()` is an action, and on this small table it runs one job.",
+    "The second `collect()` doesn't reuse the first result: it runs the plan again, this time inside the group."
+  ],
+  "explanation": "The first `collect()` runs before the group exists, so its job belongs to no group, and the first line is `2 0`: two cash trips, no jobs in `cash`. `setJobGroup` only labels jobs that start after it. The second `collect()` runs the whole plan again, because nothing keeps the first result, and that job does land in the group: `2 1`. To count the jobs an action needs, set the group first, then run the action, as in the lesson."
+}

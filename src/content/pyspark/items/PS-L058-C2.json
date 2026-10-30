@@ -1,0 +1,26 @@
+{
+  "id": "PS-L058-C2",
+  "slug": "stock-on-hand-by-region",
+  "lesson": "PS-L058",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Stock on hand by region",
+  "dataset": { "id": "PS-D08", "version": "1.0.0" },
+  "prompt": "Planning wants the stock picture per region. Each `inventory` row is one stock line, and its warehouse's region comes from the small `warehouses` table. Write `solve(inventory, warehouses)` so it returns `region`, `stock_lines` and `on_hand`.",
+  "rules": [
+    "One row per region. `stock_lines` counts the region's inventory rows, including rows where `on_hand` is missing. `on_hand` is their total `on_hand`.",
+    "Stock lines whose warehouse isn't in `warehouses` are counted together in one row with `region` missing.",
+    "A region with no stock lines doesn't appear. Return only these three columns, in this order."
+  ],
+  "hints": [
+    "Join first, then group. Every inventory row has to reach the grouping, matched or not.",
+    "Keep `inventory` whole with a left join, and broadcast `warehouses`, the side that isn't kept whole.",
+    "`F.count(\"*\")` counts rows; `F.count(\"on_hand\")` would skip the rows where it's missing."
+  ],
+  "entry": "solve",
+  "inputs": ["inventory", "warehouses"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(inventory, warehouses):\n    # Return region, stock_lines and on_hand: one row per region.\n    return inventory\n",
+  "output": { "columns": ["region", "stock_lines", "on_hand"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "sample": true }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

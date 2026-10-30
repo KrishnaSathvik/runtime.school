@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0440",
+  "slug": "tune-the-rating-model",
+  "lesson": "PS-L088",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 20,
+  "title": "Tune the rating model",
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0"
+  },
+  "prompt": "A model predicts a film's 2026 average rating from its 2025 average. Before it ships, the team wants to know whether a regularised line does better on films it wasn't fitted on. Write `solve(ratings)` so it returns each setting's cross-validated error and marks the best one.",
+  "rules": [
+    "Ratings before 2026-01-01 are 2025; ratings from 2026-01-01 on are 2026. Use films rated in both periods: the feature is the 2025 average `rating`, the label the 2026 average.",
+    "Compare `LinearRegression` with `regParam` 0.0 and 1.0, other settings default, by 2-fold cross-validation. A film's fold is `F.crc32(\"movie_id\") % 2`, so the folds are the same on every run.",
+    "`avg_rmse` is a setting's root mean squared error on the held-out fold, averaged over the two folds and rounded to 3 decimal places. `best` is true for the setting with the lower error.",
+    "Return `reg_param`, `avg_rmse` and `best`, one row per setting."
+  ],
+  "hints": [
+    "One `groupBy(\"movie_id\")` gives both averages: `F.avg` of a `F.when(...)` that is NULL outside the period skips the other period's ratings.",
+    "`CrossValidator(..., numFolds=2, foldCol=\"fold\")` uses a column you made, an integer 0 or 1, instead of a random split. `ParamGridBuilder().addGrid(lr.regParam, [0.0, 1.0]).build()` makes the two settings.",
+    "`avgMetrics` lists one average RMSE per setting in grid order, as NumPy numbers: wrap each in `float(...)`. `bestModel.getRegParam()` is the winner. Build the answer with `ratings.sparkSession.createDataFrame([...], \"reg_param DOUBLE, avg_rmse DOUBLE, best BOOLEAN\")`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "ratings"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.ml.feature import VectorAssembler\nfrom pyspark.ml.regression import LinearRegression\nfrom pyspark.ml.evaluation import RegressionEvaluator\nfrom pyspark.ml.tuning import CrossValidator, ParamGridBuilder\n\n\ndef solve(ratings):\n    # Per-film averages for 2025 and 2026, crc32 folds, cross-validate two regParam values.\n    return ratings\n",
+  "output": {
+    "columns": [
+      "reg_param",
+      "avg_rmse",
+      "best"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "The features come from one `groupBy`: averaging a `F.when` that is NULL outside a period gives each film its 2025 and 2026 averages, and a filter keeps films that have both. A fold column `(F.crc32(\"movie_id\") % 2).cast(\"int\")` passed as `foldCol` makes the cross-validation repeatable: without it `CrossValidator` splits at random, and the folds can change when the data is partitioned differently. Each setting is fitted on one fold and measured on the other, twice, and `avgMetrics` holds the two averages in grid order. RMSE is better when lower, so the best setting is the one with the smaller average, which `bestModel.getRegParam()` reports. In the sample there are only five films, and the plain line, fitted on two or three of them, swings far off on the others: holding it back with `regParam=1.0` nearly halves the error. On the larger practice ratings the plain line wins. Measuring each setting on the films it was fitted on would always favour the plain line, because regularisation only ever adds training error."
+}

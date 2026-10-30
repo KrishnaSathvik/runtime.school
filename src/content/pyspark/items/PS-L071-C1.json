@@ -1,0 +1,56 @@
+{
+ "id": "PS-L071-C1",
+ "slug": "page-views-with-their-session",
+ "lesson": "PS-L071",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 12,
+ "title": "Page views with their session",
+ "dataset": {
+  "id": "PS-D06",
+  "version": "1.0.0"
+ },
+ "prompt": "The marketing team wants each page view tagged with where its visit came from, as the views stream in. Write `solve(page_views, sessions)` so it streams `page_views`, joins `sessions` as a static table, and returns `event_id`, `session_id`, `page_type`, `traffic_source` and `country`.",
+ "rules": [
+  "Every page view appears once. A view whose session isn't in `sessions` still appears, with `traffic_source` and `country` missing.",
+  "Match on `session_id` only. Anonymous visitors have no `user_id`, and their views must still get their session's details.",
+  "Return these five columns, in this order."
+ ],
+ "hints": [
+  "A stream-static join is written like a batch join: `views.join(sessions, \"session_id\", how)`.",
+  "Which join type keeps every row of the stream, matched or not? Keep the stream on the left.",
+  "Write the joined stream to `format(\"memory\")` with a `queryName`, run it with `run_stream`, and read it back with `spark.table`."
+ ],
+ "entry": "solve",
+ "inputs": [
+  "page_views",
+  "sessions"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\ndef solve(page_views, sessions):\n    make_batches(page_views, \"/tmp/views\")           # one file per batch; clears the folder first\n    shutil.rmtree(\"/tmp/ck\", ignore_errors=True)     # a fresh checkpoint for every run\n    views = spark.readStream.schema(page_views.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/views\")\n    # Join each page view with its session, write the result to a memory table,\n    # run the stream, and return the five columns from that table.\n\n    return page_views\n",
+ "output": {
+  "columns": [
+   "event_id",
+   "session_id",
+   "page_type",
+   "traffic_source",
+   "country"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

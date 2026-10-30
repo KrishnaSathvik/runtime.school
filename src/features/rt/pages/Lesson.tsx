@@ -222,40 +222,43 @@ function Session({ lessonId }: { lessonId: number }) {
                 nextAction={<button type="button" className="rx-btn primary" onClick={() => goTo("check")}>Next: Concept check <ArrowRight size={14} aria-hidden="true" /></button>} />}
               {tab === "check" && (
                 <>
-                  <section className="rx-question" aria-label="Concept check">
+                  <section className="rx-question rx-concept" aria-label="Concept check">
                     <div className="rx-question-head"><p className="rx-label">concept check</p></div>
                     <p className="rx-question-text">{lesson.quiz.q}</p>
-                    <p className="rx-question-meta"><span>pick one answer</span></p>
+                    <p className="rx-quiz-prompt">pick one answer</p>
+                    <div className="rx-quiz" role="radiogroup" aria-label="Answer options">
+                      {lesson.quiz.options.map((opt, i) => (
+                        <label key={opt} className={quiz?.choice === i ? (quiz.ok ? "right" : "wrong") : ""}>
+                          <input
+                            className="sr-only"
+                            type="radio"
+                            name={`quiz-${lessonId}`}
+                            checked={quiz?.choice === i}
+                            disabled={quiz?.ok === true}
+                            onChange={() => {
+                              const r = completeQuiz(lessonId, null, i);
+                              setQuiz({ choice: i, ok: r.ok });
+                            }}
+                          />
+                          <span className="rx-opt" aria-hidden="true">{String.fromCharCode(97 + i)}</span>
+                          <span>{opt}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <div aria-live="polite">
+                      {quiz && (
+                        <p className={`rx-feedback ${quiz.ok ? "ok" : "bad"}`}>
+                          {quiz.ok
+                            ? nextLessonId !== undefined
+                              ? "✓ Correct."
+                              : "✓ Correct. That’s the last lesson in the course."
+                            : "✕ Not quite."}{" "}
+                          {lesson.quiz.why}
+                        </p>
+                      )}
+                      {!quiz && checkPassed && <p className="rx-feedback ok">✓ Concept check passed earlier.</p>}
+                    </div>
                   </section>
-                  <div className="rx-quiz" role="group" aria-label="Answer options">
-                    {lesson.quiz.options.map((opt, i) => (
-                      <button
-                        key={opt}
-                        type="button"
-                        aria-pressed={quiz?.choice === i}
-                        disabled={quiz?.ok === true}
-                        onClick={() => {
-                          const r = completeQuiz(lessonId, null, i);
-                          setQuiz({ choice: i, ok: r.ok });
-                        }}
-                      >
-                        <span className="mono rx-opt">{String.fromCharCode(97 + i)}</span> {opt}
-                      </button>
-                    ))}
-                  </div>
-                  <div aria-live="polite">
-                    {quiz && (
-                      <p className={`rx-feedback ${quiz.ok ? "ok" : "bad"}`}>
-                        {quiz.ok
-                          ? nextLessonId !== undefined
-                            ? "✓ Correct."
-                            : "✓ Correct. That’s the last lesson in the course."
-                          : "✕ Not quite."}{" "}
-                        {lesson.quiz.why}
-                      </p>
-                    )}
-                    {!quiz && checkPassed && <p className="rx-feedback ok">✓ Concept check passed earlier.</p>}
-                  </div>
                   {(quiz?.ok || (!quiz && checkPassed)) && nextLessonLink && <div className="rx-next">{nextLessonLink}</div>}
                 </>
               )}

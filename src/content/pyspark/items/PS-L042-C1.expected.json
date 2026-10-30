@@ -1,0 +1,194 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "reading_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "device_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "event_time",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "temperature_c",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "battery_v",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "firmware_version",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "late_s",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "R0001",
+     "DEV-001",
+     "2026-04-14T09:00:00",
+     3.2,
+     3.31,
+     "low_battery",
+     "2.3.1",
+     21
+    ],
+    [
+     "R0004",
+     "DEV-004",
+     "2026-04-14T09:00:00",
+     25.1,
+     3.88,
+     "ok",
+     "2.4.0",
+     43
+    ],
+    [
+     "R0002",
+     "DEV-002",
+     "2026-04-14T09:00:00",
+     21.4,
+     3.92,
+     "ok",
+     "2.4.0",
+     44
+    ],
+    [
+     "R0003",
+     "DEV-003",
+     "2026-04-14T09:00:00",
+     28.7,
+     3.75,
+     "ok",
+     "2.3.1",
+     46
+    ],
+    [
+     "R0007",
+     "DEV-003",
+     "2026-04-14T09:15:00",
+     29.6,
+     3.75,
+     "ok",
+     "2.3.1",
+     7
+    ],
+    [
+     "R0005",
+     "DEV-001",
+     "2026-04-14T09:15:00",
+     3.4,
+     3.3,
+     "low_battery",
+     "2.3.1",
+     14
+    ],
+    [
+     "R0008",
+     "DEV-004",
+     "2026-04-14T09:15:00",
+     41.2,
+     3.88,
+     "ok",
+     "2.4.0",
+     49
+    ],
+    [
+     "R0011",
+     "DEV-003",
+     "2026-04-14T09:30:00",
+     31.4,
+     3.74,
+     "ok",
+     "2.3.1",
+     15
+    ],
+    [
+     "R0012",
+     "DEV-004",
+     "2026-04-14T09:30:00",
+     26.0,
+     3.87,
+     "ok",
+     "2.4.0",
+     21
+    ],
+    [
+     "R0010",
+     "DEV-002",
+     "2026-04-14T09:30:00",
+     21.9,
+     3.91,
+     "ok",
+     "2.4.0",
+     25
+    ],
+    [
+     "R0009",
+     "DEV-001",
+     "2026-04-14T09:30:00",
+     3.3,
+     3.29,
+     "low_battery",
+     "2.3.1",
+     48
+    ],
+    [
+     "R0011",
+     "DEV-003",
+     "2026-04-14T09:30:00",
+     31.4,
+     3.74,
+     "ok",
+     "2.3.1",
+     375
+    ],
+    [
+     "R0006",
+     "DEV-002",
+     "2026-04-14T09:15:00",
+     21.6,
+     3.92,
+     "ok",
+     "2.4.0",
+     2227
+    ]
+   ],
+   "row_count": 13
+  }
+ },
+ "hidden": [
+  "the full practice readings",
+  "readings that arrive hours late, including across midnight",
+  "readings with a missing firmware block or missing payload fields",
+  "the same reading delivered twice",
+  "an empty readings table"
+ ]
+}

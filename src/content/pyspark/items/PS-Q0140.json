@@ -1,0 +1,57 @@
+{
+  "id": "PS-Q0140",
+  "slug": "restock-check",
+  "lesson": "PS-L028",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 20,
+  "title": "Restock check",
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0"
+  },
+  "prompt": "Buyers want to know whether the stock on its way is enough. Write `solve(purchase_orders, inventory, suppliers)` so it returns each incoming purchase order row with the stock it will leave and a check.",
+  "rules": [
+    "Incoming means `status` is exactly `confirmed` or `shipped`. Each row (each version) is checked on its own. Its stock line is the `inventory` row with the same `warehouse_id` and `sku`; its supplier is the `suppliers` row with the same `supplier_id`.",
+    "`projected` is `on_hand` plus the order's `quantity`. `check` is `no stock record` when `on_hand` is missing (or there is no stock line), `still low` when `projected` is below `reorder_point`, and `ok` otherwise.",
+    "Return `po_id`, `version`, `supplier` (the supplier's `name`, missing if unknown), `warehouse_id`, `sku`, `projected` and `check`, sorted by `po_id` and then `version`."
+  ],
+  "hints": [
+    "Filter the incoming rows first. Then left join to `inventory` on both key columns, `on=[\"warehouse_id\", \"sku\"]`, and to `suppliers` on `supplier_id`, so no incoming order is lost.",
+    "`F.col(\"on_hand\") + F.col(\"quantity\")` is missing whenever `on_hand` is, and a comparison with a missing value is never true. So test `still low` with `<` and `ok` with `>=`, and let `.otherwise(...)` catch the rows left over.",
+    "Exactly at the reorder point is `ok`: only below it is `still low`. Sort last with `orderBy(\"po_id\", \"version\")`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "purchase_orders",
+    "inventory",
+    "suppliers"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(purchase_orders, inventory, suppliers):\n    # Incoming orders with projected stock and a check, sorted by po_id and version.\n    return purchase_orders\n",
+  "output": {
+    "columns": [
+      "po_id",
+      "version",
+      "supplier",
+      "warehouse_id",
+      "sku",
+      "projected",
+      "check"
+    ],
+    "order_sensitive": true
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Three steps. Keep the incoming rows with `filter(F.col(\"status\").isin(\"confirmed\", \"shipped\"))`. Left join to `inventory` on the whole key, `on=[\"warehouse_id\", \"sku\"]`: joining on `sku` alone would pair the order with other warehouses' stock and repeat it. Left join to `suppliers` on `supplier_id` for the name. Then `projected = F.col(\"on_hand\") + F.col(\"quantity\")` and `F.when(projected < F.col(\"reorder_point\"), \"still low\").when(projected >= F.col(\"reorder_point\"), \"ok\").otherwise(\"no stock record\")`: when `on_hand` is missing, `projected` is NULL, neither comparison is true, and the row falls through to `otherwise`. Inner joins would drop orders for stock lines or suppliers that aren't on file. Finish with `orderBy(\"po_id\", \"version\")`."
+}

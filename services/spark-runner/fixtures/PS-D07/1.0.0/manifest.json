@@ -1,0 +1,140 @@
+{
+  "dataset_id": "PS-D07",
+  "version": "1.0.0",
+  "title": "Transportation & Taxi",
+  "source": "synthetic",
+  "licence": {
+    "status": "ours",
+    "note": "Runtime-owned deterministic synthetic data."
+  },
+  "seed": 2007,
+  "schemas": {
+    "trips": "trip_id STRING, driver_id STRING, pickup_at TIMESTAMP, dropoff_at TIMESTAMP, pickup_zone_id INT, dropoff_zone_id INT, passenger_count INT, trip_distance DOUBLE, rate_code STRING, fare DECIMAL(8,2), tip DECIMAL(8,2), tolls DECIMAL(8,2), surcharge DECIMAL(8,2), total DECIMAL(8,2), payment_type STRING",
+    "taxi_zones": "zone_id INT, zone_name STRING, borough STRING, service_zone STRING",
+    "fare_rules": "rate_code STRING, description STRING, base_fare DECIMAL(6,2), per_mile DECIMAL(6,2), per_minute DECIMAL(6,2), minimum_fare DECIMAL(6,2), flat_fare DECIMAL(6,2), surcharge DECIMAL(6,2)",
+    "drivers": "driver_id STRING, display_name STRING, vehicle_type STRING, joined_date DATE, home_zone_id INT, active BOOLEAN",
+    "weather_enrichment": "obs_date DATE, obs_hour INT, temperature_c DOUBLE, precipitation_mm DOUBLE, wind_kph DOUBLE, conditions STRING"
+  },
+  "keys": {
+    "primary": {
+      "trips": [
+        "trip_id"
+      ],
+      "taxi_zones": [
+        "zone_id"
+      ],
+      "fare_rules": [
+        "rate_code"
+      ],
+      "drivers": [
+        "driver_id"
+      ],
+      "weather_enrichment": [
+        "obs_date",
+        "obs_hour"
+      ]
+    },
+    "foreign": {
+      "trips.pickup_zone_id": "taxi_zones.zone_id",
+      "trips.dropoff_zone_id": "taxi_zones.zone_id",
+      "trips.driver_id": "drivers.driver_id",
+      "trips.rate_code": "fare_rules.rate_code",
+      "drivers.home_zone_id": "taxi_zones.zone_id"
+    }
+  },
+  "rules": [
+    "fare is what the meter charged under the trip's rate code: base_fare + per_mile \u00d7 trip_distance + per_minute \u00d7 minutes, at least minimum_fare, rounded half up to cents; airport trips pay the flat_fare instead.",
+    "total = fare + tip + tolls + surcharge, exactly, in every edition (including the damaged project rows).",
+    "Card and wallet tips are a percentage of fare (mostly 15, 18, 20 or 25%) rounded half up to cents, so 18% of 11.25 = 2.025 is stored as 2.03 (lesson trip T006) and a 15.625 meter fare as 15.63 (T001); cash tips are recorded as 0.00.",
+    "trip_distance is the meter's reading in miles with two decimals; values ending in 5 (2.25, 2.35, 0.95 in the lesson edition) show the difference between round() (half up) and bround() (half even).",
+    "Night trips (pickup 20:00 to 05:59) use the night rate code; trips touching an airport zone use airport_flat.",
+    "payment_type is card, cash, wallet, no_charge or dispute; no_charge and dispute trips have a tip of 0.00.",
+    "weather_enrichment has one row per date and hour (obs_hour 0 to 23) of the edition's period; join it on to_date(pickup_at) and hour(pickup_at).",
+    "passenger_count is missing (null) for about 2% of practice and project trips where the driver didn't key it in.",
+    "The project edition is a raw meter export with problems to clean: zero-distance trips (about 1.5%), negative fares and totals from reversed charges (about 1%), dropoff_at earlier than pickup_at (about 1%) and pickup or dropoff zone ids 0 or 99 that are not in taxi_zones (about 1.5%).",
+    "Lesson and practice trips are clean: positive distances and fares, dropoff after pickup, known zones and drivers."
+  ],
+  "editions": {
+    "lesson": {
+      "trips": {
+        "file": "lesson/trips.csv",
+        "rows": 12,
+        "sha256": "481f8d2cce4136f834e7190b5fa61588fc18832aa3a5199ab20006d430312a88"
+      },
+      "taxi_zones": {
+        "file": "lesson/taxi_zones.csv",
+        "rows": 6,
+        "sha256": "a85510f03ff87ff19b8f861b33fdfc864bbc27b337427599814793288b974a4e"
+      },
+      "fare_rules": {
+        "file": "lesson/fare_rules.csv",
+        "rows": 4,
+        "sha256": "75a550bf5ec573f38202b80f901a1f2d434616d69460e78a1c30abf1c449989c"
+      },
+      "drivers": {
+        "file": "lesson/drivers.csv",
+        "rows": 4,
+        "sha256": "420a8b011e2c2fb8923042c0821abd77dcb3304e5a73308bb89d1de7604617bb"
+      },
+      "weather_enrichment": {
+        "file": "lesson/weather_enrichment.csv",
+        "rows": 6,
+        "sha256": "4fd86e10895cf917bafef216b979d4678e60c13e58191865def76d9a9dbee884"
+      }
+    },
+    "practice": {
+      "trips": {
+        "file": "practice/trips.csv",
+        "rows": 3000,
+        "sha256": "439ac739c8d52b8f74df9046c67e158b99af8c58c3498bac96abffee213ce9e9"
+      },
+      "taxi_zones": {
+        "file": "practice/taxi_zones.csv",
+        "rows": 30,
+        "sha256": "fd3007870a8cfcae6e41d27568c33746ff6cb772a91d27e527d68951c681ab24"
+      },
+      "fare_rules": {
+        "file": "practice/fare_rules.csv",
+        "rows": 4,
+        "sha256": "75a550bf5ec573f38202b80f901a1f2d434616d69460e78a1c30abf1c449989c"
+      },
+      "drivers": {
+        "file": "practice/drivers.csv",
+        "rows": 120,
+        "sha256": "28c200e9a9015ca5c4f2519657996778497869a25b84ad45bf002d4cd0ca115e"
+      },
+      "weather_enrichment": {
+        "file": "practice/weather_enrichment.csv",
+        "rows": 336,
+        "sha256": "3bd698448fde37ffa0d150e1d3371c0c3c05cad3a02b7fa674345da2135a1624"
+      }
+    },
+    "project": {
+      "trips": {
+        "file": "project/trips.csv",
+        "rows": 5200,
+        "sha256": "07e307ff6707ee83a9df501dd83c3b85a3967b3441c856b5505cfb86dd8eed1e"
+      },
+      "taxi_zones": {
+        "file": "project/taxi_zones.csv",
+        "rows": 30,
+        "sha256": "fd3007870a8cfcae6e41d27568c33746ff6cb772a91d27e527d68951c681ab24"
+      },
+      "fare_rules": {
+        "file": "project/fare_rules.csv",
+        "rows": 4,
+        "sha256": "75a550bf5ec573f38202b80f901a1f2d434616d69460e78a1c30abf1c449989c"
+      },
+      "drivers": {
+        "file": "project/drivers.csv",
+        "rows": 180,
+        "sha256": "895d02267638e53c4deffba645b43e20f90d914385cd9a08ba574f20715e4301"
+      },
+      "weather_enrichment": {
+        "file": "project/weather_enrichment.csv",
+        "rows": 504,
+        "sha256": "5f7ba930ddc2716ea81cb8fb9316597e287a29d39c622b1b9bb57316f6c35a3b"
+      }
+    }
+  }
+}

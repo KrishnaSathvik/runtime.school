@@ -1,0 +1,50 @@
+{
+  "id": "PS-Q0114",
+  "slug": "fix-lab-results-report",
+  "lesson": "PS-L023",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Fix the lab results report",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "prompt": "The lab results report says every result is missing its value, and results with an unknown code never fail the unit rule. Find the bugs and fix `solve(observations)`.",
+  "rules": [
+    "`value_present`: `value` is present and a real number. Missing or NaN breaks the rule.",
+    "`unit_matches_code`: `unit` is the unit of its `code` (GLU mg/dL, HBA1C %, LDL mg/dL, HGB g/dL, BMI kg/m2). Any other code, or a missing unit, breaks the rule.",
+    "`description_present`: `description` is present. Return `rule` and `failed` (bigint) for all three rules, even when nothing fails."
+  ],
+  "hints": [
+    "Every rule in the list should be true for a good row, because the loop counts the rows where it is not. Read `value_present` again.",
+    "For a code that isn't in the `F.when` chain, `expected_unit` is NULL, so the unit comparison is NULL. What does `filter(~NULL)` keep?",
+    "Wrap each rule in `F.coalesce(passes, F.lit(False))` before negating it, so a rule that can't be answered counts as failed."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "observations"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(observations):\n    expected_unit = (\n        F.when(F.col(\"code\") == \"GLU\", \"mg/dL\")\n        .when(F.col(\"code\") == \"HBA1C\", \"%\")\n        .when(F.col(\"code\") == \"LDL\", \"mg/dL\")\n        .when(F.col(\"code\") == \"HGB\", \"g/dL\")\n        .when(F.col(\"code\") == \"BMI\", \"kg/m2\")\n    )\n    rules = [\n        (\"value_present\", F.col(\"value\").isNull() | F.isnan(\"value\")),\n        (\"unit_matches_code\", F.col(\"unit\") == expected_unit),\n        (\"description_present\", F.col(\"description\").isNotNull()),\n    ]\n    results = []\n    for name, passes in rules:\n        failed = observations.filter(~passes).count()\n        results.append((name, failed))\n    return spark.createDataFrame(results, \"rule STRING, failed BIGINT\")\n",
+  "output": {
+    "columns": [
+      "rule",
+      "failed"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "There are two bugs. First, `value_present` is written as the failure, `isNull() | isnan`, while the loop treats every rule as true for a good row, so every real value is counted as missing. It should be `F.col(\"value\").isNotNull() & ~F.isnan(\"value\")`. Second, `filter(~passes)` drops rows where the rule is NULL: an unknown code gives a NULL expected unit and a missing unit gives a NULL comparison, so those rows are counted nowhere. `filter(~F.coalesce(passes, F.lit(False)))` counts them as failures. Fixing only one bug leaves the report wrong on the other."
+}

@@ -1,0 +1,142 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "encounter_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "record",
+     "type": "struct<patient:string,primary_code:string,code_count:int,vitals:struct<heart_rate:int,systolic:int,diastolic:int,temperature_c:double,pulse_pressure:int>>",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "ENC000001",
+     {
+      "patient": "PAT00003",
+      "primary_code": "J45.909",
+      "code_count": 3,
+      "vitals": {
+       "heart_rate": 96,
+       "systolic": 115,
+       "diastolic": 72,
+       "temperature_c": 36.2,
+       "pulse_pressure": 43
+      }
+     }
+    ],
+    [
+     "ENC000002",
+     {
+      "patient": "PAT00002",
+      "primary_code": "Z00.00",
+      "code_count": 2,
+      "vitals": {
+       "heart_rate": 104,
+       "systolic": 107,
+       "diastolic": 65,
+       "temperature_c": 37.2,
+       "pulse_pressure": 42
+      }
+     }
+    ],
+    [
+     "ENC000003",
+     {
+      "patient": "PAT00001",
+      "primary_code": "K21.9",
+      "code_count": 1,
+      "vitals": {
+       "heart_rate": 92,
+       "systolic": 144,
+       "diastolic": 66,
+       "temperature_c": 37.2,
+       "pulse_pressure": 78
+      }
+     }
+    ],
+    [
+     "ENC000004",
+     {
+      "patient": "PAT00002",
+      "primary_code": "K21.9",
+      "code_count": 1,
+      "vitals": {
+       "heart_rate": 91,
+       "systolic": 100,
+       "diastolic": 55,
+       "temperature_c": 36.3,
+       "pulse_pressure": 45
+      }
+     }
+    ],
+    [
+     "ENC000005",
+     {
+      "patient": "PAT00005",
+      "primary_code": "N39.0",
+      "code_count": 2,
+      "vitals": {
+       "heart_rate": 102,
+       "systolic": 131,
+       "diastolic": 91,
+       "temperature_c": null,
+       "pulse_pressure": 40
+      }
+     }
+    ],
+    [
+     "ENC000006",
+     {
+      "patient": "PAT00006",
+      "primary_code": "S93.401A",
+      "code_count": 2,
+      "vitals": {
+       "heart_rate": 96,
+       "systolic": 125,
+       "diastolic": 64,
+       "temperature_c": 37.3,
+       "pulse_pressure": 61
+      }
+     }
+    ],
+    [
+     "ENC000007",
+     {
+      "patient": "PAT00001",
+      "primary_code": "N39.0",
+      "code_count": 1,
+      "vitals": null
+     }
+    ],
+    [
+     "ENC000008",
+     {
+      "patient": "PAT00004",
+      "primary_code": "M54.5",
+      "code_count": 1,
+      "vitals": null
+     }
+    ]
+   ],
+   "row_count": 8
+  }
+ },
+ "hidden": [
+  "the full practice encounters",
+  "telehealth visits with no vitals",
+  "a visit whose code list is missing",
+  "vitals with a blood pressure reading missing",
+  "no encounters"
+ ]
+}

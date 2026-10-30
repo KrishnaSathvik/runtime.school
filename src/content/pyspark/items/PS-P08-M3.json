@@ -1,0 +1,77 @@
+{
+ "id": "PS-P08-M3",
+ "slug": "load-the-first-batch-into-delta",
+ "project": "PS-P08",
+ "milestone": "PS-P08.m3",
+ "difficulty": "medium",
+ "minutes": 30,
+ "title": "Load the first batch into the shipment fact",
+ "dataset": {
+  "id": "PS-D08",
+  "version": "1.0.0"
+ },
+ "also": [
+  {
+   "id": "PS-D14",
+   "version": "1.0.0",
+   "tables": [
+    "accounts",
+    "customer_cdc"
+   ]
+  }
+ ],
+ "prompt": "The shipment fact holds each shipment's current status: its latest step. It's a Delta table, and it's built in batches, as the loads arrive. Batch 1 is every row loaded before `SECOND_LOAD`; batch 2, the rest, comes in the next step.\n\nWrite `latest_steps(log)`, which turns an event log into one row per shipment, and `fact_after_batch_1(shipment_events, shipments)`, which saves batch 1's latest steps as a new Delta table at `FACT_PATH` and returns the table read back.",
+ "rules": [
+  "Batch 1 is the rows with `load_date` before `SECOND_LOAD`. Apply `event_log` to those rows only: a correction that loads in batch 2 isn't known yet.",
+  "A shipment's latest step is its row with the highest `sequence`, not the latest `event_time` or `load_date`.",
+  "Return `shipment_id`, `warehouse_id`, `status` (the step's `event_type`), `sequence`, `event_time`, `location`, `load_date` and `is_correction`, in that order.",
+  "Save the rows with `format(\"delta\")` at `FACT_PATH` after clearing the folder, then return `spark.read.format(\"delta\").load(FACT_PATH)`."
+ ],
+ "hints": [
+  "`event_log` takes any scans table, so `event_log(shipment_events.filter(F.col(\"load_date\") < SECOND_LOAD), shipments)` is batch 1 cleaned.",
+  "`row_number` over a window partitioned by `shipment_id` and ordered by `sequence` descending; keep number 1.",
+  "Run on the example: `SH0001`'s picked scan loaded a day after its departed scan, and `SH0002`'s correction only arrives in batch 2."
+ ],
+ "explanation": "Filtering the raw rows first and cleaning them second is what makes the batch honest: it sees exactly what had arrived. Cleaning the whole feed first would let a correction from batch 2 replace a scan that batch 1 had, and the step would vanish from batch 1. The latest step comes from `sequence`, the source's own order: loads arrive out of order (`SH0001`'s picked scan loaded after its departed scan), so the newest load isn't the latest step. Clearing `FACT_PATH` first makes the function safe to run again: every run starts the table at version 0.",
+ "entry": "fact_after_batch_1",
+ "inputs": [
+  "shipment_events",
+  "shipments"
+ ],
+ "file": "pipeline.py",
+ "append": "\n\nFACT_PATH = \"/tmp/p08/shipment_fact\"\nSECOND_LOAD = \"2026-05-18\"  # rows loaded on or after this day are batch 2\n\n\ndef latest_steps(log):\n    # Step 3: each shipment's latest step in an event log, in the fact's columns.\n    return log\n\n\ndef fact_after_batch_1(shipment_events, shipments):\n    # Step 3: the fact after batch 1, saved as a new Delta table at FACT_PATH and read back.\n    shutil.rmtree(FACT_PATH, ignore_errors=True)  # start from an empty folder on every run\n    return latest_steps(event_log(shipment_events, shipments))\n",
+ "prerequisites": [
+  "PS-L033",
+  "PS-L061",
+  "PS-L074"
+ ],
+ "output": {
+  "columns": [
+   "shipment_id",
+   "warehouse_id",
+   "status",
+   "sequence",
+   "event_time",
+   "location",
+   "load_date",
+   "is_correction"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "example",
+   "sample": true
+  },
+  {
+   "id": "project",
+   "edition": "project"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 240,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

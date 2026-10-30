@@ -1,0 +1,129 @@
+{
+  "id": "PS-L004",
+  "minutes": 20,
+  "lede": "Spark doesn't touch your data when you write `filter` or `select`. It writes down a plan, and only runs it when you ask for an answer. Knowing which lines plan and which lines run explains most of how PySpark behaves.",
+  "objectives": [
+    "Tell transformations (`select`, `filter`, `limit`) apart from actions (`show`, `count`, `collect`, `first`, `take`)",
+    "Explain why a transformation returns straight away and reads no rows",
+    "Bring rows back to Python with `collect`, `first` and `take`, and read values from a row",
+    "Print a DataFrame's plan with `explain()`"
+  ],
+  "dataset": { "id": "PS-D01", "version": "1.1.0", "edition": "lesson", "tables": ["orders"] },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "The `orders` table above has one row per order in a small shop. In every example on this page it's already loaded as a DataFrame called `orders`, and `F` is `pyspark.sql.functions`.\n\nEverything you do with a DataFrame is one of two kinds of step:\n\n- A **transformation** describes a new DataFrame from an old one: `filter` keeps some rows, `select` keeps some columns, `limit(n)` keeps at most `n` rows. It returns a new DataFrame **straight away** and runs nothing.\n- An **action** asks for an answer: `show()`, `count()`, `collect()`, `first()`, `take(n)`. This is the moment Spark actually reads data and does the work.\n\nThis lesson uses `filter` and `select` only as examples of transformations. Lessons 9 and 10 cover them properly."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "A transformation gives back a plan",
+      "code": "from pyspark.sql import functions as F\n\npaid = orders.filter(F.col(\"status\") == \"paid\")\nprint(paid)\n",
+      "note": "Printing `paid` shows its columns and their types, but no rows: none have been read yet. `paid` is a new DataFrame that only knows how to get its rows."
+    },
+    {
+      "kind": "text",
+      "md": "A DataFrame is a **plan** until an action runs it. That's called **lazy evaluation**. Spark waits on purpose: once it sees the whole plan, it can skip columns and rows you never use, and do several steps in one pass over the data."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "An action runs the plan",
+      "code": "from pyspark.sql import functions as F\n\npaid = orders.filter(F.col(\"status\") == \"paid\")\npaid.show()\nprint(paid.count(), \"of\", orders.count(), \"orders are paid\")\n",
+      "note": "`show()` and `count()` are actions, so this time Spark reads the orders. `orders` still has all 12 rows: a transformation makes a new DataFrame and never changes the old one."
+    },
+    {
+      "kind": "text",
+      "md": "Transformations chain: each one adds a step to the plan. Nothing runs until the action at the end, and then all the steps run together."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Chain steps, then act once",
+      "code": "from pyspark.sql import functions as F\n\nweb = orders.filter(F.col(\"channel\") == \"web\")\nweb_totals = web.select(\"order_id\", \"total\")\nfirst_two = web_totals.limit(2)\nfirst_two.show()\n",
+      "note": "Three transformations build the plan; only `show()` runs it. Which rows `limit` keeps isn't promised unless the rows are sorted (lesson 11). On this small table it keeps the first two in file order."
+    },
+    {
+      "kind": "text",
+      "md": "`show()` prints rows for you to look at. To use the values in Python, bring rows back with an action:\n\n- `collect()` returns **every** row as a Python list. Fine for a few rows; on a big table it can overwhelm your program.\n- `take(n)` returns a list of at most `n` rows.\n- `first()` returns just the first row.\n\nEach row is a `Row`. Read a value with `row[\"column\"]`."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Bring rows back to Python",
+      "code": "from pyspark.sql import functions as F\n\nweb = orders.filter(F.col(\"channel\") == \"web\").select(\"order_id\", \"total\")\n\nrows = web.collect()\nprint(len(rows), \"web orders\")\n\nfirst = web.first()\nprint(first[\"order_id\"], first[\"total\"])\n\nprint(web.take(2))\n",
+      "note": "`collect()` brought back all three web orders as a list, `first()` one `Row`, and `take(2)` a list of two. `total` comes back as a Python `Decimal`, which keeps the exact cents."
+    },
+    {
+      "kind": "text",
+      "md": "Lazy doesn't mean careless. When you add a step, Spark checks it against the columns it knows about, without reading any rows. A misspelt column fails on the line where you wrote it, not later at the action."
+    },
+    {
+      "kind": "error-example",
+      "id": "e5",
+      "title": "A wrong column name fails straight away",
+      "code": "from pyspark.sql import functions as F\n\nbig = orders.filter(F.col(\"totl\") > 200)\nprint(\"never printed\")\n",
+      "error": "AnalysisException",
+      "note": "There's no action here at all, yet Spark stops on the `filter` line: it knows `orders` has no `totl` column and suggests the names it does have."
+    },
+    {
+      "kind": "text",
+      "md": "To see the plan itself, call `explain()` on a DataFrame. It's not an action: it prints the plan without running it."
+    },
+    {
+      "kind": "example",
+      "id": "e6",
+      "title": "Look at the plan",
+      "code": "from pyspark.sql import functions as F\n\nweb_totals = orders.filter(F.col(\"channel\") == \"web\").select(\"order_id\", \"total\")\nweb_totals.explain()\n",
+      "note": "Read it from the bottom up: scan the CSV file, keep the web rows (`Filter`), keep two columns (`Project`). The scan's `ReadSchema` lists only the three columns the plan needs: because Spark saw the whole plan first, it skips the rest. The numbers after `#` are Spark's own labels for columns."
+    }
+  ],
+  "challenges": ["PS-L004-C1", "PS-L004-C2"],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "Which of these is an action?",
+      "choices": [
+        "orders.filter(F.col(\"status\") == \"paid\")",
+        "orders.select(\"order_id\")",
+        "orders.limit(5)",
+        "orders.count()"
+      ],
+      "answer": 3,
+      "why": "`count()` asks for an answer, so Spark runs the plan. `filter`, `select` and `limit` are transformations: each returns a new DataFrame and runs nothing."
+    },
+    {
+      "id": "k2",
+      "prompt": "What happens when the line `paid = orders.filter(F.col(\"status\") == \"paid\")` runs?",
+      "choices": [
+        "Spark reads every order and keeps the paid ones in memory",
+        "Spark builds a new DataFrame that describes the paid orders, without reading any rows",
+        "The unpaid rows are removed from `orders`",
+        "Spark prints the paid orders"
+      ],
+      "answer": 1,
+      "why": "A transformation only adds a step to a plan. Rows are read when an action, such as `show()` or `count()`, runs that plan. `orders` itself never changes."
+    },
+    {
+      "id": "k3",
+      "prompt": "You write `orders.filter(F.col(\"totl\") > 200)` with a typo and no action after it. What happens?",
+      "choices": [
+        "Nothing, until an action runs the plan",
+        "An error on that line, because Spark checks column names as you build the plan",
+        "The filter keeps no rows",
+        "The filter keeps every row"
+      ],
+      "answer": 1,
+      "why": "Spark checks each step against the columns it knows as soon as you write it, without reading data. The `AnalysisException` points at the `filter` line."
+    }
+  ],
+  "review": [
+    "Transformations such as `filter`, `select` and `limit` return a new DataFrame straight away and run nothing.",
+    "Actions such as `show`, `count`, `collect`, `first` and `take` run the plan and give you an answer.",
+    "A DataFrame is a plan until an action runs it. This is lazy evaluation, and it lets Spark skip work you don't need.",
+    "A transformation never changes the DataFrame it started from.",
+    "`collect()` returns every row as a list, `take(n)` at most `n`, `first()` one `Row`; read values with `row[\"column\"]`.",
+    "`explain()` prints the plan without running it. Wrong column names fail as soon as you write the step."
+  ],
+  "practice": ["PS-Q0016", "PS-Q0017", "PS-Q0018", "PS-Q0019", "PS-Q0020"]
+}

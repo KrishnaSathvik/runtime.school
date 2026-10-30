@@ -1,0 +1,138 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "user_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "preferred_device",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "device_index",
+     "type": "double",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "U01",
+     "tv",
+     0.0
+    ],
+    [
+     "U02",
+     "mobile",
+     2.0
+    ],
+    [
+     "U03",
+     "web",
+     1.0
+    ],
+    [
+     "U04",
+     "tv",
+     0.0
+    ],
+    [
+     "U05",
+     "tablet",
+     3.0
+    ],
+    [
+     "U06",
+     "tv",
+     0.0
+    ],
+    [
+     "U07",
+     null,
+     4.0
+    ],
+    [
+     "U08",
+     "web",
+     1.0
+    ]
+   ],
+   "row_count": 8,
+   "inputs": {
+    "users": [
+     [
+      "U01",
+      "2025-02-03",
+      "US",
+      "25-34",
+      "tv"
+     ],
+     [
+      "U02",
+      "2025-03-18",
+      "IN",
+      "18-24",
+      "mobile"
+     ],
+     [
+      "U03",
+      "2025-05-09",
+      "GB",
+      "35-44",
+      "web"
+     ],
+     [
+      "U04",
+      "2025-08-21",
+      "BR",
+      "25-34",
+      "tv"
+     ],
+     [
+      "U05",
+      "2026-01-12",
+      "CA",
+      "45-54",
+      "tablet"
+     ],
+     [
+      "U06",
+      "2026-08-30",
+      "DE",
+      "55+",
+      "tv"
+     ],
+     [
+      "U07",
+      "2026-09-02",
+      "FR",
+      "25-34",
+      null
+     ],
+     [
+      "U08",
+      "2026-09-05",
+      "IN",
+      "18-24",
+      "web"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice members",
+  "devices used equally often, and several members with no device",
+  "every member on the same device",
+  "no members at all"
+ ]
+}

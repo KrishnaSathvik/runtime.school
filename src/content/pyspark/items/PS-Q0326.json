@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0326",
+  "slug": "files-after-the-nightly-rewrite",
+  "lesson": "PS-L066",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 6,
+  "title": "Files after the nightly rewrite",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "prompt": "The trips table is loaded every morning and rewritten every night. Before planning a clean-up, the team wants to know how many files the table uses and how many are lying in its folder. Finish `solve` so it returns the table's latest version and both file counts.",
+  "rules": [
+    "`version`: the table's latest version number, from its history.",
+    "`files_in_table`: the data files the latest version uses.",
+    "`files_in_folder`: every Parquet file in the table's folder, as `files_on_disk` counts them.",
+    "Don't change `build_table`, `files_on_disk` or `report`."
+  ],
+  "hints": [
+    "An overwrite marks the old files removed in the log. Does it delete them?",
+    "`DeltaTable.forPath(spark, path).detail()` describes the current version; its `numFiles` counts only the files that version uses.",
+    "Take the version from the newest history row. A write that changes nothing makes no version, so counting writes can be wrong."
+  ],
+  "explanation": "`detail().first().numFiles` (or `len(spark.read.format(\"delta\").load(path).inputFiles())`) counts the files the latest version uses: the two the nightly rewrite wrote. The folder still holds the morning load's three files as well, because an overwrite only marks files removed in the log, so `files_on_disk` says five. `spark.read.parquet(path)` reads the folder, not the log, so it counts those five too. The version comes from `history().first().version`: normally 1, but with no trips the overwrite changes nothing and makes no version, so the latest is still 0.",
+  "entry": "solve",
+  "inputs": [
+    "trips"
+  ],
+  "starter": "import os\nimport shutil\n\nfrom delta.tables import DeltaTable\n\n\ndef build_table(trips, path):\n    # The day's two writes, replayed on a fresh table. Don't change this.\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty folder on every run\n    # repartition(n) splits the trips into n parts, so a write makes up to n files.\n    trips.repartition(3).write.format(\"delta\").save(path)  # the morning load\n    trips.repartition(2).write.format(\"delta\").mode(\"overwrite\").save(path)  # the nightly rewrite\n\n\ndef files_on_disk(path):\n    # Every Parquet file in the table's folder (the log is a sub-folder, so it isn't counted).\n    return len([f for f in os.listdir(path) if f.endswith(\".parquet\")])\n\n\ndef report(version, files_in_table, files_in_folder):\n    return spark.createDataFrame(\n        [(version, files_in_table, files_in_folder)],\n        \"version BIGINT, files_in_table INT, files_in_folder INT\",\n    )\n\n\ndef solve(trips):\n    path = \"/tmp/taxi/trips\"\n    build_table(trips, path)\n    # Fill in the three numbers.\n    return report(0, 0, 0)\n",
+  "output": {
+    "columns": [
+      "version",
+      "files_in_table",
+      "files_in_folder"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

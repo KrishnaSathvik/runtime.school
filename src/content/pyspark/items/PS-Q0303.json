@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0303",
+  "kind": "predict",
+  "slug": "writes-that-leave-no-version",
+  "lesson": "PS-L061",
+  "role": "edge",
+  "format": "concept_or_trace",
+  "difficulty": "medium",
+  "minutes": 6,
+  "title": "Writes that leave no version",
+  "prompt": "`accounts` has 5 rows and `nothing` has none. This program writes to a new Delta table four times: two of the writes have no rows, and one uses the default mode on a table that already exists. What does it print? Type each line on its own line.",
+  "program": "from delta.tables import DeltaTable\n\npath = \"/tmp/delta/accounts\"\nnothing = spark.createDataFrame([], accounts.schema)\n\naccounts.write.format(\"delta\").save(path)\nnothing.write.format(\"delta\").mode(\"append\").save(path)\ntry:\n    accounts.write.format(\"delta\").save(path)\nexcept Exception as e:\n    print(type(e).__name__)\nnothing.write.format(\"delta\").mode(\"overwrite\").save(path)\n\nprint([row.version for row in DeltaTable.forPath(spark, path).history().collect()])\nprint(spark.read.format(\"delta\").load(path).count(), spark.read.parquet(path).count())\n",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "The default mode refuses to write to a table that exists. Does a refused write leave a commit?",
+    "Appending no rows adds no file. Overwriting a table that has rows marks its files removed, even when the new data is empty.",
+    "Removed files stay on disk. Which of the two reads still finds them?"
+  ],
+  "explanation": "The default mode on an existing table raises an `AnalysisException` before anything is written, so it leaves no commit. Appending no rows adds no file and removes none, so Delta writes no version either. The overwrite with no rows does change the table: it marks the five rows' file removed. So the history has only versions 0 and 1, newest first. The Delta read follows the log and finds no rows; the Parquet read takes every file in the folder, including the removed one, and counts 5."
+}

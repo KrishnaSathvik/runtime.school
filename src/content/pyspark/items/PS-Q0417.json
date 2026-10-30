@@ -1,0 +1,52 @@
+{
+ "id": "PS-Q0417",
+ "slug": "who-went-quiet",
+ "lesson": "PS-L084",
+ "role": "business",
+ "format": "dataframe_coding",
+ "difficulty": "hard",
+ "minutes": 17,
+ "title": "Who went quiet?",
+ "dataset": {
+  "id": "PS-D15",
+  "version": "1.0.0"
+ },
+ "prompt": "On-call wants a freshness check over `application_logs`: for every service in `EXPECTED`, when it last logged before the check time, and whether that's recent enough. It must give the same answer when rerun later for the same check time. Complete `freshness`.",
+ "rules": [
+  "Columns and types: `service STRING, last_log TIMESTAMP, quiet_s BIGINT, freshness STRING`, one row per service in `EXPECTED`. Other services are ignored.",
+  "Only logs at or before the check time count. `quiet_s` is the whole seconds from `last_log` to the check time, as `F.unix_timestamp` gives them.",
+  "`freshness` is `fresh` when `quiet_s` is at most `MAX_SILENCE_S`, `stale` when it's more, and `silent` when the service has no log at all by then (with NULL `last_log` and `quiet_s`)."
+ ],
+ "hints": [
+  "Run the starter on the sample. Which expected service has no row, and which row is about a log after the check time?",
+  "Grouping can't produce a row for a service with no logs. Stack a row per expected service with a NULL time onto the logs first, with `unionByName`; `F.max` ignores the NULLs.",
+  "Never use `F.current_timestamp()`: compare with the check time you were given, cast to a timestamp."
+ ],
+ "explanation": "Filter the logs to the expected services and to times at or before the check time; a log stamped after it didn't exist yet when the check was due, and counting it would make a rerun disagree with the original run. A service that never logged has no rows to group, so it would vanish instead of raising the loudest alarm. Stacking one row per expected service with a NULL `logged_at` (`unionByName`) gives every service a group, and `F.max` skips the NULL, leaving `last_log` NULL only for the silent ones. `F.unix_timestamp` turns both times into whole seconds, so the difference is the silence, and exactly the limit is still fresh. Joining to a list of services would also work, but grouping and stacking is enough here.",
+ "entry": "solve",
+ "inputs": [
+  "application_logs"
+ ],
+ "starter": "from pyspark.sql import functions as F\n\nEXPECTED = [\"auth-service\", \"catalog-api\", \"checkout-api\", \"iot-gateway\", \"notification-worker\", \"search-api\"]\nMAX_SILENCE_S = 60\n\n\ndef freshness(application_logs, check_at):\n    # One row per expected service: when it last logged, how long ago, and whether that's fresh.\n    check_time = F.lit(check_at).cast(\"timestamp\")\n    return application_logs.groupBy(\"service\").agg(F.max(\"logged_at\").alias(\"last_log\"))\n\n\ndef solve(application_logs):\n    return freshness(application_logs, \"2026-04-14 10:01:25\")\n",
+ "output": {
+  "columns": [
+   "service",
+   "last_log",
+   "quiet_s",
+   "freshness"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 45,
+  "check_timeout_s": 120,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

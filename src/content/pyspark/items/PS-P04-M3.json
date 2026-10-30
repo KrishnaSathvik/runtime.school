@@ -1,0 +1,65 @@
+{
+  "id": "PS-P04-M3",
+  "slug": "deduplicate-transactions",
+  "project": "PS-P04",
+  "milestone": "PS-P04.m3",
+  "difficulty": "medium",
+  "minutes": 35,
+  "title": "Remove repeated transactions and run each balance",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "The feed sometimes sends the same row twice, and a repeated row would move a balance twice. Write `reconciled_transactions(transactions, accounts)`: your valid transactions with the copies removed, only the posted ones, and each account's running balance after every transaction.",
+  "rules": [
+    "A copy is a row identical to another in every column. Keep one of them.",
+    "Only `posted` transactions move money. `pending` and `declined` rows are left out.",
+    "Return `transaction_id`, `account_id`, `posted_at`, `txn_type`, `signed_amount` and `running_balance`, in that order.",
+    "`running_balance` is the sum of the account's `signed_amount` up to and including this row, in order of `posted_at`, then `transaction_id` when two rows share a time.",
+    "`running_balance` is a `MONEY` decimal, `decimal(14,2)`. Cast the sum; never use a double."
+  ],
+  "hints": [
+    "`valid_transactions(transactions, accounts).dropDuplicates()` removes exact copies. Then filter the status.",
+    "`Window.partitionBy(\"account_id\").orderBy(\"posted_at\", \"transaction_id\")` puts each account's rows in order; add `.rowsBetween(Window.unboundedPreceding, Window.currentRow)`.",
+    "`F.sum(\"signed_amount\").over(w).cast(MONEY)`. Remove the copies before the window: a copy left in counts twice in every later balance."
+  ],
+  "explanation": "Removing copies comes first: `dropDuplicates()` on the valid rows, so a repeated row can't add its amount twice to every balance after it. Only posted rows move money, so the status filter comes before the window too. The running balance is a window sum partitioned by account. Ordering by `posted_at` alone isn't enough: two transactions at the same second would tie, and the default window frame gives tied rows the same total. Adding `transaction_id` to the order and using `rowsBetween(Window.unboundedPreceding, Window.currentRow)` makes every row's balance exact and repeatable. A decimal sum widens to `decimal(22,2)`; casting it to `MONEY` sets the type without rounding anything.",
+  "entry": "reconciled_transactions",
+  "inputs": [
+    "transactions",
+    "accounts"
+  ],
+  "file": "pipeline.py",
+  "append": "\n\nMONEY = \"decimal(14,2)\"\n\n\ndef reconciled_transactions(transactions, accounts):\n    # Step 3: valid rows, one copy of each, posted only, with each account's running balance.\n    return valid_transactions(transactions, accounts)\n",
+  "prerequisites": [
+    "PS-L020",
+    "PS-L035"
+  ],
+  "output": {
+    "columns": [
+      "transaction_id",
+      "account_id",
+      "posted_at",
+      "txn_type",
+      "signed_amount",
+      "running_balance"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "example",
+      "sample": true
+    },
+    {
+      "id": "project",
+      "edition": "project"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 150,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

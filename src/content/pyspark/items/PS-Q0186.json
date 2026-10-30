@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0186",
+  "slug": "patient-name-and-address",
+  "lesson": "PS-L038",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Patient name and address records",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "prompt": "The patient portal stores names and addresses as nested records. Write `solve(patients)` so each patient comes back with a `name` struct and an `address` struct.",
+  "rules": [
+    "`name` has the fields `first` and `last`, from `first_name` and `last_name`, in that order.",
+    "`address` has the fields `city`, `state` and `zip` (from `postal_code`), in that order. Postal codes stay text, leading zeros included.",
+    "Every patient gets both structs, even when some or all of the values inside are missing.",
+    "Return `patient_id`, `name` and `address`."
+  ],
+  "hints": [
+    "`F.struct(...)` builds one struct column from several columns.",
+    "Each field takes its column's name unless you rename it with `alias` inside `F.struct`.",
+    "Name the whole struct with one more `alias` outside: `F.struct(F.col(\"first_name\").alias(\"first\"), ...).alias(\"name\")`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "patients"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(patients):\n    # Return patient_id, a name struct and an address struct.\n    return patients\n",
+  "output": {
+    "columns": [
+      "patient_id",
+      "name",
+      "address"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Build each struct with `F.struct`, renaming the fields inside and the struct outside: `F.struct(F.col(\"first_name\").alias(\"first\"), F.col(\"last_name\").alias(\"last\")).alias(\"name\")` and `F.struct(\"city\", \"state\", F.col(\"postal_code\").alias(\"zip\")).alias(\"address\")`. Fields come out in the order you list them, and `F.struct` always builds a struct, so a patient with no address details still gets one whose fields are all missing. `postal_code` is text, so leave it as it is; casting it to a number would lose leading zeros."
+}

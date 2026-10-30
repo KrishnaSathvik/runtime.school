@@ -1,0 +1,68 @@
+{
+  "id": "PS-P04-M5",
+  "slug": "calculate-account-balances",
+  "project": "PS-P04",
+  "milestone": "PS-P04.m5",
+  "difficulty": "hard",
+  "minutes": 45,
+  "title": "Calculate expected and ledger balances",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "Now each account's balance, worked out two ways. The expected balance is what should be there: the account's posted transactions plus the transfers that should have moved money. The ledger balance is what the ledger actually booked. When the books are right, the two agree to the cent.\n\nWrite `account_balances(accounts, transactions, transfers, ledger_entries)`: one row per account, both balances side by side, and the difference between them.",
+  "rules": [
+    "One row for every account in `accounts`, even one with no activity: its balances are 0.00.",
+    "Both balances start from the sum of the account's `signed_amount` in `reconciled_transactions`.",
+    "`expected_balance` then adds every transfer in `transfer_matches` except duplicates: minus its `amount` on `from_account_id`, plus its `amount` on `to_account_id`.",
+    "`ledger_balance` instead adds every ledger entry on the account, whatever its transfer: a `credit` adds its `amount`, a `debit` subtracts it.",
+    "`difference` is `ledger_balance` minus `expected_balance`.",
+    "Return `account_id`, `currency`, `expected_balance`, `ledger_balance` and `difference`, the three balances as `decimal(14,2)`."
+  ],
+  "hints": [
+    "Build three totals per account with `groupBy(\"account_id\")`: transactions, expected transfers and ledger entries. For the transfers, select the sending side as (`from_account_id` → `account_id`, `-F.col(\"amount\")`) and the receiving side as (`to_account_id`, `amount`), and `unionByName` them before grouping.",
+    "Start from `accounts.select(\"account_id\", \"currency\")` and left join the three totals, so quiet accounts stay. `F.coalesce(F.col(\"txn_net\"), F.lit(0))` turns a missing total into zero.",
+    "Cast each balance to `MONEY` at the end. Decimal sums are exact, so the cast only sets the type."
+  ],
+  "explanation": "The two balances share the same transactions and differ only in how transfers are counted, so their difference points straight at the ledger. The expected side comes from `transfer_matches` without duplicates: what the bank was asked to move, each transfer once. Turning every transfer into two flows, minus on the sender and plus on the receiver, and stacking them with `unionByName` lets one `groupBy` total both directions. The ledger side takes every entry as it was booked, including copies and entries of transfers that don't exist, because that is what the account really shows. Starting from `accounts` with left joins keeps quiet accounts, and `coalesce` makes their totals zero instead of missing. Everything stays decimal, so a one-cent booking error leaves a one-cent difference.",
+  "entry": "account_balances",
+  "inputs": [
+    "accounts",
+    "transactions",
+    "transfers",
+    "ledger_entries"
+  ],
+  "file": "pipeline.py",
+  "append": "\n\ndef account_balances(accounts, transactions, transfers, ledger_entries):\n    # Step 5: one row per account, the expected and the ledger balance side by side, and their difference.\n    return accounts\n",
+  "prerequisites": [
+    "PS-L019",
+    "PS-L029",
+    "PS-L031"
+  ],
+  "output": {
+    "columns": [
+      "account_id",
+      "currency",
+      "expected_balance",
+      "ledger_balance",
+      "difference"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "example",
+      "sample": true
+    },
+    {
+      "id": "project",
+      "edition": "project"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 200,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

@@ -1,0 +1,78 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "task",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "first_run",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "rerun",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "rows",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "late_deliveries",
+     "ok",
+     "reused",
+     1
+    ],
+    [
+     "clean_events",
+     "ok",
+     "reused",
+     13
+    ],
+    [
+     "unknown_events",
+     "ok",
+     "reused",
+     1
+    ],
+    [
+     "known_events",
+     "failed",
+     "ok",
+     12
+    ],
+    [
+     "delivered",
+     "skipped",
+     "ok",
+     4
+    ],
+    [
+     "late_scans",
+     "skipped",
+     "ok",
+     1
+    ]
+   ],
+   "row_count": 6
+  }
+ },
+ "hidden": [
+  "the full practice tables, where every check passes",
+  "events for unknown shipments and a delivery with a status that isn't allowed",
+  "empty tables"
+ ]
+}

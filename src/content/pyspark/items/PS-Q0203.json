@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0203",
+  "slug": "basket-lines-that-fail-the-price-check",
+  "lesson": "PS-L041",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Basket lines that fail the price check",
+  "dataset": {
+    "id": "PS-D06",
+    "version": "1.0.0"
+  },
+  "prompt": "Before a basket is charged, every line needs a positive quantity and a positive price. Write `solve(checkout_events)` so it flags each checkout step and lists the skus of the lines that clearly fail.",
+  "rules": [
+    "Return `event_id`, `step`, `all_valid` and `invalid_skus`, in that order.",
+    "A line is valid when `qty` is at least 1 and `price` is more than 0. It's invalid when `qty` is 0 or less, or `price` is 0 or less.",
+    "`all_valid` is true when every line is valid and false when any line is invalid. If no line is invalid but some line has a missing `qty` or `price`, it's missing. An empty basket is valid.",
+    "`invalid_skus` lists the invalid lines' skus in basket order, repeats included; a line that's only missing a value isn't listed. A missing `items` gives missing values."
+  ],
+  "hints": [
+    "`F.forall(\"items\", lambda x: ...)` answers \"is every line valid?\" Join two conditions inside the lambda with `&`, each in parentheses.",
+    "For the list, filter the invalid lines with `|` (either condition), then `F.transform` them to their sku.",
+    "A comparison with a missing value is missing, not false. Work out what `true & missing`, `false & missing` and `true | missing` give before adding any special handling."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "checkout_events"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(checkout_events):\n    # Return event_id, step, all_valid and invalid_skus for each checkout step.\n    return checkout_events\n",
+  "output": {
+    "columns": [
+      "event_id",
+      "step",
+      "all_valid",
+      "invalid_skus"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Two expressions, both on the array in place. `F.forall(\"items\", lambda x: (x[\"qty\"] >= 1) & (x[\"price\"] > 0))` gives `all_valid`, and `F.transform(F.filter(\"items\", lambda x: (x[\"qty\"] <= 0) | (x[\"price\"] <= 0)), lambda x: x[\"sku\"])` gives `invalid_skus`. The missing values take care of themselves: a line with a missing price but a good quantity gives `true & missing`, which is missing, so `forall` returns missing unless another line is false; and `false | missing` is missing, so `filter` doesn't list it. A line with `qty` 0 is invalid even if its price is missing, because `false & missing` is false and `true | missing` is true. An empty basket has no failing line, so `forall` is true and the list is empty. The usual slips are `> 1` for the quantity, `>= 0` for the price, and removing repeated skus."
+}

@@ -1,0 +1,66 @@
+{
+  "id": "PS-P06-M3",
+  "slug": "zone-and-hour-demand",
+  "project": "PS-P06",
+  "milestone": "PS-P06.m3",
+  "difficulty": "medium",
+  "minutes": 35,
+  "title": "Measure demand by zone and hour",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "prompt": "The dispatch team wants to know where and when people take taxis. Write `zone_demand(trips, taxi_zones)`: one row per pickup zone and local hour of the day, over all valid trips, with the zone's name and borough from `taxi_zones`. Some trips start in zone ids that aren't in the zone list. They still count, under the name `Unknown`.",
+  "rules": [
+    "Use the valid trips from `trip_metrics(trips)`, grouped by `pickup_zone_id` and `pickup_hour`, the local hour.",
+    "Return `zone_id`, `zone_name`, `borough`, `pickup_hour`, `trips`, `revenue` and `avg_fare`, one row per zone and hour that has trips.",
+    "`trips` counts the trips. `revenue` is the sum of `total` as a `DECIMAL(12,2)`. `avg_fare` is the average `fare` as a `DECIMAL(10,2)`.",
+    "A zone id that isn't in `taxi_zones` keeps its own rows, with `zone_name` and `borough` both `Unknown`."
+  ],
+  "hints": [
+    "Group first, then join the names: the grouped table has at most 24 rows per zone, so the join has little to look up.",
+    "A left join keeps every grouped row, and zones with no match get NULL names. `F.coalesce(F.col(\"zone_name\"), F.lit(\"Unknown\"))` fills them.",
+    "`F.sum(\"total\").cast(\"decimal(12,2)\")` and `F.avg(\"fare\").cast(\"decimal(10,2)\")` keep the money exact and round the average half up to cents."
+  ],
+  "explanation": "Grouping before the join means Spark joins about 700 summary rows to 30 zones instead of 5,000 trips: the same answer from a smaller join. The join is `left` so trips from zone ids that aren't in the list (0 and 99 here) keep their rows and the demand still adds up to every valid trip; an inner join would drop them without a word. The hour is the meter's local hour, so 08:00 means the city's morning rush, not 08:00 UTC. Money stays in `DECIMAL`: the sum of a `DECIMAL(8,2)` column is exact, and the cast rounds the average half up.",
+  "entry": "zone_demand",
+  "inputs": [
+    "trips",
+    "taxi_zones"
+  ],
+  "file": "pipeline.py",
+  "append": "\n\ndef zone_demand(trips, taxi_zones):\n    # Step 3: trips, revenue and average fare per pickup zone and local hour, with the zone's name.\n    return trip_metrics(trips)\n",
+  "prerequisites": [
+    "PS-L019",
+    "PS-L025",
+    "PS-L031"
+  ],
+  "output": {
+    "columns": [
+      "zone_id",
+      "zone_name",
+      "borough",
+      "pickup_hour",
+      "trips",
+      "revenue",
+      "avg_fare"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "example",
+      "sample": true
+    },
+    {
+      "id": "project",
+      "edition": "project"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 150,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

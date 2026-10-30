@@ -1,0 +1,128 @@
+{
+  "id": "PS-L045",
+  "minutes": 25,
+  "lede": "CSV is how data arrives; Parquet is how most pipelines keep it. A columnar file stores the schema with the data, so types survive, files are smaller and Spark can read just the columns a query needs.",
+  "objectives": [
+    "Write a DataFrame as Parquet and read it back with its types intact",
+    "Explain what's inside a Parquet folder: part files, compression and a `_SUCCESS` marker",
+    "Write and read ORC, the other common columnar format",
+    "Avoid the error from writing to a folder that already exists"
+  ],
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "trips"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`trips` has one row per taxi ride: times, zones, distance, and money columns as exact decimals. It was read from CSV with a schema, which is the only reason those columns have types at all: the CSV file itself is just text.\n\n`df.write.parquet(path)` saves a DataFrame in Parquet format. Every example here writes under `/tmp`, the one place the course's Spark can write, and adds `.mode(\"overwrite\")` so it can run again. `spark.read.parquet(path)` reads it back."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Write Parquet, read it back",
+      "code": "trips.write.mode(\"overwrite\").parquet(\"/tmp/taxi/trips\")\n\nback = spark.read.parquet(\"/tmp/taxi/trips\")\nback.printSchema()\nback.select(\"trip_id\", \"pickup_at\", \"fare\", \"total\").show(3)\nprint(back.count(), \"trips\")\n",
+      "note": "No schema was given to the read, yet every column comes back with its type: timestamps, whole numbers, a double and `decimal(8,2)` money. Parquet keeps the schema inside the file."
+    },
+    {
+      "kind": "text",
+      "md": "Compare that with a round trip through CSV. Written as CSV and read back without a schema, every column is text again, and you'd have to repeat the schema on every read."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "The same round trip through CSV",
+      "code": "trips.write.mode(\"overwrite\").csv(\"/tmp/taxi/trips_csv\", header=True)\ntrips.write.mode(\"overwrite\").parquet(\"/tmp/taxi/trips\")\n\nas_csv = spark.read.csv(\"/tmp/taxi/trips_csv\", header=True)\nas_parquet = spark.read.parquet(\"/tmp/taxi/trips\")\nprint(dict(as_csv.dtypes)[\"fare\"], dict(as_csv.dtypes)[\"pickup_at\"])\nprint(dict(as_parquet.dtypes)[\"fare\"], dict(as_parquet.dtypes)[\"pickup_at\"])\n",
+      "note": "From CSV, `fare` and `pickup_at` are strings; from Parquet, they're still a decimal and a timestamp."
+    },
+    {
+      "kind": "text",
+      "md": "The path you write to is a **folder**, not a file. Inside it:\n\n- one or more `part-...` files hold the rows, one per partition of the DataFrame being written. Their names include a random id, so never rely on them.\n- an empty `_SUCCESS` file marks that the whole write finished.\n- small hidden `.crc` files hold checksums.\n\nParquet files are compressed. The default codec is `snappy`, which is fast; the `compression` option picks another, such as `gzip`. The codec shows in the file names.\n\nBecause Parquet stores each column separately, a query that selects two columns reads only those two from disk. On wide tables that's the biggest saving of all."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "What's in the folder",
+      "code": "import os\n\ntrips.write.mode(\"overwrite\").parquet(\"/tmp/taxi/trips\")\nfiles = sorted(os.listdir(\"/tmp/taxi/trips\"))\nprint(len([f for f in files if f.startswith(\"part-\")]), \"part file,\", \"_SUCCESS\" in files)\nprint(sorted({f.split(\"c000\")[-1] for f in files if f.startswith(\"part-\")}))\n\ntrips.write.mode(\"overwrite\").option(\"compression\", \"gzip\").parquet(\"/tmp/taxi/trips_gzip\")\ngz_files = os.listdir(\"/tmp/taxi/trips_gzip\")\nprint(sorted({f.split(\"c000\")[-1] for f in gz_files if f.startswith(\"part-\")}))\n",
+      "note": "Twelve rows from one small file make one partition, so there's one part file. Its name ends in `.snappy.parquet`; with `compression=\"gzip\"` it ends in `.gz.parquet`. Plain Python's `os.listdir` lists the folder; the code prints only what doesn't change between runs."
+    },
+    {
+      "kind": "text",
+      "md": "**ORC** is the other columnar format you'll meet, common in Hive-based platforms. It works the same way: `df.write.orc(path)` and `spark.read.orc(path)`, with the schema stored in the file. Its default compression here is `zstd`."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "ORC keeps the schema too",
+      "code": "import os\n\ntrips.write.mode(\"overwrite\").orc(\"/tmp/taxi/trips_orc\")\norc = spark.read.orc(\"/tmp/taxi/trips_orc\")\nprint(sorted({f.split(\"c000\")[-1] for f in os.listdir(\"/tmp/taxi/trips_orc\") if f.startswith(\"part-\")}))\nprint(orc.dtypes == trips.dtypes)\norc.select(\"trip_id\", \"trip_distance\", \"total\", \"payment_type\").show(3)\n",
+      "note": "Same columns, same types, same values as the original `trips`."
+    },
+    {
+      "kind": "text",
+      "md": "Without a mode, a write refuses to touch a folder that's already there. That protects data from being replaced by accident. `.mode(\"overwrite\")` replaces the folder's contents; the lesson on write modes covers the others."
+    },
+    {
+      "kind": "error-example",
+      "id": "e5",
+      "title": "Writing to a folder that exists",
+      "code": "trips.write.mode(\"overwrite\").parquet(\"/tmp/taxi/trips\")\ntrips.write.parquet(\"/tmp/taxi/trips\")\n",
+      "error": "AnalysisException",
+      "note": "The first line creates the folder; the second has no mode, so it stops rather than replace what's there. The error names the path and suggests `mode(\"overwrite\")`."
+    }
+  ],
+  "challenges": [
+    "PS-L045-C1",
+    "PS-L045-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "You write `trips` to Parquet and read it back without a schema. What type is `fare`?",
+      "choices": [
+        "string",
+        "double",
+        "decimal(8,2), the same as before",
+        "It depends on the values"
+      ],
+      "answer": 2,
+      "why": "Parquet stores the schema with the data, so types come back exactly as they were written."
+    },
+    {
+      "id": "k2",
+      "prompt": "What is `/tmp/taxi/trips` after `trips.write.parquet(\"/tmp/taxi/trips\")`?",
+      "choices": [
+        "A single file called trips",
+        "A folder with part files and a `_SUCCESS` marker",
+        "A CSV file with a Parquet header",
+        "A table in a database"
+      ],
+      "answer": 1,
+      "why": "Spark writes a folder: one part file per partition, plus `_SUCCESS` when the write finished."
+    },
+    {
+      "id": "k3",
+      "prompt": "What happens if you run `trips.write.parquet(path)` when `path` already exists?",
+      "choices": [
+        "It adds the rows to the folder",
+        "It replaces the folder",
+        "It fails with an error, because no mode was given",
+        "It writes to a new folder next to it"
+      ],
+      "answer": 2,
+      "why": "The default refuses to write to an existing path. Use `.mode(\"overwrite\")` to replace it on purpose."
+    }
+  ],
+  "review": [
+    "`df.write.parquet(path)` writes Parquet; `spark.read.parquet(path)` reads it back with its schema, no options needed.",
+    "Parquet and ORC are columnar: types survive, files are compressed, and Spark reads only the columns a query selects.",
+    "A write produces a folder of `part-` files (random names) and a `_SUCCESS` marker.",
+    "Parquet compresses with `snappy` by default; `option(\"compression\", \"gzip\")` picks another codec.",
+    "`df.write.orc(path)` and `spark.read.orc(path)` work the same way for ORC.",
+    "Writing to an existing path fails unless you choose a mode such as `.mode(\"overwrite\")`."
+  ],
+  "practice": ["PS-Q0221", "PS-Q0222", "PS-Q0223", "PS-Q0224", "PS-Q0225"]
+}

@@ -1,0 +1,27 @@
+{
+  "id": "PS-L015-C1",
+  "slug": "product-url-slugs",
+  "lesson": "PS-L015",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Product URL slugs",
+  "dataset": { "id": "PS-D01", "version": "1.1.0" },
+  "prompt": "Each product page gets a web address made from its name, like `pour-over-kettle`. Write `solve(products)` so it returns `product_id` and that `slug` for every product.",
+  "rules": [
+    "The slug is the name in lower case.",
+    "Each run of characters that aren't a letter `a`–`z` or a digit becomes one `-`.",
+    "A slug never starts or ends with `-`. A missing name gives a missing slug.",
+    "Return only `product_id` and `slug`, in that order."
+  ],
+  "hints": [
+    "`F.lower` first, so capitals aren't treated as other characters.",
+    "`F.regexp_replace` with a pattern for \"a character that isn't a lowercase letter or digit\", repeated with `+`, turns each run of them into one dash.",
+    "A name that starts or ends with a symbol leaves a dash at that end. A second `regexp_replace`, with a pattern anchored by `^` and `$`, can remove it."
+  ],
+  "entry": "solve",
+  "inputs": ["products"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(products):\n    # Return product_id and a lower-case, dash-separated slug of the name.\n    return products\n",
+  "output": { "columns": ["product_id", "slug"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

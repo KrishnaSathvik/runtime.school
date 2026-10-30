@@ -1,0 +1,18 @@
+{
+  "id": "PS-L001-C1",
+  "kind": "predict",
+  "slug": "rows-and-columns",
+  "lesson": "PS-L001",
+  "difficulty": "easy",
+  "minutes": 4,
+  "title": "Rows and columns",
+  "prompt": "This program counts things in the `learners` and `courses` tables above. What does it print? Type each line on its own line.",
+  "program": "print(learners.count())\nprint(courses.count())\nprint(len(courses.columns))\n",
+  "dataset": { "id": "PS-D11", "version": "1.0.0" },
+  "edition": "lesson",
+  "hints": [
+    "There are three `print` calls, so there are three lines.",
+    "`count()` counts rows. The column names on top of a table aren't a row.",
+    "`columns` is the list of column names, so `len` of it is the number of columns, not rows."
+  ]
+}

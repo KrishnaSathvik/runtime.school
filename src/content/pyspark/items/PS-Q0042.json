@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0042",
+  "slug": "distance-from-the-pass-mark",
+  "lesson": "PS-L009",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Distance from the pass mark",
+  "dataset": {
+    "id": "PS-D11",
+    "version": "1.0.0"
+  },
+  "prompt": "The results email tells each learner how far their final test score was from the pass mark of 70: above it or below it. Write `solve(assessments)` so it returns the score and that distance for every assessment.",
+  "rules": [
+    "Return five columns, in this order: `assessment_id`, `learner_id`, `course_id`, `score` and `margin`.",
+    "`score` is `score_pct`, unchanged. `margin` is `score_pct` minus 70: positive above the pass mark, 0 on it, negative below it.",
+    "A missing score gives a missing `score` and `margin`. Keep every assessment, duplicates included."
+  ],
+  "hints": [
+    "A column minus a number is a new column: `F.col(\"score_pct\") - 70`.",
+    "Wrap the arithmetic in brackets before `.alias(\"margin\")`, so the name goes on the whole calculation.",
+    "The same column can appear twice in one `select`: once renamed to `score`, once inside the calculation."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "assessments"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(assessments):\n    # Return assessment_id, learner_id, course_id, score and margin.\n    return assessments\n",
+  "output": {
+    "columns": [
+      "assessment_id",
+      "learner_id",
+      "course_id",
+      "score",
+      "margin"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Both new columns come from `score_pct`: `F.col(\"score_pct\").alias(\"score\")` renames it, and `(F.col(\"score_pct\") - 70).alias(\"margin\")` works out the distance for every row. The brackets matter: `F.col(\"score_pct\").alias(\"margin\") - 70` names only part of the calculation, and the column gets a long generated name instead. A missing score makes the margin missing on its own, because any calculation with a missing value is missing. `70 - score_pct` has the sign the wrong way round: a learner who passed would see a negative number. With SQL text, `selectExpr(\"assessment_id\", \"learner_id\", \"course_id\", \"score_pct AS score\", \"score_pct - 70 AS margin\")` is the same."
+}

@@ -1,0 +1,48 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "query",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "files",
+     "type": "int",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "status = 'paid'",
+     1
+    ],
+    [
+     "total_amount >= 250",
+     2
+    ],
+    [
+     "status = 'paid' AND total_amount >= 250",
+     0
+    ],
+    [
+     "invoice_date >= '2026-01-01'",
+     2
+    ]
+   ],
+   "row_count": 4
+  }
+ },
+ "hidden": [
+  "the full practice invoices",
+  "invoices with no status, and a paid invoice with no amount",
+  "no invoices"
+ ]
+}

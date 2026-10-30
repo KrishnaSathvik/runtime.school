@@ -1,0 +1,92 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "user_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "movie_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "rating",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "rated_at",
+     "type": "timestamp",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "U05",
+     "M08",
+     1.5,
+     "2026-08-09T19:02:00"
+    ],
+    [
+     "U05",
+     "M06",
+     4.0,
+     "2026-06-27T20:20:00"
+    ],
+    [
+     "U04",
+     "M10",
+     5.0,
+     "2026-04-16T21:05:00"
+    ],
+    [
+     "U03",
+     "M09",
+     4.5,
+     "2026-03-21T22:18:00"
+    ],
+    [
+     "U01",
+     "M06",
+     4.0,
+     "2026-02-14T23:01:00"
+    ],
+    [
+     "U05",
+     "M03",
+     3.5,
+     "2026-02-02T17:48:00"
+    ],
+    [
+     "U02",
+     "M07",
+     3.5,
+     "2026-01-08T12:30:00"
+    ],
+    [
+     "U03",
+     "M05",
+     2.5,
+     "2025-11-02T20:10:00"
+    ]
+   ],
+   "row_count": 8
+  }
+ },
+ "hidden": [
+  "the full practice ratings table",
+  "several ratings made at the same moment around the eighth place",
+  "a table with fewer than eight ratings",
+  "the same rating delivered twice",
+  "an empty ratings table"
+ ]
+}

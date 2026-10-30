@@ -1,0 +1,149 @@
+{
+ "id": "PS-L073",
+ "minutes": 30,
+ "lede": "A pipeline that reads raw files and writes a report in one step can't tell you whether a wrong number came from the source, the rules or the report. Bronze, silver and gold split it into three tables, so every number can be traced and every step rerun.",
+ "objectives": [
+  "Land raw data in a bronze Delta table with lineage columns that say where each row came from",
+  "Build a silver table of rows that pass the rules, and send the others to a quarantine table with the reason",
+  "Build a gold table for one use from silver only",
+  "Trace a gold number back through silver and bronze to its source file"
+ ],
+ "dataset": {
+  "id": "PS-D04",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "claims"
+  ]
+ },
+ "blocks": [
+  {
+   "kind": "text",
+   "md": "`claims` holds a clinic's insurance claims. Finance wants totals per payer. You could read the claims, filter, add them up and save the result in one go. Then one day a total looks wrong, and you can't tell whether a claim was bad, a rule was wrong or the sum was. You also can't fix one step without running everything again.\n\nThe usual answer is three layers, each its own table:\n\n- **Bronze** holds the data as it arrived, plus **lineage** columns that say where each row came from. Nothing is fixed or dropped here, so every later table can be rebuilt from it.\n- **Silver** holds the rows that pass the data-quality rules. A row that breaks a rule goes to a **quarantine** table with the reason, so it's neither used nor lost.\n- **Gold** holds tables shaped for one use, such as totals per payer. It's built from silver only.\n\nHere every layer is a Delta table under `/tmp/clinic`. This environment is one machine, but the layers work the same way on a cluster."
+  },
+  {
+   "kind": "text",
+   "md": "Bronze is the first table. `select(\"*\", ...)` keeps every column and adds new ones at the end. The lineage columns start with `_` so nobody mistakes them for data:\n\n- `_source_file`: the file the rows came from;\n- `_batch_id`: which load this is, counting up from 1.\n\nTheir values describe the load, so they're plain values with `F.lit`. Don't use the clock (`F.current_timestamp()`) for them: a rerun would give different values, and two tables built from the same load wouldn't agree."
+  },
+  {
+   "kind": "example",
+   "id": "e1",
+   "title": "Land the claims in bronze",
+   "code": "from pyspark.sql import functions as F\n\nbronze = claims.select(\n    \"*\",\n    F.lit(\"claims_2026-02-28.csv\").alias(\"_source_file\"),\n    F.lit(1).alias(\"_batch_id\"),\n)\nbronze.write.format(\"delta\").mode(\"overwrite\").save(\"/tmp/clinic/bronze/claims\")\n\nlanded = spark.read.format(\"delta\").load(\"/tmp/clinic/bronze/claims\")\nprint(landed.count(), \"rows,\", len(landed.columns), \"columns\")\nlanded.select(\"claim_id\", \"service_date\", \"submitted_date\", \"claim_status\", \"_source_file\", \"_batch_id\").show(truncate=False)\n",
+   "note": "Bronze has the seven claims and their twelve columns, plus the two lineage columns. CLM000003 is here too, although it was submitted three days before the visit: bronze keeps what arrived."
+  },
+  {
+   "kind": "text",
+   "md": "Silver applies the rules. Lesson 22's `F.when` chain names the first rule a row breaks; a row that breaks none gets NULL. Each rule checks for missing values first, so a NULL can't slip through:\n\n- both dates must be there, and the service can't be after the submission;\n- `allowed_amount` is empty until the payer decides, which is fine; when it's there it can't be above `billed_amount`. A NULL comparison doesn't fire a `when`, so an empty `allowed_amount` passes;\n- the status must be one of the five known ones.\n\nRows with no problem go to silver with bronze's columns (`select(bronze.columns)` drops the helper column). The rest go to quarantine with `_problem`. Every bronze row lands in exactly one of the two, so the counts must add up."
+  },
+  {
+   "kind": "example",
+   "id": "e2",
+   "title": "Split bronze into silver and quarantine",
+   "code": "from pyspark.sql import functions as F\n\nbronze = claims.select(\n    \"*\",\n    F.lit(\"claims_2026-02-28.csv\").alias(\"_source_file\"),\n    F.lit(1).alias(\"_batch_id\"),\n)\nbronze.write.format(\"delta\").mode(\"overwrite\").save(\"/tmp/clinic/bronze/claims\")\nbronze = spark.read.format(\"delta\").load(\"/tmp/clinic/bronze/claims\")\n\nproblem = (\n    F.when(F.col(\"service_date\").isNull() | F.col(\"submitted_date\").isNull(), \"missing date\")\n    .when(F.col(\"service_date\") > F.col(\"submitted_date\"), \"submitted before service\")\n    .when(F.col(\"allowed_amount\") > F.col(\"billed_amount\"), \"allowed above billed\")\n    .when(~F.coalesce(F.col(\"claim_status\").isin(\"submitted\", \"approved\", \"paid\", \"denied\", \"appealed\"), F.lit(False)), \"unknown status\")\n)\n\nchecked = bronze.select(\"*\", problem.alias(\"_problem\"))\nsilver = checked.filter(F.col(\"_problem\").isNull()).select(bronze.columns)\nquarantine = checked.filter(F.col(\"_problem\").isNotNull())\n\nsilver.write.format(\"delta\").mode(\"overwrite\").save(\"/tmp/clinic/silver/claims\")\nquarantine.write.format(\"delta\").mode(\"overwrite\").save(\"/tmp/clinic/quarantine/claims\")\n\nprint(bronze.count(), \"in bronze =\", silver.count(), \"in silver +\", quarantine.count(), \"in quarantine\")\nquarantine.select(\"claim_id\", \"service_date\", \"submitted_date\", \"_problem\", \"_source_file\", \"_batch_id\").show(truncate=False)\n",
+   "note": "Six claims pass. CLM000003 is in quarantine with its reason and its lineage, so whoever fixes it knows which file it came from. Nothing was dropped silently: 7 = 6 + 1."
+  },
+  {
+   "kind": "text",
+   "md": "Gold reads silver and shapes it for one reader. For finance that's one row per payer. `groupBy(\"payer\").agg(...)` makes one row per payer; `F.count(\"*\")` counts its rows and `F.sum` adds a column up. The aggregation lesson covers them in detail. A sum of `decimal(12,2)` values stays exact, with room for bigger totals."
+  },
+  {
+   "kind": "example",
+   "id": "e3",
+   "title": "Gold: totals per payer",
+   "code": "from pyspark.sql import functions as F\n\nbronze = claims.select(\n    \"*\",\n    F.lit(\"claims_2026-02-28.csv\").alias(\"_source_file\"),\n    F.lit(1).alias(\"_batch_id\"),\n)\nbronze.write.format(\"delta\").mode(\"overwrite\").save(\"/tmp/clinic/bronze/claims\")\nbronze = spark.read.format(\"delta\").load(\"/tmp/clinic/bronze/claims\")\n\nproblem = (\n    F.when(F.col(\"service_date\").isNull() | F.col(\"submitted_date\").isNull(), \"missing date\")\n    .when(F.col(\"service_date\") > F.col(\"submitted_date\"), \"submitted before service\")\n    .when(F.col(\"allowed_amount\") > F.col(\"billed_amount\"), \"allowed above billed\")\n    .when(~F.coalesce(F.col(\"claim_status\").isin(\"submitted\", \"approved\", \"paid\", \"denied\", \"appealed\"), F.lit(False)), \"unknown status\")\n)\nchecked = bronze.select(\"*\", problem.alias(\"_problem\"))\nchecked.filter(F.col(\"_problem\").isNull()).select(bronze.columns).write.format(\"delta\").mode(\"overwrite\").save(\"/tmp/clinic/silver/claims\")\n\nsilver = spark.read.format(\"delta\").load(\"/tmp/clinic/silver/claims\")\ngold = silver.groupBy(\"payer\").agg(\n    F.count(\"*\").alias(\"claims\"),\n    F.sum(\"billed_amount\").alias(\"billed\"),\n    F.sum(\"paid_amount\").alias(\"paid\"),\n)\ngold.write.format(\"delta\").mode(\"overwrite\").save(\"/tmp/clinic/gold/payer_totals\")\n\nspark.read.format(\"delta\").load(\"/tmp/clinic/gold/payer_totals\").orderBy(\"payer\").show(truncate=False)\n",
+   "note": "Two payers. CLM000003 isn't in Summit's totals, because gold only sees silver. `paid` adds only the claims that have a paid amount: `F.sum` skips NULLs."
+  },
+  {
+   "kind": "text",
+   "md": "Loads keep coming, so each layer gets its own write mode:\n\n- bronze **appends** each load with its own `_batch_id`. It's the record of everything that arrived;\n- silver and gold are **rebuilt** from the layer below with `overwrite`. If a rule changes, rebuild silver from bronze and gold from silver; the raw data is still there.\n\nHere the claims arrive in two loads, split at 20 January. `problem.isNull()` is the silver filter; bronze has no helper column, so there's nothing to remove."
+  },
+  {
+   "kind": "example",
+   "id": "e4",
+   "title": "Two loads through the layers",
+   "code": "from pyspark.sql import functions as F\nfrom delta.tables import DeltaTable\n\nBRONZE = \"/tmp/clinic/bronze/claims\"\nSILVER = \"/tmp/clinic/silver/claims\"\nGOLD = \"/tmp/clinic/gold/payer_totals\"\n\nproblem = (\n    F.when(F.col(\"service_date\").isNull() | F.col(\"submitted_date\").isNull(), \"missing date\")\n    .when(F.col(\"service_date\") > F.col(\"submitted_date\"), \"submitted before service\")\n    .when(F.col(\"allowed_amount\") > F.col(\"billed_amount\"), \"allowed above billed\")\n    .when(~F.coalesce(F.col(\"claim_status\").isin(\"submitted\", \"approved\", \"paid\", \"denied\", \"appealed\"), F.lit(False)), \"unknown status\")\n)\n\n\ndef run(load, source_file, batch_id):\n    # bronze: keep every load as it arrived\n    load.select(\"*\", F.lit(source_file).alias(\"_source_file\"), F.lit(batch_id).alias(\"_batch_id\")) \\\n        .write.format(\"delta\").mode(\"append\").save(BRONZE)\n    # silver: rebuilt from all of bronze\n    bronze = spark.read.format(\"delta\").load(BRONZE)\n    bronze.filter(problem.isNull()).write.format(\"delta\").mode(\"overwrite\").save(SILVER)\n    # gold: rebuilt from silver\n    silver = spark.read.format(\"delta\").load(SILVER)\n    silver.groupBy(\"payer\").agg(F.count(\"*\").alias(\"claims\"), F.sum(\"billed_amount\").alias(\"billed\")) \\\n        .write.format(\"delta\").mode(\"overwrite\").save(GOLD)\n\n\nrun(claims.where(\"submitted_date < '2026-01-20'\"), \"claims_2026-01-19.csv\", 1)\nrun(claims.where(\"submitted_date >= '2026-01-20'\"), \"claims_2026-02-28.csv\", 2)\n\nspark.read.format(\"delta\").load(SILVER).select(\"claim_id\", \"payer\", \"_source_file\", \"_batch_id\").orderBy(\"claim_id\").show(truncate=False)\nspark.read.format(\"delta\").load(GOLD).orderBy(\"payer\").show(truncate=False)\nfor path in (BRONZE, SILVER, GOLD):\n    print(path, [(h.version, h.operationParameters[\"mode\"]) for h in DeltaTable.forPath(spark, path).history().orderBy(\"version\").collect()])\n",
+   "note": "Silver keeps the lineage columns, so every claim says which load it came in. Bronze has two appends (versions 0 and 1); silver and gold were overwritten on each run, so their latest versions hold only the current result."
+  },
+  {
+   "kind": "text",
+   "md": "Lineage pays off when someone asks about a number. Start at the gold row, find the silver rows behind it, and check bronze for claims that never made it."
+  },
+  {
+   "kind": "example",
+   "id": "e5",
+   "title": "Trace a gold number to its source",
+   "code": "from pyspark.sql import functions as F\nfrom delta.tables import DeltaTable\n\nBRONZE = \"/tmp/clinic/bronze/claims\"\nSILVER = \"/tmp/clinic/silver/claims\"\nGOLD = \"/tmp/clinic/gold/payer_totals\"\n\nproblem = (\n    F.when(F.col(\"service_date\").isNull() | F.col(\"submitted_date\").isNull(), \"missing date\")\n    .when(F.col(\"service_date\") > F.col(\"submitted_date\"), \"submitted before service\")\n    .when(F.col(\"allowed_amount\") > F.col(\"billed_amount\"), \"allowed above billed\")\n    .when(~F.coalesce(F.col(\"claim_status\").isin(\"submitted\", \"approved\", \"paid\", \"denied\", \"appealed\"), F.lit(False)), \"unknown status\")\n)\n\n\ndef run(load, source_file, batch_id):\n    # bronze: keep every load as it arrived\n    load.select(\"*\", F.lit(source_file).alias(\"_source_file\"), F.lit(batch_id).alias(\"_batch_id\")) \\\n        .write.format(\"delta\").mode(\"append\").save(BRONZE)\n    # silver: rebuilt from all of bronze\n    bronze = spark.read.format(\"delta\").load(BRONZE)\n    bronze.filter(problem.isNull()).write.format(\"delta\").mode(\"overwrite\").save(SILVER)\n    # gold: rebuilt from silver\n    silver = spark.read.format(\"delta\").load(SILVER)\n    silver.groupBy(\"payer\").agg(F.count(\"*\").alias(\"claims\"), F.sum(\"billed_amount\").alias(\"billed\")) \\\n        .write.format(\"delta\").mode(\"overwrite\").save(GOLD)\n\n\nrun(claims.where(\"submitted_date < '2026-01-20'\"), \"claims_2026-01-19.csv\", 1)\nrun(claims.where(\"submitted_date >= '2026-01-20'\"), \"claims_2026-02-28.csv\", 2)\n\ngold = spark.read.format(\"delta\").load(GOLD)\ngold.filter(F.col(\"payer\") == \"Summit Senior Advantage\").show(truncate=False)\n\nsilver = spark.read.format(\"delta\").load(SILVER)\nsilver.filter(F.col(\"payer\") == \"Summit Senior Advantage\").select(\"claim_id\", \"billed_amount\", \"_source_file\", \"_batch_id\").orderBy(\"claim_id\").show(truncate=False)\n\nbronze = spark.read.format(\"delta\").load(BRONZE)\nbronze.filter((F.col(\"payer\") == \"Summit Senior Advantage\") & problem.isNotNull()).select(\"claim_id\", \"billed_amount\", problem.alias(\"problem\"), \"_source_file\").show(truncate=False)\n",
+   "note": "Summit's gold row is one claim, CLM000007, and silver says it came in the second load. Bronze still has Summit's other claim, CLM000003, from the first file, and the rule it broke: that's why gold counts one claim, not two."
+  },
+  {
+   "kind": "text",
+   "md": "Delta also protects the shape of each layer. Every table remembers its schema, and an append with different columns is refused before anything is written."
+  },
+  {
+   "kind": "error-example",
+   "id": "e6",
+   "title": "Quarantined rows appended to silver",
+   "code": "from pyspark.sql import functions as F\n\nbronze = claims.select(\n    \"*\",\n    F.lit(\"claims_2026-02-28.csv\").alias(\"_source_file\"),\n    F.lit(1).alias(\"_batch_id\"),\n)\nbronze.write.format(\"delta\").mode(\"overwrite\").save(\"/tmp/clinic/bronze/claims\")\nbronze = spark.read.format(\"delta\").load(\"/tmp/clinic/bronze/claims\")\n\nproblem = (\n    F.when(F.col(\"service_date\").isNull() | F.col(\"submitted_date\").isNull(), \"missing date\")\n    .when(F.col(\"service_date\") > F.col(\"submitted_date\"), \"submitted before service\")\n    .when(F.col(\"allowed_amount\") > F.col(\"billed_amount\"), \"allowed above billed\")\n    .when(~F.coalesce(F.col(\"claim_status\").isin(\"submitted\", \"approved\", \"paid\", \"denied\", \"appealed\"), F.lit(False)), \"unknown status\")\n)\nchecked = bronze.select(\"*\", problem.alias(\"_problem\"))\nchecked.filter(F.col(\"_problem\").isNull()).select(bronze.columns).write.format(\"delta\").mode(\"overwrite\").save(\"/tmp/clinic/silver/claims\")\n\n# By mistake, the quarantined rows are appended to silver, extra column and all.\nchecked.filter(F.col(\"_problem\").isNotNull()).write.format(\"delta\").mode(\"append\").save(\"/tmp/clinic/silver/claims\")\n",
+   "error": "AnalysisException",
+   "note": "The quarantined rows have an extra `_problem` column, so Delta refuses the append and silver stays as it was. Plain Parquet folders would have taken the files."
+  }
+ ],
+ "challenges": [
+  "PS-L073-C1",
+  "PS-L073-C2"
+ ],
+ "concept": [
+  {
+   "id": "k1",
+   "prompt": "A claim was submitted before the visit it bills for. Where does it end up?",
+   "choices": [
+    "Nowhere: silver's filter drops it",
+    "In bronze and in quarantine, with the rule it broke",
+    "In silver, flagged with a column",
+    "In gold, so finance can see it"
+   ],
+   "answer": 1,
+   "why": "Bronze keeps everything that arrived. Silver gets only rows that pass; a row that fails goes to quarantine with the reason, so it's neither used nor lost."
+  },
+  {
+   "id": "k2",
+   "prompt": "Why are `_source_file` and `_batch_id` set with `F.lit` from the load, not from `F.current_timestamp()`?",
+   "choices": [
+    "`F.current_timestamp()` doesn't work on Delta tables",
+    "Plain values are faster to write",
+    "They describe the load, so a rerun of the same load gives the same values",
+    "Lineage columns must be text"
+   ],
+   "answer": 2,
+   "why": "The clock changes on every run, so two runs of the same load would disagree. Values that describe the load are the same every time."
+  },
+  {
+   "id": "k3",
+   "prompt": "A data-quality rule was wrong and has been fixed. What do you rebuild?",
+   "choices": [
+    "Nothing: the next load uses the new rule",
+    "Bronze, then silver, then gold",
+    "Silver from bronze, then gold from silver",
+    "Only gold"
+   ],
+   "answer": 2,
+   "why": "Bronze is the raw record and doesn't depend on any rule. Silver applies the rules, and gold is built from silver, so both are rebuilt."
+  }
+ ],
+ "review": [
+  "Bronze is the data as it arrived plus lineage columns; it's appended to and never cleaned.",
+  "Lineage values describe the load (file, batch), so a rerun gives the same table. Don't take them from the clock.",
+  "Silver keeps the rows that pass the rules; the others go to quarantine with the reason. Bronze = silver + quarantine.",
+  "Gold is shaped for one use and built from silver only.",
+  "Silver and gold are rebuilt with `overwrite`, so a fixed rule is applied by rebuilding them from bronze.",
+  "A Delta table refuses an append with a different schema, which keeps each layer's shape."
+ ],
+ "practice": [
+  "PS-Q0361",
+  "PS-Q0362",
+  "PS-Q0363",
+  "PS-Q0364",
+  "PS-Q0365"
+ ]
+}

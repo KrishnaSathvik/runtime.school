@@ -1,0 +1,133 @@
+{
+  "id": "PS-L055",
+  "minutes": 25,
+  "lede": "When a Spark program is slow, the question is always where the work went. Every action becomes a job, every shuffle splits it into stages, and every partition becomes a task. Counting them on a real run is the first step to reading performance.",
+  "objectives": [
+    "Say which lines start a job, and count the jobs a piece of code runs",
+    "Count a job's stages and each stage's tasks with the SparkContext's `statusTracker()`",
+    "Predict the stages of a job from the `Exchange` steps in its plan",
+    "Explain why stages form a graph (a DAG) and why a stage waits for the ones it reads from"
+  ],
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "trips"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`trips` above has the 12 lesson trips, already loaded, and `F` is `pyspark.sql.functions`. Lesson 6 traced the path from code to plan. This lesson looks at what happens after the plan, when an action runs it:\n\n- A **job** is the work one action starts. `show`, `count`, `collect`, `first` and `take` each start at least one.\n- A job is cut into **stages** wherever rows have to move between partitions (a shuffle). Inside a stage, every step runs row by row on one partition.\n- Each stage runs one **task** per partition it works on. A task is the unit an executor core actually runs.\n\nYou can count all three with the SparkContext's `statusTracker()`. Put the work in a named job group with `setJobGroup`, as in lesson 6, then ask the tracker about that group's jobs: `getJobInfo(job).stageIds` lists a job's stages, and `getStageInfo(stage).numTasks` gives a stage's tasks. The ids themselves change from run to run, so the examples print only counts."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "One action, one job, one stage, one task",
+      "code": "from pyspark.sql import functions as F\n\nsc = spark.sparkContext\ntracker = sc.statusTracker()\n\nsc.setJobGroup(\"card\", \"card trips\")\ncard = trips.filter(F.col(\"payment_type\") == \"card\").select(\"trip_id\", \"tip\")\nrows = card.collect()\n\njobs = tracker.getJobIdsForGroup(\"card\")\nstages = tracker.getJobInfo(jobs[0]).stageIds\nprint(len(jobs), \"job,\", len(stages), \"stage,\", tracker.getStageInfo(stages[0]).numTasks, \"task\")\nprint(len(rows), \"card trips\")\n",
+      "note": "`filter` and `select` are narrow, so the whole job is one stage. `trips` is one partition (one small file), so that stage is one task: read the file, filter, keep two columns."
+    },
+    {
+      "kind": "text",
+      "md": "Before counting stages after a shuffle, one setting. Spark 4 has **adaptive query execution** on by default: it runs the stage before each shuffle as a job of its own, looks at the result, and only then plans the rest. That's useful (lessons 57 and 58), but it adds jobs and changes task counts. The next examples turn it off with `spark.conf.set(\"spark.sql.adaptive.enabled\", \"false\")` so the counts follow the plan exactly.\n\nThe example groups trips by payment type, a wide step you learned in lesson 31. It also shows that `groupBy(...).count()` on a DataFrame is a transformation: it builds a plan and starts nothing."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "A shuffle splits the job into two stages",
+      "code": "spark.conf.set(\"spark.sql.adaptive.enabled\", \"false\")\nsc = spark.sparkContext\ntracker = sc.statusTracker()\n\nsc.setJobGroup(\"pay\", \"trips per payment type\")\nby_payment = trips.groupBy(\"payment_type\").count()\nprint(\"jobs after groupBy:\", len(tracker.getJobIdsForGroup(\"pay\")))\n\nrows = by_payment.collect()\njobs = tracker.getJobIdsForGroup(\"pay\")\nstages = sorted(tracker.getJobInfo(jobs[0]).stageIds)\nprint(\"jobs after collect:\", len(jobs))\nprint(\"tasks per stage:\", [tracker.getStageInfo(s).numTasks for s in stages])\nprint(len(rows), \"payment types\")\n",
+      "note": "One job with two stages. The first stage reads the file's one partition (one task), counts within it and writes the rows out by payment type. The second stage has 4 tasks because a shuffle makes `spark.sql.shuffle.partitions` partitions, which this environment sets to 4."
+    },
+    {
+      "kind": "text",
+      "md": "Those two stages aren't independent. The second stage reads what the first one wrote, so it can't start until **every** task of the first has finished. Stages and the links between them form a **DAG**, a directed acyclic graph: arrows go one way, from the stages that produce data to the stages that read it, and never loop back. A plain chain like this one is the simplest DAG; when two inputs meet in a join (lesson 25), each input gets its own stage and both feed the next one.\n\nYou can see the stage boundaries before running anything: each `Exchange` in the physical plan is a shuffle, so with adaptive execution off a job has one more stage than its plan has `Exchange` steps. `by_payment._jdf.queryExecution().executedPlan().toString()` gives that plan as text; `_jdf` is the DataFrame's object inside Spark's JVM, fine for looking but not something to build on."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Two shuffles, three stages",
+      "code": "spark.conf.set(\"spark.sql.adaptive.enabled\", \"false\")\nsc = spark.sparkContext\ntracker = sc.statusTracker()\n\nby_payment = trips.repartition(3).groupBy(\"payment_type\").count()\nplan = by_payment._jdf.queryExecution().executedPlan().toString()\nprint(\"Exchange steps:\", plan.count(\"Exchange\"))\n\nsc.setJobGroup(\"pay3\", \"three stages\")\nby_payment.collect()\njob = tracker.getJobIdsForGroup(\"pay3\")[0]\nstages = sorted(tracker.getJobInfo(job).stageIds)\nprint(\"stages:\", len(stages))\nprint(\"tasks per stage:\", [tracker.getStageInfo(s).numTasks for s in stages])\n",
+      "note": "`repartition(3)` (lesson 2) is a shuffle into 3 partitions, and grouping is a second shuffle into 4. Two `Exchange` steps, three stages: 1 task to read, 3 tasks to count within each new partition, 4 tasks to add up the counts. That's 8 tasks for one action."
+    },
+    {
+      "kind": "text",
+      "md": "Each action is its own job, even on the same DataFrame. Spark doesn't keep the rows between actions unless you ask it to (lesson 60), so a second action reads the file again.\n\nOne surprise: `count()` on a DataFrame is itself a tiny aggregation. Each task counts its own partition, then those partial counts are shuffled into one partition and added up, so even a narrow DataFrame's `count()` has two stages."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Three actions, three jobs",
+      "code": "from pyspark.sql import functions as F\n\nspark.conf.set(\"spark.sql.adaptive.enabled\", \"false\")\nsc = spark.sparkContext\ntracker = sc.statusTracker()\n\ncard = trips.filter(F.col(\"payment_type\") == \"card\").select(\"trip_id\", \"tip\")\nsc.setJobGroup(\"three\", \"three actions\")\nfirst = card.first()\nn = card.count()\nrows = card.collect()\n\nfor job in sorted(tracker.getJobIdsForGroup(\"three\")):\n    stages = sorted(tracker.getJobInfo(job).stageIds)\n    print(\"job with\", len(stages), \"stage(s), tasks:\", [tracker.getStageInfo(s).numTasks for s in stages])\nprint(first[\"trip_id\"], n, len(rows))\n",
+      "note": "`first()` and `collect()` are one stage each. `count()` is two: count per partition, then a one-task stage that adds the partial counts. The three jobs each read `trips` from the file again."
+    },
+    {
+      "kind": "text",
+      "md": "Here's the same grouping with adaptive execution left on, Spark's default. The job tracker shows what changes."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "With adaptive execution on",
+      "code": "sc = spark.sparkContext\ntracker = sc.statusTracker()\nprint(\"adaptive:\", spark.conf.get(\"spark.sql.adaptive.enabled\"))\n\nsc.setJobGroup(\"aqe\", \"adaptive\")\ntrips.groupBy(\"payment_type\").count().collect()\nfor job in sorted(tracker.getJobIdsForGroup(\"aqe\")):\n    stages = sorted(tracker.getJobInfo(job).stageIds)\n    print(\"job:\", [(tracker.getStageInfo(s).numTasks, tracker.getStageInfo(s).numCompletedTasks) for s in stages])\n",
+      "note": "Each pair is (tasks, tasks that ran). The first job runs only the stage before the shuffle. The second job lists that stage again but runs none of its tasks: it's **skipped**, because its shuffle output already exists. Its last stage has 1 task, not 4: having seen how little data came out, Spark merged the 4 small partitions into one (lesson 57)."
+    }
+  ],
+  "challenges": [
+    "PS-L055-C1",
+    "PS-L055-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "Which line starts a Spark job?",
+      "choices": [
+        "by_rate = trips.groupBy(\"rate_code\").count()",
+        "long = trips.filter(F.col(\"trip_distance\") > 3)",
+        "n = trips.count()",
+        "plan = trips._jdf.queryExecution().executedPlan().toString()"
+      ],
+      "answer": 2,
+      "why": "`trips.count()` is an action. `groupBy(...).count()` returns a DataFrame, so it's a transformation, and building or printing a plan runs nothing."
+    },
+    {
+      "id": "k2",
+      "prompt": "With adaptive execution off, a job's physical plan has two `Exchange` steps. How many stages does the job run?",
+      "choices": [
+        "1",
+        "2",
+        "3",
+        "One per partition"
+      ],
+      "answer": 2,
+      "why": "Each `Exchange` is a shuffle, and a shuffle ends one stage and starts the next, so two shuffles give three stages."
+    },
+    {
+      "id": "k3",
+      "prompt": "Why can't the stage after a shuffle start while the stage before it is still running?",
+      "choices": [
+        "Spark runs only one stage per job",
+        "Each of its tasks reads rows from every task of the earlier stage, so all of them must have finished",
+        "The driver has only one core",
+        "Stages always run in alphabetical order"
+      ],
+      "answer": 1,
+      "why": "After a shuffle, a partition can hold rows from any earlier partition. The stage depends on all the earlier stage's output: that's an arrow in the job's DAG."
+    }
+  ],
+  "review": [
+    "An action starts a job; transformations, including `groupBy(...).count()` on a DataFrame, start none.",
+    "A shuffle (`Exchange` in the plan) ends a stage. With adaptive execution off, stages = `Exchange` steps + 1.",
+    "Each stage runs one task per partition it works on: 1 for a one-file read, `spark.sql.shuffle.partitions` after a grouping shuffle.",
+    "`statusTracker()` counts jobs, stages and tasks for a job group; print counts, never ids.",
+    "Stages form a DAG: a stage waits for every stage it reads from. A second job can skip a stage whose shuffle output already exists.",
+    "Adaptive execution (on by default) runs stages before a shuffle as separate jobs and can merge small partitions, so set it explicitly when you count."
+  ],
+  "practice": [
+    "PS-Q0271",
+    "PS-Q0272",
+    "PS-Q0273",
+    "PS-Q0274",
+    "PS-Q0275"
+  ]
+}

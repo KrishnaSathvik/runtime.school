@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0166",
+  "slug": "overnight-gaps",
+  "lesson": "PS-L034",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Overnight gaps",
+  "dataset": {
+    "id": "PS-D10",
+    "version": "1.0.0"
+  },
+  "prompt": "Traders watch how far a stock jumps between one day's close and the next trading day's open. Write `solve(daily_prices)` so it adds the next row's open and that gap to every row.",
+  "rules": [
+    "For each `symbol`, the next row is the one with the earliest later `trade_date`, whatever order the rows arrive in.",
+    "`next_open` is that row's `open`, and `gap` is `next_open - close`.",
+    "A symbol's last row has no next row, so its `next_open` and `gap` are missing.",
+    "Return `symbol`, `trade_date`, `close`, `next_open` and `gap`, one row per input row."
+  ],
+  "hints": [
+    "The value from the next row is `F.lead`, over a window of each symbol in date order.",
+    "`Window.partitionBy(\"symbol\").orderBy(\"trade_date\")` keeps each stock on its own.",
+    "The gap is the later price minus the earlier one: `next_open - close`. A calculation with a missing value stays missing."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "daily_prices"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(daily_prices):\n    # Add next_open and gap to every row.\n    return daily_prices.select(\"symbol\", \"trade_date\", \"close\")\n",
+  "output": {
+    "columns": [
+      "symbol",
+      "trade_date",
+      "close",
+      "next_open",
+      "gap"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "The next row's value is `F.lead`: `w = Window.partitionBy(\"symbol\").orderBy(\"trade_date\")`, then `F.lead(\"open\").over(w).alias(\"next_open\")` and `(F.lead(\"open\").over(w) - F.col(\"close\")).alias(\"gap\")`. The window's order decides what \"next\" means, so the input order doesn't matter. Each symbol's last row has no next row, so both columns are missing there. `F.lag` would look back a day instead, and leaving out `partitionBy` would let one stock's last day borrow the next stock's first open."
+}

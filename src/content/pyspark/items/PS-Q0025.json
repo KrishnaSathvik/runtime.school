@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0025",
+  "kind": "predict",
+  "slug": "doubled-latency-dataframe",
+  "lesson": "PS-L005",
+  "role": "integration",
+  "format": "concept_or_trace",
+  "difficulty": "easy",
+  "minutes": 4,
+  "title": "Back to a DataFrame, then filter",
+  "prompt": "This program doubles every latency in an RDD, turns the result back into a DataFrame and filters it. What does it print? Type each line on its own line.",
+  "program": "from pyspark.sql import functions as F\n\npairs = api_requests.rdd.map(lambda r: (r[\"service\"], r[\"latency_ms\"] * 2))\ndf = pairs.toDF([\"service\", \"double_ms\"])\nslow = df.filter(F.col(\"double_ms\") > 300)\nprint(df.count(), slow.count())\nprint(slow.first()[\"service\"])\ndf.printSchema()\n",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "`double_ms > 300` is the same as a latency above 150 ms. Find those requests in the table.",
+    "`first()` returns the first matching row in table order.",
+    "Given only names, `toDF` guesses each column's type from the Python values: whole numbers become the wide whole-number type."
+  ],
+  "explanation": "Three requests took more than 150 ms (236, 1240 and 162 ms), so `slow` has 3 of the 12 rows, and the first is a `checkout-api` request. With names only, `toDF` saw Python whole numbers and chose `long`; every column it builds this way may hold missing values."
+}

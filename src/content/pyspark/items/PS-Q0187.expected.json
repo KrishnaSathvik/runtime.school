@@ -1,0 +1,142 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "claim_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "claim_status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "amounts",
+     "type": "struct<billed:decimal(12,2),allowed:decimal(12,2),paid:decimal(12,2),unpaid:decimal(13,2)>",
+     "nullable": false
+    },
+    {
+     "name": "dates",
+     "type": "struct<service:date,submitted:date>",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "CLM000001",
+     "submitted",
+     {
+      "billed": "2724.83",
+      "allowed": null,
+      "paid": null,
+      "unpaid": null
+     },
+     {
+      "service": "2025-12-03",
+      "submitted": "2025-12-18"
+     }
+    ],
+    [
+     "CLM000002",
+     "denied",
+     {
+      "billed": "217.82",
+      "allowed": "0.00",
+      "paid": "0.00",
+      "unpaid": "217.82"
+     },
+     {
+      "service": "2025-12-18",
+      "submitted": "2026-01-01"
+     }
+    ],
+    [
+     "CLM000003",
+     "paid",
+     {
+      "billed": "200.80",
+      "allowed": "166.46",
+      "paid": "166.46",
+      "unpaid": "34.34"
+     },
+     {
+      "service": "2025-12-20",
+      "submitted": "2025-12-17"
+     }
+    ],
+    [
+     "CLM000004",
+     "approved",
+     {
+      "billed": "332.53",
+      "allowed": "185.17",
+      "paid": null,
+      "unpaid": null
+     },
+     {
+      "service": "2026-01-13",
+      "submitted": "2026-01-26"
+     }
+    ],
+    [
+     "CLM000005",
+     "paid",
+     {
+      "billed": "458.05",
+      "allowed": "339.79",
+      "paid": "339.79",
+      "unpaid": "118.26"
+     },
+     {
+      "service": "2026-01-16",
+      "submitted": "2026-01-19"
+     }
+    ],
+    [
+     "CLM000006",
+     "paid",
+     {
+      "billed": "23227.37",
+      "allowed": "10680.23",
+      "paid": "10680.23",
+      "unpaid": "12547.14"
+     },
+     {
+      "service": "2026-01-17",
+      "submitted": "2026-02-13"
+     }
+    ],
+    [
+     "CLM000007",
+     "paid",
+     {
+      "billed": "154.34",
+      "allowed": "134.08",
+      "paid": "134.08",
+      "unpaid": "20.26"
+     },
+     {
+      "service": "2026-01-30",
+      "submitted": "2026-02-27"
+     }
+    ]
+   ],
+   "row_count": 7
+  }
+ },
+ "hidden": [
+  "the full practice claims table",
+  "claims with no allowed or paid amount yet",
+  "denied claims that paid nothing",
+  "paid claims, one paid in full",
+  "an empty claims table"
+ ]
+}

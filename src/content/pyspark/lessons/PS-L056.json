@@ -1,0 +1,142 @@
+{
+  "id": "PS-L056",
+  "minutes": 30,
+  "lede": "You write what you want; Spark's optimizer, Catalyst, decides how to get it. Reading its plans shows which columns it reads, which filters it runs early and where it moved your steps, so you can tell a fast query from a slow one before running it.",
+  "objectives": [
+    "Name Catalyst's phases and tell a logical plan from a physical plan",
+    "Choose an `explain()` mode: simple, extended, formatted, cost or codegen",
+    "Find column pruning and filter pushdown in a scan's `ReadSchema` and `PushedFilters`",
+    "Show that Catalyst moves a filter below a join, so two ways of writing a query get the same plan"
+  ],
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0",
+    "edition": "lesson",
+    "tables": [
+      "orders",
+      "customers"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`orders` has one row per order and `customers` one row per customer; both are loaded, and `F` is `pyspark.sql.functions`.\n\n**Catalyst** is the optimizer behind every DataFrame and every Spark SQL query. It works in four phases:\n\n1. **Analysis.** It checks every column and table name and works out each type. A wrong name fails here, before anything runs (lesson 4).\n2. **Logical optimization.** It rewrites the *logical plan*, the description of *what* to compute, with rules: drop columns nobody uses, run filters as early as possible, merge steps that can be merged.\n3. **Physical planning.** It turns the logical plan into a *physical plan*, *how* to compute it: which file reader, which kind of join, where to shuffle.\n4. **Code generation.** It compiles chains of steps into Java code that runs in one pass per partition (the `*(1)` marks in a plan).\n\n`explain()` takes a `mode`: `\"simple\"` (the default) prints the physical plan; `\"extended\"` (or `explain(True)`) adds the parsed, analyzed and optimized logical plans; `\"formatted\"` numbers the physical steps; `\"cost\"` adds size estimates to the optimized plan; `\"codegen\"` prints the generated code."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Four plans for one query",
+      "code": "from pyspark.sql import functions as F\n\npaid = (\n    orders.select(\"order_id\", \"status\", \"channel\", \"total\")\n    .filter(F.col(\"status\") == \"paid\")\n    .select(\"order_id\", \"total\")\n)\npaid.explain(mode=\"extended\")\n",
+      "note": "The code has two `select`s and a `filter`, and the parsed and analyzed plans keep all three. In the optimized plan they're one `Project` over one `Filter`, with `isnotnull(status)` added: a missing status can't equal `paid`. The physical plan reads only `order_id`, `status` and `total`; `channel` was dropped even though the first `select` asked for it."
+    },
+    {
+      "kind": "text",
+      "md": "The last line of the physical plan is the scan, the step that reads the file. Two parts of it show Catalyst's work:\n\n- **`ReadSchema`** lists the columns the reader will produce. Reading fewer columns is **column pruning**: a column you never use is never read into a row.\n- **`PushedFilters`** lists the conditions handed to the reader itself. That's **filter pushdown**: the reader drops rows that fail them while it reads. For CSV, that saves turning those rows into full rows; for Parquet (lesson 45), the reader can also skip whole chunks of the file using the min and max values stored for each chunk.\n\nPlans contain numbers like `#13` that tag each column inside Spark. To check a plan in code, take it as text and look for the part you care about. `paid._jdf.queryExecution()` reaches the plans Spark keeps for a DataFrame; `_jdf` is internal, fine for looking but not something to build on."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "What the scan reads and what it filters",
+      "code": "from pyspark.sql import functions as F\n\npaid = orders.filter(F.col(\"status\") == \"paid\").select(\"order_id\", \"total\")\nplan = paid._jdf.queryExecution().executedPlan().toString()\n\nprint(plan.split(\"ReadSchema: \")[1].strip())\nprint(plan.split(\"PushedFilters: \")[1].split(\"], \")[0] + \"]\")\nprint(paid.columns)\n",
+      "note": "The result has two columns, but the scan reads three: `status` is needed for the filter, then dropped. The pushed filters are the same condition in the reader's own terms: `status` is not null and equals `paid`."
+    },
+    {
+      "kind": "text",
+      "md": "Catalyst also moves steps around. A filter written after a join still runs before it, on the one side that has the column. That means fewer rows go into the join, and the answer doesn't change.\n\nThe next example joins orders to customers (lesson 25) and then keeps customers in Leeds. Compare the analyzed plan (your order of steps) with the optimized plan (Catalyst's)."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "A filter after a join runs before it",
+      "code": "from pyspark.sql import functions as F\n\nleeds = orders.join(customers, \"customer_id\").filter(F.col(\"city\") == \"Leeds\").select(\"order_id\", \"name\")\nqe = leeds._jdf.queryExecution()\nprint(qe.analyzed().toString())\nprint(qe.optimizedPlan().toString())\nleeds.show()\n",
+      "note": "Plans print top-down, so the last lines run first. In the analyzed plan the `Filter (city = Leeds)` sits above the `Join`. In the optimized plan it sits under the join, on the `customers` side only, next to `isnotnull(customer_id)` filters that Catalyst added on both sides: an inner join can never match a missing key. Each side also keeps only the columns the join and the result need."
+    },
+    {
+      "kind": "text",
+      "md": "Because Catalyst does this, you don't have to hand-order filters and joins for speed: two ways of writing the same query usually end up with the same optimized plan. `sameResult` compares two plans while ignoring the `#n` tags.\n\nThe same goes for two `filter` calls in a row: Catalyst merges them into one `Filter`."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Two ways of writing it, one plan",
+      "code": "from pyspark.sql import functions as F\n\nafter = orders.join(customers, \"customer_id\").filter(F.col(\"city\") == \"Leeds\").select(\"order_id\", \"name\")\nbefore = orders.join(customers.filter(F.col(\"city\") == \"Leeds\"), \"customer_id\").select(\"order_id\", \"name\")\nprint(after._jdf.queryExecution().optimizedPlan().sameResult(before._jdf.queryExecution().optimizedPlan()))\n\ntwo = orders.filter(F.col(\"status\") == \"paid\").filter(F.col(\"channel\") == \"app\")\nprint(two._jdf.queryExecution().optimizedPlan().toString())\nprint(two.count(), \"paid app orders\")\n",
+      "note": "`True`: filtering customers first by hand gives the plan Catalyst builds anyway. The two `filter` calls became one `Filter` with all four conditions joined by `AND`."
+    },
+    {
+      "kind": "text",
+      "md": "`explain(mode=\"formatted\")` is the easiest way to read a longer physical plan. Here it shows the join's physical choices: both scans with their pushed filters, and a `BroadcastHashJoin`, which copies the small `customers` side to every task instead of shuffling both sides. Lesson 58 covers when Spark picks it.\n\n`AdaptiveSparkPlan isFinalPlan=false` at the top means adaptive execution may still change this plan while it runs; `explain` shows the plan before any of that."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "The physical plan of the join, formatted",
+      "code": "from pyspark.sql import functions as F\n\nleeds = orders.join(customers, \"customer_id\").filter(F.col(\"city\") == \"Leeds\").select(\"order_id\", \"name\")\nleeds.explain(mode=\"formatted\")\n",
+      "note": "Read the outline from the bottom: scan `orders` (only `order_id` and `customer_id`) and scan `customers` (only three columns, with `city = Leeds` pushed into the reader), broadcast the small side, join, keep two columns."
+    },
+    {
+      "kind": "error-example",
+      "id": "e6",
+      "title": "A mode explain doesn't know",
+      "code": "orders.explain(mode=\"full\")\n",
+      "error": "IllegalArgumentException",
+      "note": "The message lists the five modes `explain` accepts. `explain(True)` is the same as `mode=\"extended\"`."
+    }
+  ],
+  "challenges": [
+    "PS-L056-C1",
+    "PS-L056-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "What is the difference between a logical plan and a physical plan?",
+      "choices": [
+        "The logical plan runs on the driver and the physical plan on executors",
+        "The logical plan says what to compute; the physical plan says how: which reader, which join, where to shuffle",
+        "The logical plan is for SQL and the physical plan is for DataFrames",
+        "There is none; they are two names for the same plan"
+      ],
+      "answer": 1,
+      "why": "Catalyst optimizes the logical plan with rules, then picks physical operators to carry it out. `explain()` shows the physical plan; `explain(True)` shows the logical ones too."
+    },
+    {
+      "id": "k2",
+      "prompt": "`orders.filter(F.col(\"status\") == \"paid\").select(\"order_id\")` reads a CSV file. Which columns does the scan's `ReadSchema` list?",
+      "choices": [
+        "Only `order_id`",
+        "`order_id` and `status`",
+        "All six columns of `orders`",
+        "None; CSV can't prune columns"
+      ],
+      "answer": 1,
+      "why": "Column pruning drops every column the query never uses, but `status` is used by the filter, so it's read and dropped afterwards."
+    },
+    {
+      "id": "k3",
+      "prompt": "You join orders to customers and then filter on `city`. What does Catalyst do with the filter?",
+      "choices": [
+        "Runs it after the join, as written",
+        "Moves it below the join, onto the customers side, so fewer rows are joined",
+        "Turns the join into a filter",
+        "Runs it twice, before and after the join"
+      ],
+      "answer": 1,
+      "why": "`city` only comes from customers, so the filter can run on that side before the join with the same result. The optimized plan shows it under the `Join`."
+    }
+  ],
+  "review": [
+    "Catalyst analyzes names and types, optimizes the logical plan with rules, picks a physical plan, then generates code.",
+    "`explain()` modes: simple (physical plan), extended or `True` (all plans), formatted (numbered), cost (size estimates), codegen (generated code).",
+    "`ReadSchema` shows column pruning: only the columns the query uses, including ones used just for filtering.",
+    "`PushedFilters` shows filter pushdown: conditions the reader applies while it reads.",
+    "Catalyst moves filters below joins and merges consecutive filters, so equivalent queries usually get the same optimized plan.",
+    "Plans contain `#n` column tags; check plan text for stable facts, or compare plans with `sameResult`."
+  ],
+  "practice": [
+    "PS-Q0276",
+    "PS-Q0277",
+    "PS-Q0278",
+    "PS-Q0279",
+    "PS-Q0280"
+  ]
+}

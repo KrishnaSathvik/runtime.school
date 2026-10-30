@@ -1,0 +1,50 @@
+{
+  "id": "PS-L090-C1",
+  "slug": "run-the-shops-night-twice",
+  "lesson": "PS-L090",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 17,
+  "title": "Run the shop's night twice",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "A web shop's nightly job takes tonight's `orders` file into its Delta table of orders, and finance reads daily revenue from `gold`. Nights get rerun, so `solve` runs this one twice. Fix `nightly` so the table, and so gold, is right however many times a night runs.",
+  "rules": [
+    "A row is good when its `status` is one of the six in `STATUSES` and it has an `order_date`. Other rows never reach the table.",
+    "The file holds new orders and new states of orders the table already has. A good row replaces its order's row, every column, and a new order is added. Orders the file has no good row for stay as they are.",
+    "The file may hold an order more than once, always as identical copies. The table has one row per `order_id`.",
+    "Running `nightly` twice must give the same table as running it once. Don't change `start_table`, `gold` or `solve`."
+  ],
+  "hints": [
+    "Run the starter on the sample and compare 3 March and 23 January with what the file says about those orders.",
+    "Keep the good rows first, with lesson 22's conditions, and count a NULL test as a failure.",
+    "Then lesson 83's load: remove repeated orders by `order_id`, and MERGE on it, updating matches and inserting the rest."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "orders"
+  ],
+  "starter": "import shutil\nfrom datetime import date\nfrom decimal import Decimal\n\nfrom delta.tables import DeltaTable\nfrom pyspark.sql import functions as F\n\nSTATUSES = [\"placed\", \"paid\", \"shipped\", \"delivered\", \"cancelled\", \"refunded\"]\n\n\ndef start_table(orders, path):\n    # The orders table before tonight. Don't change this.\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty folder on every run\n    before = spark.createDataFrame(\n        [\n            (\"O00007\", \"C0003\", date(2026, 3, 23), \"placed\", \"web\", Decimal(\"227.48\")),\n            (\"O00012\", \"C0005\", date(2026, 3, 3), \"paid\", \"app\", Decimal(\"57.00\")),\n            (\"O00050\", \"C0002\", date(2026, 3, 3), \"delivered\", \"store\", Decimal(\"40.00\")),\n        ],\n        orders.schema,\n    )\n    before.write.format(\"delta\").save(path)\n\n\ndef nightly(orders, path):\n    # Take tonight's file into the orders table.\n    orders.write.format(\"delta\").mode(\"append\").save(path)\n\n\ndef gold(path):\n    # Daily revenue for finance. Don't change this.\n    sold = spark.read.format(\"delta\").load(path).filter(F.col(\"status\").isin(\"paid\", \"shipped\", \"delivered\"))\n    return sold.groupBy(\"order_date\").agg(F.count(\"*\").alias(\"orders\"), F.sum(\"total\").alias(\"revenue\"))\n\n\ndef solve(orders):\n    path = \"/tmp/shop/orders\"\n    start_table(orders, path)\n    nightly(orders, path)\n    nightly(orders, path)  # the night is rerun\n    return gold(path)\n",
+  "output": {
+    "columns": [
+      "order_date",
+      "orders",
+      "revenue"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 240,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

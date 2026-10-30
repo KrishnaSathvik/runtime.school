@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0210",
+  "slug": "numbered-tags-with-exact-temperatures",
+  "lesson": "PS-L042",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Numbered tags with exact temperatures",
+  "dataset": {
+    "id": "PS-D09",
+    "version": "1.0.0"
+  },
+  "prompt": "The warehouse system stores tags with their position and wants temperatures as exact decimals it can't misread. Write `solve(sensor_readings)` so it returns one row per tag, numbered, with the reading's temperature as a decimal.",
+  "rules": [
+    "Return `reading_id`, `tag_no`, `tag` and `temperature_c`, in that order.",
+    "One row per entry of `payload.tags`. `tag_no` is the tag's position in the list, starting at 1. A reading with no tags, or no payload, gives no rows.",
+    "`temperature_c` is `payload.temperature_c` as `DECIMAL(3,1)`. A value that doesn't fit, such as a sensor glitch of 999.0, becomes missing instead of stopping the job.",
+    "Keep repeated deliveries and repeated tags."
+  ],
+  "hints": [
+    "`F.posexplode(...)` gives each entry's position and value as two columns; name them with `.alias(\"pos\", \"tag\")`.",
+    "Positions from `posexplode` start at 0, so add 1.",
+    "`DECIMAL(3,1)` holds at most 99.9. A plain `cast` stops the job on a glitch value; the lesson on casting showed the version that gives a missing value instead."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "sensor_readings"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(sensor_readings):\n    # Return one numbered row per tag with an exact temperature.\n    return sensor_readings\n",
+  "output": {
+    "columns": [
+      "reading_id",
+      "tag_no",
+      "tag",
+      "temperature_c"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Explode with positions, then fix up the position and the type. `F.posexplode(\"payload.tags\").alias(\"pos\", \"tag\")` in one `select` gives the rows; a second `select` turns `pos` into `(F.col(\"pos\") + 1).alias(\"tag_no\")`. For the temperature, `F.col(\"payload.temperature_c\").try_cast(\"decimal(3,1)\")` keeps real readings such as 21.4 or -12.5 exactly and turns 999.0, which has too many digits before the point, into a missing value. With `cast` instead, Spark's strict mode stops the whole job at the first glitch. Plain `posexplode` drops readings with no tags, which is what the rules ask for here."
+}

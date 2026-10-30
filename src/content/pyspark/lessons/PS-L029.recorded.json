@@ -1,0 +1,45 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D14",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "accounts",
+   "customer_cdc",
+   "invoices"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "5 + 10 = 15\n+----------+\n|account_id|\n+----------+\n|  ACC-0001|\n|  ACC-0002|\n|  ACC-0003|\n|  ACC-0004|\n|  ACC-0005|\n|  ACC-0006|\n|  ACC-0007|\n+----------+\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "+--------------------------+----------------------+\n|account_id                |account_name          |\n+--------------------------+----------------------+\n|ACC-0001                  |Quillfen Analytics Inc|\n|ACC-0002                  |Brackenmoor Foods Ltd |\n|ACC-0003                  |Tamsley Logistics GmbH|\n|ACC-0004                  |Corvane Health Pty Ltd|\n|ACC-0005                  |Ellowby Energy Inc    |\n|Quillfen Analytics Inc    |ACC-0001              |\n|Brackenmoor Foods Ltd     |ACC-0002              |\n|Fennick Labs B.V.         |ACC-0006              |\n|Quillfen Analytics Inc    |ACC-0001              |\n|Tamsley Logistics GmbH    |ACC-0003              |\n|Marrowind Retail Lda      |ACC-0007              |\n|Fennick Labs B.V.         |ACC-0006              |\n|Corvane Health Pty Ltd    |ACC-0004              |\n|Quillfen Analytics Inc    |ACC-0001              |\n|Marrowind Retail Group Lda|ACC-0007              |\n+--------------------------+----------------------+\n\n+----------+--------------------------+\n|account_id|account_name              |\n+----------+--------------------------+\n|ACC-0001  |Quillfen Analytics Inc    |\n|ACC-0001  |Quillfen Analytics Inc    |\n|ACC-0001  |Quillfen Analytics Inc    |\n|ACC-0001  |Quillfen Analytics Inc    |\n|ACC-0002  |Brackenmoor Foods Ltd     |\n|ACC-0002  |Brackenmoor Foods Ltd     |\n|ACC-0003  |Tamsley Logistics GmbH    |\n|ACC-0003  |Tamsley Logistics GmbH    |\n|ACC-0004  |Corvane Health Pty Ltd    |\n|ACC-0004  |Corvane Health Pty Ltd    |\n|ACC-0005  |Ellowby Energy Inc        |\n|ACC-0006  |Fennick Labs B.V.         |\n|ACC-0006  |Fennick Labs B.V.         |\n|ACC-0007  |Marrowind Retail Lda      |\n|ACC-0007  |Marrowind Retail Group Lda|\n+----------+--------------------------+\n\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "",
+   "error": {
+    "type": "AnalysisException",
+    "message": "[NUM_COLUMNS_MISMATCH] UNION can only be performed on inputs with the same number of columns, but the first input has 1 columns and the second input has 2 columns. SQLSTATE: 42826",
+    "line": 1,
+    "condition": "NUM_COLUMNS_MISMATCH"
+   }
+  },
+  "e4": {
+   "stdout": "+----------+\n|account_id|\n+----------+\n|  ACC-0001|\n|  ACC-0002|\n|  ACC-0003|\n|  ACC-0004|\n+----------+\n\n+----------+\n|account_id|\n+----------+\n|  ACC-0005|\n+----------+\n\n+----------+\n|account_id|\n+----------+\n|  ACC-0006|\n|  ACC-0007|\n+----------+\n\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "+----------+--------------------+------------+\n|account_id|        account_name|credit_limit|\n+----------+--------------------+------------+\n|  ACC-0003|Tamsley Logistics...|   250000.00|\n+----------+--------------------+------------+\n\n+----------+\n|account_id|\n+----------+\n+----------+\n\n+----------+\n|account_id|\n+----------+\n|  ACC-0001|\n+----------+\n\n",
+   "error": null
+  }
+ }
+}

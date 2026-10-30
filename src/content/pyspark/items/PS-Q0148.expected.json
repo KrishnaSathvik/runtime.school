@@ -1,0 +1,171 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "product_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "order_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "line_no",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "name",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "P001",
+     "O00002",
+     1,
+     "Chef Knife"
+    ],
+    [
+     "P001",
+     "O00002",
+     1,
+     "Chef Knife"
+    ],
+    [
+     "P003",
+     "O00003",
+     1,
+     "Trail Bottle"
+    ],
+    [
+     "P005",
+     "O00001",
+     1,
+     "Desk Lamp"
+    ],
+    [
+     "P005",
+     "O00001",
+     2,
+     "Desk Lamp"
+    ],
+    [
+     "P008",
+     null,
+     null,
+     "Wall Clock"
+    ],
+    [
+     "P009",
+     "O00003",
+     2,
+     null
+    ]
+   ],
+   "row_count": 7,
+   "inputs": {
+    "order_items": [
+     [
+      "O00001",
+      "1",
+      "P005",
+      "3",
+      "19.99"
+     ],
+     [
+      "O00001",
+      "2",
+      "P005",
+      "3",
+      "17.99"
+     ],
+     [
+      "O00002",
+      "1",
+      "P001",
+      "3",
+      "19.99"
+     ],
+     [
+      "O00002",
+      "1",
+      "P001",
+      "3",
+      "19.99"
+     ],
+     [
+      "O00003",
+      "1",
+      "P003",
+      "3",
+      "24.00"
+     ],
+     [
+      "O00003",
+      "2",
+      "P009",
+      "1",
+      "15.00"
+     ]
+    ],
+    "products": [
+     [
+      "P001",
+      "Chef Knife",
+      "kitchen",
+      "19.99",
+      "true"
+     ],
+     [
+      "P003",
+      "Trail Bottle",
+      "outdoor",
+      "24.00",
+      "true"
+     ],
+     [
+      "P003",
+      "Trail Bottle",
+      "outdoor",
+      "24.00",
+      "true"
+     ],
+     [
+      "P005",
+      "Desk Lamp",
+      "office",
+      "19.99",
+      "true"
+     ],
+     [
+      "P008",
+      "Wall Clock",
+      "home",
+      "89.00",
+      "true"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice order lines and products",
+  "products that no line matches",
+  "a product row repeated in the product list",
+  "two identical rows in the order lines",
+  "lines for a product that isn't listed",
+  "a missing product id in both tables",
+  "no order lines"
+ ]
+}

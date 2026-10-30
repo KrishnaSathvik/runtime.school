@@ -1,0 +1,106 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "key",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "applied",
+     "type": "boolean",
+     "nullable": true
+    },
+    {
+     "name": "value",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "spark.sql.shuffle.partitions",
+     true,
+     "16"
+    ],
+    [
+     "spark.driver.memory",
+     false,
+     "2g"
+    ],
+    [
+     "spark.sql.session.timeZone",
+     false,
+     "UTC"
+    ],
+    [
+     "spark.myteam.run_date",
+     true,
+     "2026-03-01"
+    ],
+    [
+     "spark.sql.catalogImplementation",
+     false,
+     "in-memory"
+    ],
+    [
+     "spark.sql.adaptive.enabled",
+     true,
+     "false"
+    ],
+    [
+     "spark.executor.cores",
+     false,
+     null
+    ]
+   ],
+   "row_count": 7,
+   "inputs": {
+    "overrides": [
+     [
+      "spark.sql.shuffle.partitions",
+      "16"
+     ],
+     [
+      "spark.driver.memory",
+      "4g"
+     ],
+     [
+      "spark.sql.session.timeZone",
+      "Lisbon"
+     ],
+     [
+      "spark.myteam.run_date",
+      "2026-03-01"
+     ],
+     [
+      "spark.sql.catalogImplementation",
+      "hive"
+     ],
+     [
+      "spark.sql.adaptive.enabled",
+      "false"
+     ],
+     [
+      "spark.executor.cores",
+      "4"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "every override is refused",
+  "a key overridden twice",
+  "a value of the wrong type",
+  "only the team's own settings",
+  "a valid time zone id"
+ ]
+}

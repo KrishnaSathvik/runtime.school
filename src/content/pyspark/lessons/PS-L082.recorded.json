@@ -1,0 +1,51 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D08",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "shipment_events"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "AnalysisException\nUNRESOLVED_COLUMN.WITH_SUGGESTION\n`shipment_ref`\nTrue\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "built\n3 rows\nNumberFormatException CAST_INVALID_INPUT\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "+--------+--------+-----------+----------+\n|event_id|event_no|shipment_id|event_type|\n+--------+--------+-----------+----------+\n|E0000101|     101|     SH0002|    picked|\n|E0000103|     103|     SH0004|    picked|\n+--------+--------+-----------+----------+\n\n+------------+--------+----------+-----------+\n|       error|event_id|event_type|shipment_id|\n+------------+--------+----------+-----------+\n|bad event id|E00001O2|    picked|     SH0003|\n|bad event id|    NULL|    picked|     SH0001|\n+------------+--------+----------+-----------+\n\nreceived 4 loaded 2 dead letter 2\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "+--------+-----------+--------+\n|event_id|shipment_id|quantity|\n+--------+-----------+--------+\n|E0000201|     SH0002|       4|\n|E0000204|     SH0001|       2|\n+--------+-----------+--------+\n\n+--------------------+\n|raw_line            |\n+--------------------+\n|E0000202,SH0003,four|\n|E0000203,SH0004     |\n+--------------------+\n\nbad records folder made: False\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "attempt 1 failed: PATH_NOT_FOUND\nattempt 2 failed: PATH_NOT_FOUND\nattempt 3 worked\n+--------+-----------+----------+\n|event_id|shipment_id|event_type|\n+--------+-----------+----------+\n|E0000012|     SH0004| delivered|\n|E0000013|     SH9999|  departed|\n+--------+-----------+----------+\n\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "attempt 1 failed, giving up\nrun failed: UNRESOLVED_COLUMN.WITH_SUGGESTION\n",
+   "error": null
+  },
+  "e7": {
+   "stdout": "",
+   "error": {
+    "type": "Py4JJavaError",
+    "message": "org.apache.spark.SparkException: [FAILED_READ_FILE.NO_HINT] Encountered error while reading file file:///tmp/landing/events.csv.  SQLSTATE: KD001",
+    "line": 8,
+    "condition": null
+   }
+  }
+ }
+}

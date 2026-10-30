@@ -1,0 +1,55 @@
+{
+  "id": "PS-Q0287",
+  "slug": "can-the-warehouse-fill-it",
+  "lesson": "PS-L058",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Can the warehouse fill it?",
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0"
+  },
+  "prompt": "Before the pickers start, the dispatch desk checks every shipment against the free stock at its own warehouse. Write `solve(shipments, inventory)` so it returns `shipment_id`, `warehouse_id`, `sku`, `quantity`, `free_stock` and `can_fill`.",
+  "rules": [
+    "`free_stock` is `on_hand` minus `reserved` on the inventory row for the shipment's warehouse **and** SKU. `can_fill` is true when `quantity` is at most `free_stock`.",
+    "Every shipment appears exactly once. If its warehouse has no inventory row for that SKU, or a count is missing, `free_stock` and `can_fill` are missing.",
+    "Check each shipment on its own against the full free stock. Return only these six columns, in this order."
+  ],
+  "hints": [
+    "The same SKU is stocked in several warehouses, so the key is the pair: `on=[\"warehouse_id\", \"sku\"]`.",
+    "Keep every shipment with a left join. `inventory` is a small lookup, so `F.broadcast(inventory)` on the right side works.",
+    "Build `free = F.col(\"on_hand\") - F.col(\"reserved\")` once and use it for both columns: `(F.col(\"quantity\") <= free)` is the flag."
+  ],
+  "explanation": "Look up each shipment's stock line on both keys, `shipments.join(F.broadcast(inventory), on=[\"warehouse_id\", \"sku\"], how=\"left\")`, then compute `free_stock` and the `<=` comparison in one `select`. Joining on `sku` alone pairs a shipment with every warehouse that stocks the SKU, so it appears several times. The left join keeps shipments with no stock line, and arithmetic or a comparison with a missing value is missing, so those rows need no extra code. Broadcasting `inventory` is how you'd run it when the stock table is small; a sort-merge join returns exactly the same rows, so the grading checks only the rows.",
+  "entry": "solve",
+  "inputs": [
+    "shipments",
+    "inventory"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(shipments, inventory):\n    # Return shipment_id, warehouse_id, sku, quantity, free_stock and can_fill for every shipment.\n    return shipments\n",
+  "output": {
+    "columns": [
+      "shipment_id",
+      "warehouse_id",
+      "sku",
+      "quantity",
+      "free_stock",
+      "can_fill"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

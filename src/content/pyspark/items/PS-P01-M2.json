@@ -1,0 +1,61 @@
+{
+  "id": "PS-P01-M2",
+  "slug": "clean-the-orders",
+  "project": "PS-P01",
+  "milestone": "PS-P01.m2",
+  "difficulty": "medium",
+  "minutes": 30,
+  "title": "Filter, validate and clean the orders",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "Some rows in the export can't go into a sales report: a status nobody recognises, a negative total, an order dated outside the year. Write `clean_orders(orders)`. It starts from your `order_view(orders)` and keeps only the orders that pass every check below.",
+  "rules": [
+    "`status` is one of `placed`, `paid`, `shipped`, `delivered`, `cancelled`, `refunded`, written exactly like that.",
+    "`order_total` is 0 or more. A missing or negative total fails.",
+    "`order_date` is in 2026: on or after 2026-01-01 and before 2027-01-01. A missing date fails.",
+    "Return `order_view`'s columns. Duplicate rows stay for now; a later step removes them."
+  ],
+  "hints": [
+    "Call `order_view(orders)` first and filter what it returns, so the columns are already right.",
+    "Three checks, joined with `&`, each in parentheses. The status check is one `isin(...)`.",
+    "The date needs two comparisons: `>= \"2026-01-01\"` and `< \"2027-01-01\"`. Missing values fail any comparison on their own."
+  ],
+  "entry": "clean_orders",
+  "inputs": [
+    "orders"
+  ],
+  "file": "pipeline.py",
+  "append": "\n\nVALID_STATUSES = [\"placed\", \"paid\", \"shipped\", \"delivered\", \"cancelled\", \"refunded\"]\n\n\ndef clean_orders(orders):\n    # Step 2: start from order_view(orders) and keep only the valid orders.\n    return order_view(orders)\n",
+  "prerequisites": [
+    "PS-L009",
+    "PS-L010"
+  ],
+  "output": {
+    "columns": [
+      "order_id",
+      "order_date",
+      "customer_id",
+      "status",
+      "order_total"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "example",
+      "sample": true
+    },
+    {
+      "id": "project",
+      "edition": "project"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

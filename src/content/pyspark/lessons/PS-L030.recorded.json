@@ -1,0 +1,41 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D01",
+  "version": "1.1.0",
+  "edition": "lesson",
+  "tables": [
+   "orders",
+   "customers",
+   "order_items",
+   "products"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "12 orders, 6 customers, 12 joined\n32 lines, 12 orders, 32 joined\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "6 rows, 6 distinct customer_id in customers\n12 rows, 6 distinct customer_id in orders\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "12 orders became 18 rows\n+--------+-----------+------+------+\n|order_id|customer_id|  city| total|\n+--------+-----------+------+------+\n|  O00001|      C0001| Leeds|117.99|\n|  O00001|      C0001| Leeds|117.99|\n|  O00002|      C0001| Leeds| 79.96|\n|  O00002|      C0001| Leeds| 79.96|\n|  O00003|      C0002|Lisbon|291.95|\n|  O00004|      C0004|Denver|418.96|\n|  O00005|      C0006| Kyoto| 71.97|\n|  O00005|      C0006| Osaka| 71.97|\n|  O00006|      C0004|Denver| 39.98|\n|  O00007|      C0003|Denver|227.48|\n|  O00008|      C0001| Leeds| 59.50|\n|  O00008|      C0001| Leeds| 59.50|\n|  O00009|      C0001| Leeds|105.49|\n|  O00009|      C0001| Leeds|105.49|\n|  O00010|      C0006| Kyoto|299.91|\n|  O00010|      C0006| Osaka|299.91|\n|  O00011|      C0005| Perth|243.00|\n|  O00012|      C0005| Perth| 57.00|\n+--------+-----------+------+------+\n\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "8 rows, 7 after removing exact copies, 6 customers\n14 rows after the join\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "8 products, 6 product-promo pairs\n+----------+----------------+--------+---------+\n|product_id|            name|category|    promo|\n+----------+----------------+--------+---------+\n|      P001|      Chef Knife| kitchen|   LOYAL5|\n|      P001|      Chef Knife| kitchen| SPRING10|\n|      P002|Pour-Over Kettle| kitchen|   LOYAL5|\n|      P002|Pour-Over Kettle| kitchen| SPRING10|\n|      P005|       Desk Lamp|  office|BACK2WORK|\n|      P006|    Notebook Set|  office|BACK2WORK|\n+----------+----------------+--------+---------+\n\n",
+   "error": null
+  }
+ }
+}

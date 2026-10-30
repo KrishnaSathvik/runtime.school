@@ -1,0 +1,52 @@
+{
+  "id": "PS-L090-C2",
+  "slug": "what-the-rerun-must-run",
+  "lesson": "PS-L090",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "What the rerun must run",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "The starter defines the platform's seven nightly tasks. Three of them raise an error when the data is wrong, and after tonight's run the team fixed a bug in `dim_accounts`. Finish `solve` so it runs the night and returns one row per task: its name in `task`, its `status`, and in `rerun` whether tomorrow's rerun must run it.",
+  "rules": [
+    "`failed`: the task ran and raised an error. `skipped`: a task it needs is `failed` or `skipped`, so it didn't run. `ok`: it ran without an error. Tasks that don't need a failed task still run.",
+    "The rerun must run every task that isn't `ok`. Because its code changed, it must also run `dim_accounts` and every task that needs it, directly or through other tasks. Every other task keeps tonight's output.",
+    "Return all seven tasks. `rerun` is a boolean."
+  ],
+  "hints": [
+    "First the statuses, as in lesson 77: walk `run_order(deps)` and look at the statuses of the tasks each one needs before running it.",
+    "A task's output changes when the code of a task it needs changes. Walking the run order once finds everything below `dim_accounts`.",
+    "`rerun` is true when the status isn't `ok`, or when the task is `dim_accounts` or below it."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "accounts",
+    "customer_cdc",
+    "invoices",
+    "invoice_lines"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\nCONTRACT = {\n    \"invoice_id\": \"string\",\n    \"account_id\": \"string\",\n    \"invoice_date\": \"date\",\n    \"due_date\": \"date\",\n    \"status\": \"string\",\n    \"total_amount\": \"decimal(12,2)\",\n}\n\n\ndef make_tasks(accounts, customer_cdc, invoices, invoice_lines):\n    cols = accounts.columns\n\n    def bronze_invoices():\n        actual = dict(invoices.dtypes)\n        broken = [c for c, t in CONTRACT.items() if actual.get(c) != t]\n        if broken:\n            raise ValueError(\"the invoice file broke its contract: \" + \", \".join(broken))\n        return invoices.select(\"*\", F.lit(1).alias(\"_batch_id\"))\n\n    def bronze_changes():\n        bad = customer_cdc.filter(~F.coalesce(F.col(\"op\").isin(\"I\", \"U\", \"D\"), F.lit(False))).count()\n        if bad > 0:\n            raise ValueError(f\"{bad} changes with an unknown op\")\n        return customer_cdc.select(\"*\", F.lit(1).alias(\"_batch_id\"))\n\n    def silver_invoices(bronze_invoices):\n        line_totals = invoice_lines.groupBy(\"invoice_id\").agg(F.sum(\"line_amount\").alias(\"lines_total\"))\n        good = (F.col(\"status\").isin(\"draft\", \"open\", \"paid\", \"overdue\", \"void\")\n                & (F.col(\"total_amount\") == F.col(\"lines_total\")))\n        checked = bronze_invoices.join(line_totals, on=\"invoice_id\", how=\"left\").withColumn(\"ok\", F.coalesce(good, F.lit(False)))\n        total, bad = checked.select(F.count(\"*\"), F.count(F.when(~F.col(\"ok\"), 1))).first()\n        if bad > total / 10:\n            raise ValueError(f\"{bad} of {total} invoices broke the rules\")\n        return checked.filter(\"ok\").select(bronze_invoices.columns)\n\n    def dim_accounts(bronze_changes):\n        snapshot = accounts.select(*cols, F.lit(\"S\").alias(\"op\"), F.lit(0).cast(\"bigint\").alias(\"sequence\"),\n                                   F.col(\"created_on\").cast(\"timestamp\").alias(\"starts\"))\n        changes = bronze_changes.select(*cols, \"op\", \"sequence\", F.col(\"changed_at\").alias(\"starts\"))\n        events = snapshot.union(changes).withColumn(\"n\", F.row_number().over(Window.partitionBy(\"account_id\").orderBy(\"sequence\")))\n        ends = events.select(\"account_id\", (F.col(\"n\") - 1).alias(\"n\"), F.col(\"starts\").alias(\"effective_to\"))\n        return (events.filter(F.col(\"op\") != \"D\").join(ends, on=[\"account_id\", \"n\"], how=\"left\")\n                .select(*cols, F.col(\"starts\").alias(\"effective_from\"), \"effective_to\"))\n\n    def fact_invoices(silver_invoices):\n        return silver_invoices.dropDuplicates([\"invoice_id\"])\n\n    def gold_revenue(fact_invoices, dim_accounts):\n        billed = fact_invoices.filter(~F.col(\"status\").isin(\"draft\", \"void\")).withColumn(\"at\", F.col(\"invoice_date\").cast(\"timestamp\"))\n        d = dim_accounts\n        valid_then = ((billed[\"account_id\"] == d[\"account_id\"]) & (d[\"effective_from\"] <= billed[\"at\"])\n                      & (d[\"effective_to\"].isNull() | (billed[\"at\"] < d[\"effective_to\"])))\n        return (billed.join(d, valid_then, \"left\")\n                .groupBy(\"segment\").agg(F.count(\"*\").alias(\"invoices\"), F.sum(\"total_amount\").alias(\"revenue\")))\n\n    def checks(gold_revenue, fact_invoices):\n        counted, missing = gold_revenue.select(\n            F.sum(\"invoices\"), F.sum(F.when(F.col(\"segment\").isNull(), F.col(\"invoices\")).otherwise(0))).first()\n        billed = fact_invoices.filter(~F.col(\"status\").isin(\"draft\", \"void\")).count()\n        if (counted or 0) != billed or (missing or 0) > 0:\n            raise ValueError(f\"gold counted {counted} of {billed} billed invoices, {missing} without an account\")\n\n    return {\n        \"checks\": (checks, [\"gold_revenue\", \"fact_invoices\"]),\n        \"gold_revenue\": (gold_revenue, [\"fact_invoices\", \"dim_accounts\"]),\n        \"fact_invoices\": (fact_invoices, [\"silver_invoices\"]),\n        \"silver_invoices\": (silver_invoices, [\"bronze_invoices\"]),\n        \"dim_accounts\": (dim_accounts, [\"bronze_changes\"]),\n        \"bronze_changes\": (bronze_changes, []),\n        \"bronze_invoices\": (bronze_invoices, []),\n    }\n\n\ndef run_order(deps):\n    order = []\n    while len(order) < len(deps):\n        ready = [t for t in deps if t not in order and all(d in order for d in deps[t])]\n        if not ready:\n            raise ValueError(\"these tasks wait on each other: \" + \", \".join(t for t in deps if t not in order))\n        order += ready\n    return order\n\n\ndef solve(accounts, customer_cdc, invoices, invoice_lines):\n    tasks = make_tasks(accounts, customer_cdc, invoices, invoice_lines)\n    deps = {name: needs for name, (fn, needs) in tasks.items()}\n    changed = \"dim_accounts\"  # its code was fixed after tonight's run\n    outputs, status = {}, {}\n    # Run the night and give every task a status. Then decide, for every task,\n    # whether the rerun must run it, and return one row per task.\n    rows = []\n    return spark.createDataFrame(rows, \"task STRING, status STRING, rerun BOOLEAN\")\n",
+  "output": {
+    "columns": [
+      "task",
+      "status",
+      "rerun"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 240,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

@@ -1,0 +1,558 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "example": {
+   "schema": [
+    {
+     "name": "transaction_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "posted_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "txn_type",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "currency",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "signed_amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "T900001",
+     "A90001",
+     "2026-01-05T09:15:00",
+     "purchase",
+     "posted",
+     "USD",
+     "42.50",
+     "-42.50"
+    ],
+    [
+     "T900002",
+     "A90001",
+     "2026-01-05T12:00:00",
+     "deposit",
+     "posted",
+     "USD",
+     "1200.00",
+     "1200.00"
+    ],
+    [
+     "T900003",
+     "A90002",
+     "2026-01-06T08:30:00",
+     "atm_withdrawal",
+     "posted",
+     "EUR",
+     "60.00",
+     "-60.00"
+    ],
+    [
+     "T900004",
+     "A90002",
+     "2026-01-07T14:10:00",
+     "refund",
+     "pending",
+     "EUR",
+     "18.75",
+     "18.75"
+    ],
+    [
+     "T900006",
+     "A90003",
+     "2026-01-31T23:00:00",
+     "interest",
+     "posted",
+     "GBP",
+     "0.37",
+     "0.37"
+    ],
+    [
+     "T900001",
+     "A90001",
+     "2026-01-05T09:15:00",
+     "purchase",
+     "posted",
+     "USD",
+     "42.50",
+     "-42.50"
+    ]
+   ],
+   "row_count": 6,
+   "inputs": {
+    "transactions": [
+     [
+      "T900001",
+      "A90001",
+      "M001",
+      "2026-01-05T09:15:00",
+      "purchase",
+      "card_present",
+      "debit",
+      "42.50",
+      "USD",
+      "posted"
+     ],
+     [
+      "T900002",
+      "A90001",
+      null,
+      "2026-01-05T12:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "1200.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T900003",
+      "A90002",
+      null,
+      "2026-01-06T08:30:00",
+      "atm_withdrawal",
+      "atm",
+      "debit",
+      "60.00",
+      "EUR",
+      "posted"
+     ],
+     [
+      "T900004",
+      "A90002",
+      "M001",
+      "2026-01-07T14:10:00",
+      "refund",
+      "online",
+      "credit",
+      "18.75",
+      "EUR",
+      "pending"
+     ],
+     [
+      "T900005",
+      "A90003",
+      null,
+      "2026-01-08T00:00:00",
+      "fee",
+      "system",
+      "debit",
+      "0.00",
+      "GBP",
+      "posted"
+     ],
+     [
+      "T900006",
+      "A90003",
+      null,
+      "2026-01-31T23:00:00",
+      "interest",
+      "system",
+      "credit",
+      "0.37",
+      "GBP",
+      "posted"
+     ],
+     [
+      "T900007",
+      "A99999",
+      "M001",
+      "2026-01-09T10:00:00",
+      "purchase",
+      "card_present",
+      "debit",
+      "15.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T900008",
+      null,
+      "M001",
+      "2026-01-10T11:11:11",
+      "purchase",
+      "card_present",
+      "debit",
+      "9.99",
+      "USD",
+      "posted"
+     ],
+     [
+      "T900009",
+      "A90001",
+      "M001",
+      "2026-01-11T16:45:00",
+      "purchase",
+      "card_present",
+      "debit",
+      "-30.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T900010",
+      "A90002",
+      null,
+      "2026-01-12T09:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "500.00",
+      "ZZZ",
+      "posted"
+     ],
+     [
+      "T900011",
+      "A90003",
+      "M001",
+      "2026-01-13T13:00:00",
+      "purchase",
+      "card_present",
+      "debit",
+      "25.00",
+      "EUR",
+      "posted"
+     ],
+     [
+      "T900001",
+      "A90001",
+      "M001",
+      "2026-01-05T09:15:00",
+      "purchase",
+      "card_present",
+      "debit",
+      "42.50",
+      "USD",
+      "posted"
+     ]
+    ],
+    "accounts": [
+     [
+      "A90001",
+      "C0001",
+      "checking",
+      "USD",
+      "active",
+      "2025-06-01",
+      "0.00"
+     ],
+     [
+      "A90002",
+      "C0002",
+      "checking",
+      "EUR",
+      "active",
+      "2025-06-01",
+      "0.00"
+     ],
+     [
+      "A90003",
+      "C0003",
+      "checking",
+      "GBP",
+      "active",
+      "2025-06-01",
+      "0.00"
+     ],
+     [
+      "A90004",
+      "C0004",
+      "checking",
+      "USD",
+      "closed",
+      "2025-06-01",
+      "0.00"
+     ]
+    ]
+   }
+  },
+  "project": {
+   "schema": [
+    {
+     "name": "transaction_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "posted_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "txn_type",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "currency",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "signed_amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "T000001",
+     "A00219",
+     "2025-07-01T06:54:48",
+     "deposit",
+     "posted",
+     "EUR",
+     "3137.50",
+     "3137.50"
+    ],
+    [
+     "T000002",
+     "A00008",
+     "2025-07-01T08:23:28",
+     "purchase",
+     "posted",
+     "USD",
+     "19.99",
+     "-19.99"
+    ],
+    [
+     "T000003",
+     "A00398",
+     "2025-07-01T08:30:58",
+     "purchase",
+     "posted",
+     "GBP",
+     "13.47",
+     "-13.47"
+    ],
+    [
+     "T000004",
+     "A00060",
+     "2025-07-01T08:58:57",
+     "purchase",
+     "posted",
+     "USD",
+     "8.66",
+     "-8.66"
+    ],
+    [
+     "T000005",
+     "A00186",
+     "2025-07-01T12:10:05",
+     "purchase",
+     "posted",
+     "EUR",
+     "154.22",
+     "-154.22"
+    ],
+    [
+     "T000006",
+     "A00197",
+     "2025-07-01T12:29:19",
+     "purchase",
+     "posted",
+     "EUR",
+     "12.57",
+     "-12.57"
+    ],
+    [
+     "T000007",
+     "A00489",
+     "2025-07-01T13:07:41",
+     "fee",
+     "pending",
+     "GBP",
+     "35.00",
+     "-35.00"
+    ],
+    [
+     "T000008",
+     "A00157",
+     "2025-07-01T13:23:51",
+     "fee",
+     "posted",
+     "EUR",
+     "35.00",
+     "-35.00"
+    ],
+    [
+     "T000009",
+     "A00287",
+     "2025-07-01T14:27:49",
+     "deposit",
+     "posted",
+     "EUR",
+     "500.00",
+     "500.00"
+    ],
+    [
+     "T000010",
+     "A00104",
+     "2025-07-01T15:21:56",
+     "purchase",
+     "posted",
+     "USD",
+     "30.39",
+     "-30.39"
+    ],
+    [
+     "T000011",
+     "A00081",
+     "2025-07-01T16:14:08",
+     "deposit",
+     "posted",
+     "EUR",
+     "1200.00",
+     "1200.00"
+    ],
+    [
+     "T000012",
+     "A00103",
+     "2025-07-01T16:37:14",
+     "atm_withdrawal",
+     "posted",
+     "EUR",
+     "160.00",
+     "-160.00"
+    ],
+    [
+     "T000013",
+     "A00357",
+     "2025-07-01T18:09:51",
+     "purchase",
+     "posted",
+     "GBP",
+     "65.22",
+     "-65.22"
+    ],
+    [
+     "T000014",
+     "A00107",
+     "2025-07-01T18:13:15",
+     "purchase",
+     "pending",
+     "GBP",
+     "57.11",
+     "-57.11"
+    ],
+    [
+     "T000015",
+     "A00412",
+     "2025-07-01T20:14:06",
+     "purchase",
+     "posted",
+     "USD",
+     "5.35",
+     "-5.35"
+    ],
+    [
+     "T000016",
+     "A00414",
+     "2025-07-02T06:34:37",
+     "purchase",
+     "posted",
+     "USD",
+     "23.60",
+     "-23.60"
+    ],
+    [
+     "T000017",
+     "A00234",
+     "2025-07-02T07:53:21",
+     "purchase",
+     "posted",
+     "GBP",
+     "15.52",
+     "-15.52"
+    ],
+    [
+     "T000018",
+     "A00432",
+     "2025-07-02T09:00:25",
+     "deposit",
+     "posted",
+     "USD",
+     "612.25",
+     "612.25"
+    ],
+    [
+     "T000019",
+     "A00016",
+     "2025-07-02T15:58:30",
+     "fee",
+     "posted",
+     "EUR",
+     "2.50",
+     "-2.50"
+    ],
+    [
+     "T000020",
+     "A00346",
+     "2025-07-02T17:04:12",
+     "purchase",
+     "posted",
+     "GBP",
+     "8.14",
+     "-8.14"
+    ]
+   ],
+   "row_count": 4590
+  }
+ },
+ "hidden": [
+  "the full practice tables",
+  "zero, one-cent, negative and missing amounts",
+  "unknown and missing accounts, an id in the wrong case, and an account listed twice",
+  "unknown codes, no currency, a code in lower case, and a real currency that isn't the account's",
+  "valid and invalid rows delivered more than once",
+  "empty tables"
+ ]
+}

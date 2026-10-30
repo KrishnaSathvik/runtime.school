@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0169",
+  "slug": "fix-the-daily-returns",
+  "lesson": "PS-L034",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Fix the daily returns",
+  "dataset": {
+    "id": "PS-D10",
+    "version": "1.0.0"
+  },
+  "prompt": "This function adds each day's percentage change to the price table. Most rows look right, but the first day of most stocks shows a huge move. Find the bug and fix `solve(daily_prices)`.",
+  "rules": [
+    "For each `symbol`, `prev_close` is the `close` of the same symbol's row with the latest earlier `trade_date`.",
+    "`pct_change` is `(close - prev_close) / prev_close × 100`, rounded half up to two places as a `decimal(10,2)`.",
+    "A symbol's first row has missing `prev_close` and `pct_change`.",
+    "Return `symbol`, `trade_date`, `close`, `prev_close` and `pct_change`, one row per input row."
+  ],
+  "hints": [
+    "Look at the first row of the second stock. Where does its `prev_close` come from?",
+    "Sorting the window by `symbol` puts the stocks one after another, but it doesn't keep them apart: `lag` reaches back into the previous stock.",
+    "`partitionBy` keeps each stock's rows apart, and then the window only needs the date order. The formula is fine."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "daily_prices"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(daily_prices):\n    w = Window.orderBy(\"symbol\", \"trade_date\")\n    prev_close = F.lag(\"close\").over(w)\n    return daily_prices.select(\n        \"symbol\",\n        \"trade_date\",\n        \"close\",\n        prev_close.alias(\"prev_close\"),\n        ((F.col(\"close\") - prev_close) / prev_close * 100).cast(\"decimal(10,2)\").alias(\"pct_change\"),\n    )\n",
+  "output": {
+    "columns": [
+      "symbol",
+      "trade_date",
+      "close",
+      "prev_close",
+      "pct_change"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "The window has no `partitionBy`. Ordering by `symbol` and `trade_date` lines all the stocks up in one long list, so `lag` on a stock's first day reaches the last close of the stock before it, and the change compares two different companies. Only the very first row of the table gets a missing value. Use `Window.partitionBy(\"symbol\").orderBy(\"trade_date\")`: each stock is its own group, its first row has nothing before it, and the formula stays as it is. Without an `orderBy`, `lag` raises an error."
+}

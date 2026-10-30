@@ -1,0 +1,61 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D09",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "sensor_readings"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "",
+   "error": {
+    "type": "IllegalArgumentException",
+    "message": "Schema must be specified when creating a streaming source DataFrame. If some files already exist in the directory, then depending on the file format you may be able to create a static DataFrame on that directory with 'spark.read.load(directory)' and infer schema from it.",
+    "line": 4,
+    "condition": "_LEGACY_ERROR_TEMP_2048"
+   }
+  },
+  "e2": {
+   "stdout": "['part-0.json', 'part-1.json', 'part-2.json', 'part-3.json']\nmicro-batch 0 ['R0001', 'R0002', 'R0003', 'R0004', 'R0005', 'R0007', 'R0008']\nmicro-batch 1 ['R0006', 'R0009', 'R0010', 'R0011', 'R0011', 'R0012']\n[7, 6]\nFileStreamSource[file:/tmp/readings]\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "False 4 micro-batches\nR0001 DEV-001 3.2 low_battery\nR0005 DEV-001 3.4 low_battery\nR0009 DEV-001 3.3 low_battery\nMemorySink\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "",
+   "error": {
+    "type": "AnalysisException",
+    "message": "checkpointLocation must be specified either through option(\"checkpointLocation\", ...) or SparkSession.conf.set(\"spark.sql.streaming.checkpointLocation\", ...).",
+    "line": 19,
+    "condition": "_LEGACY_ERROR_TEMP_1298"
+   }
+  },
+  "e5": {
+   "stdout": "False 13 rows saved\n['commits', 'metadata', 'offsets', 'sources']\n['0', '1', '2', '3']\nFileSink[file:/tmp/out/readings]\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "micro-batch 0 7 readings\nmicro-batch 1 6 readings\navailableNow: 2 micro-batches\nmicro-batch 0 13 readings\nonce: 1 micro-batch\n",
+   "error": null
+  },
+  "e7": {
+   "stdout": "",
+   "error": {
+    "type": "AnalysisException",
+    "message": "[STREAMING_OUTPUT_MODE.UNSUPPORTED_OPERATION] Invalid streaming output mode: complete. This output mode is not supported for no streaming aggregations on streaming DataFrames/DataSets. SQLSTATE: 42KDE",
+    "line": 19,
+    "condition": "STREAMING_OUTPUT_MODE.UNSUPPORTED_OPERATION"
+   }
+  }
+ }
+}

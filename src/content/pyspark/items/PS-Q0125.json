@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0125",
+  "slug": "cities-and-categories-sold",
+  "lesson": "PS-L025",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 17,
+  "title": "Cities and categories sold",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "Marketing wants to know which product categories have sold in which cities. Write `solve(order_items, orders, customers, products)` so it returns each city and category pair once, sorted.",
+  "rules": [
+    "A line counts when its order is in `orders`, that order's customer is in `customers`, and its product is in `products`. The city is the customer's `city`; the category is the product's `category`.",
+    "Return each `city` and `category` pair once, however many lines sold it, sorted by `city` and then `category`, both A to Z.",
+    "A missing city is still a value and sorts first. Return only `city` and `category`, in that order."
+  ],
+  "hints": [
+    "Chain three joins from `order_items`: to `orders` on `order_id`, to `customers` on `customer_id`, to `products` on `product_id`. Inner joins drop lines with any unknown link.",
+    "Both `customers` and `products` have a `name` column, but you only need `city` and `category`, so select them right away.",
+    "`distinct()` removes repeated pairs; `orderBy(\"city\", \"category\")` sorts them. Sort last, after `distinct()`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "order_items",
+    "orders",
+    "customers",
+    "products"
+  ],
+  "starter": "def solve(order_items, orders, customers, products):\n    # Each city and category pair once, sorted by city then category.\n    return order_items\n",
+  "output": {
+    "columns": [
+      "city",
+      "category"
+    ],
+    "order_sensitive": true
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Chain inner joins so a line only counts when every link exists: `order_items.join(orders, on=\"order_id\", how=\"inner\").join(customers, on=\"customer_id\", how=\"inner\").join(products, on=\"product_id\", how=\"inner\")`. Then `select(\"city\", \"category\")`, `distinct()` to keep each pair once, and `orderBy(\"city\", \"category\")` last, because `distinct` doesn't keep any order. Ascending order puts a missing city first, as the rules ask. Left joins would bring in lines with unknown links as pairs with a missing city or category, and sorting by category first gives the same pairs in a different order."
+}

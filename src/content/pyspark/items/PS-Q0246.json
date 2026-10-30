@@ -1,0 +1,67 @@
+{
+  "id": "PS-Q0246",
+  "slug": "traffic-per-region",
+  "lesson": "PS-L050",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Traffic per region",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "The network team is planning capacity by region. Write `solve(api_requests)` with pair RDD functions so it returns, for each `client_region`, how many requests it sent and how many bytes the API sent back in total.",
+  "rules": [
+    "One row per `client_region`, in any order. Requests with no region are counted together, under a missing region.",
+    "`requests` counts every request. `bytes_sent` adds up the `bytes_sent` values; a missing value adds nothing, so a region whose values are all missing has 0.",
+    "Return `client_region` (text), `requests` and `bytes_sent` (both `bigint`), in that order. An empty table gives an empty result."
+  ],
+  "hints": [
+    "Map each row to a pair whose key is the region and whose value is a tuple: `(1, bytes)`.",
+    "`reduceByKey` with a function that adds both parts of two tuples gives the count and the total together.",
+    "Use `0` in place of a missing `bytes_sent` before adding, then flatten `(region, (n, total))` and use `toDF` with a schema string."
+  ],
+  "explanation": "Map each request to `(client_region, (1, bytes_sent or 0))`, add the tuples part by part with `reduceByKey(lambda a, b: (a[0] + b[0], a[1] + b[1]))`, flatten to `(region, requests, bytes)` and call `toDF(\"client_region string, requests bigint, bytes_sent bigint\")`. A missing region is just another key, `None`. Adding a missing `bytes_sent` directly raises a `TypeError`, and Python whole numbers belong in `bigint` columns.",
+  "entry": "solve",
+  "inputs": [
+    "api_requests"
+  ],
+  "starter": "def solve(api_requests):\n    # Requests and bytes sent per client_region, with pair RDD functions.\n    return api_requests\n",
+  "output": {
+    "columns": [
+      "client_region",
+      "requests",
+      "bytes_sent"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "technique": {
+    "name": "pair RDD functions",
+    "plan": [
+      "Scan"
+    ],
+    "source": [
+      "reduceByKey",
+      "groupByKey",
+      "aggregateByKey",
+      "combineByKey",
+      "foldByKey",
+      "mapValues",
+      "flatMapValues",
+      "countByKey"
+    ]
+  }
+}

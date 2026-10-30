@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0297",
+  "slug": "cache-the-shared-picks",
+  "lesson": "PS-L060",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Cache the picks both reports use",
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0"
+  },
+  "prompt": "The nightly job builds this year's high ratings, counts them for a first report, then hands the same rows to a second report. Cache them so the second report reads the kept rows. Write `solve(ratings)` so it returns `user_id`, `movie_id`, `rating` and `from_cache`.",
+  "rules": [
+    "Keep ratings of 4.0 or more made on or after 1 January 2026 (midnight counts). A rating with no value or no time is left out.",
+    "`from_cache` is `reads_cache` of the DataFrame you return the rows from: true when its plan reads cached rows.",
+    "Add `from_cache` with `with_facts` from the starter. Return only these four columns, in this order."
+  ],
+  "hints": [
+    "Combine the two conditions in one `filter` with `&`, each in parentheses. Compare `rated_at` with the text `\"2026-01-01\"`.",
+    "`cache()` only marks the DataFrame; the `count()` is the first action, and it fills the cache.",
+    "Don't `unpersist()` before the second report has used the rows: the mark is what makes later plans read the cache."
+  ],
+  "explanation": "Filter once, `cache()` the result, and run the first report's `count()`: that action computes the rows and keeps them. The returned DataFrame is the cached one, so its plan reads the kept rows through `InMemoryTableScan` and `from_cache` is true. Without the cache both reports read and filter the file again; with an `unpersist()` before the second report the mark is gone and so is the reuse. The cache never changes which rows come back, only where the second report reads them from, and in this small environment there's no time difference to show. The flag is the fact you can check. Missing ratings or times drop out because a comparison with a missing value isn't true.",
+  "entry": "solve",
+  "inputs": [
+    "ratings"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef reads_cache(df):\n    # True when the DataFrame's physical plan reads cached rows.\n    return \"InMemoryTableScan\" in df._jdf.queryExecution().executedPlan().toString()\n\n\ndef with_facts(df, **facts):\n    # Adds one column per fact, holding the same value on every row.\n    for name, value in facts.items():\n        df = df.withColumn(name, F.lit(value))\n    return df\n\n\ndef solve(ratings):\n    # Build this year's ratings of 4.0 or more, cache them, print the count, then return them.\n    return with_facts(ratings, from_cache=False)\n",
+  "output": {
+    "columns": [
+      "user_id",
+      "movie_id",
+      "rating",
+      "from_cache"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

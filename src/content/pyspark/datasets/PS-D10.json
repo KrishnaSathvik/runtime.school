@@ -1,0 +1,1376 @@
+{
+ "id": "PS-D10",
+ "version": "1.0.0",
+ "title": "Financial Markets",
+ "generated_by": "services/spark-runner/datasets/d10_markets.py",
+ "rules": [
+  "All companies, symbols and prices are invented; symbols end in .SX (the made-up Sandbox Exchange). Prices are in USD.",
+  "market_calendar has every calendar day of the period; weekends and exchange holidays have is_trading_day false, and holiday_name is set only for weekday holidays.",
+  "daily_prices has rows only for trading days, so lag() over trade_date per symbol steps over weekends and holidays; the previous row is the previous trading day.",
+  "A few trading days are missing for some symbols (a data gap, not a closed market): BRVO.SX on 2026-01-20 in the lesson edition; in practice eight isolated days (ALDR.SX 2026-06-01, CYPH.SX 2026-03-27, FERN.SX 2025-07-22, FERN.SX 2026-05-01, KORA.SX 2025-07-17, KORA.SX 2026-05-18, PIKE.SX 2025-12-19, PIKE.SX 2026-05-14) plus a three-day trading halt for KORA.SX (2026-02-10 to 2026-02-12). Compare with market_calendar to find them.",
+  "Prices are not adjusted for splits: on a split's ex_date the price drops by the split ratio (ALDR.SX 2-for-1 on 2026-01-21 in the lesson edition; ALDR.SX 2-for-1 and NIMB.SX 3-for-1 in practice). Divide earlier prices by split_ratio (and multiply volume) to compare across the split.",
+  "corporate_actions: split_ratio is set for splits (2.0 means 2-for-1) and dividend_per_share for dividends; the other is null.",
+  "low <= open, close <= high on every row; volume is shares traded that day.",
+  "A security listed during the period has no prices before its listed_date (DUNE.SX lists on 2026-02-02, so it has no prices in the lesson week; in practice LUMA.SX starts in November 2025 and DUNE.SX in February 2026).",
+  "trades happen only on trading days the symbol has a price, between 14:30 and 21:00 UTC, at a price between that day's low and high; fee is 0.05% of quantity \u00d7 price with a 1.00 minimum, rounded half up to cents.",
+  "The lesson and practice editions have no other deliberate problems; there is no project edition."
+ ],
+ "relationships": [
+  {
+   "from": "daily_prices.symbol",
+   "to": "securities.symbol"
+  },
+  {
+   "from": "daily_prices.trade_date",
+   "to": "market_calendar.cal_date"
+  },
+  {
+   "from": "trades.symbol",
+   "to": "securities.symbol"
+  },
+  {
+   "from": "corporate_actions.symbol",
+   "to": "securities.symbol"
+  }
+ ],
+ "tables": {
+  "securities": {
+   "note": "One row per listed security: its company, sector, listing date and shares outstanding.",
+   "columns": [
+    {
+     "name": "symbol",
+     "type": "string"
+    },
+    {
+     "name": "company_name",
+     "type": "string"
+    },
+    {
+     "name": "sector",
+     "type": "string"
+    },
+    {
+     "name": "exchange",
+     "type": "string"
+    },
+    {
+     "name": "currency",
+     "type": "string"
+    },
+    {
+     "name": "listed_date",
+     "type": "date"
+    },
+    {
+     "name": "shares_outstanding",
+     "type": "bigint"
+    }
+   ],
+   "key": [
+    "symbol"
+   ],
+   "rows": {
+    "lesson": 4,
+    "practice": 11
+   },
+   "lesson": [
+    [
+     "ALDR.SX",
+     "Alder Robotics",
+     "Industrials",
+     "SBX",
+     "USD",
+     "2014-05-12",
+     "182000000"
+    ],
+    [
+     "BRVO.SX",
+     "Bravo Foods Group",
+     "Consumer Staples",
+     "SBX",
+     "USD",
+     "2009-03-02",
+     "410000000"
+    ],
+    [
+     "CYPH.SX",
+     "Cypher Grid Software",
+     "Technology",
+     "SBX",
+     "USD",
+     "2017-09-18",
+     "96000000"
+    ],
+    [
+     "DUNE.SX",
+     "Dunehaven Energy",
+     "Energy",
+     "SBX",
+     "USD",
+     "2026-02-02",
+     "75000000"
+    ]
+   ],
+   "practice_head": [
+    [
+     "ALDR.SX",
+     "Alder Robotics",
+     "Industrials",
+     "SBX",
+     "USD",
+     "2014-05-12",
+     "182000000"
+    ],
+    [
+     "BRVO.SX",
+     "Bravo Foods Group",
+     "Consumer Staples",
+     "SBX",
+     "USD",
+     "2009-03-02",
+     "410000000"
+    ],
+    [
+     "CYPH.SX",
+     "Cypher Grid Software",
+     "Technology",
+     "SBX",
+     "USD",
+     "2017-09-18",
+     "96000000"
+    ],
+    [
+     "DUNE.SX",
+     "Dunehaven Energy",
+     "Energy",
+     "SBX",
+     "USD",
+     "2026-02-02",
+     "75000000"
+    ],
+    [
+     "ECHO.SX",
+     "Echo Lane Media",
+     "Communication",
+     "SBX",
+     "USD",
+     "2012-06-04",
+     "230000000"
+    ],
+    [
+     "FERN.SX",
+     "Fernway Outdoor",
+     "Consumer Discretionary",
+     "SBX",
+     "USD",
+     "2015-10-26",
+     "64000000"
+    ],
+    [
+     "KORA.SX",
+     "Kora Biotherapeutics",
+     "Health Care",
+     "SBX",
+     "USD",
+     "2019-04-08",
+     "120000000"
+    ],
+    [
+     "LUMA.SX",
+     "Luma Payments",
+     "Financials",
+     "SBX",
+     "USD",
+     "2025-11-03",
+     "150000000"
+    ],
+    [
+     "NIMB.SX",
+     "Nimbus Freight",
+     "Industrials",
+     "SBX",
+     "USD",
+     "2011-01-18",
+     "88000000"
+    ],
+    [
+     "ORCA.SX",
+     "Orca Water Utilities",
+     "Utilities",
+     "SBX",
+     "USD",
+     "2006-08-14",
+     "300000000"
+    ],
+    [
+     "PIKE.SX",
+     "Pike Street Bank",
+     "Financials",
+     "SBX",
+     "USD",
+     "2008-02-25",
+     "510000000"
+    ]
+   ]
+  },
+  "daily_prices": {
+   "note": "One row per security per trading day it traded: open, high, low, close and volume.",
+   "columns": [
+    {
+     "name": "symbol",
+     "type": "string"
+    },
+    {
+     "name": "trade_date",
+     "type": "date"
+    },
+    {
+     "name": "open",
+     "type": "decimal(10,2)"
+    },
+    {
+     "name": "high",
+     "type": "decimal(10,2)"
+    },
+    {
+     "name": "low",
+     "type": "decimal(10,2)"
+    },
+    {
+     "name": "close",
+     "type": "decimal(10,2)"
+    },
+    {
+     "name": "volume",
+     "type": "bigint"
+    }
+   ],
+   "key": [
+    "symbol",
+    "trade_date"
+   ],
+   "rows": {
+    "lesson": 14,
+    "practice": 2515
+   },
+   "lesson": [
+    [
+     "ALDR.SX",
+     "2026-01-15",
+     "188.93",
+     "192.26",
+     "186.69",
+     "191.95",
+     "984700"
+    ],
+    [
+     "BRVO.SX",
+     "2026-01-15",
+     "54.17",
+     "55.29",
+     "54.08",
+     "54.62",
+     "3521500"
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-15",
+     "119.23",
+     "124.15",
+     "115.85",
+     "122.58",
+     "1791600"
+    ],
+    [
+     "ALDR.SX",
+     "2026-01-16",
+     "193.08",
+     "196.84",
+     "191.81",
+     "192.94",
+     "4147700"
+    ],
+    [
+     "BRVO.SX",
+     "2026-01-16",
+     "55.18",
+     "55.67",
+     "54.79",
+     "55.34",
+     "3823300"
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-16",
+     "123.21",
+     "124.16",
+     "118.27",
+     "121.62",
+     "1269600"
+    ],
+    [
+     "ALDR.SX",
+     "2026-01-20",
+     "192.71",
+     "199.12",
+     "191.43",
+     "197.36",
+     "1781600"
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-20",
+     "121.91",
+     "125.41",
+     "120.85",
+     "124.71",
+     "2166800"
+    ],
+    [
+     "ALDR.SX",
+     "2026-01-21",
+     "98.15",
+     "99.12",
+     "96.83",
+     "98.47",
+     "11678200"
+    ],
+    [
+     "BRVO.SX",
+     "2026-01-21",
+     "56.12",
+     "56.24",
+     "56.03",
+     "56.05",
+     "7350100"
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-21",
+     "124.78",
+     "125.66",
+     "122.21",
+     "125.51",
+     "2068000"
+    ],
+    [
+     "ALDR.SX",
+     "2026-01-22",
+     "98.77",
+     "101.83",
+     "98.43",
+     "101.22",
+     "5516400"
+    ],
+    [
+     "BRVO.SX",
+     "2026-01-22",
+     "56.35",
+     "56.77",
+     "55.88",
+     "56.40",
+     "2569600"
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-22",
+     "126.37",
+     "126.51",
+     "124.33",
+     "126.25",
+     "2173300"
+    ]
+   ],
+   "practice_head": [
+    [
+     "ALDR.SX",
+     "2025-07-01",
+     "190.73",
+     "193.14",
+     "188.38",
+     "191.65",
+     "2876800"
+    ],
+    [
+     "BRVO.SX",
+     "2025-07-01",
+     "53.72",
+     "54.14",
+     "53.11",
+     "53.36",
+     "4193500"
+    ],
+    [
+     "CYPH.SX",
+     "2025-07-01",
+     "120.48",
+     "125.73",
+     "119.45",
+     "125.67",
+     "2903900"
+    ],
+    [
+     "ECHO.SX",
+     "2025-07-01",
+     "32.54",
+     "33.00",
+     "32.13",
+     "32.40",
+     "1853800"
+    ],
+    [
+     "FERN.SX",
+     "2025-07-01",
+     "76.12",
+     "77.12",
+     "75.37",
+     "77.06",
+     "474000"
+    ],
+    [
+     "KORA.SX",
+     "2025-07-01",
+     "40.16",
+     "41.61",
+     "40.10",
+     "40.27",
+     "2149800"
+    ],
+    [
+     "NIMB.SX",
+     "2025-07-01",
+     "285.08",
+     "286.10",
+     "281.75",
+     "283.00",
+     "441500"
+    ],
+    [
+     "ORCA.SX",
+     "2025-07-01",
+     "63.06",
+     "63.52",
+     "61.93",
+     "62.22",
+     "860000"
+    ],
+    [
+     "PIKE.SX",
+     "2025-07-01",
+     "46.70",
+     "47.03",
+     "46.64",
+     "47.00",
+     "4672400"
+    ],
+    [
+     "ALDR.SX",
+     "2025-07-02",
+     "191.22",
+     "192.43",
+     "187.79",
+     "188.13",
+     "2441500"
+    ],
+    [
+     "BRVO.SX",
+     "2025-07-02",
+     "53.85",
+     "53.88",
+     "53.62",
+     "53.85",
+     "1721600"
+    ],
+    [
+     "CYPH.SX",
+     "2025-07-02",
+     "126.76",
+     "131.31",
+     "123.57",
+     "130.48",
+     "1700900"
+    ],
+    [
+     "ECHO.SX",
+     "2025-07-02",
+     "32.35",
+     "32.49",
+     "31.01",
+     "31.64",
+     "1606300"
+    ],
+    [
+     "FERN.SX",
+     "2025-07-02",
+     "77.41",
+     "77.70",
+     "76.84",
+     "77.08",
+     "623100"
+    ],
+    [
+     "KORA.SX",
+     "2025-07-02",
+     "39.62",
+     "42.36",
+     "39.15",
+     "41.53",
+     "2212600"
+    ],
+    [
+     "NIMB.SX",
+     "2025-07-02",
+     "285.47",
+     "287.60",
+     "282.93",
+     "286.61",
+     "706000"
+    ],
+    [
+     "ORCA.SX",
+     "2025-07-02",
+     "62.29",
+     "62.41",
+     "62.11",
+     "62.23",
+     "797100"
+    ],
+    [
+     "PIKE.SX",
+     "2025-07-02",
+     "47.05",
+     "47.51",
+     "46.55",
+     "46.84",
+     "3881900"
+    ],
+    [
+     "ALDR.SX",
+     "2025-07-03",
+     "186.65",
+     "189.11",
+     "178.45",
+     "180.65",
+     "1574300"
+    ],
+    [
+     "BRVO.SX",
+     "2025-07-03",
+     "53.92",
+     "53.99",
+     "53.33",
+     "53.56",
+     "5780400"
+    ]
+   ]
+  },
+  "trades": {
+   "note": "One row per executed trade by a client account: buy or sell, how many shares, at what price and fee.",
+   "columns": [
+    {
+     "name": "trade_id",
+     "type": "string"
+    },
+    {
+     "name": "account_id",
+     "type": "string"
+    },
+    {
+     "name": "symbol",
+     "type": "string"
+    },
+    {
+     "name": "executed_at",
+     "type": "timestamp"
+    },
+    {
+     "name": "side",
+     "type": "string"
+    },
+    {
+     "name": "quantity",
+     "type": "int"
+    },
+    {
+     "name": "price",
+     "type": "decimal(10,2)"
+    },
+    {
+     "name": "fee",
+     "type": "decimal(8,2)"
+    }
+   ],
+   "key": [
+    "trade_id"
+   ],
+   "rows": {
+    "lesson": 10,
+    "practice": 1500
+   },
+   "lesson": [
+    [
+     "TR-000001",
+     "ACC-0002",
+     "ALDR.SX",
+     "2026-01-15T15:06:15",
+     "buy",
+     "100",
+     "191.68",
+     "9.58"
+    ],
+    [
+     "TR-000002",
+     "ACC-0003",
+     "BRVO.SX",
+     "2026-01-16T15:34:53",
+     "sell",
+     "10",
+     "55.36",
+     "1.00"
+    ],
+    [
+     "TR-000003",
+     "ACC-0004",
+     "BRVO.SX",
+     "2026-01-16T18:38:35",
+     "buy",
+     "250",
+     "55.30",
+     "6.91"
+    ],
+    [
+     "TR-000004",
+     "ACC-0001",
+     "CYPH.SX",
+     "2026-01-16T19:25:24",
+     "sell",
+     "250",
+     "118.88",
+     "14.86"
+    ],
+    [
+     "TR-000005",
+     "ACC-0003",
+     "ALDR.SX",
+     "2026-01-20T16:37:49",
+     "buy",
+     "20",
+     "198.72",
+     "1.99"
+    ],
+    [
+     "TR-000006",
+     "ACC-0001",
+     "ALDR.SX",
+     "2026-01-21T15:17:27",
+     "buy",
+     "10",
+     "98.35",
+     "1.00"
+    ],
+    [
+     "TR-000007",
+     "ACC-0003",
+     "ALDR.SX",
+     "2026-01-21T16:27:23",
+     "buy",
+     "10",
+     "98.36",
+     "1.00"
+    ],
+    [
+     "TR-000008",
+     "ACC-0002",
+     "BRVO.SX",
+     "2026-01-21T20:37:10",
+     "buy",
+     "100",
+     "56.08",
+     "2.80"
+    ],
+    [
+     "TR-000009",
+     "ACC-0001",
+     "BRVO.SX",
+     "2026-01-21T20:59:19",
+     "buy",
+     "1",
+     "56.05",
+     "1.00"
+    ],
+    [
+     "TR-000010",
+     "ACC-0004",
+     "CYPH.SX",
+     "2026-01-22T18:59:33",
+     "buy",
+     "250",
+     "126.34",
+     "15.79"
+    ]
+   ],
+   "practice_head": [
+    [
+     "TR-000001",
+     "ACC-0042",
+     "ECHO.SX",
+     "2025-07-01T16:36:06",
+     "sell",
+     "10",
+     "32.17",
+     "1.00"
+    ],
+    [
+     "TR-000002",
+     "ACC-0038",
+     "PIKE.SX",
+     "2025-07-01T17:22:36",
+     "sell",
+     "1",
+     "46.65",
+     "1.00"
+    ],
+    [
+     "TR-000003",
+     "ACC-0037",
+     "ALDR.SX",
+     "2025-07-01T17:49:54",
+     "sell",
+     "50",
+     "192.86",
+     "4.82"
+    ],
+    [
+     "TR-000004",
+     "ACC-0035",
+     "PIKE.SX",
+     "2025-07-01T18:43:47",
+     "buy",
+     "10",
+     "46.93",
+     "1.00"
+    ],
+    [
+     "TR-000005",
+     "ACC-0042",
+     "FERN.SX",
+     "2025-07-01T20:21:18",
+     "buy",
+     "200",
+     "75.50",
+     "7.55"
+    ],
+    [
+     "TR-000006",
+     "ACC-0017",
+     "ALDR.SX",
+     "2025-07-01T20:23:40",
+     "buy",
+     "50",
+     "190.33",
+     "4.76"
+    ],
+    [
+     "TR-000007",
+     "ACC-0059",
+     "CYPH.SX",
+     "2025-07-02T15:44:13",
+     "sell",
+     "5",
+     "130.21",
+     "1.00"
+    ],
+    [
+     "TR-000008",
+     "ACC-0028",
+     "FERN.SX",
+     "2025-07-02T17:02:39",
+     "buy",
+     "100",
+     "77.45",
+     "3.87"
+    ],
+    [
+     "TR-000009",
+     "ACC-0021",
+     "FERN.SX",
+     "2025-07-02T20:58:30",
+     "buy",
+     "500",
+     "77.34",
+     "19.34"
+    ],
+    [
+     "TR-000010",
+     "ACC-0050",
+     "ALDR.SX",
+     "2025-07-03T14:44:19",
+     "sell",
+     "500",
+     "183.17",
+     "45.79"
+    ],
+    [
+     "TR-000011",
+     "ACC-0038",
+     "PIKE.SX",
+     "2025-07-03T14:49:38",
+     "sell",
+     "20",
+     "46.58",
+     "1.00"
+    ],
+    [
+     "TR-000012",
+     "ACC-0039",
+     "KORA.SX",
+     "2025-07-03T15:59:44",
+     "sell",
+     "1",
+     "41.35",
+     "1.00"
+    ],
+    [
+     "TR-000013",
+     "ACC-0035",
+     "NIMB.SX",
+     "2025-07-03T16:05:32",
+     "buy",
+     "100",
+     "288.81",
+     "14.44"
+    ],
+    [
+     "TR-000014",
+     "ACC-0002",
+     "FERN.SX",
+     "2025-07-03T18:19:22",
+     "buy",
+     "25",
+     "75.39",
+     "1.00"
+    ],
+    [
+     "TR-000015",
+     "ACC-0053",
+     "FERN.SX",
+     "2025-07-03T20:42:47",
+     "buy",
+     "100",
+     "77.40",
+     "3.87"
+    ],
+    [
+     "TR-000016",
+     "ACC-0005",
+     "BRVO.SX",
+     "2025-07-07T15:10:11",
+     "sell",
+     "10",
+     "53.81",
+     "1.00"
+    ],
+    [
+     "TR-000017",
+     "ACC-0059",
+     "PIKE.SX",
+     "2025-07-07T16:17:40",
+     "buy",
+     "100",
+     "45.49",
+     "2.27"
+    ],
+    [
+     "TR-000018",
+     "ACC-0053",
+     "ALDR.SX",
+     "2025-07-07T16:47:39",
+     "buy",
+     "10",
+     "183.27",
+     "1.00"
+    ],
+    [
+     "TR-000019",
+     "ACC-0055",
+     "ORCA.SX",
+     "2025-07-07T19:21:31",
+     "sell",
+     "50",
+     "61.45",
+     "1.54"
+    ],
+    [
+     "TR-000020",
+     "ACC-0031",
+     "ORCA.SX",
+     "2025-07-07T19:46:44",
+     "buy",
+     "200",
+     "61.83",
+     "6.18"
+    ]
+   ]
+  },
+  "corporate_actions": {
+   "note": "One row per split or dividend: when it was announced and the ex-date it takes effect.",
+   "columns": [
+    {
+     "name": "action_id",
+     "type": "string"
+    },
+    {
+     "name": "symbol",
+     "type": "string"
+    },
+    {
+     "name": "action_type",
+     "type": "string"
+    },
+    {
+     "name": "announced_date",
+     "type": "date"
+    },
+    {
+     "name": "ex_date",
+     "type": "date"
+    },
+    {
+     "name": "split_ratio",
+     "type": "double"
+    },
+    {
+     "name": "dividend_per_share",
+     "type": "decimal(8,4)"
+    }
+   ],
+   "key": [
+    "action_id"
+   ],
+   "rows": {
+    "lesson": 4,
+    "practice": 22
+   },
+   "lesson": [
+    [
+     "CA-001",
+     "ALDR.SX",
+     "dividend",
+     "2025-11-20",
+     "2025-12-11",
+     null,
+     "0.4500"
+    ],
+    [
+     "CA-002",
+     "BRVO.SX",
+     "dividend",
+     "2025-12-18",
+     "2026-01-16",
+     null,
+     "0.3800"
+    ],
+    [
+     "CA-003",
+     "ALDR.SX",
+     "split",
+     "2025-12-09",
+     "2026-01-21",
+     "2.0",
+     null
+    ],
+    [
+     "CA-004",
+     "CYPH.SX",
+     "dividend",
+     "2026-01-02",
+     "2026-01-22",
+     null,
+     "0.1250"
+    ]
+   ],
+   "practice_head": [
+    [
+     "CA-001",
+     "ALDR.SX",
+     "dividend",
+     "2025-07-21",
+     "2025-08-11",
+     null,
+     "0.2250"
+    ],
+    [
+     "CA-002",
+     "BRVO.SX",
+     "dividend",
+     "2025-07-14",
+     "2025-08-11",
+     null,
+     "0.3800"
+    ],
+    [
+     "CA-003",
+     "FERN.SX",
+     "dividend",
+     "2025-07-13",
+     "2025-08-11",
+     null,
+     "0.3000"
+    ],
+    [
+     "CA-004",
+     "ORCA.SX",
+     "dividend",
+     "2025-07-15",
+     "2025-08-11",
+     null,
+     "0.5600"
+    ],
+    [
+     "CA-005",
+     "PIKE.SX",
+     "dividend",
+     "2025-07-17",
+     "2025-08-11",
+     null,
+     "0.4100"
+    ],
+    [
+     "CA-006",
+     "ALDR.SX",
+     "split",
+     "2025-09-24",
+     "2025-10-15",
+     "2.0",
+     null
+    ],
+    [
+     "CA-007",
+     "ALDR.SX",
+     "dividend",
+     "2025-10-18",
+     "2025-11-10",
+     null,
+     "0.2250"
+    ],
+    [
+     "CA-008",
+     "BRVO.SX",
+     "dividend",
+     "2025-10-22",
+     "2025-11-10",
+     null,
+     "0.3800"
+    ],
+    [
+     "CA-009",
+     "FERN.SX",
+     "dividend",
+     "2025-10-17",
+     "2025-11-10",
+     null,
+     "0.3000"
+    ],
+    [
+     "CA-010",
+     "ORCA.SX",
+     "dividend",
+     "2025-10-24",
+     "2025-11-10",
+     null,
+     "0.5600"
+    ],
+    [
+     "CA-011",
+     "PIKE.SX",
+     "dividend",
+     "2025-10-16",
+     "2025-11-10",
+     null,
+     "0.4100"
+    ],
+    [
+     "CA-012",
+     "ALDR.SX",
+     "dividend",
+     "2026-01-11",
+     "2026-02-10",
+     null,
+     "0.2250"
+    ],
+    [
+     "CA-013",
+     "BRVO.SX",
+     "dividend",
+     "2026-01-23",
+     "2026-02-10",
+     null,
+     "0.3800"
+    ],
+    [
+     "CA-014",
+     "FERN.SX",
+     "dividend",
+     "2026-01-21",
+     "2026-02-10",
+     null,
+     "0.3000"
+    ],
+    [
+     "CA-015",
+     "ORCA.SX",
+     "dividend",
+     "2026-01-26",
+     "2026-02-10",
+     null,
+     "0.5600"
+    ],
+    [
+     "CA-016",
+     "PIKE.SX",
+     "dividend",
+     "2026-01-16",
+     "2026-02-10",
+     null,
+     "0.4100"
+    ],
+    [
+     "CA-017",
+     "NIMB.SX",
+     "split",
+     "2026-02-14",
+     "2026-03-09",
+     "3.0",
+     null
+    ],
+    [
+     "CA-018",
+     "ALDR.SX",
+     "dividend",
+     "2026-04-13",
+     "2026-05-11",
+     null,
+     "0.2250"
+    ],
+    [
+     "CA-019",
+     "BRVO.SX",
+     "dividend",
+     "2026-04-14",
+     "2026-05-11",
+     null,
+     "0.3800"
+    ],
+    [
+     "CA-020",
+     "FERN.SX",
+     "dividend",
+     "2026-04-13",
+     "2026-05-11",
+     null,
+     "0.3000"
+    ]
+   ]
+  },
+  "market_calendar": {
+   "note": "One row per calendar day: whether the exchange was open and, if closed on a weekday, which holiday.",
+   "columns": [
+    {
+     "name": "cal_date",
+     "type": "date"
+    },
+    {
+     "name": "day_of_week",
+     "type": "string"
+    },
+    {
+     "name": "is_trading_day",
+     "type": "boolean"
+    },
+    {
+     "name": "holiday_name",
+     "type": "string"
+    }
+   ],
+   "key": [
+    "cal_date"
+   ],
+   "rows": {
+    "lesson": 8,
+    "practice": 365
+   },
+   "lesson": [
+    [
+     "2026-01-15",
+     "Thursday",
+     "true",
+     null
+    ],
+    [
+     "2026-01-16",
+     "Friday",
+     "true",
+     null
+    ],
+    [
+     "2026-01-17",
+     "Saturday",
+     "false",
+     null
+    ],
+    [
+     "2026-01-18",
+     "Sunday",
+     "false",
+     null
+    ],
+    [
+     "2026-01-19",
+     "Monday",
+     "false",
+     "Martin Luther King Jr. Day"
+    ],
+    [
+     "2026-01-20",
+     "Tuesday",
+     "true",
+     null
+    ],
+    [
+     "2026-01-21",
+     "Wednesday",
+     "true",
+     null
+    ],
+    [
+     "2026-01-22",
+     "Thursday",
+     "true",
+     null
+    ]
+   ],
+   "practice_head": [
+    [
+     "2025-07-01",
+     "Tuesday",
+     "true",
+     null
+    ],
+    [
+     "2025-07-02",
+     "Wednesday",
+     "true",
+     null
+    ],
+    [
+     "2025-07-03",
+     "Thursday",
+     "true",
+     null
+    ],
+    [
+     "2025-07-04",
+     "Friday",
+     "false",
+     "Independence Day"
+    ],
+    [
+     "2025-07-05",
+     "Saturday",
+     "false",
+     null
+    ],
+    [
+     "2025-07-06",
+     "Sunday",
+     "false",
+     null
+    ],
+    [
+     "2025-07-07",
+     "Monday",
+     "true",
+     null
+    ],
+    [
+     "2025-07-08",
+     "Tuesday",
+     "true",
+     null
+    ],
+    [
+     "2025-07-09",
+     "Wednesday",
+     "true",
+     null
+    ],
+    [
+     "2025-07-10",
+     "Thursday",
+     "true",
+     null
+    ],
+    [
+     "2025-07-11",
+     "Friday",
+     "true",
+     null
+    ],
+    [
+     "2025-07-12",
+     "Saturday",
+     "false",
+     null
+    ],
+    [
+     "2025-07-13",
+     "Sunday",
+     "false",
+     null
+    ],
+    [
+     "2025-07-14",
+     "Monday",
+     "true",
+     null
+    ],
+    [
+     "2025-07-15",
+     "Tuesday",
+     "true",
+     null
+    ],
+    [
+     "2025-07-16",
+     "Wednesday",
+     "true",
+     null
+    ],
+    [
+     "2025-07-17",
+     "Thursday",
+     "true",
+     null
+    ],
+    [
+     "2025-07-18",
+     "Friday",
+     "true",
+     null
+    ],
+    [
+     "2025-07-19",
+     "Saturday",
+     "false",
+     null
+    ],
+    [
+     "2025-07-20",
+     "Sunday",
+     "false",
+     null
+    ]
+   ]
+  }
+ }
+}

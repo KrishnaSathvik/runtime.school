@@ -1,0 +1,26 @@
+{
+  "id": "PS-L016-C2",
+  "slug": "fare-per-mile",
+  "lesson": "PS-L016",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Fare per mile",
+  "dataset": { "id": "PS-D07", "version": "1.0.0" },
+  "prompt": "Pricing compares trips by fare per mile. Some meter readings show a distance of zero, and the report must still run. Write `solve(trips)` so it returns `trip_id` and `fare_per_mile`.",
+  "rules": [
+    "`fare_per_mile` is `fare` divided by `trip_distance`, rounded to 2 decimal places with a half going up.",
+    "A distance of zero gives a missing `fare_per_mile`. The job must not stop.",
+    "A missing fare or distance gives a missing result. Return only `trip_id` and `fare_per_mile`."
+  ],
+  "hints": [
+    "Plain `/` stops the job when the divisor is zero.",
+    "`F.try_divide(\"fare\", \"trip_distance\")` gives `NULL` for those rows.",
+    "Wrap it in `F.round(..., 2)`."
+  ],
+  "entry": "solve",
+  "inputs": ["trips"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(trips):\n    # Return trip_id and fare_per_mile, rounded to 2 places, missing when the distance is zero.\n    return trips\n",
+  "output": { "columns": ["trip_id", "fare_per_mile"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

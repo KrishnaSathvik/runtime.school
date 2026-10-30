@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0388",
+  "kind": "predict",
+  "slug": "what-assertdataframeequal-calls-equal",
+  "lesson": "PS-L078",
+  "role": "edge",
+  "format": "concept_or_trace",
+  "difficulty": "hard",
+  "minutes": 8,
+  "title": "What assertDataFrameEqual calls equal",
+  "prompt": "This test helper prints `same` when `assertDataFrameEqual` passes, and the error's condition when it fails. It compares seven pairs of small DataFrames. What does the program print? Type each line on its own line.",
+  "program": "from pyspark.testing import assertDataFrameEqual\n\n\ndef compare(label, got, want, **options):\n    try:\n        assertDataFrameEqual(got, want, **options)\n        print(label, \"same\")\n    except Exception as e:\n        print(label, e.getCondition())\n\n\nschema = \"observation_id STRING, value DOUBLE\"\na = spark.createDataFrame([(\"O1\", 5.6), (\"O2\", 6.5)], schema)\nb = spark.createDataFrame([(\"O2\", 6.5), (\"O1\", 5.6)], schema)\ncompare(\"order\", a, b)\ncompare(\"order checked\", a, b, checkRowOrder=True)\ncompare(\"nan\", spark.createDataFrame([(\"O7\", float(\"nan\"))], schema), spark.createDataFrame([(\"O7\", float(\"nan\"))], schema))\ncompare(\"null\", spark.createDataFrame([(\"O7\", None)], schema), spark.createDataFrame([(\"O7\", float(\"nan\"))], schema))\ncompare(\"copies\", spark.createDataFrame([(\"O1\", 5.6), (\"O1\", 5.6), (\"O2\", 6.5)], schema), spark.createDataFrame([(\"O1\", 5.6), (\"O2\", 6.5), (\"O2\", 6.5)], schema))\ncompare(\"sum\", spark.createDataFrame([(\"O1\", 0.1 + 0.2)], schema), spark.createDataFrame([(\"O1\", 0.3)], schema))\ncompare(\"types\", spark.createDataFrame([(\"O1\", 5)], \"observation_id STRING, value INT\"), spark.createDataFrame([(\"O1\", 5)], \"observation_id STRING, value BIGINT\"))\n",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "By default the rows are compared in any order. `checkRowOrder=True` changes that.",
+    "NaN and NULL are different values. And the rows are compared as a multiset: how many times each row appears matters.",
+    "Doubles are compared with a small tolerance, but the schema is checked first and must match exactly."
+  ],
+  "explanation": "`assertDataFrameEqual` ignores row order unless `checkRowOrder=True`, so the first pair is `same` and the second isn't (`DIFFERENT_ROWS`). It treats NaN as equal to NaN, which plain Python doesn't, but NULL is not NaN. It counts copies: two O1 rows and one O2 are not one O1 and two O2. Doubles get a relative tolerance (`rtol=1e-5`), so `0.1 + 0.2` matches `0.3`. The schema check comes before the rows: `int` and `bigint` are different types, so the last pair fails with `DIFFERENT_SCHEMA` even though the values are equal."
+}

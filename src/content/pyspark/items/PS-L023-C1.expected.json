@@ -1,0 +1,229 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "observation_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "encounter_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "patient_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "code",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "description",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "value",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "unit",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "observed_at",
+     "type": "timestamp",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "OBS000004",
+     "ENC000003",
+     "PAT00001",
+     "HGB",
+     "Hemoglobin",
+     "NaN",
+     "g/dL",
+     "2025-12-20T09:10:00"
+    ],
+    [
+     "OBS000007",
+     "ENC000005",
+     "PAT00005",
+     "BMI",
+     "Body mass index",
+     22.6,
+     null,
+     "2026-01-16T11:05:00"
+    ],
+    [
+     "OBS000011",
+     "ENC000006",
+     "PAT00006",
+     "GLU",
+     "Glucose",
+     98.0,
+     "MG/DL",
+     "2026-01-17T11:55:00"
+    ],
+    [
+     "OBS000012",
+     "ENC000006",
+     "PAT00006",
+     "HBA1C",
+     "Hemoglobin A1c",
+     25.4,
+     "%",
+     "2026-01-17T11:55:00"
+    ]
+   ],
+   "row_count": 4,
+   "inputs": {
+    "observations": [
+     [
+      "OBS000001",
+      "ENC000002",
+      "PAT00002",
+      "HBA1C",
+      "Hemoglobin A1c",
+      "8.7",
+      "%",
+      "2025-12-18T11:50:00"
+     ],
+     [
+      "OBS000002",
+      "ENC000002",
+      "PAT00002",
+      "HGB",
+      "Hemoglobin",
+      "13.9",
+      "g/dL",
+      "2025-12-18T11:25:00"
+     ],
+     [
+      "OBS000003",
+      "ENC000002",
+      "PAT00002",
+      "GLU",
+      "Glucose",
+      "131.0",
+      "mg/dL",
+      "2025-12-18T11:25:00"
+     ],
+     [
+      "OBS000004",
+      "ENC000003",
+      "PAT00001",
+      "HGB",
+      "Hemoglobin",
+      "NaN",
+      "g/dL",
+      "2025-12-20T09:10:00"
+     ],
+     [
+      "OBS000005",
+      "ENC000003",
+      "PAT00001",
+      "HBA1C",
+      "Hemoglobin A1c",
+      "20.0",
+      "%",
+      "2025-12-20T09:20:00"
+     ],
+     [
+      "OBS000006",
+      "ENC000005",
+      "PAT00005",
+      "HBA1C",
+      "Hemoglobin A1c",
+      "3.0",
+      "%",
+      "2026-01-16T11:20:00"
+     ],
+     [
+      "OBS000007",
+      "ENC000005",
+      "PAT00005",
+      "BMI",
+      "Body mass index",
+      "22.6",
+      null,
+      "2026-01-16T11:05:00"
+     ],
+     [
+      "OBS000008",
+      "ENC000005",
+      "PAT00005",
+      "HGB",
+      "Hemoglobin",
+      "16.5",
+      "g/dL",
+      "2026-01-16T10:50:00"
+     ],
+     [
+      "OBS000009",
+      "ENC000006",
+      "PAT00006",
+      "BMI",
+      "Body mass index",
+      "30.2",
+      "kg/m2",
+      "2026-01-17T11:55:00"
+     ],
+     [
+      "OBS000010",
+      "ENC000006",
+      "PAT00006",
+      "HBA1C",
+      "Hemoglobin A1c",
+      "5.1",
+      "%",
+      "2026-01-17T11:55:00"
+     ],
+     [
+      "OBS000011",
+      "ENC000006",
+      "PAT00006",
+      "GLU",
+      "Glucose",
+      "98.0",
+      "MG/DL",
+      "2026-01-17T11:55:00"
+     ],
+     [
+      "OBS000012",
+      "ENC000006",
+      "PAT00006",
+      "HBA1C",
+      "Hemoglobin A1c",
+      "25.4",
+      "%",
+      "2026-01-17T11:55:00"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice observations table",
+  "results with a missing or NaN value",
+  "results in the wrong unit, an unknown code or no unit",
+  "HbA1c results just inside and just outside the allowed range",
+  "a feed where every result follows the contract",
+  "an empty observations table"
+ ]
+}

@@ -1,0 +1,106 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "encounter_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "vitals",
+     "type": "struct<heart_rate:int,temperature_c:double,blood_pressure:struct<systolic:int,diastolic:int>>",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "ENC000001",
+     {
+      "heart_rate": 96,
+      "temperature_c": 36.2,
+      "blood_pressure": {
+       "systolic": 115,
+       "diastolic": 72
+      }
+     }
+    ],
+    [
+     "ENC000002",
+     {
+      "heart_rate": 104,
+      "temperature_c": 37.2,
+      "blood_pressure": {
+       "systolic": 107,
+       "diastolic": 65
+      }
+     }
+    ],
+    [
+     "ENC000003",
+     {
+      "heart_rate": 92,
+      "temperature_c": 37.2,
+      "blood_pressure": {
+       "systolic": 144,
+       "diastolic": 66
+      }
+     }
+    ],
+    [
+     "ENC000004",
+     {
+      "heart_rate": 91,
+      "temperature_c": 36.3,
+      "blood_pressure": {
+       "systolic": 100,
+       "diastolic": 55
+      }
+     }
+    ],
+    [
+     "ENC000005",
+     {
+      "heart_rate": 102,
+      "temperature_c": null,
+      "blood_pressure": {
+       "systolic": 131,
+       "diastolic": 91
+      }
+     }
+    ],
+    [
+     "ENC000006",
+     {
+      "heart_rate": 96,
+      "temperature_c": 37.3,
+      "blood_pressure": {
+       "systolic": 125,
+       "diastolic": 64
+      }
+     }
+    ],
+    [
+     "ENC000007",
+     null
+    ],
+    [
+     "ENC000008",
+     null
+    ]
+   ],
+   "row_count": 8
+  }
+ },
+ "hidden": [
+  "the full practice encounters",
+  "vitals with some readings missing, and none at all",
+  "an empty encounters table"
+ ]
+}

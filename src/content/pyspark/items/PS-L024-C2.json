@@ -1,0 +1,26 @@
+{
+  "id": "PS-L024-C2",
+  "slug": "reconcile-the-load",
+  "lesson": "PS-L024",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Reconcile the load",
+  "dataset": { "id": "PS-D08", "version": "1.0.0" },
+  "prompt": "After each load, operations wants three numbers: how many events came in, how many were clean, and how many went to quarantine. Write `solve(shipment_events, shipments)` so it returns them as one row: `received`, `clean` and `quarantined`.",
+  "rules": [
+    "An event is clean when its `shipment_id` is in `shipments`, its `location` is present, and `is_correction` is `false`. Corrections aren't accepted yet.",
+    "Every other event is quarantined, including events where a check can't be answered because a value is missing.",
+    "Return exactly one row with three bigint columns, in this order. `received` must equal `clean` plus `quarantined`."
+  ],
+  "hints": [
+    "Get the known ids as a Python list with `collect()`, then combine the three checks with `&`.",
+    "A missing `shipment_id` or `is_correction` makes the check NULL. Wrap it: `F.coalesce(check, F.lit(False))`.",
+    "Count with `count()`, then build the row with `spark.createDataFrame([(received, clean, quarantined)], \"received BIGINT, clean BIGINT, quarantined BIGINT\")`."
+  ],
+  "entry": "solve",
+  "inputs": ["shipment_events", "shipments"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(shipment_events, shipments):\n    # Return one row: received, clean, quarantined.\n    received = shipment_events.count()\n    clean = 0\n    quarantined = 0\n    return spark.createDataFrame([(received, clean, quarantined)], \"received BIGINT, clean BIGINT, quarantined BIGINT\")\n",
+  "output": { "columns": ["received", "clean", "quarantined"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

@@ -1,0 +1,54 @@
+{
+ "id": "PS-L087-C1",
+ "slug": "sensor-online-sessions",
+ "lesson": "PS-L087",
+ "format": "dataframe_coding",
+ "difficulty": "hard",
+ "minutes": 17,
+ "title": "Sensor online sessions",
+ "dataset": {
+  "id": "PS-D09",
+  "version": "1.0.0"
+ },
+ "prompt": "Operations wants to see when each sensor was online. Write `solve(sensor_readings)` so it streams the readings and returns `device_id`, `first_reading`, `last_reading` and `readings` for every finished session.",
+ "rules": [
+  "A session is a run of one sensor's readings that are at most 20 minutes apart in `event_time`. `first_reading` and `last_reading` are the event times of its first and last reading.",
+  "A reading delivered more than once (same `reading_id`) counts once.",
+  "Use a 10-minute watermark on `event_time`. Return each session once, after the stream has closed it, and leave out sessions that are still open when the stream stops."
+ ],
+ "hints": [
+  "`F.session_window(\"event_time\", \"20 minutes\")` groups a sensor's readings into sessions: group by `device_id` and the session window.",
+  "Remove copies with `dropDuplicatesWithinWatermark([\"reading_id\"])` after `withWatermark`. The session window ends 20 minutes after the last reading, so take `F.min` and `F.max` of `event_time` instead.",
+  "Write in append mode to a memory table with `run_stream`, then pick the four columns from `spark.table(name)`."
+ ],
+ "entry": "solve",
+ "inputs": [
+  "sensor_readings"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\ndef solve(sensor_readings):\n    spark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\n    make_batches(sensor_readings, \"/tmp/in\")         # one file per batch; clears the folder first\n    shutil.rmtree(\"/tmp/ck\", ignore_errors=True)     # a fresh checkpoint for every run\n    readings = spark.readStream.schema(sensor_readings.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\n    # Drop repeated deliveries, group each sensor's readings into sessions, write only closed\n    # sessions to a memory table, run the stream, and return the four columns.\n\n    return sensor_readings\n",
+ "output": {
+  "columns": [
+   "device_id",
+   "first_reading",
+   "last_reading",
+   "readings"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

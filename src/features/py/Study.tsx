@@ -22,7 +22,7 @@ function DataValue({ value }: { value: unknown }) {
 export function FileData({ files, full = false }: { files: Record<string,string>; full?: boolean }) {
   return <div className={`py-file-data${full ? " py-file-data-full" : ""}`}>{Object.entries(files).map(([name,text]) => {
     const preview = filePreview(name,text);
-    const rows = preview ? (full ? preview.rows : preview.rows.slice(0,5)) : [];
+    const rows = preview ? (full ? preview.rows : preview.rows.slice(0, 10)) : [];
     const weights = preview?.columns.map((column,c) => column === 'id' ? 6 : Math.min(28, Math.max(12, column.length, ...rows.map(row => String(row[c] ?? '').trim().length)))) ?? [];
     const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
     return <details key={name} className="rx-schema-table" open>
@@ -34,7 +34,7 @@ export function FileData({ files, full = false }: { files: Record<string,string>
           </table>
         </div>
         <div className="py-file-records" aria-label={`${name} records`}>{rows.map((row,i) => <dl key={i}>{preview.columns.map((column,c) => <div key={column}><dt>{column}</dt><dd><DataValue value={row[c]} /></dd></div>)}</dl>)}</div>
-        <p className="rx-table-foot">{!full && preview.rows.length>5 ? `showing 5 of ${preview.rows.length} rows` : `all ${preview.rows.length} rows`}</p>
+        <p className="rx-table-foot">{!full && preview.rows.length > 10 ? `first 10 of ${preview.rows.length} rows` : `all ${preview.rows.length} rows`}</p>
       </> : <pre tabIndex={0} aria-label={name}>{text}</pre>}
     </details>;
   })}</div>;

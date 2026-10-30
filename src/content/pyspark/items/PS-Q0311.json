@@ -1,0 +1,55 @@
+{
+  "id": "PS-Q0311",
+  "slug": "remove-discontinued-stock",
+  "lesson": "PS-L063",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Remove discontinued stock",
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0"
+  },
+  "prompt": "Some warehouses are stopping some SKUs. `discontinued()` lists the warehouse and SKU of each one. Write `remove(stopped, path)` so it deletes exactly those rows from the Delta stock table with a merge.",
+  "rules": [
+    "A stock row is one SKU in one warehouse: delete a row only when both its `warehouse_id` and `sku` are in the list.",
+    "The same SKU in other warehouses stays. A listed pair the table doesn't hold changes nothing; nothing is added.",
+    "Every other row stays as it is. Don't change `start_table`, `discontinued` or `solve`."
+  ],
+  "hints": [
+    "Start from `DeltaTable.forPath(spark, path).alias(\"t\")` and merge in the list as `s`.",
+    "The condition must cover the whole key: both columns, joined with `AND`.",
+    "`whenMatchedDelete()` removes the table rows a source row matches. Leave out the insert clause, then call `execute()`."
+  ],
+  "explanation": "A merge with only a delete clause does it: `table.alias(\"t\").merge(stopped.alias(\"s\"), \"t.warehouse_id = s.warehouse_id AND t.sku = s.sku\").whenMatchedDelete().execute()`. Matching on `sku` alone deletes packing tape from every warehouse, not just `WH01`. With no `whenNotMatched` clause, a listed pair the table doesn't hold is simply ignored. One source row may match several table rows, so a row listed twice in the table goes with both copies. A missing warehouse never equals anything, so that row stays.",
+  "entry": "solve",
+  "inputs": [
+    "inventory"
+  ],
+  "starter": "import shutil\n\nfrom delta.tables import DeltaTable\n\n\ndef start_table(inventory, path):\n    # The stock table. Don't change this.\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty folder on every run\n    inventory.write.format(\"delta\").save(path)\n\n\ndef discontinued():\n    # The SKUs each warehouse stops stocking. Don't change this.\n    return spark.createDataFrame(\n        [(\"WH01\", \"SKU-1003\"), (\"WH03\", \"SKU-1009\"), (\"WH02\", \"SKU-1050\")],\n        \"warehouse_id STRING, sku STRING\",\n    )\n\n\ndef remove(stopped, path):\n    # Delete the stock rows that are discontinued.\n    pass\n\n\ndef solve(inventory):\n    path = \"/tmp/stock/inventory\"\n    start_table(inventory, path)\n    remove(discontinued(), path)\n    return spark.read.format(\"delta\").load(path)\n",
+  "output": {
+    "columns": [
+      "warehouse_id",
+      "sku",
+      "sku_name",
+      "on_hand",
+      "reserved",
+      "reorder_point",
+      "as_of_date"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

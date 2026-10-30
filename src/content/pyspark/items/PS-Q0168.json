@@ -1,0 +1,55 @@
+{
+  "id": "PS-Q0168",
+  "slug": "three-row-change",
+  "lesson": "PS-L034",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Change over three trading rows",
+  "dataset": {
+    "id": "PS-D10",
+    "version": "1.0.0"
+  },
+  "prompt": "Analysts compare each close with the close three trading rows earlier, and check how many calendar days that covers. Write `solve(daily_prices)` so it adds those columns to every row.",
+  "rules": [
+    "For each `symbol`, rows are taken in `trade_date` order, whatever order they arrive in. The row three back is three rows earlier, not three days.",
+    "`close_3_back` is that row's `close`, `change_3` is `close - close_3_back`, and `days_spanned` is the number of days from that row's `trade_date` to this one.",
+    "The first three rows of a symbol have no row three back, so all three columns are missing there. A missing close makes `change_3` missing.",
+    "Return `symbol`, `trade_date`, `close`, `close_3_back`, `change_3` and `days_spanned`, one row per input row."
+  ],
+  "hints": [
+    "`F.lag(col, 3)` steps three rows back in the window.",
+    "Lag the date too, and measure the gap with `F.datediff(later, earlier)`.",
+    "Don't pass a default: a missing value is the honest answer when there's no row three back."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "daily_prices"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(daily_prices):\n    # Add close_3_back, change_3 and days_spanned to every row.\n    return daily_prices.select(\"symbol\", \"trade_date\", \"close\")\n",
+  "output": {
+    "columns": [
+      "symbol",
+      "trade_date",
+      "close",
+      "close_3_back",
+      "change_3",
+      "days_spanned"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Step three rows back with the second argument of `lag`: over `w = Window.partitionBy(\"symbol\").orderBy(\"trade_date\")`, `F.lag(\"close\", 3).over(w)` is the close three rows earlier and `F.datediff(F.col(\"trade_date\"), F.lag(\"trade_date\", 3).over(w))` the calendar days between. Three rows usually span three to five days because of weekends and holidays, and more when the feed misses a day. The first three rows of each symbol have nothing three back, so the columns are missing; a default of 0 would turn that into a fake price, and `F.lag(\"close\")` alone only steps one row."
+}

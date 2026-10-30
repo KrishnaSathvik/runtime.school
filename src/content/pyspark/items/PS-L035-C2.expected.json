@@ -1,0 +1,91 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "entry_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "booked_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "last3_total",
+     "type": "decimal(22,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "A00001",
+     "LE000004",
+     "2026-01-29T11:55:57",
+     "1500.00",
+     "1575.00"
+    ],
+    [
+     "A00001",
+     "LE000005",
+     "2026-02-01T19:48:37",
+     "52.99",
+     "1627.99"
+    ],
+    [
+     "A00001",
+     "LE000008",
+     "2026-02-19T16:56:11",
+     "40.50",
+     "1593.49"
+    ],
+    [
+     "A00008",
+     "LE000003",
+     "2026-01-29T11:55:57",
+     "1500.00",
+     "1575.00"
+    ],
+    [
+     "A00008",
+     "LE000006",
+     "2026-02-01T19:48:37",
+     "52.99",
+     "1627.99"
+    ],
+    [
+     "A00008",
+     "LE000007",
+     "2026-02-19T16:56:11",
+     "40.50",
+     "1593.49"
+    ]
+   ],
+   "row_count": 6
+  }
+ },
+ "hidden": [
+  "the full practice ledger",
+  "a large entry followed by several small ones",
+  "totals just under and exactly at 1,000.00",
+  "two accounts whose entries interleave",
+  "an empty ledger"
+ ]
+}

@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0327",
+  "slug": "clear-out-the-old-files",
+  "lesson": "PS-L066",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Clear out the old files",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "prompt": "The trips table's folder keeps growing, and nobody reads its old versions. Finish `solve` so it compacts the table, then deletes straight away every file the current version doesn't use, and reports what the clean-up did.",
+  "rules": [
+    "`files_deleted`: the Parquet files the delete removed from the folder; `files_left`: the Parquet files still there afterwards, both as `files_on_disk` counts them.",
+    "`files_in_table`: the data files the table's current version uses, after the clean-up.",
+    "`trips`: the rows the table holds afterwards. Every trip must still be there.",
+    "Don't change `load_feed`, `files_on_disk` or `report`."
+  ],
+  "hints": [
+    "OPTIMIZE adds a new file and marks the small ones removed, but deletes nothing. Something else deletes files.",
+    "`vacuum()` keeps files removed in the last seven days. To delete them now you need 0 hours, and Delta's safety check has to be switched off first.",
+    "Count the folder just before the delete and just after it: the difference is what the delete removed."
+  ],
+  "explanation": "`optimize().executeCompaction()` writes one new file and marks the three small ones removed, so the folder holds four. `vacuum(0)` then deletes the three, but only after `spark.databricks.delta.retentionDurationCheck.enabled` is set to `false`; otherwise Delta refuses a retention under seven days. `vacuum()` with the default keeps them all, because they were removed seconds ago, and vacuuming before compacting deletes nothing, because no file has been removed yet. Count the folder right before the VACUUM: counting before the compaction misses the file OPTIMIZE added. With no trips, the load leaves one empty file that the table doesn't use, and VACUUM deletes that too. This is only safe because nobody needs time travel: once the files are gone, older versions can't be read.",
+  "entry": "solve",
+  "inputs": [
+    "trips"
+  ],
+  "starter": "import os\nimport shutil\n\nfrom delta.tables import DeltaTable\n\n\ndef load_feed(trips, path):\n    # The feed's load, replayed on a fresh table. Don't change this.\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty folder on every run\n    # repartition(3) splits the trips into three parts, so the write makes up to three files.\n    trips.repartition(3).write.format(\"delta\").save(path)\n\n\ndef files_on_disk(path):\n    # Every Parquet file in the table's folder (the log is a sub-folder, so it isn't counted).\n    return len([f for f in os.listdir(path) if f.endswith(\".parquet\")])\n\n\ndef report(files_deleted, files_left, files_in_table, trips):\n    return spark.createDataFrame(\n        [(files_deleted, files_left, files_in_table, trips)],\n        \"files_deleted INT, files_left INT, files_in_table INT, trips BIGINT\",\n    )\n\n\ndef solve(trips):\n    path = \"/tmp/taxi/trips\"\n    load_feed(trips, path)\n    # VACUUM lists the folder with parallel tasks; in this environment two are plenty.\n    spark.conf.set(\"spark.sql.sources.parallelPartitionDiscovery.parallelism\", \"2\")\n    table = DeltaTable.forPath(spark, path)\n    # Compact the table, then delete the files it no longer uses.\n    return report(0, 0, 0, 0)\n",
+  "output": {
+    "columns": [
+      "files_deleted",
+      "files_left",
+      "files_in_table",
+      "trips"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

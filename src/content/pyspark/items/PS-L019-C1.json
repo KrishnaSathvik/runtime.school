@@ -1,0 +1,27 @@
+{
+  "id": "PS-L019-C1",
+  "slug": "readings-worth-keeping",
+  "lesson": "PS-L019",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Readings worth keeping",
+  "dataset": { "id": "PS-D13", "version": "1.0.0" },
+  "prompt": "The climate model can cope with one missing measurement per reading, but not more. Write `solve(observations)` so it returns the readings with at least four of their five measurements, with the station code for \"no value\" turned into a real empty value.",
+  "rules": [
+    "The five measurements are `temperature_c`, `humidity_pct`, `precipitation_mm`, `wind_speed_kph` and `pressure_hpa`.",
+    "A measurement is missing when it's empty (null), NaN, or the code -9999. Keep readings where at least four are not missing.",
+    "In the rows you return, -9999 in those five columns becomes null. Every other value stays as it is, NaN included.",
+    "Return every column of `observations`, in order. Keep duplicates."
+  ],
+  "hints": [
+    "`na.replace(-9999, None, subset=[...])` turns the code into null first.",
+    "`dropna(thresh=4, subset=[...])` keeps rows with at least four values present.",
+    "For number columns, `dropna` already treats NaN as missing."
+  ],
+  "entry": "solve",
+  "inputs": ["observations"],
+  "starter": "from pyspark.sql import functions as F\n\nMEASURES = [\"temperature_c\", \"humidity_pct\", \"precipitation_mm\", \"wind_speed_kph\", \"pressure_hpa\"]\n\n\ndef solve(observations):\n    # Keep readings with at least four of the five measurements; -9999 becomes null.\n    return observations\n",
+  "output": { "columns": ["observation_id", "station_id", "observed_at", "observation_date", "temperature_c", "humidity_pct", "precipitation_mm", "wind_speed_kph", "pressure_hpa", "quality_flag"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

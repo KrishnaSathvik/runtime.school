@@ -1,0 +1,182 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "entry_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "check",
+     "type": "string",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "LE000001",
+     "ok"
+    ],
+    [
+     "LE000002",
+     "ok"
+    ],
+    [
+     "LE000003",
+     "ok"
+    ],
+    [
+     "LE000004",
+     "ok"
+    ],
+    [
+     "LE000005",
+     "ok"
+    ],
+    [
+     "LE000006",
+     "ok"
+    ],
+    [
+     "LE000011",
+     "bad type"
+    ],
+    [
+     "LE000012",
+     "bad amount"
+    ],
+    [
+     "LE000013",
+     "bad currency"
+    ],
+    [
+     "LE000014",
+     "bad amount"
+    ],
+    [
+     "LE000015",
+     "bad amount"
+    ]
+   ],
+   "row_count": 11,
+   "inputs": {
+    "ledger_entries": [
+     [
+      "LE000001",
+      "TR00002",
+      "A00008",
+      "debit",
+      "75.00",
+      "USD",
+      "2026-01-23T07:33:55"
+     ],
+     [
+      "LE000002",
+      "TR00002",
+      "A00001",
+      "credit",
+      "75.00",
+      "USD",
+      "2026-01-23T07:33:55"
+     ],
+     [
+      "LE000003",
+      "TR00003",
+      "A00008",
+      "debit",
+      "1500.00",
+      "USD",
+      "2026-01-29T11:55:57"
+     ],
+     [
+      "LE000004",
+      "TR00003",
+      "A00001",
+      "credit",
+      "1500.00",
+      "USD",
+      "2026-01-29T11:55:57"
+     ],
+     [
+      "LE000005",
+      "TR00004",
+      "A00001",
+      "debit",
+      "52.99",
+      "USD",
+      "2026-02-01T19:48:37"
+     ],
+     [
+      "LE000006",
+      "TR00004",
+      "A00008",
+      "credit",
+      "52.99",
+      "USD",
+      "2026-02-01T19:48:37"
+     ],
+     [
+      "LE000011",
+      "TR00007",
+      "A00008",
+      null,
+      "75.00",
+      "USD",
+      "2026-02-21T09:10:00"
+     ],
+     [
+      "LE000012",
+      "TR00007",
+      "A00001",
+      "credit",
+      "0.00",
+      "USD",
+      "2026-02-21T09:10:00"
+     ],
+     [
+      "LE000013",
+      "TR00008",
+      "A00001",
+      "debit",
+      "40.50",
+      null,
+      "2026-02-22T10:00:00"
+     ],
+     [
+      "LE000014",
+      "TR00008",
+      "A00008",
+      "credit",
+      "0.00",
+      "ZZZ",
+      "2026-02-22T10:00:00"
+     ],
+     [
+      "LE000015",
+      "TR00009",
+      "A00008",
+      "debit",
+      null,
+      "USD",
+      "2026-02-23T11:00:00"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice ledger table",
+  "entries with no type, amount or currency",
+  "amounts of zero, a cent and negative",
+  "types and currencies outside the lists",
+  "the same entry delivered twice",
+  "an empty ledger table"
+ ]
+}

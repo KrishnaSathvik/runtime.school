@@ -1,0 +1,250 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "reading_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "device_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "tag",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "R0001",
+     "DEV-001",
+     "indoor"
+    ],
+    [
+     "R0001",
+     "DEV-001",
+     "cold_chain"
+    ],
+    [
+     "R0001",
+     "DEV-001",
+     "low_battery"
+    ],
+    [
+     "R0004",
+     "DEV-004",
+     "indoor"
+    ],
+    [
+     "R0004",
+     "DEV-004",
+     "critical"
+    ],
+    [
+     "R0002",
+     "DEV-002",
+     "indoor"
+    ],
+    [
+     "R0002",
+     "DEV-002",
+     "hvac"
+    ],
+    [
+     "R0007",
+     "DEV-003",
+     "outdoor"
+    ],
+    [
+     "R0007",
+     "DEV-003",
+     "greenhouse"
+    ],
+    [
+     "R0005",
+     "DEV-001",
+     "indoor"
+    ],
+    [
+     "R0005",
+     "DEV-001",
+     "cold_chain"
+    ],
+    [
+     "R0005",
+     "DEV-001",
+     "low_battery"
+    ],
+    [
+     "R0008",
+     "DEV-004",
+     "indoor"
+    ],
+    [
+     "R0008",
+     "DEV-004",
+     "critical"
+    ],
+    [
+     "R0011",
+     "DEV-003",
+     "outdoor"
+    ],
+    [
+     "R0011",
+     "DEV-003",
+     "greenhouse"
+    ],
+    [
+     "R0009",
+     "DEV-001",
+     "indoor"
+    ],
+    [
+     "R0009",
+     "DEV-001",
+     "cold_chain"
+    ],
+    [
+     "R0009",
+     "DEV-001",
+     "low_battery"
+    ],
+    [
+     "R0011",
+     "DEV-003",
+     "outdoor"
+    ]
+   ],
+   "row_count": 23,
+   "inputs": {
+    "sensor_readings": [
+     [
+      "R0001",
+      "DEV-001",
+      "2026-04-14T09:00:00",
+      "2026-04-14T09:00:21",
+      "0",
+      "{\"temperature_c\":3.2,\"humidity_pct\":null,\"battery_v\":3.31,\"status\":\"low_battery\",\"tags\":[\"indoor\",\"cold_chain\",\"low_battery\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0004",
+      "DEV-004",
+      "2026-04-14T09:00:00",
+      "2026-04-14T09:00:43",
+      "0",
+      "{\"temperature_c\":25.1,\"humidity_pct\":37.9,\"battery_v\":3.88,\"status\":\"ok\",\"tags\":[\"indoor\",\"critical\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0002",
+      "DEV-002",
+      "2026-04-14T09:00:00",
+      "2026-04-14T09:00:44",
+      "0",
+      "{\"temperature_c\":21.4,\"humidity_pct\":41.5,\"battery_v\":3.92,\"status\":\"ok\",\"tags\":[\"indoor\",\"hvac\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0007",
+      "DEV-003",
+      "2026-04-14T09:15:00",
+      "2026-04-14T09:15:07",
+      "1",
+      "{\"temperature_c\":29.6,\"humidity_pct\":82.4,\"battery_v\":3.75,\"status\":\"ok\",\"tags\":[\"outdoor\",\"greenhouse\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0005",
+      "DEV-001",
+      "2026-04-14T09:15:00",
+      "2026-04-14T09:15:14",
+      "1",
+      "{\"temperature_c\":3.4,\"humidity_pct\":null,\"battery_v\":3.3,\"status\":\"low_battery\",\"tags\":[\"indoor\",\"cold_chain\",\"low_battery\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0008",
+      "DEV-004",
+      "2026-04-14T09:15:00",
+      "2026-04-14T09:15:49",
+      "1",
+      "{\"temperature_c\":41.2,\"humidity_pct\":33.0,\"battery_v\":3.88,\"status\":\"ok\",\"tags\":[\"indoor\",\"critical\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0011",
+      "DEV-003",
+      "2026-04-14T09:30:00",
+      "2026-04-14T09:30:15",
+      "2",
+      "{\"temperature_c\":31.4,\"humidity_pct\":80.6,\"battery_v\":3.74,\"status\":\"ok\",\"tags\":[\"outdoor\",\"greenhouse\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0009",
+      "DEV-001",
+      "2026-04-14T09:30:00",
+      "2026-04-14T09:30:48",
+      "2",
+      "{\"temperature_c\":3.3,\"humidity_pct\":null,\"battery_v\":3.29,\"status\":\"low_battery\",\"tags\":[\"indoor\",\"cold_chain\",\"low_battery\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0011",
+      "DEV-003",
+      "2026-04-14T09:30:00",
+      "2026-04-14T09:36:15",
+      "2",
+      "{\"temperature_c\":31.4,\"humidity_pct\":80.6,\"battery_v\":3.74,\"status\":\"ok\",\"tags\":[\"outdoor\",\"greenhouse\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0006",
+      "DEV-002",
+      "2026-04-14T09:15:00",
+      "2026-04-14T09:52:07",
+      "3",
+      "{\"temperature_c\":21.6,\"humidity_pct\":41.2,\"battery_v\":3.92,\"status\":\"ok\",\"tags\":[\"indoor\",\"hvac\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0013",
+      "DEV-002",
+      "2026-04-14T09:45:00",
+      "2026-04-14T09:45:18",
+      "3",
+      "{\"temperature_c\":22.0,\"humidity_pct\":40.9,\"battery_v\":3.91,\"status\":\"ok\",\"tags\":[]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0014",
+      "DEV-004",
+      "2026-04-14T09:45:00",
+      "2026-04-14T09:45:31",
+      "3",
+      "{\"temperature_c\":25.8,\"humidity_pct\":37.2,\"battery_v\":3.87,\"status\":\"ok\",\"tags\":null}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice readings",
+  "readings with an empty tag list, no tag list or no payload at all",
+  "a reading delivered three times, with other readings in between",
+  "no readings at all"
+ ]
+}

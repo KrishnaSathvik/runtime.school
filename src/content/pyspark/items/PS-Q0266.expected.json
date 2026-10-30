@@ -1,0 +1,104 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "user_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "age_band",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "age_vec",
+     "type": "array<double>",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "U01",
+     "25-34",
+     [
+      1.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    ],
+    [
+     "U02",
+     "18-24",
+     [
+      0.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    ],
+    [
+     "U03",
+     "35-44",
+     [
+      0.0,
+      0.0,
+      1.0,
+      0.0,
+      0.0
+     ]
+    ],
+    [
+     "U04",
+     "25-34",
+     [
+      1.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    ],
+    [
+     "U05",
+     "45-54",
+     [
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+      0.0
+     ]
+    ],
+    [
+     "U06",
+     "55+",
+     [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ]
+    ]
+   ],
+   "row_count": 6
+  }
+ },
+ "hidden": [
+  "all practice members",
+  "members with no age band",
+  "age bands used by the same number of members",
+  "no members at all"
+ ]
+}

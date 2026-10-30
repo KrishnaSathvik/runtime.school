@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0397",
+  "slug": "size-the-nightly-job",
+  "lesson": "PS-L080",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Size the nightly job",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "prompt": "The platform team agrees a size for each nightly trips job, in local mode: a heap in MiB, a unified memory pool in MiB and a number of cores, given in the one-row table `size_targets`. The starter writes a sizing check, `/tmp/sizing_check.py`. Write `solve(size_targets)` so it submits the check with options that give it that size, then returns `report(run)`.",
+  "rules": [
+    "The job's heap is `heap_mib` MiB, its unified pool exactly `pool_mib` MiB and its cores `cores`, as the report shows them.",
+    "Give the size on the `spark-submit` command line; leave the check script and `report` as they are."
+  ],
+  "hints": [
+    "In local mode the driver and the executor are one JVM. Which memory option sizes it? `size_targets.first()` gives the targets as a Row.",
+    "The pool is (heap - 300 MiB) × `spark.memory.fraction`, so the fraction is `pool_mib / (heap_mib - 300)`: 675 from a 1200 MiB heap needs 0.75.",
+    "A memory setting can't change once the job runs, so it has to be a `--conf` on the command, not a `spark.conf.set` in the job. The cores come from the master."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "size_targets"
+  ],
+  "starter": "import os, subprocess\n\nopen(\"/tmp/sizing_check.py\", \"w\").write(\"\"\"\nfrom pyspark.sql import SparkSession\n\nspark = SparkSession.builder.getOrCreate()\nsc = spark.sparkContext\nheap_mib = sc._jvm.org.apache.spark.util.Utils.memoryStringToMb(sc.getConf().get(\"spark.driver.memory\", \"1g\"))\n# The JVM can report a little less heap than it was given, so the pool is shown as its share of the usable heap\n# (heap - 300 MiB) applied to the heap the job asked for.\nusable = sc._jvm.java.lang.Runtime.getRuntime().maxMemory() - 300 * 1024**2\npool = sc._jsc.sc().getExecutorMemoryStatus().values().head()._1()\nprint(\"app: heap MiB=\" + str(heap_mib))\nprint(\"app: pool MiB=\" + str(round((heap_mib - 300) * round(pool / usable, 2))))\nprint(\"app: cores=\" + str(sc.defaultParallelism))\nspark.stop()\n\"\"\")\n\n\ndef report(run):\n    # The finished submit as a DataFrame: its exit code, then each \"app: key=value\" line the job printed.\n    # spark.createDataFrame builds a DataFrame from a list of Python tuples, with the columns named here.\n    rows = [(\"exit code\", str(run.returncode))]\n    for line in run.stdout.splitlines():\n        if line.startswith(\"app: \"):\n            key, value = line[5:].split(\"=\", 1)\n            rows.append((key, value))\n    return spark.createDataFrame(rows, \"key STRING, value STRING\")\n\n\ndef solve(size_targets):\n    t = size_targets.first()\n    env = {**os.environ, \"SPARK_LOCAL_IP\": \"127.0.0.1\"}\n    # Add the options that give the job the agreed size.\n    run = subprocess.run([\"spark-submit\", \"/tmp/sizing_check.py\"],\n                         capture_output=True, text=True, env=env)\n    return report(run)\n",
+  "output": {
+    "columns": [
+      "key",
+      "value"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "For the sample's targets, `--driver-memory 1200m` gives the single local JVM a 1200 MiB heap. Spark keeps 300 MiB of it back, so the pool is 900 MiB × `spark.memory.fraction`, and 675 / 900 = 0.75: `--conf spark.memory.fraction=0.75`. `--master local[3]` gives 3 cores. Build each option from the row, `f\"{t.heap_mib}m\"`, `str(t.pool_mib / (t.heap_mib - 300))` and `f\"local[{t.cores}]\"`, so every agreed size works. `--executor-memory` changes nothing in local mode (the heap stays at spark-submit's default of 1g), and the default fraction of 0.6 is right only when the pool happens to be 60% of the usable heap. On a cluster the same arithmetic applies to each executor's heap, with `--executor-memory` and `--executor-cores`.",
+  "own_tables": {
+    "size_targets": "heap_mib INT, pool_mib INT, cores INT"
+  }
+}

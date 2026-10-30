@@ -1,0 +1,138 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "movie_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "prediction",
+     "type": "double",
+     "nullable": false
+    },
+    {
+     "name": "p_high",
+     "type": "double",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "M01",
+     1.0,
+     0.66
+    ],
+    [
+     "M05",
+     1.0,
+     0.66
+    ],
+    [
+     "M02",
+     1.0,
+     0.55
+    ],
+    [
+     "M03",
+     1.0,
+     0.61
+    ],
+    [
+     "M04",
+     0.0,
+     0.49
+    ]
+   ],
+   "row_count": 5,
+   "inputs": {
+    "ratings": [
+     [
+      "U01",
+      "M01",
+      "4.5",
+      "2025-03-02T21:14:00"
+     ],
+     [
+      "U02",
+      "M02",
+      "3.0",
+      "2025-04-01T19:22:00"
+     ],
+     [
+      "U03",
+      "M02",
+      "3.5",
+      "2025-06-30T21:55:00"
+     ],
+     [
+      "U01",
+      "M03",
+      "4.0",
+      "2025-07-19T18:45:00"
+     ],
+     [
+      "U04",
+      "M04",
+      "4.5",
+      "2025-09-05T20:03:00"
+     ],
+     [
+      "U02",
+      "M05",
+      "3.5",
+      "2025-10-04T23:30:00"
+     ],
+     [
+      "U03",
+      "M06",
+      "2.5",
+      "2025-11-02T20:10:00"
+     ],
+     [
+      "U05",
+      "M01",
+      "4.5",
+      "2026-01-08T12:30:00"
+     ],
+     [
+      "U04",
+      "M02",
+      "3.5",
+      "2026-02-14T23:01:00"
+     ],
+     [
+      "U05",
+      "M03",
+      "4.0",
+      "2026-03-21T22:18:00"
+     ],
+     [
+      "U01",
+      "M04",
+      "3.0",
+      "2026-04-16T21:05:00"
+     ],
+     [
+      "U03",
+      "M05",
+      "4.5",
+      "2026-06-27T20:20:00"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice ratings",
+  "ratings at midnight on the first day of 2026, films whose 2026 average is exactly 4.0, films rated in only one period",
+  "films with several ratings in each period, rows in no particular order"
+ ]
+}

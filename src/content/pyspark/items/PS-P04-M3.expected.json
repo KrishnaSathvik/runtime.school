@@ -1,0 +1,456 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "example": {
+   "schema": [
+    {
+     "name": "transaction_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "posted_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "txn_type",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "signed_amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "running_balance",
+     "type": "decimal(14,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "T900001",
+     "A90001",
+     "2026-01-05T09:00:00",
+     "deposit",
+     "1000.00",
+     "1000.00"
+    ],
+    [
+     "T900002",
+     "A90001",
+     "2026-01-05T09:00:00",
+     "purchase",
+     "-40.00",
+     "960.00"
+    ],
+    [
+     "T900004",
+     "A90001",
+     "2026-01-07T11:00:00",
+     "atm_withdrawal",
+     "-60.00",
+     "900.00"
+    ],
+    [
+     "T900005",
+     "A90002",
+     "2026-01-05T08:00:00",
+     "deposit",
+     "500.00",
+     "500.00"
+    ],
+    [
+     "T900007",
+     "A90002",
+     "2026-01-08T09:30:00",
+     "refund",
+     "5.01",
+     "505.01"
+    ],
+    [
+     "T900008",
+     "A90002",
+     "2026-01-09T10:00:00",
+     "fee",
+     "-2.50",
+     "502.51"
+    ]
+   ],
+   "row_count": 6,
+   "inputs": {
+    "transactions": [
+     [
+      "T900001",
+      "A90001",
+      null,
+      "2026-01-05T09:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "1000.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T900002",
+      "A90001",
+      "M001",
+      "2026-01-05T09:00:00",
+      "purchase",
+      "card_present",
+      "debit",
+      "40.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T900003",
+      "A90001",
+      "M001",
+      "2026-01-06T10:00:00",
+      "purchase",
+      "card_present",
+      "debit",
+      "25.10",
+      "USD",
+      "pending"
+     ],
+     [
+      "T900004",
+      "A90001",
+      null,
+      "2026-01-07T11:00:00",
+      "atm_withdrawal",
+      "atm",
+      "debit",
+      "60.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T900004",
+      "A90001",
+      null,
+      "2026-01-07T11:00:00",
+      "atm_withdrawal",
+      "atm",
+      "debit",
+      "60.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T900005",
+      "A90002",
+      null,
+      "2026-01-05T08:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "500.00",
+      "EUR",
+      "posted"
+     ],
+     [
+      "T900006",
+      "A90002",
+      "M001",
+      "2026-01-06T12:00:00",
+      "purchase",
+      "card_present",
+      "debit",
+      "12.34",
+      "EUR",
+      "declined"
+     ],
+     [
+      "T900007",
+      "A90002",
+      "M001",
+      "2026-01-08T09:30:00",
+      "refund",
+      "online",
+      "credit",
+      "5.01",
+      "EUR",
+      "posted"
+     ],
+     [
+      "T900008",
+      "A90002",
+      null,
+      "2026-01-09T10:00:00",
+      "fee",
+      "system",
+      "debit",
+      "2.50",
+      "EUR",
+      "posted"
+     ],
+     [
+      "T900009",
+      "A99999",
+      "M001",
+      "2026-01-09T11:00:00",
+      "purchase",
+      "card_present",
+      "debit",
+      "70.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T900010",
+      "A90001",
+      "M001",
+      "2026-01-08T12:00:00",
+      "purchase",
+      "card_present",
+      "debit",
+      "-5.00",
+      "USD",
+      "posted"
+     ]
+    ],
+    "accounts": [
+     [
+      "A90001",
+      "C0001",
+      "checking",
+      "USD",
+      "active",
+      "2025-06-01",
+      "0.00"
+     ],
+     [
+      "A90002",
+      "C0002",
+      "checking",
+      "EUR",
+      "active",
+      "2025-06-01",
+      "0.00"
+     ]
+    ]
+   }
+  },
+  "project": {
+   "schema": [
+    {
+     "name": "transaction_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "posted_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "txn_type",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "signed_amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "running_balance",
+     "type": "decimal(14,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "T000046",
+     "A00002",
+     "2025-07-04T15:38:20",
+     "purchase",
+     "-12.36",
+     "-12.36"
+    ],
+    [
+     "T000324",
+     "A00002",
+     "2025-07-28T18:02:08",
+     "purchase",
+     "-33.09",
+     "-45.45"
+    ],
+    [
+     "T000688",
+     "A00002",
+     "2025-08-23T21:08:37",
+     "refund",
+     "95.41",
+     "49.96"
+    ],
+    [
+     "T000959",
+     "A00002",
+     "2025-09-13T07:17:19",
+     "purchase",
+     "-39.39",
+     "10.57"
+    ],
+    [
+     "T001085",
+     "A00002",
+     "2025-09-22T18:31:17",
+     "purchase",
+     "-2.93",
+     "7.64"
+    ],
+    [
+     "T001864",
+     "A00002",
+     "2025-11-22T07:14:19",
+     "purchase",
+     "-11.44",
+     "-3.80"
+    ],
+    [
+     "T003494",
+     "A00002",
+     "2026-04-03T13:44:42",
+     "deposit",
+     "1887.50",
+     "1883.70"
+    ],
+    [
+     "T003635",
+     "A00002",
+     "2026-04-15T16:30:02",
+     "deposit",
+     "1887.50",
+     "3771.20"
+    ],
+    [
+     "T004565",
+     "A00002",
+     "2026-06-26T18:37:05",
+     "purchase",
+     "-5.29",
+     "3765.91"
+    ],
+    [
+     "T001077",
+     "A00003",
+     "2025-09-22T14:48:19",
+     "purchase",
+     "-40.70",
+     "-40.70"
+    ],
+    [
+     "T001928",
+     "A00003",
+     "2025-11-26T13:34:20",
+     "atm_withdrawal",
+     "-120.00",
+     "-160.70"
+    ],
+    [
+     "T003570",
+     "A00003",
+     "2026-04-09T20:47:02",
+     "purchase",
+     "-30.00",
+     "-190.70"
+    ],
+    [
+     "T004180",
+     "A00003",
+     "2026-05-28T20:34:15",
+     "refund",
+     "66.06",
+     "-124.64"
+    ],
+    [
+     "T004190",
+     "A00003",
+     "2026-05-29T11:30:13",
+     "purchase",
+     "-19.87",
+     "-144.51"
+    ],
+    [
+     "T000129",
+     "A00004",
+     "2025-07-09T21:44:55",
+     "purchase",
+     "-5.12",
+     "-5.12"
+    ],
+    [
+     "T000136",
+     "A00004",
+     "2025-07-10T10:06:06",
+     "deposit",
+     "1237.50",
+     "1232.38"
+    ],
+    [
+     "T000611",
+     "A00004",
+     "2025-08-18T07:13:46",
+     "deposit",
+     "1200.00",
+     "2432.38"
+    ],
+    [
+     "T001232",
+     "A00004",
+     "2025-10-03T16:50:20",
+     "purchase",
+     "-34.89",
+     "2397.49"
+    ],
+    [
+     "T001234",
+     "A00004",
+     "2025-10-03T22:48:54",
+     "purchase",
+     "-25.68",
+     "2371.81"
+    ],
+    [
+     "T001237",
+     "A00004",
+     "2025-10-04T08:53:44",
+     "purchase",
+     "-9.15",
+     "2362.66"
+    ]
+   ],
+   "row_count": 4207
+  }
+ },
+ "hidden": [
+  "the full practice tables",
+  "a row delivered three times, copies of pending and invalid rows, and two different rows that look alike",
+  "several transactions on one account at the same second",
+  "pending and declined rows between posted ones",
+  "two accounts whose transactions take turns",
+  "empty tables"
+ ]
+}

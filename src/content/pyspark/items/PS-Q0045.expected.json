@@ -1,0 +1,124 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "ASSESSMENT_ID",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "LEARNER_ID",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "COURSE_ID",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "TAKEN_AT",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "POINTS",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "MAX_POINTS",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "SCORE_PCT",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "PASSED",
+     "type": "boolean",
+     "nullable": true
+    },
+    {
+     "name": "POINTS_MISSED",
+     "type": "int",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "AS001",
+     "L001",
+     "C01",
+     "2026-05-11T22:17:00",
+     43,
+     50,
+     86.0,
+     true,
+     7
+    ],
+    [
+     "AS002",
+     "L002",
+     "C02",
+     "2026-06-06T11:18:00",
+     38,
+     50,
+     76.0,
+     true,
+     12
+    ],
+    [
+     "AS003",
+     "L003",
+     "C01",
+     "2026-06-06T21:58:00",
+     38,
+     50,
+     76.0,
+     true,
+     12
+    ],
+    [
+     "AS004",
+     "L004",
+     "C03",
+     "2026-06-18T07:39:00",
+     42,
+     50,
+     84.0,
+     true,
+     8
+    ],
+    [
+     "AS005",
+     "L001",
+     "C02",
+     "2026-06-19T07:10:00",
+     37,
+     50,
+     74.0,
+     true,
+     13
+    ]
+   ],
+   "row_count": 5
+  }
+ },
+ "hidden": [
+  "the full practice assessments table",
+  "assessments with missing points, maximum, score or result",
+  "full marks and zero points",
+  "the same assessment row delivered twice",
+  "an empty assessments table"
+ ]
+}

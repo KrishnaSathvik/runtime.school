@@ -1,0 +1,55 @@
+{
+  "id": "PS-Q0227",
+  "slug": "partner-supplier-xml",
+  "lesson": "PS-L046",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "The partner's supplier file",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "A purchasing partner sends its supplier list as XML. Write `load(path)` so it reads the file and returns the suppliers as a flat table, with the same columns and types as `suppliers`. `export` and `solve` are written for you.",
+  "rules": [
+    "Each `<supplier>` element is one supplier. Its `id` and `system` are attributes; `name` and `country` are child elements.",
+    "The payment terms are in `<terms><days>`, and the email in `<contact><email>`.",
+    "Return `source_system`, `supplier_id`, `supplier_name`, `country`, `payment_terms_days` (`int`) and `contact_email`, in that order. A value missing from the file is missing in the result.",
+    "Keep every supplier. A file with no suppliers gives an empty result."
+  ],
+  "hints": [
+    "Read with `spark.read.option(\"rowTag\", \"supplier\")`. Attributes come back as columns whose names start with `_`.",
+    "A child element with children of its own is a struct. Give the read a schema such as `terms STRUCT<days: INT>` so the types are yours, not guessed.",
+    "Then `select` the fields you need: `F.col(\"terms.days\").alias(\"payment_terms_days\")`, and the same for the attributes and the email."
+  ],
+  "explanation": "Read with `rowTag` set to `supplier` and an explicit schema: `_id STRING, _system STRING, name STRING, country STRING, terms STRUCT<days: INT>, contact STRUCT<email: STRING>`. Attributes are named with a leading underscore, and the nested elements are structs, so a `select` pulls out `terms.days` and `contact.email` and renames everything with `alias`. Without a schema, Spark guesses `bigint` for the days, puts columns in alphabetical order and can't read an empty file at all. Writing `id` instead of `_id` in the schema silently gives missing ids.",
+  "entry": "solve",
+  "inputs": [
+    "suppliers"
+  ],
+  "starter": "\nimport os\nfrom xml.sax.saxutils import escape, quoteattr\n\nfrom pyspark.sql import functions as F\n\n\ndef tag(name, value):\n    return \"\" if value is None else f\"<{name}>{escape(str(value))}</{name}>\"\n\n\ndef attr(name, value):\n    return \"\" if value is None else f\" {name}={quoteattr(value)}\"\n\n\ndef export(suppliers, path):\n    \"\"\"The partner's file, written for you: one <supplier> element per supplier.\"\"\"\n    rows = []\n    for r in suppliers.collect():\n        rows.append(\n            f\"  <supplier{attr('id', r['supplier_id'])}{attr('system', r['source_system'])}>\"\n            f\"{tag('name', r['supplier_name'])}{tag('country', r['country'])}\"\n            f\"<terms>{tag('days', r['payment_terms_days'])}</terms>\"\n            f\"<contact>{tag('email', r['contact_email'])}</contact></supplier>\"\n        )\n    os.makedirs(os.path.dirname(path), exist_ok=True)\n    with open(path, \"w\") as f:\n        f.write(\"<suppliers>\\n\" + \"\\n\".join(rows) + \"\\n</suppliers>\\n\")\n\n\ndef load(path):\n    # Read the partner's XML at `path` and return a flat suppliers table.\n    pass\n\n\ndef solve(suppliers):\n    path = \"/tmp/partner/suppliers.xml\"\n    export(suppliers, path)\n    return load(path)\n",
+  "output": {
+    "columns": [
+      "source_system",
+      "supplier_id",
+      "supplier_name",
+      "country",
+      "payment_terms_days",
+      "contact_email"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

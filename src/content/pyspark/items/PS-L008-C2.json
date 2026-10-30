@@ -1,0 +1,48 @@
+{
+ "id": "PS-L008-C2",
+ "slug": "orders-load-check",
+ "lesson": "PS-L008",
+ "difficulty": "easy",
+ "minutes": 8,
+ "title": "A load check for orders",
+ "dataset": {
+  "id": "PS-D01",
+  "version": "1.1.0"
+ },
+ "prompt": "After every load, the data team logs a one-row summary of what arrived. Write `solve(orders)` so it returns how many rows and columns `orders` has, and the type its `total` column arrived as.",
+ "rules": [
+  "One row with three columns, in order: `row_count`, `column_count` and `total_type`.",
+  "`row_count` and `column_count` are whole numbers of type `bigint`. Count every row, duplicates included.",
+  "`total_type` is the type exactly as `dtypes` writes it, for example `string` or `decimal(10,2)`."
+ ],
+ "hints": [
+  "`orders.count()` counts the rows and `len(orders.columns)` counts the columns.",
+  "`dict(orders.dtypes)` lets you look up a column's type by its name.",
+  "Put the three values in one tuple and build the result with `spark.createDataFrame`. `BIGINT` in the schema gives `bigint`."
+ ],
+ "entry": "solve",
+ "inputs": [
+  "orders"
+ ],
+ "starter": "def solve(orders):\n    # Return one row: row_count, column_count and total_type.\n    return orders\n",
+ "output": {
+  "columns": [
+   "row_count",
+   "column_count",
+   "total_type"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 45,
+  "check_timeout_s": 90,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0021",
+  "kind": "predict",
+  "slug": "http-methods-rdd",
+  "lesson": "PS-L005",
+  "role": "foundation",
+  "format": "concept_or_trace",
+  "difficulty": "easy",
+  "minutes": 4,
+  "title": "HTTP methods in an RDD",
+  "prompt": "This program makes an RDD from a Python list of HTTP methods. What does it print? Type each line on its own line.",
+  "program": "methods = spark.sparkContext.parallelize([\"get\", \"post\", \"get\", \"put\", \"delete\"])\nupper = methods.map(lambda m: m.upper())\nprint(upper.collect())\nprint(methods.filter(lambda m: len(m) > 3).count())\nprint(upper.first(), methods.count())\n",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "`map` calls the function on every item and keeps what it returns; `collect()` keeps the original order.",
+    "`filter` keeps the items where the function returns `True`. Which methods have more than 3 letters?",
+    "`map` and `filter` give back new RDDs; `methods` keeps all five lowercase items."
+  ],
+  "explanation": "`map` turns each method into capitals, and `collect()` returns them in the original order, repeats included. Only `post` and `delete` are longer than 3 letters, so the filter keeps 2. `upper.first()` is `GET`, and `methods` still has its 5 items."
+}

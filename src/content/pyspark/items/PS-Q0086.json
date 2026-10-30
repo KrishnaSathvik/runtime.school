@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0086",
+  "slug": "days-each-alert-covers",
+  "lesson": "PS-L018",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Days each alert covers",
+  "dataset": {
+    "id": "PS-D13",
+    "version": "1.0.0"
+  },
+  "prompt": "The alerts archive files each weather alert under every calendar day it touches. Write `solve(weather_alerts)` so it returns `alert_id`, `start_date`, `end_date` and `days_covered`.",
+  "rules": [
+    "`start_date` is the date of `starts_at` and `end_date` the date of `ends_at`, both as dates. All times are UTC.",
+    "`days_covered` counts the calendar days from `start_date` to `end_date`, both included, as an int: an alert that starts and ends on the same day covers 1.",
+    "An alert still in force has no `ends_at`, so its `end_date` and `days_covered` are missing. Return the four columns, in that order, for every alert."
+  ],
+  "hints": [
+    "`F.to_date(\"starts_at\")` takes the day from a timestamp.",
+    "`F.datediff(end, start)` counts the days between two dates. Mind the order: the later date comes first.",
+    "`datediff` gives 0 for two equal dates, but that alert still covers one day. Add 1."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "weather_alerts"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(weather_alerts):\n    # Return alert_id, start_date, end_date and days_covered.\n    return weather_alerts\n",
+  "output": {
+    "columns": [
+      "alert_id",
+      "start_date",
+      "end_date",
+      "days_covered"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`F.to_date` takes the day from each timestamp, and `F.datediff(end, start)` counts the days between them: `weather_alerts.select(\"alert_id\", F.to_date(\"starts_at\").alias(\"start_date\"), F.to_date(\"ends_at\").alias(\"end_date\"), (F.datediff(F.to_date(\"ends_at\"), F.to_date(\"starts_at\")) + 1).alias(\"days_covered\"))`. `datediff` counts the gaps between days, so a same-day alert gives 0; adding 1 counts the days themselves. Working from the dates matters: an alert from 23:00 to 01:00 lasts two hours but touches two days, which dividing the seconds between the timestamps by 86400 would miss. A missing `ends_at` makes every calculation with it missing, with no extra code."
+}

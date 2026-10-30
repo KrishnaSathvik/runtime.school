@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0316",
+  "slug": "todays-product-catalogue",
+  "lesson": "PS-L064",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Today's product catalogue",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "`product_cdc` is the catalogue's whole change feed, from each product's first insert. There is no snapshot table. Write `solve(product_cdc)` so it returns today's catalogue: one row for each product that still exists.",
+  "rules": [
+    "A product's row today is its newest change by `sequence`. If that change is a delete, the product is gone, even if it was deleted and added again before.",
+    "Rows are in arrival order, which isn't always sequence order, and a change can be delivered twice.",
+    "Return `product_id`, `product_name`, `category`, `list_price`, `unit_of_measure` and `is_active`, with their types."
+  ],
+  "hints": [
+    "Each change carries the whole row, so the newest change of a product is its row today.",
+    "Remove exact repeats with `distinct()`, then number each product's changes with `row_number` over `product_id`, newest `sequence` first, and keep 1.",
+    "Drop the deletes only after you've picked the newest change. Dropping them first brings back an older row of a deleted product."
+  ],
+  "explanation": "Remove repeated deliveries with `distinct()`, then keep each product's newest change: `row_number` over `Window.partitionBy(\"product_id\").orderBy(F.col(\"sequence\").desc())`, filtered to 1. Only then drop the rows whose `op` is `D`, and select the six catalogue columns. The order matters. Filtering out deletes first leaves the change before the delete as the newest one, so a deleted product comes back with its old row. Without `distinct()`, `rank` gives both copies of a repeated newest change the number 1, and the product appears twice. A `groupBy(\"product_id\")` with `F.max(\"sequence\")`, joined back to the feed, finds the same newest changes.",
+  "entry": "solve",
+  "inputs": [
+    "product_cdc"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(product_cdc):\n    # Return one row per product that exists today.\n    return product_cdc\n",
+  "output": {
+    "columns": [
+      "product_id",
+      "product_name",
+      "category",
+      "list_price",
+      "unit_of_measure",
+      "is_active"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

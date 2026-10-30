@@ -1,0 +1,47 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D02",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "transactions"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "5 rows after one run\n10 rows after two runs\n+--------------+-----------+------+\n|transaction_id|posted_date|amount|\n+--------------+-----------+------+\n|       T000010| 2026-02-21| 19.23|\n|       T000010| 2026-02-21| 19.23|\n+--------------+-----------+------+\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "14 14 True\n2 WRITE\n1 WRITE\n0 WRITE\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "dynamic - T000011 rows left: 1\nreplaceWhere - T000011 rows left: 0\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "14 rows\n14 rows\n[1, 0]\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "as delivered - rows for T000012: 2\ndeduplicated - rows for T000012: 1\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "",
+   "error": {
+    "type": "AnalysisException",
+    "message": "[DELTA_REPLACE_WHERE_MISMATCH] Written data does not conform to partial table overwrite condition or constraint 'posted_date >= '2026-02-19' AND posted_date <= '2026-02-25''.",
+    "line": 7,
+    "condition": "DELTA_REPLACE_WHERE_MISMATCH"
+   }
+  }
+ }
+}

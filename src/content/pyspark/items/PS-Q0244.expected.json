@@ -1,0 +1,49 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "error_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "service",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "device_id",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "ERR-00002",
+     "iot-gateway",
+     "DEV-0002"
+    ],
+    [
+     "ERR-00003",
+     "iot-gateway",
+     "DEV-0001"
+    ]
+   ],
+   "row_count": 2
+  }
+ },
+ "hidden": [
+  "the full practice errors",
+  "a day when no error came from a device",
+  "a day when every error came from a device",
+  "the same error recorded twice",
+  "an empty errors table"
+ ]
+}

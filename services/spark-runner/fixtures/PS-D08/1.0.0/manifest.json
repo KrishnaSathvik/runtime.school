@@ -1,0 +1,186 @@
+{
+  "dataset_id": "PS-D08",
+  "version": "1.0.0",
+  "title": "Logistics & Supply Chain",
+  "source": "synthetic",
+  "licence": {
+    "status": "ours",
+    "note": "Runtime-owned deterministic synthetic data."
+  },
+  "seed": 2008,
+  "schemas": {
+    "warehouses": "warehouse_id STRING, name STRING, city STRING, region STRING, capacity_pallets INT, opened_date DATE",
+    "suppliers": "supplier_id STRING, name STRING, country STRING, lead_time_days INT, on_time_rate DOUBLE",
+    "inventory": "warehouse_id STRING, sku STRING, sku_name STRING, on_hand INT, reserved INT, reorder_point INT, as_of_date DATE",
+    "purchase_orders": "po_id STRING, version INT, supplier_id STRING, warehouse_id STRING, sku STRING, quantity INT, unit_cost DECIMAL(10,2), status STRING, expected_date DATE, updated_at TIMESTAMP",
+    "shipments": "shipment_id STRING, warehouse_id STRING, sku STRING, quantity INT, carrier STRING, service_level STRING, destination_city STRING, created_at TIMESTAMP, promised_date DATE",
+    "shipment_events": "event_id STRING, shipment_id STRING, warehouse_id STRING, event_type STRING, event_time TIMESTAMP, location STRING, sequence BIGINT, load_date DATE, is_correction BOOLEAN",
+    "deliveries": "delivery_id STRING, shipment_id STRING, window_start TIMESTAMP, window_end TIMESTAMP, delivered_at TIMESTAMP, status STRING"
+  },
+  "keys": {
+    "primary": {
+      "warehouses": [
+        "warehouse_id"
+      ],
+      "suppliers": [
+        "supplier_id"
+      ],
+      "inventory": [
+        "warehouse_id",
+        "sku"
+      ],
+      "purchase_orders": [
+        "po_id",
+        "version"
+      ],
+      "shipments": [
+        "shipment_id"
+      ],
+      "shipment_events": [
+        "event_id"
+      ],
+      "deliveries": [
+        "delivery_id"
+      ]
+    },
+    "foreign": {
+      "inventory.warehouse_id": "warehouses.warehouse_id",
+      "purchase_orders.supplier_id": "suppliers.supplier_id",
+      "purchase_orders.warehouse_id": "warehouses.warehouse_id",
+      "shipments.warehouse_id": "warehouses.warehouse_id",
+      "shipments.warehouse_id+sku": "inventory.warehouse_id+sku",
+      "shipment_events.shipment_id": "shipments.shipment_id",
+      "shipment_events.warehouse_id": "warehouses.warehouse_id",
+      "deliveries.shipment_id": "shipments.shipment_id"
+    }
+  },
+  "rules": [
+    "inventory is keyed by warehouse_id + sku together: the same SKU is stocked in several warehouses, so joining shipments to inventory on sku alone multiplies rows.",
+    "event_type is one of created, picked, departed, in_transit, out_for_delivery, delivered, exception, always lowercase; a shipment's events follow that order in event_time.",
+    "sequence is the source system's log number: it increases with event_time across all events, so within a shipment a higher sequence is a later step.",
+    "load_date is the day the event reached the platform. Most events load the day they happen; some load one to four days late, so process loads by load_date, not by event_time.",
+    "location is the warehouse_id for created, picked and departed, a hub code (HUB-\u2026) for in_transit, and the destination city after that. warehouse_id on an event is the shipment's sending warehouse.",
+    "A delivery is on_time when delivered_at falls between window_start and window_end (inclusive), late when it is after window_end, and failed when the carrier gave up after an exception event (no delivered_at).",
+    "Shipments created near the end of the data are still in flight: they have no delivered event and no delivery row until they go out for delivery.",
+    "purchase_orders keeps every version of an order: version 1 is the original, higher versions change quantity, status or expected_date, and updated_at orders them. The current state of an order is its highest version; to rehearse MERGE, load version 1 as the target and apply later versions as updates.",
+    "purchase_orders status is one of open, confirmed, shipped, received, cancelled.",
+    "unit_cost is in exact decimals (DECIMAL(10,2)); on_time_rate is a share between 0 and 1.",
+    "Lesson edition: two deliberate cases for quarantine and reconciliation: event E0000007 is delivered twice (the same event_id on two rows, the copy loaded a day later), and event E0000013 is for shipment SH9999, which is not in shipments.",
+    "Practice edition: a few events are delivered twice with the same event_id (an exact copy loaded on the same or the next day), and some events load late; every event's shipment exists.",
+    "Project edition (the P08 CDC feed): the file is not in event order; about 3% of events are duplicated with the same event_id (sometimes on a later load_date); about 2% of events have a late correction: a second row with a new event_id, the same shipment_id, event_type and sequence, a corrected event_time or location, is_correction = true and a later load_date, so it arrives after events with higher sequences (the correction wins); about 1% of events are for shipment_ids not in shipments (quarantine them).",
+    "is_correction is false on every row except the project edition's late corrections."
+  ],
+  "editions": {
+    "lesson": {
+      "warehouses": {
+        "file": "lesson/warehouses.csv",
+        "rows": 3,
+        "sha256": "04982f02d928331df762f2a6d0bb88e5e9a1ab3eb089922838e9c925bdc151dc"
+      },
+      "suppliers": {
+        "file": "lesson/suppliers.csv",
+        "rows": 4,
+        "sha256": "54ceaa7ff6e0817110c155e17b6f22a427249c649b807ad9e06152c5af504281"
+      },
+      "inventory": {
+        "file": "lesson/inventory.csv",
+        "rows": 9,
+        "sha256": "2c369422685909840bfcdf9d5b80778c098ca5418e1bcd5f14d07742bced7ac3"
+      },
+      "purchase_orders": {
+        "file": "lesson/purchase_orders.csv",
+        "rows": 9,
+        "sha256": "5b3caef4836d44ba80be5f4cb8ffc2557beba282c2ef25102801ee47ab2d3aee"
+      },
+      "shipments": {
+        "file": "lesson/shipments.csv",
+        "rows": 4,
+        "sha256": "25abf605e8c50b1722d3fa51899520551dd4f18d54c80ce240a220ce1933312c"
+      },
+      "shipment_events": {
+        "file": "lesson/shipment_events.csv",
+        "rows": 14,
+        "sha256": "daafcd379f34eae271a7455574d1a97650363c2a75272239693ee3f2d54e5b73"
+      },
+      "deliveries": {
+        "file": "lesson/deliveries.csv",
+        "rows": 4,
+        "sha256": "b52fcc1e3bd78b5cb2c607f7dafda38e3b9373136300dba71257bf99f5f70ebf"
+      }
+    },
+    "practice": {
+      "warehouses": {
+        "file": "practice/warehouses.csv",
+        "rows": 6,
+        "sha256": "fb57e67679d4f971a9ea15daa99fef293ef26c76e57e1608f2d70b30bfbc6038"
+      },
+      "suppliers": {
+        "file": "practice/suppliers.csv",
+        "rows": 10,
+        "sha256": "ca741b7c67e4071eb9391912de9eaaabd5219790bb6b0a01f0ff44c607750197"
+      },
+      "inventory": {
+        "file": "practice/inventory.csv",
+        "rows": 108,
+        "sha256": "0388a8ffa3233b7a6b04c1374e982a68ad2f6f2fbbf22889ec072bf47421cbea"
+      },
+      "purchase_orders": {
+        "file": "practice/purchase_orders.csv",
+        "rows": 278,
+        "sha256": "0e1124f867c2309390daaa2fb31e8dfa2839b956a05999fa8e03156d6a03d87a"
+      },
+      "shipments": {
+        "file": "practice/shipments.csv",
+        "rows": 380,
+        "sha256": "365f937665cf33e5c0604f12d9ef511fa9061d066acd600ce20686fca7170ca2"
+      },
+      "shipment_events": {
+        "file": "practice/shipment_events.csv",
+        "rows": 2418,
+        "sha256": "566037197105566ea9ada997e10122c63e24ef7772871ae1934f510323f87980"
+      },
+      "deliveries": {
+        "file": "practice/deliveries.csv",
+        "rows": 344,
+        "sha256": "295557c0390246ad11ff958187883740659402e2319ee550acd7197b3a7ab7ca"
+      }
+    },
+    "project": {
+      "warehouses": {
+        "file": "project/warehouses.csv",
+        "rows": 8,
+        "sha256": "89693f1027459f91899d8539e4678dec2db5906f74ca224577fac9bcfed74c24"
+      },
+      "suppliers": {
+        "file": "project/suppliers.csv",
+        "rows": 12,
+        "sha256": "d9124863767f021e3d5fb1481c41d7b55a5ded8bdcab3a47ccc501acec51a0c3"
+      },
+      "inventory": {
+        "file": "project/inventory.csv",
+        "rows": 160,
+        "sha256": "df58fb5f843318f3d4390ed70c6b831cc3cf7a59ba5ddff80785ac16bd7b4509"
+      },
+      "purchase_orders": {
+        "file": "project/purchase_orders.csv",
+        "rows": 510,
+        "sha256": "faf37d2424a0a20d703078da0747af99806dd6d20714b8e38eef88dae01f62e1"
+      },
+      "shipments": {
+        "file": "project/shipments.csv",
+        "rows": 760,
+        "sha256": "4507af2e043094c318e326c70b7f1d2ec1153ebe21fcc26a58802c7e16d4725a"
+      },
+      "shipment_events": {
+        "file": "project/shipment_events.csv",
+        "rows": 5125,
+        "sha256": "bd980891da33d4067209f61611ab2b4190d1f642febeb3d0eed49168b4c51d57"
+      },
+      "deliveries": {
+        "file": "project/deliveries.csv",
+        "rows": 696,
+        "sha256": "dba7cf6dca6a1caa446ff1f5c027edfabd5ec96eac8dc88b633496f3919138b2"
+      }
+    }
+  }
+}

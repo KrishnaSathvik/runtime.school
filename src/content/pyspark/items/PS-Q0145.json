@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0145",
+  "slug": "top-new-credit-limits",
+  "lesson": "PS-L029",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Top new credit limits",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "Risk reviews the largest credit limits set since the snapshot. Write `solve(accounts, customer_cdc)` so it returns the three largest account and limit pairs that the feed has and the snapshot doesn't.",
+  "rules": [
+    "A pair is an `account_id` with a `credit_limit`. It is new if it appears in `customer_cdc` but not in `accounts`; each new pair counts once, however many feed rows carry it.",
+    "Sort by `credit_limit` from largest to smallest, then by `account_id` A to Z. A missing limit sorts last.",
+    "Return `account_id` and `credit_limit` for the first three pairs, or all of them if there are fewer."
+  ],
+  "hints": [
+    "Select the same two columns from both tables, then keep the feed's pairs that the snapshot lacks.",
+    "`subtract` already returns each pair once. Sort after it, not before.",
+    "`F.desc(\"credit_limit\")` sorts largest first with missing values last; add `\"account_id\"` to settle ties, then `limit(3)`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "accounts",
+    "customer_cdc"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(accounts, customer_cdc):\n    # Return the three largest new (account_id, credit_limit) pairs.\n    return customer_cdc.select(\"account_id\", \"credit_limit\")\n",
+  "output": {
+    "columns": [
+      "account_id",
+      "credit_limit"
+    ],
+    "order_sensitive": true
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Compare only the two columns that define a pair: `customer_cdc.select(\"account_id\", \"credit_limit\").subtract(accounts.select(\"account_id\", \"credit_limit\"))`. That drops pairs the snapshot already has (including deletes, which carry the old row) and returns each new pair once, even when several feed rows carry the same limit. Then sort and cut: `.orderBy(F.desc(\"credit_limit\"), \"account_id\").limit(3)`. Comparing whole feed rows instead would count an owner or segment change as a new limit, and `exceptAll` would let one limit fill several places."
+}

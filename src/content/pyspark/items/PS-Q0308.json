@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0308",
+  "kind": "predict",
+  "slug": "restore-and-read-old-versions",
+  "lesson": "PS-L062",
+  "role": "edge",
+  "format": "concept_or_trace",
+  "difficulty": "hard",
+  "minutes": 8,
+  "title": "Restore, then read old versions",
+  "prompt": "`transactions` has 14 rows: two are declined, and the currencies are `USD` and `GBP`. This program deletes the declined ones twice, sets every currency to `USD`, restores the first version, then lists the history and reads two older versions. What does it print? Type each line on its own line.",
+  "program": "from delta.tables import DeltaTable\n\npath = \"/tmp/delta/transactions\"\ntransactions.write.format(\"delta\").save(path)\ntable = DeltaTable.forPath(spark, path)\ntable.delete(\"status = 'declined'\")\ntable.delete(\"status = 'declined'\")  # run twice by mistake\ntable.update(set={\"currency\": \"'USD'\"})\ntable.restoreToVersion(0)\n\nprint([row.operation for row in table.history().collect()])\nfor version in (1, 2):\n    rows = spark.read.format(\"delta\").option(\"versionAsOf\", version).load(path).collect()\n    print(version, len(rows), sorted({row.currency for row in rows}))\nprint(spark.read.format(\"delta\").load(path).count())\n",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "The second delete finds no declined rows left. Does it make a version?",
+    "A restore is a new commit; history is listed newest first.",
+    "Restoring doesn't delete the versions after the one you restore. What did each of them hold?"
+  ],
+  "explanation": "The load is version 0. The first delete removes the two declined rows (version 1); the second finds nothing to delete and makes no version, so the update is version 2. `restoreToVersion(0)` adds version 3, which looks like version 0 again. The history, newest first, is RESTORE, UPDATE, DELETE, WRITE. Versions 1 and 2 can still be read: both have 12 rows, version 1 still in both currencies and version 2 all in USD. The current table is version 3, with all 14 rows."
+}

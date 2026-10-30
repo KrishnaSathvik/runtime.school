@@ -1,0 +1,142 @@
+{
+  "id": "PS-L067",
+  "minutes": 25,
+  "lede": "Clicks, sensor readings and payments never stop arriving, and nobody wants to wait for tonight's job to see them. Structured Streaming runs the DataFrame code you already know again and again, on each new slice of data as it arrives.",
+  "objectives": [
+    "Explain a stream as a table that keeps growing, and read one with `spark.readStream`",
+    "Tell a streaming DataFrame from a batch one with `isStreaming`, and say why `count()` and `show()` fail on it",
+    "Start a query with `writeStream` and look at each micro-batch with `foreachBatch`",
+    "Predict which rows land in which micro-batch, including micro-batches with no rows"
+  ],
+  "dataset": {
+    "id": "PS-D06",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "page_views"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`page_views` is an online shop's clickstream: one row per page a visitor opened. Next to `event_time`, when the visitor opened the page, it has `arrival_time`, when the shop's pipeline received it, and `batch`, the delivery that brought it. The events reach the pipeline in five deliveries, ten minutes apart.\n\nSo far every DataFrame has been a fixed table: read it, work on it, done. A **stream** is a table that keeps growing. Structured Streaming treats it as an **unbounded table**: you write an ordinary query against it, and Spark runs that query again on each new slice of rows. Each of those runs is a **micro-batch**.\n\nReal streams come from message systems such as Kafka, or from a folder that other systems keep dropping files into. This environment has no network, so this course uses the folder. A small helper writes a table as one JSON file per `batch` value, oldest first, and the stream reads those files in that order:\n\n```python\nimport json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n```\n\nEvery stream example on this page starts with this helper. `F` is `pyspark.sql.functions`, as usual."
+    },
+    {
+      "kind": "text",
+      "md": "`spark.readStream` works like `spark.read`, but gives back a **streaming DataFrame**. A file stream needs its schema up front (lesson 68 explains why); here it's the schema of `page_views` itself. The `isStreaming` property tells the two kinds of DataFrame apart."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "A streaming DataFrame",
+      "code": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\nmake_batches(page_views, \"/tmp/clicks\")\nprint(sorted(os.listdir(\"/tmp/clicks\")))\n\nviews = spark.readStream.schema(page_views.schema).json(\"/tmp/clicks\")\nprint(type(views).__name__, views.isStreaming, page_views.isStreaming)\n\nproducts = views.filter(F.col(\"page_type\") == \"product\").select(\"event_id\", \"event_time\", F.col(\"device.type\").alias(\"device\"))\nprint(products.isStreaming)\nproducts.printSchema()\n",
+      "note": "The folder holds one file per delivery. `views` is still a `DataFrame` with the usual columns, but `isStreaming` is `True`; the batch table `page_views` says `False`. `filter` and `select` work on a stream exactly as before and give another streaming DataFrame. No rows have been read yet: like any transformation, this only builds a plan."
+    },
+    {
+      "kind": "text",
+      "md": "On a batch DataFrame, an action such as `count()` or `show()` runs the plan once and gives an answer. A stream never ends, so there's no moment to give that answer. These actions aren't allowed on a streaming DataFrame."
+    },
+    {
+      "kind": "error-example",
+      "id": "e2",
+      "title": "Actions don't work on a stream",
+      "code": "import os\n\nos.makedirs(\"/tmp/clicks\", exist_ok=True)\nviews = spark.readStream.schema(page_views.schema).json(\"/tmp/clicks\")\nprint(views.count())\n",
+      "error": "AnalysisException",
+      "note": "Spark refuses straight away: a query with a streaming source has to be started with `writeStream.start()`. `show()` and `collect()` fail the same way."
+    },
+    {
+      "kind": "text",
+      "md": "To run a stream, describe where its results go with `writeStream`, then call `start()`. The most direct way to watch it work is `foreachBatch(fn)`: Spark calls `fn(batch_df, batch_id)` once per micro-batch. `batch_df` is an **ordinary batch DataFrame** holding that micro-batch's rows, so every action works on it, and `batch_id` counts micro-batches from 0.\n\nTwo settings keep the examples small and the same on every run:\n\n- `option(\"maxFilesPerTrigger\", 1)` reads at most one new file per micro-batch, so each delivery becomes its own micro-batch.\n- `trigger(availableNow=True)` processes every file waiting in the folder and then stops. `awaitTermination()` waits until it has.\n\nLesson 68 covers triggers and the other places a stream can write to."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "One micro-batch per file",
+      "code": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\nmake_batches(page_views, \"/tmp/clicks\")\nviews = spark.readStream.schema(page_views.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/clicks\")\n\ndef show_batch(batch_df, batch_id):\n    rows = sorted(r[\"event_id\"] for r in batch_df.collect())\n    print(\"micro-batch\", batch_id, batch_df.isStreaming, rows)\n\nq = views.writeStream.foreachBatch(show_batch).trigger(availableNow=True).start()\nq.awaitTermination()\n",
+      "note": "Five files, five micro-batches, numbered 0 to 4. Each one holds only the rows that arrived since the one before, and `batch_df.isStreaming` is `False`: inside `foreachBatch` you're back to batch DataFrames. PV-0003 was viewed at 10:03 but arrived 20 minutes late, so it's in micro-batch 2 with that delivery. Rows inside a micro-batch have no fixed order, so they're sorted in Python before printing."
+    },
+    {
+      "kind": "text",
+      "md": "The query you write runs on each micro-batch in turn, and it only sees that micro-batch's rows. A filter can leave a micro-batch empty: a delivery arrived, but nothing in it passed the filter. Spark still runs that micro-batch."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "A filter runs on every micro-batch",
+      "code": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\nmake_batches(page_views, \"/tmp/clicks\")\nviews = spark.readStream.schema(page_views.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/clicks\")\nproducts = views.filter(F.col(\"page_type\") == \"product\").select(\"event_id\", \"event_time\", \"batch\")\n\ndef show_batch(batch_df, batch_id):\n    rows = sorted((r[\"event_id\"], r[\"event_time\"].strftime(\"%H:%M\"), r[\"batch\"]) for r in batch_df.collect())\n    print(\"micro-batch\", batch_id, \"->\", len(rows), \"product views\", rows)\n\nq = products.writeStream.foreachBatch(show_batch).trigger(availableNow=True).start()\nq.awaitTermination()\n",
+      "note": "The last delivery had no product page, so micro-batch 4 is empty, yet `show_batch` was still called for it. In micro-batch 2, PV-0003 from 10:03 sits next to PV-0010 from 10:24: a stream sees rows in the order they arrive, not the order they happened. Grouping by when things happened is lesson 69."
+    },
+    {
+      "kind": "text",
+      "md": "How many micro-batches there are depends on what's waiting when the query runs. Without `maxFilesPerTrigger`, Spark takes every file in the folder in one micro-batch. Either way, the rows that come out are the rows the same query gives on the whole table. That's the unbounded-table idea: the stream is the table, delivered in pieces."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Same answer, however it's sliced",
+      "code": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\nmake_batches(page_views, \"/tmp/clicks\")\nviews = spark.readStream.schema(page_views.schema).json(\"/tmp/clicks\")\nproducts = views.filter(F.col(\"page_type\") == \"product\").select(\"event_id\", \"session_id\")\n\nseen = []\ndef keep(batch_df, batch_id):\n    seen.extend((r[\"event_id\"], r[\"session_id\"]) for r in batch_df.collect())\n\nq = products.writeStream.foreachBatch(keep).trigger(availableNow=True).start()\nq.awaitTermination()\nprint(len(q.recentProgress), \"micro-batch\")\n\nbatch = page_views.filter(F.col(\"page_type\") == \"product\").select(\"event_id\", \"session_id\")\nprint(sorted(seen) == sorted((r[\"event_id\"], r[\"session_id\"]) for r in batch.collect()))\n",
+      "note": "All five files went into a single micro-batch this time. `q.recentProgress` is a list with one progress report per micro-batch. The rows collected from the stream are exactly the rows the batch filter gives on `page_views`."
+    },
+    {
+      "kind": "text",
+      "md": "A plain filter or select doesn't need to remember anything between micro-batches. Counting and grouping do, because a later row can change an earlier answer; lesson 69 shows how Spark keeps that.\n\nIn production a stream runs for days and checks for new data every few seconds. Here every query processes what's waiting and stops, so the output is the same on every run."
+    }
+  ],
+  "challenges": [
+    "PS-L067-C1",
+    "PS-L067-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "`views` is a streaming DataFrame. Which line runs without an error?",
+      "choices": [
+        "views.count()",
+        "views.show()",
+        "views.filter(F.col(\"page_type\") == \"product\")",
+        "views.collect()"
+      ],
+      "answer": 2,
+      "why": "`filter` is a transformation, so it just gives another streaming DataFrame. `count`, `show` and `collect` are actions; on a stream they raise an `AnalysisException` asking for `writeStream.start()`."
+    },
+    {
+      "id": "k2",
+      "prompt": "Inside `foreachBatch(fn)`, what is the `batch_df` that Spark passes to `fn`?",
+      "choices": [
+        "A streaming DataFrame with every row seen so far",
+        "An ordinary DataFrame with the rows of this micro-batch",
+        "A Python list of rows",
+        "The whole input folder read again"
+      ],
+      "answer": 1,
+      "why": "Each call gets one micro-batch as a batch DataFrame (`isStreaming` is `False`), so actions like `count()` and `collect()` work on it."
+    },
+    {
+      "id": "k3",
+      "prompt": "A query reads a folder of four files with `maxFilesPerTrigger` set to 1 and `availableNow`. Nothing in the third file passes the query's filter. How many times is the `foreachBatch` function called?",
+      "choices": [
+        "3",
+        "4",
+        "1",
+        "5"
+      ],
+      "answer": 1,
+      "why": "Each file is a micro-batch, and a micro-batch runs because new data arrived, even when the filter keeps none of it. The third call simply gets an empty DataFrame."
+    }
+  ],
+  "review": [
+    "A stream is an unbounded table: rows keep arriving, and Spark runs your query on each new slice, a micro-batch.",
+    "`spark.readStream` gives a streaming DataFrame; a file stream needs its schema up front. `isStreaming` tells it from a batch DataFrame.",
+    "Transformations work on streams as usual. Actions such as `count()` and `show()` raise an `AnalysisException`.",
+    "`writeStream ... start()` runs the query. `foreachBatch(fn)` calls `fn(batch_df, batch_id)` with each micro-batch as an ordinary DataFrame.",
+    "With `maxFilesPerTrigger` 1 each file is one micro-batch, and a micro-batch still runs when the filter keeps nothing.",
+    "A stream sees rows in arrival order; however it's sliced, a filter gives the same rows as on the whole table."
+  ],
+  "practice": [
+    "PS-Q0331",
+    "PS-Q0332",
+    "PS-Q0333",
+    "PS-Q0334",
+    "PS-Q0335"
+  ]
+}

@@ -1,0 +1,74 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "customer_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "channel",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "C0002",
+     "app"
+    ],
+    [
+     "C0003",
+     "web"
+    ],
+    [
+     "C0001",
+     "store"
+    ],
+    [
+     "C0001",
+     "web"
+    ],
+    [
+     "C0005",
+     "web"
+    ],
+    [
+     "C0001",
+     "app"
+    ],
+    [
+     "C0004",
+     "app"
+    ],
+    [
+     "C0006",
+     "app"
+    ],
+    [
+     "C0004",
+     "store"
+    ],
+    [
+     "C0005",
+     "app"
+    ]
+   ],
+   "row_count": 10
+  }
+ },
+ "hidden": [
+  "the full practice orders table",
+  "customers who order through the same channel many times",
+  "orders with a missing customer or channel",
+  "channels and customers that differ only in case",
+  "an empty orders table"
+ ]
+}

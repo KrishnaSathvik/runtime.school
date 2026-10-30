@@ -1,0 +1,250 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "event_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "shipment_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "event_type",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "load_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "published",
+     "type": "boolean",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "E0000001",
+     "SH0002",
+     "created",
+     "2026-03-03",
+     true
+    ],
+    [
+     "E0000002",
+     "SH0004",
+     "created",
+     "2026-03-03",
+     true
+    ],
+    [
+     "E0000003",
+     "SH0003",
+     "created",
+     "2026-03-03",
+     true
+    ],
+    [
+     "E0000004",
+     "SH0001",
+     "created",
+     "2026-03-03",
+     true
+    ],
+    [
+     "E0000003",
+     "SH0003",
+     "created",
+     "2026-03-03",
+     true
+    ],
+    [
+     "E0000005",
+     "SH0004",
+     "departed",
+     "2026-03-03",
+     true
+    ],
+    [
+     "E0000006",
+     "SH0002",
+     "departed",
+     "2026-03-03",
+     true
+    ],
+    [
+     "E0000007",
+     "SH0001",
+     "departed",
+     "2026-03-03",
+     true
+    ],
+    [
+     "E0000008",
+     "SH0003",
+     "departed",
+     "2026-03-03",
+     true
+    ],
+    [
+     "E0000009",
+     "SH0003",
+     "delivered",
+     "2026-03-06",
+     true
+    ],
+    [
+     "E0000007",
+     "SH0001",
+     "departed",
+     "2026-03-04",
+     true
+    ]
+   ],
+   "row_count": 11,
+   "inputs": {
+    "shipment_events": [
+     [
+      "E0000001",
+      "SH0002",
+      "WH01",
+      "created",
+      "2026-03-03T08:03:00",
+      "WH01",
+      "100001",
+      "2026-03-03",
+      "false"
+     ],
+     [
+      "E0000002",
+      "SH0004",
+      "WH02",
+      "created",
+      "2026-03-03T09:30:00",
+      "WH02",
+      "100002",
+      "2026-03-03",
+      "false"
+     ],
+     [
+      "E0000003",
+      "SH0003",
+      "WH02",
+      "created",
+      "2026-03-03T12:17:00",
+      "WH02",
+      "100003",
+      "2026-03-03",
+      "false"
+     ],
+     [
+      "E0000004",
+      "SH0001",
+      "WH03",
+      "created",
+      "2026-03-03T12:24:00",
+      "WH03",
+      "100004",
+      "2026-03-03",
+      "false"
+     ],
+     [
+      "E0000003",
+      "SH0003",
+      "WH02",
+      "created",
+      "2026-03-03T12:17:00",
+      "WH02",
+      "100003",
+      "2026-03-03",
+      "false"
+     ],
+     [
+      "E0000005",
+      "SH0004",
+      "WH02",
+      "departed",
+      "2026-03-03T14:29:00",
+      "WH02",
+      "100005",
+      "2026-03-03",
+      "false"
+     ],
+     [
+      "E0000006",
+      "SH0002",
+      "WH01",
+      "departed",
+      "2026-03-03T15:42:00",
+      "WH01",
+      "100006",
+      "2026-03-03",
+      "false"
+     ],
+     [
+      "E0000007",
+      "SH0001",
+      "WH03",
+      "departed",
+      "2026-03-03T16:06:00",
+      "WH03",
+      "100007",
+      "2026-03-03",
+      "false"
+     ],
+     [
+      "E0000007",
+      "SH0001",
+      "WH03",
+      "departed",
+      "2026-03-03T16:06:00",
+      "WH03",
+      "100007",
+      "2026-03-04",
+      "false"
+     ],
+     [
+      "E0000008",
+      "SH0003",
+      "WH02",
+      "departed",
+      "2026-03-03T18:00:00",
+      "WH02",
+      "100008",
+      "2026-03-03",
+      "false"
+     ],
+     [
+      "E0000009",
+      "SH0003",
+      "WH02",
+      "delivered",
+      "2026-03-06T08:53:00",
+      "Turin",
+      "100009",
+      "2026-03-06",
+      "false"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the lesson feed: five days, one event delivered on two days",
+  "a feed with a single day",
+  "events the feed sent two and three times, on the first day and later",
+  "an empty feed"
+ ]
+}

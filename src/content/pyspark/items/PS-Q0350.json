@@ -1,0 +1,59 @@
+{
+ "id": "PS-Q0350",
+ "slug": "hot-hours-per-sensor",
+ "lesson": "PS-L070",
+ "role": "integration",
+ "format": "dataframe_coding",
+ "difficulty": "hard",
+ "minutes": 23,
+ "title": "Hot hours per sensor",
+ "dataset": {
+  "id": "PS-D09",
+  "version": "1.0.0"
+ },
+ "prompt": "Facilities wants a final report of the hours when a sensor ran hot. Write `solve(sensor_readings)` so it streams the readings and returns `device_id`, `day`, `hour`, `hot_readings` and `hottest` for every sensor and closed clock hour that had at least one hot reading.",
+ "rules": [
+  "A reading is hot when `payload.temperature_c` is above 30.0 (30.0 itself isn't). A temperature of 999.0 is a glitch, not a hot reading.",
+  "A reading delivered more than once (same `reading_id`) counts once. Copies arrive within a few minutes.",
+  "Use a 20-minute watermark on `event_time` that every reading moves on, hot or not: the watermark and the duplicate check come before the hot filter. Return each closed hour once, with its final values.",
+  "`day` is the date and `hour` the hour (0 to 23, an int) when the clock hour starts. `hot_readings` counts the hot readings, `hottest` is the highest temperature among them.",
+  "The rows must come from a streaming query over the delivery files: working on `sensor_readings` itself doesn't count."
+ ],
+ "hints": [
+  "Order matters: watermark first, then `dropDuplicatesWithinWatermark([\"reading_id\"])`, then the hot filter, then the hourly `groupBy`.",
+  "Two conditions in one filter: above 30 and not 999.0, each in parentheses, joined with `&`.",
+  "After reading the memory table back, `F.to_date` and `F.hour` on `window.start` give `day` and `hour`."
+ ],
+ "explanation": "The watermark has to see every reading, so the hot filter comes after the watermark and the duplicate check. If it came first, only hot readings would move the watermark and hours would close much later (in the sample, the 10:00 hours would still be open). Even a filter written straight after `withWatermark` does that, because Spark moves a simple filter in front of the watermark; the duplicate check between them keeps it in place. Removing copies with `dropDuplicatesWithinWatermark([\"reading_id\"])` keeps R1303 from counting twice; the filter `> 30` and `!= 999.0` drops R1301 at exactly 30.0 and the glitch R1304. The hourly `groupBy` with `F.count(\"*\")` and `F.max` in append mode writes each hour once it closes. The date and hour come from the window's start with ordinary date functions on the memory table.",
+ "entry": "solve",
+ "inputs": [
+  "sensor_readings"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\ndef solve(sensor_readings):\n    spark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\n    make_batches(sensor_readings, \"/tmp/in\")         # one file per batch; clears the folder first\n    shutil.rmtree(\"/tmp/ck\", ignore_errors=True)     # a fresh checkpoint for every run\n    readings = spark.readStream.schema(sensor_readings.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\n    # Watermark, drop repeated deliveries, keep hot readings, count them per sensor and clock hour,\n    # write only closed hours to a memory table, run the stream, and return the five columns.\n\n    return sensor_readings\n",
+ "output": {
+  "columns": [
+   "device_id",
+   "day",
+   "hour",
+   "hot_readings",
+   "hottest"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

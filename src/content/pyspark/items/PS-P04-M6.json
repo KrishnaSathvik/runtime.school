@@ -1,0 +1,66 @@
+{
+  "id": "PS-P04-M6",
+  "slug": "publish-reconciliation-exceptions",
+  "project": "PS-P04",
+  "milestone": "PS-P04.m6",
+  "difficulty": "hard",
+  "minutes": 40,
+  "title": "Publish the discrepancies and a reconciliation summary",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "The finance team needs one list of everything that doesn't reconcile, so someone can look at each item. Write `reconciliation_exceptions(accounts, transactions, transfers, ledger_entries)`. It returns one row per problem, from the three sources below, with the columns of `EXCEPTION_SCHEMA`.\n\n`reconciliation_summary` is already written: it counts your exceptions by kind. When this step passes, press Run project to see every table of the pipeline, the two balances side by side included.",
+  "rules": [
+    "Every transfer in `transfer_matches` whose `match_status` isn't `matched`: `kind` is its status, `ref_id` its `transfer_id`, `account_id` its `from_account_id`, `amount` its `amount`.",
+    "Every ledger entry whose `transfer_id` isn't in `transfers`, or is missing: `kind` is `unknown_transfer`, `ref_id` its `entry_id`, with its own `account_id` and `amount`.",
+    "Every account in `account_balances` whose `difference` isn't zero: `kind` is `balance_difference`, `ref_id` and `account_id` are its `account_id`, `amount` is the difference. A difference of 0.01 is listed.",
+    "Return `kind`, `ref_id`, `account_id` and `amount`, with `amount` as `decimal(14,2)`. When everything reconciles, the result is empty."
+  ],
+  "hints": [
+    "Build the three parts separately, each a `select` with `.alias` into `kind`, `ref_id`, `account_id` and `amount`. `F.lit(\"unknown_transfer\")` makes a fixed column.",
+    "A left anti join of `ledger_entries` with `transfers.select(\"transfer_id\")` keeps the entries whose transfer doesn't exist. A missing `transfer_id` never matches, so those entries are kept too.",
+    "`unionByName` stacks the parts by column name. Cast `amount` to `MONEY` in each part so every row has the same type."
+  ],
+  "explanation": "Each source of trouble is already a table: `transfer_matches` names every transfer that isn't clean, a left anti join finds ledger entries that belong to no transfer, and `account_balances` shows where the two balances part ways. Shaping each into the same four columns and stacking them with `unionByName` gives one list the team can work through, matching columns by name rather than position. The balance filter is `difference != 0`, with no tolerance: a one-cent gap is exactly the kind of error a reconciliation exists to catch. The transfer rows explain the balance rows: a duplicate shows up on both accounts it touched, a missing credit on the receiver, a cent mismatch as a cent. On balanced books the list is empty, which is what the summary should show before the books close.",
+  "entry": "reconciliation_exceptions",
+  "inputs": [
+    "accounts",
+    "transactions",
+    "transfers",
+    "ledger_entries"
+  ],
+  "file": "pipeline.py",
+  "append": "\n\nEXCEPTION_SCHEMA = \"kind STRING, ref_id STRING, account_id STRING, amount DECIMAL(14,2)\"\n\n\ndef reconciliation_exceptions(accounts, transactions, transfers, ledger_entries):\n    # Step 6: every unmatched transfer, every entry of an unknown transfer, every account whose balances differ.\n    return spark.createDataFrame([], EXCEPTION_SCHEMA)\n\n\ndef reconciliation_summary(accounts, transactions, transfers, ledger_entries):\n    # Given: one row per kind of exception, with how many there are and the money they add up to.\n    exceptions = reconciliation_exceptions(accounts, transactions, transfers, ledger_entries)\n    return exceptions.groupBy(\"kind\").agg(\n        F.count(\"*\").alias(\"exceptions\"),\n        F.sum(\"amount\").cast(MONEY).alias(\"amount\"),\n    )\n",
+  "prerequisites": [
+    "PS-L024",
+    "PS-L026",
+    "PS-L029",
+    "PS-L076"
+  ],
+  "output": {
+    "columns": [
+      "kind",
+      "ref_id",
+      "account_id",
+      "amount"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "example",
+      "sample": true
+    },
+    {
+      "id": "project",
+      "edition": "project"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 200,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

@@ -1,0 +1,56 @@
+{
+ "id": "PS-Q0354",
+ "slug": "searches-and-the-product-they-opened",
+ "lesson": "PS-L071",
+ "role": "debugging",
+ "format": "dataframe_coding",
+ "difficulty": "hard",
+ "minutes": 17,
+ "title": "Searches and the product they opened",
+ "dataset": {
+  "id": "PS-D06",
+  "version": "1.0.0"
+ },
+ "prompt": "The search team wants every search with the product page opened after it, or no page if none was. The starter's table never shows a search without a product page. Fix `solve(searches, page_views)` so it returns `search_id` and `view_id` for every search, with `view_id` missing when no product page followed.",
+ "rules": [
+  "A product page view (`page_type` `product`) follows a search when it's in the same session, at the search's `event_time` or up to 5 minutes after it (5 minutes exactly counts). Other page types never count.",
+  "A search with several such views gets one row per view. A search with none gets one row with `view_id` missing.",
+  "Keep the starter's 10-minute watermarks. A search with no product view comes out once the watermark shows none can still arrive; searches still waiting when the stream stops are left out.",
+  "The rows must come from a streaming query over the delivery files: working on `searches` itself doesn't count."
+ ],
+ "hints": [
+  "Which rows does a left join add when a search has no match, and what is their `page_type`?",
+  "A filter after an outer join also removes the rows with nothing on the right side.",
+  "Filter `page_views` to product pages before the join, so the join only ever sees product pages."
+ ],
+ "explanation": "A left outer join gives an unmatched search a row whose right side is all missing, `page_type` included, so the starter's `filter(page_type == \"product\")` after the join removed exactly the rows it should keep. Searches whose only views were other pages, like SR-0102, were matched with those pages and then filtered away, so they vanished too. Filtering `page_views` before the join fixes both: the join only sees product pages, and a search with none comes out with `view_id` missing once the watermark passes its 5-minute bound. SR-0106 is still waiting when the stream stops, because no later events moved the watermark past it.",
+ "entry": "solve",
+ "inputs": [
+  "searches",
+  "page_views"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\ndef solve(searches, page_views):\n    spark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\n    make_batches(searches, \"/tmp/searches\")\n    make_batches(page_views, \"/tmp/views\")\n    shutil.rmtree(\"/tmp/ck\", ignore_errors=True)\n    s = spark.readStream.schema(searches.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/searches\")\n    v = spark.readStream.schema(page_views.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/views\")\n    looks = (s.select(F.col(\"session_id\").alias(\"search_session\"), F.col(\"event_id\").alias(\"search_id\"),\n                      F.col(\"event_time\").alias(\"search_time\"))\n             .withWatermark(\"search_time\", \"10 minutes\"))\n    pages = (v.select(\"session_id\", \"page_type\", F.col(\"event_id\").alias(\"view_id\"), F.col(\"event_time\").alias(\"view_time\"))\n             .withWatermark(\"view_time\", \"10 minutes\"))\n    match = ((F.col(\"session_id\") == F.col(\"search_session\"))\n             & (F.col(\"view_time\") >= F.col(\"search_time\"))\n             & (F.col(\"view_time\") <= F.col(\"search_time\") + F.expr(\"INTERVAL 5 MINUTES\")))\n    pairs = (looks.join(pages, match, \"left\")\n             .filter(F.col(\"page_type\") == \"product\")\n             .select(\"search_id\", \"view_id\"))\n    run_stream(pairs.writeStream.format(\"memory\").queryName(\"search_to_product\")\n               .option(\"checkpointLocation\", \"/tmp/ck\"))\n    return spark.table(\"search_to_product\")\n",
+ "output": {
+  "columns": [
+   "search_id",
+   "view_id"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

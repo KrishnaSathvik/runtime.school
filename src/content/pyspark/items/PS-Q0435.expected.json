@@ -1,0 +1,195 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "device_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "started_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "ended_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "hot_readings",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "peak_c",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "minutes",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "level",
+     "type": "string",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "DEV-004",
+     "2026-04-14T09:00:00",
+     "2026-04-14T09:00:00",
+     1,
+     41.2,
+     0,
+     "critical"
+    ],
+    [
+     "DEV-002",
+     "2026-04-14T09:20:00",
+     "2026-04-14T09:50:00",
+     2,
+     31.5,
+     30,
+     "warning"
+    ],
+    [
+     "DEV-003",
+     "2026-04-14T09:00:00",
+     "2026-04-14T09:30:00",
+     2,
+     32.5,
+     30,
+     "warning"
+    ]
+   ],
+   "row_count": 3,
+   "inputs": {
+    "sensor_readings": [
+     [
+      "R1002",
+      "DEV-004",
+      "2026-04-14T09:00:00",
+      "2026-04-14T09:00:43",
+      "0",
+      "{\"temperature_c\":41.2,\"humidity_pct\":37.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"critical\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R1001",
+      "DEV-003",
+      "2026-04-14T09:00:00",
+      "2026-04-14T09:00:46",
+      "0",
+      "{\"temperature_c\":31.0,\"humidity_pct\":80.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"outdoor\",\"greenhouse\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R1003",
+      "DEV-003",
+      "2026-04-14T09:15:00",
+      "2026-04-14T09:15:07",
+      "1",
+      "{\"temperature_c\":29.0,\"humidity_pct\":80.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"outdoor\",\"greenhouse\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R1004",
+      "DEV-004",
+      "2026-04-14T09:15:00",
+      "2026-04-14T09:15:49",
+      "1",
+      "{\"temperature_c\":999.0,\"humidity_pct\":37.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"critical\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R1005",
+      "DEV-002",
+      "2026-04-14T09:20:00",
+      "2026-04-14T09:20:30",
+      "1",
+      "{\"temperature_c\":31.0,\"humidity_pct\":41.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"hvac\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R1006",
+      "DEV-003",
+      "2026-04-14T09:30:00",
+      "2026-04-14T09:30:15",
+      "1",
+      "{\"temperature_c\":32.5,\"humidity_pct\":80.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"outdoor\",\"greenhouse\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R1006",
+      "DEV-003",
+      "2026-04-14T09:30:00",
+      "2026-04-14T09:36:15",
+      "2",
+      "{\"temperature_c\":32.5,\"humidity_pct\":80.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"outdoor\",\"greenhouse\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R1007",
+      "DEV-004",
+      "2026-04-14T09:45:00",
+      "2026-04-14T09:45:21",
+      "2",
+      "{\"temperature_c\":30.0,\"humidity_pct\":37.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"critical\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R1008",
+      "DEV-002",
+      "2026-04-14T09:50:00",
+      "2026-04-14T09:50:25",
+      "2",
+      "{\"temperature_c\":31.5,\"humidity_pct\":41.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"hvac\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R1009",
+      "DEV-003",
+      "2026-04-14T10:15:00",
+      "2026-04-14T10:15:12",
+      "2",
+      "{\"temperature_c\":33.0,\"humidity_pct\":80.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"outdoor\",\"greenhouse\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R1010",
+      "DEV-002",
+      "2026-04-14T11:00:00",
+      "2026-04-14T11:00:25",
+      "3",
+      "{\"temperature_c\":22.0,\"humidity_pct\":41.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"hvac\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "two days of practice readings with glitches, copies and late readings, in five micro-batches",
+  "two hot readings 31 minutes apart",
+  "two hot readings exactly 30 minutes apart",
+  "a late hot reading that still joins its spell",
+  "a hot reading that arrives too late to count",
+  "a glitch reading of 999.0",
+  "a spell whose peak is exactly 40.0",
+  "a hot reading delivered twice",
+  "a hot spell followed only by cool readings",
+  "a spell still open when the stream stops",
+  "no readings"
+ ]
+}

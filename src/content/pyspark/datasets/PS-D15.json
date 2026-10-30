@@ -1,0 +1,3264 @@
+{
+ "id": "PS-D15",
+ "version": "1.1.0",
+ "title": "Application Logs",
+ "generated_by": "services/spark-runner/datasets/d15_logs.py",
+ "rules": [
+  "Every service, host, user agent and identifier is invented; logs contain no real users, IP addresses, secrets or tokens.",
+  "All times are UTC. endpoint is the route template (e.g. GET /v1/catalog/items/{sku}), never a path with real ids in it.",
+  "status_code is an HTTP status; 5xx is a server error and counts in error_count, 4xx is the caller's mistake and does not.",
+  "latency_ms is the time from receiving the request to sending the last byte.",
+  "application_logs.attributes is a map whose keys depend on the line: host and region are on every line; checkout lines add order_ref and payment_provider, iot-gateway lines add device_id and firmware, search lines add result_count, and so on. A missing key is simply absent from the map.",
+  "application_logs_raw is the log file before parsing: every application_logs record as one JSON line, plus a few malformed lines \u2014 a line cut off mid-record (the shipper resent it whole), a record missing its closing brace, and plain-text lines that are not JSON at all. Dropping the malformed lines leaves exactly the records in application_logs.",
+  "Lesson edition: application_logs_raw lines 4, 8 and 12 are the malformed ones (truncated, missing brace, plain text).",
+  "traces: the root span (parent_span_id empty) is the request itself; child spans start inside their parent and end before it.",
+  "service_metrics is computed from api_requests: requests and 5xx errors per service in each 5-minute window, latency percentiles by nearest rank. Windows with no requests have no row.",
+  "error_events.request_id is set when the error happened while answering a request; device_id is set for iot-gateway device errors. Lesson and practice device ids (DEV-0001 \u2026) are stand-alone and are not PS-D09 devices; in the project edition device_id is always a PS-D09 project device (DEV-001 \u2026 DEV-018), in error_events and in application_logs attributes alike.",
+  "Deployment incident in practice and project: checkout-api 2.14.0 raised 5xx errors and latency until it was rolled back about 35 minutes later (outcome rolled_back), then 2.13.2 was redeployed.",
+  "Data skew: in practice about 55% of requests are GET /v1/catalog/items on catalog-api; in project about 70%. Grouping or joining by endpoint puts most rows in one partition.",
+  "Practice edition: user_agent is missing (null) on about 1% of requests.",
+  "Project edition problem 1: about 1% of application_logs records were shipped twice (same log_id, identical row), and they appear twice in application_logs_raw too.",
+  "Project edition problem 2: about 2% of application_logs_raw lines are malformed.",
+  "Project edition problem 3: requests the client abandoned have status_code 499 and an empty (null) latency_ms; they are not server errors.",
+  "Project edition and PS-D09 (P10): it covers 2026-05-12 00:00 to 24:00 UTC, inside PS-D09's project days (2026-05-11 to 05-13, also UTC). Every sensor talks to the platform only through iot-gateway, and no iot-gateway request names a device while that device is under maintenance in PS-D09.",
+  "Project edition and PS-D09 (P10): each PS-D09 maintenance visit that starts that day has one HeartbeatMissed error (no request) for its device 10 minutes after started_at, and each PS-D09 glitch reading (temperature_c 999.0 or humidity_pct 255.0) that first arrived that day has one OutOfRangeReading error (no request) for its device at that arrival_time. Other devices' errors are tied to iot-gateway requests."
+ ],
+ "relationships": [
+  {
+   "from": "traces.trace_id",
+   "to": "api_requests.trace_id"
+  },
+  {
+   "from": "traces.parent_span_id",
+   "to": "traces.span_id"
+  },
+  {
+   "from": "application_logs.trace_id",
+   "to": "api_requests.trace_id"
+  },
+  {
+   "from": "error_events.request_id",
+   "to": "api_requests.request_id"
+  }
+ ],
+ "tables": {
+  "api_requests": {
+   "note": "One row per HTTP request a service answered: endpoint, status, latency and the caller's user agent.",
+   "columns": [
+    {
+     "name": "request_id",
+     "type": "string"
+    },
+    {
+     "name": "trace_id",
+     "type": "string"
+    },
+    {
+     "name": "requested_at",
+     "type": "timestamp"
+    },
+    {
+     "name": "service",
+     "type": "string"
+    },
+    {
+     "name": "method",
+     "type": "string"
+    },
+    {
+     "name": "endpoint",
+     "type": "string"
+    },
+    {
+     "name": "status_code",
+     "type": "int"
+    },
+    {
+     "name": "latency_ms",
+     "type": "int"
+    },
+    {
+     "name": "bytes_sent",
+     "type": "bigint"
+    },
+    {
+     "name": "user_agent",
+     "type": "string"
+    },
+    {
+     "name": "client_region",
+     "type": "string"
+    }
+   ],
+   "key": [
+    "request_id"
+   ],
+   "rows": {
+    "lesson": 12,
+    "practice": 2500,
+    "project": 5000
+   },
+   "lesson": [
+    [
+     "REQ-000001",
+     "13b64b22ba0fbc6c",
+     "2026-04-14T10:00:02.100000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items",
+     "200",
+     "42",
+     "17950",
+     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36",
+     "us-east"
+    ],
+    [
+     "REQ-000002",
+     "a64fadafa3e59936",
+     "2026-04-14T10:00:05.400000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items",
+     "200",
+     "38",
+     "18220",
+     "RuntimeShop-iOS/4.12.0 (iPhone; iOS 17.5)",
+     "eu-west"
+    ],
+    [
+     "REQ-000003",
+     "0a5f722afabaf005",
+     "2026-04-14T10:00:09",
+     "auth-service",
+     "POST",
+     "/v1/auth/token",
+     "200",
+     "61",
+     "702",
+     "RuntimeShop-Android/4.11.2 (Android 14)",
+     "us-east"
+    ],
+    [
+     "REQ-000004",
+     "bee00ecb217ae5e3",
+     "2026-04-14T10:00:14.700000",
+     "checkout-api",
+     "POST",
+     "/v1/checkout",
+     "201",
+     "236",
+     "1580",
+     "RuntimeShop-iOS/4.12.0 (iPhone; iOS 17.5)",
+     "us-west"
+    ],
+    [
+     "REQ-000005",
+     "bae0b151a3d78dc9",
+     "2026-04-14T10:00:21.300000",
+     "search-api",
+     "GET",
+     "/v1/search",
+     "200",
+     "118",
+     "9410",
+     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36",
+     "eu-west"
+    ],
+    [
+     "REQ-000006",
+     "cc2702f716e39bf2",
+     "2026-04-14T10:00:33.800000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items/{sku}",
+     "404",
+     "12",
+     "0",
+     "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 Version/17.5 Safari/605.1.15",
+     "us-east"
+    ],
+    [
+     "REQ-000007",
+     "830a8c89a751c0b5",
+     "2026-04-14T10:00:47.200000",
+     "iot-gateway",
+     "POST",
+     "/v1/devices/{device_id}/telemetry",
+     "201",
+     "24",
+     "118",
+     "SensorHub-Agent/2.3 (firmware 1.8.4)",
+     "ap-south"
+    ],
+    [
+     "REQ-000008",
+     "c43d1a266b993fd1",
+     "2026-04-14T10:00:58.900000",
+     "checkout-api",
+     "POST",
+     "/v1/payments/authorize",
+     "500",
+     "1240",
+     "0",
+     "RuntimeShop-Android/4.11.2 (Android 14)",
+     "us-east"
+    ],
+    [
+     "REQ-000009",
+     "22bfa062eda1037e",
+     "2026-04-14T10:01:06",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items",
+     "200",
+     "51",
+     "18030",
+     "okhttp/4.12.0",
+     "us-west"
+    ],
+    [
+     "REQ-000010",
+     "d984a7b4b7458060",
+     "2026-04-14T10:01:12.500000",
+     "iot-gateway",
+     "POST",
+     "/v1/devices/{device_id}/telemetry",
+     "201",
+     "22",
+     "121",
+     "SensorHub-Agent/2.3 (firmware 1.8.4)",
+     "ap-south"
+    ],
+    [
+     "REQ-000011",
+     "6e956dfb98bbfb49",
+     "2026-04-14T10:01:21.400000",
+     "search-api",
+     "GET",
+     "/v1/search",
+     "200",
+     "162",
+     "10220",
+     "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 Version/17.5 Safari/605.1.15",
+     "us-east"
+    ],
+    [
+     "REQ-000012",
+     "591fa0b8bf211d90",
+     "2026-04-14T10:01:35.600000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items",
+     "200",
+     "40",
+     "17780",
+     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36",
+     "eu-west"
+    ]
+   ],
+   "practice_head": [
+    [
+     "REQ-000001",
+     "20b9d844599b2bba",
+     "2026-04-14T10:00:01.892000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items",
+     "200",
+     "35",
+     "21158",
+     "RuntimeShop-iOS/4.12.0 (iPhone; iOS 17.5)",
+     "us-west"
+    ],
+    [
+     "REQ-000002",
+     "f99d06298c4c52d2",
+     "2026-04-14T10:00:12.014000",
+     "iot-gateway",
+     "POST",
+     "/v1/devices/{device_id}/telemetry",
+     "201",
+     "9",
+     "150",
+     "SensorHub-Agent/2.3 (firmware 1.8.4)",
+     "ap-south"
+    ],
+    [
+     "REQ-000003",
+     "145c2e46b1555952",
+     "2026-04-14T10:00:16.577000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items/{sku}",
+     "200",
+     "23",
+     "3758",
+     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36",
+     "us-east"
+    ],
+    [
+     "REQ-000004",
+     "9b21b4f7e62cf2d3",
+     "2026-04-14T10:00:33.580000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items",
+     "200",
+     "15",
+     "26182",
+     "RuntimeShop-iOS/4.12.0 (iPhone; iOS 17.5)",
+     "us-east"
+    ],
+    [
+     "REQ-000005",
+     "28495229826bb85c",
+     "2026-04-14T10:00:34.758000",
+     "checkout-api",
+     "POST",
+     "/v1/payments/authorize",
+     "201",
+     "337",
+     "753",
+     "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 Version/17.5 Safari/605.1.15",
+     "us-east"
+    ],
+    [
+     "REQ-000006",
+     "acfecbe61ddd66c0",
+     "2026-04-14T10:00:46.911000",
+     "auth-service",
+     "POST",
+     "/v1/auth/token",
+     "200",
+     "68",
+     "481",
+     "RuntimeShop-iOS/4.12.0 (iPhone; iOS 17.5)",
+     "us-west"
+    ],
+    [
+     "REQ-000007",
+     "59be2778f1cc2c19",
+     "2026-04-14T10:00:54.630000",
+     "auth-service",
+     "POST",
+     "/v1/auth/refresh",
+     "200",
+     "15",
+     "914",
+     "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 Version/17.5 Safari/605.1.15",
+     "us-east"
+    ],
+    [
+     "REQ-000008",
+     "d027abd60e3063f0",
+     "2026-04-14T10:00:55.607000",
+     "notification-worker",
+     "POST",
+     "/internal/notify",
+     "201",
+     "34",
+     "322",
+     "RuntimeNotify/1.0",
+     "us-east"
+    ],
+    [
+     "REQ-000009",
+     "c7b0b2f6542ff056",
+     "2026-04-14T10:01:15.468000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items/{sku}",
+     "200",
+     "45",
+     "2687",
+     "RuntimeShop-iOS/4.12.0 (iPhone; iOS 17.5)",
+     "us-east"
+    ],
+    [
+     "REQ-000010",
+     "547c1a6085c33955",
+     "2026-04-14T10:01:20.497000",
+     "auth-service",
+     "POST",
+     "/v1/auth/token",
+     "200",
+     "78",
+     "551",
+     "RuntimeShop-iOS/4.12.0 (iPhone; iOS 17.5)",
+     "ap-south"
+    ],
+    [
+     "REQ-000011",
+     "b0f5f98f87d02f8c",
+     "2026-04-14T10:01:22.881000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items",
+     "200",
+     "40",
+     "15538",
+     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36",
+     "us-east"
+    ],
+    [
+     "REQ-000012",
+     "c97aa054c4361913",
+     "2026-04-14T10:01:23.262000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items",
+     "200",
+     "48",
+     "14936",
+     "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 Version/17.5 Safari/605.1.15",
+     "us-west"
+    ],
+    [
+     "REQ-000013",
+     "4dacd739b6bdb8b1",
+     "2026-04-14T10:01:24.754000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items",
+     "200",
+     "34",
+     "15059",
+     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36",
+     "eu-west"
+    ],
+    [
+     "REQ-000014",
+     "3b4bebecf22ae8a0",
+     "2026-04-14T10:01:25.202000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items",
+     "200",
+     "55",
+     "14756",
+     "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 Version/17.5 Safari/605.1.15",
+     "us-east"
+    ],
+    [
+     "REQ-000015",
+     "97b7d6db5d369433",
+     "2026-04-14T10:01:30.134000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items",
+     "200",
+     "39",
+     "23674",
+     "RuntimeShop-iOS/4.12.0 (iPhone; iOS 17.5)",
+     "us-east"
+    ],
+    [
+     "REQ-000016",
+     "357c6beb8db70f6e",
+     "2026-04-14T10:01:45.808000",
+     "auth-service",
+     "POST",
+     "/v1/auth/refresh",
+     "200",
+     "22",
+     "463",
+     "RuntimeShop-Android/4.11.2 (Android 14)",
+     "us-east"
+    ],
+    [
+     "REQ-000017",
+     "171fb6f8e32d6dc1",
+     "2026-04-14T10:01:53.686000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items",
+     "200",
+     "45",
+     "26433",
+     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36",
+     "us-west"
+    ],
+    [
+     "REQ-000018",
+     "e010fecf34dcdbd9",
+     "2026-04-14T10:02:01.511000",
+     "auth-service",
+     "POST",
+     "/v1/auth/token",
+     "200",
+     "48",
+     "1007",
+     "RuntimeShop-Android/4.11.2 (Android 14)",
+     "eu-west"
+    ],
+    [
+     "REQ-000019",
+     "8ea8086f628e1706",
+     "2026-04-14T10:02:08.847000",
+     "search-api",
+     "GET",
+     "/v1/search",
+     "200",
+     "314",
+     "11949",
+     "okhttp/4.12.0",
+     "eu-west"
+    ],
+    [
+     "REQ-000020",
+     "b56c6441cd3563e9",
+     "2026-04-14T10:02:15.010000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items",
+     "200",
+     "58",
+     "13203",
+     "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 Version/17.5 Safari/605.1.15",
+     "us-east"
+    ]
+   ],
+   "project_head": [
+    [
+     "REQ-000001",
+     "1ec377dbc17029c3",
+     "2026-05-12T00:00:08.085000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items",
+     "200",
+     "62",
+     "14463",
+     "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 Version/17.5 Safari/605.1.15",
+     "ap-south"
+    ],
+    [
+     "REQ-000002",
+     "e13fd572e22e8e87",
+     "2026-05-12T00:00:13.040000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items",
+     "200",
+     "47",
+     "24650",
+     "RuntimeShop-iOS/4.12.0 (iPhone; iOS 17.5)",
+     "us-east"
+    ],
+    [
+     "REQ-000003",
+     "7f71f7c1b7a366f9",
+     "2026-05-12T00:00:18.419000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items",
+     "404",
+     "90",
+     "0",
+     "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 Version/17.5 Safari/605.1.15",
+     "us-east"
+    ],
+    [
+     "REQ-000004",
+     "8699b41e24d90b02",
+     "2026-05-12T00:00:18.602000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items",
+     "200",
+     "42",
+     "11873",
+     "RuntimeShop-iOS/4.12.0 (iPhone; iOS 17.5)",
+     "eu-west"
+    ],
+    [
+     "REQ-000005",
+     "5989512ead60763d",
+     "2026-05-12T00:00:22.477000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items",
+     "200",
+     "36",
+     "25875",
+     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36",
+     "us-east"
+    ],
+    [
+     "REQ-000006",
+     "27fdf24208b4dee2",
+     "2026-05-12T00:00:22.835000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items",
+     "200",
+     "43",
+     "17952",
+     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36",
+     "us-west"
+    ],
+    [
+     "REQ-000007",
+     "82e5e2760b1e9fb3",
+     "2026-05-12T00:00:24.123000",
+     "search-api",
+     "GET",
+     "/v1/search",
+     "200",
+     "97",
+     "9799",
+     "RuntimeShop-iOS/4.12.0 (iPhone; iOS 17.5)",
+     "ap-south"
+    ],
+    [
+     "REQ-000008",
+     "953b0e4af9eed3d0",
+     "2026-05-12T00:01:04.813000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items",
+     "200",
+     "38",
+     "20494",
+     "RuntimeShop-Android/4.11.2 (Android 14)",
+     "eu-west"
+    ],
+    [
+     "REQ-000009",
+     "5e29d4f7759a98a3",
+     "2026-05-12T00:01:49.765000",
+     "iot-gateway",
+     "GET",
+     "/v1/devices/{device_id}/status",
+     "200",
+     "30",
+     "1063",
+     "SensorHub-Agent/2.3 (firmware 1.8.4)",
+     "us-east"
+    ],
+    [
+     "REQ-000010",
+     "ee2fedf4d8792a24",
+     "2026-05-12T00:01:55.362000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items",
+     "200",
+     "66",
+     "16990",
+     "RuntimeShop-iOS/4.12.0 (iPhone; iOS 17.5)",
+     "us-east"
+    ],
+    [
+     "REQ-000011",
+     "6eefef6f8512ccdd",
+     "2026-05-12T00:02:40.036000",
+     "checkout-api",
+     "POST",
+     "/v1/checkout",
+     "201",
+     "773",
+     "1228",
+     "RuntimeShop-iOS/4.12.0 (iPhone; iOS 17.5)",
+     "eu-west"
+    ],
+    [
+     "REQ-000012",
+     "679725025853140e",
+     "2026-05-12T00:02:42.090000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items",
+     "200",
+     "33",
+     "12387",
+     "RuntimeShop-Android/4.11.2 (Android 14)",
+     "us-west"
+    ],
+    [
+     "REQ-000013",
+     "a997698a6b665549",
+     "2026-05-12T00:02:57.494000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items",
+     "200",
+     "34",
+     "13267",
+     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36",
+     "us-east"
+    ],
+    [
+     "REQ-000014",
+     "c5f5ed80ef022417",
+     "2026-05-12T00:03:06.230000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items",
+     "200",
+     "24",
+     "20404",
+     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36",
+     "eu-west"
+    ],
+    [
+     "REQ-000015",
+     "da312e056943be4e",
+     "2026-05-12T00:03:09.662000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items",
+     "200",
+     "67",
+     "26693",
+     "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 Version/17.5 Safari/605.1.15",
+     "ap-south"
+    ],
+    [
+     "REQ-000016",
+     "3b0d6b8abdab7a67",
+     "2026-05-12T00:03:30.305000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items",
+     "404",
+     "23",
+     "0",
+     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36",
+     "eu-west"
+    ],
+    [
+     "REQ-000017",
+     "eb81308cbce7eb76",
+     "2026-05-12T00:03:37.165000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items",
+     "200",
+     "78",
+     "15631",
+     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36",
+     "us-east"
+    ],
+    [
+     "REQ-000018",
+     "80b149ea27f7ed37",
+     "2026-05-12T00:03:45.610000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items",
+     "404",
+     "19",
+     "0",
+     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36",
+     "us-east"
+    ],
+    [
+     "REQ-000019",
+     "cb4a372f706ded90",
+     "2026-05-12T00:03:48.435000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items",
+     "200",
+     "72",
+     "13573",
+     "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 Version/17.5 Safari/605.1.15",
+     "eu-west"
+    ],
+    [
+     "REQ-000020",
+     "3d982b20809f5bf8",
+     "2026-05-12T00:04:14.516000",
+     "catalog-api",
+     "GET",
+     "/v1/catalog/items",
+     "200",
+     "40",
+     "22268",
+     "RuntimeShop-iOS/4.12.0 (iPhone; iOS 17.5)",
+     "us-west"
+    ]
+   ]
+  },
+  "application_logs": {
+   "note": "One row per structured log line, with a map of attributes whose keys depend on the service.",
+   "columns": [
+    {
+     "name": "log_id",
+     "type": "string"
+    },
+    {
+     "name": "logged_at",
+     "type": "timestamp"
+    },
+    {
+     "name": "level",
+     "type": "string"
+    },
+    {
+     "name": "service",
+     "type": "string"
+    },
+    {
+     "name": "message",
+     "type": "string"
+    },
+    {
+     "name": "trace_id",
+     "type": "string"
+    },
+    {
+     "name": "attributes",
+     "type": "map<string,string>"
+    }
+   ],
+   "key": [
+    "log_id"
+   ],
+   "rows": {
+    "lesson": 10,
+    "practice": 569,
+    "project": 1200
+   },
+   "lesson": [
+    [
+     "LOG-000001",
+     "2026-04-14T10:00:02.142000",
+     "INFO",
+     "catalog-api",
+     "GET /v1/catalog/items 200",
+     "13b64b22ba0fbc6c",
+     "{\"cache\":\"hit\",\"host\":\"catalog-api-7f9c2\",\"latency_ms\":\"42\",\"region\":\"us-east\"}"
+    ],
+    [
+     "LOG-000002",
+     "2026-04-14T10:00:09.061000",
+     "INFO",
+     "auth-service",
+     "POST /v1/auth/token 200",
+     "0a5f722afabaf005",
+     "{\"grant_type\":\"client_credentials\",\"host\":\"auth-service-a41d8\",\"latency_ms\":\"61\",\"region\":\"us-east\"}"
+    ],
+    [
+     "LOG-000003",
+     "2026-04-14T10:00:14.936000",
+     "INFO",
+     "checkout-api",
+     "POST /v1/checkout 201",
+     "bee00ecb217ae5e3",
+     "{\"host\":\"checkout-api-7f9c2\",\"latency_ms\":\"236\",\"order_ref\":\"ord-730917\",\"payment_provider\":\"banklink\",\"region\":\"us-west\"}"
+    ],
+    [
+     "LOG-000004",
+     "2026-04-14T10:00:21.418000",
+     "INFO",
+     "search-api",
+     "GET /v1/search 200",
+     "bae0b151a3d78dc9",
+     "{\"host\":\"search-api-c03be\",\"latency_ms\":\"118\",\"query_terms\":\"4\",\"region\":\"eu-west\",\"result_count\":\"48\"}"
+    ],
+    [
+     "LOG-000005",
+     "2026-04-14T10:00:47.224000",
+     "INFO",
+     "iot-gateway",
+     "POST /v1/devices/{device_id}/telemetry 201",
+     "830a8c89a751c0b5",
+     "{\"device_id\":\"DEV-0003\",\"firmware\":\"1.8.4\",\"host\":\"iot-gateway-a41d8\",\"latency_ms\":\"24\",\"region\":\"ap-south\"}"
+    ],
+    [
+     "LOG-000006",
+     "2026-04-14T10:01:00.140000",
+     "ERROR",
+     "checkout-api",
+     "POST /v1/payments/authorize failed with 500",
+     "c43d1a266b993fd1",
+     "{\"host\":\"checkout-api-a41d8\",\"latency_ms\":\"1240\",\"order_ref\":\"ord-673729\",\"payment_provider\":\"banklink\",\"region\":\"us-east\"}"
+    ],
+    [
+     "LOG-000007",
+     "2026-04-14T10:01:03",
+     "WARN",
+     "iot-gateway",
+     "no heartbeat for 10 minutes",
+     null,
+     "{\"device_id\":\"DEV-0002\",\"error_type\":\"HeartbeatMissed\",\"host\":\"iot-gateway-a41d8\"}"
+    ],
+    [
+     "LOG-000008",
+     "2026-04-14T10:01:12.522000",
+     "INFO",
+     "iot-gateway",
+     "POST /v1/devices/{device_id}/telemetry 201",
+     "d984a7b4b7458060",
+     "{\"device_id\":\"DEV-0001\",\"firmware\":\"1.8.4\",\"host\":\"iot-gateway-a41d8\",\"latency_ms\":\"22\",\"region\":\"ap-south\"}"
+    ],
+    [
+     "LOG-000009",
+     "2026-04-14T10:01:21.562000",
+     "INFO",
+     "search-api",
+     "GET /v1/search 200",
+     "6e956dfb98bbfb49",
+     "{\"host\":\"search-api-7f9c2\",\"latency_ms\":\"162\",\"query_terms\":\"1\",\"region\":\"us-east\",\"result_count\":\"3\"}"
+    ],
+    [
+     "LOG-000010",
+     "2026-04-14T10:01:28",
+     "ERROR",
+     "notification-worker",
+     "email provider did not answer within 10 s",
+     null,
+     "{\"error_type\":\"ProviderTimeout\",\"host\":\"notification-worker-7f9c2\"}"
+    ]
+   ],
+   "practice_head": [
+    [
+     "LOG-000001",
+     "2026-04-14T10:00:16.600000",
+     "INFO",
+     "catalog-api",
+     "GET /v1/catalog/items/{sku} 200",
+     "145c2e46b1555952",
+     "{\"cache\":\"hit\",\"host\":\"catalog-api-a41d8\",\"latency_ms\":\"23\",\"region\":\"us-east\",\"sku\":\"SKU-2140\"}"
+    ],
+    [
+     "LOG-000002",
+     "2026-04-14T10:00:33.595000",
+     "INFO",
+     "catalog-api",
+     "GET /v1/catalog/items 200",
+     "9b21b4f7e62cf2d3",
+     "{\"cache\":\"hit\",\"host\":\"catalog-api-c03be\",\"latency_ms\":\"15\",\"region\":\"us-east\"}"
+    ],
+    [
+     "LOG-000003",
+     "2026-04-14T10:01:15.513000",
+     "INFO",
+     "catalog-api",
+     "GET /v1/catalog/items/{sku} 200",
+     "c7b0b2f6542ff056",
+     "{\"cache\":\"hit\",\"host\":\"catalog-api-c03be\",\"latency_ms\":\"45\",\"region\":\"us-east\",\"sku\":\"SKU-4415\"}"
+    ],
+    [
+     "LOG-000004",
+     "2026-04-14T10:01:24.788000",
+     "INFO",
+     "catalog-api",
+     "GET /v1/catalog/items 200",
+     "4dacd739b6bdb8b1",
+     "{\"cache\":\"miss\",\"host\":\"catalog-api-a41d8\",\"latency_ms\":\"34\",\"region\":\"eu-west\"}"
+    ],
+    [
+     "LOG-000005",
+     "2026-04-14T10:01:53.731000",
+     "INFO",
+     "catalog-api",
+     "GET /v1/catalog/items 200",
+     "171fb6f8e32d6dc1",
+     "{\"cache\":\"miss\",\"host\":\"catalog-api-7f9c2\",\"latency_ms\":\"45\",\"region\":\"us-west\"}"
+    ],
+    [
+     "LOG-000006",
+     "2026-04-14T10:02:15.068000",
+     "INFO",
+     "catalog-api",
+     "GET /v1/catalog/items 200",
+     "b56c6441cd3563e9",
+     "{\"cache\":\"hit\",\"host\":\"catalog-api-a41d8\",\"latency_ms\":\"58\",\"region\":\"us-east\"}"
+    ],
+    [
+     "LOG-000007",
+     "2026-04-14T10:03:33.473000",
+     "INFO",
+     "catalog-api",
+     "GET /v1/catalog/items 200",
+     "36ff9b7ed6db2e3d",
+     "{\"cache\":\"hit\",\"host\":\"catalog-api-a41d8\",\"latency_ms\":\"78\",\"region\":\"ap-south\"}"
+    ],
+    [
+     "LOG-000008",
+     "2026-04-14T10:03:36.506000",
+     "INFO",
+     "iot-gateway",
+     "GET /v1/devices/{device_id}/status 200",
+     "6498616a9f4fce33",
+     "{\"device_id\":\"DEV-0039\",\"firmware\":\"1.8.4\",\"host\":\"iot-gateway-7f9c2\",\"latency_ms\":\"43\",\"region\":\"eu-west\"}"
+    ],
+    [
+     "LOG-000009",
+     "2026-04-14T10:03:53.143000",
+     "ERROR",
+     "catalog-api",
+     "GET /v1/catalog/items failed with 502",
+     "9183b656f27a2ab9",
+     "{\"cache\":\"miss\",\"host\":\"catalog-api-c03be\",\"latency_ms\":\"15\",\"region\":\"us-east\"}"
+    ],
+    [
+     "LOG-000010",
+     "2026-04-14T10:04:19.621000",
+     "INFO",
+     "auth-service",
+     "POST /v1/auth/token 200",
+     "d6aa1d98760dabcf",
+     "{\"grant_type\":\"client_credentials\",\"host\":\"auth-service-7f9c2\",\"latency_ms\":\"33\",\"region\":\"eu-west\"}"
+    ],
+    [
+     "LOG-000011",
+     "2026-04-14T10:04:37.451000",
+     "INFO",
+     "catalog-api",
+     "GET /v1/catalog/items 200",
+     "e312c5c323c14ef1",
+     "{\"cache\":\"hit\",\"host\":\"catalog-api-7f9c2\",\"latency_ms\":\"27\",\"region\":\"eu-west\"}"
+    ],
+    [
+     "LOG-000012",
+     "2026-04-14T10:04:42.875000",
+     "INFO",
+     "catalog-api",
+     "GET /v1/catalog/items 200",
+     "4492fa71ae8d6147",
+     "{\"cache\":\"miss\",\"host\":\"catalog-api-a41d8\",\"latency_ms\":\"59\",\"region\":\"us-east\"}"
+    ],
+    [
+     "LOG-000013",
+     "2026-04-14T10:05:08.716000",
+     "DEBUG",
+     "catalog-api",
+     "GET /v1/catalog/items 200",
+     "b17b83eaf634dc35",
+     "{\"cache\":\"hit\",\"host\":\"catalog-api-a41d8\",\"latency_ms\":\"43\",\"region\":\"ap-south\"}"
+    ],
+    [
+     "LOG-000014",
+     "2026-04-14T10:06:21.418000",
+     "INFO",
+     "checkout-api",
+     "POST /v1/checkout 201",
+     "81d96444da19a5e0",
+     "{\"host\":\"checkout-api-7f9c2\",\"latency_ms\":\"176\",\"order_ref\":\"ord-596678\",\"payment_provider\":\"walletly\",\"region\":\"us-west\"}"
+    ],
+    [
+     "LOG-000015",
+     "2026-04-14T10:06:25.537000",
+     "INFO",
+     "catalog-api",
+     "GET /v1/catalog/items 200",
+     "b4ddd219fc5bb276",
+     "{\"cache\":\"hit\",\"host\":\"catalog-api-c03be\",\"latency_ms\":\"20\",\"region\":\"ap-south\"}"
+    ],
+    [
+     "LOG-000016",
+     "2026-04-14T10:08:35.835000",
+     "INFO",
+     "notification-worker",
+     "POST /internal/notify 201",
+     "da667f47e2abf724",
+     "{\"channel\":\"email\",\"host\":\"notification-worker-a41d8\",\"latency_ms\":\"49\",\"region\":\"eu-west\",\"template\":\"order_shipped\"}"
+    ],
+    [
+     "LOG-000017",
+     "2026-04-14T10:08:42.962000",
+     "INFO",
+     "catalog-api",
+     "GET /v1/catalog/items 200",
+     "8ccbed4331896a8f",
+     "{\"cache\":\"hit\",\"host\":\"catalog-api-7f9c2\",\"latency_ms\":\"72\",\"region\":\"eu-west\"}"
+    ],
+    [
+     "LOG-000018",
+     "2026-04-14T10:09:20.181000",
+     "INFO",
+     "checkout-api",
+     "POST /v1/payments/authorize 201",
+     "42974d0a695c2f37",
+     "{\"host\":\"checkout-api-7f9c2\",\"latency_ms\":\"226\",\"order_ref\":\"ord-259338\",\"payment_provider\":\"banklink\",\"region\":\"us-east\"}"
+    ],
+    [
+     "LOG-000019",
+     "2026-04-14T10:10:28.080000",
+     "INFO",
+     "catalog-api",
+     "GET /v1/catalog/items/{sku} 200",
+     "3c803e878f771efb",
+     "{\"cache\":\"miss\",\"host\":\"catalog-api-7f9c2\",\"latency_ms\":\"36\",\"region\":\"us-west\",\"sku\":\"SKU-2212\"}"
+    ],
+    [
+     "LOG-000020",
+     "2026-04-14T10:11:20.759000",
+     "INFO",
+     "catalog-api",
+     "GET /v1/catalog/items 200",
+     "84a9a7b6d5ae04a2",
+     "{\"cache\":\"hit\",\"host\":\"catalog-api-c03be\",\"latency_ms\":\"31\",\"region\":\"us-east\"}"
+    ]
+   ],
+   "project_head": [
+    [
+     "LOG-000001",
+     "2026-05-12T00:03:45.629000",
+     "INFO",
+     "catalog-api",
+     "GET /v1/catalog/items 404",
+     "80b149ea27f7ed37",
+     "{\"cache\":\"hit\",\"host\":\"catalog-api-c03be\",\"latency_ms\":\"19\",\"region\":\"us-east\"}"
+    ],
+    [
+     "LOG-000002",
+     "2026-05-12T00:04:14.556000",
+     "INFO",
+     "catalog-api",
+     "GET /v1/catalog/items 200",
+     "3d982b20809f5bf8",
+     "{\"cache\":\"hit\",\"host\":\"catalog-api-c03be\",\"latency_ms\":\"40\",\"region\":\"us-west\"}"
+    ],
+    [
+     "LOG-000003",
+     "2026-05-12T00:06:27.456000",
+     "INFO",
+     "catalog-api",
+     "GET /v1/catalog/items 200",
+     "ea3da647d4e0c554",
+     "{\"cache\":\"hit\",\"host\":\"catalog-api-a41d8\",\"latency_ms\":\"50\",\"region\":\"eu-west\"}"
+    ],
+    [
+     "LOG-000004",
+     "2026-05-12T00:06:36.078000",
+     "INFO",
+     "catalog-api",
+     "GET /v1/catalog/items 200",
+     "0b9b1583d5af9367",
+     "{\"cache\":\"hit\",\"host\":\"catalog-api-a41d8\",\"latency_ms\":\"31\",\"region\":\"us-west\"}"
+    ],
+    [
+     "LOG-000005",
+     "2026-05-12T00:07:27.336000",
+     "INFO",
+     "checkout-api",
+     "POST /v1/checkout 201",
+     "2052c3a6c0c2a6a3",
+     "{\"host\":\"checkout-api-c03be\",\"latency_ms\":\"206\",\"order_ref\":\"ord-793752\",\"payment_provider\":\"cardpay\",\"region\":\"eu-west\"}"
+    ],
+    [
+     "LOG-000006",
+     "2026-05-12T00:11:06.064000",
+     "INFO",
+     "catalog-api",
+     "GET /v1/catalog/items 404",
+     "830aa8efadce805c",
+     "{\"cache\":\"hit\",\"host\":\"catalog-api-c03be\",\"latency_ms\":\"25\",\"region\":\"us-east\"}"
+    ],
+    [
+     "LOG-000007",
+     "2026-05-12T00:12:09.477000",
+     "INFO",
+     "checkout-api",
+     "POST /v1/checkout 201",
+     "91d7e66335067cef",
+     "{\"host\":\"checkout-api-a41d8\",\"latency_ms\":\"120\",\"order_ref\":\"ord-996493\",\"payment_provider\":\"banklink\",\"region\":\"us-east\"}"
+    ],
+    [
+     "LOG-000008",
+     "2026-05-12T00:12:15.863000",
+     "INFO",
+     "catalog-api",
+     "GET /v1/catalog/items 200",
+     "d90b5462a27be4b5",
+     "{\"cache\":\"hit\",\"host\":\"catalog-api-c03be\",\"latency_ms\":\"22\",\"region\":\"us-east\"}"
+    ],
+    [
+     "LOG-000009",
+     "2026-05-12T00:12:31.991000",
+     "INFO",
+     "auth-service",
+     "POST /v1/auth/token 200",
+     "be612714fb11d27e",
+     "{\"grant_type\":\"client_credentials\",\"host\":\"auth-service-c03be\",\"latency_ms\":\"61\",\"region\":\"eu-west\"}"
+    ],
+    [
+     "LOG-000010",
+     "2026-05-12T00:12:56.232000",
+     "DEBUG",
+     "catalog-api",
+     "GET /v1/catalog/items 200",
+     "97f6fe2f977d2319",
+     "{\"cache\":\"hit\",\"host\":\"catalog-api-7f9c2\",\"latency_ms\":\"131\",\"region\":\"ap-south\"}"
+    ],
+    [
+     "LOG-000011",
+     "2026-05-12T00:14:30.727000",
+     "INFO",
+     "catalog-api",
+     "GET /v1/catalog/items 200",
+     "82a65427f35120d2",
+     "{\"cache\":\"hit\",\"host\":\"catalog-api-c03be\",\"latency_ms\":\"141\",\"region\":\"us-east\"}"
+    ],
+    [
+     "LOG-000012",
+     "2026-05-12T00:16:51.369000",
+     "INFO",
+     "catalog-api",
+     "GET /v1/catalog/items 200",
+     "10a6e6eec6e23121",
+     "{\"cache\":\"hit\",\"host\":\"catalog-api-c03be\",\"latency_ms\":\"45\",\"region\":\"ap-south\"}"
+    ],
+    [
+     "LOG-000013",
+     "2026-05-12T00:19:10.077000",
+     "INFO",
+     "catalog-api",
+     "GET /v1/catalog/items 200",
+     "aa3f113730365458",
+     "{\"cache\":\"hit\",\"host\":\"catalog-api-a41d8\",\"latency_ms\":\"50\",\"region\":\"us-east\"}"
+    ],
+    [
+     "LOG-000014",
+     "2026-05-12T00:20:46.994000",
+     "INFO",
+     "catalog-api",
+     "GET /v1/catalog/items 200",
+     "10ee59c3c2181d4d",
+     "{\"cache\":\"miss\",\"host\":\"catalog-api-a41d8\",\"latency_ms\":\"13\",\"region\":\"eu-west\"}"
+    ],
+    [
+     "LOG-000015",
+     "2026-05-12T00:21:30.431000",
+     "INFO",
+     "catalog-api",
+     "GET /v1/catalog/items 200",
+     "e36084cbb04a6537",
+     "{\"cache\":\"miss\",\"host\":\"catalog-api-7f9c2\",\"latency_ms\":\"98\",\"region\":\"ap-south\"}"
+    ],
+    [
+     "LOG-000016",
+     "2026-05-12T00:21:41.896000",
+     "INFO",
+     "catalog-api",
+     "GET /v1/catalog/items 200",
+     "eda81610fd876730",
+     "{\"cache\":\"hit\",\"host\":\"catalog-api-c03be\",\"latency_ms\":\"39\",\"region\":\"us-west\"}"
+    ],
+    [
+     "LOG-000017",
+     "2026-05-12T00:22:03.275000",
+     "DEBUG",
+     "catalog-api",
+     "GET /v1/catalog/items 200",
+     "12a5ad7edf10a5eb",
+     "{\"cache\":\"hit\",\"host\":\"catalog-api-a41d8\",\"latency_ms\":\"50\",\"region\":\"eu-west\"}"
+    ],
+    [
+     "LOG-000018",
+     "2026-05-12T00:22:05.429000",
+     "INFO",
+     "auth-service",
+     "POST /v1/auth/refresh 200",
+     "9c6965a4172cc774",
+     "{\"grant_type\":\"refresh_token\",\"host\":\"auth-service-7f9c2\",\"latency_ms\":\"50\",\"region\":\"us-west\"}"
+    ],
+    [
+     "LOG-000019",
+     "2026-05-12T00:24:43.994000",
+     "DEBUG",
+     "catalog-api",
+     "GET /v1/catalog/items 200",
+     "9b6943fcbecc11bb",
+     "{\"cache\":\"hit\",\"host\":\"catalog-api-7f9c2\",\"latency_ms\":\"52\",\"region\":\"ap-south\"}"
+    ],
+    [
+     "LOG-000020",
+     "2026-05-12T00:27:38.657000",
+     "INFO",
+     "checkout-api",
+     "POST /v1/checkout 201",
+     "a4e96f1fcf433e46",
+     "{\"host\":\"checkout-api-c03be\",\"latency_ms\":\"181\",\"order_ref\":\"ord-449593\",\"payment_provider\":\"cardpay\",\"region\":\"eu-west\"}"
+    ]
+   ],
+   "format": "jsonl"
+  },
+  "application_logs_raw": {
+   "note": "One row per raw line of the log file as shipped, before parsing; a few lines are broken.",
+   "columns": [
+    {
+     "name": "value",
+     "type": "string"
+    }
+   ],
+   "key": [],
+   "rows": {
+    "lesson": 13,
+    "practice": 572,
+    "project": 1217
+   },
+   "lesson": [
+    [
+     "{\"log_id\":\"LOG-000001\",\"logged_at\":\"2026-04-14T10:00:02.142000\",\"level\":\"INFO\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items 200\",\"trace_id\":\"13b64b22ba0fbc6c\",\"attributes\":{\"cache\":\"hit\",\"host\":\"catalog-api-7f9c2\",\"latency_ms\":\"42\",\"region\":\"us-east\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000002\",\"logged_at\":\"2026-04-14T10:00:09.061000\",\"level\":\"INFO\",\"service\":\"auth-service\",\"message\":\"POST /v1/auth/token 200\",\"trace_id\":\"0a5f722afabaf005\",\"attributes\":{\"grant_type\":\"client_credentials\",\"host\":\"auth-service-a41d8\",\"latency_ms\":\"61\",\"region\":\"us-east\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000003\",\"logged_at\":\"2026-04-14T10:00:14.936000\",\"level\":\"INFO\",\"service\":\"checkout-api\",\"message\":\"POST /v1/checkout 201\",\"trace_id\":\"bee00ecb217ae5e3\",\"attributes\":{\"host\":\"checkout-api-7f9c2\",\"latency_ms\":\"236\",\"order_ref\":\"ord-730917\",\"payment_provider\":\"banklink\",\"region\":\"us-west\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000004\",\"logged_at\":\"2026-04-14T10:00:21.418000\",\"level\":\"INFO\",\"service\":\"search-api\",\"message\":\"GET /v1/search 200\",\"trace_id\":\"bae0b151a3d78dc9\",\"attributes\":{\"host\":\"s"
+    ],
+    [
+     "{\"log_id\":\"LOG-000004\",\"logged_at\":\"2026-04-14T10:00:21.418000\",\"level\":\"INFO\",\"service\":\"search-api\",\"message\":\"GET /v1/search 200\",\"trace_id\":\"bae0b151a3d78dc9\",\"attributes\":{\"host\":\"search-api-c03be\",\"latency_ms\":\"118\",\"query_terms\":\"4\",\"region\":\"eu-west\",\"result_count\":\"48\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000005\",\"logged_at\":\"2026-04-14T10:00:47.224000\",\"level\":\"INFO\",\"service\":\"iot-gateway\",\"message\":\"POST /v1/devices/{device_id}/telemetry 201\",\"trace_id\":\"830a8c89a751c0b5\",\"attributes\":{\"device_id\":\"DEV-0003\",\"firmware\":\"1.8.4\",\"host\":\"iot-gateway-a41d8\",\"latency_ms\":\"24\",\"region\":\"ap-south\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000006\",\"logged_at\":\"2026-04-14T10:01:00.140000\",\"level\":\"ERROR\",\"service\":\"checkout-api\",\"message\":\"POST /v1/payments/authorize failed with 500\",\"trace_id\":\"c43d1a266b993fd1\",\"attributes\":{\"host\":\"checkout-api-a41d8\",\"latency_ms\":\"1240\",\"order_ref\":\"ord-673729\",\"payment_provider\":\"banklink\",\"region\":\"us-east\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000007\",\"logged_at\":\"2026-04-14T10:01:03\",\"level\":\"WARN\",\"service\":\"iot-gateway\",\"message\":\"no heartbeat for 10 minutes\",\"trace_id\":null,\"attributes\":{\"device_id\":\"DEV-0002\",\"error_type\":\"HeartbeatMissed\",\"host\":\"iot-gateway-a41d8\"}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000007\",\"logged_at\":\"2026-04-14T10:01:03\",\"level\":\"WARN\",\"service\":\"iot-gateway\",\"message\":\"no heartbeat for 10 minutes\",\"trace_id\":null,\"attributes\":{\"device_id\":\"DEV-0002\",\"error_type\":\"HeartbeatMissed\",\"host\":\"iot-gateway-a41d8\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000008\",\"logged_at\":\"2026-04-14T10:01:12.522000\",\"level\":\"INFO\",\"service\":\"iot-gateway\",\"message\":\"POST /v1/devices/{device_id}/telemetry 201\",\"trace_id\":\"d984a7b4b7458060\",\"attributes\":{\"device_id\":\"DEV-0001\",\"firmware\":\"1.8.4\",\"host\":\"iot-gateway-a41d8\",\"latency_ms\":\"22\",\"region\":\"ap-south\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000009\",\"logged_at\":\"2026-04-14T10:01:21.562000\",\"level\":\"INFO\",\"service\":\"search-api\",\"message\":\"GET /v1/search 200\",\"trace_id\":\"6e956dfb98bbfb49\",\"attributes\":{\"host\":\"search-api-7f9c2\",\"latency_ms\":\"162\",\"query_terms\":\"1\",\"region\":\"us-east\",\"result_count\":\"3\"}}"
+    ],
+    [
+     "2026-04-14 10:01:28 ERROR notification-worker Traceback (most recent call last):"
+    ],
+    [
+     "{\"log_id\":\"LOG-000010\",\"logged_at\":\"2026-04-14T10:01:28\",\"level\":\"ERROR\",\"service\":\"notification-worker\",\"message\":\"email provider did not answer within 10 s\",\"trace_id\":null,\"attributes\":{\"error_type\":\"ProviderTimeout\",\"host\":\"notification-worker-7f9c2\"}}"
+    ]
+   ],
+   "practice_head": [
+    [
+     "{\"log_id\":\"LOG-000001\",\"logged_at\":\"2026-04-14T10:00:16.600000\",\"level\":\"INFO\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items/{sku} 200\",\"trace_id\":\"145c2e46b1555952\",\"attributes\":{\"cache\":\"hit\",\"host\":\"catalog-api-a41d8\",\"latency_ms\":\"23\",\"region\":\"us-east\",\"sku\":\"SKU-2140\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000002\",\"logged_at\":\"2026-04-14T10:00:33.595000\",\"level\":\"INFO\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items 200\",\"trace_id\":\"9b21b4f7e62cf2d3\",\"attributes\":{\"cache\":\"hit\",\"host\":\"catalog-api-c03be\",\"latency_ms\":\"15\",\"region\":\"us-east\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000003\",\"logged_at\":\"2026-04-14T10:01:15.513000\",\"level\":\"INFO\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items/{sku} 200\",\"trace_id\":\"c7b0b2f6542ff056\",\"attributes\":{\"cache\":\"hit\",\"host\":\"catalog-api-c03be\",\"latency_ms\":\"45\",\"region\":\"us-east\",\"sku\":\"SKU-4415\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000004\",\"logged_at\":\"2026-04-14T10:01:24.788000\",\"level\":\"INFO\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items 200\",\"trace_id\":\"4dacd739b6bdb8b1\",\"attributes\":{\"cache\":\"miss\",\"host\":\"catalog-api-a41d8\",\"latency_ms\":\"34\",\"region\":\"eu-west\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000005\",\"logged_at\":\"2026-04-14T10:01:53.731000\",\"level\":\"INFO\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items 200\",\"trace_id\":\"171fb6f8e32d6dc1\",\"attributes\":{\"cache\":\"miss\",\"host\":\"catalog-api-7f9c2\",\"latency_ms\":\"45\",\"region\":\"us-west\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000006\",\"logged_at\":\"2026-04-14T10:02:15.068000\",\"level\":\"INFO\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items 200\",\"trace_id\":\"b56c6441cd3563e9\",\"attributes\":{\"cache\":\"hit\",\"host\":\"catalog-api-a41d8\",\"latency_ms\":\"58\",\"region\":\"us-east\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000007\",\"logged_at\":\"2026-04-14T10:03:33.473000\",\"level\":\"INFO\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items 200\",\"trace_id\":\"36ff9b7ed6db2e3d\",\"attributes\":{\"cache\":\"hit\",\"host\":\"catalog-api-a41d8\",\"latency_ms\":\"78\",\"region\":\"ap-south\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000008\",\"logged_at\":\"2026-04-14T10:03:36.506000\",\"level\":\"INFO\",\"service\":\"iot-gateway\",\"message\":\"GET /v1/devices/{device_id}/status 200\",\"trace_id\":\"6498616a9f4fce33\",\"attributes\":{\"device_id\":\"DEV-0039\",\"firmware\":\"1.8.4\",\"host\":\"iot-gateway-7f9c2\",\"latency_ms\":\"43\",\"region\":\"eu-west\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000009\",\"logged_at\":\"2026-04-14T10:03:53.143000\",\"level\":\"ERROR\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items failed with 502\",\"trace_id\":\"9183b656f27a2ab9\",\"attributes\":{\"cache\":\"miss\",\"host\":\"catalog-api-c03be\",\"latency_ms\":\"15\",\"region\":\"us-east\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000010\",\"logged_at\":\"2026-04-14T10:04:19.621000\",\"level\":\"INFO\",\"service\":\"auth-service\",\"message\":\"POST /v1/auth/token 200\",\"trace_id\":\"d6aa1d98760dabcf\",\"attributes\":{\"grant_type\":\"client_credentials\",\"host\":\"auth-service-7f9c2\",\"latency_ms\":\"33\",\"region\":\"eu-west\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000011\",\"logged_at\":\"2026-04-14T10:04:37.451000\",\"level\":\"INFO\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items 200\",\"trace_id\":\"e312c5c323c14ef1\",\"attributes\":{\"cache\":\"hit\",\"host\":\"catalog-api-7f9c2\",\"latency_ms\":\"27\",\"region\":\"eu-west\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000012\",\"logged_at\":\"2026-04-14T10:04:42.875000\",\"level\":\"INFO\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items 200\",\"trace_id\":\"4492fa71ae8d6147\",\"attributes\":{\"cache\":\"miss\",\"host\":\"catalog-api-a41d8\",\"latency_ms\":\"59\",\"region\":\"us-east\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000013\",\"logged_at\":\"2026-04-14T10:05:08.716000\",\"level\":\"DEBUG\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items 200\",\"trace_id\":\"b17b83eaf634dc35\",\"attributes\":{\"cache\":\"hit\",\"host\":\"catalog-api-a41d8\",\"latency_ms\":\"43\",\"region\":\"ap-south\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000014\",\"logged_at\":\"2026-04-14T10:06:21.418000\",\"level\":\"INFO\",\"service\":\"checkout-api\",\"message\":\"POST /v1/checkout 201\",\"trace_id\":\"81d96444da19a5e0\",\"attributes\":{\"host\":\"checkout-api-7f9c2\",\"latency_ms\":\"176\",\"order_ref\":\"ord-596678\",\"payment_provider\":\"walletly\",\"region\":\"us-west\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000015\",\"logged_at\":\"2026-04-14T10:06:25.537000\",\"level\":\"INFO\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items 200\",\"trace_id\":\"b4ddd219fc5bb276\",\"attributes\":{\"cache\":\"hit\",\"host\":\"catalog-api-c03be\",\"latency_ms\":\"20\",\"region\":\"ap-south\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000016\",\"logged_at\":\"2026-04-14T10:08:35.835000\",\"level\":\"INFO\",\"service\":\"notification-worker\",\"message\":\"POST /internal/notify 201\",\"trace_id\":\"da667f47e2abf724\",\"attributes\":{\"channel\":\"email\",\"host\":\"notification-worker-a41d8\",\"latency_ms\":\"49\",\"region\":\"eu-west\",\"template\":\"order_shipped\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000017\",\"logged_at\":\"2026-04-14T10:08:42.962000\",\"level\":\"INFO\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items 200\",\"trace_id\":\"8ccbed4331896a8f\",\"attributes\":{\"cache\":\"hit\",\"host\":\"catalog-api-7f9c2\",\"latency_ms\":\"72\",\"region\":\"eu-west\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000018\",\"logged_at\":\"2026-04-14T10:09:20.181000\",\"level\":\"INFO\",\"service\":\"checkout-api\",\"message\":\"POST /v1/payments/authorize 201\",\"trace_id\":\"42974d0a695c2f37\",\"attributes\":{\"host\":\"checkout-api-7f9c2\",\"latency_ms\":\"226\",\"order_ref\":\"ord-259338\",\"payment_provider\":\"banklink\",\"region\":\"us-east\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000019\",\"logged_at\":\"2026-04-14T10:10:28.080000\",\"level\":\"INFO\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items/{sku} 200\",\"trace_id\":\"3c803e878f771efb\",\"attributes\":{\"cache\":\"miss\",\"host\":\"catalog-api-7f9c2\",\"latency_ms\":\"36\",\"region\":\"us-west\",\"sku\":\"SKU-2212\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000020\",\"logged_at\":\"2026-04-14T10:11:20.759000\",\"level\":\"INFO\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items 200\",\"trace_id\":\"84a9a7b6d5ae04a2\",\"attributes\":{\"cache\":\"hit\",\"host\":\"catalog-api-c03be\",\"latency_ms\":\"31\",\"region\":\"us-east\"}}"
+    ]
+   ],
+   "project_head": [
+    [
+     "{\"log_id\":\"LOG-000001\",\"logged_at\":\"2026-05-12T00:03:45.629000\",\"level\":\"INFO\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items 404\",\"trace_id\":\"80b149ea27f7ed37\",\"attributes\":{\"cache\":\"hit\",\"host\":\"catalog-api-c03be\",\"latency_ms\":\"19\",\"region\":\"us-east\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000002\",\"logged_at\":\"2026-05-12T00:04:14.556000\",\"level\":\"INFO\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items 200\",\"trace_id\":\"3d982b20809f5bf8\",\"attributes\":{\"cache\":\"hit\",\"host\":\"catalog-api-c03be\",\"latency_ms\":\"40\",\"region\":\"us-west\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000003\",\"logged_at\":\"2026-05-12T00:06:27.456000\",\"level\":\"INFO\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items 200\",\"trace_id\":\"ea3da647d4e0c554\",\"attributes\":{\"cache\":\"hit\",\"host\":\"catalog-api-a41d8\",\"latency_ms\":\"50\",\"region\":\"eu-west\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000004\",\"logged_at\":\"2026-05-12T00:06:36.078000\",\"level\":\"INFO\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items 200\",\"trace_id\":\"0b9b1583d5af9367\",\"attributes\":{\"cache\":\"hit\",\"host\":\"catalog-api-a41d8\",\"latency_ms\":\"31\",\"region\":\"us-west\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000005\",\"logged_at\":\"2026-05-12T00:07:27.336000\",\"level\":\"INFO\",\"service\":\"checkout-api\",\"message\":\"POST /v1/checkout 201\",\"trace_id\":\"2052c3a6c0c2a6a3\",\"attributes\":{\"host\":\"checkout-api-c03be\",\"latency_ms\":\"206\",\"order_ref\":\"ord-793752\",\"payment_provider\":\"cardpay\",\"region\":\"eu-west\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000006\",\"logged_at\":\"2026-05-12T00:11:06.064000\",\"level\":\"INFO\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items 404\",\"trace_id\":\"830aa8efadce805c\",\"attributes\":{\"cache\":\"hit\",\"host\":\"catalog-api-c03be\",\"latency_ms\":\"25\",\"region\":\"us-east\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000007\",\"logged_at\":\"2026-05-12T00:12:09.477000\",\"level\":\"INFO\",\"service\":\"checkout-api\",\"message\":\"POST /v1/checkout 201\",\"trace_id\":\"91d7e66335067cef\",\"attributes\":{\"host\":\"checkout-api-a41d8\",\"latency_ms\":\"120\",\"order_ref\":\"ord-996493\",\"payment_provider\":\"banklink\",\"region\":\"us-east\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000008\",\"logged_at\":\"2026-05-12T00:12:15.863000\",\"level\":\"INFO\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items 200\",\"trace_id\":\"d90b5462a27be4b5\",\"attributes\":{\"cache\":\"hit\",\"host\":\"catalog-api-c03be\",\"latency_ms\":\"22\",\"region\":\"us-east\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000009\",\"logged_at\":\"2026-05-12T00:12:31.991000\",\"level\":\"INFO\",\"service\":\"auth-service\",\"message\":\"POST /v1/auth/token 200\",\"trace_id\":\"be612714fb11d27e\",\"attributes\":{\"grant_type\":\"client_credentials\",\"host\":\"auth-service-c03be\",\"latency_ms\":\"61\",\"region\":\"eu-west\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000010\",\"logged_at\":\"2026-05-12T00:12:56.232000\",\"level\":\"DEBUG\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items 200\",\"trace_id\":\"97f6fe2f977d2319\",\"attributes\":{\"cache\":\"hit\",\"host\":\"catalog-api-7f9c2\",\"latency_ms\":\"131\",\"region\":\"ap-south\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000011\",\"logged_at\":\"2026-05-12T00:14:30.727000\",\"level\":\"INFO\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items 200\",\"trace_id\":\"82a65427f35120d2\",\"attributes\":{\"cache\":\"hit\",\"host\":\"catalog-api-c03be\",\"latency_ms\":\"141\",\"region\":\"us-east\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000012\",\"logged_at\":\"2026-05-12T00:16:51.369000\",\"level\":\"INFO\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items 200\",\"trace_id\":\"10a6e6eec6e23121\",\"attributes\":{\"cache\":\"hit\",\"host\":\"catalog-api-c03be\",\"latency_ms\":\"45\",\"region\":\"ap-south\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000013\",\"logged_at\":\"2026-05-12T00:19:10.077000\",\"level\":\"INFO\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items 200\",\"trace_id\":\"aa3f113730365458\",\"attributes\":{\"cache\":\"hit\",\"host\":\"catalog-api-a41d8\",\"latency_ms\":\"50\",\"region\":\"us-east\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000014\",\"logged_at\":\"2026-05-12T00:20:46.994000\",\"level\":\"INFO\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items 200\",\"trace_id\":\"10ee59c3c2181d4d\",\"attributes\":{\"cache\":\"miss\",\"host\":\"catalog-api-a41d8\",\"latency_ms\":\"13\",\"region\":\"eu-west\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000015\",\"logged_at\":\"2026-05-12T00:21:30.431000\",\"level\":\"INFO\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items 200\",\"trace_id\":\"e36084cbb04a6537\",\"attributes\":{\"cache\":\"miss\",\"host\":\"catalog-api-7f9c2\",\"latency_ms\":\"98\",\"region\":\"ap-south\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000016\",\"logged_at\":\"2026-05-12T00:21:41.896000\",\"level\":\"INFO\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items 200\",\"trace_id\":\"eda81610fd876730\",\"attributes\":{\"cache\":\"hit\",\"host\":\"catalog-api-c03be\",\"latency_ms\":\"39\",\"region\":\"us-west\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000017\",\"logged_at\":\"2026-05-12T00:22:03.275000\",\"level\":\"DEBUG\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items 200\",\"trace_id\":\"12a5ad7edf10a5eb\",\"attributes\":{\"cache\":\"hit\",\"host\":\"catalog-api-a41d8\",\"latency_ms\":\"50\",\"region\":\"eu-west\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000018\",\"logged_at\":\"2026-05-12T00:22:05.429000\",\"level\":\"INFO\",\"service\":\"auth-service\",\"message\":\"POST /v1/auth/refresh 200\",\"trace_id\":\"9c6965a4172cc774\",\"attributes\":{\"grant_type\":\"refresh_token\",\"host\":\"auth-service-7f9c2\",\"latency_ms\":\"50\",\"region\":\"us-west\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000019\",\"logged_at\":\"2026-05-12T00:24:43.994000\",\"level\":\"DEBUG\",\"service\":\"catalog-api\",\"message\":\"GET /v1/catalog/items 200\",\"trace_id\":\"9b6943fcbecc11bb\",\"attributes\":{\"cache\":\"hit\",\"host\":\"catalog-api-7f9c2\",\"latency_ms\":\"52\",\"region\":\"ap-south\"}}"
+    ],
+    [
+     "{\"log_id\":\"LOG-000020\",\"logged_at\":\"2026-05-12T00:27:38.657000\",\"level\":\"INFO\",\"service\":\"checkout-api\",\"message\":\"POST /v1/checkout 201\",\"trace_id\":\"a4e96f1fcf433e46\",\"attributes\":{\"host\":\"checkout-api-c03be\",\"latency_ms\":\"181\",\"order_ref\":\"ord-449593\",\"payment_provider\":\"cardpay\",\"region\":\"eu-west\"}}"
+    ]
+   ],
+   "format": "text"
+  },
+  "traces": {
+   "note": "One row per span of a distributed trace: which service did what, for how long, under which parent span.",
+   "columns": [
+    {
+     "name": "span_id",
+     "type": "string"
+    },
+    {
+     "name": "trace_id",
+     "type": "string"
+    },
+    {
+     "name": "parent_span_id",
+     "type": "string"
+    },
+    {
+     "name": "service",
+     "type": "string"
+    },
+    {
+     "name": "operation",
+     "type": "string"
+    },
+    {
+     "name": "started_at",
+     "type": "timestamp"
+    },
+    {
+     "name": "duration_ms",
+     "type": "int"
+    },
+    {
+     "name": "status",
+     "type": "string"
+    }
+   ],
+   "key": [
+    "span_id"
+   ],
+   "rows": {
+    "lesson": 8,
+    "practice": 684,
+    "project": 756
+   },
+   "lesson": [
+    [
+     "d66887a3a5561782",
+     "bee00ecb217ae5e3",
+     null,
+     "checkout-api",
+     "POST /v1/checkout",
+     "2026-04-14T10:00:14.700000",
+     "236",
+     "ok"
+    ],
+    [
+     "877f77b22c5c6316",
+     "bee00ecb217ae5e3",
+     "d66887a3a5561782",
+     "auth-service",
+     "verify token",
+     "2026-04-14T10:00:14.701000",
+     "91",
+     "ok"
+    ],
+    [
+     "602ac25bf929aa91",
+     "bee00ecb217ae5e3",
+     "d66887a3a5561782",
+     "postgres",
+     "SELECT",
+     "2026-04-14T10:00:14.793000",
+     "28",
+     "ok"
+    ],
+    [
+     "61f8416310d7543a",
+     "bee00ecb217ae5e3",
+     "d66887a3a5561782",
+     "payments-gateway",
+     "authorize",
+     "2026-04-14T10:00:14.822000",
+     "48",
+     "ok"
+    ],
+    [
+     "1e6248070b1913dc",
+     "c43d1a266b993fd1",
+     null,
+     "checkout-api",
+     "POST /v1/payments/authorize",
+     "2026-04-14T10:00:58.900000",
+     "1240",
+     "error"
+    ],
+    [
+     "6022e729fb649d4d",
+     "c43d1a266b993fd1",
+     "1e6248070b1913dc",
+     "auth-service",
+     "verify token",
+     "2026-04-14T10:00:58.901000",
+     "628",
+     "ok"
+    ],
+    [
+     "9cc801420c9a5756",
+     "c43d1a266b993fd1",
+     "1e6248070b1913dc",
+     "postgres",
+     "SELECT",
+     "2026-04-14T10:00:59.530000",
+     "146",
+     "ok"
+    ],
+    [
+     "111b3025829dbeed",
+     "c43d1a266b993fd1",
+     "1e6248070b1913dc",
+     "payments-gateway",
+     "authorize",
+     "2026-04-14T10:00:59.677000",
+     "97",
+     "error"
+    ]
+   ],
+   "practice_head": [
+    [
+     "bba545754801b299",
+     "acfecbe61ddd66c0",
+     null,
+     "auth-service",
+     "POST /v1/auth/token",
+     "2026-04-14T10:00:46.911000",
+     "68",
+     "ok"
+    ],
+    [
+     "05654c376099d2f2",
+     "acfecbe61ddd66c0",
+     "bba545754801b299",
+     "postgres",
+     "SELECT",
+     "2026-04-14T10:00:46.912000",
+     "19",
+     "ok"
+    ],
+    [
+     "e3a577b10b2c77e6",
+     "4dacd739b6bdb8b1",
+     null,
+     "catalog-api",
+     "GET /v1/catalog/items",
+     "2026-04-14T10:01:24.754000",
+     "34",
+     "ok"
+    ],
+    [
+     "95540208d0a76f9d",
+     "4dacd739b6bdb8b1",
+     "e3a577b10b2c77e6",
+     "redis-cache",
+     "GET",
+     "2026-04-14T10:01:24.755000",
+     "10",
+     "ok"
+    ],
+    [
+     "dab4449db25834ff",
+     "4dacd739b6bdb8b1",
+     "e3a577b10b2c77e6",
+     "postgres",
+     "SELECT",
+     "2026-04-14T10:01:24.766000",
+     "4",
+     "ok"
+    ],
+    [
+     "e3379cec3adc4307",
+     "50c448d088064648",
+     null,
+     "catalog-api",
+     "GET /v1/catalog/items",
+     "2026-04-14T10:02:48.744000",
+     "63",
+     "ok"
+    ],
+    [
+     "c9d0a02e2451b4d2",
+     "50c448d088064648",
+     "e3379cec3adc4307",
+     "redis-cache",
+     "GET",
+     "2026-04-14T10:02:48.745000",
+     "33",
+     "ok"
+    ],
+    [
+     "e72e9168000bbd30",
+     "50c448d088064648",
+     "e3379cec3adc4307",
+     "postgres",
+     "SELECT",
+     "2026-04-14T10:02:48.779000",
+     "13",
+     "ok"
+    ],
+    [
+     "f7d6383d2467fb29",
+     "de38e27dc7f53143",
+     null,
+     "checkout-api",
+     "POST /v1/checkout",
+     "2026-04-14T10:04:49.599000",
+     "182",
+     "ok"
+    ],
+    [
+     "52c728ce1068127a",
+     "de38e27dc7f53143",
+     "f7d6383d2467fb29",
+     "auth-service",
+     "verify token",
+     "2026-04-14T10:04:49.600000",
+     "54",
+     "ok"
+    ],
+    [
+     "a8ac60fd326134a7",
+     "de38e27dc7f53143",
+     "f7d6383d2467fb29",
+     "postgres",
+     "SELECT",
+     "2026-04-14T10:04:49.655000",
+     "71",
+     "ok"
+    ],
+    [
+     "eaa02a8496d39a7f",
+     "de38e27dc7f53143",
+     "f7d6383d2467fb29",
+     "payments-gateway",
+     "authorize",
+     "2026-04-14T10:04:49.727000",
+     "15",
+     "ok"
+    ],
+    [
+     "0002149eecf543a0",
+     "b17b83eaf634dc35",
+     null,
+     "catalog-api",
+     "GET /v1/catalog/items",
+     "2026-04-14T10:05:08.673000",
+     "43",
+     "ok"
+    ],
+    [
+     "dfec6de4403ab075",
+     "b17b83eaf634dc35",
+     "0002149eecf543a0",
+     "redis-cache",
+     "GET",
+     "2026-04-14T10:05:08.674000",
+     "18",
+     "ok"
+    ],
+    [
+     "9d3c5d507297c75a",
+     "b17b83eaf634dc35",
+     "0002149eecf543a0",
+     "postgres",
+     "SELECT",
+     "2026-04-14T10:05:08.693000",
+     "10",
+     "ok"
+    ],
+    [
+     "2a91febd691f9ad6",
+     "15ff8a2da98dec12",
+     null,
+     "catalog-api",
+     "GET /v1/catalog/items/{sku}",
+     "2026-04-14T10:06:41.318000",
+     "29",
+     "ok"
+    ],
+    [
+     "2f92068d0225847c",
+     "15ff8a2da98dec12",
+     "2a91febd691f9ad6",
+     "redis-cache",
+     "GET",
+     "2026-04-14T10:06:41.319000",
+     "16",
+     "ok"
+    ],
+    [
+     "00192b764ddc6067",
+     "15ff8a2da98dec12",
+     "2a91febd691f9ad6",
+     "postgres",
+     "SELECT",
+     "2026-04-14T10:06:41.336000",
+     "4",
+     "ok"
+    ],
+    [
+     "60e019cfeca9b725",
+     "95331b395fa73b7c",
+     null,
+     "checkout-api",
+     "POST /v1/payments/authorize",
+     "2026-04-14T10:06:54.085000",
+     "226",
+     "ok"
+    ],
+    [
+     "24d6af3e36a9b4c2",
+     "95331b395fa73b7c",
+     "60e019cfeca9b725",
+     "auth-service",
+     "verify token",
+     "2026-04-14T10:06:54.086000",
+     "84",
+     "ok"
+    ]
+   ],
+   "project_head": [
+    [
+     "be0a92b19589e18d",
+     "953b0e4af9eed3d0",
+     null,
+     "catalog-api",
+     "GET /v1/catalog/items",
+     "2026-05-12T00:01:04.813000",
+     "38",
+     "ok"
+    ],
+    [
+     "97765b20a39df09b",
+     "953b0e4af9eed3d0",
+     "be0a92b19589e18d",
+     "redis-cache",
+     "GET",
+     "2026-05-12T00:01:04.814000",
+     "19",
+     "ok"
+    ],
+    [
+     "43c419ade88c712b",
+     "953b0e4af9eed3d0",
+     "be0a92b19589e18d",
+     "postgres",
+     "SELECT",
+     "2026-05-12T00:01:04.834000",
+     "8",
+     "ok"
+    ],
+    [
+     "e8ab08e4629661f8",
+     "a997698a6b665549",
+     null,
+     "catalog-api",
+     "GET /v1/catalog/items",
+     "2026-05-12T00:02:57.494000",
+     "34",
+     "ok"
+    ],
+    [
+     "d2cd54aa4b841d9f",
+     "a997698a6b665549",
+     "e8ab08e4629661f8",
+     "redis-cache",
+     "GET",
+     "2026-05-12T00:02:57.495000",
+     "15",
+     "ok"
+    ],
+    [
+     "bb0e12d80dd5b60b",
+     "a997698a6b665549",
+     "e8ab08e4629661f8",
+     "postgres",
+     "SELECT",
+     "2026-05-12T00:02:57.511000",
+     "9",
+     "ok"
+    ],
+    [
+     "772256cd4d92a4e2",
+     "c88a1152a0fb776f",
+     null,
+     "catalog-api",
+     "GET /v1/catalog/items",
+     "2026-05-12T00:05:56.598000",
+     "26",
+     "ok"
+    ],
+    [
+     "6e5963290ff88278",
+     "c88a1152a0fb776f",
+     "772256cd4d92a4e2",
+     "redis-cache",
+     "GET",
+     "2026-05-12T00:05:56.599000",
+     "14",
+     "ok"
+    ],
+    [
+     "1f9ad2fbc77757db",
+     "c88a1152a0fb776f",
+     "772256cd4d92a4e2",
+     "postgres",
+     "SELECT",
+     "2026-05-12T00:05:56.614000",
+     "5",
+     "ok"
+    ],
+    [
+     "ebfefeb15b06b1a7",
+     "4360861a3b1087b6",
+     null,
+     "catalog-api",
+     "GET /v1/catalog/items",
+     "2026-05-12T00:09:51.526000",
+     "76",
+     "ok"
+    ],
+    [
+     "2cbc6fac81a21ba6",
+     "4360861a3b1087b6",
+     "ebfefeb15b06b1a7",
+     "redis-cache",
+     "GET",
+     "2026-05-12T00:09:51.527000",
+     "26",
+     "ok"
+    ],
+    [
+     "e3cb8daa87e99a9f",
+     "4360861a3b1087b6",
+     "ebfefeb15b06b1a7",
+     "postgres",
+     "SELECT",
+     "2026-05-12T00:09:51.554000",
+     "27",
+     "ok"
+    ],
+    [
+     "81224bd836d48f44",
+     "0d80c2e118014b8a",
+     null,
+     "catalog-api",
+     "GET /v1/catalog/items",
+     "2026-05-12T00:25:27.537000",
+     "40",
+     "ok"
+    ],
+    [
+     "6f9e11e1741b1967",
+     "0d80c2e118014b8a",
+     "81224bd836d48f44",
+     "redis-cache",
+     "GET",
+     "2026-05-12T00:25:27.538000",
+     "11",
+     "ok"
+    ],
+    [
+     "201b4ffd254b6eae",
+     "0d80c2e118014b8a",
+     "81224bd836d48f44",
+     "postgres",
+     "SELECT",
+     "2026-05-12T00:25:27.550000",
+     "6",
+     "ok"
+    ],
+    [
+     "a92b03c62f3bcf54",
+     "5b1dc8202c84ac03",
+     null,
+     "checkout-api",
+     "POST /v1/payments/authorize",
+     "2026-05-12T00:33:39.136000",
+     "886",
+     "ok"
+    ],
+    [
+     "3ab5b5b210091d1c",
+     "5b1dc8202c84ac03",
+     "a92b03c62f3bcf54",
+     "auth-service",
+     "verify token",
+     "2026-05-12T00:33:39.137000",
+     "462",
+     "ok"
+    ],
+    [
+     "8e249152ee04c1ca",
+     "5b1dc8202c84ac03",
+     "a92b03c62f3bcf54",
+     "postgres",
+     "SELECT",
+     "2026-05-12T00:33:39.600000",
+     "128",
+     "ok"
+    ],
+    [
+     "b5489dbf16cf24fa",
+     "5b1dc8202c84ac03",
+     "a92b03c62f3bcf54",
+     "payments-gateway",
+     "authorize",
+     "2026-05-12T00:33:39.729000",
+     "100",
+     "ok"
+    ],
+    [
+     "09329c94d4af3647",
+     "ed28648c6026e3ab",
+     null,
+     "catalog-api",
+     "GET /v1/catalog/items",
+     "2026-05-12T00:48:46.318000",
+     "41",
+     "ok"
+    ]
+   ]
+  },
+  "deployments": {
+   "note": "One row per release of a service to production, and whether it stuck or was rolled back.",
+   "columns": [
+    {
+     "name": "deployment_id",
+     "type": "string"
+    },
+    {
+     "name": "service",
+     "type": "string"
+    },
+    {
+     "name": "version",
+     "type": "string"
+    },
+    {
+     "name": "environment",
+     "type": "string"
+    },
+    {
+     "name": "deployed_at",
+     "type": "timestamp"
+    },
+    {
+     "name": "deployed_by",
+     "type": "string"
+    },
+    {
+     "name": "outcome",
+     "type": "string"
+    }
+   ],
+   "key": [
+    "deployment_id"
+   ],
+   "rows": {
+    "lesson": 4,
+    "practice": 8,
+    "project": 8
+   },
+   "lesson": [
+    [
+     "DEP-0001",
+     "catalog-api",
+     "3.8.1",
+     "production",
+     "2026-04-12T07:00:00",
+     "platform-team",
+     "succeeded"
+    ],
+    [
+     "DEP-0002",
+     "checkout-api",
+     "2.13.2",
+     "production",
+     "2026-04-13T09:00:00",
+     "payments-team",
+     "succeeded"
+    ],
+    [
+     "DEP-0003",
+     "checkout-api",
+     "2.14.0",
+     "production",
+     "2026-04-14T09:58:00",
+     "payments-team",
+     "rolled_back"
+    ],
+    [
+     "DEP-0004",
+     "checkout-api",
+     "2.13.2",
+     "production",
+     "2026-04-14T10:33:00",
+     "payments-team",
+     "succeeded"
+    ]
+   ],
+   "practice_head": [
+    [
+     "DEP-0001",
+     "catalog-api",
+     "3.8.1",
+     "production",
+     "2026-04-12T07:00:00",
+     "platform-team",
+     "succeeded"
+    ],
+    [
+     "DEP-0002",
+     "auth-service",
+     "1.22.0",
+     "production",
+     "2026-04-13T05:00:00",
+     "identity-team",
+     "succeeded"
+    ],
+    [
+     "DEP-0003",
+     "checkout-api",
+     "2.13.2",
+     "production",
+     "2026-04-13T09:00:00",
+     "payments-team",
+     "succeeded"
+    ],
+    [
+     "DEP-0004",
+     "notification-worker",
+     "1.4.7",
+     "production",
+     "2026-04-14T04:00:00",
+     "platform-team",
+     "succeeded"
+    ],
+    [
+     "DEP-0005",
+     "search-api",
+     "5.0.4",
+     "production",
+     "2026-04-14T10:51:00",
+     "discovery-team",
+     "succeeded"
+    ],
+    [
+     "DEP-0006",
+     "checkout-api",
+     "2.14.0",
+     "production",
+     "2026-04-14T12:30:00",
+     "payments-team",
+     "rolled_back"
+    ],
+    [
+     "DEP-0007",
+     "checkout-api",
+     "2.13.2",
+     "production",
+     "2026-04-14T13:05:00",
+     "payments-team",
+     "succeeded"
+    ],
+    [
+     "DEP-0008",
+     "iot-gateway",
+     "0.19.3",
+     "production",
+     "2026-04-14T14:24:00",
+     "devices-team",
+     "succeeded"
+    ]
+   ],
+   "project_head": [
+    [
+     "DEP-0001",
+     "catalog-api",
+     "3.8.1",
+     "production",
+     "2026-05-09T21:00:00",
+     "platform-team",
+     "succeeded"
+    ],
+    [
+     "DEP-0002",
+     "auth-service",
+     "1.22.0",
+     "production",
+     "2026-05-10T19:00:00",
+     "identity-team",
+     "succeeded"
+    ],
+    [
+     "DEP-0003",
+     "checkout-api",
+     "2.13.2",
+     "production",
+     "2026-05-10T23:00:00",
+     "payments-team",
+     "succeeded"
+    ],
+    [
+     "DEP-0004",
+     "notification-worker",
+     "1.4.7",
+     "production",
+     "2026-05-11T18:00:00",
+     "platform-team",
+     "succeeded"
+    ],
+    [
+     "DEP-0005",
+     "search-api",
+     "5.0.4",
+     "production",
+     "2026-05-12T00:44:00",
+     "discovery-team",
+     "succeeded"
+    ],
+    [
+     "DEP-0006",
+     "checkout-api",
+     "2.14.0",
+     "production",
+     "2026-05-12T14:10:00",
+     "payments-team",
+     "rolled_back"
+    ],
+    [
+     "DEP-0007",
+     "checkout-api",
+     "2.13.2",
+     "production",
+     "2026-05-12T14:45:00",
+     "payments-team",
+     "succeeded"
+    ],
+    [
+     "DEP-0008",
+     "iot-gateway",
+     "0.19.3",
+     "production",
+     "2026-05-12T16:15:00",
+     "devices-team",
+     "succeeded"
+    ]
+   ]
+  },
+  "service_metrics": {
+   "note": "One row per service per 5-minute window: traffic, errors, latency percentiles and resource use.",
+   "columns": [
+    {
+     "name": "service",
+     "type": "string"
+    },
+    {
+     "name": "window_start",
+     "type": "timestamp"
+    },
+    {
+     "name": "request_count",
+     "type": "int"
+    },
+    {
+     "name": "error_count",
+     "type": "int"
+    },
+    {
+     "name": "p50_latency_ms",
+     "type": "int"
+    },
+    {
+     "name": "p95_latency_ms",
+     "type": "int"
+    },
+    {
+     "name": "p99_latency_ms",
+     "type": "int"
+    },
+    {
+     "name": "cpu_pct",
+     "type": "double"
+    },
+    {
+     "name": "memory_mb",
+     "type": "int"
+    }
+   ],
+   "key": [
+    "service",
+    "window_start"
+   ],
+   "rows": {
+    "lesson": 5,
+    "practice": 397,
+    "project": 1108
+   },
+   "lesson": [
+    [
+     "auth-service",
+     "2026-04-14T10:00:00",
+     "1",
+     "0",
+     "61",
+     "61",
+     "61",
+     "9.6",
+     "415"
+    ],
+    [
+     "catalog-api",
+     "2026-04-14T10:00:00",
+     "5",
+     "0",
+     "40",
+     "51",
+     "51",
+     "18.2",
+     "436"
+    ],
+    [
+     "checkout-api",
+     "2026-04-14T10:00:00",
+     "2",
+     "1",
+     "236",
+     "1240",
+     "1240",
+     "15.0",
+     "392"
+    ],
+    [
+     "iot-gateway",
+     "2026-04-14T10:00:00",
+     "2",
+     "0",
+     "22",
+     "24",
+     "24",
+     "15.1",
+     "443"
+    ],
+    [
+     "search-api",
+     "2026-04-14T10:00:00",
+     "2",
+     "0",
+     "118",
+     "162",
+     "162",
+     "13.4",
+     "421"
+    ]
+   ],
+   "practice_head": [
+    [
+     "auth-service",
+     "2026-04-14T10:00:00",
+     "8",
+     "0",
+     "35",
+     "78",
+     "78",
+     "17.2",
+     "451"
+    ],
+    [
+     "auth-service",
+     "2026-04-14T10:05:00",
+     "2",
+     "0",
+     "40",
+     "41",
+     "41",
+     "12.2",
+     "413"
+    ],
+    [
+     "auth-service",
+     "2026-04-14T10:15:00",
+     "2",
+     "0",
+     "30",
+     "67",
+     "67",
+     "9.9",
+     "424"
+    ],
+    [
+     "auth-service",
+     "2026-04-14T10:20:00",
+     "5",
+     "0",
+     "42",
+     "49",
+     "49",
+     "12.8",
+     "429"
+    ],
+    [
+     "auth-service",
+     "2026-04-14T10:25:00",
+     "1",
+     "0",
+     "53",
+     "53",
+     "53",
+     "11.9",
+     "385"
+    ],
+    [
+     "auth-service",
+     "2026-04-14T10:30:00",
+     "6",
+     "0",
+     "28",
+     "80",
+     "80",
+     "17.7",
+     "444"
+    ],
+    [
+     "auth-service",
+     "2026-04-14T10:35:00",
+     "3",
+     "0",
+     "57",
+     "70",
+     "70",
+     "12.6",
+     "390"
+    ],
+    [
+     "auth-service",
+     "2026-04-14T10:40:00",
+     "2",
+     "0",
+     "41",
+     "48",
+     "48",
+     "14.3",
+     "410"
+    ],
+    [
+     "auth-service",
+     "2026-04-14T10:45:00",
+     "3",
+     "0",
+     "30",
+     "75",
+     "75",
+     "16.5",
+     "395"
+    ],
+    [
+     "auth-service",
+     "2026-04-14T10:50:00",
+     "1",
+     "0",
+     "61",
+     "61",
+     "61",
+     "10.0",
+     "383"
+    ],
+    [
+     "auth-service",
+     "2026-04-14T10:55:00",
+     "2",
+     "0",
+     "59",
+     "69",
+     "69",
+     "12.3",
+     "413"
+    ],
+    [
+     "auth-service",
+     "2026-04-14T11:00:00",
+     "4",
+     "0",
+     "48",
+     "157",
+     "157",
+     "16.0",
+     "410"
+    ],
+    [
+     "auth-service",
+     "2026-04-14T11:05:00",
+     "1",
+     "0",
+     "46",
+     "46",
+     "46",
+     "11.9",
+     "430"
+    ],
+    [
+     "auth-service",
+     "2026-04-14T11:10:00",
+     "2",
+     "0",
+     "42",
+     "54",
+     "54",
+     "12.2",
+     "416"
+    ],
+    [
+     "auth-service",
+     "2026-04-14T11:20:00",
+     "2",
+     "0",
+     "42",
+     "48",
+     "48",
+     "10.4",
+     "437"
+    ],
+    [
+     "auth-service",
+     "2026-04-14T11:25:00",
+     "1",
+     "0",
+     "55",
+     "55",
+     "55",
+     "12.6",
+     "426"
+    ],
+    [
+     "auth-service",
+     "2026-04-14T11:30:00",
+     "3",
+     "0",
+     "57",
+     "93",
+     "93",
+     "13.0",
+     "414"
+    ],
+    [
+     "auth-service",
+     "2026-04-14T11:35:00",
+     "1",
+     "0",
+     "44",
+     "44",
+     "44",
+     "10.5",
+     "425"
+    ],
+    [
+     "auth-service",
+     "2026-04-14T11:40:00",
+     "2",
+     "0",
+     "43",
+     "70",
+     "70",
+     "13.1",
+     "420"
+    ],
+    [
+     "auth-service",
+     "2026-04-14T11:45:00",
+     "2",
+     "0",
+     "32",
+     "122",
+     "122",
+     "11.5",
+     "386"
+    ]
+   ],
+   "project_head": [
+    [
+     "auth-service",
+     "2026-05-12T00:10:00",
+     "2",
+     "0",
+     "61",
+     "101",
+     "101",
+     "11.3",
+     "427"
+    ],
+    [
+     "auth-service",
+     "2026-05-12T00:20:00",
+     "2",
+     "0",
+     "50",
+     "110",
+     "110",
+     "15.0",
+     "428"
+    ],
+    [
+     "auth-service",
+     "2026-05-12T00:25:00",
+     "2",
+     "0",
+     "25",
+     "116",
+     "116",
+     "11.8",
+     "436"
+    ],
+    [
+     "auth-service",
+     "2026-05-12T00:30:00",
+     "1",
+     "0",
+     "98",
+     "98",
+     "98",
+     "14.4",
+     "414"
+    ],
+    [
+     "auth-service",
+     "2026-05-12T00:40:00",
+     "2",
+     "0",
+     "17",
+     "121",
+     "121",
+     "11.0",
+     "393"
+    ],
+    [
+     "auth-service",
+     "2026-05-12T00:45:00",
+     "2",
+     "0",
+     "25",
+     "40",
+     "40",
+     "10.4",
+     "421"
+    ],
+    [
+     "auth-service",
+     "2026-05-12T00:50:00",
+     "1",
+     "0",
+     "109",
+     "109",
+     "109",
+     "12.2",
+     "394"
+    ],
+    [
+     "auth-service",
+     "2026-05-12T00:55:00",
+     "1",
+     "0",
+     "29",
+     "29",
+     "29",
+     "12.8",
+     "433"
+    ],
+    [
+     "auth-service",
+     "2026-05-12T01:05:00",
+     "1",
+     "0",
+     "82",
+     "82",
+     "82",
+     "10.7",
+     "403"
+    ],
+    [
+     "auth-service",
+     "2026-05-12T01:20:00",
+     "2",
+     "0",
+     "21",
+     "142",
+     "142",
+     "11.0",
+     "393"
+    ],
+    [
+     "auth-service",
+     "2026-05-12T01:40:00",
+     "1",
+     "0",
+     "66",
+     "66",
+     "66",
+     "10.2",
+     "433"
+    ],
+    [
+     "auth-service",
+     "2026-05-12T02:00:00",
+     "2",
+     "0",
+     "26",
+     "29",
+     "29",
+     "13.2",
+     "406"
+    ],
+    [
+     "auth-service",
+     "2026-05-12T02:05:00",
+     "1",
+     "0",
+     "24",
+     "24",
+     "24",
+     "13.2",
+     "433"
+    ],
+    [
+     "auth-service",
+     "2026-05-12T02:10:00",
+     "1",
+     "0",
+     "37",
+     "37",
+     "37",
+     "9.4",
+     "438"
+    ],
+    [
+     "auth-service",
+     "2026-05-12T02:15:00",
+     "1",
+     "1",
+     "30000",
+     "30000",
+     "30000",
+     "12.0",
+     "428"
+    ],
+    [
+     "auth-service",
+     "2026-05-12T02:20:00",
+     "2",
+     "0",
+     "53",
+     "59",
+     "59",
+     "12.5",
+     "390"
+    ],
+    [
+     "auth-service",
+     "2026-05-12T02:25:00",
+     "3",
+     "0",
+     "43",
+     "53",
+     "53",
+     "14.8",
+     "417"
+    ],
+    [
+     "auth-service",
+     "2026-05-12T02:30:00",
+     "1",
+     "0",
+     "56",
+     "56",
+     "56",
+     "14.0",
+     "423"
+    ],
+    [
+     "auth-service",
+     "2026-05-12T02:40:00",
+     "3",
+     "0",
+     "26",
+     "77",
+     "77",
+     "10.8",
+     "437"
+    ],
+    [
+     "auth-service",
+     "2026-05-12T02:50:00",
+     "1",
+     "0",
+     "48",
+     "48",
+     "48",
+     "14.8",
+     "430"
+    ]
+   ]
+  },
+  "error_events": {
+   "note": "One row per error a service reported, linked to the request or the IoT device involved when there is one.",
+   "columns": [
+    {
+     "name": "error_id",
+     "type": "string"
+    },
+    {
+     "name": "occurred_at",
+     "type": "timestamp"
+    },
+    {
+     "name": "service",
+     "type": "string"
+    },
+    {
+     "name": "error_type",
+     "type": "string"
+    },
+    {
+     "name": "error_message",
+     "type": "string"
+    },
+    {
+     "name": "severity",
+     "type": "string"
+    },
+    {
+     "name": "request_id",
+     "type": "string"
+    },
+    {
+     "name": "device_id",
+     "type": "string"
+    }
+   ],
+   "key": [
+    "error_id"
+   ],
+   "rows": {
+    "lesson": 4,
+    "practice": 55,
+    "project": 72
+   },
+   "lesson": [
+    [
+     "ERR-00001",
+     "2026-04-14T10:01:00.140000",
+     "checkout-api",
+     "UpstreamError",
+     "payment authorizer returned an unexpected response",
+     "error",
+     "REQ-000008",
+     null
+    ],
+    [
+     "ERR-00002",
+     "2026-04-14T10:01:03",
+     "iot-gateway",
+     "HeartbeatMissed",
+     "no heartbeat for 10 minutes",
+     "warning",
+     null,
+     "DEV-0002"
+    ],
+    [
+     "ERR-00003",
+     "2026-04-14T10:01:12.522000",
+     "iot-gateway",
+     "ClockSkew",
+     "device clock more than 5 minutes off server time",
+     "warning",
+     "REQ-000010",
+     "DEV-0001"
+    ],
+    [
+     "ERR-00004",
+     "2026-04-14T10:01:28",
+     "notification-worker",
+     "ProviderTimeout",
+     "email provider did not answer within 10 s",
+     "error",
+     null,
+     null
+    ]
+   ],
+   "practice_head": [
+    [
+     "ERR-00001",
+     "2026-04-14T10:03:53.143000",
+     "catalog-api",
+     "BadGateway",
+     "upstream connection reset by peer",
+     "error",
+     "REQ-000032",
+     null
+    ],
+    [
+     "ERR-00002",
+     "2026-04-14T10:15:08",
+     "iot-gateway",
+     "HeartbeatMissed",
+     "no heartbeat for 10 minutes",
+     "warning",
+     null,
+     "DEV-0014"
+    ],
+    [
+     "ERR-00003",
+     "2026-04-14T10:29:00.275000",
+     "catalog-api",
+     "BadGateway",
+     "upstream connection reset by peer",
+     "error",
+     "REQ-000189",
+     null
+    ],
+    [
+     "ERR-00004",
+     "2026-04-14T10:45:44.559000",
+     "iot-gateway",
+     "TelemetryRejected",
+     "payload failed schema validation",
+     "warning",
+     "REQ-000303",
+     "DEV-0003"
+    ],
+    [
+     "ERR-00005",
+     "2026-04-14T10:57:28",
+     "iot-gateway",
+     "HeartbeatMissed",
+     "no heartbeat for 10 minutes",
+     "warning",
+     null,
+     "DEV-0016"
+    ],
+    [
+     "ERR-00006",
+     "2026-04-14T11:11:17",
+     "iot-gateway",
+     "HeartbeatMissed",
+     "no heartbeat for 10 minutes",
+     "warning",
+     null,
+     "DEV-0035"
+    ],
+    [
+     "ERR-00007",
+     "2026-04-14T11:26:38",
+     "iot-gateway",
+     "HeartbeatMissed",
+     "no heartbeat for 10 minutes",
+     "warning",
+     null,
+     "DEV-0048"
+    ],
+    [
+     "ERR-00008",
+     "2026-04-14T11:29:56",
+     "iot-gateway",
+     "HeartbeatMissed",
+     "no heartbeat for 10 minutes",
+     "warning",
+     null,
+     "DEV-0035"
+    ],
+    [
+     "ERR-00009",
+     "2026-04-14T12:01:26",
+     "iot-gateway",
+     "HeartbeatMissed",
+     "no heartbeat for 10 minutes",
+     "warning",
+     null,
+     "DEV-0047"
+    ],
+    [
+     "ERR-00010",
+     "2026-04-14T12:07:33.888000",
+     "catalog-api",
+     "ServiceUnavailable",
+     "request timed out waiting for a free worker",
+     "critical",
+     "REQ-000872",
+     null
+    ],
+    [
+     "ERR-00011",
+     "2026-04-14T12:10:14",
+     "iot-gateway",
+     "HeartbeatMissed",
+     "no heartbeat for 10 minutes",
+     "warning",
+     null,
+     "DEV-0037"
+    ],
+    [
+     "ERR-00012",
+     "2026-04-14T12:27:48",
+     "iot-gateway",
+     "HeartbeatMissed",
+     "no heartbeat for 10 minutes",
+     "warning",
+     null,
+     "DEV-0037"
+    ],
+    [
+     "ERR-00013",
+     "2026-04-14T12:31:41.073000",
+     "checkout-api",
+     "UpstreamError",
+     "payment authorizer returned an unexpected response",
+     "error",
+     "REQ-001069",
+     null
+    ],
+    [
+     "ERR-00014",
+     "2026-04-14T12:34:01.847000",
+     "checkout-api",
+     "UpstreamError",
+     "payment authorizer returned an unexpected response",
+     "error",
+     "REQ-001085",
+     null
+    ],
+    [
+     "ERR-00015",
+     "2026-04-14T12:34:40.166000",
+     "checkout-api",
+     "UpstreamError",
+     "payment authorizer returned an unexpected response",
+     "error",
+     "REQ-001092",
+     null
+    ],
+    [
+     "ERR-00016",
+     "2026-04-14T12:35:31.802000",
+     "checkout-api",
+     "UpstreamError",
+     "payment authorizer returned an unexpected response",
+     "error",
+     "REQ-001098",
+     null
+    ],
+    [
+     "ERR-00017",
+     "2026-04-14T12:35:42.791000",
+     "checkout-api",
+     "UpstreamError",
+     "payment authorizer returned an unexpected response",
+     "error",
+     "REQ-001101",
+     null
+    ],
+    [
+     "ERR-00018",
+     "2026-04-14T12:36:54.308000",
+     "checkout-api",
+     "UpstreamError",
+     "payment authorizer returned an unexpected response",
+     "error",
+     "REQ-001106",
+     null
+    ],
+    [
+     "ERR-00019",
+     "2026-04-14T12:36:54.676000",
+     "checkout-api",
+     "UpstreamError",
+     "payment authorizer returned an unexpected response",
+     "error",
+     "REQ-001107",
+     null
+    ],
+    [
+     "ERR-00020",
+     "2026-04-14T12:37:16.486000",
+     "checkout-api",
+     "UpstreamError",
+     "payment authorizer returned an unexpected response",
+     "error",
+     "REQ-001108",
+     null
+    ]
+   ],
+   "project_head": [
+    [
+     "ERR-00001",
+     "2026-05-12T00:35:55",
+     "notification-worker",
+     "ProviderTimeout",
+     "email provider did not answer within 10 s",
+     "error",
+     null,
+     null
+    ],
+    [
+     "ERR-00002",
+     "2026-05-12T00:47:01",
+     "notification-worker",
+     "ProviderTimeout",
+     "email provider did not answer within 10 s",
+     "error",
+     null,
+     null
+    ],
+    [
+     "ERR-00003",
+     "2026-05-12T01:29:00",
+     "iot-gateway",
+     "OutOfRangeReading",
+     "reading R004081 has humidity_pct 255.0, outside the sensor's range",
+     "warning",
+     null,
+     "DEV-015"
+    ],
+    [
+     "ERR-00004",
+     "2026-05-12T01:54:01",
+     "notification-worker",
+     "ProviderTimeout",
+     "email provider did not answer within 10 s",
+     "error",
+     null,
+     null
+    ],
+    [
+     "ERR-00005",
+     "2026-05-12T01:55:48",
+     "notification-worker",
+     "ProviderTimeout",
+     "email provider did not answer within 10 s",
+     "error",
+     null,
+     null
+    ],
+    [
+     "ERR-00006",
+     "2026-05-12T02:15:47.282000",
+     "auth-service",
+     "ServiceUnavailable",
+     "request timed out waiting for a free worker",
+     "critical",
+     "REQ-000458",
+     null
+    ],
+    [
+     "ERR-00007",
+     "2026-05-12T02:31:50.432000",
+     "catalog-api",
+     "ServiceUnavailable",
+     "request timed out waiting for a free worker",
+     "critical",
+     "REQ-000523",
+     null
+    ],
+    [
+     "ERR-00008",
+     "2026-05-12T02:40:00",
+     "iot-gateway",
+     "HeartbeatMissed",
+     "no heartbeat for 10 minutes",
+     "warning",
+     null,
+     "DEV-014"
+    ],
+    [
+     "ERR-00009",
+     "2026-05-12T02:55:44.855000",
+     "iot-gateway",
+     "TelemetryRejected",
+     "payload failed schema validation",
+     "warning",
+     "REQ-000602",
+     "DEV-009"
+    ],
+    [
+     "ERR-00010",
+     "2026-05-12T03:13:41.132000",
+     "catalog-api",
+     "ServiceUnavailable",
+     "request timed out waiting for a free worker",
+     "critical",
+     "REQ-000661",
+     null
+    ],
+    [
+     "ERR-00011",
+     "2026-05-12T03:53:52.137000",
+     "iot-gateway",
+     "TelemetryRejected",
+     "payload failed schema validation",
+     "warning",
+     "REQ-000782",
+     "DEV-015"
+    ],
+    [
+     "ERR-00012",
+     "2026-05-12T04:30:42",
+     "iot-gateway",
+     "OutOfRangeReading",
+     "reading R003548 has temperature_c 999.0, outside the sensor's range",
+     "warning",
+     null,
+     "DEV-013"
+    ],
+    [
+     "ERR-00013",
+     "2026-05-12T04:36:22.536000",
+     "catalog-api",
+     "ServiceUnavailable",
+     "request timed out waiting for a free worker",
+     "critical",
+     "REQ-000940",
+     null
+    ],
+    [
+     "ERR-00014",
+     "2026-05-12T04:49:29",
+     "notification-worker",
+     "ProviderTimeout",
+     "email provider did not answer within 10 s",
+     "error",
+     null,
+     null
+    ],
+    [
+     "ERR-00015",
+     "2026-05-12T04:50:17",
+     "notification-worker",
+     "ProviderTimeout",
+     "email provider did not answer within 10 s",
+     "error",
+     null,
+     null
+    ],
+    [
+     "ERR-00016",
+     "2026-05-12T04:52:10.896000",
+     "catalog-api",
+     "BadGateway",
+     "upstream connection reset by peer",
+     "error",
+     "REQ-000994",
+     null
+    ],
+    [
+     "ERR-00017",
+     "2026-05-12T04:54:27.332000",
+     "catalog-api",
+     "ServiceUnavailable",
+     "request timed out waiting for a free worker",
+     "critical",
+     "REQ-001003",
+     null
+    ],
+    [
+     "ERR-00018",
+     "2026-05-12T05:00:25",
+     "iot-gateway",
+     "OutOfRangeReading",
+     "reading R003550 has temperature_c 999.0, outside the sensor's range",
+     "warning",
+     null,
+     "DEV-013"
+    ],
+    [
+     "ERR-00019",
+     "2026-05-12T06:01:46",
+     "iot-gateway",
+     "OutOfRangeReading",
+     "reading R003554 has temperature_c 999.0, outside the sensor's range",
+     "warning",
+     null,
+     "DEV-013"
+    ],
+    [
+     "ERR-00020",
+     "2026-05-12T07:18:20.870000",
+     "search-api",
+     "BadGateway",
+     "upstream connection reset by peer",
+     "error",
+     "REQ-001500",
+     null
+    ]
+   ]
+  }
+ }
+}

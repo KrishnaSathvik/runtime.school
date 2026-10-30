@@ -1,0 +1,27 @@
+{
+  "id": "PS-L034-C1",
+  "slug": "close-to-close-change",
+  "lesson": "PS-L034",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Close-to-close change",
+  "dataset": { "id": "PS-D10", "version": "1.0.0" },
+  "prompt": "The market desk wants each day's move next to the previous trading row of the same stock, and how many calendar days back that row was. Write `solve(daily_prices)` to add those columns to every row.",
+  "rules": [
+    "For each `symbol`, the previous row is the one with the latest earlier `trade_date`, whatever order the rows arrive in.",
+    "`prev_close` is that row's `close`; `change` is `close - prev_close`; `gap_days` is the number of days from that row's `trade_date` to this one.",
+    "A symbol's first row has missing `prev_close`, `change` and `gap_days`.",
+    "Return `symbol`, `trade_date`, `close`, `prev_close`, `change` and `gap_days`, one row per input row."
+  ],
+  "hints": [
+    "Use one window for everything: `Window.partitionBy(\"symbol\").orderBy(\"trade_date\")`.",
+    "`F.lag(\"close\").over(w)` gives the previous close; lag `trade_date` the same way for the gap.",
+    "`F.datediff(F.col(\"trade_date\"), F.lag(\"trade_date\").over(w))` counts the days back."
+  ],
+  "entry": "solve",
+  "inputs": ["daily_prices"],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(daily_prices):\n    # Each row with prev_close, change and gap_days.\n    return daily_prices\n",
+  "output": { "columns": ["symbol", "trade_date", "close", "prev_close", "change", "gap_days"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

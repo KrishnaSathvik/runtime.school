@@ -1,0 +1,80 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "event_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "step",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "skus",
+     "type": "array<string>",
+     "nullable": true
+    },
+    {
+     "name": "units",
+     "type": "int",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "CO-0001",
+     "begin",
+     [
+      "SKU-1001",
+      "SKU-1013"
+     ],
+     3
+    ],
+    [
+     "CO-0002",
+     "payment",
+     [
+      "SKU-1001",
+      "SKU-1013"
+     ],
+     3
+    ],
+    [
+     "CO-0003",
+     "complete",
+     [
+      "SKU-1001",
+      "SKU-1013"
+     ],
+     3
+    ],
+    [
+     "CO-0004",
+     "begin",
+     [
+      "SKU-1002"
+     ],
+     1
+    ]
+   ],
+   "row_count": 4
+  }
+ },
+ "hidden": [
+  "the full practice checkout events",
+  "baskets with large quantities and repeated skus",
+  "a basket with no items",
+  "a missing basket and an item with a missing quantity",
+  "the same event delivered twice",
+  "an empty checkout table"
+ ]
+}

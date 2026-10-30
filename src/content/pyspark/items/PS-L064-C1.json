@@ -1,0 +1,66 @@
+{
+  "id": "PS-L064-C1",
+  "slug": "apply-the-account-changes",
+  "lesson": "PS-L064",
+  "difficulty": "hard",
+  "minutes": 17,
+  "title": "Apply the account changes",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "`accounts` is the CRM snapshot from 1 January and `customer_cdc` is every change since. Write `solve(accounts, customer_cdc)` so it returns today's accounts: the snapshot with the feed applied, using a Delta MERGE.",
+  "rules": [
+    "Each account ends up as its newest change by `sequence` says, unless that change is a delete. The rows in the file are in arrival order, which isn't always sequence order.",
+    "Some changes were delivered twice. A repeated change counts once.",
+    "Accounts the snapshot doesn't have are added; a deleted account is left out, even if it was never in the snapshot.",
+    "Return the snapshot's nine columns, in their order.",
+    "Write the snapshot to a Delta table, apply the feed to it with a MERGE, and return that table read back afterwards."
+  ],
+  "hints": [
+    "Merging the feed as it is fails, because some accounts have several changes. Reduce it to one row per account first.",
+    "Remove exact repeats with `distinct()`, then keep `row_number` 1 over `account_id` ordered by `sequence` descending.",
+    "In the MERGE: delete when matched and `op` is `D`, update all other matches, insert unmatched rows whose `op` isn't `D`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "accounts",
+    "customer_cdc"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\nfrom delta.tables import DeltaTable\n\n\ndef solve(accounts, customer_cdc):\n    path = \"/tmp/crm/accounts\"\n    accounts.write.format(\"delta\").mode(\"overwrite\").save(path)  # start from the snapshot\n\n    # Apply customer_cdc to the table at `path` with a MERGE.\n\n    return spark.read.format(\"delta\").load(path)\n",
+  "output": {
+    "columns": [
+      "account_id",
+      "account_name",
+      "industry",
+      "country",
+      "segment",
+      "account_owner",
+      "credit_limit",
+      "created_on",
+      "is_active"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "technique": {
+    "name": "a Delta MERGE",
+    "plan": [
+      "ColumnarToRow"
+    ],
+    "source": [
+      "merge"
+    ]
+  }
+}

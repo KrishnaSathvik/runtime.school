@@ -1,0 +1,72 @@
+{
+ "id": "PS-P10-M4",
+ "slug": "raise-anomaly-events-once",
+ "project": "PS-P10",
+ "milestone": "PS-P10.m4",
+ "difficulty": "hard",
+ "minutes": 60,
+ "title": "Raise anomaly events and suppress repeats",
+ "dataset": {
+  "id": "PS-D09",
+  "version": "1.0.0"
+ },
+ "prompt": "Alert thresholds come in `RULES`. A hot afternoon breaks the same rule reading after reading, and a reading delivered twice breaks it twice, but the on-call team wants one event per episode. Glitches are different: each one is a faulty sensor reading and gets its own event.\n\nWrite `breaches(sensor_readings, devices, device_locations)`, one row per usable reading and rule it breaks. Then write the stateful part: `first_of_episode` decides which breaches raise an event, `episodes` builds the alert stream, and `anomaly_events(sensor_readings, devices, device_locations)` runs it and returns the events.",
+ "rules": [
+  "`breaches` returns `reading_id`, `device_id`, `event_time`, `rule_id`, `value` and `severity` for each usable reading (`ok` or `missing_value`) and each rule in `RULES` it breaks. A glitch reading breaks only `SENSOR_GLITCH`, with `value` the out-of-range measurement (the temperature if it is out of range, otherwise the humidity) and `severity` `fault`.",
+  "Copies raise nothing: drop repeated breaches by `reading_id` and `rule_id`, within a 12-hour watermark on `event_time`.",
+  "For each sensor and rule, a breach raises an event when it is the first breach seen, or more than one hour later than the newest breach seen so far. Every breach, raised or not, can become the newest. Within a micro-batch, take a sensor's breaches in `event_time` order, then by `reading_id`.",
+  "`SENSOR_GLITCH` events are never suppressed.",
+  "Keep the newest breach time per sensor and rule in state with `applyInPandasWithState` (append mode, no timeout). `anomaly_events` writes the events to a memory table and returns `EVENT_SCHEMA`'s columns."
+ ],
+ "hints": [
+  "One stream, five checks: build an array of structs (`rule_id`, `value`, `breached`, `severity`), `F.explode` it and keep the rows where `breached` is true. A missing measurement breaks nothing.",
+  "In `first_of_episode`, read the state with `state.get[0] if state.exists else None`. Loop over `pdf.sort_values([\"event_time\", \"reading_id\"]).itertuples()`, compare with `pd.Timedelta(hours=1)`, then `state.update((newest,))`.",
+  "`groupBy(\"device_id\", \"rule_id\").applyInPandasWithState(first_of_episode, EVENT_SCHEMA, \"newest TIMESTAMP\", \"append\", GroupStateTimeout.NoTimeout)` after the duplicate drop."
+ ],
+ "explanation": "Two kinds of repeats are handled in two places. Repeated deliveries are the same breach seen twice, so `dropDuplicatesWithinWatermark` removes them by key before anything else looks at them; without it, a glitch delivered twice would page someone twice. Repeated breaches of an episode are real readings, so they need memory: the state keeps, for every sensor and rule, the newest breach seen, and a breach only raises an event when it's more than an hour newer. Comparing with the newest breach, not the last event, is what makes a long hot spell one episode. Because the state lives in the checkpoint, the rule holds across micro-batches. The order inside a micro-batch is fixed by sorting, because Spark hands rows over in no fixed order. A late breach older than the newest one never raises an event: by then the episode was already reported.",
+ "entry": "anomaly_events",
+ "inputs": [
+  "sensor_readings",
+  "devices",
+  "device_locations"
+ ],
+ "file": "pipeline.py",
+ "append": "\n\nRULES = [  # rule_id, metric, breached when, severity\n    (\"TEMP_HIGH\", \"temperature_c\", F.col(\"temperature_c\") > 30, \"warning\"),\n    (\"TEMP_CRIT\", \"temperature_c\", F.col(\"temperature_c\") > 40, \"critical\"),\n    (\"HUM_HIGH\", \"humidity_pct\", F.col(\"humidity_pct\") > 80, \"warning\"),\n    (\"BATT_LOW\", \"battery_v\", F.col(\"battery_v\") < 3.3, \"warning\"),\n]\nEVENT_SCHEMA = \"device_id STRING, rule_id STRING, reading_id STRING, event_time TIMESTAMP, value DOUBLE, severity STRING\"\n\n\ndef breaches(sensor_readings, devices, device_locations):\n    # Step 4: one row per usable reading and rule it breaks; a glitch breaks only SENSOR_GLITCH.\n    return validate_readings(sensor_readings, devices, device_locations)\n\n\ndef first_of_episode(key, batches, state):\n    # Step 4: called once per sensor and rule that has new breaches in a micro-batch.\n    # Yield the breaches that raise an event, and keep the newest breach time in the state.\n    device_id, rule_id = key\n    yield pd.DataFrame([], columns=[\"device_id\", \"rule_id\", \"reading_id\", \"event_time\", \"value\", \"severity\"])\n\n\ndef episodes(stream, devices, device_locations):\n    # Step 4: the alert stream: breaches without copies, then first_of_episode per sensor and rule.\n    return breaches(stream, devices, device_locations)\n\n\ndef anomaly_events(sensor_readings, devices, device_locations):\n    # Step 4: run episodes(...) on the stream into a memory table and return it.\n    return breaches(sensor_readings, devices, device_locations)\n",
+ "prerequisites": [
+  "PS-L039",
+  "PS-L053",
+  "PS-L070",
+  "PS-L087"
+ ],
+ "output": {
+  "columns": [
+   "device_id",
+   "rule_id",
+   "reading_id",
+   "event_time",
+   "value",
+   "severity"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "example",
+   "sample": true
+  },
+  {
+   "id": "project",
+   "edition": "project"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

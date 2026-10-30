@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0141",
+  "slug": "suppliers-without-orders",
+  "lesson": "PS-L029",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Suppliers without orders",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "Procurement wants to tidy up suppliers that were never ordered from. Write `solve(suppliers, purchase_orders)` so it returns the `supplier_id` of every supplier with no purchase order.",
+  "rules": [
+    "A supplier is any `supplier_id` in `suppliers`, from either system.",
+    "Leave out every `supplier_id` that appears in `purchase_orders`.",
+    "Return one column, `supplier_id`, with each supplier once, even if both systems list it.",
+    "Compare ids exactly as they are. A missing id on both sides counts as a match, as in any set operation."
+  ],
+  "hints": [
+    "Both tables have a `supplier_id` column. Select just that column from each so the two shapes match.",
+    "\"In the first but not in the second\" is `subtract`, and the order of the two matters.",
+    "Put the table you want ids from first. `subtract` already returns each id once, so you don't need `distinct`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "suppliers",
+    "purchase_orders"
+  ],
+  "starter": "def solve(suppliers, purchase_orders):\n    # Return each supplier_id with no purchase order, once.\n    return suppliers.select(\"supplier_id\")\n",
+  "output": {
+    "columns": [
+      "supplier_id"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Select the id from both sides and take one away from the other: `suppliers.select(\"supplier_id\").subtract(purchase_orders.select(\"supplier_id\"))`. `subtract` compares whole rows, which here are just the id, and returns each remaining row once, so a supplier listed by both systems appears once. The order matters: `purchase_orders` first would ask the opposite question, orders whose supplier isn't listed. `exceptAll` would keep one copy per system and list some suppliers twice."
+}

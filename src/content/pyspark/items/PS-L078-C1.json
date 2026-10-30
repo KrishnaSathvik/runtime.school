@@ -1,0 +1,26 @@
+{
+  "id": "PS-L078-C1",
+  "slug": "fix-the-claim-balance-step",
+  "lesson": "PS-L078",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Fix the claim balance step",
+  "dataset": { "id": "PS-D04", "version": "1.0.0" },
+  "prompt": "The billing pipeline's balance step gives each claim the amount still owed in `balance`. New unit tests with hand-made claims fail on it. Fix `solve(claims)` so these tests pass; it returns `claim_id`, `claim_status` and `balance`.",
+  "rules": [
+    "A paid claim's balance is `billed_amount` minus `paid_amount`, but never below 0: a claim paid more than it billed has a balance of 0.",
+    "A denied claim's balance is its whole `billed_amount`, whatever `paid_amount` holds, even when it's missing.",
+    "Any other claim, including one with no status, isn't settled yet and has no balance (NULL), not 0."
+  ],
+  "hints": [
+    "Run the starter on the sample and compare each status with the rules: which rows come out wrong?",
+    "Arithmetic with a missing value is missing. A denied claim doesn't need `paid_amount` at all.",
+    "Give each case its own `when`, narrowest first, and leave out `otherwise` so everything else stays NULL."
+  ],
+  "entry": "solve",
+  "inputs": ["claims"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(claims):\n    settled = F.col(\"claim_status\").isin(\"paid\", \"denied\")\n    balance = F.when(settled, F.col(\"billed_amount\") - F.col(\"paid_amount\")).otherwise(0)\n    return claims.select(\"claim_id\", \"claim_status\", balance.alias(\"balance\"))\n",
+  "output": { "columns": ["claim_id", "claim_status", "balance"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "sample": true }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

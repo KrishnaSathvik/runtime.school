@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0208",
+  "slug": "tag-rows-that-keep-untagged-readings",
+  "lesson": "PS-L042",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Tag rows that keep untagged readings",
+  "dataset": {
+    "id": "PS-D09",
+    "version": "1.0.0"
+  },
+  "prompt": "The placement audit needs one row per tag, but a reading that reports no tags must still show up so it can be chased. Write `solve(sensor_readings)` to build that table.",
+  "rules": [
+    "Return `reading_id`, `device_id`, `status` and `tag`, in that order. `status` comes from `payload.status`.",
+    "One row per entry of `payload.tags`, in any order. A tag listed twice in one reading gives two rows.",
+    "A reading with an empty or missing tag list, or no payload at all, gives exactly one row with a missing `tag`.",
+    "Keep repeated deliveries: a reading delivered twice gives its rows twice."
+  ],
+  "hints": [
+    "Turning a list into rows is an explode, but plain `F.explode` gives nothing for an empty or missing list.",
+    "The lesson on arrays has a variant of explode that keeps those rows.",
+    "Don't tidy the tags first: repeats inside a reading count as separate rows."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "sensor_readings"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(sensor_readings):\n    # Return one row per tag, keeping readings with no tags.\n    return sensor_readings\n",
+  "output": {
+    "columns": [
+      "reading_id",
+      "device_id",
+      "status",
+      "tag"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`F.explode_outer(\"payload.tags\").alias(\"tag\")` next to `\"reading_id\"`, `\"device_id\"` and `F.col(\"payload.status\").alias(\"status\")` gives exactly this table. `explode_outer` works like `explode` for a list with entries, and keeps one row with a missing value when the list is empty or missing, including when the whole payload is missing. Plain `explode` quietly loses those readings, which is the problem the audit is trying to catch. The other columns are copied onto every tag row, and nothing removes repeats, so a tag listed twice or a reading delivered twice shows up twice."
+}

@@ -1,0 +1,59 @@
+{
+ "id": "PS-Q0414",
+ "slug": "the-backfill-that-loses-its-last-day",
+ "lesson": "PS-L083",
+ "role": "debugging",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 12,
+ "title": "The backfill that loses its last day",
+ "dataset": {
+  "id": "PS-D02",
+  "version": "1.0.0"
+ },
+ "prompt": "The backfill reloads 19 to 24 February into the Delta table with `replaceWhere`, and reruns give the same table. But after it runs, transactions posted on 24 February are missing, even though the source has them. Fix `backfill`.",
+ "rules": [
+  "`posted_date` is the day of `posted_at`. The range runs from `start` to `end`, both days included, whatever the time of day.",
+  "Inside the range, the table must match the source: its rows replace what was there, and rows the source no longer has disappear. Rows outside the range stay as they were.",
+  "Running `backfill` twice must give the same table as running it once. Don't change `start_table` or `solve`."
+ ],
+ "hints": [
+  "Run the starter on the sample. T000011 was in the table before, and the source still has it. Where did it go?",
+  "`end` is the text `2026-02-24`. Compared with a timestamp, which moment of that day does it stand for?",
+  "The rows you write and the rows `replaceWhere` deletes must be chosen by the same condition, on the same column."
+ ],
+ "explanation": "`replaceWhere` deletes every row whose `posted_date` is in the range, so the whole of 24 February goes. The batch, though, was filtered on `posted_at`, and comparing a timestamp with `'2026-02-24'` means midnight at the start of that day: everything later on the 24th is left out. Delta accepts the write, because every row it writes is inside the condition, so the day is emptied and nothing warns. Filter the source on `posted_date`, the column `replaceWhere` uses, and the two match exactly. Stretching the time filter to the next midnight lets a transaction posted at exactly 00:00 on the 25th in, which Delta then refuses. Dynamic partition overwrite would leave T000095's old row, because no new row is dated the 22nd.",
+ "entry": "solve",
+ "inputs": [
+  "transactions"
+ ],
+ "starter": "import shutil\nfrom datetime import date, datetime\nfrom decimal import Decimal\n\nfrom pyspark.sql import functions as F\n\nSCHEMA = \"transaction_id STRING, account_id STRING, merchant_id STRING, posted_at TIMESTAMP, txn_type STRING, channel STRING, direction STRING, amount DECIMAL(12,2), currency STRING, status STRING, posted_date DATE\"\n\n\ndef start_table(path):\n    # The table before the backfill. Don't change this.\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty folder on every run\n    before = spark.createDataFrame(\n        [\n            (\"T000001\", \"A00006\", None, datetime(2026, 1, 5, 10, 51, 19), \"deposit\", \"branch\", \"credit\", Decimal(\"800.00\"), \"GBP\", \"posted\", date(2026, 1, 5)),\n            (\"T000008\", \"A00001\", \"M002\", datetime(2026, 2, 19, 10, 23, 22), \"purchase\", \"card_present\", \"debit\", Decimal(\"15.99\"), \"USD\", \"pending\", date(2026, 2, 19)),\n            (\"T000095\", \"A00008\", \"M003\", datetime(2026, 2, 22, 9, 12, 0), \"purchase\", \"online\", \"debit\", Decimal(\"42.00\"), \"USD\", \"posted\", date(2026, 2, 22)),\n            (\"T000011\", \"A00008\", \"M003\", datetime(2026, 2, 24, 12, 49, 59), \"purchase\", \"card_present\", \"debit\", Decimal(\"7.60\"), \"USD\", \"pending\", date(2026, 2, 24)),\n            (\"T000014\", \"A00006\", \"M004\", datetime(2026, 2, 28, 18, 17, 37), \"purchase\", \"online\", \"debit\", Decimal(\"60.53\"), \"GBP\", \"pending\", date(2026, 2, 28)),\n        ],\n        SCHEMA,\n    )\n    before.write.format(\"delta\").partitionBy(\"posted_date\").save(path)\n\n\ndef backfill(transactions, path, start, end):\n    # Reload the source's transactions posted from `start` to `end`, both days included.\n    posted = transactions.select(\"*\", F.to_date(\"posted_at\").alias(\"posted_date\"))\n    batch = posted.filter((F.col(\"posted_at\") >= start) & (F.col(\"posted_at\") <= end))\n    (\n        batch.write.format(\"delta\")\n        .mode(\"overwrite\")\n        .option(\"replaceWhere\", f\"posted_date >= '{start}' AND posted_date <= '{end}'\")\n        .save(path)\n    )\n\n\ndef solve(transactions):\n    path = \"/tmp/bank/transactions\"\n    start_table(path)\n    backfill(transactions, path, \"2026-02-19\", \"2026-02-24\")\n    backfill(transactions, path, \"2026-02-19\", \"2026-02-24\")  # the job is rerun\n    return spark.read.format(\"delta\").load(path)\n",
+ "output": {
+  "columns": [
+   "transaction_id",
+   "account_id",
+   "merchant_id",
+   "posted_at",
+   "txn_type",
+   "channel",
+   "direction",
+   "amount",
+   "currency",
+   "status",
+   "posted_date"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 180,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

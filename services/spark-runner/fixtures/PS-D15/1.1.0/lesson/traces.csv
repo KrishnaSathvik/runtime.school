@@ -1,0 +1,9 @@
+span_id,trace_id,parent_span_id,service,operation,started_at,duration_ms,status
+d66887a3a5561782,bee00ecb217ae5e3,,checkout-api,POST /v1/checkout,2026-04-14T10:00:14.700000,236,ok
+877f77b22c5c6316,bee00ecb217ae5e3,d66887a3a5561782,auth-service,verify token,2026-04-14T10:00:14.701000,91,ok
+602ac25bf929aa91,bee00ecb217ae5e3,d66887a3a5561782,postgres,SELECT,2026-04-14T10:00:14.793000,28,ok
+61f8416310d7543a,bee00ecb217ae5e3,d66887a3a5561782,payments-gateway,authorize,2026-04-14T10:00:14.822000,48,ok
+1e6248070b1913dc,c43d1a266b993fd1,,checkout-api,POST /v1/payments/authorize,2026-04-14T10:00:58.900000,1240,error
+6022e729fb649d4d,c43d1a266b993fd1,1e6248070b1913dc,auth-service,verify token,2026-04-14T10:00:58.901000,628,ok
+9cc801420c9a5756,c43d1a266b993fd1,1e6248070b1913dc,postgres,SELECT,2026-04-14T10:00:59.530000,146,ok
+111b3025829dbeed,c43d1a266b993fd1,1e6248070b1913dc,payments-gateway,authorize,2026-04-14T10:00:59.677000,97,error

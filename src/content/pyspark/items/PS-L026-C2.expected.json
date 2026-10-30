@@ -1,0 +1,74 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "customer_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "full_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "email",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "city",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "country",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "segment",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "kyc_status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "joined_date",
+     "type": "date",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "C0005",
+     "Jonas Silva",
+     "jonas.silva5@mail.example",
+     "Austin",
+     "US",
+     "retail",
+     "verified",
+     "2025-04-04"
+    ]
+   ],
+   "row_count": 1
+  }
+ },
+ "hidden": [
+  "the full practice customers, accounts and transactions",
+  "a customer with several declined payments on two accounts",
+  "declined payments for an account the bank doesn't have, or with no account",
+  "customers whose payments were only posted or pending",
+  "no transactions at all"
+ ]
+}

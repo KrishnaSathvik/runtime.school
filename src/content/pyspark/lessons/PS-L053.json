@@ -1,0 +1,142 @@
+{
+  "id": "PS-L053",
+  "minutes": 25,
+  "lede": "A pandas UDF turns columns into one new column. `mapInPandas` hands you whole pandas DataFrames, batch by batch, and lets you send back any rows and columns you like: more rows, fewer rows, or a different shape.",
+  "objectives": [
+    "Transform a DataFrame with `mapInPandas`: a function that takes an iterator of pandas DataFrames and yields pandas DataFrames",
+    "Declare the output schema, and yield more or fewer rows than came in",
+    "Explain how Spark splits rows into batches, and set the batch size with `spark.sql.execution.arrow.maxRecordsPerBatch`",
+    "Tell batch-safe logic from logic that needs every row at once"
+  ],
+  "dataset": {
+    "id": "PS-D09",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "sensor_readings",
+      "devices"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`sensor_readings` has one row per measurement from four building sensors, in the order they arrived. The measured values sit inside a struct column, `payload`; `F.col(\"payload.temperature_c\")` reads one field of it. Each example first pulls the fields it needs into plain columns.\n\n`df.mapInPandas(function, schema)` calls `function` with an **iterator** of pandas DataFrames, each holding one batch of rows. The function loops over them and `yield`s pandas DataFrames back. `schema` says which columns come out and their types, just like a UDF's return type."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Add a column, batch by batch",
+      "code": "import pandas as pd\nfrom pyspark.sql import functions as F\n\nreadings = sensor_readings.select(\n    \"reading_id\", \"device_id\",\n    F.col(\"payload.temperature_c\").alias(\"temperature_c\"),\n)\n\n\ndef add_fahrenheit(batches):\n    for pdf in batches:\n        pdf[\"temperature_f\"] = (pdf[\"temperature_c\"] * 9 / 5 + 32).round(1)\n        yield pdf[[\"reading_id\", \"device_id\", \"temperature_c\", \"temperature_f\"]]\n\n\nschema = \"reading_id STRING, device_id STRING, temperature_c DOUBLE, temperature_f DOUBLE\"\nreadings.mapInPandas(add_fahrenheit, schema).show()\n",
+      "note": "`pdf` is an ordinary pandas DataFrame, so any pandas code works on it. Spark matches the yielded columns to the schema by name."
+    },
+    {
+      "kind": "text",
+      "md": "Unlike a pandas UDF, `mapInPandas` doesn't need one output row per input row. Each yielded DataFrame can have any number of rows, including none. Here every reading becomes one row per measurement, and measurements the sensor doesn't take (a `temp` sensor has no humidity) are dropped."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "More rows and fewer rows",
+      "code": "import pandas as pd\nfrom pyspark.sql import functions as F\n\nreadings = sensor_readings.select(\n    \"reading_id\", \"device_id\",\n    F.col(\"payload.temperature_c\").alias(\"temperature_c\"),\n    F.col(\"payload.humidity_pct\").alias(\"humidity_pct\"),\n    F.col(\"payload.battery_v\").alias(\"battery_v\"),\n)\n\n\ndef one_row_per_metric(batches):\n    for pdf in batches:\n        long = pdf.melt(\n            id_vars=[\"reading_id\", \"device_id\"],\n            value_vars=[\"temperature_c\", \"humidity_pct\", \"battery_v\"],\n            var_name=\"metric\", value_name=\"value\",\n        )\n        yield long.dropna(subset=[\"value\"])\n\n\nlong = readings.mapInPandas(one_row_per_metric, \"reading_id STRING, device_id STRING, metric STRING, value DOUBLE\")\nlong.filter(F.col(\"reading_id\").isin(\"R0001\", \"R0002\")).show()\nprint(readings.count(), \"readings became\", long.count(), \"rows\")\n",
+      "note": "13 readings × 3 measurements would be 39 rows; the three humidity values of DEV-001, a `temp` sensor, are missing and were dropped, leaving 36."
+    },
+    {
+      "kind": "error-example",
+      "id": "e3",
+      "title": "A column the schema promised is missing",
+      "code": "import pandas as pd\nfrom pyspark.sql import functions as F\n\nreadings = sensor_readings.select(\"reading_id\", \"device_id\", F.col(\"payload.battery_v\").alias(\"battery_v\"))\n\n\ndef low_battery(batches):\n    for pdf in batches:\n        yield pdf[pdf[\"battery_v\"] < 3.4][[\"reading_id\", \"battery_v\"]]\n\n\nreadings.mapInPandas(low_battery, \"reading_id STRING, device_id STRING, battery_v DOUBLE\").show()\n",
+      "error": "PythonException",
+      "note": "The schema lists `device_id`, but the yielded DataFrame doesn't have it. Spark checks every yielded DataFrame against the schema and stops: the message inside says the columns don't match and names the missing one."
+    },
+    {
+      "kind": "text",
+      "md": "Where do batches come from? Spark calls your function once per **partition**, and the iterator gives that partition's rows in batches of at most `spark.sql.execution.arrow.maxRecordsPerBatch` rows (10,000 unless you change it). This small table is one partition of 13 rows, so normally it arrives as a single batch. Setting the limit to 4 splits it."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Seeing the batches",
+      "code": "import pandas as pd\n\nspark.conf.set(\"spark.sql.execution.arrow.maxRecordsPerBatch\", \"4\")\n\n\ndef describe_batches(batches):\n    for number, pdf in enumerate(batches):\n        yield pd.DataFrame({\"batch_no\": [number], \"rows\": [len(pdf)], \"first_reading\": [pdf[\"reading_id\"].iloc[0]]})\n\n\nsensor_readings.select(\"reading_id\").mapInPandas(describe_batches, \"batch_no INT, rows INT, first_reading STRING\").show()\n",
+      "note": "Four batches: 4, 4, 4 and 1 rows. The function yielded one summary row per batch, so the result has four rows."
+    },
+    {
+      "kind": "text",
+      "md": "That matters for correctness. Work that looks at one row at a time (converting units, labelling, reshaping) gives the same answer however the rows are split. Work that needs to see **every** row at once doesn't: removing duplicates, totals, ranking, \"the previous reading\". A batch only sees itself.\n\nReading R0011 was delivered twice. Below, each batch drops duplicate `reading_id`s. With one batch that works; with batches of 4 the two copies land in different batches and both survive."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Duplicates across batches",
+      "code": "import pandas as pd\nfrom pyspark.sql import functions as F\n\nreadings = sensor_readings.select(\"reading_id\", \"device_id\", \"arrival_time\")\n\n\ndef drop_repeats(batches):\n    for pdf in batches:\n        yield pdf.drop_duplicates(\"reading_id\")\n\n\nfor size in [\"10000\", \"4\"]:\n    spark.conf.set(\"spark.sql.execution.arrow.maxRecordsPerBatch\", size)\n    kept = readings.mapInPandas(drop_repeats, readings.schema)\n    print(\"batches of\", size, \"->\", kept.count(), \"rows; copies of R0011:\", kept.filter(F.col(\"reading_id\") == \"R0011\").count())\n",
+      "note": "On real data you don't control where the copies land: they can be in different batches or different partitions. Remove duplicates with DataFrame methods before or after `mapInPandas`, never inside it."
+    },
+    {
+      "kind": "text",
+      "md": "Code in the function **before** the loop runs once per partition, not once per batch or row, so it's the place for setup such as building a lookup or loading a model. Values from outside the function, like a small dictionary made on the driver, are shipped to the workers with it."
+    },
+    {
+      "kind": "example",
+      "id": "e6",
+      "title": "A small lookup inside the function",
+      "code": "import pandas as pd\nfrom pyspark.sql import functions as F\n\nlookup = devices.toPandas()\ndevice_type = dict(zip(lookup[\"device_id\"], lookup[\"device_type\"]))\nprint(device_type)\n\nreadings = sensor_readings.select(\"reading_id\", \"device_id\", F.col(\"payload.humidity_pct\").alias(\"humidity_pct\"))\n\n\ndef with_type(batches):\n    types = pd.Series(device_type)\n    for pdf in batches:\n        pdf[\"device_type\"] = pdf[\"device_id\"].map(types)\n        yield pdf[[\"reading_id\", \"device_id\", \"device_type\", \"humidity_pct\"]]\n\n\nreadings.mapInPandas(with_type, \"reading_id STRING, device_id STRING, device_type STRING, humidity_pct DOUBLE\").show(6)\n",
+      "note": "`types` is built once per partition, before the loop. The lookup explains the NULL humidity: DEV-001 is a `temp` sensor, which has no humidity sensor."
+    }
+  ],
+  "challenges": [
+    "PS-L053-C1",
+    "PS-L053-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "What does the function you pass to `df.mapInPandas(function, schema)` receive?",
+      "choices": [
+        "One row at a time, as a dictionary",
+        "One pandas Series per column",
+        "An iterator of pandas DataFrames, one per batch",
+        "The whole DataFrame as a single pandas DataFrame on the driver"
+      ],
+      "answer": 2,
+      "why": "Spark calls the function once per partition with an iterator; each item is a pandas DataFrame holding one batch of rows."
+    },
+    {
+      "id": "k2",
+      "prompt": "A batch of 4 rows goes in. How many rows may the yielded DataFrame have?",
+      "choices": [
+        "Exactly 4",
+        "Any number, including 0",
+        "At most 4",
+        "Exactly 1"
+      ],
+      "answer": 1,
+      "why": "`mapInPandas` doesn't tie output rows to input rows: a function can reshape one row into several, drop rows, or yield a single summary row per batch."
+    },
+    {
+      "id": "k3",
+      "prompt": "Inside `mapInPandas`, each batch calls `pdf.drop_duplicates(\"reading_id\")`. A reading's two copies are in different batches. What happens?",
+      "choices": [
+        "Both copies are kept",
+        "Spark merges the batches first, so one copy is kept",
+        "Both copies are removed",
+        "The job stops with an error"
+      ],
+      "answer": 0,
+      "why": "Each batch only sees its own rows, so neither batch finds a duplicate. Remove duplicates with DataFrame methods outside `mapInPandas`."
+    }
+  ],
+  "review": [
+    "`df.mapInPandas(function, schema)`: the function takes an iterator of pandas DataFrames and `yield`s pandas DataFrames.",
+    "The schema names the output columns and types; every yielded DataFrame must have those columns, matched by name.",
+    "Output rows needn't match input rows: reshape, filter or summarise freely.",
+    "Spark calls the function once per partition; batches hold at most `spark.sql.execution.arrow.maxRecordsPerBatch` rows (10,000 by default).",
+    "Batch-safe work looks at rows on their own. Duplicates, totals and ordering need every row, so do them with DataFrame methods.",
+    "Setup before the loop runs once per partition: the place for lookups and models."
+  ],
+  "practice": [
+    "PS-Q0261",
+    "PS-Q0262",
+    "PS-Q0263",
+    "PS-Q0264",
+    "PS-Q0265"
+  ]
+}

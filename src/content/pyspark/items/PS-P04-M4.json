@@ -1,0 +1,69 @@
+{
+  "id": "PS-P04-M4",
+  "slug": "match-ledger-entries",
+  "project": "PS-P04",
+  "milestone": "PS-P04.m4",
+  "difficulty": "hard",
+  "minutes": 50,
+  "title": "Match ledger entries and reversals",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "Money moved between accounts is in `transfers`. Every completed or reversed transfer should be booked in `ledger_entries` once: a debit on the sending account and a credit on the receiving one, each for the transfer's amount. A reversed transfer is undone by a later transfer the other way round, whose `reversal_of` names it.\n\nWrite `transfer_matches(transfers, ledger_entries)`. It returns one row per completed or reversed transfer, with what the ledger booked for it and a `match_status` from the checks below.",
+  "rules": [
+    "Only transfers whose `status` is `completed` or `reversed` are checked. `pending` and `failed` transfers move no money.",
+    "`debit_booked` is the sum of the transfer's `debit` entries and `credit_booked` the sum of its `credit` entries, as `decimal(14,2)`. Missing when it has none.",
+    "Each transfer gets the first status that applies, in this order: `duplicate`, `bad_reversal`, `missing_debit`, `missing_credit`, `amount_mismatch`, otherwise `matched`.",
+    "`duplicate`: another checked transfer has the same `from_account_id`, `to_account_id`, `amount`, `currency` and `reference`, and came first. The earliest by `requested_at` (then by `transfer_id`) is the original.",
+    "`bad_reversal`: `reversal_of` is set, but it doesn't name a `reversed` transfer between the same two accounts the other way round, for the same amount.",
+    "`amount_mismatch`: the booked debit or credit isn't exactly the transfer's `amount`. One cent is a mismatch; there's no tolerance.",
+    "Return `transfer_id`, `from_account_id`, `to_account_id`, `amount`, `debit_booked`, `credit_booked` and `match_status`."
+  ],
+  "hints": [
+    "Sum both sides in one `groupBy(\"transfer_id\")` with `F.sum(F.when(F.col(\"entry_type\") == \"debit\", F.col(\"amount\")))`, and left join it onto the checked transfers so a transfer with no entries keeps its row.",
+    "Number the copies with `F.row_number()` over a window partitioned by the five columns and ordered by `requested_at`, `transfer_id`. Filter the status first: a failed attempt followed by a completed retry isn't a duplicate.",
+    "For reversals, select the `reversed` transfers with renamed columns (`reversal_of`, `original_from`, `original_to`, `original_amount`) and left join them on `reversal_of`. Wrap the reversal test in `F.coalesce(..., F.lit(False))` so a missing original counts as bad, then one `F.when(...).when(...)` chain gives the status."
+  ],
+  "explanation": "Summing each side per transfer with a conditional aggregate turns the ledger into one row per transfer, and the left join keeps transfers the ledger never booked, so a missing side shows up as a missing value instead of a vanished row. Duplicates are numbered with `row_number()` among the checked transfers only, ordered by time and id, so the first copy stays the original whatever order the rows arrive in, and a failed attempt doesn't make its retry look like a copy. The reversal test joins each reversal to the transfer it names and checks that it sends the same amount back between the same accounts: only then does the pair net to zero. The comparisons are exact decimals: a credit one cent short is `amount_mismatch`, because a reconciliation that tolerates a cent hides real errors.",
+  "entry": "transfer_matches",
+  "inputs": [
+    "transfers",
+    "ledger_entries"
+  ],
+  "file": "pipeline.py",
+  "append": "\n\nBOOKED_STATUSES = [\"completed\", \"reversed\"]\n\n\ndef transfer_matches(transfers, ledger_entries):\n    # Step 4: one row per completed or reversed transfer, with what the ledger booked and a match_status.\n    return transfers\n",
+  "prerequisites": [
+    "PS-L025",
+    "PS-L032",
+    "PS-L033"
+  ],
+  "output": {
+    "columns": [
+      "transfer_id",
+      "from_account_id",
+      "to_account_id",
+      "amount",
+      "debit_booked",
+      "credit_booked",
+      "match_status"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "example",
+      "sample": true
+    },
+    {
+      "id": "project",
+      "edition": "project"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

@@ -1,0 +1,163 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "plan",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "monthly_price",
+     "type": "decimal(6,2)",
+     "nullable": true
+    },
+    {
+     "name": "yearly_price",
+     "type": "decimal(9,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "premium",
+     "17.99",
+     "215.88"
+    ],
+    [
+     "premium",
+     "15.99",
+     "191.88"
+    ],
+    [
+     "family",
+     "11.99",
+     "143.88"
+    ],
+    [
+     "standard",
+     "11.99",
+     "143.88"
+    ],
+    [
+     "basic",
+     "6.99",
+     "83.88"
+    ],
+    [
+     "basic",
+     null,
+     null
+    ]
+   ],
+   "row_count": 6,
+   "inputs": {
+    "subscriptions": [
+     [
+      "S01",
+      "U01",
+      "premium",
+      "17.99",
+      "2025-02-03",
+      null,
+      "active"
+     ],
+     [
+      "S02",
+      "U02",
+      "basic",
+      "6.99",
+      "2025-03-18",
+      "2025-12-31",
+      "cancelled"
+     ],
+     [
+      "S03",
+      "U02",
+      "standard",
+      "11.99",
+      "2026-01-01",
+      null,
+      "active"
+     ],
+     [
+      "S04",
+      "U03",
+      "standard",
+      "11.99",
+      "2025-05-09",
+      null,
+      "active"
+     ],
+     [
+      "S05",
+      "U04",
+      "basic",
+      "6.99",
+      "2025-08-21",
+      null,
+      "active"
+     ],
+     [
+      "S06",
+      "U05",
+      "standard",
+      "11.99",
+      "2026-01-12",
+      null,
+      "active"
+     ],
+     [
+      "S07",
+      "U06",
+      "basic",
+      "6.99",
+      "2026-08-30",
+      null,
+      "active"
+     ],
+     [
+      "S08",
+      "U07",
+      "family",
+      "11.99",
+      "2026-02-14",
+      null,
+      "active"
+     ],
+     [
+      "S09",
+      "U08",
+      "premium",
+      "15.99",
+      "2026-03-02",
+      null,
+      "active"
+     ],
+     [
+      "S10",
+      "U09",
+      "basic",
+      null,
+      "2026-03-10",
+      null,
+      "active"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice subscriptions table",
+  "two plans at the same monthly price",
+  "a plan that changed price",
+  "subscriptions with a missing price",
+  "an empty subscriptions table"
+ ]
+}

@@ -1,0 +1,65 @@
+{
+  "id": "PS-P01-M4",
+  "slug": "calculate-daily-and-category-sales",
+  "project": "PS-P01",
+  "milestone": "PS-P01.m4",
+  "difficulty": "medium",
+  "minutes": 35,
+  "title": "Calculate daily and category sales",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "Sales numbers are only useful when everyone counts them the same way. The business rules below say what counts as a sale and how it's measured.\n\nFirst finish `sales_lines(orders, order_items, products)`: your `order_lines` for sales only, with the rules applied and a `net_amount` per line. Then write `category_sales(orders, order_items, products)` from it, one row per category. The last step builds the daily table from the same lines.",
+  "rules": [
+    "A sale is an order whose status is `paid`, `shipped` or `delivered`. `placed` orders aren't paid yet, and `cancelled` and `refunded` orders gave the money back, so they count for nothing.",
+    "A line's net amount is `quantity` × `unit_price`, the price on the line. Not the order's total, and not today's catalogue price.",
+    "A line with no `category` counts under the category `unknown`.",
+    "Return `category`, `orders` (how many different orders had a line in the category), `units` (the sum of `quantity`) and `net_sales`.",
+    "`net_sales` is the exact sum of the net amounts, with nothing rounded, as a `decimal(12,2)`.",
+    "Duplicate orders still count twice here; the last step removes them."
+  ],
+  "hints": [
+    "In `sales_lines`, filter `order_lines(...)` with `isin` on the three sale statuses, and add `(F.col(\"quantity\") * F.col(\"unit_price\")).alias(\"net_amount\")`.",
+    "`F.coalesce(F.col(\"category\"), F.lit(\"unknown\"))` fills the missing category. Then `groupBy(\"category\").agg(...)` gives one row per category.",
+    "An order with two lines in one category is still one order: use `F.countDistinct(\"order_id\")`. Finish `net_sales` with `.cast(\"decimal(12,2)\")`; a decimal sum is exact, so the cast only sets the type."
+  ],
+  "explanation": "The rules live in `sales_lines`, so every table built from it agrees. Only `paid`, `shipped` and `delivered` orders are sales. Each line's net amount is its own `quantity` × `unit_price`, the price actually charged. A missing category is turned into `unknown` rather than dropped, so no money disappears from the totals. In `category_sales`, `countDistinct(\"order_id\")` counts orders, not lines, and `F.sum` over decimals stays exact; the cast to `decimal(12,2)` sets the type without rounding anything.",
+  "entry": "category_sales",
+  "inputs": [
+    "orders",
+    "order_items",
+    "products"
+  ],
+  "file": "pipeline.py",
+  "append": "\n\nSALES_STATUSES = [\"paid\", \"shipped\", \"delivered\"]\n\n\ndef sales_lines(orders, order_items, products):\n    # Step 4: order_lines(...) for sales only, with the category filled in and a net_amount per line.\n    return order_lines(orders, order_items, products)\n\n\ndef category_sales(orders, order_items, products):\n    # Step 4: one row per category, built from sales_lines(...).\n    return sales_lines(orders, order_items, products)\n",
+  "prerequisites": [
+    "PS-L014",
+    "PS-L031"
+  ],
+  "output": {
+    "columns": [
+      "category",
+      "orders",
+      "units",
+      "net_sales"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "example",
+      "sample": true
+    },
+    {
+      "id": "project",
+      "edition": "project"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

@@ -1,0 +1,220 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "observation_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "station_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "observed_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "observation_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "temperature_c",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "humidity_pct",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "precipitation_mm",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "wind_speed_kph",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "pressure_hpa",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "quality_flag",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "OBS-000001",
+     "PER-01",
+     "2026-03-07T15:50:00",
+     "2026-03-07",
+     21.3,
+     55,
+     0.0,
+     15.2,
+     1012.7,
+     "ok"
+    ],
+    [
+     "OBS-000002",
+     "PER-01",
+     "2026-03-07T16:10:00",
+     "2026-03-07",
+     21.0,
+     56,
+     0.0,
+     14.6,
+     null,
+     "ok"
+    ],
+    [
+     "OBS-000003",
+     "PNQ-01",
+     "2026-03-07T18:15:00",
+     "2026-03-07",
+     24.8,
+     31,
+     0.0,
+     6.1,
+     1008.9,
+     "ok"
+    ],
+    [
+     "OBS-000004",
+     "PNQ-01",
+     "2026-03-07T18:45:00",
+     "2026-03-07",
+     24.1,
+     33,
+     0.0,
+     5.4,
+     1009.1,
+     "ok"
+    ],
+    [
+     "OBS-000005",
+     "LIS-01",
+     "2026-03-07T23:30:00",
+     "2026-03-07",
+     11.4,
+     81,
+     0.0,
+     9.4,
+     1019.0,
+     "ok"
+    ],
+    [
+     "OBS-000006",
+     "LIS-01",
+     "2026-03-08T00:30:00",
+     "2026-03-08",
+     11.0,
+     83,
+     "NaN",
+     8.7,
+     1018.6,
+     "ok"
+    ],
+    [
+     "OBS-000007",
+     "NYC-01",
+     "2026-03-08T04:00:00",
+     "2026-03-08",
+     2.1,
+     71,
+     0.0,
+     14.8,
+     1016.2,
+     "ok"
+    ],
+    [
+     "OBS-000008",
+     "PER-01",
+     "2026-03-08T04:00:00",
+     "2026-03-08",
+     33.4,
+     24,
+     0.0,
+     22.8,
+     1010.4,
+     "ok"
+    ],
+    [
+     "OBS-000009",
+     "NYC-01",
+     "2026-03-08T05:00:00",
+     "2026-03-08",
+     1.6,
+     73,
+     0.0,
+     13.0,
+     1016.4,
+     "ok"
+    ],
+    [
+     "OBS-000010",
+     "NYC-01",
+     "2026-03-08T06:00:00",
+     "2026-03-08",
+     1.2,
+     74,
+     0.0,
+     12.2,
+     1016.1,
+     "ok"
+    ],
+    [
+     "OBS-000011",
+     "NYC-01",
+     "2026-03-08T07:00:00",
+     "2026-03-08",
+     0.9,
+     76,
+     0.2,
+     11.5,
+     1015.8,
+     "ok"
+    ],
+    [
+     "OBS-000012",
+     "NYC-01",
+     "2026-03-08T08:00:00",
+     "2026-03-08",
+     null,
+     77,
+     0.4,
+     12.9,
+     1015.3,
+     "ok"
+    ]
+   ],
+   "row_count": 12
+  }
+ },
+ "hidden": [
+  "the full practice readings table",
+  "the code in each of the four columns, one at a time",
+  "a reading with the code in all four columns",
+  "negative values that aren't the code",
+  "readings that already have an empty or NaN value",
+  "the same reading delivered twice",
+  "an empty readings table"
+ ]
+}

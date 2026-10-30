@@ -1,0 +1,117 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "event_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "device_type",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "os",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "campaign",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "PV-0001",
+     "mobile",
+     "iOS",
+     "CMP-0007"
+    ],
+    [
+     "PV-0002",
+     "mobile",
+     "iOS",
+     "CMP-0007"
+    ],
+    [
+     "PV-0003",
+     "mobile",
+     "iOS",
+     "CMP-0007"
+    ],
+    [
+     "PV-0004",
+     "desktop",
+     "Windows",
+     null
+    ],
+    [
+     "PV-0005",
+     "desktop",
+     "Windows",
+     null
+    ],
+    [
+     "PV-0006",
+     "desktop",
+     "macOS",
+     "CMP-0012"
+    ],
+    [
+     "PV-0007",
+     "desktop",
+     "macOS",
+     "CMP-0012"
+    ],
+    [
+     "PV-0008",
+     "desktop",
+     "macOS",
+     "CMP-0012"
+    ],
+    [
+     "PV-0009",
+     "tablet",
+     "Android",
+     null
+    ],
+    [
+     "PV-0010",
+     "tablet",
+     "Android",
+     null
+    ],
+    [
+     "PV-0011",
+     "mobile",
+     "Android",
+     "CMP-0007"
+    ],
+    [
+     "PV-0012",
+     "mobile",
+     "Android",
+     "CMP-0007"
+    ]
+   ],
+   "row_count": 12
+  }
+ },
+ "hidden": [
+  "the full practice page views",
+  "visits that didn't come from a campaign",
+  "a campaign tag with a source but no campaign",
+  "page views with no device or no context at all",
+  "JSON lines that leave nested keys out",
+  "no page views"
+ ]
+}

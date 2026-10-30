@@ -1,0 +1,154 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "country",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "preferred_device",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "BR",
+     "tv"
+    ],
+    [
+     "CA",
+     "tablet"
+    ],
+    [
+     "DE",
+     "tv"
+    ],
+    [
+     "GB",
+     "web"
+    ],
+    [
+     "IN",
+     "mobile"
+    ],
+    [
+     "US",
+     "mobile"
+    ],
+    [
+     "US",
+     "tv"
+    ],
+    [
+     "US",
+     null
+    ],
+    [
+     null,
+     "web"
+    ],
+    [
+     null,
+     null
+    ]
+   ],
+   "row_count": 10,
+   "inputs": {
+    "users": [
+     [
+      "U01",
+      "2025-02-03",
+      "US",
+      "25-34",
+      "tv"
+     ],
+     [
+      "U02",
+      "2025-03-18",
+      "IN",
+      "18-24",
+      "mobile"
+     ],
+     [
+      "U03",
+      "2025-05-09",
+      "GB",
+      "35-44",
+      "web"
+     ],
+     [
+      "U04",
+      "2025-08-21",
+      "BR",
+      "25-34",
+      "tv"
+     ],
+     [
+      "U05",
+      "2026-01-12",
+      "CA",
+      "45-54",
+      "tablet"
+     ],
+     [
+      "U06",
+      "2026-08-30",
+      "DE",
+      "55+",
+      "tv"
+     ],
+     [
+      "U07",
+      "2026-09-02",
+      "US",
+      "18-24",
+      "mobile"
+     ],
+     [
+      "U08",
+      "2026-09-05",
+      "US",
+      "35-44",
+      "tv"
+     ],
+     [
+      "U09",
+      "2026-09-11",
+      "US",
+      "25-34",
+      null
+     ],
+     [
+      "U10",
+      "2026-09-14",
+      null,
+      "45-54",
+      "web"
+     ],
+     [
+      "U11",
+      "2026-09-20",
+      null,
+      "18-24",
+      null
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice users table",
+  "members with a missing country, device or both",
+  "many members sharing the same combinations",
+  "an empty users table"
+ ]
+}

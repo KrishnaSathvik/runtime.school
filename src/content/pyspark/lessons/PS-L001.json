@@ -1,0 +1,122 @@
+{
+  "id": "PS-L001",
+  "minutes": 15,
+  "lede": "Some data is too big or too slow to handle one row at a time on one computer. Apache Spark splits the work into pieces and runs them side by side, and PySpark lets you drive it from Python.",
+  "objectives": [
+    "Explain what Spark does: process data in parallel, one partition at a time per core",
+    "Describe PySpark as Python's way to use Spark, and a DataFrame as a table Spark manages",
+    "Print rows with `show()` and count them with `count()`",
+    "Read a DataFrame's column names with `columns` and its types with `printSchema()`"
+  ],
+  "dataset": { "id": "PS-D11", "version": "1.0.0", "edition": "lesson", "tables": ["learners", "courses"] },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "**Apache Spark** is an engine for processing data in parallel. It splits a table into **partitions**, chunks of rows, and works on several of them at the same time, one per processor core. On a cluster, many machines each take some of the partitions, so a job that would take hours on one computer can finish in minutes.\n\nIn this course Spark runs in **local mode**: one machine with 2 cores, so it works on up to two partitions at once. There's no cluster here, but the code you write is the same code that runs on one."
+    },
+    {
+      "kind": "text",
+      "md": "**PySpark** is Spark's Python API. You write ordinary Python, and Spark does the heavy work behind it.\n\nThe main thing you work with is a **DataFrame**: a table that Spark manages, with named columns, a type for each column, and rows. The `learners` and `courses` tables above are already loaded as DataFrames called `learners` and `courses`. To see what's in one, call `show()`."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Print a DataFrame's rows",
+      "code": "learners.show()\n",
+      "note": "`show()` prints the rows as a table, with the column names on top. There are five learners, each with five columns."
+    },
+    {
+      "kind": "text",
+      "md": "`show()` prints up to 20 rows. `show(n)` prints only the first `n`, and says so underneath. It also cuts any text longer than 20 characters and ends it with `...`. That's only for printing: the data itself is unchanged."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Fewer rows, and long text",
+      "code": "learners.show(2)\ncourses.show()\n",
+      "note": "With `show(2)` Spark prints two learners and adds `only showing top 2 rows`. In `courses`, the fourth title is longer than 20 characters, so `show()` prints it as `Data Modelling Ba...`."
+    },
+    {
+      "kind": "text",
+      "md": "`count()` counts the rows and gives back a plain Python number, so you can print it, mix it with text or do arithmetic with it."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Count the rows",
+      "code": "print(learners.count())\nprint(courses.count(), \"courses\")\n",
+      "note": "Five learners and four courses. The header line that `show()` prints isn't a row, so it isn't counted."
+    },
+    {
+      "kind": "text",
+      "md": "Every DataFrame knows its columns and their types, together called its **schema**. `df.columns` is a Python list of the column names. It isn't a method, so there are no parentheses. `df.printSchema()` prints each column's name and type, and whether it may hold missing values (`nullable`)."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Column names and the schema",
+      "code": "print(courses.columns)\nprint(len(courses.columns))\ncourses.printSchema()\n",
+      "note": "`columns` is a plain list, so `len` counts the six columns. `printSchema()` shows that `lesson_count` holds whole numbers (`integer`) and `published_date` holds dates; `nullable = true` means a value may be missing."
+    },
+    {
+      "kind": "error-example",
+      "id": "e5",
+      "title": "Calling columns like a method",
+      "code": "learners.columns()\n",
+      "error": "TypeError",
+      "note": "`columns` is already a list, so the `()` tries to call a list. Write `learners.columns`. `show()`, `count()` and `printSchema()` are methods, so they do need their parentheses."
+    },
+    {
+      "kind": "text",
+      "md": "The opposite mistake doesn't raise an error. `print(learners.count)` without parentheses doesn't count anything: it prints a description of the `count` method instead of `5`. If you see `<bound method ...>`, add the `()`."
+    }
+  ],
+  "challenges": ["PS-L001-C1", "PS-L001-C2"],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "How does Spark make a big job faster?",
+      "choices": [
+        "It splits the data into partitions and works on several of them at the same time",
+        "It reads the data one row at a time, very quickly",
+        "It keeps a copy of the whole table on every core",
+        "It skips the rows it doesn't need to print"
+      ],
+      "answer": 0,
+      "why": "Spark splits a table into partitions and processes them in parallel, one per core. A cluster adds more machines, so more partitions run at once."
+    },
+    {
+      "id": "k2",
+      "prompt": "In this course, where does Spark run your code?",
+      "choices": [
+        "On a cluster of many machines",
+        "In local mode, on one machine with 2 cores",
+        "Inside your web browser",
+        "On a single core, one row at a time"
+      ],
+      "answer": 1,
+      "why": "This environment runs Spark in local mode with 2 cores, so it can work on two partitions at once. There's no cluster, but the code is the same."
+    },
+    {
+      "id": "k3",
+      "prompt": "What does `print(courses.count())` print for the `courses` table above?",
+      "choices": [
+        "6, the number of columns",
+        "The four rows, as a table",
+        "4",
+        "5, counting the header line"
+      ],
+      "answer": 2,
+      "why": "`count()` counts rows and gives back a plain number. The header isn't a row, and the columns are `len(courses.columns)`."
+    }
+  ],
+  "review": [
+    "Spark processes data in parallel: it splits a table into partitions and works on several at once, one per core.",
+    "Here Spark runs in local mode on one machine with 2 cores. On a cluster the same code spreads over many machines.",
+    "PySpark is Spark's Python API, and a DataFrame is a table Spark manages: named columns, their types and rows.",
+    "`df.show()` prints up to 20 rows and cuts long text to 20 characters; `df.show(n)` prints the first `n`.",
+    "`df.count()` gives back the number of rows as a Python number.",
+    "`df.columns` is a list of column names (no parentheses); `df.printSchema()` prints each column's name and type."
+  ],
+  "practice": ["PS-Q0001", "PS-Q0002", "PS-Q0003", "PS-Q0004", "PS-Q0005"]
+}

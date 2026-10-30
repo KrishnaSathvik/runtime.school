@@ -1,0 +1,145 @@
+{
+ "id": "PS-L078",
+ "minutes": 30,
+ "lede": "A pipeline step that gives the right rows today can give wrong ones the day a NULL or a boundary value arrives. Tests with a few hand-made rows check each step on exactly those cases, and an integration test checks that the steps still agree when they run together.",
+ "objectives": [
+  "Write a pipeline step as a function and test it on a small DataFrame built with `createDataFrame` and a schema",
+  "Compare a result with the expected rows, using sorted `collect()` or `assertDataFrameEqual`",
+  "Test the edge cases on purpose: boundaries, NULL, NaN and an empty input",
+  "Write an integration test that runs two steps together on input shaped like the real table"
+ ],
+ "dataset": {
+  "id": "PS-D04",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "observations"
+  ]
+ },
+ "blocks": [
+  {
+   "kind": "text",
+   "md": "`observations` holds lab results. One step of the clinic's pipeline puts each HbA1c result in a band: below 5.7 is `normal`, from 5.7 up to 6.5 is `prediabetes`, 6.5 and above is `diabetes`.\n\nWrite the step as a function that takes a DataFrame and returns one. That's what makes it testable: a test can call it with any input it likes."
+  },
+  {
+   "kind": "example",
+   "id": "e1",
+   "title": "A step as a function",
+   "code": "from pyspark.sql import functions as F\n\n\ndef hba1c_band(observations):\n    value = F.col(\"value\")\n    band = F.when(value < 5.7, \"normal\").when(value < 6.5, \"prediabetes\").otherwise(\"diabetes\")\n    return observations.filter(F.col(\"code\") == \"HBA1C\").select(\"observation_id\", \"value\", band.alias(\"band\"))\n\n\nhba1c_band(observations).show()\n",
+   "note": "On today's data every band looks right. That says little: none of these values sits on a boundary, and none is missing."
+  },
+  {
+   "kind": "text",
+   "md": "A **unit test** checks one step on input you chose. Build the input with `spark.createDataFrame(rows, schema)`, giving only the columns the step reads, and pick rows that sit exactly on each boundary, plus one the step should drop.\n\n`collect()` is an action that brings every row back to Python as a list of `Row` objects. A `Row` behaves like a tuple, so `tuple(row)` compares with expected tuples. Sort both lists first: Spark makes no promise about row order."
+  },
+  {
+   "kind": "example",
+   "id": "e2",
+   "title": "A unit test with hand-made rows",
+   "code": "from pyspark.sql import functions as F\n\n\ndef hba1c_band(observations):\n    value = F.col(\"value\")\n    band = F.when(value < 5.7, \"normal\").when(value < 6.5, \"prediabetes\").otherwise(\"diabetes\")\n    return observations.filter(F.col(\"code\") == \"HBA1C\").select(\"observation_id\", \"value\", band.alias(\"band\"))\n\n\ndef test_boundaries():\n    test_input = spark.createDataFrame(\n        [(\"O1\", \"HBA1C\", 5.6), (\"O2\", \"HBA1C\", 5.7), (\"O3\", \"HBA1C\", 6.4), (\"O4\", \"HBA1C\", 6.5), (\"O5\", \"GLU\", 131.0)],\n        \"observation_id STRING, code STRING, value DOUBLE\",\n    )\n    want = [(\"O1\", 5.6, \"normal\"), (\"O2\", 5.7, \"prediabetes\"), (\"O3\", 6.4, \"prediabetes\"), (\"O4\", 6.5, \"diabetes\")]\n    got = [tuple(row) for row in hba1c_band(test_input).collect()]\n    assert sorted(got) == sorted(want), f\"got {sorted(got)}\"\n    print(\"test_boundaries passed\")\n\n\ntest_boundaries()\n",
+   "note": "Each boundary landed in the right band and the glucose row was dropped. `collect()` is fine here because test inputs are tiny; on a real table it would pull every row onto the driver."
+  },
+  {
+   "kind": "text",
+   "md": "Boundaries aren't the only edge. A result can be missing (NULL) or not a number (NaN). Decide what the step should do, here give no band, and write a test that says so."
+  },
+  {
+   "kind": "error-example",
+   "id": "e3",
+   "title": "The edge case the test finds",
+   "code": "from pyspark.sql import functions as F\n\n\ndef hba1c_band(observations):\n    value = F.col(\"value\")\n    band = F.when(value < 5.7, \"normal\").when(value < 6.5, \"prediabetes\").otherwise(\"diabetes\")\n    return observations.filter(F.col(\"code\") == \"HBA1C\").select(\"observation_id\", \"value\", band.alias(\"band\"))\n\n\ndef test_missing_values():\n    test_input = spark.createDataFrame(\n        [(\"O6\", \"HBA1C\", None), (\"O7\", \"HBA1C\", float(\"nan\"))],\n        \"observation_id STRING, code STRING, value DOUBLE\",\n    )\n    got = [tuple(row) for row in hba1c_band(test_input).collect()]\n    bands = sorted((oid, band) for oid, value, band in got)\n    assert bands == [(\"O6\", None), (\"O7\", None)], f\"got {bands}\"\n\n\ntest_missing_values()\n",
+   "error": "AssertionError",
+   "note": "Both rows got `diabetes`. A NULL value isn't less than anything, so it falls through to `otherwise`. NaN counts as larger than every number in Spark, so it does too. Without the test, an unmeasured result would be reported as diabetes."
+  },
+  {
+   "kind": "text",
+   "md": "The fix: give NaN no band first, and replace `otherwise` with a last `when`, so a NULL matches nothing and stays NULL.\n\nComparing tuples gets awkward with NaN, because in Python `nan == nan` is false. `assertDataFrameEqual` from `pyspark.testing` compares two DataFrames for you: the same columns with the same types, and the same rows in any order, with NaN equal to NaN. When they differ it raises `PySparkAssertionError`, and `getCondition()` names what differed."
+  },
+  {
+   "kind": "example",
+   "id": "e4",
+   "title": "assertDataFrameEqual",
+   "code": "from pyspark.sql import functions as F\nfrom pyspark.testing import assertDataFrameEqual\n\n\ndef hba1c_band(observations):\n    value = F.col(\"value\")\n    band = (\n        F.when(F.isnan(value), None)\n        .when(value < 5.7, \"normal\")\n        .when(value < 6.5, \"prediabetes\")\n        .when(value >= 6.5, \"diabetes\")\n    )\n    return observations.filter(F.col(\"code\") == \"HBA1C\").select(\"observation_id\", \"value\", band.alias(\"band\"))\n\n\ntest_input = spark.createDataFrame(\n    [(\"O1\", \"HBA1C\", 6.5), (\"O6\", \"HBA1C\", None), (\"O7\", \"HBA1C\", float(\"nan\"))],\n    \"observation_id STRING, code STRING, value DOUBLE\",\n)\nexpected = spark.createDataFrame(\n    [(\"O7\", float(\"nan\"), None), (\"O6\", None, None), (\"O1\", 6.5, \"diabetes\")],\n    \"observation_id STRING, value DOUBLE, band STRING\",\n)\nassertDataFrameEqual(hba1c_band(test_input), expected)\nprint(\"same rows, in any order\")\n\nwrong_types = spark.createDataFrame(\n    [(\"O7\", \"NaN\", None), (\"O6\", None, None), (\"O1\", \"6.5\", \"diabetes\")],\n    \"observation_id STRING, value STRING, band STRING\",\n)\ntry:\n    assertDataFrameEqual(hba1c_band(test_input), wrong_types)\nexcept Exception as e:\n    print(type(e).__name__, e.getCondition())\n",
+   "note": "The first comparison passes even though the expected rows are in a different order. The second fails on the schema before it looks at any row: `value` is text there, not a double."
+  },
+  {
+   "kind": "text",
+   "md": "An empty input is worth one test too. A step should return no rows, but still the right columns and types, so the next step can run on it."
+  },
+  {
+   "kind": "example",
+   "id": "e5",
+   "title": "An empty input",
+   "code": "from pyspark.sql import functions as F\n\n\ndef hba1c_band(observations):\n    value = F.col(\"value\")\n    band = (\n        F.when(F.isnan(value), None)\n        .when(value < 5.7, \"normal\")\n        .when(value < 6.5, \"prediabetes\")\n        .when(value >= 6.5, \"diabetes\")\n    )\n    return observations.filter(F.col(\"code\") == \"HBA1C\").select(\"observation_id\", \"value\", band.alias(\"band\"))\n\n\nempty = spark.createDataFrame([], \"observation_id STRING, code STRING, value DOUBLE\")\nresult = hba1c_band(empty)\nassert result.count() == 0\nassert result.dtypes == [(\"observation_id\", \"string\"), (\"value\", \"double\"), (\"band\", \"string\")]\nprint(\"an empty input gives an empty result with the right columns\")\n",
+   "note": "`createDataFrame([], schema)` makes an empty DataFrame with exactly the columns you name. `dtypes` checks the result's shape without needing any rows."
+  },
+  {
+   "kind": "text",
+   "md": "Each step can pass its own tests and the pipeline can still be wrong, because the steps disagree about something. An **integration test** runs the steps together on input with the real table's columns: `observations.schema` reuses the table's schema, so the test can't drift from it.\n\nIn a project, tests live in a file and a runner such as pytest calls every function whose name starts with `test_`. Here the examples call them directly."
+  },
+  {
+   "kind": "error-example",
+   "id": "e6",
+   "title": "Two steps that pass alone, fail together",
+   "code": "from pyspark.sql import functions as F\n\n\ndef hba1c_band(observations):\n    value = F.col(\"value\")\n    band = (\n        F.when(F.isnan(value), None)\n        .when(value < 5.7, \"normal\")\n        .when(value < 6.5, \"prediabetes\")\n        .when(value >= 6.5, \"diabetes\")\n    )\n    return observations.filter(F.col(\"code\") == \"HBA1C\").select(\"observation_id\", \"value\", band.alias(\"band\"))\n\n\ndef clean(observations):\n    return observations.fillna(0.0, subset=[\"value\"])\n\n\ndef test_clean():\n    test_input = spark.createDataFrame([(\"O1\", 5.6), (\"O2\", None)], \"observation_id STRING, value DOUBLE\")\n    assert clean(test_input).filter(F.col(\"value\").isNull()).count() == 0\n    print(\"test_clean passed\")\n\n\ndef test_pipeline():\n    test_input = spark.createDataFrame(\n        [\n            (\"OBS1\", \"ENC1\", \"PAT1\", \"HBA1C\", \"Hemoglobin A1c\", 7.1, \"%\", None),\n            (\"OBS2\", \"ENC1\", \"PAT1\", \"HBA1C\", \"Hemoglobin A1c\", None, \"%\", None),\n        ],\n        observations.schema,\n    )\n    got = sorted((r[\"observation_id\"], r[\"band\"]) for r in hba1c_band(clean(test_input)).collect())\n    assert got == [(\"OBS1\", \"diabetes\")], f\"got {got}\"\n\n\ntest_clean()\ntest_pipeline()\n",
+   "error": "AssertionError",
+   "note": "`test_clean` passes: no value is missing after `clean`. But `clean` filled the missing result with 0.0, and `hba1c_band` put 0.0 in `normal`. Each step did what its own test asked; together they report a test that was never done. The fix is to agree on a contract between the steps: `clean` should drop rows without a real value instead."
+  }
+ ],
+ "challenges": [
+  "PS-L078-C1",
+  "PS-L078-C2"
+ ],
+ "concept": [
+  {
+   "id": "k1",
+   "prompt": "Why sort both lists before comparing `collect()` results in a test?",
+   "choices": [
+    "`collect()` returns rows in a random order every time",
+    "Spark doesn't promise any row order, so an unsorted comparison could fail on correct rows",
+    "Sorting removes duplicate rows",
+    "`collect()` only works on sorted DataFrames"
+   ],
+   "answer": 1,
+   "why": "Without `orderBy`, row order depends on how the data is split, so a test should not depend on it. `assertDataFrameEqual` ignores order by default for the same reason."
+  },
+  {
+   "id": "k2",
+   "prompt": "What does `assertDataFrameEqual(actual, expected)` check?",
+   "choices": [
+    "Only that both have the same number of rows",
+    "The same rows in the same order, ignoring column types",
+    "The same columns and types, and the same rows in any order",
+    "That both were built from the same table"
+   ],
+   "answer": 2,
+   "why": "It compares the schemas first and raises `DIFFERENT_SCHEMA` if they differ, then the rows as a set with duplicates counted, in any order unless you ask for `checkRowOrder=True`."
+  },
+  {
+   "id": "k3",
+   "prompt": "Two steps each pass their unit tests, but the pipeline gives a wrong answer. Which test would catch it?",
+   "choices": [
+    "More unit tests for the first step",
+    "An integration test that runs both steps on input shaped like the real table",
+    "Running the pipeline on today's data and looking at it",
+    "A test that the result isn't empty"
+   ],
+   "answer": 1,
+   "why": "The mistake is between the steps: what one produces doesn't match what the other assumes. Only a test that runs them together, on realistic input, sees that."
+  }
+ ],
+ "review": [
+  "Write each step as a function from DataFrames to a DataFrame so a test can call it with chosen input.",
+  "Build test input with `spark.createDataFrame(rows, schema)`, only the columns the step reads, and rows that sit on each boundary.",
+  "Compare sorted `collect()` tuples, or use `assertDataFrameEqual`, which checks the schema and the rows in any order, with NaN equal to NaN.",
+  "Test NULL, NaN and an empty input on purpose: a NULL falls through to `otherwise`, and NaN is larger than every number.",
+  "An integration test runs the steps together on input with the real schema; it catches steps that disagree."
+ ],
+ "practice": [
+  "PS-Q0386",
+  "PS-Q0387",
+  "PS-Q0388",
+  "PS-Q0389",
+  "PS-Q0390"
+ ]
+}

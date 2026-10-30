@@ -1,0 +1,258 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "employee_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "employment_type",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "E0001",
+     "full_time"
+    ],
+    [
+     "E0002",
+     "full_time"
+    ],
+    [
+     "E0003",
+     "full_time"
+    ],
+    [
+     "E0004",
+     "full_time"
+    ],
+    [
+     "E0005",
+     "full_time"
+    ],
+    [
+     "E0010",
+     "full_time"
+    ],
+    [
+     "E0011",
+     "full_time"
+    ],
+    [
+     "E0012",
+     "part_time"
+    ],
+    [
+     "E0013",
+     "contractor"
+    ],
+    [
+     "E0014",
+     "part_time"
+    ],
+    [
+     "E0015",
+     null
+    ]
+   ],
+   "row_count": 11,
+   "inputs": {
+    "employees": [
+     [
+      "E0001",
+      "Tomas",
+      "Haddad",
+      "tomas.haddad@corp.example",
+      "555-490-5027",
+      "Chief Executive Officer",
+      "5",
+      "D01",
+      null,
+      "2025-01-06",
+      "full_time",
+      "260000.00",
+      "active",
+      null
+     ],
+     [
+      "E0002",
+      "Noor",
+      "Novak",
+      "noor.novak@corp.example",
+      "555-919-2731",
+      "Head of Engineering",
+      "4",
+      "D02",
+      "E0001",
+      "2025-05-26",
+      "full_time",
+      "200000.00",
+      "active",
+      null
+     ],
+     [
+      "E0003",
+      "Lena",
+      "Duarte",
+      "lena.duarte@corp.example",
+      "555-831-2628",
+      "Software Engineer",
+      "1",
+      "D02",
+      "E0002",
+      "2025-07-15",
+      "full_time",
+      "75000.00",
+      "active",
+      null
+     ],
+     [
+      "E0004",
+      "Anika",
+      "Silva",
+      "anika.silva@corp.example",
+      "555-574-7551",
+      "  senior software engineer",
+      "2",
+      "D02",
+      "E0002",
+      "2025-08-15",
+      "full_time",
+      "70000.00",
+      "active",
+      null
+     ],
+     [
+      "E0005",
+      "Elif",
+      "Rao",
+      "elif.rao@corp.example",
+      "555-717-5507",
+      "Senior Software Engineer",
+      "2",
+      "D02",
+      "E0002",
+      "2025-07-07",
+      "full_time",
+      "70000.00",
+      "active",
+      null
+     ],
+     [
+      "E0010",
+      "Lena",
+      "Duarte",
+      "lena.duarte@corp.example",
+      "555-831-2628",
+      "Software Engineer",
+      "1",
+      "D02",
+      "E0002",
+      "2025-07-15",
+      " FT",
+      "75000.00",
+      "active",
+      null
+     ],
+     [
+      "E0011",
+      "Lena",
+      "Duarte",
+      "lena.duarte@corp.example",
+      "555-831-2628",
+      "Software Engineer",
+      "1",
+      "D02",
+      "E0002",
+      "2025-07-15",
+      "Full  Time",
+      "75000.00",
+      "active",
+      null
+     ],
+     [
+      "E0012",
+      "Lena",
+      "Duarte",
+      "lena.duarte@corp.example",
+      "555-831-2628",
+      "Software Engineer",
+      "1",
+      "D02",
+      "E0002",
+      "2025-07-15",
+      "pt ",
+      "75000.00",
+      "active",
+      null
+     ],
+     [
+      "E0013",
+      "Lena",
+      "Duarte",
+      "lena.duarte@corp.example",
+      "555-831-2628",
+      "Software Engineer",
+      "1",
+      "D02",
+      "E0002",
+      "2025-07-15",
+      "Contract",
+      "75000.00",
+      "active",
+      null
+     ],
+     [
+      "E0014",
+      "Lena",
+      "Duarte",
+      "lena.duarte@corp.example",
+      "555-831-2628",
+      "Software Engineer",
+      "1",
+      "D02",
+      "E0002",
+      "2025-07-15",
+      "part-time",
+      "75000.00",
+      "active",
+      null
+     ],
+     [
+      "E0015",
+      "Lena",
+      "Duarte",
+      "lena.duarte@corp.example",
+      "555-831-2628",
+      "Software Engineer",
+      "1",
+      "D02",
+      "E0002",
+      "2025-07-15",
+      null,
+      "75000.00",
+      "active",
+      null
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice employees table",
+  "short forms in different case and with stray spaces",
+  "types written with spaces, hyphens and runs of both",
+  "values that aren't short forms, and a missing type",
+  "an empty employees table"
+ ]
+}

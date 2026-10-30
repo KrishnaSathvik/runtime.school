@@ -1,0 +1,139 @@
+{
+  "id": "PS-L043",
+  "minutes": 25,
+  "lede": "CSV is the most common way data arrives, and the least precise: no types, any separator, quotes, and the odd broken line. Read options are how you tell Spark what the file really looks like.",
+  "objectives": [
+    "Read a CSV file with the right separator and header using `spark.read.csv` options",
+    "Give the columns their types with a schema instead of letting Spark guess",
+    "Keep values that contain the separator intact with quotes",
+    "Choose what happens to malformed lines with `mode`, and keep them for review"
+  ],
+  "dataset": {
+    "id": "PS-D03",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "employees_raw"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`employees_raw` is the HR system's export exactly as it was delivered: one line of text per row, in a single `value` column. Look at it before reading it as CSV. The first line is a header, fields are separated by `;`, and one job title is wrapped in double quotes because it contains a `;` itself."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "The export as plain text",
+      "code": "employees_raw.show(truncate=False)\n",
+      "note": "Ten lines: a header and nine employees. The line for E0005 stops after the job title: three fields are missing."
+    },
+    {
+      "kind": "text",
+      "md": "In a real pipeline the export is a file. To work with a file here, each example first saves the text to `/tmp/hr/employees` with one line, `employees_raw.write.mode(\"overwrite\").text(...)`, and then reads it back with `spark.read.csv`. The lessons on file formats cover writing properly; for now it's just the way to get a file.\n\n`spark.read.csv(path)` assumes a comma between fields and no header. Options change that: `sep=\";\"` sets the separator and `header=True` takes column names from the first line."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Separator and header",
+      "code": "employees_raw.write.mode(\"overwrite\").text(\"/tmp/hr/employees\")\n\nspark.read.csv(\"/tmp/hr/employees\").show(3)\n\npeople = spark.read.csv(\"/tmp/hr/employees\", sep=\";\", header=True)\npeople.show(truncate=False)\npeople.printSchema()\n",
+      "note": "With the defaults there are no commas to split on, so each whole line lands in one column called `_c0`, and the header is treated as data. With the right options there are six named columns, but every one is text, salary and date included."
+    },
+    {
+      "kind": "text",
+      "md": "CSV has no types. `inferSchema=True` asks Spark to read the data an extra time and guess them, and it guesses `double` for the salary, which isn't exact for money. A schema says exactly what each column is: the same schema strings you've used to create DataFrames, passed as `schema=`. With a schema, Spark doesn't need to guess; `header=True` still tells it to skip the first line. `spark.read.schema(schema).csv(path, ...)` does the same, and that form works for the other file formats too."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Guessed types and a schema",
+      "code": "employees_raw.write.mode(\"overwrite\").text(\"/tmp/hr/employees\")\n\nspark.read.csv(\"/tmp/hr/employees\", sep=\";\", header=True, inferSchema=True).printSchema()\n\nschema = \"employee_id STRING, full_name STRING, job_title STRING, department STRING, salary DECIMAL(10,2), hire_date DATE\"\ntyped = spark.read.csv(\"/tmp/hr/employees\", sep=\";\", header=True, schema=schema)\ntyped.printSchema()\ntyped.select(\"employee_id\", \"salary\", \"hire_date\").show(3)\n",
+      "note": "The guess makes `salary` a `double` and `hire_date` a `date`. The schema makes `salary` an exact `decimal(10,2)`, and the names come from the schema, in its order."
+    },
+    {
+      "kind": "text",
+      "md": "A field that contains the separator has to be quoted, or it would split into two. Spark reads text between double quotes as one value by default, and drops the quotes. The `quote` option changes the quote character if a file uses another one."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "A quoted value keeps its separator",
+      "code": "employees_raw.write.mode(\"overwrite\").text(\"/tmp/hr/employees\")\n\nschema = \"employee_id STRING, full_name STRING, job_title STRING, department STRING, salary DECIMAL(10,2), hire_date DATE\"\ntyped = spark.read.csv(\"/tmp/hr/employees\", sep=\";\", header=True, schema=schema)\ntyped.select(\"employee_id\", \"job_title\", \"department\").show(truncate=False)\n",
+      "note": "E0007's title, `Head of Finance; Onboarding`, stays one value, and its department is still `Finance`. Without the quotes, `Onboarding` would have pushed every later field one place to the right."
+    },
+    {
+      "kind": "text",
+      "md": "A **malformed** line doesn't match the schema: too few or too many fields, or a value that isn't a valid number or date for its column. The `mode` option decides what happens to it:\n\n- `PERMISSIVE` (the default) keeps the row and sets what it couldn't read to NULL.\n- `DROPMALFORMED` leaves the row out.\n- `FAILFAST` stops the job with an error at the first bad line.\n\nWith `PERMISSIVE`, add a text column to the schema and name it in `columnNameOfCorruptRecord`: for each bad line it holds the raw text, so you can see and report exactly what arrived."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Keep, flag or drop bad lines",
+      "code": "employees_raw.write.mode(\"overwrite\").text(\"/tmp/hr/employees\")\n\nschema = \"employee_id STRING, full_name STRING, job_title STRING, department STRING, salary DECIMAL(10,2), hire_date DATE\"\n\nflagged = spark.read.csv(\"/tmp/hr/employees\", sep=\";\", header=True,\n                         schema=schema + \", bad_line STRING\", columnNameOfCorruptRecord=\"bad_line\")\nflagged.show(truncate=False)\n\nclean = spark.read.csv(\"/tmp/hr/employees\", sep=\";\", header=True, schema=schema, mode=\"DROPMALFORMED\")\nclean.show(truncate=False)\n",
+      "note": "`PERMISSIVE` keeps E0005 with NULL department, salary and date, and `bad_line` shows the line as it arrived. `DROPMALFORMED` gives the eight good employees."
+    },
+    {
+      "kind": "text",
+      "md": "One caution: Spark checks only the columns a query actually reads. If you select just `employee_id`, or call `count()`, a short line can slip through unnoticed, so a dropped line may still be counted. Judge bad lines on the full row."
+    },
+    {
+      "kind": "error-example",
+      "id": "e6",
+      "title": "A path that isn't there",
+      "code": "spark.read.csv(\"/tmp/hr/employes\", sep=\";\", header=True).show()\n",
+      "error": "AnalysisException",
+      "note": "The path has a typo. Spark checks that the files exist as soon as you call `read`, before any action, so a wrong path fails on that line."
+    }
+  ],
+  "challenges": [
+    "PS-L043-C1",
+    "PS-L043-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "A file uses `;` between fields. What does `spark.read.csv(path, header=True)` give?",
+      "choices": [
+        "Six columns, split on `;`",
+        "One column per line, because the default separator is a comma",
+        "An error about the separator",
+        "Six columns with types guessed"
+      ],
+      "answer": 1,
+      "why": "The default separator is a comma. With no commas in the lines, each whole line becomes one value. Pass `sep=\";\"`."
+    },
+    {
+      "id": "k2",
+      "prompt": "In the default `PERMISSIVE` mode, what happens to a line with too few fields?",
+      "choices": [
+        "It stops the job",
+        "It's dropped",
+        "It's kept, with NULL for the fields it couldn't read",
+        "Its fields shift to the left"
+      ],
+      "answer": 2,
+      "why": "`PERMISSIVE` keeps the row and sets the missing values to NULL. Add a column named in `columnNameOfCorruptRecord` to keep the raw line too."
+    },
+    {
+      "id": "k3",
+      "prompt": "Why give a schema rather than `inferSchema=True` for a salary column?",
+      "choices": [
+        "A schema can make it an exact decimal, while inference guesses a double",
+        "inferSchema can't read numbers",
+        "A schema makes the file smaller",
+        "inferSchema ignores the header"
+      ],
+      "answer": 0,
+      "why": "Inference guesses `double` for numbers with a fraction, which isn't exact for money, and costs an extra pass over the data. A schema says exactly what you want."
+    }
+  ],
+  "review": [
+    "`spark.read.csv(path, sep=\";\", header=True)` reads a file with a `;` separator and a header line. The default separator is a comma.",
+    "Without a schema every column is text. `inferSchema=True` guesses, with an extra pass; `schema=\"...\"` says exactly what each column is.",
+    "Values in double quotes stay whole even when they contain the separator.",
+    "`mode` decides what happens to malformed lines: `PERMISSIVE` keeps them with NULLs, `DROPMALFORMED` drops them, `FAILFAST` stops the job.",
+    "Add a text column to the schema and name it in `columnNameOfCorruptRecord` to keep each bad line's raw text.",
+    "Spark only checks the columns a query reads, so judge bad lines on the full row."
+  ],
+  "practice": ["PS-Q0211", "PS-Q0212", "PS-Q0213", "PS-Q0214", "PS-Q0215"]
+}

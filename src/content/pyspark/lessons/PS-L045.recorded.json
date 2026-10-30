@@ -1,0 +1,43 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D07",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "trips"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "root\n |-- trip_id: string (nullable = true)\n |-- driver_id: string (nullable = true)\n |-- pickup_at: timestamp (nullable = true)\n |-- dropoff_at: timestamp (nullable = true)\n |-- pickup_zone_id: integer (nullable = true)\n |-- dropoff_zone_id: integer (nullable = true)\n |-- passenger_count: integer (nullable = true)\n |-- trip_distance: double (nullable = true)\n |-- rate_code: string (nullable = true)\n |-- fare: decimal(8,2) (nullable = true)\n |-- tip: decimal(8,2) (nullable = true)\n |-- tolls: decimal(8,2) (nullable = true)\n |-- surcharge: decimal(8,2) (nullable = true)\n |-- total: decimal(8,2) (nullable = true)\n |-- payment_type: string (nullable = true)\n\n+-------+-------------------+-----+-----+\n|trip_id|          pickup_at| fare|total|\n+-------+-------------------+-----+-----+\n|   T001|2026-04-07 07:05:07|15.63|18.94|\n|   T002|2026-04-07 07:12:14|16.38|20.16|\n|   T003|2026-04-07 07:40:21| 8.63| 9.13|\n+-------+-------------------+-----+-----+\nonly showing top 3 rows\n12 trips\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "string string\ndecimal(8,2) timestamp\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "1 part file, True\n['.snappy.parquet']\n['.gz.parquet']\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "['.zstd.orc']\nTrue\n+-------+-------------+-----+------------+\n|trip_id|trip_distance|total|payment_type|\n+-------+-------------+-----+------------+\n|   T001|         2.25|18.94|        card|\n|   T002|         2.35|20.16|        card|\n|   T003|         0.95| 9.13|        cash|\n+-------+-------------+-----+------------+\nonly showing top 3 rows\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "",
+   "error": {
+    "type": "AnalysisException",
+    "message": "[PATH_ALREADY_EXISTS] Path file:/tmp/taxi/trips already exists. Set mode as \"overwrite\" to overwrite the existing path. SQLSTATE: 42K04",
+    "line": 2,
+    "condition": "PATH_ALREADY_EXISTS"
+   }
+  }
+ }
+}

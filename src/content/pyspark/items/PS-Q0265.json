@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0265",
+  "slug": "readings-on-old-firmware",
+  "lesson": "PS-L053",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 17,
+  "title": "Readings on old firmware",
+  "dataset": {
+    "id": "PS-D09",
+    "version": "1.0.0"
+  },
+  "prompt": "Firmware 2.4.0 fixed a sensor bug, so the team is reviewing every reading taken on an older version. Write `solve(sensor_readings)` so it returns `reading_id`, `device_id`, `version` and `priority` for those readings. `mapInPandas` works for parsing the versions, but any correct approach passes.",
+  "rules": [
+    "A version is three numbers, major.minor.patch, compared as numbers: 2.3.12 is older than 2.4.0, and 2.10.0 is newer.",
+    "Keep only readings on a version older than 2.4.0. A reading with no firmware version is left out.",
+    "`priority` is `high` when `status` is `low_battery` or `degraded`, and `normal` otherwise, including a missing status.",
+    "Keep every delivered row. Return `reading_id`, `device_id`, `version` and `priority`, all text, in that order."
+  ],
+  "hints": [
+    "Leave out the readings with no version first, with a `filter`. With `mapInPandas`, add whole-number `major` and `minor` columns: `pdf[\"version\"].str.split(\".\")` gives lists, and `.str[0]` picks the first part.",
+    "Text comparison goes character by character, so \"2.10.0\" < \"2.4.0\" is true. Compare the numbers: older than 2.4.0 means major below 2, or major 2 and minor below 4.",
+    "After the parsing, the rest is built-ins: `filter`, then `F.when(F.col(\"status\").isin(...), \"high\").otherwise(\"normal\")` in a `select`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "sensor_readings"
+  ],
+  "starter": "import pandas as pd\nfrom pyspark.sql import functions as F\n\n\ndef solve(sensor_readings):\n    # The firmware version and status from inside the structs, as plain columns.\n    readings = sensor_readings.select(\n        \"reading_id\", \"device_id\",\n        F.col(\"firmware.version\").alias(\"version\"),\n        F.col(\"payload.status\").alias(\"status\"),\n    )\n    # Return reading_id, device_id, version and priority for readings on firmware older than 2.4.0.\n    return readings\n",
+  "output": {
+    "columns": [
+      "reading_id",
+      "device_id",
+      "version",
+      "priority"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Filter out the missing versions first, so the function only sees real ones. In `mapInPandas`, split each version with `pdf[\"version\"].str.split(\".\")` and turn the parts into whole numbers: `.str[0].astype(\"int64\")` for `major`, `.str[1]` for `minor`. Declare them as `INT` in the schema. Back in Spark, keep `(F.col(\"major\") < 2) | ((F.col(\"major\") == 2) & (F.col(\"minor\") < 4))` and build `priority` with `F.when(F.col(\"status\").isin(\"low_battery\", \"degraded\"), \"high\").otherwise(\"normal\")`. `isin` on a missing status is NULL, not true, so it falls through to `normal`. Comparing the text, `\"2.10.0\" < \"2.4.0\"` is true, and treating the version as the number 2.10 gives 2.1, which is below 2.4: both would flag a newer sensor. Parsing is row by row, so it's batch-safe. Built-ins can do the parsing too, and are often the better choice: `F.split(\"version\", r\"\\.\")` gives the parts, `.cast(\"int\")` makes them numbers, and the whole job stays in the JVM without sending rows to Python."
+}

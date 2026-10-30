@@ -1,0 +1,26 @@
+{
+  "id": "PS-L012-C2",
+  "slug": "names-for-the-new-hr-system",
+  "lesson": "PS-L012",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Names for the new HR system",
+  "dataset": { "id": "PS-D03", "version": "1.0.0" },
+  "prompt": "The new HR system uses shorter column names, doesn't take salaries and needs a pay band. Write `solve(employees)` so it returns the employees table in that shape.",
+  "rules": [
+    "Rename `employee_id` to `emp_id`, `department_id` to `dept_id` and `manager_id` to `reports_to`, each in its place.",
+    "Remove `salary`. Keep every other column in its place.",
+    "Add `band` at the end: `level` times 10. A missing level gives a missing band."
+  ],
+  "hints": [
+    "`withColumnsRenamed` takes a dict of old name to new name.",
+    "A misspelt old name is ignored without an error, so check the result's columns.",
+    "`withColumn(\"band\", ...)` with `F.col(\"level\") * 10` adds the band."
+  ],
+  "entry": "solve",
+  "inputs": ["employees"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(employees):\n    # Rename three columns, drop salary, add band.\n    return employees\n",
+  "output": { "columns": ["emp_id", "first_name", "last_name", "email", "phone", "job_title", "level", "dept_id", "reports_to", "hire_date", "employment_type", "status", "termination_date", "band"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

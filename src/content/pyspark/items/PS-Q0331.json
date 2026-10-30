@@ -1,0 +1,55 @@
+{
+ "id": "PS-Q0331",
+ "slug": "searches-that-found-nothing",
+ "lesson": "PS-L067",
+ "role": "foundation",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 12,
+ "title": "Searches that found nothing",
+ "dataset": {
+  "id": "PS-D06",
+  "version": "1.0.0"
+ },
+ "prompt": "The search team wants every search that came back empty, as the deliveries stream in. Write `solve(searches)` so a streaming query reads the delivery files and returns `event_id`, `session_id` and `query` for every search that found no results.",
+ "rules": [
+  "A search found nothing when its `results_count` is 0.",
+  "Return these three columns, one row per search.",
+  "The rows must come from a streaming query over the delivery files: filtering `searches` itself doesn't count."
+ ],
+ "hints": [
+  "Read the folder with `spark.readStream`, the table's schema and `.json(folder)`. `filter` and `select` work on the stream as usual.",
+  "A streaming DataFrame can't be collected. `writeStream.foreachBatch(fn)` hands `fn` each micro-batch as a batch DataFrame.",
+  "In `fn(batch_df, batch_id)`, add each collected row's three values to `rows`. Start with `trigger(availableNow=True)` and call `awaitTermination()` before returning."
+ ],
+ "explanation": "`spark.readStream.schema(searches.schema).json(folder)` gives a streaming DataFrame, and `filter(F.col(\"results_count\") == 0)` with a `select` runs on it like on a table. You can't `collect()` a stream, so the rows come out through `foreachBatch`: each micro-batch is a batch DataFrame, and its collected rows go into the Python list. `availableNow` processes every waiting file and stops, and `awaitTermination()` waits for that before the list is turned into a DataFrame. With or without `maxFilesPerTrigger`, the rows are the same: a filter gives the same answer however the stream is sliced. An empty `filters` list means no filter was ticked, not that nothing was found.",
+ "entry": "solve",
+ "inputs": [
+  "searches"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef solve(searches):\n    make_batches(searches, \"/tmp/searches\")\n    rows = []\n    # Stream /tmp/searches, keep the searches that found nothing,\n    # and add (event_id, session_id, query) to rows from each micro-batch.\n\n    return spark.createDataFrame(rows, \"event_id STRING, session_id STRING, query STRING\")\n",
+ "output": {
+  "columns": [
+   "event_id",
+   "session_id",
+   "query"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

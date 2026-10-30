@@ -1,0 +1,547 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "example": {
+   "schema": [
+    {
+     "name": "payer",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "encounter_class",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "claims",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "billed_amount",
+     "type": "decimal(14,2)",
+     "nullable": true
+    },
+    {
+     "name": "allowed_amount",
+     "type": "decimal(14,2)",
+     "nullable": true
+    },
+    {
+     "name": "paid_amount",
+     "type": "decimal(14,2)",
+     "nullable": true
+    },
+    {
+     "name": "denied_claims",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "Bluebird Health",
+     "emergency",
+     1,
+     "900.00",
+     "640.00",
+     "0.00",
+     0
+    ],
+    [
+     "Summit Senior Advantage",
+     null,
+     1,
+     "310.00",
+     "250.00",
+     "250.00",
+     0
+    ],
+    [
+     "Bluebird Health",
+     "ambulatory",
+     1,
+     "200.00",
+     "150.00",
+     "150.00",
+     0
+    ],
+    [
+     "Summit Senior Advantage",
+     "ambulatory",
+     1,
+     "480.00",
+     null,
+     "0.00",
+     0
+    ],
+    [
+     "Cedar State Medicaid",
+     "telehealth",
+     1,
+     "95.00",
+     "0.00",
+     "0.00",
+     1
+    ]
+   ],
+   "row_count": 5,
+   "inputs": {
+    "claims": [
+     [
+      "CLM900001",
+      "ENC900001",
+      "PAT90001",
+      "PRV0001",
+      "Bluebird Health",
+      "2025-11-03",
+      "2025-11-10",
+      "200.00",
+      "150.00",
+      "150.00",
+      "paid",
+      null
+     ],
+     [
+      "CLM900001",
+      "ENC900001",
+      "PAT90001",
+      "PRV0001",
+      "Bluebird Health",
+      "2025-11-03",
+      "2025-11-10",
+      "200.00",
+      "150.00",
+      "150.00",
+      "paid",
+      null
+     ],
+     [
+      "CLM900002",
+      "ENC900002",
+      "PAT90002",
+      "PRV0002",
+      "Summit Senior Advantage",
+      "2026-01-05",
+      "2026-01-20",
+      "480.00",
+      null,
+      null,
+      "submitted",
+      null
+     ],
+     [
+      "CLM900012",
+      "ENC900002",
+      "PAT90002",
+      "PRV0002",
+      "Summit Senior Advantage",
+      "2026-01-05",
+      "2026-02-15",
+      "480.00",
+      null,
+      null,
+      "submitted",
+      null
+     ],
+     [
+      "CLM900003",
+      "ENC900003",
+      "PAT90003",
+      null,
+      "Cedar State Medicaid",
+      "2026-02-01",
+      "2026-02-03",
+      "95.00",
+      "0.00",
+      "0.00",
+      "denied",
+      "not_covered"
+     ],
+     [
+      "CLM900004",
+      "ENC900004",
+      "PAT90004",
+      "PRV9123",
+      "Bluebird Health",
+      "2026-02-11",
+      "2026-02-20",
+      "130.00",
+      null,
+      null,
+      "submitted",
+      null
+     ],
+     [
+      "CLM900005",
+      "ENC900005",
+      "PAT90005",
+      "PRV9001",
+      "Bluebird Health",
+      "2026-03-10",
+      "2026-03-02",
+      "75.00",
+      null,
+      null,
+      "submitted",
+      null
+     ],
+     [
+      "CLM900006",
+      "ENC900006",
+      null,
+      "PRV0001",
+      "Cedar State Medicaid",
+      "2026-03-12",
+      null,
+      "60.00",
+      null,
+      null,
+      "submitted",
+      null
+     ],
+     [
+      "CLM900007",
+      "ENC900007",
+      "PAT90007",
+      "PRV0002",
+      "Summit Senior Advantage",
+      "2026-03-20",
+      "2026-03-28",
+      "100.00",
+      "120.00",
+      null,
+      "approved",
+      null
+     ],
+     [
+      "CLM900008",
+      "ENC900008",
+      "PAT90008",
+      "PRV0001",
+      "Bluebird Health",
+      "2026-04-02",
+      "2026-04-09",
+      "88.00",
+      null,
+      null,
+      "pending",
+      null
+     ],
+     [
+      "CLM900009",
+      "ENC900009",
+      "PAT90009",
+      "PRV0004",
+      "Bluebird Health",
+      "2026-04-15",
+      "2026-04-29",
+      "900.00",
+      "640.00",
+      null,
+      "approved",
+      null
+     ],
+     [
+      "CLM900010",
+      "ENC900010",
+      "PAT90010",
+      "PRV0002",
+      "Summit Senior Advantage",
+      "2026-05-06",
+      "2026-05-06",
+      "310.00",
+      "250.00",
+      "250.00",
+      "paid",
+      null
+     ]
+    ],
+    "encounters": [
+     [
+      "ENC900001",
+      "PAT90001",
+      "PRV0001",
+      "ambulatory",
+      "2025-11-03T09:00:00",
+      "2025-11-03T09:40:00",
+      "Visit",
+      "{\"heart_rate\":72,\"systolic\":120,\"diastolic\":78,\"temperature_c\":99.5}",
+      "[\"J06.9\"]",
+      null
+     ],
+     [
+      "ENC900002",
+      "PAT90002",
+      "PRV0002",
+      "ambulatory",
+      "2026-01-05T10:00:00",
+      "2026-01-05T10:30:00",
+      "Visit",
+      "{\"heart_rate\":72,\"systolic\":120,\"diastolic\":78,\"temperature_c\":36.8}",
+      "[\"I10\",\"E78.5\"]",
+      "home"
+     ],
+     [
+      "ENC900003",
+      "PAT90003",
+      "PRV0003",
+      "telehealth",
+      "2026-02-01T15:00:00",
+      "2026-02-01T15:20:00",
+      "Visit",
+      null,
+      "[\"F41.1\"]",
+      null
+     ],
+     [
+      "ENC900004",
+      "PAT90004",
+      "PRV0001",
+      "wellness",
+      "2026-02-11T08:30:00",
+      "2026-02-11T09:00:00",
+      "Visit",
+      "{\"heart_rate\":72,\"systolic\":120,\"diastolic\":78,\"temperature_c\":36.6}",
+      "[\"Z00.00\"]",
+      null
+     ],
+     [
+      "ENC900009",
+      "PAT90009",
+      "PRV0004",
+      "emergency",
+      "2026-04-15T22:10:00",
+      "2026-04-16T03:00:00",
+      "Visit",
+      "{\"heart_rate\":72,\"systolic\":120,\"diastolic\":78,\"temperature_c\":38.4}",
+      "[\"S52.501A\",\"W19\"]",
+      "home_with_care"
+     ]
+    ],
+    "providers": [
+     [
+      "PRV0001",
+      "Dr. Lena Okafor",
+      "family_medicine",
+      "Northfield Medical Group",
+      "Millbrook",
+      "true"
+     ],
+     [
+      "PRV0002",
+      "Dr. Tomas Varga",
+      "cardiology",
+      "Riverbend Heart Center",
+      "Riverton",
+      "true"
+     ],
+     [
+      "PRV0003",
+      "Dr. Priya Lund",
+      "pediatrics",
+      "Northfield Medical Group",
+      "Millbrook",
+      "false"
+     ],
+     [
+      "PRV0004",
+      "Dr. Owen Hale",
+      "emergency_medicine",
+      "Cedar Falls General",
+      "Cedar Falls",
+      "true"
+     ]
+    ]
+   }
+  },
+  "project": {
+   "schema": [
+    {
+     "name": "payer",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "encounter_class",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "claims",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "billed_amount",
+     "type": "decimal(14,2)",
+     "nullable": true
+    },
+    {
+     "name": "allowed_amount",
+     "type": "decimal(14,2)",
+     "nullable": true
+    },
+    {
+     "name": "paid_amount",
+     "type": "decimal(14,2)",
+     "nullable": true
+    },
+    {
+     "name": "denied_claims",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "Bluebird Health",
+     "emergency",
+     124,
+     "276326.48",
+     "143002.88",
+     "116610.17",
+     13
+    ],
+    [
+     "Summit Senior Advantage",
+     "telehealth",
+     86,
+     "9330.69",
+     "5245.93",
+     "4506.25",
+     8
+    ],
+    [
+     "Bluebird Health",
+     "inpatient",
+     52,
+     "898247.34",
+     "478655.65",
+     "378903.73",
+     8
+    ],
+    [
+     "Bluebird Health",
+     "ambulatory",
+     696,
+     "205746.57",
+     "105212.58",
+     "88550.46",
+     81
+    ],
+    [
+     "Cedar State Medicaid",
+     "wellness",
+     95,
+     "22529.09",
+     "10130.15",
+     "7730.30",
+     13
+    ],
+    [
+     "Cedar State Medicaid",
+     "ambulatory",
+     190,
+     "58049.95",
+     "28283.36",
+     "23841.82",
+     21
+    ],
+    [
+     "Summit Senior Advantage",
+     "ambulatory",
+     186,
+     "54962.36",
+     "27667.81",
+     "21021.27",
+     16
+    ],
+    [
+     "Summit Senior Advantage",
+     "emergency",
+     45,
+     "99218.48",
+     "41548.88",
+     "35341.20",
+     6
+    ],
+    [
+     "Bluebird Health",
+     "telehealth",
+     269,
+     "29838.36",
+     "14913.60",
+     "11804.12",
+     29
+    ],
+    [
+     "Cedar State Medicaid",
+     "telehealth",
+     76,
+     "7885.12",
+     "4535.70",
+     "3539.22",
+     5
+    ],
+    [
+     "Bluebird Health",
+     "wellness",
+     341,
+     "79966.15",
+     "42691.63",
+     "35134.49",
+     40
+    ],
+    [
+     "Cedar State Medicaid",
+     "inpatient",
+     16,
+     "224561.39",
+     "118813.67",
+     "107646.80",
+     0
+    ],
+    [
+     "Summit Senior Advantage",
+     "wellness",
+     104,
+     "24947.53",
+     "13104.92",
+     "11710.04",
+     10
+    ],
+    [
+     "Cedar State Medicaid",
+     "emergency",
+     35,
+     "75273.18",
+     "38611.52",
+     "32515.80",
+     2
+    ],
+    [
+     "Summit Senior Advantage",
+     "inpatient",
+     15,
+     "243031.44",
+     "135987.49",
+     "98570.33",
+     1
+    ]
+   ],
+   "row_count": 15
+  }
+ },
+ "hidden": [
+  "the full practice claims, visits and providers",
+  "groups with and without denied claims or allowed amounts, a claim with no visit, a rejected claim, a copy and a resubmission",
+  "an empty claims table"
+ ]
+}

@@ -1,0 +1,98 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "request_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "service",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "team",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "REQ-000002",
+     "catalog-api",
+     "catalog"
+    ],
+    [
+     "REQ-000005",
+     "search-api",
+     "search"
+    ],
+    [
+     "REQ-000006",
+     "catalog-api",
+     "catalog"
+    ],
+    [
+     "REQ-000008",
+     "checkout-api",
+     "payments"
+    ],
+    [
+     "REQ-000004",
+     "checkout-api",
+     "payments"
+    ],
+    [
+     "REQ-000003",
+     "auth-service",
+     "identity"
+    ],
+    [
+     "REQ-000007",
+     "iot-gateway",
+     "devices"
+    ],
+    [
+     "REQ-000009",
+     "catalog-api",
+     "catalog"
+    ],
+    [
+     "REQ-000010",
+     "iot-gateway",
+     "devices"
+    ],
+    [
+     "REQ-000001",
+     "catalog-api",
+     "catalog"
+    ],
+    [
+     "REQ-000011",
+     "search-api",
+     "search"
+    ],
+    [
+     "REQ-000012",
+     "catalog-api",
+     "catalog"
+    ]
+   ],
+   "row_count": 12
+  }
+ },
+ "hidden": [
+  "the full practice requests, including a service with no owner",
+  "services with no owner, and a request with no service recorded",
+  "twenty requests on one service and one on another",
+  "no requests at all"
+ ]
+}

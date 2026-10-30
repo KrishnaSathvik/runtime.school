@@ -1,0 +1,135 @@
+{
+  "id": "PS-L044",
+  "minutes": 25,
+  "lede": "Logs and event feeds usually arrive as JSON Lines: one JSON record per line. Most lines are fine; the few that aren't decide whether your job crashes, silently loses data, or tells you what went wrong.",
+  "objectives": [
+    "Read JSON Lines with `spark.read.json`, with and without a schema",
+    "Read a file that holds one JSON array with `multiLine=True`",
+    "Drop or keep malformed records with `mode` and `columnNameOfCorruptRecord`",
+    "Tell a broken line from a record with a missing field or a value of the wrong type"
+  ],
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "application_logs_raw"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`application_logs_raw` is an application log file before parsing, one line per row in a `value` column. Each good line is one JSON record. A few lines aren't: the shipper cut one record off halfway and then resent it whole, another record lost its closing `}`, and one line is a plain-text traceback."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "The log file as text",
+      "code": "application_logs_raw.show(truncate=60)\nprint(application_logs_raw.count(), \"lines\")\n",
+      "note": "Thirteen lines for ten log records. Look at lines 4, 8 and 12: the first two start like JSON but don't finish properly, and the third isn't JSON at all."
+    },
+    {
+      "kind": "text",
+      "md": "As in the CSV lesson, each example first saves the text as a file, here `/tmp/logs/app`, and reads it back.\n\n`spark.read.json(path)` reads **JSON Lines**: it expects one complete record on each line. Without a schema it reads the data once to work out the columns and their types, and puts any line it can't parse into an extra column, `_corrupt_record`."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Let Spark work out the schema",
+      "code": "application_logs_raw.write.mode(\"overwrite\").text(\"/tmp/logs/app\")\n\nlogs = spark.read.json(\"/tmp/logs/app\")\nlogs.printSchema()\nlogs.select(\"log_id\", \"level\", \"_corrupt_record\").show(truncate=50)\n",
+      "note": "Every field became text, including `logged_at`, and `attributes` became a struct with every key seen in any line. The three broken lines have NULL in every field and their raw text in `_corrupt_record`. LOG-000004 and LOG-000007 also appear as good records, from the copies that arrived whole."
+    },
+    {
+      "kind": "text",
+      "md": "A schema fixes the types and skips the extra pass. The options for bad records are the ones you know from CSV:\n\n- `PERMISSIVE` (the default) keeps a bad line as a row of NULLs. Add a text column to the schema and name it in `columnNameOfCorruptRecord` to keep the raw line.\n- `DROPMALFORMED` leaves bad lines out.\n- `FAILFAST` stops the job at the first one.\n\nFields that aren't in the schema are simply not read, so you can take only the part of each record you need."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Keep or drop the bad lines",
+      "code": "application_logs_raw.write.mode(\"overwrite\").text(\"/tmp/logs/app\")\n\nschema = \"log_id STRING, logged_at TIMESTAMP, level STRING, service STRING, message STRING\"\n\nflagged = spark.read.json(\"/tmp/logs/app\", schema=schema + \", bad_record STRING\", columnNameOfCorruptRecord=\"bad_record\")\nflagged.select(\"log_id\", \"level\", \"bad_record\").show(truncate=50)\n\nclean = spark.read.json(\"/tmp/logs/app\", schema=schema, mode=\"DROPMALFORMED\")\nclean.show(truncate=False)\n",
+      "note": "`flagged` has all thirteen lines; the three bad ones have no `log_id` and keep their text in `bad_record`. `clean` has exactly the ten log records, with `logged_at` as a real timestamp."
+    },
+    {
+      "kind": "text",
+      "md": "Not every problem is a broken line. A record can be valid JSON and still not fit the schema:\n\n- A **missing field** is just NULL. The record isn't malformed.\n- A value of the **wrong type**, such as text that isn't a number for an `INT` field, makes the record malformed. In `PERMISSIVE` mode the other fields are still read, the bad one is NULL, and the raw line is kept.\n- A blank line is skipped."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Missing fields and wrong types",
+      "code": "lines = [\n    '{\"log_id\": \"T1\", \"level\": \"INFO\", \"latency_ms\": 42}',\n    '{\"log_id\": \"T2\", \"level\": \"WARN\"}',\n    '{\"log_id\": \"T3\", \"level\": \"INFO\", \"latency_ms\": \"slow\"}',\n    '',\n    '{\"log_id\": \"T4\", \"level\": \"ERROR\", \"latency_ms\": 1240}',\n]\nwith open(\"/tmp/logs_types.jsonl\", \"w\") as f:\n    f.write(\"\\n\".join(lines) + \"\\n\")\n\nschema = \"log_id STRING, level STRING, latency_ms INT, bad_record STRING\"\nspark.read.json(\"/tmp/logs_types.jsonl\", schema=schema, columnNameOfCorruptRecord=\"bad_record\").show(truncate=False)\n",
+      "note": "T2 has no `latency_ms`, so it's NULL and the record is fine. T3's `\"slow\"` isn't an `INT`: the record is flagged, but its `log_id` and `level` were still read. The blank line gives no row. This small file is written with plain Python, which can write to `/tmp` too."
+    },
+    {
+      "kind": "text",
+      "md": "Some systems write one big JSON **array** instead of one record per line, often spread over many lines. Read line by line, every line is a fragment. `multiLine=True` tells Spark to parse each file as a whole JSON document; an array becomes one row per element."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "One JSON array across many lines",
+      "code": "with open(\"/tmp/logs_array.json\", \"w\") as f:\n    f.write('[\\n  {\"log_id\": \"A1\", \"level\": \"INFO\"},\\n  {\"log_id\": \"A2\", \"level\": \"WARN\"}\\n]\\n')\n\nspark.read.json(\"/tmp/logs_array.json\").show()\nspark.read.json(\"/tmp/logs_array.json\", multiLine=True).show()\n",
+      "note": "Line by line, `[` and `]` are bad records and each element happens to fit on its own line. With `multiLine=True` the whole file is one array, and its two elements become two clean rows."
+    },
+    {
+      "kind": "error-example",
+      "id": "e6",
+      "title": "Asking only for the bad records",
+      "code": "application_logs_raw.write.mode(\"overwrite\").text(\"/tmp/logs/app\")\n\nschema = \"log_id STRING, logged_at TIMESTAMP, level STRING, service STRING, message STRING, bad_record STRING\"\nlogs = spark.read.json(\"/tmp/logs/app\", schema=schema, columnNameOfCorruptRecord=\"bad_record\")\nlogs.select(\"bad_record\").show()\n",
+      "error": "AnalysisException",
+      "note": "Spark refuses a query on a raw JSON or CSV file that reads only the corrupt-record column, because with no other field asked for it can't reliably tell which lines are bad. Select another column with it, such as `log_id`, as the earlier example does."
+    }
+  ],
+  "challenges": [
+    "PS-L044-C1",
+    "PS-L044-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "A file holds one JSON array of records, spread over many lines. How do you read it?",
+      "choices": [
+        "`spark.read.json(path)`",
+        "`spark.read.json(path, multiLine=True)`",
+        "`spark.read.csv(path)`",
+        "`spark.read.text(path)`"
+      ],
+      "answer": 1,
+      "why": "By default `spark.read.json` expects one record per line. `multiLine=True` parses each file as one JSON document, and an array gives one row per element."
+    },
+    {
+      "id": "k2",
+      "prompt": "In `PERMISSIVE` mode with a schema, a record has `\"latency_ms\": \"slow\"` for an `INT` field. What happens?",
+      "choices": [
+        "The job stops",
+        "The record is dropped",
+        "The record is kept, `latency_ms` is NULL, its other fields are read, and the raw line goes to the corrupt-record column",
+        "`latency_ms` becomes 0"
+      ],
+      "answer": 2,
+      "why": "A wrong type makes the record malformed. `PERMISSIVE` keeps it, reads what it can, and puts the raw line in the column named by `columnNameOfCorruptRecord`."
+    },
+    {
+      "id": "k3",
+      "prompt": "A record has no `trace_id` field, but the schema has one. Is it malformed?",
+      "choices": [
+        "Yes, it's dropped by `DROPMALFORMED`",
+        "No, `trace_id` is just NULL",
+        "Yes, the job stops",
+        "No, but the whole row is NULL"
+      ],
+      "answer": 1,
+      "why": "A missing field is read as NULL. Only lines that aren't valid JSON, or values of the wrong type, are malformed."
+    }
+  ],
+  "review": [
+    "`spark.read.json(path)` reads JSON Lines: one record per line. Without a schema it scans the data to guess types and adds `_corrupt_record` for lines it can't parse.",
+    "A schema sets the types, skips the extra scan, and reads only the fields you list.",
+    "`mode` works as for CSV: `PERMISSIVE` keeps bad lines, `DROPMALFORMED` drops them, `FAILFAST` stops. `columnNameOfCorruptRecord` keeps the raw text.",
+    "A missing field is NULL, not malformed. A value of the wrong type makes the record malformed, but `PERMISSIVE` still reads its other fields.",
+    "`multiLine=True` reads each file as one JSON document, such as an array spread over many lines.",
+    "A query on a raw file can't read only the corrupt-record column; select another column with it."
+  ],
+  "practice": ["PS-Q0216", "PS-Q0217", "PS-Q0218", "PS-Q0219", "PS-Q0220"]
+}

@@ -1,0 +1,38 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D02",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "transactions"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "+--------------+----------+--------+------+\n|transaction_id|account_id|txn_type|amount|\n+--------------+----------+--------+------+\n|       T000002|      NULL|purchase| 60.53|\n+--------------+----------+--------+------+\n\n0 purchases or refunds without a merchant\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "+--------------+----------+---------+-----------+\n|transaction_id|account_ok|amount_ok|currency_ok|\n+--------------+----------+---------+-----------+\n|           X01|      true|     true|       true|\n|           X02|      true|    false|       true|\n|           X03|      true|     true|      false|\n|           X04|      true|     true|       NULL|\n|           X05|     false|     true|       true|\n|           X06|      true|     NULL|       true|\n|           X07|      true|     true|       true|\n+--------------+----------+---------+-----------+\n\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "+--------------+--------+\n|transaction_id|currency|\n+--------------+--------+\n|           X03|     ZZZ|\n+--------------+--------+\n\n+--------------+--------+\n|transaction_id|currency|\n+--------------+--------+\n|           X03|     ZZZ|\n|           X04|    NULL|\n+--------------+--------+\n\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "+--------------+--------+---------+------+--------+---------------+\n|transaction_id|txn_type|direction|amount|currency|        problem|\n+--------------+--------+---------+------+--------+---------------+\n|           X01|purchase|    debit| 27.90|     USD|           NULL|\n|           X02|purchase|    debit|-36.59|     USD|     bad amount|\n|           X03| deposit|   credit|800.00|     ZZZ|   bad currency|\n|           X04|     fee|    debit|  4.00|    NULL|   bad currency|\n|           X05|  refund|   credit| 43.95|     USD|     no account|\n|           X06|purchase|    debit|  NULL|     GBP|     bad amount|\n|           X07|purchase|   credit| 12.00|     GBP|wrong direction|\n+--------------+--------+---------+------+--------+---------------+\n\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "+--------------+----------+------+--------+----------+\n|transaction_id|account_id|amount|currency|   problem|\n+--------------+----------+------+--------+----------+\n|       T000002|      NULL| 60.53|     GBP|no account|\n+--------------+----------+------+--------+----------+\n\n14 rows: 13 valid + 1 invalid\n",
+   "error": null
+  }
+ }
+}

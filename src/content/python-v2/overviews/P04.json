@@ -1,0 +1,23 @@
+{
+  "id": "P04",
+  "task": "A shop exported five invoices, and some of them can't count as sales. Build a small quality tool that reads the file, rejects the broken rows, adds up what's left, and reports the same three numbers in a file and on the command line.",
+  "produce": [
+    { "name": "quality.py", "about": "Counts the invoices, splits kept from rejected rows, totals the kept rows and writes the report." },
+    { "name": "main.py", "about": "The command: prints the kept count, the rejected count and the kept total." },
+    { "name": "quality.txt", "about": "Kept count, rejected count and kept total, one per line." }
+  ],
+  "steps": {
+    "P04.m1": "Read the sales file and count the invoices.",
+    "P04.m2": "Reject rows with a blank description, a quantity or a price that isn't positive.",
+    "P04.m3": "Total quantity times price over the kept rows only.",
+    "P04.m4": "Write the kept count, rejected count and total to a file.",
+    "P04.m5": "Print the same three numbers from the command, every run."
+  },
+  "problems": [
+    "One invoice has a blank description.",
+    "One invoice has a negative quantity.",
+    "One invoice has a price of zero.",
+    "The same product is on two invoices, and only one of them can be kept."
+  ],
+  "preparation": ["PY-L25-05", "PY-L20-01", "PY-L12-01", "PY-L11-05", "PY-L19-02", "PY-L23-05", "PY-L22-04"]
+}

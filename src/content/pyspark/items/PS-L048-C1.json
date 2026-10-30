@@ -1,0 +1,52 @@
+{
+ "id": "PS-L048-C1",
+ "slug": "unpaid-invoices-from-two-systems",
+ "lesson": "PS-L048",
+ "difficulty": "medium",
+ "minutes": 12,
+ "title": "Unpaid invoices from two systems",
+ "dataset": {
+  "id": "PS-D14",
+  "version": "1.0.0"
+ },
+ "prompt": "Finance wants the invoices still waiting for payment, with each customer's name. The invoices are in the billing database and the account names come from the CRM's CSV export. Write `solve(invoices, accounts)` so it returns `invoice_id`, `account_name`, `status` and `total_amount` for every invoice whose status is open or overdue.",
+ "rules": [
+  "The starter saves the invoices to the database and the accounts to a CSV file. Read them from there.",
+  "Keep only invoices with status `open` or `overdue`. An invoice with no status is not open.",
+  "Keep an invoice even when its account isn't in the CSV file; its `account_name` is then NULL.",
+  "Keep every matching row the database returns, repeats included.",
+  "Return `invoice_id`, `account_name`, `status` (text) and `total_amount` (decimal(12,2)), in that order."
+ ],
+ "hints": [
+  "Read the invoices with `spark.read.jdbc(url, ...)` and the accounts with `spark.read.csv(accounts_path, header=True, ...)`.",
+  "Let the database pick the rows: a subquery `(SELECT ... FROM invoices WHERE status IN (...)) AS due` works as the table name.",
+  "Which join type keeps an invoice that has no matching account?"
+ ],
+ "entry": "solve",
+ "inputs": [
+  "invoices",
+  "accounts"
+ ],
+ "starter": "def solve(invoices, accounts):\n    url = \"jdbc:sqlite:/tmp/billing.db\"\n    invoices.coalesce(1).write.jdbc(url, \"invoices\", mode=\"overwrite\")\n    accounts_path = \"/tmp/crm/accounts\"\n    accounts.write.mode(\"overwrite\").csv(accounts_path, header=True)\n    # Read the open and overdue invoices from the database at `url` and the accounts from the CSV file\n    # at `accounts_path`, then return invoice_id, account_name, status and total_amount.\n    return invoices\n",
+ "output": {
+  "columns": [
+   "invoice_id",
+   "account_name",
+   "status",
+   "total_amount"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 45,
+  "check_timeout_s": 90,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

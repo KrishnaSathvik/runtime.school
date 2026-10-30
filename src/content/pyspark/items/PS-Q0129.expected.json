@@ -1,0 +1,105 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "customer_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "account_type",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "currency",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "opened_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "overdraft_limit",
+     "type": "decimal(12,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "A00002",
+     "C0001",
+     "checking",
+     "USD",
+     "closed",
+     "2025-06-26",
+     "250.00"
+    ],
+    [
+     "A00003",
+     "C0002",
+     "savings",
+     "USD",
+     "active",
+     "2025-02-28",
+     null
+    ],
+    [
+     "A00004",
+     "C0002",
+     "savings",
+     "USD",
+     "closed",
+     "2025-04-11",
+     null
+    ],
+    [
+     "A00005",
+     "C0003",
+     "credit_card",
+     "GBP",
+     "frozen",
+     "2025-03-06",
+     null
+    ],
+    [
+     "A00007",
+     "C0004",
+     "checking",
+     "USD",
+     "closed",
+     "2025-03-12",
+     "0.00"
+    ]
+   ],
+   "row_count": 5
+  }
+ },
+ "hidden": [
+  "the full practice accounts and transactions",
+  "accounts whose transactions are all pending or declined",
+  "accounts with one posted transaction among others that aren't",
+  "closed and frozen accounts with no transactions",
+  "an empty transactions table",
+  "posted transactions for accounts that don't exist"
+ ]
+}

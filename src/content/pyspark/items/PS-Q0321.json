@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0321",
+  "kind": "predict",
+  "slug": "which-appends-get-in",
+  "lesson": "PS-L065",
+  "role": "foundation",
+  "format": "concept_or_trace",
+  "difficulty": "easy",
+  "minutes": 5,
+  "title": "Which appends get in?",
+  "prompt": "`encounters` has eight visits. The program saves four of its columns as a Delta table, then tries four appends with no options: columns in another order, a column missing, an extra column, and `start_time` as text. What does it print? Type each line on its own line.",
+  "program": "from pyspark.sql import functions as F\n\npath = \"/tmp/clinic/visits\"\ncols = [\"encounter_id\", \"patient_id\", \"encounter_class\", \"start_time\"]\nencounters.select(cols).write.format(\"delta\").save(path)\n\nbatches = [\n    (\"reordered\", encounters.select(\"start_time\", \"encounter_class\", \"patient_id\", \"encounter_id\")),\n    (\"missing\", encounters.select(\"encounter_id\", \"patient_id\", \"start_time\")),\n    (\"extra\", encounters.select(cols + [\"reason\"])),\n    (\"text\", encounters.select(\"encounter_id\", \"patient_id\", \"encounter_class\", F.col(\"start_time\").cast(\"string\").alias(\"start_time\"))),\n]\nfor name, batch in batches:\n    try:\n        batch.write.format(\"delta\").mode(\"append\").save(path)\n        print(name, \"accepted\")\n    except Exception:\n        print(name, \"refused\")\n\ntable = spark.read.format(\"delta\").load(path)\nprint(table.count(), len(table.columns))\n",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "Delta matches an append's columns to the table's by name, not by position.",
+    "A batch may leave out one of the table's columns; it may not bring a column the table doesn't have.",
+    "Types must match exactly, and a refused append writes nothing. Count the rows of every write that got in."
+  ],
+  "explanation": "Delta checks each append against the table's schema. Column order doesn't matter, because columns are matched by name, so `reordered` is accepted. A missing column is allowed too; its rows read NULL there, so `missing` is accepted. An extra column (`reason`) isn't in the schema, so `extra` is refused, and a `start_time` written as text doesn't match the timestamp column, so `text` is refused. A refused append writes nothing. The table holds the first write and two accepted appends, 3 × 8 = 24 rows, and still its 4 columns."
+}

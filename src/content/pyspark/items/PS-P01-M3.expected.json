@@ -1,0 +1,505 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "example": {
+   "schema": [
+    {
+     "name": "order_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "order_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "line_no",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "product_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "category",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "quantity",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "unit_price",
+     "type": "decimal(10,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "O90001",
+     "2026-01-15",
+     "paid",
+     1,
+     "P002",
+     "outdoor",
+     1,
+     "15.50"
+    ],
+    [
+     "O90001",
+     "2026-01-15",
+     "paid",
+     1,
+     "P002",
+     "outdoor",
+     1,
+     "15.50"
+    ],
+    [
+     "O90001",
+     "2026-01-15",
+     "paid",
+     2,
+     "P004",
+     null,
+     1,
+     "9.50"
+    ],
+    [
+     "O90001",
+     "2026-01-15",
+     "paid",
+     2,
+     "P004",
+     null,
+     1,
+     "9.50"
+    ],
+    [
+     "O90003",
+     "2026-02-10",
+     "delivered",
+     1,
+     "P001",
+     "kitchen",
+     1,
+     "49.00"
+    ],
+    [
+     "O90003",
+     "2026-02-10",
+     "delivered",
+     2,
+     "P099",
+     null,
+     1,
+     "10.00"
+    ]
+   ],
+   "row_count": 6,
+   "inputs": {
+    "orders": [
+     [
+      "O90001",
+      "C0101",
+      "2026-01-15",
+      "paid",
+      "web",
+      "25.00"
+     ],
+     [
+      "O90002",
+      "C0102",
+      "2026-02-03",
+      "Shipped",
+      "app",
+      "40.00"
+     ],
+     [
+      "O90003",
+      "C0103",
+      "2026-02-10",
+      "delivered",
+      "web",
+      "59.00"
+     ],
+     [
+      "O90004",
+      "C0104",
+      "2026-03-01",
+      "paid",
+      "store",
+      "12.00"
+     ],
+     [
+      "O90005",
+      "C0105",
+      "2026-03-05",
+      "placed",
+      "web",
+      null
+     ],
+     [
+      "O90001",
+      "C0101",
+      "2026-01-15",
+      "paid",
+      "web",
+      "25.00"
+     ]
+    ],
+    "order_items": [
+     [
+      "O90001",
+      "1",
+      "P002",
+      "1",
+      "15.50"
+     ],
+     [
+      "O90001",
+      "2",
+      "P004",
+      "1",
+      "9.50"
+     ],
+     [
+      "O90002",
+      "1",
+      "P001",
+      "1",
+      "40.00"
+     ],
+     [
+      "O90003",
+      "1",
+      "P001",
+      "1",
+      "49.00"
+     ],
+     [
+      "O90003",
+      "2",
+      "P099",
+      "1",
+      "10.00"
+     ],
+     [
+      "O90005",
+      "1",
+      "P003",
+      "1",
+      "59.99"
+     ],
+     [
+      "O90007",
+      "1",
+      "P002",
+      "2",
+      "15.50"
+     ]
+    ],
+    "products": [
+     [
+      "P001",
+      "Chef Knife",
+      "kitchen",
+      "59.99",
+      "true"
+     ],
+     [
+      "P002",
+      "Trail Bottle",
+      "outdoor",
+      "15.50",
+      "true"
+     ],
+     [
+      "P003",
+      "Desk Lamp",
+      "office",
+      "59.99",
+      "true"
+     ],
+     [
+      "P004",
+      "Gift Wrap",
+      null,
+      "10.00",
+      "true"
+     ]
+    ]
+   }
+  },
+  "project": {
+   "schema": [
+    {
+     "name": "order_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "order_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "line_no",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "product_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "category",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "quantity",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "unit_price",
+     "type": "decimal(10,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "O00001",
+     "2026-02-16",
+     "delivered",
+     1,
+     "P004",
+     "kitchen",
+     2,
+     "89.00"
+    ],
+    [
+     "O00001",
+     "2026-02-16",
+     "delivered",
+     2,
+     "P019",
+     "home",
+     3,
+     "15.50"
+    ],
+    [
+     "O00001",
+     "2026-02-16",
+     "delivered",
+     3,
+     "P003",
+     "kitchen",
+     2,
+     "59.99"
+    ],
+    [
+     "O00001",
+     "2026-02-16",
+     "delivered",
+     4,
+     "P013",
+     "office",
+     1,
+     "59.99"
+    ],
+    [
+     "O00002",
+     "2026-07-20",
+     "paid",
+     1,
+     "P019",
+     "home",
+     1,
+     "15.50"
+    ],
+    [
+     "O00002",
+     "2026-07-20",
+     "paid",
+     2,
+     "P009",
+     "outdoor",
+     1,
+     "7.99"
+    ],
+    [
+     "O00003",
+     "2026-01-28",
+     "delivered",
+     1,
+     "P014",
+     "office",
+     1,
+     "59.99"
+    ],
+    [
+     "O00004",
+     "2026-07-10",
+     "paid",
+     1,
+     "P014",
+     "office",
+     3,
+     "59.99"
+    ],
+    [
+     "O00005",
+     "2026-05-18",
+     "delivered",
+     1,
+     "P016",
+     "home",
+     3,
+     "7.99"
+    ],
+    [
+     "O00005",
+     "2026-05-18",
+     "delivered",
+     2,
+     "P016",
+     "home",
+     1,
+     "7.99"
+    ],
+    [
+     "O00005",
+     "2026-05-18",
+     "delivered",
+     3,
+     "P020",
+     "home",
+     3,
+     "7.99"
+    ],
+    [
+     "O00005",
+     "2026-05-18",
+     "delivered",
+     4,
+     "P004",
+     "kitchen",
+     2,
+     "89.00"
+    ],
+    [
+     "O00007",
+     "2026-02-12",
+     "shipped",
+     1,
+     "P013",
+     "office",
+     2,
+     "59.99"
+    ],
+    [
+     "O00007",
+     "2026-02-12",
+     "shipped",
+     2,
+     "P012",
+     "office",
+     1,
+     "45.00"
+    ],
+    [
+     "O00007",
+     "2026-02-12",
+     "shipped",
+     3,
+     "P002",
+     "kitchen",
+     1,
+     "15.50"
+    ],
+    [
+     "O00007",
+     "2026-02-12",
+     "shipped",
+     4,
+     "P013",
+     "office",
+     1,
+     "59.99"
+    ],
+    [
+     "O00008",
+     "2026-05-12",
+     "cancelled",
+     1,
+     "P013",
+     "office",
+     2,
+     "59.99"
+    ],
+    [
+     "O00008",
+     "2026-05-12",
+     "cancelled",
+     2,
+     "P008",
+     "outdoor",
+     1,
+     "15.50"
+    ],
+    [
+     "O00008",
+     "2026-05-12",
+     "cancelled",
+     3,
+     "P013",
+     "office",
+     1,
+     "59.99"
+    ],
+    [
+     "O00009",
+     "2026-09-02",
+     "shipped",
+     1,
+     "P006",
+     "outdoor",
+     2,
+     "13.95"
+    ]
+   ],
+   "row_count": 6876
+  }
+ },
+ "hidden": [
+  "the full practice tables",
+  "lines whose product is missing from the catalogue, has no id, or has no category",
+  "lines of invalid orders, an order with no lines, and a line with no order",
+  "an order delivered twice, and an order with no total yet",
+  "lines sold at a price different from the catalogue's",
+  "no orders at all"
+ ]
+}

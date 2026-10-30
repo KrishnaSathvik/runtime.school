@@ -1,0 +1,47 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D01",
+  "version": "1.1.0",
+  "edition": "lesson",
+  "tables": [
+   "orders"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "DataFrame[order_id: string, customer_id: string, order_date: date, status: string, channel: string, total: decimal(10,2)]\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "+--------+-----------+----------+------+-------+------+\n|order_id|customer_id|order_date|status|channel| total|\n+--------+-----------+----------+------+-------+------+\n|  O00001|      C0001|2026-06-11|  paid|  store|117.99|\n|  O00003|      C0002|2026-08-28|  paid|    app|291.95|\n|  O00008|      C0001|2026-04-03|  paid|    web| 59.50|\n|  O00010|      C0006|2026-01-11|  paid|    app|299.91|\n+--------+-----------+----------+------+-------+------+\n\n4 of 12 orders are paid\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "+--------+------+\n|order_id| total|\n+--------+------+\n|  O00007|227.48|\n|  O00008| 59.50|\n+--------+------+\n\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "3 web orders\nO00007 227.48\n[Row(order_id='O00007', total=Decimal('227.48')), Row(order_id='O00008', total=Decimal('59.50'))]\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "",
+   "error": {
+    "type": "AnalysisException",
+    "message": "[UNRESOLVED_COLUMN.WITH_SUGGESTION] A column, variable, or function parameter with name `totl` cannot be resolved. Did you mean one of the following? [`total`, `status`, `channel`, `order_id`, `order_date`]. SQLSTATE: 42703",
+    "line": 3,
+    "condition": "UNRESOLVED_COLUMN.WITH_SUGGESTION"
+   }
+  },
+  "e6": {
+   "stdout": "== Physical Plan ==\n*(1) Project [order_id#10, total#15]\n+- *(1) Filter (isnotnull(channel#14) AND (channel#14 = web))\n   +- FileScan csv [order_id#10,channel#14,total#15] Batched: false, DataFilters: [isnotnull(channel#14), (channel#14 = web)], Format: CSV, Location: InMemoryFileIndex(1 paths)[file:/data/playground/orders.csv], PartitionFilters: [], PushedFilters: [IsNotNull(channel), EqualTo(channel,web)], ReadSchema: struct<order_id:string,channel:string,total:decimal(10,2)>\n\n\n",
+   "error": null
+  }
+ }
+}

@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0423",
+  "slug": "files-a-partition-filter-skips",
+  "lesson": "PS-L085",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Files a partition filter skips",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "prompt": "The trip archive keeps one folder per payment type, and the audit team runs seven queries on it. Finish `files_and_rows` so `solve(trips)` reports, for each query, how many files its scan opened and how many rows it returned.",
+  "rules": [
+    "`files` is the number of files the query's `Scan csv` step opened in one run, not the number of files in the archive.",
+    "`rows` is the number of rows the query returns, duplicates included.",
+    "Don't change `QUERIES`, `write_archive`, `read_archive` or `solve`."
+  ],
+  "hints": [
+    "`inputFiles()` lists every file the archive holds, whatever the condition. The scan's own count says what a run opened.",
+    "Profile `archive.where(query)` and read `files` from its scan step. The top step's `rows` is what the query returned.",
+    "A trip with no payment type sits in a folder of its own. `<>` is never true for a missing value, so that folder is skipped."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "trips"
+  ],
+  "starter": "import shutil\n\nfrom pyspark.sql import functions as F\n\nspark.conf.set(\"spark.sql.adaptive.enabled\", \"false\")\n\nARCHIVE = \"/tmp/archive/trips\"\n\nQUERIES = [\n    \"payment_type = 'cash'\",\n    \"payment_type <> 'cash'\",\n    \"payment_type IS NULL\",\n    \"payment_type = 'no_charge'\",\n    \"total >= 20\",\n    \"payment_type = 'card' AND total >= 20\",\n    \"payment_type = 'card' OR total >= 60\",\n]\n\n\ndef write_archive(trips):\n    # partitionBy writes one folder per payment type (payment_type=card/ ...); trips with no type get a folder too.\n    shutil.rmtree(ARCHIVE, ignore_errors=True)\n    trips.write.partitionBy(\"payment_type\").option(\"header\", True).csv(ARCHIVE)\n\n\ndef read_archive(schema):\n    return spark.read.schema(schema).option(\"header\", True).csv(ARCHIVE)\n\n\ndef profile(df):\n    \"\"\"Run df once, then list the plan steps Spark ran with the counts it kept.\"\"\"\n    df.collect()\n    labels = {\"numOutputRows\": \"rows\", \"shuffleRecordsWritten\": \"shuffled rows\", \"numFiles\": \"files\", \"filesSize\": \"bytes\"}\n    steps = []\n\n    def walk(node, depth):\n        name = node.nodeName().strip()\n        if name == \"AdaptiveSparkPlan\":\n            return walk(node.executedPlan(), depth)\n        if name.endswith(\"QueryStage\"):\n            return walk(node.plan(), depth)\n        metrics = node.metrics()\n        counts = {label: metrics.apply(key).value() for key, label in labels.items() if metrics.contains(key)}\n        if counts:\n            steps.append((\"  \" * depth + name, counts))\n            depth += 1\n        children = node.children()\n        for i in range(children.size()):\n            walk(children.apply(i), depth)\n\n    walk(df._jdf.queryExecution().executedPlan(), 0)\n    return steps\n\n\ndef files_and_rows(archive, query):\n    # How many files the query's scan opens, and how many rows the query returns.\n    return 0, 0\n\n\ndef solve(trips):\n    write_archive(trips)\n    archive = read_archive(trips.schema)\n    rows = [(query, *files_and_rows(archive, query)) for query in QUERIES]\n    return spark.createDataFrame(rows, \"query STRING, files LONG, rows LONG\")\n",
+  "output": {
+    "columns": [
+      "query",
+      "files",
+      "rows"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Profile each query and read its scan: `steps = profile(archive.where(query))`, then the `files` count of the `Scan csv` step, and the top step's `rows` (or `count()` on a fresh DataFrame) for what it returned. A condition on `payment_type` alone is checked against folder names before any file is opened, so `= 'cash'` opens one file and `= 'no_charge'` opens none when there's no such folder. Trips with no type are in a folder of their own: only `IS NULL` opens it, and `<> 'cash'` skips it because a comparison with a missing value isn't true. A condition on `total` can't skip folders, and neither can an `OR` that mixes the two columns, so those open every file. `inputFiles()` gives the archive's file list for every query; counting the payment types among the returned rows misses folders that were opened and had no match."
+}

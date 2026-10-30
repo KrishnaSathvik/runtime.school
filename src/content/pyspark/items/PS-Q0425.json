@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0425",
+  "slug": "what-the-cache-serves",
+  "lesson": "PS-L085",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "What the cache serves",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "prompt": "The card desk runs a zone report and a driver report, both on card trips, and wants to know what caching the card trips would change. Write `solve(trips, taxi_zones)` so it profiles each report once with nothing cached and once with `card_trips(trips)` cached, and reports what each run read.",
+  "rules": [
+    "Four rows: each report in `REPORTS` with `cached` false, then with `cached` true. Don't change the reports.",
+    "`rows` is the rows the report returned, `files` adds up the files every scan step opened, and `cached_rows` adds up the rows its `InMemoryTableScan` steps read (0 when there are none).",
+    "Cache the card trips, not a report; for the uncached runs, nothing may be cached."
+  ],
+  "hints": [
+    "Profile fresh DataFrames: `profile(build(trips, taxi_zones))` for each report, before you cache anything.",
+    "Then `card = card_trips(trips).cache()`, fill it with an action, profile fresh reports again, and `unpersist()` it at the end.",
+    "The zone report has two scan steps: add up `files` across all the steps, and the rows of every `InMemoryTableScan` step."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "trips",
+    "taxi_zones"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\nspark.conf.set(\"spark.sql.adaptive.enabled\", \"false\")\n\n\ndef card_trips(trips):\n    return trips.filter(F.col(\"payment_type\") == \"card\")\n\n\ndef zone_report(trips, taxi_zones):\n    card, zones = card_trips(trips), F.broadcast(taxi_zones)  # always send the zones to every task\n    return card.join(zones, card.pickup_zone_id == zones.zone_id).groupBy(\"zone_name\").count()\n\n\ndef driver_report(trips, taxi_zones):\n    return card_trips(trips).groupBy(\"driver_id\").agg(F.sum(\"total\").alias(\"revenue\"))\n\n\nREPORTS = {\"zones\": zone_report, \"drivers\": driver_report}\n\n\ndef profile(df):\n    \"\"\"Run df once, then list the plan steps Spark ran with the counts it kept.\"\"\"\n    df.collect()\n    labels = {\"numOutputRows\": \"rows\", \"shuffleRecordsWritten\": \"shuffled rows\", \"numFiles\": \"files\", \"filesSize\": \"bytes\"}\n    steps = []\n\n    def walk(node, depth):\n        name = node.nodeName().strip()\n        if name == \"AdaptiveSparkPlan\":\n            return walk(node.executedPlan(), depth)\n        if name.endswith(\"QueryStage\"):\n            return walk(node.plan(), depth)\n        metrics = node.metrics()\n        counts = {label: metrics.apply(key).value() for key, label in labels.items() if metrics.contains(key)}\n        if counts:\n            steps.append((\"  \" * depth + name, counts))\n            depth += 1\n        children = node.children()\n        for i in range(children.size()):\n            walk(children.apply(i), depth)\n\n    walk(df._jdf.queryExecution().executedPlan(), 0)\n    return steps\n\n\ndef solve(trips, taxi_zones):\n    # One row per report and setup: report, cached, rows, files, cached_rows.\n    rows = []\n    return spark.createDataFrame(rows, \"report STRING, cached BOOLEAN, rows LONG, files LONG, cached_rows LONG\")\n",
+  "output": {
+    "columns": [
+      "report",
+      "cached",
+      "rows",
+      "files",
+      "cached_rows"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Profile fresh reports first: the zone report opens two files (the trips, and the zones it broadcasts) and the driver report one. Then cache `card_trips(trips)`, fill it with `count()`, and profile fresh reports again. Neither report uses the cached DataFrame by name, but Spark matches a cache by its plan, so both now start with an `InMemoryTableScan` of the card trips instead of the trips scan: the zone report opens only the zones file, the driver report no file. Both return the same rows either way. Call `unpersist()` when you're done, so nothing else reads the cache by accident. Caching a report itself (`report.cache()`) caches its result rows, which answers a different question, and caching before the uncached runs makes them read the cache too. The profile says what each run reads; whether that saves time depends on the data and the cluster, and only a benchmark there can say."
+}

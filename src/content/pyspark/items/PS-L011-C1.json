@@ -1,0 +1,26 @@
+{
+  "id": "PS-L011-C1",
+  "slug": "five-highest-ratings",
+  "lesson": "PS-L011",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Five highest ratings",
+  "dataset": { "id": "PS-D05", "version": "1.0.0" },
+  "prompt": "The home page shows the five highest ratings members have given. Write `solve(ratings)` so it returns `user_id`, `movie_id` and `rating` for those five rows, highest first.",
+  "rules": [
+    "Sort by `rating`, highest first. A missing rating goes last.",
+    "When ratings tie, sort by `movie_id` A to Z, then by `user_id` A to Z.",
+    "Return at most five rows, with only `user_id`, `movie_id` and `rating`, in that order."
+  ],
+  "hints": [
+    "`F.desc(\"rating\")` sorts highest first, and missing values already go last that way.",
+    "`orderBy` takes several columns: the first decides, the next ones settle ties.",
+    "Sort before `limit(5)`, then `select` the three columns."
+  ],
+  "entry": "solve",
+  "inputs": ["ratings"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(ratings):\n    # Return the five highest ratings, highest first.\n    return ratings\n",
+  "output": { "columns": ["user_id", "movie_id", "rating"], "order_sensitive": true },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

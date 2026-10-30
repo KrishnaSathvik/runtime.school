@@ -1,0 +1,69 @@
+{
+ "id": "PS-P02-M2",
+ "slug": "standardise-employee-fields",
+ "project": "PS-P02",
+ "milestone": "PS-P02.m2",
+ "difficulty": "medium",
+ "minutes": 30,
+ "title": "Standardise names, titles, emails and phones",
+ "dataset": {
+  "id": "PS-D03",
+  "version": "1.0.0"
+ },
+ "prompt": "The same job title appears as `Software Engineer`, `software  engineer` and `SOFTWARE ENGINEER`, so a count by title gives three answers. Emails and phone numbers are just as mixed.\n\nWrite `employee_clean(employees)`. It starts from your `employee_view(employees)` and rewrites the text fields below into one standard form each. Every other column, and every row, stays as it is.",
+ "rules": [
+  "`job_title`: no spaces at either end, one space between words, each word starting with a capital and the rest lower case, except `of`, which stays lower case (`Head of Data`).",
+  "`email`: no spaces at either end, all lower case.",
+  "`phone`: the last ten digits written as `555-201-3344`, whatever the format was. A missing phone stays missing.",
+  "`department_id`: no spaces at either end, upper case (`D02`).",
+  "Return `employee_view`'s columns in the same order, one row per input row."
+ ],
+ "hints": [
+  "Call `employee_view(employees)` and `select` from it, replacing the four columns with cleaned versions and keeping their names with `.alias`.",
+  "For the title: `F.trim`, then `F.regexp_replace(..., r\"\\s+\", \" \")`, then `F.initcap`. `initcap` gives `Head Of Data`, so one more `regexp_replace` turns `\" Of \"` back into `\" of \"`.",
+  "For the phone: keep the digits with `regexp_replace(\"phone\", \"[^0-9]\", \"\")`, keep the last ten with `F.substring(digits, -10, 10)`, then rebuild the dashes with groups: `r\"^(\\d{3})(\\d{3})(\\d{4})$\"` and `\"$1-$2-$3\"`."
+ ],
+ "explanation": "Each field gets one rule, written once as a column expression. Trimming and collapsing runs of spaces before `initcap` means `  software  engineer ` and `SOFTWARE ENGINEER` both become `Software Engineer`; the final `regexp_replace` puts the small word `of` back in lower case. Phone numbers are rebuilt from their digits, so the format they arrived in doesn't matter, and keeping the last ten drops the `+1` country code. String functions return `NULL` for `NULL`, so a missing phone needs no special case. Because `employee_clean` starts from `employee_view`, the columns and their order are already right.",
+ "entry": "employee_clean",
+ "inputs": [
+  "employees"
+ ],
+ "file": "pipeline.py",
+ "append": "\n\ndef employee_clean(employees):\n    # Step 2: start from employee_view(employees) and standardise the text fields.\n    return employee_view(employees)\n",
+ "prerequisites": [
+  "PS-L012",
+  "PS-L021"
+ ],
+ "output": {
+  "columns": [
+   "employee_id",
+   "full_name",
+   "email",
+   "phone",
+   "job_title",
+   "level",
+   "department_id",
+   "manager_id",
+   "hire_date",
+   "status",
+   "termination_date"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "example",
+   "sample": true
+  },
+  {
+   "id": "project",
+   "edition": "project"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 45,
+  "check_timeout_s": 120,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

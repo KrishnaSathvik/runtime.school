@@ -1,0 +1,76 @@
+{
+  "id": "PS-P07-M4",
+  "slug": "enrich-claims-with-visits",
+  "project": "PS-P07",
+  "milestone": "PS-P07.m4",
+  "difficulty": "hard",
+  "minutes": 40,
+  "title": "Enrich the claims with visits and providers",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "prompt": "Finance wants each claim next to what happened at the visit and who treated the patient. The visits are in `encounters`, nested: `vitals` is a struct and `diagnosis_codes` an array. The feed also changed on 1 January 2026, when `discharge_disposition` was added: older visits have nothing there.\n\nWrite `silver_encounters(encounters)`, one flat row per visit, then `enriched_claims(claims, encounters, providers)`: each silver claim with its visit and its provider's specialty.",
+  "rules": [
+    "`silver_encounters` returns `encounter_id`, `visit_provider_id` (the visit's `provider_id`), `encounter_class`, `primary_diagnosis` (the first of `diagnosis_codes`), `temperature_c` and `discharge_disposition`.",
+    "`temperature_c` comes from `vitals`. A value above 45 was sent in Fahrenheit: convert it, (F − 32) × 5 / 9, rounded to 1 decimal.",
+    "`discharge_disposition` is `not_collected` for visits that started before 2026-01-01, `not_applicable` when a later visit has none, and the value otherwise.",
+    "`enriched_claims` keeps every silver claim, even one whose visit is missing. A claim with no `provider_id` takes the visit's; `specialty` comes from `providers` for the provider the claim ends up with.",
+    "`enriched_claims` returns `claim_id`, `encounter_id`, `patient_id`, `provider_id`, `specialty`, `payer`, `encounter_class`, `primary_diagnosis`, `temperature_c`, `discharge_disposition`, `service_date`, `billed_amount`, `allowed_amount`, `paid_amount`, `claim_status`."
+  ],
+  "hints": [
+    "`F.col(\"vitals.temperature_c\")` reads a struct field, and `F.col(\"diagnosis_codes\")[0]` the first array element. Both are missing when the struct or array is.",
+    "Check the date first: `F.when(F.col(\"start_time\") < \"2026-01-01\", \"not_collected\").when(...isNull(), ...).otherwise(...)`.",
+    "Left-join the visits on `encounter_id`, fill the provider with `F.coalesce(\"provider_id\", \"visit_provider_id\")`, and only then left-join `providers.select(\"provider_id\", \"specialty\")`."
+  ],
+  "explanation": "Silver flattens nested data once, so no reader has to know the feed's shape: struct fields become columns with `vitals.temperature_c`, and the first diagnosis comes out of the array with `[0]`. Normalising here fixes the three Fahrenheit readings for everyone. The new column needs care: before 1 January 2026 it didn't exist, so a missing value means 'not collected', not 'not applicable'. Checking the date first keeps the two meanings apart. In the enrichment, left joins keep every claim even when a lookup fails, so no money disappears. The order of the two joins matters: the claim's missing provider has to be filled from the visit before looking up the specialty, or those claims would get none.",
+  "entry": "enriched_claims",
+  "inputs": [
+    "claims",
+    "encounters",
+    "providers"
+  ],
+  "file": "pipeline.py",
+  "append": "\n\ndef silver_encounters(encounters):\n    # Step 4: one flat row per visit: nested fields pulled out and normalised.\n    return encounters\n\n\ndef enriched_claims(claims, encounters, providers):\n    # Step 4: each silver claim with its visit and its provider's specialty.\n    return silver_claims(claims, providers)\n",
+  "prerequisites": [
+    "PS-L025",
+    "PS-L038",
+    "PS-L065"
+  ],
+  "output": {
+    "columns": [
+      "claim_id",
+      "encounter_id",
+      "patient_id",
+      "provider_id",
+      "specialty",
+      "payer",
+      "encounter_class",
+      "primary_diagnosis",
+      "temperature_c",
+      "discharge_disposition",
+      "service_date",
+      "billed_amount",
+      "allowed_amount",
+      "paid_amount",
+      "claim_status"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "example",
+      "sample": true
+    },
+    {
+      "id": "project",
+      "edition": "project"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

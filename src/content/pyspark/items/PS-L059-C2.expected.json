@@ -1,0 +1,85 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "endpoint",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "requests",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "total_latency_ms",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "slowest_ms",
+     "type": "int",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "/v1/devices/{device_id}/telemetry",
+     2,
+     46,
+     24
+    ],
+    [
+     "/v1/catalog/items",
+     4,
+     171,
+     51
+    ],
+    [
+     "/v1/payments/authorize",
+     1,
+     1240,
+     1240
+    ],
+    [
+     "/v1/search",
+     2,
+     280,
+     162
+    ],
+    [
+     "/v1/checkout",
+     1,
+     236,
+     236
+    ],
+    [
+     "/v1/catalog/items/{sku}",
+     1,
+     12,
+     12
+    ],
+    [
+     "/v1/auth/token",
+     1,
+     61,
+     61
+    ]
+   ],
+   "row_count": 7
+  }
+ },
+ "hidden": [
+  "the full practice requests, one endpoint far ahead of the rest",
+  "abandoned requests with no latency recorded",
+  "twenty requests on one endpoint and one on another",
+  "no requests at all"
+ ]
+}

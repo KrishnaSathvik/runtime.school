@@ -1,0 +1,51 @@
+{
+  "id": "PS-L064-C2",
+  "slug": "what-the-merge-changed",
+  "lesson": "PS-L064",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "What the merge changed",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "A downstream team wants only what changed, not the whole table. Write `solve(accounts, customer_cdc)` so it saves the snapshot as a Delta table that records its changes, merges the newest change per account into it, and returns the row changes that merge made.",
+  "rules": [
+    "Apply the changes as in the lesson: a delete removes the account, other changes update it or add it, and a delete for an account the table doesn't have changes nothing. `latest_changes` is written for you.",
+    "Return the merge's changes only, not the rows the snapshot write added: `account_id`, `_change_type`, `account_owner`, `credit_limit` and `is_active`.",
+    "An updated account gives two rows: its row before the update and after it."
+  ],
+  "hints": [
+    "The table must record changes from its very first write: set `delta.enableChangeDataFeed` to `true` when you save the snapshot.",
+    "The snapshot is version 0 and the merge is version 1. Read the change feed starting from the version you want.",
+    "Read with `option(\"readChangeFeed\", \"true\")` and `option(\"startingVersion\", ...)`, then `select` the five columns."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "accounts",
+    "customer_cdc"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\nfrom delta.tables import DeltaTable\n\n\ndef latest_changes(customer_cdc):\n    # One row per account: its newest change, as in the lesson.\n    newest_first = Window.partitionBy(\"account_id\").orderBy(F.col(\"sequence\").desc())\n    return customer_cdc.distinct().withColumn(\"rn\", F.row_number().over(newest_first)).filter(F.col(\"rn\") == 1).drop(\"rn\")\n\n\ndef solve(accounts, customer_cdc):\n    import shutil\n    path = \"/tmp/crm/accounts_cdf\"\n    shutil.rmtree(path, ignore_errors=True)  # every run starts from an empty folder\n\n    # 1. Save `accounts` at `path` as a Delta table that records its changes.\n    # 2. Merge latest_changes(customer_cdc) into it.\n    # 3. Return the changes the merge made.\n    return accounts\n",
+  "output": {
+    "columns": [
+      "account_id",
+      "_change_type",
+      "account_owner",
+      "credit_limit",
+      "is_active"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

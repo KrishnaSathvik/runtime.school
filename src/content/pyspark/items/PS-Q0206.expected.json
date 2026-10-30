@@ -1,0 +1,159 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "reading_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "device_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "firmware_version",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "firmware_build",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "tag_count",
+     "type": "int",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "R0001",
+     "DEV-001",
+     "low_battery",
+     "2.3.1",
+     231,
+     3
+    ],
+    [
+     "R0004",
+     "DEV-004",
+     "ok",
+     "2.4.0",
+     240,
+     2
+    ],
+    [
+     "R0002",
+     "DEV-002",
+     "ok",
+     "2.4.0",
+     240,
+     2
+    ],
+    [
+     "R0003",
+     "DEV-003",
+     "ok",
+     "2.3.1",
+     231,
+     2
+    ],
+    [
+     "R0007",
+     "DEV-003",
+     "ok",
+     "2.3.1",
+     231,
+     2
+    ],
+    [
+     "R0005",
+     "DEV-001",
+     "low_battery",
+     "2.3.1",
+     231,
+     3
+    ],
+    [
+     "R0008",
+     "DEV-004",
+     "ok",
+     "2.4.0",
+     240,
+     2
+    ],
+    [
+     "R0011",
+     "DEV-003",
+     "ok",
+     "2.3.1",
+     231,
+     2
+    ],
+    [
+     "R0012",
+     "DEV-004",
+     "ok",
+     "2.4.0",
+     240,
+     2
+    ],
+    [
+     "R0010",
+     "DEV-002",
+     "ok",
+     "2.4.0",
+     240,
+     2
+    ],
+    [
+     "R0009",
+     "DEV-001",
+     "low_battery",
+     "2.3.1",
+     231,
+     3
+    ],
+    [
+     "R0011",
+     "DEV-003",
+     "ok",
+     "2.3.1",
+     231,
+     2
+    ],
+    [
+     "R0006",
+     "DEV-002",
+     "ok",
+     "2.4.0",
+     240,
+     2
+    ]
+   ],
+   "row_count": 13
+  }
+ },
+ "hidden": [
+  "the full practice readings",
+  "readings with no firmware block, or only part of it",
+  "readings with no payload, or no status",
+  "readings with no tags, a missing tag list and a tag sent twice",
+  "the same reading delivered twice",
+  "no readings"
+ ]
+}

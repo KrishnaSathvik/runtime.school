@@ -1,0 +1,57 @@
+{
+  "id": "PS-Q0106",
+  "slug": "transfers-ready-to-settle",
+  "lesson": "PS-L022",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Transfers ready to settle",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "Settlement only takes transfers that pass every basic rule. Write `solve(transfers)` so it returns the valid transfers.",
+  "rules": [
+    "A transfer is valid when `from_account_id` and `to_account_id` are both present and not the same account, `amount` is more than 0, and `currency` is `USD`, `EUR` or `GBP`.",
+    "A rule on a missing value isn't passed: a transfer with a missing amount or currency is not valid.",
+    "Return every column of `transfers`, unchanged. Keep duplicate rows."
+  ],
+  "hints": [
+    "Write each rule so it's true for a good row, and join them with `&`.",
+    "`F.col(\"from_account_id\") != F.col(\"to_account_id\")` checks the two accounts differ.",
+    "A comparison with a missing value is NULL, and `filter` keeps only true, so missing values drop out of a valid-rows filter on their own. Adding `isNotNull()` checks makes that explicit."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "transfers"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(transfers):\n    # Return the transfers that pass every rule.\n    return transfers\n",
+  "output": {
+    "columns": [
+      "transfer_id",
+      "from_account_id",
+      "to_account_id",
+      "amount",
+      "currency",
+      "requested_at",
+      "status",
+      "reference",
+      "reversal_of"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Each rule is a condition that's true for a good transfer, and a valid transfer needs all of them: `transfers.filter(F.col(\"from_account_id\").isNotNull() & F.col(\"to_account_id\").isNotNull() & (F.col(\"from_account_id\") != F.col(\"to_account_id\")) & (F.col(\"amount\") > 0) & F.col(\"currency\").isin(\"USD\", \"EUR\", \"GBP\"))`. On a missing value each comparison is NULL rather than true, and `filter` keeps only true, so a transfer with a missing account, amount or currency is left out, which is what the rules ask. The `isNotNull()` checks spell that out for the accounts. The usual slips are `>= 0`, which lets a transfer of 0.00 through, and forgetting the same-account rule."
+}

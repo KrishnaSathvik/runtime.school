@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Play } from "lucide-react";
+import { Play, RotateCcw } from "lucide-react";
 import { mountsFor, pyManifests } from "@/content/python-v2/datasets";
 import { LAB_ACTIVITIES, LAB_ENVIRONMENTS, LAB_GROUPS, LAB_SCRATCH, activitiesFor, activityCode, activitySql, labEnv, type LabActivity } from "@/content/python-v2/tools/lab";
 import { preloadPython, runPython, stopPython, type PyRunResult } from "@/engine/python/client";
@@ -321,6 +321,7 @@ export function DatabaseLab() {
                 busy={busy === "run"}
                 result={pyRun?.result ?? null}
                 minHeight={LAB_EDITOR_HEIGHT}
+                resultsBar
                 onCloseOutput={() => setPyRun(null)}
                 after={
                   <>
@@ -332,6 +333,7 @@ export function DatabaseLab() {
                 }
               />
             ) : (
+              <>
               <div className="rx-cell">
                 <div className="rx-cell-head">
                   <span className="name">{activity?.id ?? "lab"}.sql</span>
@@ -343,16 +345,26 @@ export function DatabaseLab() {
                   <button type="button" className="rx-btn ghost" onClick={explain} disabled={!!busy || !db}>Explain plan</button>
                   <button type="button" className="rx-btn" onClick={runSql} disabled={!!busy || !db}><Play size={13} /> {busy === "run" ? "Running…" : "Run"}</button>
                 </div>
-                {plan && <PlanOut plan={plan} />}
-                {sqlRun && <SqlOut reply={sqlRun} onClose={() => setSqlRun(null)} />}
               </div>
+              <div className="rx-results">
+                <div className="rx-results-tabs" role="tablist" aria-label="Output">
+                  <span role="tab" aria-selected="true">Output</span>
+                </div>
+                {(plan || sqlRun) && (
+                  <div className="rx-results-pane" role="tabpanel">
+                    {plan && <PlanOut plan={plan} />}
+                    {sqlRun && <SqlOut reply={sqlRun} onClose={() => setSqlRun(null)} />}
+                  </div>
+                )}
+              </div>
+              </>
             )}
             {/* Two different undos, side by side: the code goes back to the example; the database goes back to the dataset. */}
             <p className="py-row py-resets">
-              <button type="button" className="rx-btn" disabled={mode === "sql" ? !sql.edited : !py.edited} onClick={() => { if (mode === "sql") sql.reset(); else { py.reset(); pyEditor.current?.replaceAll(initialPy); } }}>
-                Reset code
+              <button type="button" className="rx-btn line" disabled={mode === "sql" ? !sql.edited : !py.edited} onClick={() => { if (mode === "sql") sql.reset(); else { py.reset(); pyEditor.current?.replaceAll(initialPy); } }}>
+                <RotateCcw size={14} aria-hidden="true" /> Reset code
               </button>
-              <button type="button" className="rx-btn" onClick={() => setDialog("reset")} disabled={!db || preparing}>{prepared ? `Reset ${env.db} data` : `Empty ${env.db}`}</button>
+              <button type="button" className="rx-btn line" onClick={() => setDialog("reset")} disabled={!db || preparing}><RotateCcw size={14} aria-hidden="true" /> {prepared ? `Reset ${env.db} data` : `Empty ${env.db}`}</button>
             </p>
             {rows && (
               <div className="rx-cell">

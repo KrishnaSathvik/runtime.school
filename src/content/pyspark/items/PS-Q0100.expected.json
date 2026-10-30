@@ -1,0 +1,199 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "order_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "product_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "quantity",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "line_total",
+     "type": "decimal(21,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "O00001",
+     "P005",
+     3,
+     "59.97"
+    ],
+    [
+     "O00001",
+     "P005",
+     3,
+     "53.97"
+    ],
+    [
+     "O00001",
+     "P004",
+     1,
+     "4.05"
+    ],
+    [
+     "O00008",
+     "P004",
+     3,
+     "13.50"
+    ],
+    [
+     "O00008",
+     "P002",
+     1,
+     "32.50"
+    ],
+    [
+     "O00010",
+     "P005",
+     3,
+     "59.97"
+    ],
+    [
+     "O00012",
+     "P006",
+     3,
+     "36.00"
+    ],
+    [
+     "O00002",
+     "P001",
+     3,
+     "59.97"
+    ],
+    [
+     "O00008",
+     "P004",
+     3,
+     "13.50"
+    ],
+    [
+     "O00010",
+     "P005",
+     3,
+     "59.97"
+    ],
+    [
+     "O00012",
+     "P006",
+     2,
+     "24.00"
+    ]
+   ],
+   "row_count": 11,
+   "inputs": {
+    "order_items": [
+     [
+      "O00001",
+      "1",
+      "P005",
+      "3",
+      "19.99"
+     ],
+     [
+      "O00001",
+      "2",
+      "P005",
+      "3",
+      "17.99"
+     ],
+     [
+      "O00001",
+      "3",
+      "P004",
+      "1",
+      "4.05"
+     ],
+     [
+      "O00002",
+      "1",
+      "P001",
+      "3",
+      "19.99"
+     ],
+     [
+      "O00002",
+      "1",
+      "P001",
+      "3",
+      "19.99"
+     ],
+     [
+      "O00008",
+      "1",
+      "P004",
+      "3",
+      "4.50"
+     ],
+     [
+      "O00008",
+      "2",
+      "P002",
+      "1",
+      "32.50"
+     ],
+     [
+      "O00008",
+      "3",
+      "P004",
+      "3",
+      "4.50"
+     ],
+     [
+      "O00010",
+      "2",
+      "P005",
+      "3",
+      "19.99"
+     ],
+     [
+      "O00010",
+      "3",
+      "P005",
+      "3",
+      "19.99"
+     ],
+     [
+      "O00012",
+      "3",
+      "P006",
+      "3",
+      "12.00"
+     ],
+     [
+      "O00012",
+      "3",
+      "P006",
+      "2",
+      "12.00"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice order lines table",
+  "lines delivered two and three times",
+  "two real lines that look the same apart from the line number",
+  "a line sent again with a corrected quantity",
+  "lines with a missing quantity or price",
+  "an empty order lines table"
+ ]
+}

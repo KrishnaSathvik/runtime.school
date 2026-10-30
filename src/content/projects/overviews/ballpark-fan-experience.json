@@ -1,0 +1,59 @@
+{
+  "id": "ballpark-fan-experience",
+  "task": "You support the strategy team of a professional baseball league that is reviewing the past decade: home-field advantage, the empty stadiums of 2020, attendance recovery and the 2023 pitch clock. Find out how home advantage, attendance and game length changed from 2016 to 2025, and who stood out in 2025.",
+  "produce": [
+    {
+      "name": "Home advantage",
+      "about": "Regular-season games, home wins and home win rate per season."
+    },
+    {
+      "name": "Attendance and game length",
+      "about": "Games with attendance, average attendance and average game length per season."
+    },
+    {
+      "name": "2025 standings",
+      "about": "Wins, losses, runs scored and allowed, and run differential per club."
+    },
+    {
+      "name": "2025 power hitters",
+      "about": "The ten leading home-run hitters with their batting average and on-base rate."
+    },
+    {
+      "name": "Fan-experience review",
+      "about": "Three findings and one recommendation."
+    }
+  ],
+  "labels": {
+    "understand-data": "Explore games",
+    "home-advantage": "Home advantage",
+    "attendance-length": "Attendance",
+    "standings-2025": "Standings",
+    "hitters-2025": "Hitters",
+    "synthesis": "Conclusions",
+    "report": "Report"
+  },
+  "summaries": {
+    "understand-data": "Compare a 2020 game with a 2025 game on attendance and length.",
+    "home-advantage": "Measure the home team's win rate each season.",
+    "attendance-length": "Track average attendance and game length by season.",
+    "standings-2025": "Rebuild the 2025 standings from both sides of every game.",
+    "hitters-2025": "Find the leading home-run hitters among everyday players.",
+    "synthesis": "Decide what changed most for fans, and what the data can't explain.",
+    "report": "Write three findings and one recommendation."
+  },
+  "problems": [
+    "Postseason games sit in the same table as the regular season, so every season total needs a game-type filter.",
+    "2020 has only 898 regular-season games and no attendance at all.",
+    "Outside 2020, 135 regular-season games still have no attendance recorded.",
+    "One 2016 regular-season game ended in a 1–1 tie, so it is neither a home win nor a loss.",
+    "Player data covers only 2025, and about a third of batting lines have no plate appearances."
+  ],
+  "preparation": [
+    "group-into-summaries",
+    "filter-groups-with-having",
+    "conditional-aggregation",
+    "combine-sets-with-union",
+    "connect-tables-with-join",
+    "understand-null"
+  ]
+}

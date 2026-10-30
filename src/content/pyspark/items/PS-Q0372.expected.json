@@ -1,0 +1,73 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "invoice_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "invoice_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "total_amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "account_owner",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "segment",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "INV-000004",
+     "ACC-0001",
+     "2026-02-05",
+     "283.50",
+     "Dana Whitlock",
+     "mid_market"
+    ],
+    [
+     "INV-000005",
+     "ACC-0005",
+     "2026-03-04",
+     "245.00",
+     "Dana Whitlock",
+     "smb"
+    ]
+   ],
+   "row_count": 2
+  }
+ },
+ "hidden": [
+  "the full practice accounts, change feed and invoices",
+  "invoices the day before and the day an account changed at midnight",
+  "an invoice on a day its account changed in the afternoon",
+  "invoices before and on the day an account was deleted",
+  "an invoice dated the day its account was added, before it was added",
+  "invoices on the last day before the history starts and on its first day",
+  "an invoice for an account the history doesn't know",
+  "no invoices"
+ ]
+}

@@ -1,0 +1,136 @@
+{
+  "id": "PS-L007",
+  "minutes": 20,
+  "lede": "Most tables arrive ready to use, but sometimes you need to make one yourself: a few rows to test with, or a small lookup table. `spark.createDataFrame` turns plain Python data into a DataFrame.",
+  "objectives": [
+    "Build a DataFrame from a list of tuples with `spark.createDataFrame(rows, schema)`",
+    "Write a schema string that names each column and its type",
+    "Use `Decimal`, `date` and `None` for exact amounts, dates and missing values",
+    "Build DataFrames from dicts, `Row` objects and `spark.range`"
+  ],
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0",
+    "edition": "lesson",
+    "tables": [
+      "orders",
+      "products"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "On this page `spark` is the SparkSession, already started, and the shop's tables are loaded as DataFrames called `orders` and `products`.\n\n`spark.createDataFrame(rows, schema)` builds a new DataFrame. `rows` is a list with one tuple per row. `schema` is a string that names each column and its type, in order, separated by commas: `\"product_id STRING, in_stock INT\"`. The values in each tuple go into the columns in that same order."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "A DataFrame from tuples",
+      "code": "rows = [(\"P001\", \"Chef Knife\", 3), (\"P002\", \"Pour-Over Kettle\", 1), (\"P004\", \"Camp Lantern\", 6)]\nstock = spark.createDataFrame(rows, \"product_id STRING, name STRING, in_stock INT\")\n\nstock.show()\nstock.printSchema()\n",
+      "note": "`show()` prints the rows and `printSchema()` lists each column with its type, where `INT` is written `integer`. Lesson 8 looks at both properly."
+    },
+    {
+      "kind": "text",
+      "md": "The types you'll use most are `STRING` (text), `INT` and `BIGINT` (whole numbers, `BIGINT` for very big ones), `DOUBLE` (numbers with a fraction), `BOOLEAN` (true or false), `DATE`, and `DECIMAL(10,2)` (exact amounts with two decimal places, like money).\n\nYou can leave the types out and pass only the column names. Then Spark looks at the values and **guesses** the types, and its guesses aren't always what you want."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Let Spark guess the types",
+      "code": "rows = [(\"P001\", 3, 19.99), (\"P002\", 1, 32.50)]\nguessed = spark.createDataFrame(rows, [\"product_id\", \"in_stock\", \"unit_price\"])\n\nguessed.printSchema()\n",
+      "note": "Python whole numbers become `long` (Spark's name for `bigint`), not `int`, and `19.99` becomes `double`, which can't hold money exactly. A schema says what you mean instead of leaving it to a guess."
+    },
+    {
+      "kind": "text",
+      "md": "Each column type needs the matching kind of Python value. A `DECIMAL` column takes a `Decimal` from Python's `decimal` module, written from text so it stays exact: `Decimal(\"19.99\")`. A `DATE` column takes a `date` from `datetime`, such as `date(2026, 9, 1)`. A missing value is `None`, in any column."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Exact prices, dates and a missing value",
+      "code": "from datetime import date\nfrom decimal import Decimal\n\nrows = [\n    (\"P001\", date(2026, 9, 1), Decimal(\"21.49\")),\n    (\"P004\", date(2026, 9, 1), None),\n]\nchanges = spark.createDataFrame(rows, \"product_id STRING, changed_on DATE, new_price DECIMAL(10,2)\")\n\nchanges.show()\nchanges.printSchema()\n",
+      "note": "The price that isn't decided yet is `None`, so it shows as `NULL`. `new_price` is `decimal(10,2)`, the same type as `unit_price` in `products`."
+    },
+    {
+      "kind": "error-example",
+      "id": "e4",
+      "title": "A float in a DECIMAL column",
+      "code": "prices = spark.createDataFrame([(\"P001\", 19.99)], \"product_id STRING, unit_price DECIMAL(10,2)\")\n",
+      "error": "PySparkTypeError",
+      "note": "Spark checks every value against the schema. `19.99` is a float, not a `Decimal`, so the `DECIMAL` column refuses it. Write `Decimal(\"19.99\")`. A date written as text, like `\"2026-09-01\"`, is refused by a `DATE` column in the same way."
+    },
+    {
+      "kind": "text",
+      "md": "Rows can also be dicts, with each value under its column's name, or `Row` objects from `pyspark.sql`. With a schema, Spark matches the values to the columns by name. Without one, it guesses the types, and for dicts it puts the columns in alphabetical order.\n\n`spark.range(n)` is a quick way to get rows when you just need numbers: one `id` column counting from 0 up to `n - 1`."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "From dicts and Row objects",
+      "code": "from pyspark.sql import Row\n\nas_dicts = [{\"status\": \"paid\", \"orders\": 4}, {\"status\": \"shipped\", \"orders\": 3}]\nspark.createDataFrame(as_dicts).show()\nspark.createDataFrame(as_dicts, \"status STRING, orders INT\").show()\n\nas_rows = [Row(status=\"placed\", orders=1)]\nspark.createDataFrame(as_rows, \"status STRING, orders INT\").show()\n",
+      "note": "Without a schema the dict columns come out as `orders, status`. With one they follow the schema: `status` first."
+    },
+    {
+      "kind": "example",
+      "id": "e6",
+      "title": "Numbers with spark.range",
+      "code": "spark.range(4).show()\nspark.range(10, 40, 10).show()\n",
+      "note": "`range(4)` gives 0 to 3. With a start, an end and a step it counts from the start and stops before the end."
+    },
+    {
+      "kind": "text",
+      "md": "Real data usually comes from files. `spark.read.csv(path, header=True, schema=\"...\")` reads a CSV file with the same kind of schema string, and that's how the tables on this page were loaded. In these lessons the tables are ready for you, so you won't need a file path."
+    }
+  ],
+  "challenges": [
+    "PS-L007-C1",
+    "PS-L007-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "What type does `qty` get in `spark.createDataFrame([(\"A\", 3)], [\"code\", \"qty\"])`?",
+      "choices": [
+        "int",
+        "bigint",
+        "double",
+        "string"
+      ],
+      "answer": 1,
+      "why": "With only column names, Spark guesses the types. A Python whole number becomes `bigint`. Write `\"code STRING, qty INT\"` to get `int`."
+    },
+    {
+      "id": "k2",
+      "prompt": "Which value can go into a `DECIMAL(10,2)` column?",
+      "choices": [
+        "19.99",
+        "\"19.99\"",
+        "Decimal(\"19.99\")",
+        "Any of them: Spark converts it"
+      ],
+      "answer": 2,
+      "why": "A `DECIMAL` column only accepts a `Decimal`. A float or a piece of text is refused with an error."
+    },
+    {
+      "id": "k3",
+      "prompt": "What does `spark.range(3)` give?",
+      "choices": [
+        "One column called `id` with the rows 0, 1 and 2",
+        "One column called `id` with the rows 1, 2 and 3",
+        "Three empty columns",
+        "A Python list `[0, 1, 2]`"
+      ],
+      "answer": 0,
+      "why": "`spark.range(n)` is a DataFrame with one `id` column, counting from 0 and stopping before `n`."
+    }
+  ],
+  "review": [
+    "`spark.createDataFrame(rows, schema)` builds a DataFrame from a list of tuples, one tuple per row.",
+    "A schema string names each column and its type, in order: `\"product_id STRING, in_stock INT\"`.",
+    "Without a schema Spark guesses: whole numbers become `bigint` and numbers with a fraction become `double`.",
+    "Use `Decimal(\"19.99\")` for a `DECIMAL` column, `date(2026, 9, 1)` for a `DATE` column and `None` for a missing value.",
+    "Rows can also be dicts or `Row` objects; `spark.range(n)` gives one `id` column from 0 to `n - 1`.",
+    "Files are read with `spark.read.csv(path, header=True, schema=...)`, using the same schema strings."
+  ],
+  "practice": ["PS-Q0031", "PS-Q0032", "PS-Q0033", "PS-Q0034", "PS-Q0035"]
+}

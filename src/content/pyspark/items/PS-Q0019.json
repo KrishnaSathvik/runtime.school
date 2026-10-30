@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0019",
+  "kind": "predict",
+  "slug": "the-select-that-went-missing",
+  "lesson": "PS-L004",
+  "role": "debugging",
+  "format": "concept_or_trace",
+  "difficulty": "easy",
+  "minutes": 4,
+  "title": "The select that went missing",
+  "prompt": "Someone wanted only `order_id` and `total` for web orders, but forgot something. What does this program actually print? Type each line on its own line.",
+  "program": "from pyspark.sql import functions as F\n\nweb = orders.filter(F.col(\"channel\") == \"web\")\nweb.select(\"order_id\", \"total\")\nrow = web.first()\nprint(len(row))\nprint(row[\"order_id\"], row[\"status\"])\n",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "`select` gives back a new DataFrame. Is its result stored anywhere?",
+    "So `web` still has every column of `orders`. How many is that?",
+    "The first web order in the file is the first row of `web`; read its status from the table."
+  ],
+  "explanation": "The `select` line builds a new DataFrame and throws it away, so `web` keeps all 6 columns of `orders`. Its first row is order O00007, whose status is `placed`, so reading `status` works instead of failing. The fix is `web = web.select(\"order_id\", \"total\")`."
+}

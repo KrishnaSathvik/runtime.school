@@ -1,0 +1,22 @@
+{
+  "id": "P05",
+  "task": "A booking desk needs to know which rooms can take a stay. Working on five simulated listing rows, build the code that checks whether a room is open, refuses a stay that includes a closed day, and saves accepted stays to a SQLite file.",
+  "produce": [
+    { "name": "desk.py", "about": "The listing model, the open check, the booking rule and the SQLite save and read." },
+    { "name": "main.py", "about": "Books a stay only when it is accepted and prints the saved days." },
+    { "name": "bookings.db", "about": "One row per booked day." }
+  ],
+  "steps": {
+    "P05.m1": "Describe a listing as a dictionary of room, day and open flag.",
+    "P05.m2": "Check whether a room is open on a day.",
+    "P05.m3": "Accept a stay only when every day in it is open.",
+    "P05.m4": "Save a booking to SQLite, one row per day, and read the days back in order.",
+    "P05.m5": "Report the booked days, which hold only accepted stays."
+  },
+  "problems": [
+    "The oak room is closed on 3 June.",
+    "The elm room has no row for 3 June, so a missing day must count as not open.",
+    "Open is written as the word yes or no, not as True or False."
+  ],
+  "preparation": ["PY-L30-05", "PY-L30-04", "PY-L08-01", "PY-L14-03", "PY-L20-01"]
+}

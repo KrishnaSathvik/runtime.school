@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0223",
+  "slug": "an-orc-snapshot-safe-to-rerun",
+  "lesson": "PS-L045",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "An ORC snapshot safe to re-run",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "prompt": "A nightly job saves a snapshot of the trips in ORC for the Hive team, and it gets re-run whenever something upstream changes. Write `solve(trips)` so each run saves the snapshot at the given path and returns exactly what that run saved.",
+  "rules": [
+    "Save `trip_id`, `passenger_count`, `tip`, `total` and `payment_type`, in that order, as ORC at `path`.",
+    "The job runs several times in a row on different data. Each run must leave only its own trips at `path`: nothing from earlier runs, and never an error because the folder exists.",
+    "Return the DataFrame read back from `path`, with the original types. Missing values stay missing and duplicate trips stay.",
+    "A run with no trips saves and returns an empty snapshot that still has the five columns."
+  ],
+  "hints": [
+    "`df.write.orc(path)` and `spark.read.orc(path)` work like their Parquet versions.",
+    "Think about what a write does when the folder is already there from the previous run, and which mode replaces it.",
+    "The check runs your function once per test case, one after another, on the same path."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "trips"
+  ],
+  "starter": "def solve(trips):\n    path = \"/tmp/taxi/snapshot\"\n    # Save the snapshot as ORC at `path` and return what you read back.\n    return trips\n",
+  "output": {
+    "columns": [
+      "trip_id",
+      "passenger_count",
+      "tip",
+      "total",
+      "payment_type"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`trips.select(\"trip_id\", \"passenger_count\", \"tip\", \"total\", \"payment_type\").write.mode(\"overwrite\").orc(path)` and `return spark.read.orc(path)`. The second run is where it goes wrong without a mode: the folder from the first run is still there, and a write with no mode stops with an error rather than replace it. Appending would keep every earlier run's trips too, and ignoring the write would keep returning the first run's snapshot. `overwrite` replaces the folder's contents each time. ORC stores the schema in its files, so missing values, duplicates and even an empty snapshot come back with the right column types."
+}

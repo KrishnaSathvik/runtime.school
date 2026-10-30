@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0034",
+  "slug": "fix-the-new-product-rows",
+  "lesson": "PS-L007",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Fix the new product rows",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "Three new products must be added with exactly the same columns and types as `products`. The function below returns the right rows, but the check says the types are wrong. Fix `solve()`.",
+  "rules": [
+    "Columns, in order: `product_id`, `name`, `category` (all text), `unit_price` (decimal(10,2)) and `active` (boolean).",
+    "`P021`, `Bread Knife`, `kitchen`, 14.50, active. `P022`, `Hammock`, `outdoor`, 45.00, not active.",
+    "`P023`, `Desk Mat`, `office`, active, with no price yet: its price is missing."
+  ],
+  "hints": [
+    "Press Run and look at the schema of the result: what type did `unit_price` get?",
+    "With only column names, Spark guesses the types, and a number with a fraction becomes `double`. A schema string sets each type.",
+    "A `DECIMAL` column needs `Decimal` values, written from text so they stay exact: `Decimal(\"14.50\")`. A float in a `DECIMAL` column is an error."
+  ],
+  "entry": "solve",
+  "inputs": [],
+  "starter": "def solve():\n    # Three new products, with the same columns and types as products.\n    rows = [\n        (\"P021\", \"Bread Knife\", \"kitchen\", 14.50, True),\n        (\"P022\", \"Hammock\", \"outdoor\", 45.00, False),\n        (\"P023\", \"Desk Mat\", \"office\", None, True),\n    ]\n    return spark.createDataFrame(rows, [\"product_id\", \"name\", \"category\", \"unit_price\", \"active\"])\n",
+  "output": {
+    "columns": [
+      "product_id",
+      "name",
+      "category",
+      "unit_price",
+      "active"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Passing only column names makes Spark guess every type, and `14.50` is a Python float, so `unit_price` comes out as `double`, not `decimal(10,2)`. The fix has two parts: a schema string that states each type, `\"product_id STRING, name STRING, category STRING, unit_price DECIMAL(10,2), active BOOLEAN\"`, and `Decimal(\"14.50\")` and `Decimal(\"45.00\")` for the prices, because a `DECIMAL` column won't take a float. Keep `None` for the missing price: a price of 0 would mean the mat is free."
+}

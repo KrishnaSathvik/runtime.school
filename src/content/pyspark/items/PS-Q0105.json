@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0105",
+  "slug": "login-domain-and-area-code",
+  "lesson": "PS-L021",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Login, domain and area code",
+  "dataset": {
+    "id": "PS-D03",
+    "version": "1.0.0"
+  },
+  "prompt": "The IT team sets up accounts from the HR table. Write `solve(employees)` so it returns `employee_id`, `login`, `domain` and `area_code`.",
+  "rules": [
+    "Standardize `email` first: no spaces at the start or end, all lower case. `login` is the part before the `@` and `domain` the part after it.",
+    "An email without an `@` has no domain (missing), and its login is the whole standardized email. The job must not stop.",
+    "`area_code` is the first three of the phone's last ten digits, ignoring dashes, dots, spaces, brackets and a leading `+1`.",
+    "Missing values give missing results. Return the four columns, in that order, one row per employee."
+  ],
+  "hints": [
+    "`F.split(email, \"@\")` makes a list of the parts. Build it from the trimmed, lower-case email.",
+    "`.getItem(1)` stops the job when there's no second part. `F.get(parts, 1)` gives `NULL` instead.",
+    "For the phone: keep the digits with `regexp_replace`, take the last ten with `F.substring(digits, -10, 10)`, then the first three of those."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "employees"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(employees):\n    # Return employee_id, login, domain and area_code.\n    return employees\n",
+  "output": {
+    "columns": [
+      "employee_id",
+      "login",
+      "domain",
+      "area_code"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Standardize, split, and read the parts safely. `email = F.lower(F.trim(\"email\"))` and `parts = F.split(email, \"@\")`; then `F.get(parts, 0)` is the login and `F.get(parts, 1)` the domain. With no `@` the list has one part, so `get` gives `NULL` for the domain, where `getItem(1)` would stop the job. Lower-casing before the split matters: `Ines.novak@Corp.Example` must give the domain `corp.example`. For the area code, `digits = F.regexp_replace(\"phone\", \"[^0-9]\", \"\")`, then `F.substring(F.substring(digits, -10, 10), 1, 3)`: taking the first three digits straight from `digits` would give `155` for a number written with `+1`."
+}

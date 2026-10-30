@@ -1,0 +1,40 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D06",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "page_views",
+   "cart_events",
+   "sessions"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "micro-batch 0 [('PV-0001', 'social', 'US'), ('PV-0002', 'social', 'US'), ('PV-0004', 'organic', 'GB'), ('PV-0005', 'organic', 'GB')]\nmicro-batch 1 [('PV-0006', 'email', 'DE'), ('PV-0007', 'email', 'DE'), ('PV-0008', 'email', 'DE')]\nmicro-batch 2 [('PV-0003', 'social', 'US'), ('PV-0009', 'direct', 'CA'), ('PV-0010', 'direct', 'CA')]\nmicro-batch 3 [('PV-0011', 'social', 'US')]\nmicro-batch 4 [('PV-0012', 'social', 'US')]\nstateful steps: 0\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "AnalysisException\nLeftOuter join with a streaming DataFrame/Dataset on the right and a static DataFrame/Dataset on the left is not supported;\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "micro-batch 0 []\nmicro-batch 1 [('PV-0007', 'CA-0003')]\nmicro-batch 2 [('PV-0003', 'CA-0001'), ('PV-0003', 'CA-0002'), ('PV-0010', 'CA-0005')]\nmicro-batch 3 []\nmicro-batch 4 []\nrows kept in state: [2, 4, 8, 9, 9]\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "micro-batch 0 []\nmicro-batch 1 [('PV-0007', 'CA-0003')]\nmicro-batch 2 [('PV-0003', 'CA-0001'), ('PV-0003', 'CA-0002'), ('PV-0010', 'CA-0005')]\nmicro-batch 3 [('PV-0005', 'None')]\nmicro-batch 4 []\nmicro-batch 0 watermark 1970-01-01T00:00:00.000Z rows in state 2\nmicro-batch 1 watermark 2026-03-14T09:59:10.000Z rows in state 4\nmicro-batch 2 watermark 2026-03-14T10:07:50.000Z rows in state 6\nmicro-batch 3 watermark 2026-03-14T10:19:55.000Z rows in state 4\nmicro-batch 4 watermark 2026-03-14T10:20:40.000Z rows in state 4\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "AnalysisException\nStream-stream LeftOuter join between two streaming DataFrame/Datasets is not supported without a watermark in the join keys, or a watermark on the nullable side and an appropriate range condition;\n",
+   "error": null
+  }
+ }
+}

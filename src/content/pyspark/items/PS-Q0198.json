@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0198",
+  "slug": "parse-untidy-attribute-values",
+  "lesson": "PS-L040",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Parse untidy attribute values",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "Some log shippers write attribute values as numbers or `null` instead of text. Write `solve(application_logs_raw)` so it parses every line and returns how many attributes it has and its result count as text.",
+  "rules": [
+    "Each line of `value` is a JSON object with `log_id` and an `attributes` object whose keys change from line to line.",
+    "`entries` counts the keys in `attributes`, including a key whose value is `null`. An empty object gives 0; a line with no `attributes`, or `null` there, gives a missing count.",
+    "`result_count` is the value under that key as text, so the number `48` becomes `\"48\"`. A `null` value or a missing key gives a missing value.",
+    "A line that isn't valid JSON gives a row with every column missing. Return `log_id`, `entries` and `result_count`."
+  ],
+  "hints": [
+    "Parse with `F.from_json` and give `attributes` the type `MAP<STRING, STRING>`, so any set of keys fits.",
+    "With text as the value type, a JSON number or `true` comes back as its text. A JSON `null` keeps its key with a missing value.",
+    "`F.size` of the map counts its keys; read one value with `[\"result_count\"]`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "application_logs_raw"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(application_logs_raw):\n    # Parse each line; return log_id, entries and result_count.\n    return application_logs_raw\n",
+  "output": {
+    "columns": [
+      "log_id",
+      "entries",
+      "result_count"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Parse once with a map for the changing part: `parsed = F.from_json(\"value\", \"log_id STRING, attributes MAP<STRING, STRING>\")`, then select `parsed.log_id`, `F.size(parsed.attributes)` and `parsed.attributes[\"result_count\"]`. Because the map's values are text, a number such as `48` comes back as `\"48\"` instead of failing, and a key written as `null` stays in the map with a missing value, so it still counts in `entries`. `{}` is an empty map with size 0, while a missing or `null` `attributes` is no map at all, so its size is missing. A line that isn't JSON parses to nothing, and every column is missing. A map of numbers would lose every value that isn't a number."
+}

@@ -1,0 +1,51 @@
+{
+  "id": "PS-L044-C1",
+  "slug": "clean-log-records",
+  "lesson": "PS-L044",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Clean log records",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "The on-call dashboard should only see log records that parsed. The starter saves the log file; write the rest of `solve(application_logs_raw)` so it reads the file as JSON Lines and returns `log_id`, `logged_at`, `level`, `service` and `message` for every good record.",
+  "rules": [
+    "Columns and types: `log_id STRING, logged_at TIMESTAMP, level STRING, service STRING, message STRING`.",
+    "Leave out lines that aren't valid JSON, and records whose `logged_at` isn't a valid timestamp.",
+    "A record with a missing field is kept, with NULL for that field. Keep repeated records.",
+    "Return only these five columns, in this order."
+  ],
+  "hints": [
+    "`spark.read.json(path, schema=...)` reads JSON Lines with the types you give.",
+    "Only the fields named in the schema are read; the others are ignored.",
+    "`mode=\"DROPMALFORMED\"` leaves out the lines that don't fit."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "application_logs_raw"
+  ],
+  "starter": "def solve(application_logs_raw):\n    path = \"/tmp/logs/app\"\n    application_logs_raw.write.mode(\"overwrite\").text(path)\n    # Read the file at `path` as JSON Lines and return the good records.\n    return application_logs_raw\n",
+  "output": {
+    "columns": [
+      "log_id",
+      "logged_at",
+      "level",
+      "service",
+      "message"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

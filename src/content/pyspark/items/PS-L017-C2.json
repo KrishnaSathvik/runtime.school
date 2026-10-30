@@ -1,0 +1,27 @@
+{
+  "id": "PS-L017-C2",
+  "slug": "posted-amount-bands",
+  "lesson": "PS-L017",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Posted amount bands",
+  "dataset": { "id": "PS-D02", "version": "1.0.0" },
+  "prompt": "The fraud team reviews posted transactions by size. Write `solve(transactions)` so it returns `transaction_id`, `amount` and a `band` for each posted transaction.",
+  "rules": [
+    "Keep only transactions whose `status` is exactly `posted`.",
+    "`band` is `large` for 1000.00 or more, `medium` for 100.00 or more, and `small` below 100.00.",
+    "A missing amount gets the band `unknown`.",
+    "Return `transaction_id`, `amount` and `band`, in that order."
+  ],
+  "hints": [
+    "`filter` the posted rows, then `select` with the new column.",
+    "The first true `when` wins, so test the largest band first.",
+    "A missing amount fails every comparison, so give `small` its own `when` and leave `otherwise` for `unknown`."
+  ],
+  "entry": "solve",
+  "inputs": ["transactions"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(transactions):\n    # Return transaction_id, amount and band for posted transactions.\n    return transactions\n",
+  "output": { "columns": ["transaction_id", "amount", "band"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

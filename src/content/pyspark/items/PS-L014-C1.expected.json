@@ -1,0 +1,68 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "merchant_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "mcc_code",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "mcc_number",
+     "type": "int",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "M001",
+     "5411",
+     5411
+    ],
+    [
+     "M002",
+     "0742",
+     742
+    ],
+    [
+     "M003",
+     "5814",
+     5814
+    ],
+    [
+     "M004",
+     "5541",
+     5541
+    ],
+    [
+     "M005",
+     "5942",
+     5942
+    ],
+    [
+     "M006",
+     "5812",
+     5812
+    ]
+   ],
+   "row_count": 6
+  }
+ },
+ "hidden": [
+  "the full practice merchants table",
+  "codes that are missing or aren't numbers",
+  "codes with leading zeros",
+  "an empty merchants table"
+ ]
+}

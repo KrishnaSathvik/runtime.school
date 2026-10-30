@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0149",
+  "slug": "fix-the-customer-order-list",
+  "lesson": "PS-L030",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Fix the customer order list",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "The customer list arrives with some customers repeated, so someone removed duplicates. Now each customer shows only one of their orders. Find the bug and fix `solve(customers, orders)`.",
+  "rules": [
+    "Each customer appears once per order, and a customer with no orders appears once with a missing `order_id` and `total`.",
+    "Repeated customer rows are exact copies of each other; each customer counts once.",
+    "Each row of `orders` appears exactly as many times as it does in `orders`, even a repeated one.",
+    "Return `customer_id`, `name`, `order_id` and `total`."
+  ],
+  "hints": [
+    "Count C0001's rows in the result and compare with how many orders C0001 placed.",
+    "`dropDuplicates([\"customer_id\"])` after the join keeps one row per customer, so it throws away all but one order.",
+    "Remove the copies from `customers` before the join, where the problem is, and leave the joined rows alone."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "customers",
+    "orders"
+  ],
+  "starter": "def solve(customers, orders):\n    joined = customers.join(orders, on=\"customer_id\", how=\"left\")\n    return joined.dropDuplicates([\"customer_id\"]).select(\"customer_id\", \"name\", \"order_id\", \"total\")\n",
+  "output": {
+    "columns": [
+      "customer_id",
+      "name",
+      "order_id",
+      "total"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "The duplicates are removed in the wrong place. After the join a customer has one row per order, so `dropDuplicates([\"customer_id\"])` keeps one of them at random and drops the rest. Remove the copies from the side that has them, before joining: `customers.dropDuplicates().join(orders, on=\"customer_id\", how=\"left\")`, then select the four columns. `distinct()` after the join looks safer but still merges an order row that genuinely appears twice in `orders`, and an inner join would lose customers with no orders."
+}

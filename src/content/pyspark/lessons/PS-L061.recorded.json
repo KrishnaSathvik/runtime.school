@@ -1,0 +1,47 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D14",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "accounts"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "1 data file\n['00000000000000000000.json']\n+----------+--------------------+--------------+-------+----------+-------------+------------+----------+---------+\n|account_id|        account_name|      industry|country|   segment|account_owner|credit_limit|created_on|is_active|\n+----------+--------------------+--------------+-------+----------+-------------+------------+----------+---------+\n|  ACC-0001|Quillfen Analytic...|    technology|     US|mid_market|Dana Whitlock|    75000.00|2022-03-14|     true|\n|  ACC-0002|Brackenmoor Foods...|consumer goods|     GB|       smb| Jonas Ekberg|    15000.00|2023-06-02|     true|\n|  ACC-0003|Tamsley Logistics...|     transport|     DE|enterprise|Mei Lindqvist|   250000.00|2021-09-20|     true|\n|  ACC-0004|Corvane Health Pt...|    healthcare|     AU|mid_market|Rafael Ibarra|    75000.00|2024-01-08|     true|\n|  ACC-0005|  Ellowby Energy Inc|        energy|     US|       smb|Dana Whitlock|    15000.00|2025-04-30|     true|\n+----------+--------------------+--------------+-------+----------+-------------+------------+----------+---------+\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "commitInfo\nmetaData\nprotocol\nadd\nWRITE ErrorIfExists\n['account_id', 'account_name', 'industry', 'country', 'segment', 'account_owner', 'credit_limit', 'created_on', 'is_active']\nTrue 5\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "['00000000000000000000.json', '00000000000000000001.json', '00000000000000000002.json']\n['add', 'commitInfo', 'remove', 'remove']\ndata files on disk: 3\nrows read as Delta:   5\nrows read as Parquet: 15\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "+-------+---------+\n|version|operation|\n+-------+---------+\n|      2|    WRITE|\n|      1|    WRITE|\n|      0|    WRITE|\n+-------+---------+\n\n2 Overwrite\n1 Append\n0 ErrorIfExists\nRow(version=2, operation='WRITE')\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "['_delta_log', 'country=AU', 'country=DE', 'country=GB', 'country=US']\n['account_id', 'account_name', 'industry', 'country', 'segment', 'account_owner', 'credit_limit', 'created_on', 'is_active']\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "",
+   "error": {
+    "type": "AnalysisException",
+    "message": "[DELTA_TABLE_NOT_FOUND] Delta table `/tmp/crm/accounts_parquet` doesn't exist.",
+    "line": 4,
+    "condition": "DELTA_TABLE_NOT_FOUND"
+   }
+  }
+ }
+}

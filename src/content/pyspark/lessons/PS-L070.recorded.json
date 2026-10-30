@@ -1,0 +1,34 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D09",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "sensor_readings"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "micro-batch 0 [('09:00', 4)]\nmicro-batch 1 [('09:15', 3)]\nmicro-batch 2 [('09:30', 5)]\nmicro-batch 3 [('09:15', 4)]\nmicro-batch 0 ran with watermark 1970-01-01T00:00:00.000Z\nmicro-batch 1 ran with watermark 2026-04-14T08:50:00.000Z\nmicro-batch 2 ran with watermark 2026-04-14T09:05:00.000Z\nmicro-batch 3 ran with watermark 2026-04-14T09:20:00.000Z\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "micro-batch 0 [('09:00', 4)]\nmicro-batch 1 [('09:15', 3)]\nmicro-batch 2 [('09:30', 5)]\nmicro-batch 3 [('09:15', 4)]\nmicro-batch 4 []\nmicro-batch 0 watermark 1970-01-01T00:00:00.000Z dropped 0\nmicro-batch 1 watermark 2026-04-14T08:50:00.000Z dropped 0\nmicro-batch 2 watermark 2026-04-14T09:05:00.000Z dropped 0\nmicro-batch 3 watermark 2026-04-14T09:20:00.000Z dropped 0\nmicro-batch 4 watermark 2026-04-14T09:20:00.000Z dropped 1\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "micro-batch 0 []\nmicro-batch 1 []\nmicro-batch 2 []\nmicro-batch 3 [('09:00', 4)]\nwindows still open: 2\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "micro-batch 0 [('09:00', 4)]\nmicro-batch 1 [('09:15', 3)]\nmicro-batch 2 [('09:30', 4)]\nmicro-batch 3 [('09:15', 4)]\n['stateStoreSave', 'dedupeWithinWatermark']\n",
+   "error": null
+  }
+ }
+}

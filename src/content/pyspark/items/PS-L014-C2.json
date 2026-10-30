@@ -1,0 +1,26 @@
+{
+  "id": "PS-L014-C2",
+  "slug": "amounts-in-cents",
+  "lesson": "PS-L014",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Amounts in cents",
+  "dataset": { "id": "PS-D02", "version": "1.0.0" },
+  "prompt": "The card network's file takes amounts as whole cents and only the day each transaction was posted. Write `solve(transactions)` so it returns `transaction_id`, `amount_cents` and `posted_date`.",
+  "rules": [
+    "`amount_cents` is `amount` in cents, as a bigint: 60.53 is 6053. No cent may be lost.",
+    "`posted_date` is the date part of `posted_at`, as a date.",
+    "A missing amount or time stays missing. Return the three columns, in that order, for every transaction."
+  ],
+  "hints": [
+    "Multiply by 100 first, then cast. Casting to a whole number first drops the cents.",
+    "Use `\"bigint\"`: the largest amounts are too big for an int.",
+    "`.cast(\"date\")` on a timestamp keeps the day."
+  ],
+  "entry": "solve",
+  "inputs": ["transactions"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(transactions):\n    # Return transaction_id, amount_cents (bigint) and posted_date (date).\n    return transactions\n",
+  "output": { "columns": ["transaction_id", "amount_cents", "posted_date"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

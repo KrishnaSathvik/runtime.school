@@ -1,0 +1,133 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "claim_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "patient_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "service_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "billed_amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "paid_amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "claim_status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "payer",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "submitted_date",
+     "type": "date",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "CLM000005",
+     "PAT00005",
+     "2026-01-16",
+     "458.05",
+     null,
+     "paid",
+     "Bluebird Health",
+     "2026-01-19"
+    ],
+    [
+     "CLM000006",
+     "PAT00006",
+     "2026-01-17",
+     "23227.37",
+     null,
+     "paid",
+     "Bluebird Health",
+     "2026-02-13"
+    ],
+    [
+     "CLM000007",
+     "PAT00001",
+     "2026-01-30",
+     "154.34",
+     null,
+     "paid",
+     "Summit Senior Advantage",
+     "2026-02-27"
+    ],
+    [
+     "CLM000004",
+     "PAT00002",
+     "2026-01-13",
+     "332.53",
+     null,
+     "approved",
+     "Bluebird Health",
+     null
+    ],
+    [
+     "CLM000001",
+     "PAT00003",
+     "2025-12-03",
+     "2724.83",
+     null,
+     "submitted",
+     null,
+     null
+    ],
+    [
+     "CLM000002",
+     "PAT00002",
+     "2025-12-18",
+     "217.82",
+     "0.00",
+     "denied",
+     null,
+     null
+    ],
+    [
+     "CLM000003",
+     "PAT00001",
+     "2025-12-20",
+     "200.80",
+     "166.46",
+     "paid",
+     null,
+     null
+    ]
+   ],
+   "row_count": 7
+  }
+ },
+ "hidden": [
+  "the full practice claims",
+  "the project claims, with repeated rows and missing values",
+  "no claims from either clinic yet",
+  "claims from the second clinic only, some with missing values"
+ ]
+}

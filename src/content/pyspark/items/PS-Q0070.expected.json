@@ -1,0 +1,81 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "transfer_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "requested_on",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "fee",
+     "type": "decimal(12,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "TR00001",
+     "2026-01-11",
+     "650.50",
+     "9.76"
+    ],
+    [
+     "TR00002",
+     "2026-01-23",
+     "75.00",
+     "1.13"
+    ],
+    [
+     "TR00003",
+     "2026-01-29",
+     "1500.00",
+     "22.50"
+    ],
+    [
+     "TR00004",
+     "2026-02-01",
+     "52.99",
+     "0.79"
+    ],
+    [
+     "TR00005",
+     "2026-02-19",
+     "40.50",
+     "0.61"
+    ],
+    [
+     "TR00006",
+     "2026-02-20",
+     "40.50",
+     "0.61"
+    ]
+   ],
+   "row_count": 6
+  }
+ },
+ "hidden": [
+  "the full practice transfers table",
+  "fees that land exactly on a half cent",
+  "amounts so small the fee is under a cent",
+  "transfers with a missing amount or time",
+  "the same transfer delivered twice",
+  "an empty transfers table"
+ ]
+}

@@ -1,0 +1,124 @@
+{
+  "id": "PS-L038",
+  "minutes": 22,
+  "lede": "Reading a struct is half the job. Pipelines also build them, to group related fields or match the shape another system expects, and change them in place without flattening everything. Spark has tools for both, and one trap: a missing struct and a struct of missing values are not the same thing.",
+  "objectives": [
+    "Compute with nested fields as you would with top-level columns",
+    "Build a struct, including a struct inside a struct, with `F.struct` and `alias`",
+    "Add, replace and remove fields of an existing struct with `withField` and `dropFields`",
+    "Tell a missing struct from a struct whose fields are all missing, and predict which one you get"
+  ],
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "encounters"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`encounters` has one row per clinic visit. `vitals` is a struct with `heart_rate`, `systolic` and `diastolic` (whole numbers) and `temperature_c`; it's missing for telehealth visits, where nothing could be measured. `diagnosis_codes` is an array. The table is loaded as a DataFrame, and `F` is `pyspark.sql.functions`.\n\nA nested field works like any column once you've reached it: you can do arithmetic on it, compare it and name the result. The pulse pressure, for example, is the systolic minus the diastolic pressure."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Arithmetic on nested fields",
+      "code": "from pyspark.sql import functions as F\n\nencounters.select(\n    \"encounter_id\", \"encounter_class\",\n    \"vitals.systolic\", \"vitals.diastolic\",\n    (F.col(\"vitals.systolic\") - F.col(\"vitals.diastolic\")).alias(\"pulse_pressure\"),\n).show()\n",
+      "note": "The two telehealth visits have no `vitals`, so both fields and the difference are NULL."
+    },
+    {
+      "kind": "text",
+      "md": "`F.struct(...)` builds a struct from columns. Each field takes the column's name, so use `alias` inside to choose it. The struct as a whole is a column too, so `alias` it once more to name it.\n\nA struct can hold another struct: put an `F.struct(...)` inside, and the result has two levels."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Build a struct, and one inside another",
+      "code": "from pyspark.sql import functions as F\n\nvisits = encounters.select(\n    \"encounter_id\",\n    F.struct(\n        F.col(\"encounter_class\").alias(\"class\"),\n        F.struct(F.col(\"start_time\").alias(\"start\"), F.col(\"end_time\").alias(\"end\")).alias(\"time\"),\n        F.size(\"diagnosis_codes\").alias(\"codes\"),\n    ).alias(\"visit\"),\n)\nvisits.printSchema()\nvisits.select(\"encounter_id\", \"visit.class\", \"visit.time.start\", \"visit.codes\").show(3)\n",
+      "note": "The new struct reads with dot paths like any other, at both levels. Field order follows the order you listed them in."
+    },
+    {
+      "kind": "text",
+      "md": "To change an existing struct without rebuilding it, use methods on the struct column:\n\n- `F.col(\"vitals\").withField(\"name\", value)` adds a field at the end, or replaces it if the name exists.\n- `F.col(\"vitals\").dropFields(\"a\", \"b\")` removes fields.\n\nThe other fields stay as they were. A missing struct stays missing: there's nothing to add a field to."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Add and remove fields",
+      "code": "from pyspark.sql import functions as F\n\nreshaped = encounters.select(\n    \"encounter_id\",\n    F.col(\"vitals\")\n     .withField(\"pulse_pressure\", F.col(\"vitals.systolic\") - F.col(\"vitals.diastolic\"))\n     .dropFields(\"temperature_c\")\n     .alias(\"vitals\"),\n)\nreshaped.printSchema()\nreshaped.show(truncate=False)\n",
+      "note": "`pulse_pressure` is added after the existing fields and `temperature_c` is gone. The telehealth visits still have NULL `vitals`."
+    },
+    {
+      "kind": "text",
+      "md": "Here's the trap. `F.struct` always builds a struct, even when every value going into it is missing. So rebuilding vitals with `F.struct(\"vitals.systolic\", \"vitals.diastolic\")` turns a missing struct into a struct whose fields are all NULL. They look alike in `show()`, but they aren't equal, and JSON shows the difference: `null` versus `{}`.\n\nIf a missing struct should stay missing, change the existing struct with `withField` and `dropFields` instead of building a new one."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "A missing struct versus a struct of missing values",
+      "code": "from pyspark.sql import functions as F\n\nrebuilt = F.struct(\"vitals.systolic\", \"vitals.diastolic\")\nkept = F.col(\"vitals\").dropFields(\"heart_rate\", \"temperature_c\")\n\nencounters.select(\n    \"encounter_id\", \"encounter_class\",\n    F.to_json(rebuilt).alias(\"rebuilt\"),\n    F.to_json(kept).alias(\"kept\"),\n).show(truncate=False)\n",
+      "note": "For the telehealth visits, `rebuilt` is `{}`, a struct with nothing in it, while `kept` is NULL. `to_json` leaves out fields that are NULL, which is why the empty struct prints as `{}`."
+    },
+    {
+      "kind": "error-example",
+      "id": "e5",
+      "title": "withField on a column that isn't a struct",
+      "code": "from pyspark.sql import functions as F\n\nencounters.select(F.col(\"reason\").withField(\"code\", F.lit(\"x\"))).show()\n",
+      "error": "AnalysisException",
+      "note": "`reason` is plain text, so it has no fields to add to. (`F.lit(\"x\")` is a column with the text `x` on every row.) `withField` and `dropFields` work only on struct columns; check with `printSchema()`."
+    }
+  ],
+  "challenges": [
+    "PS-L038-C1",
+    "PS-L038-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "`vitals` is missing on a row. What does `F.struct(\"vitals.systolic\", \"vitals.diastolic\")` give there?",
+      "choices": [
+        "NULL",
+        "A struct whose two fields are NULL",
+        "An error",
+        "The struct is skipped and the row is dropped"
+      ],
+      "answer": 1,
+      "why": "`F.struct` always builds a struct. Its fields are read from a missing struct, so they're NULL, but the struct itself exists."
+    },
+    {
+      "id": "k2",
+      "prompt": "Where does `F.col(\"vitals\").withField(\"pulse_pressure\", ...)` put the new field?",
+      "choices": [
+        "First",
+        "In alphabetical order",
+        "After the existing fields",
+        "In a new struct column"
+      ],
+      "answer": 2,
+      "why": "A new field goes at the end. If a field with that name already exists, it's replaced where it is."
+    },
+    {
+      "id": "k3",
+      "prompt": "What name does the field get in `F.struct(F.col(\"encounter_class\").alias(\"class\"))`?",
+      "choices": [
+        "encounter_class",
+        "class",
+        "col1",
+        "struct"
+      ],
+      "answer": 1,
+      "why": "A field takes its column's name, so the `alias` inside the struct names it."
+    }
+  ],
+  "review": [
+    "Nested fields work in calculations like any column: `F.col(\"vitals.systolic\") - F.col(\"vitals.diastolic\")`.",
+    "`F.struct(...)` builds a struct; `alias` inside names each field, `alias` outside names the struct.",
+    "Put a struct inside `F.struct` for two levels; read it back with dot paths.",
+    "`withField` adds or replaces a field and `dropFields` removes fields; the rest stays.",
+    "A missing struct stays missing under `withField` and `dropFields`, but `F.struct` always builds one.",
+    "Use `printSchema()` to check a struct's fields and their order."
+  ],
+  "practice": ["PS-Q0186", "PS-Q0187", "PS-Q0188", "PS-Q0189", "PS-Q0190"]
+}

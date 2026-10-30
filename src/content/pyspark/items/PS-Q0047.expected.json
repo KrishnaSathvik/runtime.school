@@ -1,0 +1,123 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "customer_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "city",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "C0001",
+     "Ines Okafor",
+     "Leeds"
+    ],
+    [
+     "C0006",
+     "Hana Rao",
+     "Osaka"
+    ],
+    [
+     "C0007",
+     "Lena Novak",
+     "Leeds"
+    ]
+   ],
+   "row_count": 3,
+   "inputs": {
+    "customers": [
+     [
+      "C0001",
+      "Ines Okafor",
+      "Leeds",
+      "consumer",
+      "2025-04-30"
+     ],
+     [
+      "C0002",
+      "Kofi Mori",
+      "Lisbon",
+      "consumer",
+      "2024-11-19"
+     ],
+     [
+      "C0003",
+      "Tomas Okafor",
+      "Denver",
+      "consumer",
+      "2024-05-08"
+     ],
+     [
+      "C0004",
+      "Ines Costa",
+      "Denver",
+      "business",
+      "2024-11-15"
+     ],
+     [
+      "C0005",
+      "Maya Rao",
+      "Perth",
+      "consumer",
+      "2024-05-01"
+     ],
+     [
+      "C0006",
+      "Hana Rao",
+      "Osaka",
+      "consumer",
+      "2025-11-07"
+     ],
+     [
+      "C0007",
+      "Lena Novak",
+      "Leeds",
+      "consumer",
+      "2025-01-01"
+     ],
+     [
+      "C0008",
+      "Ravi Mori",
+      "Osaka",
+      "consumer",
+      "2026-01-01"
+     ],
+     [
+      "C0009",
+      "Omar Lind",
+      "Lisbon",
+      "business",
+      "2025-06-12"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice customers table",
+  "sign-ups on the first and last days of the year, and the days either side",
+  "consumers from cities on and off the list",
+  "business customers in the right cities and year",
+  "customers with a missing segment, city, sign-up date or name",
+  "the same customer row delivered twice",
+  "an empty customers table"
+ ]
+}

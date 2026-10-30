@@ -1,0 +1,59 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "dispute_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "disputed_cents",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "D0001",
+     "open",
+     697
+    ],
+    [
+     "D0002",
+     "open",
+     1599
+    ],
+    [
+     "D0003",
+     "won",
+     1923
+    ],
+    [
+     "D0004",
+     "won",
+     6053
+    ]
+   ],
+   "row_count": 4
+  }
+ },
+ "hidden": [
+  "the full practice disputes table",
+  "amounts a double can't hold exactly",
+  "a dispute with no amount",
+  "the same dispute delivered twice",
+  "an empty disputes table"
+ ]
+}

@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0421",
+  "slug": "profile-the-long-trip-lookup",
+  "lesson": "PS-L085",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 6,
+  "title": "Profile the long-trip lookup",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "prompt": "Dispatch's long-trip lookup lists the trips over 5 miles with their pickup zone's name. Write `solve(trips, taxi_zones)` so it returns the lookup's profile: one row per plan step with the rows that step produced in one run.",
+  "rules": [
+    "Profile `long_trips(trips, taxi_zones)` from the starter. Don't change it.",
+    "`step_counts` reads the counts Spark kept for a DataFrame's last run; it runs nothing itself.",
+    "Return `position` (1 for the top step), `step` and `rows`; `as_table` builds them from `step_counts`."
+  ],
+  "hints": [
+    "Run the starter: every count is 0. Spark only counts while a DataFrame runs.",
+    "Run `lookup` with an action before you read its counts, and read them from that same DataFrame.",
+    "`count()` and `show()` run plans of their own, so they leave `lookup`'s counts at 0. `collect()` runs `lookup`'s own plan."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "trips",
+    "taxi_zones"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\nspark.conf.set(\"spark.sql.adaptive.enabled\", \"false\")  # keep the plan exactly as written\n\n\ndef long_trips(trips, taxi_zones):\n    zones = F.broadcast(taxi_zones)  # always send the zones to every task\n    long = trips.filter(F.col(\"trip_distance\") > 5)\n    return long.join(zones, long.pickup_zone_id == zones.zone_id).select(\"trip_id\", \"zone_name\", \"trip_distance\")\n\n\ndef step_counts(df):\n    \"\"\"The rows each plan step produced in df's last run, top step first. It runs nothing itself.\"\"\"\n    steps = []\n\n    def walk(node):\n        name = node.nodeName().strip()\n        if name == \"AdaptiveSparkPlan\":\n            return walk(node.executedPlan())\n        if name.endswith(\"QueryStage\"):\n            return walk(node.plan())\n        metrics = node.metrics()\n        if metrics.contains(\"numOutputRows\"):\n            steps.append((name, metrics.apply(\"numOutputRows\").value()))\n        children = node.children()\n        for i in range(children.size()):\n            walk(children.apply(i))\n\n    walk(df._jdf.queryExecution().executedPlan())\n    return steps\n\n\ndef as_table(steps):\n    rows = [(i + 1, step, n) for i, (step, n) in enumerate(steps)]\n    return spark.createDataFrame(rows, \"position INT, step STRING, rows LONG\")\n\n\ndef solve(trips, taxi_zones):\n    lookup = long_trips(trips, taxi_zones)\n    # Profile one run of the lookup.\n    return as_table(step_counts(lookup))\n",
+  "output": {
+    "columns": [
+      "position",
+      "step",
+      "rows"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "The counts in a plan's steps fill in while that DataFrame runs, so the fix is one line before `step_counts`: `lookup.collect()`. Read from the bottom, the trips scan hands on only the trips over 5 miles that have a pickup zone, because the CSV reader applies those conditions as it reads; the zones are read, filtered to those with an id and broadcast; and the join keeps the trips whose zone is in the list. `lookup.count()` or `lookup.show()` would run a different plan (a count, or the first 20 rows), and a second `long_trips(...)` call builds a new DataFrame with its own plan, so in each case the steps you read stay at 0. These counts are the same on every run of the same data; that's what makes them a fair thing to compare."
+}

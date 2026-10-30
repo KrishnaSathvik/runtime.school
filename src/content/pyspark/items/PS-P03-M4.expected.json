@@ -1,0 +1,347 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "example": {
+   "schema": [
+    {
+     "name": "course_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "title",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "lesson_count",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "enrolled_learners",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "completed_learners",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "completion_pct",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "attempts",
+     "type": "bigint",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "C01",
+     "SQL Foundations",
+     2,
+     3,
+     1,
+     33.3,
+     6
+    ],
+    [
+     "C02",
+     "Python for Data",
+     2,
+     2,
+     0,
+     0.0,
+     2
+    ],
+    [
+     "C03",
+     "Spark Essentials",
+     2,
+     0,
+     0,
+     null,
+     0
+    ]
+   ],
+   "row_count": 3,
+   "inputs": {
+    "attempts": [
+     [
+      "A001",
+      "L01",
+      "C01-L01",
+      "1",
+      "2026-06-01T09:00:00",
+      "12",
+      "82.0",
+      "true"
+     ],
+     [
+      "A002",
+      "L01",
+      "C01-L02",
+      "1",
+      "2026-06-03T10:00:00",
+      "20",
+      "75.0",
+      "true"
+     ],
+     [
+      "A002",
+      "L01",
+      "C01-L02",
+      "1",
+      "2026-06-03T10:00:00",
+      "20",
+      "75.0",
+      "true"
+     ],
+     [
+      "A003",
+      "L02",
+      "C01-L01",
+      "1",
+      "2026-06-04T18:00:00",
+      "15",
+      "71.0",
+      "true"
+     ],
+     [
+      "A004",
+      "L03",
+      "C01-L01",
+      "1",
+      "2026-06-06T08:00:00",
+      "19",
+      "90.0",
+      "true"
+     ],
+     [
+      "A005",
+      "L03",
+      "C01-L02",
+      "1",
+      "2026-06-08T08:10:00",
+      "22",
+      "55.0",
+      "false"
+     ],
+     [
+      "A006",
+      "L03",
+      "C01-L02",
+      "2",
+      "2026-06-11T08:20:00",
+      "24",
+      "61.0",
+      "false"
+     ],
+     [
+      "A007",
+      "L02",
+      "C02-L01",
+      "1",
+      "2026-06-15T12:00:00",
+      "25",
+      "80.0",
+      "true"
+     ],
+     [
+      "A008",
+      "L02",
+      "C02-L02",
+      "1",
+      "2026-06-29T12:30:00",
+      "9",
+      "85.0",
+      "true"
+     ],
+     [
+      "A009",
+      "L01",
+      "C02-L01",
+      "1",
+      "2026-06-20T07:00:00",
+      "27",
+      "73.5",
+      "true"
+     ]
+    ],
+    "lessons": [
+     [
+      "C01-L01",
+      "C01",
+      "1",
+      "Your first SELECT",
+      "20"
+     ],
+     [
+      "C01-L02",
+      "C01",
+      "2",
+      "Filtering rows",
+      "25"
+     ],
+     [
+      "C02-L01",
+      "C02",
+      "1",
+      "Variables and types",
+      "25"
+     ],
+     [
+      "C02-L02",
+      "C02",
+      "2",
+      "Lists and loops",
+      "10"
+     ],
+     [
+      "C03-L01",
+      "C03",
+      "1",
+      "What Spark is",
+      "10"
+     ],
+     [
+      "C03-L02",
+      "C03",
+      "2",
+      "DataFrames",
+      "15"
+     ]
+    ],
+    "courses": [
+     [
+      "C01",
+      "SQL Foundations",
+      "sql",
+      "beginner",
+      "2",
+      "2025-04-01"
+     ],
+     [
+      "C02",
+      "Python for Data",
+      "python",
+      "beginner",
+      "2",
+      "2025-06-01"
+     ],
+     [
+      "C03",
+      "Spark Essentials",
+      "data_engineering",
+      "intermediate",
+      "2",
+      "2025-08-01"
+     ]
+    ]
+   }
+  },
+  "project": {
+   "schema": [
+    {
+     "name": "course_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "title",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "lesson_count",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "enrolled_learners",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "completed_learners",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "completion_pct",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "attempts",
+     "type": "bigint",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "C02",
+     "Python for Data",
+     6,
+     116,
+     94,
+     81.0,
+     965
+    ],
+    [
+     "C05",
+     "Advanced SQL Patterns",
+     7,
+     122,
+     91,
+     74.6,
+     1202
+    ],
+    [
+     "C01",
+     "SQL Foundations",
+     6,
+     118,
+     95,
+     80.5,
+     1008
+    ],
+    [
+     "C03",
+     "Spark Essentials",
+     6,
+     115,
+     89,
+     77.4,
+     1013
+    ],
+    [
+     "C04",
+     "Data Modelling Basics",
+     5,
+     108,
+     90,
+     83.3,
+     757
+    ]
+   ],
+   "row_count": 5
+  }
+ },
+ "hidden": [
+  "the full practice tables",
+  "completion rates that need rounding, and a course nobody started",
+  "learners who tried or passed some lessons but not all, and a pass after the as-of date",
+  "courses but no attempts",
+  "empty tables"
+ ]
+}

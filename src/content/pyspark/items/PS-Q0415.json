@@ -1,0 +1,57 @@
+{
+ "id": "PS-Q0415",
+ "slug": "backfill-silver-and-quarantine",
+ "lesson": "PS-L083",
+ "role": "integration",
+ "format": "dataframe_coding",
+ "difficulty": "hard",
+ "minutes": 20,
+ "title": "Backfill silver and quarantine",
+ "dataset": {
+  "id": "PS-D02",
+  "version": "1.0.0"
+ },
+ "prompt": "The source fixed its transactions for 19 to 25 February. Write `backfill` so it reloads that range into two Delta tables: valid transactions into silver, the rest into quarantine with a reason. The job may be rerun, and `solve` runs it twice, then shows both tables.",
+ "rules": [
+  "`posted_date` is the day of `posted_at`; the range includes both ends. Inside it, each table must hold exactly what this source gives it; outside it, both tables stay as they were. Rows with no `posted_at` aren't loaded.",
+  "`reason` is the first that applies: `no account` (no `account_id`), `unknown account` (not in `accounts`), `bad currency` (missing, or not in `CURRENCIES`), `negative amount`. Rows with no reason go to silver.",
+  "Quarantine rows keep every column of the transaction, plus `posted_date` and `reason`; silver rows have no `reason`.",
+  "Running `backfill` twice must give the same tables as running it once. Don't change `start_tables` or `solve`."
+ ],
+ "hints": [
+  "Each table owns the same slice, the range, so each write can replace exactly that slice. Filter what you write to the same condition.",
+  "A left join to `accounts` keeps transactions whose account isn't there; mark the matches with a column so you can tell. Then a chain of `F.when` gives the first reason.",
+  "`isin` on a missing currency is NULL, not `False`. After the join, `select` the columns back in the table's order."
+ ],
+ "explanation": "Both tables are the whole truth for the range, so both writes are `mode(\"overwrite\")` with the same `replaceWhere` on `posted_date`, and both sources are filtered to the range first: the quarantine table loses T000090, which the fixed source no longer has, and silver loses T000095. Appending to either table makes the rerun double it. The checks run on the range's rows: a left join to `accounts` (with a marker column such as `F.lit(True)`) keeps transactions whose account is unknown, where an inner join would drop them from both tables; `F.coalesce(F.col(\"currency\").isin(CURRENCIES), F.lit(False))` treats a missing currency as bad. Bad rows from outside the range don't belong in this backfill, and Delta refuses to write them under the range's `replaceWhere`.",
+ "entry": "solve",
+ "inputs": [
+  "transactions",
+  "accounts"
+ ],
+ "starter": "import shutil\nfrom datetime import date, datetime\nfrom decimal import Decimal\n\nfrom pyspark.sql import functions as F\n\nSILVER = \"/tmp/bank/silver\"\nQUARANTINE = \"/tmp/bank/quarantine\"\nCURRENCIES = [\"USD\", \"EUR\", \"GBP\"]\nCOLUMNS = \"transaction_id STRING, account_id STRING, merchant_id STRING, posted_at TIMESTAMP, txn_type STRING, channel STRING, direction STRING, amount DECIMAL(12,2), currency STRING, status STRING, posted_date DATE\"\n\n\ndef start_tables():\n    # Both tables before the backfill. Don't change this.\n    for path in (SILVER, QUARANTINE):\n        shutil.rmtree(path, ignore_errors=True)  # start from empty folders on every run\n    spark.createDataFrame(\n        [\n            (\"T000001\", \"A00006\", None, datetime(2026, 1, 5, 10, 51, 19), \"deposit\", \"branch\", \"credit\", Decimal(\"800.00\"), \"GBP\", \"posted\", date(2026, 1, 5)),\n            (\"T000008\", \"A00001\", \"M002\", datetime(2026, 2, 19, 10, 23, 22), \"purchase\", \"card_present\", \"debit\", Decimal(\"15.99\"), \"USD\", \"pending\", date(2026, 2, 19)),\n            (\"T000095\", \"A00008\", \"M003\", datetime(2026, 2, 22, 9, 12, 0), \"purchase\", \"online\", \"debit\", Decimal(\"42.00\"), \"USD\", \"posted\", date(2026, 2, 22)),\n        ],\n        COLUMNS,\n    ).write.format(\"delta\").save(SILVER)\n    spark.createDataFrame(\n        [\n            (\"T000002\", None, \"M004\", datetime(2026, 1, 16, 7, 14, 10), \"purchase\", \"online\", \"debit\", Decimal(\"60.53\"), \"GBP\", \"posted\", date(2026, 1, 16), \"no account\"),\n            (\"T000090\", \"A00003\", None, datetime(2026, 2, 21, 8, 0, 0), \"deposit\", \"branch\", \"credit\", Decimal(\"75.00\"), \"XXX\", \"posted\", date(2026, 2, 21), \"bad currency\"),\n        ],\n        COLUMNS + \", reason STRING\",\n    ).write.format(\"delta\").save(QUARANTINE)\n\n\ndef backfill(transactions, accounts, start, end):\n    # Reload the source's transactions posted from `start` to `end`, both days included:\n    # valid ones into SILVER, the others into QUARANTINE with their reason.\n    pass\n\n\ndef solve(transactions, accounts):\n    start_tables()\n    backfill(transactions, accounts, \"2026-02-19\", \"2026-02-25\")\n    backfill(transactions, accounts, \"2026-02-19\", \"2026-02-25\")  # the job is rerun\n    keep = [\"transaction_id\", \"account_id\", \"posted_date\", \"amount\", \"currency\"]\n    silver = spark.read.format(\"delta\").load(SILVER).select(F.lit(\"silver\").alias(\"table\"), *keep, F.lit(None).cast(\"string\").alias(\"reason\"))\n    quarantine = spark.read.format(\"delta\").load(QUARANTINE).select(F.lit(\"quarantine\").alias(\"table\"), *keep, \"reason\")\n    return silver.union(quarantine)  # stacks the two tables, column by column\n",
+ "output": {
+  "columns": [
+   "table",
+   "transaction_id",
+   "account_id",
+   "posted_date",
+   "amount",
+   "currency",
+   "reason"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 300,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

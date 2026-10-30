@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0159",
+  "slug": "fix-the-touch-credit",
+  "lesson": "PS-L032",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 6,
+  "title": "Fix the touch credit",
+  "dataset": {
+    "id": "PS-D12",
+    "version": "1.0.0"
+  },
+  "prompt": "This report counts how often each campaign was a customer's first touch and last touch before converting. Campaigns that were never first or never last show a blank instead of 0. Find the bug and fix `solve(attribution_events)`.",
+  "rules": [
+    "A touch is a first touch when `position` is 1, and a last touch when `position` equals `touches_in_path`. A path with one touch is both.",
+    "`first_touches` and `last_touches` count those touches per campaign and are 0, never missing, when there are none.",
+    "Every campaign in `attribution_events` gets a row. Return `campaign_id`, `first_touches` and `last_touches`."
+  ],
+  "hints": [
+    "Look at a campaign whose touches are all in the middle of a path, or never the last one.",
+    "`F.when(cond, 1)` without `otherwise` is missing on every other row, and the sum of only missing values is missing.",
+    "Add `.otherwise(0)` to both `when`s, or count matches with `F.count(F.when(cond, True))`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "attribution_events"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(attribution_events):\n    first = F.col(\"position\") == 1\n    last = F.col(\"position\") == F.col(\"touches_in_path\")\n    return attribution_events.groupBy(\"campaign_id\").agg(\n        F.sum(F.when(first, 1)).alias(\"first_touches\"),\n        F.sum(F.when(last, 1)).alias(\"last_touches\"),\n    )\n",
+  "output": {
+    "columns": [
+      "campaign_id",
+      "first_touches",
+      "last_touches"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Both `when`s lack an `otherwise`, so rows that don't match are missing, and a campaign with no match at all sums to missing instead of 0. Add `.otherwise(0)`: `F.sum(F.when(first, 1).otherwise(0))` and the same for `last`. `F.count(F.when(first, True))` is an equally good fix, because `count` skips missing values and returns 0 for none. `F.count(F.when(first, 1).otherwise(0))` is not: with `otherwise` every row has a value, so it counts every touch. Filtering to first touches before grouping would drop campaigns that never were first."
+}

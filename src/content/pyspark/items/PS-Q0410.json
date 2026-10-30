@@ -1,0 +1,54 @@
+{
+ "id": "PS-Q0410",
+ "slug": "catch-up-after-a-missing-day",
+ "lesson": "PS-L082",
+ "role": "integration",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 10,
+ "title": "Catch up after a missing day",
+ "dataset": {
+  "id": "PS-D08",
+  "version": "1.0.0"
+ },
+ "prompt": "Each night, the job copies the load days after the high-water mark from their landing folders into a Delta table. Some days land late, and the starter's first night crashes. Fix `read_day` and `run_night` so that a late day is waited for, and a day that doesn't land is loaded on a later night instead of lost. `solve` runs two nights.",
+ "rules": [
+  "A day's folder that isn't there yet (`PATH_NOT_FOUND`) is read again after `carrier.wait()`, up to 3 attempts in all.",
+  "If a day still isn't there after its third attempt, that night stops: no later day may load before it.",
+  "Every row keeps `run`, the night that loaded it. Each day's events load once, as the feed sent them.",
+  "Don't change `Carrier`, `high_water_mark` or `solve`."
+ ],
+ "hints": [
+  "Run the starter on the sample: which day's folder is missing, and when does it land?",
+  "In `read_day`, loop over attempts with `try` inside, and look at `getCondition()` before you wait and try again. Return `None` when the attempts run out.",
+  "What would the next night's high-water mark be if the first night skipped the missing day and loaded the later ones?"
+ ],
+ "explanation": "`spark.read.parquet` on a folder that isn't there fails at once with `PATH_NOT_FOUND`, so the retry loop goes around the read itself: try, and on that condition call `carrier.wait()` and try again, up to three attempts. On the first night the 2nd day lands after the second wait and loads on the third attempt; the 3rd day never lands. The important part is what happens then. The next night starts after the target's newest `load_date`, so if the first night skipped the missing day and loaded the days after it, the mark would jump past it and that day would never load. Stopping the night keeps the mark just before the gap, and the second night loads the 3rd day onward with `run` 2. A failure handler has to know how the next run decides where to start.",
+ "entry": "solve",
+ "inputs": [
+  "shipment_events"
+ ],
+ "starter": "import os\nimport shutil\n\nfrom delta.tables import DeltaTable\nfrom pyspark.errors import AnalysisException\nfrom pyspark.sql import functions as F\n\nLANDING = \"/tmp/landing\"\nTARGET = \"/tmp/silver/shipment_events\"\n\n\nclass Carrier:\n    # Stands in for the carrier's uploads: one landing folder per load day. Don't change this.\n    # Night 1: every day has landed except the 2nd, which lands after 2 waits, and the 3rd, which doesn't land that night.\n    # Night 2: every day has landed.\n    def __init__(self, events, days, night):\n        self.events, self.days, self.night, self.waits = events, days, night, 0\n        for i, day in enumerate(days):\n            if (night == 2 or i not in (1, 2)) and not os.path.exists(self.folder(day)):\n                self._land(day)\n\n    def folder(self, day):\n        return f\"{LANDING}/{day}\"\n\n    def _land(self, day):\n        self.events.filter(F.col(\"load_date\") == day).write.parquet(self.folder(day))\n\n    def wait(self):\n        # Stands in for sleeping before a retry, so the examples don't really wait.\n        self.waits += 1\n        if self.night == 1 and self.waits == 2 and len(self.days) > 1:\n            self._land(self.days[1])\n\n\ndef high_water_mark():\n    # The newest load day the target already has, or None before the first run. Don't change this.\n    if not DeltaTable.isDeltaTable(spark, TARGET):\n        return None\n    return spark.read.format(\"delta\").load(TARGET).select(F.max(\"load_date\")).first()[0]\n\n\ndef read_day(carrier, day):\n    # Reads one day's landing folder.\n    return spark.read.parquet(carrier.folder(day))\n\n\ndef run_night(carrier, days, night):\n    # Loads, in date order, the days after the high-water mark, tagging each row with the night that loaded it.\n    mark = high_water_mark()\n    for day in days:\n        if mark is not None and day <= mark:\n            continue\n        batch = read_day(carrier, day)\n        batch.select(\"event_id\", \"shipment_id\", \"event_type\", \"load_date\", F.lit(night).alias(\"run\")).write.format(\"delta\").mode(\"append\").save(TARGET)\n\n\ndef solve(shipment_events):\n    shutil.rmtree(LANDING, ignore_errors=True)  # start from empty folders on every run\n    shutil.rmtree(TARGET, ignore_errors=True)\n    days = sorted(row[\"load_date\"] for row in shipment_events.select(\"load_date\").distinct().collect())\n    for night in (1, 2):\n        run_night(Carrier(shipment_events, days, night), days, night)\n    if not DeltaTable.isDeltaTable(spark, TARGET):\n        return spark.createDataFrame([], \"event_id STRING, shipment_id STRING, event_type STRING, load_date DATE, run INT\")\n    return spark.read.format(\"delta\").load(TARGET)\n",
+ "output": {
+  "columns": [
+   "event_id",
+   "shipment_id",
+   "event_type",
+   "load_date",
+   "run"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 240,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

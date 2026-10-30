@@ -1,0 +1,57 @@
+{
+  "id": "PS-L062-C2",
+  "slug": "undo-the-bad-fix",
+  "lesson": "PS-L062",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Undo the bad fix",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "A fix meant for one account set the currency of every transaction to USD. Write `undo(path)` so the Delta table goes back to how it was just before that update. `build_table` replays the day's commits: the load, a clean-up that deletes declined transactions, then the bad update. `solve` calls `undo` and reads the table.",
+  "rules": [
+    "After `undo`, the table itself is back to the version just before the update: the clean-up stays done, and every row has its own currency again.",
+    "A delete or update that changes no rows leaves no version, so don't count versions by hand.",
+    "If the history has no update, there's nothing to undo: leave the table as it is.",
+    "Don't change `build_table` or `solve`."
+  ],
+  "hints": [
+    "`restoreToVersion(n)` makes the table look like version `n` again, as a new commit.",
+    "Find the update's version in `history()`, and restore the one before it.",
+    "Try a load with no declined transactions: which versions does the history have then? And with an empty load?"
+  ],
+  "entry": "solve",
+  "inputs": [
+    "transactions"
+  ],
+  "starter": "import shutil\n\nfrom delta.tables import DeltaTable\n\n\ndef build_table(transactions, path):\n    # The day's commits, replayed on a fresh table. Don't change this.\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty folder on every run\n    transactions.write.format(\"delta\").save(path)  # the load\n    table = DeltaTable.forPath(spark, path)\n    table.delete(\"status = 'declined'\")  # the clean-up\n    table.update(set={\"currency\": \"'USD'\"})  # the bad fix: meant for one account, ran on every row\n\n\ndef undo(path):\n    # Put the table back as it was before the bad fix.\n    pass\n\n\ndef solve(transactions):\n    path = \"/tmp/bank/transactions\"\n    build_table(transactions, path)\n    undo(path)\n    return spark.read.format(\"delta\").load(path)\n",
+  "output": {
+    "columns": [
+      "transaction_id",
+      "account_id",
+      "merchant_id",
+      "posted_at",
+      "txn_type",
+      "channel",
+      "direction",
+      "amount",
+      "currency",
+      "status"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

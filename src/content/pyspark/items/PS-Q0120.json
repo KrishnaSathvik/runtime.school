@@ -1,0 +1,55 @@
+{
+  "id": "PS-Q0120",
+  "slug": "inventory-load-check",
+  "lesson": "PS-L024",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Inventory load check",
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0"
+  },
+  "prompt": "The stock count is loaded every night. Write `solve(inventory, warehouses)` so it returns every inventory row with the units free to sell and, for rows that can't be loaded, the reason.",
+  "rules": [
+    "Check in this order and use the first reason that applies: `unknown warehouse` (`warehouse_id` missing or not in `warehouses`), `missing count` (`on_hand` or `reserved` missing), `negative count` (`on_hand` or `reserved` below 0), `over-reserved` (`reserved` more than `on_hand`).",
+    "`available` is `on_hand` minus `reserved` for a row with no reason, and missing for a row with a reason. A clean row's `reason` is missing.",
+    "Return `warehouse_id`, `sku`, `on_hand`, `reserved`, `available` and `reason`, in that order, for every row. `available` is an int."
+  ],
+  "hints": [
+    "Tag each row with a `F.when` chain. Collect the warehouse ids into a list for `isin`, and test `isNull()` too.",
+    "Build `available` from the reason: `F.when(reason.isNull(), F.col(\"on_hand\") - F.col(\"reserved\"))` is missing for every row that has a reason.",
+    "Check the counts in the given order: a row with a missing `reserved` is `missing count`, not `negative count` or `over-reserved`. Reserving exactly what is on hand is fine."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "inventory",
+    "warehouses"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(inventory, warehouses):\n    # Every row with available units and, if it can't be loaded, the reason.\n    return inventory\n",
+  "output": {
+    "columns": [
+      "warehouse_id",
+      "sku",
+      "on_hand",
+      "reserved",
+      "available",
+      "reason"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Collect the warehouse ids, then tag with a `F.when` chain in the given order: `isNull() | ~isin(known)` for the warehouse, `isNull()` on either count, `< 0` on either count, then `reserved > on_hand`. Checking for missing counts before the comparisons matters: a comparison with a missing count is NULL, and the chain would skip it. Reuse the reason for the second column: `F.when(reason.isNull(), F.col(\"on_hand\") - F.col(\"reserved\"))` has no `otherwise`, so every row with a reason gets a missing `available`, and the difference of two ints stays an int. Select the six columns from `inventory`, keeping every row."
+}

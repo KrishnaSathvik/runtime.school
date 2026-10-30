@@ -1,0 +1,65 @@
+{
+  "id": "PS-P05-M4",
+  "slug": "split-by-time-and-build-features",
+  "project": "PS-P05",
+  "milestone": "PS-P05.m4",
+  "difficulty": "hard",
+  "minutes": 40,
+  "title": "Split by time and build features from the past",
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0"
+  },
+  "prompt": "The team will train on the past and test on the most recent months. If a feature has seen even one test rating, the test result looks better than the model really is. So the split is by time, at the fixed cutoff `CUTOFF` in your file, and the features use the training rows only.\n\nWrite `training_interactions(ratings)` and `evaluation_interactions(ratings)`, then `movie_features(ratings, movies)` and `user_features(ratings, users)` from the training rows. This step checks `movie_features`; the last step checks the rest.",
+  "rules": [
+    "Training rows are rated before `CUTOFF`; evaluation rows on or after it. A rating exactly at the cutoff is an evaluation row.",
+    "Split the raw rows first, then clean each side with `clean_interactions`. A re-rating after the cutoff must not change or remove the training rating it replaces.",
+    "`movie_features` is your `movie_stats` built from the training rows only, and `user_features` is your `user_stats` built from them. A film or member whose ratings all come after the cutoff is a cold start."
+  ],
+  "hints": [
+    "`ratings.filter(F.col(\"rated_at\") < CUTOFF)` keeps the training rows. Pass that to `clean_interactions`, not the other way round.",
+    "Cleaning first would keep only a re-rating made after the cutoff, and the training rating it replaced would vanish from training.",
+    "`movie_stats` cleans whatever ratings it's given, and cleaning clean rows changes nothing. So `movie_stats(training_interactions(ratings), movies)` is the whole function."
+  ],
+  "explanation": "A fixed cutoff makes the split the same on every run, unlike a random split, and it matches how the model will be used: trained on what's known, tested on what came later. Filtering the raw rows before cleaning is the subtle part. If you clean first, a member who re-rates a film after the cutoff loses their earlier training rating, because the later one wins and then lands in evaluation: the future has changed the training set. Splitting first keeps each side's latest rating within its own period. Building features through `movie_stats` and `user_stats` on the training rows means nothing from the evaluation months reaches them: a film first rated after the cutoff is a cold start, which is exactly what the model will face. The training rows feed several tables, so `cache()` on them would save work if they were used many times in one job.",
+  "entry": "movie_features",
+  "inputs": [
+    "ratings",
+    "movies"
+  ],
+  "file": "pipeline.py",
+  "append": "\n\nCUTOFF = \"2026-07-01 00:00:00\"\n\n\ndef training_interactions(ratings):\n    # Step 4: clean interactions from before the cutoff.\n    return clean_interactions(ratings)\n\n\ndef evaluation_interactions(ratings):\n    # Step 4: clean interactions from the cutoff on.\n    return clean_interactions(ratings)\n\n\ndef movie_features(ratings, movies):\n    # Step 4: movie_stats built from the training rows only.\n    return movie_stats(ratings, movies)\n\n\ndef user_features(ratings, users):\n    # Step 4: user_stats built from the training rows only.\n    return user_stats(ratings, users)\n",
+  "prerequisites": [
+    "PS-L018",
+    "PS-L054",
+    "PS-L088"
+  ],
+  "output": {
+    "columns": [
+      "movie_id",
+      "primary_genre",
+      "ratings",
+      "average_rating",
+      "liked_share",
+      "last_rated_at",
+      "cold_start"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "example",
+      "sample": true
+    },
+    {
+      "id": "project",
+      "edition": "project"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

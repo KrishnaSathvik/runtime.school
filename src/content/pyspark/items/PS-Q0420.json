@@ -1,0 +1,59 @@
+{
+ "id": "PS-Q0420",
+ "slug": "did-the-release-hurt",
+ "lesson": "PS-L084",
+ "role": "integration",
+ "format": "dataframe_coding",
+ "difficulty": "hard",
+ "minutes": 17,
+ "title": "Did the release hurt?",
+ "dataset": {
+  "id": "PS-D15",
+  "version": "1.0.0"
+ },
+ "prompt": "After every deployment, the release team wants to know whether its service got worse. Write `solve(api_requests, deployments)` so it returns one row per deployment, comparing the service's requests in the half hour before it with the half hour after it.",
+ "rules": [
+  "Before is from 30 minutes before `deployed_at` up to, not including, `deployed_at`; after is from `deployed_at` up to, not including, 30 minutes later. Only requests to the deployment's service count. Columns and types are in `SCHEMA`.",
+  "For each side: the request count, `error_pct` (5xx codes over requests × 100, rounded to 2 decimals) and the p95 latency by nearest rank. A side with no requests has NULL `error_pct` and p95.",
+  "`verdict` is `no data` when either side has no requests; else `worse` when the after `error_pct` is higher, or the after p95 is more than twice the before p95; else `ok`."
+ ],
+ "hints": [
+  "There are only a few deployments, so `collect()` them and build one small DataFrame per deployment, stacked with `unionByName` as the starter does.",
+  "`d.deployed_at - WINDOW` is plain Python datetime arithmetic; `F.lit(...)` turns the result into a timestamp to compare with `requested_at`.",
+  "Filter to the hour around the deployment, then aggregate once with conditions: `F.count(F.when(before, 1))`, and `F.percentile_approx(F.when(before, F.col(\"latency_ms\")), 0.95)`, which ignores the NULLs."
+ ],
+ "explanation": "Without a join, loop over the collected deployments: there are a handful, and each builds one aggregate row, so the whole result is still one Spark query when it's shown. For each deployment, keep its service's requests within half an hour on either side, then aggregate once with conditional expressions: `F.when(before, ...)` is NULL on the other side, and `count` and `percentile_approx` both skip NULLs. `percentile_approx` gives the nearest-rank p95 used by `service_metrics`; `F.percentile` interpolates and gives a different number. A request at exactly `deployed_at` was served by the new version, so it's after. Guard the division with `F.when(requests > 0, ...)`: Spark 4 raises on division by zero. In the practice data the checkout release at 12:30 shows the jump in server errors that got it rolled back.",
+ "entry": "solve",
+ "inputs": [
+  "api_requests",
+  "deployments"
+ ],
+ "starter": "from datetime import timedelta\n\nfrom pyspark.sql import functions as F\n\nWINDOW = timedelta(minutes=30)\nSCHEMA = \"deployment_id STRING, service STRING, version STRING, before_requests BIGINT, before_error_pct DOUBLE, before_p95_ms INT, after_requests BIGINT, after_error_pct DOUBLE, after_p95_ms INT, verdict STRING\"\n\n\ndef solve(api_requests, deployments):\n    # One row per deployment, comparing its service's requests in the half hour before it and after it.\n    parts = []\n    for d in deployments.collect():\n        # d.deployment_id, d.service, d.version and d.deployed_at (a Python datetime) are this deployment's values.\n        pass\n    if not parts:\n        return spark.createDataFrame([], SCHEMA)\n    result = parts[0]\n    for part in parts[1:]:\n        result = result.unionByName(part)\n    return result\n",
+ "output": {
+  "columns": [
+   "deployment_id",
+   "service",
+   "version",
+   "before_requests",
+   "before_error_pct",
+   "before_p95_ms",
+   "after_requests",
+   "after_error_pct",
+   "after_p95_ms",
+   "verdict"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 60,
+  "check_timeout_s": 180,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0091",
+  "slug": "broken-readings",
+  "lesson": "PS-L019",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Broken readings",
+  "dataset": {
+    "id": "PS-D13",
+    "version": "1.0.0"
+  },
+  "prompt": "Some readings arrived broken: the temperature is missing, or the rain gauge reported a fault. Write `solve(observations)` so it returns those readings' `observation_id`, `station_id`, `observed_at`, `temperature_c` and `precipitation_mm`.",
+  "rules": [
+    "A temperature is missing when `temperature_c` is empty (null) or holds the station's `-9999` code.",
+    "A rain-gauge fault shows as NaN in `precipitation_mm`. NaN is not null, and an empty `precipitation_mm` is not a fault.",
+    "A reading with both problems appears once. A -9999 in any other column doesn't count here.",
+    "Return the five columns in that order, with their values as they are."
+  ],
+  "hints": [
+    "There are three ways a reading can be broken, and any one is enough, so join three conditions with `|`.",
+    "`F.col(\"temperature_c\").isNull()` finds empty values. `== None` never matches anything, because a comparison with a missing value isn't true.",
+    "NaN is a real number value, so `isNull()` doesn't see it: use `F.isnan(\"precipitation_mm\")`. The -9999 code is an ordinary `== -9999` check."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "observations"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(observations):\n    # Return the readings with a missing temperature or a faulty rain gauge.\n    return observations\n",
+  "output": {
+    "columns": [
+      "observation_id",
+      "station_id",
+      "observed_at",
+      "temperature_c",
+      "precipitation_mm"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Each kind of breakage needs its own test. An empty temperature is `F.col(\"temperature_c\").isNull()`, the code is `F.col(\"temperature_c\") == -9999`, and a faulty gauge is `F.isnan(\"precipitation_mm\")`. Any one is enough, so they're joined with `|`: `observations.filter(F.col(\"temperature_c\").isNull() | (F.col(\"temperature_c\") == -9999) | F.isnan(\"precipitation_mm\")).select(\"observation_id\", \"station_id\", \"observed_at\", \"temperature_c\", \"precipitation_mm\")`. `filter` checks each row once, so a reading with two problems still comes back once. The common slip is `isNull()` on the rain column: NaN is a value, not a missing one, so `isNull()` is false for it and the faulty readings are lost."
+}

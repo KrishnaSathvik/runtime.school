@@ -1,0 +1,52 @@
+{
+  "id": "PS-L082-C1",
+  "slug": "set-bad-event-ids-aside",
+  "lesson": "PS-L082",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Set bad event ids aside",
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0"
+  },
+  "prompt": "The tracking table stores each event's number as an integer: its id without the first letter. The starter stops the whole load at the first id that can't be read. Fix `solve(shipment_events)` so it returns every event, with the bad ones marked for the dead-letter folder instead.",
+  "rules": [
+    "Columns and types: `event_id STRING, shipment_id STRING, load_date DATE, event_no INT, error STRING`.",
+    "`event_no` is the id without its first character, as a number: `E0000009` is 9. `error` is NULL for these rows.",
+    "When that can't be read as a number, or the id is missing, `event_no` is NULL and `error` is `bad event id`.",
+    "Return every event exactly once, repeated ones included, with its id unchanged."
+  ],
+  "hints": [
+    "Run the starter on the sample. Which id stops it, and why only when the rows are shown?",
+    "There's a version of `cast` that gives NULL instead of failing.",
+    "A NULL `event_no` is the sign of a bad id. `F.when` without `otherwise` gives NULL for the rest."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "shipment_events"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(shipment_events):\n    digits = F.substring(\"event_id\", 2, 20)  # the id without its first letter: \"E0000009\" -> \"0000009\"\n    return shipment_events.select(\n        \"event_id\",\n        \"shipment_id\",\n        \"load_date\",\n        digits.cast(\"int\").alias(\"event_no\"),\n        F.lit(None).cast(\"string\").alias(\"error\"),\n    )\n",
+  "output": {
+    "columns": [
+      "event_id",
+      "shipment_id",
+      "load_date",
+      "event_no",
+      "error"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

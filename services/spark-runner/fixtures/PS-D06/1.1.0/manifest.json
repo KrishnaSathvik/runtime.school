@@ -1,0 +1,144 @@
+{
+  "dataset_id": "PS-D06",
+  "version": "1.1.0",
+  "title": "E-commerce Clickstream",
+  "source": "synthetic",
+  "licence": {
+    "status": "ours",
+    "note": "Runtime-owned deterministic synthetic data."
+  },
+  "seed": 2006,
+  "schemas": {
+    "page_views": "event_id STRING, session_id STRING, user_id STRING, event_time TIMESTAMP, arrival_time TIMESTAMP, batch INT, page STRING, page_type STRING, device STRUCT<type: STRING, os: STRING>, context STRUCT<referrer: STRING, utm: STRUCT<source: STRING, campaign: STRING>>, time_on_page_s INT",
+    "searches": "event_id STRING, session_id STRING, user_id STRING, event_time TIMESTAMP, arrival_time TIMESTAMP, batch INT, query STRING, filters ARRAY<STRING>, result_skus ARRAY<STRING>, results_count INT",
+    "cart_events": "event_id STRING, session_id STRING, user_id STRING, event_time TIMESTAMP, arrival_time TIMESTAMP, batch INT, action STRING, items ARRAY<STRUCT<sku: STRING, qty: INT, price: DOUBLE>>",
+    "checkout_events": "event_id STRING, session_id STRING, user_id STRING, event_time TIMESTAMP, arrival_time TIMESTAMP, batch INT, step STRING, order_id STRING, payment STRUCT<method: STRING, provider: STRING>, items ARRAY<STRUCT<sku: STRING, qty: INT, price: DOUBLE>>, order_total DOUBLE, attributes MAP<STRING,STRING>",
+    "sessions": "session_id STRING, user_id STRING, started_at TIMESTAMP, ended_at TIMESTAMP, device_type STRING, os STRING, country STRING, landing_page STRING, traffic_source STRING, campaign_id STRING"
+  },
+  "keys": {
+    "primary": {
+      "page_views": [
+        "event_id"
+      ],
+      "searches": [
+        "event_id"
+      ],
+      "cart_events": [
+        "event_id"
+      ],
+      "checkout_events": [
+        "event_id"
+      ],
+      "sessions": [
+        "session_id"
+      ]
+    },
+    "foreign": {
+      "page_views.session_id": "sessions.session_id",
+      "searches.session_id": "sessions.session_id",
+      "cart_events.session_id": "sessions.session_id",
+      "checkout_events.session_id": "sessions.session_id"
+    }
+  },
+  "rules": [
+    "event_time is when the event happened in the browser; arrival_time is when the pipeline received it; arrival_time is never earlier than event_time. All times are UTC.",
+    "batch (1 to 5) is the micro-batch that delivered the event, chosen by arrival_time: the edition's window is cut into five equal slots (10 minutes each in lesson, 2 hours each in practice and project), starting 10:00 on 2026-03-14 (lesson), 08:00 on 2026-03-14 (practice) and 08:00 on 2026-03-05 (project).",
+    "Most events arrive within 20 seconds. Late events arrive much later, so they land in a later batch than their event_time suggests: 2 in the lesson edition (PV-0003 and CA-0002, about 20 minutes late), about 4% in practice (15 to 90 minutes late) and about 8% in project (some more than 3 hours late, beyond a 2-hour watermark).",
+    "user_id is null for anonymous visitors (about a third of sessions); every event of a session has the session's user_id.",
+    "context.utm is null when the visit didn't come from a campaign; utm.campaign uses the Advertising dataset's ids CMP-0001 to CMP-0040, and sessions.campaign_id repeats it.",
+    "context.referrer on a session's first page is the outside site (null for direct visits); on later pages it is the previous page.",
+    "time_on_page_s is null on the last page of a visit (nothing followed it to time it).",
+    "filters is an empty array when no filter was ticked; result_skus is an empty array (and results_count 0) when a search found nothing.",
+    "cart_events.items lists the items this event changed: for add the quantity added, for remove the quantity removed, for update the new quantity.",
+    "checkout_events.items is the basket at that step; order_total is the sum of qty \u00d7 price over it, rounded to cents; order_id and payment are set only from the step where they exist (payment from 'payment', order_id on 'complete').",
+    "attributes is a map of optional checkout flags such as coupon and gift_wrap; it is an empty map when none apply.",
+    "The project edition delivers some events twice (about 3% of each event table): the copy has the same event_id and the same payload but a later arrival_time and often a later batch; keep one per event_id.",
+    "The project edition has sessions with no page view (about 3% of sessions): their searches, cart or checkout events exist but the page views were lost upstream.",
+    "Lesson and practice have one row per event_id and every session has at least one page view.",
+    "Project edition and PS-D12 (P09): signed-in user_ids are PS-D12 user ids (U00001 to U00480). Every campaign_id is a PS-D12 campaign running on 2026-03-05, and traffic_source follows its channel: search \u2192 search_ads, social \u2192 social, display \u2192 display, video \u2192 video, email \u2192 email (affiliate and organic visits carry no campaign). Lesson and practice ids and days are not PS-D12's and don't join to it.",
+    "Project edition and PS-D12 (P09): every campaign session was started by one PS-D12 click on its campaign 5 to 90 seconds before started_at (for signed-in sessions, by the same user_id). A click and a session match when user_id and campaign_id are equal and started_at is at most 30 minutes after the click; an order (checkout step complete) is attributed to that click when it happens within the campaign's attribution_window_days of the click."
+  ],
+  "editions": {
+    "lesson": {
+      "page_views": {
+        "file": "lesson/page_views.jsonl",
+        "rows": 12,
+        "sha256": "800e4106998b80cff95c4409140dc66a8742e37103be0bbc54b3bba50dc59237"
+      },
+      "searches": {
+        "file": "lesson/searches.jsonl",
+        "rows": 5,
+        "sha256": "b0e7f35e621c8bb20f947b16ffe471da45c4b4c4e3efb4e06cb38c1e732fe5b5"
+      },
+      "cart_events": {
+        "file": "lesson/cart_events.jsonl",
+        "rows": 5,
+        "sha256": "1413ead053305c46c2e45dfaa4c9b958b32492c691a1674727e2b17ffbbd6c44"
+      },
+      "checkout_events": {
+        "file": "lesson/checkout_events.jsonl",
+        "rows": 4,
+        "sha256": "82b98a6b3d7e616c9057aa60c84a1ef71c8463d6d1441cec6de1d1b08e6082c1"
+      },
+      "sessions": {
+        "file": "lesson/sessions.csv",
+        "rows": 5,
+        "sha256": "261adb3661fd9acfc1b84ad49c520fe455da55ca52f79355ac61f57423b84be3"
+      }
+    },
+    "practice": {
+      "page_views": {
+        "file": "practice/page_views.jsonl",
+        "rows": 1438,
+        "sha256": "ba9c20b907a5473b446a4ed9646ac5977bf4ce1a2567695ccf19ef749391685e"
+      },
+      "searches": {
+        "file": "practice/searches.jsonl",
+        "rows": 455,
+        "sha256": "4bf542a1cfb0daa5b453d5081004b3eeeca0b1c2ab7a77f9cd5de91c8fd6ddd9"
+      },
+      "cart_events": {
+        "file": "practice/cart_events.jsonl",
+        "rows": 246,
+        "sha256": "cefbc52c3845cd699c11f65078cbc6ad52527c97067d666209eb742e6655c444"
+      },
+      "checkout_events": {
+        "file": "practice/checkout_events.jsonl",
+        "rows": 142,
+        "sha256": "6a5b4b34fe1fee434ccfacd1757fd749d34f9b3a46ab23614dab3c05cdc4fba8"
+      },
+      "sessions": {
+        "file": "practice/sessions.csv",
+        "rows": 420,
+        "sha256": "874b178275b24e0d33e7694ca24419f4def949e8b877723ea195f619f3e86c5b"
+      }
+    },
+    "project": {
+      "page_views": {
+        "file": "project/page_views.jsonl",
+        "rows": 2759,
+        "sha256": "42ef1368fa5abad00b2a49f06f4610a0dd9648cd4b168db92482954344648042"
+      },
+      "searches": {
+        "file": "project/searches.jsonl",
+        "rows": 919,
+        "sha256": "fb372be8b867463326980584812b99e0f1a45a6a8cdacb805ab63855083eece1"
+      },
+      "cart_events": {
+        "file": "project/cart_events.jsonl",
+        "rows": 522,
+        "sha256": "932f9c193e5c85c968d7585022137bcf919273d6d59a0a238fb76218a34c4df5"
+      },
+      "checkout_events": {
+        "file": "project/checkout_events.jsonl",
+        "rows": 339,
+        "sha256": "a6339c93510b8bcdb662cc3cab5b513bb8ded184cf72ef577de09569a04655f0"
+      },
+      "sessions": {
+        "file": "project/sessions.csv",
+        "rows": 760,
+        "sha256": "c3a6cca2c48f1be0b2c1fd1381a627593f66fc03c6213b691b8d9f473f232ec2"
+      }
+    }
+  }
+}

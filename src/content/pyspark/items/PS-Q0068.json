@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0068",
+  "slug": "amounts-for-the-old-card-system",
+  "lesson": "PS-L014",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Amounts for the old card system",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "The old card system stores amounts as `decimal(6,2)`: four digits before the point and two after. Write `solve(transactions)` so it returns `transaction_id`, `amount` and the amount in that type as `legacy_amount`. Amounts that don't fit must not stop the job.",
+  "rules": [
+    "`legacy_amount` is `amount` as `decimal(6,2)`. Everything from -9999.99 to 9999.99 fits and keeps its value.",
+    "An amount too large for the type, such as 10000.00 or -10000.00, gives a missing `legacy_amount`. A missing amount stays missing.",
+    "Keep `amount` unchanged. Return the three columns, in that order, for every transaction, duplicates included."
+  ],
+  "hints": [
+    "The type is written as a string, exactly like a schema: `\"decimal(6,2)\"`.",
+    "In Spark 4 a plain `cast` stops the whole job when one value doesn't fit the new type.",
+    "`try_cast` gives a missing value instead of stopping."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "transactions"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(transactions):\n    # transaction_id, amount, legacy_amount\n    return transactions\n",
+  "output": {
+    "columns": [
+      "transaction_id",
+      "amount",
+      "legacy_amount"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`transactions.select(\"transaction_id\", \"amount\", F.col(\"amount\").try_cast(\"decimal(6,2)\").alias(\"legacy_amount\"))`. In `decimal(6,2)` the 6 counts every digit and the 2 those after the point, which leaves four before it: 9999.99 is the largest value, and -9999.99 the smallest. A plain `cast` works on the sample but stops the job with an out-of-range error the first time it meets 10000.00; `try_cast` turns those values into missing ones and keeps going. `decimal(4,2)` is a common misreading of the rule and only fits up to 99.99."
+}

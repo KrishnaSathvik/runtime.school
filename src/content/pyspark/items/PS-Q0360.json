@@ -1,0 +1,57 @@
+{
+ "id": "PS-Q0360",
+ "slug": "a-re-sent-file-after-a-restart",
+ "lesson": "PS-L072",
+ "role": "integration",
+ "format": "dataframe_coding",
+ "difficulty": "hard",
+ "minutes": 14,
+ "title": "A re-sent file after a restart",
+ "dataset": {
+  "id": "PS-D15",
+  "version": "1.0.0"
+ },
+ "prompt": "A service summary is counted from the log stream. After the first run the log shipper restarted and sent the third file again under a new name. Write the query and `writer` in `solve(application_logs)` so that after the second run it returns `service`, `lines`, `errors` and `last_logged`, with every log line counted once.",
+ "rules": [
+  "A re-sent line has the same `log_id` and is identical to the first copy. Count each `log_id` once, across both runs.",
+  "`lines` counts the service's log lines, all levels; `errors` counts its `ERROR` lines (0 when there are none); both are longs. `last_logged` is its latest `logged_at`.",
+  "Keep the setup's two runs on the same checkpoint, and return one row per service.",
+  "The rows must come from a streaming query over the delivery files: working on `application_logs` itself doesn't count."
+ ],
+ "hints": [
+  "`dropDuplicates([\"log_id\"])` works on a stream: it remembers every id it has seen in its state, and the checkpoint keeps that state across the restart.",
+  "Count `ERROR` lines with `F.sum` over the comparison cast to `int`: `F.count` counts every non-missing value, false included.",
+  "Aggregate per service with `agg`, write in complete mode to a memory table, and read it back after run 2."
+ ],
+ "explanation": "The re-sent file has a new name, so the file source reads it as new input in run 2. Removing repeats has to remember ids across micro-batches and across the restart: a streaming `dropDuplicates([\"log_id\"])` keeps every id it has seen in its state, the checkpoint saves that state, and the copies are dropped when they arrive. Removing repeats inside each micro-batch can't see a copy that comes in a later one. The aggregation after it is a running count in complete mode, so after run 2 the memory table has the whole summary. Without a watermark this state only grows, which is fine for a bounded backlog like this one.",
+ "entry": "solve",
+ "inputs": [
+  "application_logs"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\ndef solve(application_logs):\n    spark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\n    logs = application_logs.withColumn(\"batch\", F.hour(\"logged_at\"))   # each hour of logs is one file\n    for path in [\"/tmp/all\", \"/tmp/in\", \"/tmp/ck\"]:\n        shutil.rmtree(path, ignore_errors=True)\n    make_batches(logs, \"/tmp/all\")\n    files = sorted(os.listdir(\"/tmp/all\"))\n    os.makedirs(\"/tmp/in\")\n\n    def deliver(names):\n        \"\"\"Copy files into the folder the stream reads, keeping their times.\"\"\"\n        for name in names:\n            shutil.copy2(f\"/tmp/all/{name}\", f\"/tmp/in/{name}\")\n\n    def resend(name):\n        \"\"\"The shipper sends a file again under a new name, after the newest one.\"\"\"\n        shutil.copy2(f\"/tmp/all/{name}\", f\"/tmp/in/resent-{name}\")\n        os.utime(f\"/tmp/in/resent-{name}\", (1_700_000_100, 1_700_000_100))\n\n    stream = spark.readStream.schema(logs.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\n    # Count each log line once per service (lines, errors, last_logged), and build `writer`\n    # so the result after run 2 covers both runs.\n    writer = None\n\n    deliver(files[:3])\n    run_stream(writer)       # run 1: three files, then the shipper restarts\n    resend(files[2])         # after its restart the shipper sends the third file again\n    deliver(files[3:])\n    run_stream(writer)       # run 2: the same checkpoint\n    return application_logs\n",
+ "output": {
+  "columns": [
+   "service",
+   "lines",
+   "errors",
+   "last_logged"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

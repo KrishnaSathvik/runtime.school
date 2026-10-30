@@ -1,0 +1,135 @@
+{
+  "id": "PS-L050",
+  "minutes": 25,
+  "lede": "Counting, summing and finding the biggest value per key is the core of most reports. On RDDs you do it with pairs: a key and a value, combined per key with `reduceByKey`.",
+  "objectives": [
+    "Build a pair RDD of `(key, value)` tuples with `map`",
+    "Combine the values of each key with `reduceByKey`, and change only values with `mapValues`",
+    "Carry several numbers at once in a tuple, for counts, sums and averages",
+    "Explain why `reduceByKey` beats `groupByKey`, and sort pair results for stable output"
+  ],
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "api_requests"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`api_requests` has one row per API call: which service answered, the HTTP status, and the latency in milliseconds. To work per service, turn each row into a **pair**: a Python tuple `(key, value)`. An RDD of pairs gets extra methods that work per key."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Rows into pairs",
+      "code": "pairs = api_requests.rdd.map(lambda r: (r[\"service\"], r[\"latency_ms\"]))\nprint(pairs.take(4))\nprint(pairs.keys().take(4))\nprint(pairs.values().take(4))\n",
+      "note": "Each item is a two-item tuple. `keys()` and `values()` take the first or second part of every pair."
+    },
+    {
+      "kind": "text",
+      "md": "`reduceByKey(f)` combines all the values of one key, two at a time, with a function `f(a, b)` that returns one value of the same kind. `lambda a, b: a + b` adds them up; `max` keeps the bigger. The result has one pair per key.\n\nPair results come back in no particular order: they've been shuffled between partitions to bring each key together. Sort what you collect, with Python's `sorted` or with `sortByKey()`, whenever the order matters."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Count and find the maximum per key",
+      "code": "counts = api_requests.rdd.map(lambda r: (r[\"service\"], 1)).reduceByKey(lambda a, b: a + b)\nprint(sorted(counts.collect()))\n\nslowest = api_requests.rdd.map(lambda r: (r[\"service\"], r[\"latency_ms\"])).reduceByKey(max)\nprint(slowest.sortByKey().collect())\n",
+      "note": "Counting is adding a 1 per row. catalog-api answered 5 of the 12 calls. The slowest call was checkout-api's 1240 ms payment failure."
+    },
+    {
+      "kind": "text",
+      "md": "The function must give the same answer whatever order the values arrive in, because Spark combines them inside each partition first and then combines the partial results. Adding, `max` and `min` are safe. Taking an average isn't: the average of two averages isn't the average of all values.\n\nTo average, carry a tuple of **(sum, count)**, add both parts in `reduceByKey`, and divide at the end. `mapValues(f)` changes only the value of each pair and keeps the key."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "An average via (sum, count)",
+      "code": "sums = (\n    api_requests.rdd\n    .map(lambda r: (r[\"service\"], (r[\"latency_ms\"], 1)))\n    .reduceByKey(lambda a, b: (a[0] + b[0], a[1] + b[1]))\n)\nprint(sorted(sums.collect()))\n\naverages = sums.mapValues(lambda s: round(s[0] / s[1], 1))\nprint(sorted(averages.collect()))\n",
+      "note": "search-api had two calls, 118 and 162 ms: (280, 2), an average of 140.0. The same tuple trick carries any number of counters at once."
+    },
+    {
+      "kind": "text",
+      "md": "`groupByKey()` collects every value of a key into one list-like group. It's handy for looking, but costly: every value travels across the network before anything is combined. `reduceByKey` combines values in each partition first and sends only the partial results, so for sums, counts and maximums it does far less work. Reach for `groupByKey` only when you really need all the values together."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "groupByKey gives all the values",
+      "code": "groups = api_requests.rdd.map(lambda r: (r[\"service\"], r[\"status_code\"])).groupByKey()\nprint(sorted((service, sorted(codes)) for service, codes in groups.collect()))\n",
+      "note": "Each group is an iterable of every status code for that service; `sorted` turns it into a plain list for printing. catalog-api's 404 sits among its 200s."
+    },
+    {
+      "kind": "text",
+      "md": "Finish as usual by turning pairs into rows. A pair whose value is a tuple has to be flattened into one tuple per row first, then `toDF` with a schema string."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Pairs back to a DataFrame",
+      "code": "stats = (\n    api_requests.rdd\n    .map(lambda r: (r[\"service\"], (1, 1 if r[\"status_code\"] >= 500 else 0)))\n    .reduceByKey(lambda a, b: (a[0] + b[0], a[1] + b[1]))\n    .sortByKey()\n    .map(lambda kv: (kv[0], kv[1][0], kv[1][1]))\n)\nstats.toDF(\"service string, requests bigint, server_errors bigint\").show()\n",
+      "note": "One row per service with two counters. Only checkout-api had a 5xx error. `sortByKey()` before the last `map` puts the services in order, and `toDF` keeps that order."
+    },
+    {
+      "kind": "error-example",
+      "id": "e6",
+      "title": "reduceByKey on items that aren't pairs",
+      "code": "services = api_requests.rdd.map(lambda r: r[\"service\"])\nprint(services.reduceByKey(lambda a, b: a + b).collect())\n",
+      "error": "Py4JJavaError",
+      "note": "Each item is a plain string, not a `(key, value)` tuple, so Spark can't split it into a key and a value. Python's unpacking error is inside the long Spark message. Map to pairs first: `map(lambda r: (r[\"service\"], 1))`."
+    }
+  ],
+  "challenges": [
+    "PS-L050-C1",
+    "PS-L050-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "Which function is safe to use with `reduceByKey` to find the total latency per service?",
+      "choices": [
+        "`lambda a, b: a + b`",
+        "`lambda a, b: (a + b) / 2`",
+        "`lambda a, b: a`",
+        "`lambda a, b: [a, b]`"
+      ],
+      "answer": 0,
+      "why": "Adding gives the same total whatever order values are combined in. Averaging pairwise does not, keeping `a` depends on order, and a list changes the kind of value."
+    },
+    {
+      "id": "k2",
+      "prompt": "Why prefer `reduceByKey` to `groupByKey` for counting requests per service?",
+      "choices": [
+        "`groupByKey` gives wrong counts",
+        "`reduceByKey` combines values inside each partition before the shuffle, so far less data moves",
+        "`reduceByKey` sorts the keys",
+        "`groupByKey` only works on numbers"
+      ],
+      "answer": 1,
+      "why": "Both can count correctly, but `groupByKey` ships every value across the network first; `reduceByKey` sends only partial results."
+    },
+    {
+      "id": "k3",
+      "prompt": "`pairs.mapValues(lambda v: v * 2)` does what?",
+      "choices": [
+        "Doubles the keys",
+        "Doubles each value and keeps its key",
+        "Doubles the number of pairs",
+        "Combines values per key"
+      ],
+      "answer": 1,
+      "why": "`mapValues` applies the function to the value of each pair and leaves the key as it is."
+    }
+  ],
+  "review": [
+    "A pair RDD holds `(key, value)` tuples; build one with `map(lambda r: (key, value))`.",
+    "`reduceByKey(f)` combines a key's values two at a time; `f` must not depend on the order (adding, `max`, `min`).",
+    "Average with `(sum, count)` tuples, then divide in `mapValues`.",
+    "`groupByKey` moves every value before combining; prefer `reduceByKey` for sums, counts and maximums.",
+    "Pair results have no fixed order: sort with `sorted(...)` or `sortByKey()` when it matters.",
+    "Flatten `(key, (a, b))` into `(key, a, b)` before `toDF(\"...\")`."
+  ],
+  "practice": ["PS-Q0246", "PS-Q0247", "PS-Q0248", "PS-Q0249", "PS-Q0250"]
+}

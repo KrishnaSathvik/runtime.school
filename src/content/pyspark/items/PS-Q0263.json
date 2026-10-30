@@ -1,0 +1,62 @@
+{
+  "id": "PS-Q0263",
+  "slug": "status-and-battery-disagree",
+  "lesson": "PS-L053",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 17,
+  "title": "When the status and the battery disagree",
+  "dataset": {
+    "id": "PS-D09",
+    "version": "1.0.0"
+  },
+  "prompt": "A sensor should report `low_battery` when its battery is below 3.4 V and `ok` otherwise. Write `solve(sensor_readings)` with `mapInPandas` so it returns `reading_id`, `device_id`, `battery_v`, `status` and `problem` for each reading whose status can't be trusted.",
+  "rules": [
+    "`no status`: the status is missing.",
+    "`should be low_battery`: the status is `ok` but `battery_v` is below 3.4.",
+    "`should be ok`: the status is `low_battery` but `battery_v` is 3.4 or more.",
+    "A missing `battery_v` can't be checked, so on its own it's no problem. A `degraded` status is never a problem. Readings with no problem give no rows.",
+    "Find the problem rows with `mapInPandas`: the check looks for it in the plan Spark runs.",
+    "Check every delivered row; a repeated reading with a problem gives a row each time. Return `reading_id`, `device_id`, `battery_v` (double), `status` and `problem` (text), in that order."
+  ],
+  "hints": [
+    "Build a True/False mask per problem on the batch, take the matching rows with `pdf[mask]`, set `problem` on each part, and yield `pd.concat([...])`.",
+    "A missing battery is NaN, and every comparison with NaN is False. So `~(battery < 3.4)` is True for a missing battery; write `battery >= 3.4` instead.",
+    "A missing status is `None` in pandas: `status.isna()` finds it, and `status == \"ok\"` is simply False for it."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "sensor_readings"
+  ],
+  "starter": "import pandas as pd\nfrom pyspark.sql import functions as F\n\n\ndef solve(sensor_readings):\n    # The battery voltage and status from inside the payload struct, as plain columns.\n    readings = sensor_readings.select(\n        \"reading_id\", \"device_id\",\n        F.col(\"payload.battery_v\").alias(\"battery_v\"),\n        F.col(\"payload.status\").alias(\"status\"),\n    )\n    # Return one row per reading with a problem: reading_id, device_id, battery_v, status, problem.\n    return readings\n",
+  "output": {
+    "columns": [
+      "reading_id",
+      "device_id",
+      "battery_v",
+      "status",
+      "problem"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Three masks on each batch, one per problem: `status.isna()`, `(status == \"ok\") & (battery < 3.4)` and `(status == \"low_battery\") & (battery >= 3.4)`. Take each part with `pdf[mask]`, label it, and yield the three parts joined with `pd.concat`. Output rows don't have to match input rows, so readings with no problem simply aren't yielded. The traps are all about missing values. NaN fails every comparison, so `battery >= 3.4` is False for a missing battery, while `~(battery < 3.4)` is True and would accuse a sensor that sent no voltage. Exactly 3.4 V is not below 3.4, so a `low_battery` status there is wrong. The check looks at each row on its own, which makes it batch-safe; dropping repeats inside the function wouldn't be, and the rule says to keep them anyway. An `F.when` chain and a filter could give the same rows; this question checks for `mapInPandas` because that's what it teaches.",
+  "technique": {
+    "name": "mapInPandas",
+    "plan": [
+      "MapInPandas"
+    ]
+  }
+}

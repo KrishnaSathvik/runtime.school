@@ -1,0 +1,57 @@
+{
+ "id": "PS-Q0372",
+ "slug": "invoices-with-the-owner-at-the-time",
+ "lesson": "PS-L075",
+ "role": "business",
+ "format": "dataframe_coding",
+ "difficulty": "hard",
+ "minutes": 14,
+ "title": "Invoices with the owner at the time",
+ "dataset": {
+  "id": "PS-D14",
+  "version": "1.0.0"
+ },
+ "prompt": "Sales pays commission to whoever owned the account when an invoice was raised, not to today's owner. Write `owner_report(invoices, history)` so each invoice gets the account's owner and segment from the type 2 history.",
+ "rules": [
+  "Use the account version that was valid at the start (midnight) of `invoice_date`: `effective_from` at or before it, and `effective_to` NULL or after it.",
+  "The history starts on 1 January 2026, so report only invoices dated from then on.",
+  "Every such invoice is in the report once. If no version of its account was valid that day, `account_owner` and `segment` are NULL.",
+  "Return `invoice_id`, `account_id`, `invoice_date`, `total_amount`, `account_owner` and `segment`. Don't change `build_history` or `solve`."
+ ],
+ "hints": [
+  "This is a join on the account and on a time range. Give both sides an alias and put the whole condition in `join(..., on=condition, ...)`.",
+  "`F.col(\"i.invoice_date\").cast(\"timestamp\")` is midnight of that day, so it compares with the history's timestamps.",
+  "Which join keeps an invoice that finds no version?"
+ ],
+ "entry": "solve",
+ "inputs": [
+  "accounts",
+  "customer_cdc",
+  "invoices"
+ ],
+ "starter": "import shutil\n\nfrom pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\nfrom delta.tables import DeltaTable\n\nPATH = \"/tmp/crm/dim_accounts\"\nCOLS = [\"account_id\", \"account_name\", \"industry\", \"country\", \"segment\", \"account_owner\", \"credit_limit\", \"created_on\", \"is_active\"]\n\n\ndef build_history(accounts, customer_cdc):\n    # The type 2 history: the 1 January snapshot, then the change feed applied as one batch. Don't change this.\n    shutil.rmtree(PATH, ignore_errors=True)  # start from an empty folder on every run\n    (accounts\n        .withColumn(\"effective_from\", F.lit(\"2026-01-01 00:00:00\").cast(\"timestamp\"))\n        .withColumn(\"effective_to\", F.lit(None).cast(\"timestamp\"))\n        .withColumn(\"is_current\", F.lit(True))\n        .write.format(\"delta\").save(PATH))\n    newest_first = Window.partitionBy(\"account_id\").orderBy(F.col(\"sequence\").desc())\n    latest = customer_cdc.withColumn(\"rn\", F.row_number().over(newest_first)).filter(F.col(\"rn\") == 1).drop(\"rn\")\n    (DeltaTable.forPath(spark, PATH).alias(\"t\")\n        .merge(latest.alias(\"s\"), \"t.account_id = s.account_id AND t.is_current\")\n        .whenMatchedUpdate(set={\"effective_to\": \"s.changed_at\", \"is_current\": \"false\"})\n        .execute())\n    (latest.filter(F.col(\"op\") != \"D\")\n        .select(*COLS, F.col(\"changed_at\").alias(\"effective_from\"),\n                F.lit(None).cast(\"timestamp\").alias(\"effective_to\"), F.lit(True).alias(\"is_current\"))\n        .write.format(\"delta\").mode(\"append\").save(PATH))\n\n\ndef owner_report(invoices, history):\n    # Each invoice from 1 January 2026, with the account's owner and segment on the invoice date.\n    pass\n\ndef solve(accounts, customer_cdc, invoices):\n    build_history(accounts, customer_cdc)\n    history = spark.read.format(\"delta\").load(PATH)\n    return owner_report(invoices, history)\n",
+ "output": {
+  "columns": [
+   "invoice_id",
+   "account_id",
+   "invoice_date",
+   "total_amount",
+   "account_owner",
+   "segment"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 180,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "explanation": "Join the 2026 invoices to the history on the account and on validity: `(F.col(\"h.effective_from\") <= day) & (F.col(\"h.effective_to\").isNull() | (day < F.col(\"h.effective_to\")))`, with `day` the invoice date as a timestamp. Versions don't overlap, so each invoice matches at most one, and a left join keeps the invoices that match none, such as one raised after its account was deleted. Joining on `account_id` alone gives one row per version, and joining only the current versions credits today's owner: ACC-0001's 5 February invoice belongs to Dana Whitlock, who owned it until 10 March."
+}

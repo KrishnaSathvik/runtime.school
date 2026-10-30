@@ -1,0 +1,141 @@
+{
+  "id": "PS-L069",
+  "minutes": 25,
+  "lede": "Most streaming reports count things per minute, per hour or per day, by when they happened rather than when they arrived. `window()` puts each event in a time bucket, and a stream keeps every bucket's total up to date as new rows come in.",
+  "objectives": [
+    "Group events into tumbling windows with `F.window` on an event-time column, together with a key",
+    "Use sliding windows, where one event counts in several overlapping windows",
+    "Read a window's `start` and `end`, and say which window an event on a boundary belongs to",
+    "Pick update or complete output for a windowed count, and predict what each micro-batch sends"
+  ],
+  "dataset": {
+    "id": "PS-D12",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "impressions"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`impressions` is an ad server's log: one row per ad shown, for four campaigns over two mornings. `event_time` is when the user saw the ad, `arrival_time` when the record reached the pipeline, and `batch` the daily delivery it came in. Impression I0012 was shown on 2 March but arrived two days later, in delivery 3.\n\nA report of impressions per campaign per day should count I0012 on 2 March, when it happened, not on 4 March, when it arrived. Counting by a time stored in the data is called **event time**.\n\n`F.window(time_column, \"10 minutes\")` gives each row a **window**: a struct with a `start` and an `end`, the time bucket the row falls in. Group by it like any other column. Windows of one fixed length that don't overlap are **tumbling** windows. They're lined up with the clock: 10-minute windows start at :00, :10, :20 and so on, and day windows at midnight UTC. The start belongs to the window and the end doesn't, so an event at exactly 09:10:00 is in the window from 09:10 to 09:20."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Ten-minute windows on a table",
+      "code": "from pyspark.sql import functions as F\n\nwindows = impressions.groupBy(F.window(\"event_time\", \"10 minutes\")).count()\nwindows.printSchema()\nwindows.orderBy(\"window\").show(truncate=False)\n",
+      "note": "`window` is a struct of two timestamps. Spark only makes windows that have rows: three on each morning here. `F.window` works the same on a batch table as on a stream, which makes it an easy way to check a stream's answer."
+    },
+    {
+      "kind": "text",
+      "md": "On a stream, the same `groupBy` keeps a running count per window. Spark stores each window's count between micro-batches, in the query's **state**, and adds each new micro-batch to it. Every stream example below starts with the `make_batches` helper from lesson 67.\n\nWith `outputMode(\"update\")`, each micro-batch sends only the windows whose count changed. A grouped query shuffles rows by key, so the examples also set `spark.sql.shuffle.partitions` to 1: for this little data, one partition is much faster than the default 200."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Update mode: only what changed",
+      "code": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\nspark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\nmake_batches(impressions, \"/tmp/ads\")\nstream = spark.readStream.schema(impressions.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/ads\")\ndaily = stream.groupBy(F.window(\"event_time\", \"1 day\"), \"campaign_id\").count()\n\ndef show_batch(batch_df, batch_id):\n    rows = sorted((r[\"window\"][\"start\"].strftime(\"%m-%d\"), r[\"campaign_id\"], r[\"count\"]) for r in batch_df.collect())\n    print(\"micro-batch\", batch_id, rows)\n\nq = daily.writeStream.outputMode(\"update\").foreachBatch(show_batch).trigger(availableNow=True).start()\nq.awaitTermination()\n",
+      "note": "Micro-batch 0 counts the first day's impressions per campaign, and micro-batch 1 the second day's. Micro-batch 2 holds only I0012. It happened on 2 March, so Spark added it to that day's CMP-0001 window and sent the new count, 3. Nothing else changed, so nothing else was sent."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Complete mode: the whole result every time",
+      "code": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\nspark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\nmake_batches(impressions, \"/tmp/ads\")\nstream = spark.readStream.schema(impressions.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/ads\")\ndaily = stream.groupBy(F.window(\"event_time\", \"1 day\"), \"campaign_id\").count()\n\ndef show_batch(batch_df, batch_id):\n    rows = sorted((r[\"window\"][\"start\"].strftime(\"%m-%d\"), r[\"campaign_id\"], r[\"count\"]) for r in batch_df.collect())\n    print(\"micro-batch\", batch_id, rows)\n\nq = daily.writeStream.outputMode(\"complete\").foreachBatch(show_batch).trigger(availableNow=True).start()\nq.awaitTermination()\n",
+      "note": "Complete mode sends the whole result table from every micro-batch, so each one repeats every window seen so far. It's the easiest output to read, but it grows with every new window, so it suits small results such as a daily summary."
+    },
+    {
+      "kind": "text",
+      "md": "The sink gets exactly what the mode sends. In complete mode, a memory table is replaced by each micro-batch's full result. In update mode, the memory sink **adds** the changed rows to the ones it already holds, so a window that changed twice is in it twice."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Update mode into a memory table",
+      "code": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\nspark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\nmake_batches(impressions, \"/tmp/ads\")\nstream = spark.readStream.schema(impressions.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/ads\")\ndaily = stream.groupBy(F.window(\"event_time\", \"1 day\"), \"campaign_id\").count()\n\nq = daily.writeStream.outputMode(\"update\").format(\"memory\").queryName(\"daily\").trigger(availableNow=True).start()\nq.awaitTermination()\n\nfor r in sorted(spark.table(\"daily\").collect(), key=lambda r: (r[\"window\"][\"start\"], r[\"campaign_id\"], r[\"count\"])):\n    print(r[\"window\"][\"start\"].strftime(\"%m-%d\"), r[\"campaign_id\"], r[\"count\"])\nprint(\"windows in state:\", q.lastProgress[\"stateOperators\"][0][\"numRowsTotal\"])\n",
+      "note": "CMP-0001 on 2 March is in the table twice: 2 from micro-batch 0 and 3 from micro-batch 2. A sink that replaces rows by key, such as a Delta merge run from `foreachBatch`, would keep only the 3. The progress report says the query's state holds 8 windows, one per day and campaign."
+    },
+    {
+      "kind": "text",
+      "md": "**Sliding windows** overlap. `F.window(\"event_time\", \"20 minutes\", \"10 minutes\")` makes 20-minute windows that start every 10 minutes, so every row falls into two of them. They answer questions like \"impressions in the last 20 minutes, every 10 minutes\". The third argument is the slide; with no slide, it equals the window length and the windows tumble."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Sliding windows per channel",
+      "code": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\nspark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\nmake_batches(impressions, \"/tmp/ads\")\nstream = spark.readStream.schema(impressions.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/ads\")\nsliding = stream.groupBy(F.window(\"event_time\", \"20 minutes\", \"10 minutes\"), \"channel\").count()\n\nq = sliding.writeStream.outputMode(\"complete\").format(\"memory\").queryName(\"by_channel\").trigger(availableNow=True).start()\nq.awaitTermination()\n\nspark.table(\"by_channel\").select(\"window.start\", \"window.end\", \"channel\", \"count\").orderBy(\"start\", \"channel\").show(30)\n",
+      "note": "I0001 at 09:01 counts in the window that starts at 08:50 and in the one that starts at 09:00. Each window is counted per `channel`, and only windows with rows appear. The memory table is an ordinary table, so `select(\"window.start\", ...)` and `orderBy` work on it."
+    },
+    {
+      "kind": "text",
+      "md": "Append mode writes a row once and never changes it. For a windowed count, that means waiting until a window is finished. A plain windowed count gives Spark no way to know when that is: a late row like I0012 could still turn up days later. So Spark refuses append for it."
+    },
+    {
+      "kind": "error-example",
+      "id": "e6",
+      "title": "Append needs to know when a window is done",
+      "code": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\nmake_batches(impressions, \"/tmp/ads\")\nstream = spark.readStream.schema(impressions.schema).json(\"/tmp/ads\")\ndaily = stream.groupBy(F.window(\"event_time\", \"1 day\"), \"campaign_id\").count()\nq = daily.writeStream.outputMode(\"append\").format(\"memory\").queryName(\"daily\").start()\n",
+      "error": "AnalysisException",
+      "note": "The message says append needs a watermark: a rule for how late a row may arrive. Lesson 70 adds one with `withWatermark`. It also lets Spark drop old windows from state instead of keeping them forever."
+    }
+  ],
+  "challenges": [
+    "PS-L069-C1",
+    "PS-L069-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "With `F.window(\"event_time\", \"10 minutes\")`, which window holds an event at exactly 09:20:00?",
+      "choices": [
+        "09:10 to 09:20",
+        "09:20 to 09:30",
+        "Both of them",
+        "09:15 to 09:25"
+      ],
+      "answer": 1,
+      "why": "A window includes its start and excludes its end, and 10-minute windows start on the clock's tens. 09:20:00 opens the window from 09:20 to 09:30."
+    },
+    {
+      "id": "k2",
+      "prompt": "A windowed count runs in update mode. In micro-batch 5 a late event arrives for a window that was first counted in micro-batch 1. What does micro-batch 5 send for that window?",
+      "choices": [
+        "Nothing: the window was already sent",
+        "The window with its new total",
+        "The window with a count of 1, for the late event alone",
+        "Every window seen so far"
+      ],
+      "answer": 1,
+      "why": "Spark keeps every window's count in state, adds the late event to it and sends the changed window with its new total. Complete mode would send every window."
+    },
+    {
+      "id": "k3",
+      "prompt": "Into how many windows does one event fall with `F.window(\"event_time\", \"30 minutes\", \"10 minutes\")`?",
+      "choices": [
+        "1",
+        "2",
+        "3",
+        "30"
+      ],
+      "answer": 2,
+      "why": "Windows 30 minutes long start every 10 minutes, so three of them cover any moment."
+    }
+  ],
+  "review": [
+    "Event time is when something happened, stored in the data; windows on it count a late row where it belongs.",
+    "`F.window(col, \"10 minutes\")` gives each row a `window` struct with `start` and `end`; group by it with a key such as `campaign_id`.",
+    "Windows line up with the clock; a window includes its start and excludes its end.",
+    "`F.window(col, \"20 minutes\", \"10 minutes\")` makes sliding windows: each row counts in two.",
+    "A windowed stream keeps counts in state. Update mode sends only changed windows; complete sends the whole result each micro-batch.",
+    "A memory sink appends update-mode rows, so a changed window appears more than once. Append mode needs a watermark (lesson 70)."
+  ],
+  "practice": [
+    "PS-Q0341",
+    "PS-Q0342",
+    "PS-Q0343",
+    "PS-Q0344",
+    "PS-Q0345"
+  ]
+}

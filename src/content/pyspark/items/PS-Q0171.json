@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0171",
+  "slug": "transfer-sender-totals",
+  "lesson": "PS-L035",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Each transfer with its sender's totals",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "The transfers screen shows each transfer next to a summary of everything its sender asked to move. Write `solve(transfers)` so every transfer carries the sender's number of transfers and largest amount.",
+  "rules": [
+    "Group by `from_account_id` and count every transfer, whatever its `status`.",
+    "`sender_transfers` is how many transfers the sender has and `sender_largest` is the largest `amount` among them. Every transfer from one sender shows the same two values.",
+    "Transfers with a missing `from_account_id` count as one sender of their own.",
+    "Return `transfer_id`, `from_account_id`, `amount`, `sender_transfers` and `sender_largest`, one row per transfer."
+  ],
+  "hints": [
+    "A `groupBy` would collapse each sender to one row. A window keeps every transfer and adds the group's figure to it.",
+    "A window with `partitionBy` and no `orderBy` has the whole partition as its frame.",
+    "`F.count(\"*\").over(w)` and `F.max(\"amount\").over(w)` with `w = Window.partitionBy(\"from_account_id\")`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "transfers"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(transfers):\n    # Add the sender's transfer count and largest amount to every transfer.\n    return transfers\n",
+  "output": {
+    "columns": [
+      "transfer_id",
+      "from_account_id",
+      "amount",
+      "sender_transfers",
+      "sender_largest"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Partition by the sender and leave out `orderBy`: `w = Window.partitionBy(\"from_account_id\")`, then `transfers.select(\"transfer_id\", \"from_account_id\", \"amount\", F.count(\"*\").over(w).alias(\"sender_transfers\"), F.max(\"amount\").over(w).alias(\"sender_largest\"))`. Without an order the frame is the whole partition, so every transfer from a sender gets the same count and maximum. Adding `orderBy` would turn both into running figures that grow along the rows, and a `groupBy` would return one row per sender instead of one per transfer. Partitioning by `to_account_id` would summarise the receiver instead."
+}

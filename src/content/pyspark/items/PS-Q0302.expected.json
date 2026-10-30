@@ -1,0 +1,76 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "invoices",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "first_invoice_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "last_invoice_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "largest_total",
+     "type": "decimal(12,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "draft",
+     1,
+     "2026-03-04",
+     "2026-03-04",
+     "245.00"
+    ],
+    [
+     "open",
+     1,
+     "2026-02-05",
+     "2026-02-05",
+     "283.50"
+    ],
+    [
+     "overdue",
+     1,
+     "2025-12-09",
+     "2025-12-09",
+     "469.50"
+    ],
+    [
+     "paid",
+     2,
+     "2025-10-14",
+     "2025-11-20",
+     "244.00"
+    ]
+   ],
+   "row_count": 4
+  }
+ },
+ "hidden": [
+  "the full practice invoices",
+  "invoices with no status, no date or no total",
+  "every invoice in one status, one of them listed twice",
+  "no invoices at all"
+ ]
+}

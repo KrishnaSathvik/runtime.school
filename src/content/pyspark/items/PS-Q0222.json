@@ -1,0 +1,55 @@
+{
+  "id": "PS-Q0222",
+  "slug": "what-the-partner-sees-in-the-csv",
+  "lesson": "PS-L045",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "What the partner sees in the CSV",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "prompt": "A partner gets the trips as a CSV file with a header, and opens it without a schema. Write `solve(trips)` so it saves that file at the given path and returns exactly what the partner will read from it.",
+  "rules": [
+    "Save `trip_id`, `pickup_at`, `passenger_count`, `fare`, `tip` and `payment_type`, in that order, as CSV with a header line at `path`, replacing any earlier copy.",
+    "Read the file back the way the partner does: with the header, and no schema or type guessing.",
+    "Return what you read: every column is text, written the way the CSV file holds it. A missing value comes back missing.",
+    "Keep every trip, duplicates included."
+  ],
+  "hints": [
+    "`df.write.mode(\"overwrite\").csv(path, header=True)` writes the column names on the first line.",
+    "`spark.read.csv(path, header=True)` takes the names from that line and leaves every column as text.",
+    "Look at how a timestamp is written in the file: it isn't quite the way `show()` prints it."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "trips"
+  ],
+  "starter": "def solve(trips):\n    path = \"/tmp/taxi/partner\"\n    # Save the CSV at `path` and return what the partner reads from it.\n    return trips\n",
+  "output": {
+    "columns": [
+      "trip_id",
+      "pickup_at",
+      "passenger_count",
+      "fare",
+      "tip",
+      "payment_type"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Write and read with the header and nothing else: `trips.select(...).write.mode(\"overwrite\").csv(path, header=True)`, then `spark.read.csv(path, header=True)`. CSV has no types, so every column comes back as text, and the text is exactly what Spark wrote: `fare` keeps its two decimals, like `52.00`, and `pickup_at` is written in full ISO form with milliseconds and a `Z` for UTC, like `2026-04-07T07:05:07.000Z`. A missing passenger count is written as an empty field, which reads back as missing. This is why a CSV copy needs its schema repeated on every read, while a Parquet copy keeps its types."
+}

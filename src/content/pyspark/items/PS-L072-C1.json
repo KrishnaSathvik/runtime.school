@@ -1,0 +1,21 @@
+{
+ "id": "PS-L072-C1",
+ "kind": "predict",
+ "slug": "restart-from-a-checkpoint",
+ "lesson": "PS-L072",
+ "difficulty": "medium",
+ "minutes": 6,
+ "title": "Restart from a checkpoint",
+ "prompt": "What does this program print? The stream's folder first gets two files, then the other three. The five files hold 3, 1, 1, 3 and 2 log lines, in that order. `run_stream` starts the query, reads every file waiting, and stops.",
+ "program": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\nlogs = application_logs.withColumn(\"batch\", F.floor((F.minute(\"logged_at\") * 60 + F.second(\"logged_at\")) / 20))\nmake_batches(logs, \"/tmp/all\")          # five files: 3, 1, 1, 3 and 2 log lines\nfiles = sorted(os.listdir(\"/tmp/all\"))\nfor path in [\"/tmp/in\", \"/tmp/ck\"]:\n    shutil.rmtree(path, ignore_errors=True)\nos.makedirs(\"/tmp/in\")\n\nseen = []\n\n\ndef keep(batch_df, batch_id):\n    seen.append((batch_id, batch_df.count()))\n\n\nstream = spark.readStream.schema(logs.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\nwriter = stream.writeStream.foreachBatch(keep).option(\"checkpointLocation\", \"/tmp/ck\")\n\nfor name in files[:2]:\n    shutil.copy2(f\"/tmp/all/{name}\", f\"/tmp/in/{name}\")\nrun_stream(writer)\nfor name in files[2:]:\n    shutil.copy2(f\"/tmp/all/{name}\", f\"/tmp/in/{name}\")\nrun_stream(writer)\nprint(seen)\n\nshutil.rmtree(\"/tmp/ck\")\nrun_stream(writer)\nprint(len(seen), seen[-1])\n",
+ "dataset": {
+  "id": "PS-D15",
+  "version": "1.0.0"
+ },
+ "edition": "lesson",
+ "hints": [
+  "The second `run_stream` uses the same checkpoint. Which files has it already committed, and what number does its first micro-batch get?",
+  "`seen` is an ordinary Python list: it keeps everything from every run.",
+  "Deleting the checkpoint makes the next run a brand-new query. What does a new query read, and where do its micro-batch ids start?"
+ ]
+}

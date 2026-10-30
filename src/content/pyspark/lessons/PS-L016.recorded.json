@@ -1,0 +1,43 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D07",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "trips"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "+-------+-------------+-------+---------+\n|trip_id|trip_distance|half_up|half_even|\n+-------+-------------+-------+---------+\n|   T001|         2.25|    2.3|      2.2|\n|   T002|         2.35|    2.4|      2.4|\n|   T003|         0.95|    1.0|      1.0|\n|   T004|        10.05|   10.1|     10.0|\n|   T005|          4.6|    4.6|      4.6|\n|   T006|          1.5|    1.5|      1.5|\n+-------+-------------+-------+---------+\nonly showing top 6 rows\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "+-------+-------------+--------+----------+-----------+---------+\n|trip_id|trip_distance|miles_up|miles_down|capped_fare|odd_group|\n+-------+-------------+--------+----------+-----------+---------+\n|   T001|         2.25|       3|         2|      15.63|        1|\n|   T002|         2.35|       3|         2|      16.38|        0|\n|   T003|         0.95|       1|         0|       8.63|        1|\n|   T004|        10.05|      11|        10|      20.00|        1|\n|   T005|          4.6|       5|         4|      20.00|        1|\n+-------+-------------+--------+----------+-----------+---------+\nonly showing top 5 rows\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "+-------+----+-----+--------------+-----------+\n|trip_id| tip| fare|       tip_pct|tip_pct_1dp|\n+-------+----+-----+--------------+-----------+\n|   T001|2.81|15.63|17.97824696100|       18.0|\n|   T002|3.28|16.38|20.02442002400|       20.0|\n|   T003|0.00| 8.63| 0.00000000000|        0.0|\n|   T004|7.80|52.00|15.00000000000|       15.0|\n+-------+----+-----+--------------+-----------+\nonly showing top 4 rows\nroot\n |-- trip_id: string (nullable = true)\n |-- tip: decimal(8,2) (nullable = true)\n |-- fare: decimal(8,2) (nullable = true)\n |-- tip_pct: decimal(23,11) (nullable = true)\n |-- tip_pct_1dp: decimal(14,1) (nullable = true)\n\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "",
+   "error": {
+    "type": "ArithmeticException",
+    "message": "[DIVIDE_BY_ZERO] Division by zero. Use `try_divide` to tolerate divisor being 0 and return NULL instead. If necessary set \"spark.sql.ansi.enabled\" to \"false\" to bypass this error. SQLSTATE: 22012",
+    "line": 3,
+    "condition": "DIVIDE_BY_ZERO"
+   }
+  },
+  "e5": {
+   "stdout": "+-------+----+-----+-------------+\n|trip_id| tip|tolls| tip_per_toll|\n+-------+----+-----+-------------+\n|   T001|2.81| 0.00|         NULL|\n|   T002|3.28| 0.00|         NULL|\n|   T003|0.00| 0.00|         NULL|\n|   T004|7.80| 6.55|1.19083969466|\n|   T005|6.38| 0.00|         NULL|\n+-------+----+-----+-------------+\nonly showing top 5 rows\n",
+   "error": null
+  }
+ }
+}

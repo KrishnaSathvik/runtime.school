@@ -1,0 +1,26 @@
+{
+  "id": "PS-L026-C2",
+  "slug": "customers-with-a-declined-payment",
+  "lesson": "PS-L026",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Customers with a declined payment",
+  "dataset": { "id": "PS-D02", "version": "1.0.0" },
+  "prompt": "The support team calls every customer who had a payment declined. Write `solve(customers, accounts, transactions)` so it returns each customer who holds at least one account with a declined transaction.",
+  "rules": [
+    "A transaction is declined when its `status` is exactly `declined`.",
+    "Transactions reach customers through `accounts`: a transaction's `account_id` belongs to one account, and each account has a `customer_id`.",
+    "Return every column of `customers`, unchanged, and each customer only once, however many declined transactions they have."
+  ],
+  "hints": [
+    "Filter the transactions to the declined ones first.",
+    "A semi join keeps the accounts that have a declined transaction, without repeating them.",
+    "Do the same step again: customers semi joined with those accounts, on `customer_id`."
+  ],
+  "entry": "solve",
+  "inputs": ["customers", "accounts", "transactions"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(customers, accounts, transactions):\n    # Return each customer with at least one declined transaction, once.\n    return customers\n",
+  "output": { "columns": ["customer_id", "full_name", "email", "city", "country", "segment", "kyc_status", "joined_date"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

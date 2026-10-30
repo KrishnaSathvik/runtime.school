@@ -1,0 +1,141 @@
+{
+  "id": "PS-L033",
+  "minutes": 25,
+  "lede": "\"Top three per department\", \"latest row per customer\", \"where does this person's pay sit\": these need a number for each row that depends on the other rows in its group. Window functions give every row that number without collapsing the group the way `groupBy` does.",
+  "objectives": [
+    "Describe a window with `Window.partitionBy(...).orderBy(...)`",
+    "Number rows with `row_number`, `rank` and `dense_rank`, and explain how each treats ties",
+    "Keep the top N rows, or one row, per group by ranking first and filtering after",
+    "Make a ranking repeatable by adding columns that break ties"
+  ],
+  "dataset": {
+    "id": "PS-D03",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "employees"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`employees` has one row per person, with a `department_id`, a `hire_date` and a `salary`. It's loaded as a DataFrame, and `F` is `pyspark.sql.functions`.\n\nA window function needs two things, written once as a **window** with `Window` from `pyspark.sql.window`:\n\n- `partitionBy(\"department_id\")`: which rows belong together. Each department is numbered on its own.\n- `orderBy(F.col(\"salary\").desc())`: the order inside each group. Highest salary first here.\n\nThen `F.row_number().over(w)` is a column like any other. Add it next to the existing ones with `select(\"*\", ...)`, where `\"*\"` stands for every column the DataFrame already has. Every row stays; nothing is collapsed."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Number each department's people by salary",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\nw = Window.partitionBy(\"department_id\").orderBy(F.col(\"salary\").desc(), \"employee_id\")\n\nnumbered = employees.select(\"department_id\", \"employee_id\", \"salary\", F.row_number().over(w).alias(\"row_number\"))\nnumbered.orderBy(\"department_id\", \"row_number\").show()\n",
+      "note": "Numbering starts again at 1 in each department. All nine employees are still here, each with one extra column. `orderBy` at the end only sorts what's printed."
+    },
+    {
+      "kind": "text",
+      "md": "In Engineering, E0004 and E0005 both earn 70,000. `row_number` must still give them different numbers, so the window orders by `employee_id` after the salary to decide who comes first. Without that, Spark could number the two either way, and the answer could change between runs.\n\nWhen equal values should share a number, use a ranking function instead:\n\n- `F.row_number()`: 1, 2, 3, 4. Never ties.\n- `F.rank()`: equal values share a number, and the next one skips: 1, 2, 2, 4.\n- `F.dense_rank()`: equal values share a number, and nothing is skipped: 1, 2, 2, 3."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Three ways to number ties",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\nby_pay = Window.partitionBy(\"department_id\").orderBy(F.col(\"salary\").desc())\nin_order = Window.partitionBy(\"department_id\").orderBy(F.col(\"salary\").desc(), \"employee_id\")\n\nemployees.select(\n    \"department_id\", \"employee_id\", \"salary\",\n    F.row_number().over(in_order).alias(\"row_number\"),\n    F.rank().over(by_pay).alias(\"rank\"),\n    F.dense_rank().over(by_pay).alias(\"dense_rank\"),\n).orderBy(\"department_id\", \"row_number\").show()\n",
+      "note": "Look at Engineering: the two 70,000 salaries share rank 3, so the next person is rank 5 but dense rank 4. `rank` and `dense_rank` don't need a tie-breaker, because tied rows get the same number anyway."
+    },
+    {
+      "kind": "text",
+      "md": "To keep the top rows of each group, rank first, then `filter` on the new column. The column has to exist before you can filter on it, so add it with `select` (or keep `\"*\"`) and filter the result.\n\nPick the function by what should happen at a tie. With `rank`, \"place 2 or better\" can return three people if two tie for second. With `row_number`, exactly two come back, and the tie-breaker decides who."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "The two best-paid people per department",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\nw = Window.partitionBy(\"department_id\").orderBy(F.col(\"salary\").desc())\n\nranked = employees.select(\"*\", F.rank().over(w).alias(\"place\"))\ntop_two = ranked.filter(F.col(\"place\") <= 2)\ntop_two.select(\"department_id\", \"employee_id\", \"first_name\", \"salary\", \"place\").orderBy(\"department_id\", \"place\", \"employee_id\").show()\n",
+      "note": "The Executive department has only one person, so it returns one row. Nobody ties in the top two here; if two people did, both would be kept."
+    },
+    {
+      "kind": "text",
+      "md": "The same idea picks **one** row per group: number the rows with `row_number`, ordered so the row you want comes first, and keep number 1. Here it's the first person hired in each department. Two people hired on the same day would tie, so `employee_id` settles it."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "One row per group: the first hire",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\nw = Window.partitionBy(\"department_id\").orderBy(\"hire_date\", \"employee_id\")\n\nfirst_hires = employees.select(\"*\", F.row_number().over(w).alias(\"n\")).filter(F.col(\"n\") == 1)\nfirst_hires.select(\"department_id\", \"employee_id\", \"first_name\", \"hire_date\").orderBy(\"department_id\").show()\n",
+      "note": "One row per department. For \"the latest\" instead, order the window by the date descending."
+    },
+    {
+      "kind": "text",
+      "md": "Leave out `partitionBy` and the whole table is one group. That's how you rank all rows against each other, or rank the rows of a grouped result: `groupBy(...).agg(...)` first, then a window over its output.\n\nWithout `partitionBy`, Spark has to bring every row together in one place to number them, so keep it for small results like these."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "One ranking across the whole table",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\neveryone = Window.orderBy(F.col(\"salary\").desc())\n\nemployees.select(\"employee_id\", \"department_id\", \"salary\", F.dense_rank().over(everyone).alias(\"pay_band\")).orderBy(\"pay_band\", \"employee_id\").show()\n",
+      "note": "Two salaries appear twice (75,000 and 70,000), so those pairs share a band, and the bands stay 1, 2, 3 without gaps."
+    },
+    {
+      "kind": "error-example",
+      "id": "e6",
+      "title": "A ranking window with no order",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\nw = Window.partitionBy(\"department_id\")\nemployees.select(\"employee_id\", F.rank().over(w).alias(\"rank\")).show()\n",
+      "error": "AnalysisException",
+      "note": "Ranking needs an order: first by what? `row_number`, `rank` and `dense_rank` all need `orderBy` in the window."
+    }
+  ],
+  "challenges": [
+    "PS-L033-C1",
+    "PS-L033-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "Salaries in a department are 90, 80, 80 and 70, highest first. What does `dense_rank` give the person on 70?",
+      "choices": [
+        "3",
+        "4",
+        "2",
+        "It depends on the run"
+      ],
+      "answer": 0,
+      "why": "Dense rank gives 1, 2, 2, 3: ties share a number and nothing is skipped. `rank` would give 4."
+    },
+    {
+      "id": "k2",
+      "prompt": "Two people in a department are hired on the same day. Which window makes `row_number` repeatable for \"first hire per department\"?",
+      "choices": [
+        "Window.partitionBy(\"department_id\")",
+        "Window.partitionBy(\"department_id\").orderBy(\"hire_date\")",
+        "Window.partitionBy(\"department_id\").orderBy(\"hire_date\", \"employee_id\")",
+        "Window.orderBy(\"hire_date\")"
+      ],
+      "answer": 2,
+      "why": "Ordering by the date alone leaves the two hires tied, so either could get 1. Adding `employee_id` settles every tie."
+    },
+    {
+      "id": "k3",
+      "prompt": "How does `df.select(\"*\", F.rank().over(w).alias(\"r\"))` differ from `df.groupBy(\"department_id\").count()`?",
+      "choices": [
+        "It keeps every row and adds a column; `groupBy` collapses each group to one row",
+        "It collapses each group to one row",
+        "It sorts the DataFrame by `r`",
+        "There's no difference"
+      ],
+      "answer": 0,
+      "why": "A window function computes from the group but returns one value per row, so the row count doesn't change. It doesn't sort the result either."
+    }
+  ],
+  "review": [
+    "A window is `Window.partitionBy(group).orderBy(order)`; use it with `F.row_number().over(w)`, `F.rank().over(w)` or `F.dense_rank().over(w)`.",
+    "Window functions keep every row and add a value; `groupBy` collapses rows.",
+    "`row_number` never ties, `rank` shares and skips (1, 2, 2, 4), `dense_rank` shares without skipping (1, 2, 2, 3).",
+    "Break ties for `row_number` with extra sort columns, or the numbering can change between runs.",
+    "For top N or one row per group: add the ranking column, then `filter` on it.",
+    "Without `partitionBy`, the whole table is one group."
+  ],
+  "practice": [
+    "PS-Q0161",
+    "PS-Q0162",
+    "PS-Q0163",
+    "PS-Q0164",
+    "PS-Q0165"
+  ]
+}

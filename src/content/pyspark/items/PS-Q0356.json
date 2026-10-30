@@ -1,0 +1,55 @@
+{
+ "id": "PS-Q0356",
+ "slug": "level-counts-after-micro-batch-2",
+ "lesson": "PS-L072",
+ "role": "foundation",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 10,
+ "title": "Level counts after micro-batch 2",
+ "dataset": {
+  "id": "PS-D15",
+  "version": "1.0.0"
+ },
+ "prompt": "An incident review wants to know what the running count of log lines per level was right after micro-batch 2. Write `solve(application_logs)` so it streams the logs, counting lines per `level`, and returns `level` and `lines` as they stood in the query's state after micro-batch 2.",
+ "rules": [
+  "Each hour of logs is one file and one micro-batch, as the setup writes them. Micro-batch ids start at 0, and every case has at least three.",
+  "`lines` counts every line of that level in micro-batches 0, 1 and 2 together. A level that first appears later isn't there yet.",
+  "Return these two columns, `lines` as a long.",
+  "The rows must come from a streaming query over the delivery files: working on `application_logs` itself doesn't count."
+ ],
+ "hints": [
+  "Run the running count to the end with a checkpoint, as in the lesson. In `foreachBatch`, collect each micro-batch.",
+  "`spark.read.format(\"statestore\").load(checkpoint)` reads the state; `option(\"batchId\", n)` reads it as it was after micro-batch `n`.",
+  "The state has a `key` struct and a `value` struct: pick `key.level` and `value.count`."
+ ],
+ "explanation": "The running count keeps one row per level in the query's state, and the checkpoint keeps a version of that state for every micro-batch. `spark.read.format(\"statestore\").option(\"batchId\", 2).load(\"/tmp/ck\")` reads the version written by micro-batch 2, which holds everything counted in micro-batches 0 to 2. Without `batchId` you get the latest version. Update mode alone can't answer this: micro-batch 2 sends only the levels that changed in it. Micro-batch ids count files from 0, so they don't follow the hours, which can skip.",
+ "entry": "solve",
+ "inputs": [
+  "application_logs"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\ndef solve(application_logs):\n    spark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\n    logs = application_logs.withColumn(\"batch\", F.hour(\"logged_at\"))   # each hour of logs is one file\n    make_batches(logs, \"/tmp/in\")\n    shutil.rmtree(\"/tmp/ck\", ignore_errors=True)     # a fresh checkpoint for every run\n    stream = spark.readStream.schema(logs.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\n    # Count lines per level with a checkpoint, run the stream, then return level and lines\n    # as they stood after micro-batch 2.\n\n    return application_logs\n",
+ "output": {
+  "columns": [
+   "level",
+   "lines"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

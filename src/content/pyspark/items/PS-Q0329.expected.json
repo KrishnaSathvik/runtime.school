@@ -1,0 +1,55 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "first_trips",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "first_revenue",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "trips_now",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "revenue_now",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "files_left",
+     "type": "int",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     12,
+     "326.12",
+     14,
+     "365.22",
+     1
+    ]
+   ],
+   "row_count": 1
+  }
+ },
+ "hidden": [
+  "the full practice trips",
+  "a day with no trips",
+  "a load of exactly three trips, one in each part",
+  "the same trip delivered twice"
+ ]
+}

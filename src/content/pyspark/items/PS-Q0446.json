@@ -1,0 +1,56 @@
+{
+ "id": "PS-Q0446",
+ "slug": "send-tonights-bad-orders-to-quarantine",
+ "lesson": "PS-L090",
+ "role": "foundation",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 12,
+ "title": "Send tonight's bad orders to quarantine",
+ "dataset": {
+  "id": "PS-D01",
+  "version": "1.1.0"
+ },
+ "prompt": "Before tonight's `orders` file goes on to silver, every row that breaks a rule waits in quarantine with the reason. Write `solve(orders, customers)` so it returns the quarantine.",
+ "rules": [
+  "Check the rules in this order, and give each row the first one it breaks: `no order date` when `order_date` is missing, `unknown status` when `status` isn't one of the six in `STATUSES` (a missing status is unknown), `unknown customer` when `customer_id` is missing or isn't in `customers`, and `negative total` when `total` is below 0.",
+  "A missing `total` breaks no rule: the basket wasn't priced yet.",
+  "Check every row of the file on its own and keep copies: bronze must equal silver plus quarantine.",
+  "Return `order_id`, `customer_id`, `order_date`, `status`, `total` and `reason`."
+ ],
+ "hints": [
+  "Lesson 22's `F.when` chain labels each row with the first rule it breaks, and leaves NULL when it breaks none.",
+  "A rule on a missing value is NULL, not true. Wrap a test in `F.coalesce(..., F.lit(False))` when a missing value must count as breaking it.",
+  "To know whether a customer exists, left-join the customer ids with a marker column: no match leaves the marker NULL."
+ ],
+ "explanation": "Order matters in a `F.when` chain: it stops at the first rule that is true, so O00013, with no date and the status `Paid`, is labelled `no order date`. The status test needs `F.coalesce(F.col(\"status\").isin(STATUSES), F.lit(False))`: without it, a missing status gives NULL, the `when` doesn't fire, and O00014 slips through to silver. For the customer, left-join `customers.select(\"customer_id\").distinct()` with a marker column; a missing or unknown id finds no row, so the marker is NULL. Taking the distinct ids keeps the join from repeating an order when a customer appears twice. An inner join would lose those orders altogether, so they'd be in neither silver nor quarantine. `total < 0` is NULL for an unpriced order, so it isn't flagged, which is what the rules want. Keep copies such as the second O00015: removing duplicates is silver's job, after the split, and bronze must still add up.",
+ "entry": "solve",
+ "inputs": [
+  "orders",
+  "customers"
+ ],
+ "starter": "from pyspark.sql import functions as F\n\nSTATUSES = [\"placed\", \"paid\", \"shipped\", \"delivered\", \"cancelled\", \"refunded\"]\n\n\ndef solve(orders, customers):\n    # Return tonight's orders that break a rule, with the first rule each one breaks in `reason`.\n    return orders\n",
+ "output": {
+  "columns": [
+   "order_id",
+   "customer_id",
+   "order_date",
+   "status",
+   "total",
+   "reason"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 180,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

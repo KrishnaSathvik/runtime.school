@@ -1,0 +1,135 @@
+{
+  "id": "PS-L054",
+  "minutes": 30,
+  "lede": "Machine-learning models in Spark read one column of number vectors. Feature preparation turns text categories, numbers on different scales and missing values into that column, with steps you fit on training data and reuse on new data.",
+  "objectives": [
+    "Turn a text category into numbers with `StringIndexer` and `OneHotEncoder`",
+    "Combine columns into one `features` vector with `VectorAssembler`, and read it as an array with `vector_to_array`",
+    "Fill missing numbers with `Imputer` and rescale them with `MinMaxScaler`",
+    "Fit a `Pipeline` on training rows only and apply it to later rows, handling categories it hasn't seen"
+  ],
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "movies",
+      "ratings"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`movies` has one row per film, with a `primary_genre` and a `runtime_min`; `ratings` has one row per member and film rated. A model can't use \"Drama\" or a runtime of 118 next to a rating of 4.0 as they are. It needs every input as a number, on a comparable scale, gathered into one vector column.\n\n`pyspark.ml.feature` has a tool for each step. Some are **estimators**: `fit(df)` learns something from the data and returns a **model**. Models and the other tools are **transformers**: `transform(df)` adds a new column and keeps the rest.\n\n`StringIndexer` is an estimator. It learns the distinct values of a text column and gives each a number: the most frequent gets 0.0, and ties are broken alphabetically."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Genres as numbers",
+      "code": "from pyspark.ml.feature import StringIndexer\n\nindexer = StringIndexer(inputCol=\"primary_genre\", outputCol=\"genre_index\")\nmodel = indexer.fit(movies)\nprint(model.labels)\n\nmodel.transform(movies).select(\"movie_id\", \"primary_genre\", \"genre_index\").orderBy(\"movie_id\").show()\n",
+      "note": "Drama and Thriller have two films each, so they get 0.0 and 1.0, Drama first alphabetically. The other six genres have one film each and follow in alphabetical order. `labels` lists the genres in index order."
+    },
+    {
+      "kind": "text",
+      "md": "An index alone suggests an order (is Sci-Fi \"more\" than Drama?) that doesn't exist. `OneHotEncoder` turns each index into a vector with a 1.0 in that genre's position and 0.0 elsewhere. By default it **drops the last category**: that genre is the vector of all zeros, which saves one position.\n\n`VectorAssembler` then puts several columns side by side in one vector, in the order of `inputCols`. Vectors print in a compact sparse form; `vector_to_array` from `pyspark.ml.functions` turns one into an ordinary array column."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "One-hot encode, then assemble",
+      "code": "from pyspark.ml.feature import StringIndexer, OneHotEncoder, VectorAssembler\nfrom pyspark.ml.functions import vector_to_array\n\nindexed = StringIndexer(inputCol=\"primary_genre\", outputCol=\"genre_index\").fit(movies).transform(movies)\nencoded = OneHotEncoder(inputCol=\"genre_index\", outputCol=\"genre_vec\").fit(indexed).transform(indexed)\nencoded.select(\"movie_id\", \"primary_genre\", \"genre_vec\").orderBy(\"movie_id\").show(4, truncate=False)\n\nassembler = VectorAssembler(inputCols=[\"genre_vec\", \"runtime_min\"], outputCol=\"features\")\nfeatures = assembler.transform(encoded)\nfeatures.select(\"movie_id\", vector_to_array(\"features\").alias(\"features\")).orderBy(\"movie_id\").show(truncate=False)\n",
+      "note": "`(7,[0],[1.0])` means a vector of 7 values whose position 0 holds 1.0. Eight genres need only 7 positions: Sci-Fi, the last label, is all zeros (M06). The assembled vector is the 7 genre values followed by the runtime."
+    },
+    {
+      "kind": "text",
+      "md": "Prepare features the way a model will be used: **fit on the training rows only**, then transform new rows with what was learned. Here an indexer is fitted on films released before 2024 and then used on every film. Two genres only appear later."
+    },
+    {
+      "kind": "error-example",
+      "id": "e3",
+      "title": "A category the indexer never saw",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.ml.feature import StringIndexer\n\nolder = movies.filter(F.col(\"release_year\") < 2024)\nmodel = StringIndexer(inputCol=\"primary_genre\", outputCol=\"genre_index\").fit(older)\nprint(model.labels)\n\nmodel.transform(movies).select(\"movie_id\", \"primary_genre\", \"genre_index\").show()\n",
+      "error": "Py4JJavaError",
+      "note": "Thriller and Documentary aren't in the learned labels, so the indexer stops with an error about an unseen label. A missing (NULL) value stops it the same way."
+    },
+    {
+      "kind": "text",
+      "md": "`handleInvalid` decides what happens instead: `\"keep\"` gives unseen and missing values one extra index after the known ones, and `\"skip\"` drops those rows. `\"error\"` is the default.\n\nNumbers have their own gaps. `Imputer` fills missing values with the column's mean (or `strategy=\"median\"`). It **keeps the column's type**, so on an integer column the mean is cut to a whole number. Make the column a double first with `.cast(\"double\")`."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Keep unseen genres, fill missing runtimes",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.ml.feature import StringIndexer, Imputer\n\nolder = movies.filter(F.col(\"release_year\") < 2024)\nmodel = StringIndexer(inputCol=\"primary_genre\", outputCol=\"genre_index\", handleInvalid=\"keep\").fit(older)\nmodel.transform(movies).select(\"movie_id\", \"primary_genre\", \"genre_index\").orderBy(\"movie_id\").show()\n\nnew_films = spark.createDataFrame(\n    [(\"M11\", 104), (\"M12\", None), (\"M13\", 92), (\"M14\", 112)],\n    \"movie_id STRING, runtime_min INT\",\n).withColumn(\"runtime_double\", F.col(\"runtime_min\").cast(\"double\"))\n\nimputer = Imputer(inputCols=[\"runtime_min\", \"runtime_double\"], outputCols=[\"filled_int\", \"filled_double\"])\nimputer.fit(new_films).transform(new_films).show()\n",
+      "note": "The six known genres get 0.0 to 5.0 and both new genres get 6.0. The mean of 104, 92 and 112 is 102.67: the integer column gets 102, the double column the real mean."
+    },
+    {
+      "kind": "text",
+      "md": "Many models also want numbers on a similar scale. `MinMaxScaler` learns each position's minimum and maximum and maps them to 0.0 and 1.0. It works on a vector, so assemble first.\n\nA `Pipeline` chains the steps: `Pipeline(stages=[...]).fit(train)` fits each stage in turn and returns one model you can `transform` any data with. Below, member features come from `groupBy`; the pipeline is fitted on 2025 ratings and applied to 2026 ratings. The 2026 values were never seen during fitting, so some land outside 0 to 1, as they would for a real model.\n\nTo split rows at random instead, `df.randomSplit([0.8, 0.2], seed=42)` is repeatable for the same data, but which rows land where can change if the data is partitioned differently. A split by time, like this one, doesn't depend on that."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "A pipeline fitted on the past",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.ml import Pipeline\nfrom pyspark.ml.feature import VectorAssembler, MinMaxScaler\nfrom pyspark.ml.functions import vector_to_array\n\n\ndef member_features(rows):\n    return rows.groupBy(\"user_id\").agg(F.count(\"*\").alias(\"n_ratings\"), F.avg(\"rating\").alias(\"avg_rating\"))\n\n\ntrain = member_features(ratings.filter(F.col(\"rated_at\") < \"2026-01-01\"))\ntest = member_features(ratings.filter(F.col(\"rated_at\") >= \"2026-01-01\"))\n\npipeline = Pipeline(stages=[\n    VectorAssembler(inputCols=[\"n_ratings\", \"avg_rating\"], outputCol=\"raw\"),\n    MinMaxScaler(inputCol=\"raw\", outputCol=\"scaled\"),\n])\nmodel = pipeline.fit(train)\n\nfor name, df in [(\"train\", train), (\"test\", test)]:\n    print(name)\n    model.transform(df).select(\"user_id\", \"n_ratings\", \"avg_rating\", vector_to_array(\"scaled\").alias(\"scaled\")).orderBy(\"user_id\").show(truncate=False)\n",
+      "note": "In training, 1 to 3 ratings and averages of 3.25 to 4.5 map onto 0 to 1. In 2026, U04's 5.0 average is above the training maximum, so it scales to 1.4, and U05's 3.0 is below the minimum, so it scales to -0.2. Fitting on all rows would have hidden that, and let the test data shape the features."
+    }
+  ],
+  "challenges": [
+    "PS-L054-C1",
+    "PS-L054-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "A column holds `tv` three times and `mobile`, `tablet` and `web` once each. What index does `StringIndexer` give `mobile`?",
+      "choices": [
+        "0.0",
+        "1.0",
+        "2.0",
+        "3.0"
+      ],
+      "answer": 1,
+      "why": "`tv`, the most frequent, gets 0.0. The three ties are ordered alphabetically, so `mobile` gets 1.0, `tablet` 2.0 and `web` 3.0."
+    },
+    {
+      "id": "k2",
+      "prompt": "`OneHotEncoder`, with default settings, encodes a column of 8 genre indexes. How long is each vector?",
+      "choices": [
+        "1",
+        "7",
+        "8",
+        "9"
+      ],
+      "answer": 1,
+      "why": "By default the last category is dropped and encoded as all zeros, so 8 categories need 7 positions."
+    },
+    {
+      "id": "k3",
+      "prompt": "`Imputer` fills an `INT` column whose known values are 100 and 111. What does the missing row get?",
+      "choices": [
+        "105.5",
+        "106",
+        "105",
+        "NULL"
+      ],
+      "answer": 2,
+      "why": "The mean is 105.5, but `Imputer` keeps the column's integer type and cuts it to 105. Cast to double first to keep 105.5."
+    }
+  ],
+  "review": [
+    "Estimators `fit(df)` and return a model; models and other transformers `transform(df)` and add a column.",
+    "`StringIndexer`: most frequent value gets 0.0, ties alphabetical. `handleInvalid` is `\"error\"` by default; `\"keep\"` adds one index for unseen and missing values.",
+    "`OneHotEncoder` drops the last category by default. `VectorAssembler` joins columns into one vector in `inputCols` order.",
+    "`Imputer` fills with the mean or median and keeps the column type: cast integers to double first.",
+    "`MinMaxScaler` maps the fitted minimum and maximum to 0 and 1; new data can fall outside.",
+    "Fit a `Pipeline` on training rows only, then transform later rows. `vector_to_array` shows a vector as a plain array."
+  ],
+  "practice": [
+    "PS-Q0266",
+    "PS-Q0267",
+    "PS-Q0268",
+    "PS-Q0269",
+    "PS-Q0270"
+  ]
+}

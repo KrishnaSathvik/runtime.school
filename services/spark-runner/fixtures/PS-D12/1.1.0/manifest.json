@@ -1,0 +1,170 @@
+{
+  "dataset_id": "PS-D12",
+  "version": "1.1.0",
+  "title": "Advertising & Marketing",
+  "source": "synthetic",
+  "licence": {
+    "status": "ours",
+    "note": "Runtime-owned deterministic synthetic data."
+  },
+  "seed": 2012,
+  "schemas": {
+    "campaigns": "campaign_id STRING, campaign_name STRING, advertiser STRING, channel STRING, objective STRING, start_date DATE, end_date DATE, daily_budget DECIMAL(10,2), attribution_window_days INT, status STRING",
+    "impressions": "impression_id STRING, campaign_id STRING, user_id STRING, channel STRING, device STRING, event_time TIMESTAMP, arrival_time TIMESTAMP, batch INT, cost DECIMAL(10,4)",
+    "clicks": "click_id STRING, impression_id STRING, campaign_id STRING, user_id STRING, event_time TIMESTAMP, arrival_time TIMESTAMP, batch INT",
+    "conversions": "conversion_id STRING, user_id STRING, campaign_id STRING, click_id STRING, converted_at TIMESTAMP, conversion_type STRING, revenue DECIMAL(10,2)",
+    "budgets": "campaign_id STRING, budget_date DATE, planned_spend DECIMAL(10,2), actual_spend DECIMAL(10,2)",
+    "attribution_events": "touch_id STRING, conversion_id STRING, user_id STRING, campaign_id STRING, channel STRING, touch_type STRING, touch_time TIMESTAMP, position INT, touches_in_path INT"
+  },
+  "keys": {
+    "primary": {
+      "campaigns": [
+        "campaign_id"
+      ],
+      "impressions": [
+        "impression_id"
+      ],
+      "clicks": [
+        "click_id"
+      ],
+      "conversions": [
+        "conversion_id"
+      ],
+      "budgets": [
+        "campaign_id",
+        "budget_date"
+      ],
+      "attribution_events": [
+        "touch_id"
+      ]
+    },
+    "foreign": {
+      "impressions.campaign_id": "campaigns.campaign_id",
+      "clicks.impression_id": "impressions.impression_id",
+      "clicks.campaign_id": "campaigns.campaign_id",
+      "conversions.campaign_id": "campaigns.campaign_id",
+      "conversions.click_id": "clicks.click_id",
+      "budgets.campaign_id": "campaigns.campaign_id",
+      "attribution_events.conversion_id": "conversions.conversion_id",
+      "attribution_events.campaign_id": "campaigns.campaign_id"
+    }
+  },
+  "rules": [
+    "campaign_id runs CMP-0001 \u2026 CMP-0040 in practice and project (the lesson uses the first four); PS-D06 clickstream uses the same ids.",
+    "channel is one of search, social, display, video, email, lowercase; an impression's channel is its campaign's channel.",
+    "All times are UTC. event_time is when the user saw or clicked the ad; arrival_time is when the record reached the pipeline, always at or after event_time.",
+    "batch (1\u20135) is the micro-batch the record arrived in, assigned by arrival_time. Most records arrive within minutes, but some arrive hours late, in a later batch than their event_time suggests: these late events are what watermarks are for.",
+    "Lesson edition: batch n holds what arrived on day n from 2026-03-02. Impression I0012 happened at 09:12 on 2026-03-02 but arrived in batch 3 two days later, and click K0006 (2026-03-03) arrived in batch 4 \u2014 the two late events.",
+    "A click always follows its impression (same user and campaign, a few seconds to minutes later), except the deliberate project cases below.",
+    "cost is what one impression cost the advertiser. The impression log is a 1-in-1,000 sample, so it does not add up to budgets.actual_spend, which is the platform's bill for the whole campaign-day.",
+    "The ad server credits each conversion to the click that led to it (click_id set) or, for a view-through conversion, to an impression (click_id empty); multi-touch models use attribution_events instead.",
+    "A conversion counts for a campaign only if converted_at is within attribution_window_days of the credited click or impression.",
+    "attribution_events lists every impression and click by the converting user in the attribution window before the conversion (at most 8, the latest kept), position 1 = first touch; position = touches_in_path is the last touch.",
+    "revenue is empty (null) for sign-up and lead conversions, which carry no direct revenue.",
+    "Practice edition: device is missing (null) on about 1% of impressions, and about 4% of records arrive late.",
+    "Project edition problem 1: about 3% of clicks have an impression_id that is not in impressions (the impression was lost upstream).",
+    "Project edition problem 2: about 7% of the ad server's own conversions (not the PS-D06 orders below) happened after their campaign's attribution window had closed and must not be attributed.",
+    "Project edition problem 3: about 4% of clicks are duplicates: the same click_id, user and event_time delivered again with a later arrival_time and batch. Deduplicate on click_id.",
+    "Project edition and PS-D06 (P09): PS-D06's project day (2026-03-05) is inside this week and its signed-in users are these user ids (U00001 to U00480). Lesson and practice editions don't join to PS-D06.",
+    "Project edition and PS-D06 (P09): each PS-D06 project campaign session has one landing click here on its campaign, 5 to 90 seconds before the session's started_at (after an impression up to 10 minutes earlier), by the session's user_id, or by a user who is not signed in on the site (U00481 or later) when the session is anonymous. A click and a session match when user_id and campaign_id are equal and started_at is at most 30 minutes after the click.",
+    "Project edition and PS-D06 (P09): each order such a signed-in or anonymous session completed (checkout step complete) is a purchase conversion credited to its landing click, with converted_at the complete step's event_time and revenue its order_total; landing clicks lead to no other conversions, and these are never outside the attribution window."
+  ],
+  "editions": {
+    "lesson": {
+      "campaigns": {
+        "file": "lesson/campaigns.csv",
+        "rows": 4,
+        "sha256": "250f288f6357c164e5e015c902922e718e8559297cd8d259adfbf82c57c65c6e"
+      },
+      "impressions": {
+        "file": "lesson/impressions.csv",
+        "rows": 12,
+        "sha256": "d06fe596f1c459afa5e9499efb09ac611127618d0698f557f0744c004da48c04"
+      },
+      "clicks": {
+        "file": "lesson/clicks.csv",
+        "rows": 6,
+        "sha256": "0014fea7021388edf2e5f76cd2cc1da740fc956b1bae503fac5d7cefd674ee1e"
+      },
+      "conversions": {
+        "file": "lesson/conversions.csv",
+        "rows": 4,
+        "sha256": "c3bca59332a41cfea99880d24176982fc2c11093d6ab356a30a61d58a9e7ef7c"
+      },
+      "budgets": {
+        "file": "lesson/budgets.csv",
+        "rows": 8,
+        "sha256": "3c38d9491ebae75c25effe6065bc1da88fcf902799bf244dd4e7da73eed51dba"
+      },
+      "attribution_events": {
+        "file": "lesson/attribution_events.csv",
+        "rows": 11,
+        "sha256": "77246ead13971d07a65d0f967db73afc9c817d2602016ddcb9fa2b3468606653"
+      }
+    },
+    "practice": {
+      "campaigns": {
+        "file": "practice/campaigns.csv",
+        "rows": 40,
+        "sha256": "bcf03441784eadfdac6aaef76be29854b950d27807b3feb091dd894a8b90dfca"
+      },
+      "impressions": {
+        "file": "practice/impressions.csv",
+        "rows": 3000,
+        "sha256": "1c3518ea6522b2f7067cc31d2268c238c2dd537edba45c666f5d9f21f6352652"
+      },
+      "clicks": {
+        "file": "practice/clicks.csv",
+        "rows": 349,
+        "sha256": "415e95b4ca2414f6064ad698b58b3926a41312a4c2cc2dabe5f72f243d747ea3"
+      },
+      "conversions": {
+        "file": "practice/conversions.csv",
+        "rows": 91,
+        "sha256": "8ef2010e6a9ea968e52b00ebd82f305e4eb484b9adf508efe69702d54b06a07f"
+      },
+      "budgets": {
+        "file": "practice/budgets.csv",
+        "rows": 278,
+        "sha256": "7caa73deb976fa84694b9c44385745b7ce683d6073a84e4d0d31df5a41f8fa8e"
+      },
+      "attribution_events": {
+        "file": "practice/attribution_events.csv",
+        "rows": 323,
+        "sha256": "a50b271bbd77c3e3fcf0010a57535cfb3d9d2c35e3015cd6fdb8cb2cd443e6a7"
+      }
+    },
+    "project": {
+      "campaigns": {
+        "file": "project/campaigns.csv",
+        "rows": 40,
+        "sha256": "69810de504b414e38845b1ec671188f40c69f11b8512817ea1e835dbb55f22b1"
+      },
+      "impressions": {
+        "file": "project/impressions.csv",
+        "rows": 5553,
+        "sha256": "ff70c9f9d4f81a52efc3515adeadad2e90f40625dd5708a01b67aa29b96a455d"
+      },
+      "clicks": {
+        "file": "project/clicks.csv",
+        "rows": 1085,
+        "sha256": "be8f13f6ef5a28b36e6b5c784be61d0f21e501a1085f0ce0ffffa06c7b8e9c24"
+      },
+      "conversions": {
+        "file": "project/conversions.csv",
+        "rows": 213,
+        "sha256": "226467dbca314d93ce5018badc3a1ffb5920ea301c1e1b06f15c41892a692cb5"
+      },
+      "budgets": {
+        "file": "project/budgets.csv",
+        "rows": 276,
+        "sha256": "15b7d62fcbeb8e0ecb029550dd8b961ad9048470fbc9faced296872ce7f421d4"
+      },
+      "attribution_events": {
+        "file": "project/attribution_events.csv",
+        "rows": 789,
+        "sha256": "80412be7c35368c0ac2ae510f28f7ae2feb91646ebb777cb9ab658bac099b0af"
+      }
+    }
+  }
+}

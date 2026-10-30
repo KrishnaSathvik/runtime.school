@@ -1,0 +1,49 @@
+{
+ "id": "PS-L009-C1",
+ "slug": "scores-for-the-coach",
+ "lesson": "PS-L009",
+ "difficulty": "easy",
+ "minutes": 8,
+ "title": "Scores for the coach",
+ "dataset": {
+  "id": "PS-D11",
+  "version": "1.0.0"
+ },
+ "prompt": "A coach wants to see how each try at a lesson went. Write `solve(attempts)` so it returns `learner_id`, `lesson_id`, `attempt_no` and the score, with `score_pct` renamed to `score`.",
+ "rules": [
+  "Return exactly four columns, in this order: `learner_id`, `lesson_id`, `attempt_no`, `score`.",
+  "`score` holds the values of `score_pct`, unchanged. A missing score stays missing.",
+  "Keep every attempt."
+ ],
+ "hints": [
+  "`select` returns the columns you list, in the order you list them.",
+  "Rename inside `select` with `F.col(\"score_pct\").alias(\"score\")`.",
+  "You can mix plain names and `F.col(...)` in the same `select`."
+ ],
+ "entry": "solve",
+ "inputs": [
+  "attempts"
+ ],
+ "starter": "from pyspark.sql import functions as F\n\n\ndef solve(attempts):\n    # Return learner_id, lesson_id, attempt_no and score.\n    return attempts\n",
+ "output": {
+  "columns": [
+   "learner_id",
+   "lesson_id",
+   "attempt_no",
+   "score"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 45,
+  "check_timeout_s": 90,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

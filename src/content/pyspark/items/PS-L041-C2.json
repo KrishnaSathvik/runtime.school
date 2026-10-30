@@ -1,0 +1,50 @@
+{
+  "id": "PS-L041-C2",
+  "slug": "pricey-cart-items",
+  "lesson": "PS-L041",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Pricey cart items",
+  "dataset": {
+    "id": "PS-D06",
+    "version": "1.0.0"
+  },
+  "prompt": "Merchandising wants to see which cart changes touch expensive products. Write `solve(cart_events)` so it returns `event_id`, `action`, `pricey_skus` (the skus of items with a `price` of 50.00 or more) and `any_bulk` (true when at least one item has a `qty` of more than 1).",
+  "rules": [
+    "Keep one row per cart event, in any order. Keep duplicate rows.",
+    "An item counts as pricey when its unit `price` is 50.00 or more; quantity doesn't matter. Keep the pricey items' order. An item with a missing price isn't pricey.",
+    "With no pricey items, `pricey_skus` is an empty array. An event with no items has `any_bulk` false.",
+    "Return only `event_id`, `action`, `pricey_skus` and `any_bulk`, in that order."
+  ],
+  "hints": [
+    "Two steps for `pricey_skus`: keep the right items with `F.filter`, then turn each into its sku with `F.transform`.",
+    "\"At least one item\" is `F.exists`. \"50.00 or more\" is `>=`.",
+    "`F.filter` returns an array, so its result can go straight into `F.transform`. Inside each lambda, `x[\"price\"]` and `x[\"sku\"]` reach the item's fields."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "cart_events"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(cart_events):\n    # Return event_id, action, pricey_skus and any_bulk for each cart event.\n    return cart_events\n",
+  "output": {
+    "columns": [
+      "event_id",
+      "action",
+      "pricey_skus",
+      "any_bulk"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

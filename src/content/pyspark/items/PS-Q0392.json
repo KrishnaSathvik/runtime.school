@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0392",
+  "slug": "submit-the-nightly-report",
+  "lesson": "PS-L079",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 6,
+  "title": "Submit the nightly report",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "The scheduler runs the requests report every night. The starter writes the job, `/tmp/jobs/requests_report.py`, and the module it imports, `/tmp/libs/request_rules.py`; its `stage(api_requests)` writes the night's status codes to the file the job reads. Write `solve(api_requests)` so it stages the night's requests, submits the job the way the nightly run needs, then returns `report(run)`.",
+  "rules": [
+    "The application is called `nightly-requests`, runs on master `local[1]` and uses 8 shuffle partitions.",
+    "The job reads two arguments: the date `2026-01-15`, then the region `eu-west`.",
+    "The job imports `request_rules`, which isn't on its path; ship it with the job.",
+    "Leave both files, `stage` and `report` as they are; call `stage(api_requests)` before the submit and change only the `spark-submit` command."
+  ],
+  "hints": [
+    "Spark's options go before the script, the job's own arguments after it, in the order the job reads them.",
+    "`--name`, `--master` and `--conf key=value` set the first rule. Which option ships a Python file to the driver and executors?",
+    "Run it: an exit code of 1 with no other rows means the job never got going. Look for a missing module or a word in the wrong place."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "api_requests"
+  ],
+  "starter": "import os, subprocess\n\nos.makedirs(\"/tmp/libs\", exist_ok=True)\nos.makedirs(\"/tmp/jobs\", exist_ok=True)\nopen(\"/tmp/libs/request_rules.py\", \"w\").write(\"def is_server_error(code):\\n    return code >= 500\\n\")\nopen(\"/tmp/jobs/requests_report.py\", \"w\").write(\"\"\"\nimport sys\nfrom request_rules import is_server_error\nfrom pyspark.sql import SparkSession\n\nspark = SparkSession.builder.getOrCreate()\nsc = spark.sparkContext\ndate, region = sys.argv[1], sys.argv[2]\ncodes = [int(c) for c in open(\"/tmp/jobs/status_codes.txt\").read().split()]\nprint(\"app: name=\" + sc.appName)\nprint(\"app: master=\" + sc.master)\nprint(\"app: shuffle partitions=\" + spark.conf.get(\"spark.sql.shuffle.partitions\"))\nprint(\"app: date=\" + date)\nprint(\"app: region=\" + region)\nprint(\"app: server errors=\" + str(sum(is_server_error(c) for c in codes)))\nspark.stop()\n\"\"\")\n\n\ndef stage(api_requests):\n    # Tonight's status codes, one per line, in the file the job reads.\n    codes = [str(r.status_code) for r in api_requests.select(\"status_code\").collect()]\n    open(\"/tmp/jobs/status_codes.txt\", \"w\").write(\"\\n\".join(codes) + \"\\n\")\n\n\ndef report(run):\n    # The finished submit as a DataFrame: its exit code, then each \"app: key=value\" line the job printed.\n    # spark.createDataFrame builds a DataFrame from a list of Python tuples, with the columns named here.\n    rows = [(\"exit code\", str(run.returncode))]\n    for line in run.stdout.splitlines():\n        if line.startswith(\"app: \"):\n            key, value = line[5:].split(\"=\", 1)\n            rows.append((key, value))\n    return spark.createDataFrame(rows, \"key STRING, value STRING\")\n\n\ndef solve(api_requests):\n    stage(api_requests)\n    env = {**os.environ, \"SPARK_LOCAL_IP\": \"127.0.0.1\"}\n    # Add the options and arguments the nightly run needs.\n    run = subprocess.run([\"spark-submit\", \"/tmp/jobs/requests_report.py\"],\n                         capture_output=True, text=True, env=env)\n    return report(run)\n",
+  "output": {
+    "columns": [
+      "key",
+      "value"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "The command is `spark-submit --master local[1] --name nightly-requests --conf spark.sql.shuffle.partitions=8 --py-files /tmp/libs/request_rules.py /tmp/jobs/requests_report.py 2026-01-15 eu-west`. The options can come in any order, but all of them before the script; the two words after the script reach the job as `sys.argv[1]` and `sys.argv[2]`. Without `--py-files`, the job's first line fails with `ModuleNotFoundError` and the report shows only exit code 1. An option written after the script isn't an option at all: it becomes one of the job's arguments, and the job reads `--name` as its date. The server-error count comes from the codes `stage` wrote, so it changes from night to night while the command stays the same."
+}

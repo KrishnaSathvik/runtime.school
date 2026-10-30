@@ -1,0 +1,22 @@
+{
+ "id": "PS-Q0358",
+ "kind": "predict",
+ "slug": "a-failure-in-the-first-micro-batch",
+ "lesson": "PS-L072",
+ "role": "edge",
+ "difficulty": "hard",
+ "minutes": 8,
+ "title": "A failure in the first micro-batch",
+ "prompt": "What does this program print? The five files hold 3, 1, 1, 3 and 2 log lines, in that order. The sink fails on its first call, and the query is started again with the same checkpoint. `listing` leaves out Spark's hidden check files.",
+ "program": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\nlogs = application_logs.withColumn(\"batch\", F.floor((F.minute(\"logged_at\") * 60 + F.second(\"logged_at\")) / 20))\nfor path in [\"/tmp/in\", \"/tmp/ck\"]:\n    shutil.rmtree(path, ignore_errors=True)\nmake_batches(logs, \"/tmp/in\")          # five files: 3, 1, 1, 3 and 2 log lines\ncalls = []\n\n\ndef save(batch_df, batch_id):\n    calls.append((batch_id, batch_df.count()))\n    if len(calls) == 1:\n        raise ConnectionError(\"sink down\")   # fails on the very first call only\n\n\ndef listing(folder):\n    return [f for f in sorted(os.listdir(folder)) if not f.startswith(\".\")]\n\n\nstream = spark.readStream.schema(logs.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\nwriter = stream.writeStream.foreachBatch(save).option(\"checkpointLocation\", \"/tmp/ck\")\ntry:\n    run_stream(writer)\nexcept Exception as e:\n    print(type(e).__name__)\nprint(listing(\"/tmp/ck/offsets\"), listing(\"/tmp/ck/commits\"))\nrun_stream(writer)\nprint(calls)\n",
+ "dataset": {
+  "id": "PS-D15",
+  "version": "1.0.0"
+ },
+ "edition": "lesson",
+ "hints": [
+  "Spark writes a micro-batch's offset file before it runs and its commit file after it finishes. Which of the two exist for micro-batch 0?",
+  "A failure inside `foreachBatch` stops the query with Spark's own exception type, not the one the function raised.",
+  "On restart, a micro-batch with an offset but no commit runs again, with the same input and the same id. `calls` is an ordinary list that keeps both runs."
+ ]
+}

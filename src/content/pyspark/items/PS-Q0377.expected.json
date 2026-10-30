@@ -1,0 +1,270 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "transaction_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "currency",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "warning",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "T000001",
+     "A00001",
+     "800.00",
+     "USD",
+     null
+    ],
+    [
+     "T000003",
+     "A00001",
+     "27.90",
+     "USD",
+     null
+    ],
+    [
+     "T000004",
+     "A00008",
+     "3100.00",
+     "USD",
+     "within_review_limit"
+    ],
+    [
+     "T000005",
+     "A00001",
+     "15.99",
+     "USD",
+     "merchant_on_card_types"
+    ],
+    [
+     "T000006",
+     "A00008",
+     "2750.00",
+     "USD",
+     "within_review_limit"
+    ],
+    [
+     "T000008",
+     "A00001",
+     "43.95",
+     "USD",
+     null
+    ],
+    [
+     "T000009",
+     "A00001",
+     "21.91",
+     "USD",
+     null
+    ],
+    [
+     "T000010",
+     "A00006",
+     "4.00",
+     "GBP",
+     null
+    ],
+    [
+     "T000011",
+     "A00001",
+     "200.00",
+     "EUR",
+     "merchant_on_card_types"
+    ],
+    [
+     "T000012",
+     "A00008",
+     "2500.00",
+     "USD",
+     null
+    ]
+   ],
+   "row_count": 10,
+   "inputs": {
+    "transactions": [
+     [
+      "T000001",
+      "A00001",
+      null,
+      "2026-03-02T10:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "800.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000002",
+      null,
+      "M004",
+      "2026-03-03T10:00:00",
+      "purchase",
+      "online",
+      "debit",
+      "60.53",
+      "GBP",
+      "posted"
+     ],
+     [
+      "T000003",
+      "A00001",
+      "M003",
+      "2026-03-04T10:00:00",
+      "purchase",
+      "online",
+      "debit",
+      "27.90",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000004",
+      "A00008",
+      null,
+      "2026-03-05T10:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "3100.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000005",
+      "A00001",
+      null,
+      "2026-03-06T10:00:00",
+      "purchase",
+      "online",
+      "debit",
+      "15.99",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000006",
+      "A00008",
+      null,
+      "2026-03-07T10:00:00",
+      "purchase",
+      "online",
+      "debit",
+      "2750.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000007",
+      "A00006",
+      null,
+      "2026-03-08T10:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "500.00",
+      null,
+      "posted"
+     ],
+     [
+      "T000008",
+      "A00001",
+      "M001",
+      "2026-03-09T10:00:00",
+      "refund",
+      "card_present",
+      "credit",
+      "43.95",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000009",
+      "A00001",
+      null,
+      "2026-03-10T10:00:00",
+      "interest",
+      "system",
+      "credit",
+      "21.91",
+      "USD",
+      "pending"
+     ],
+     [
+      "T000010",
+      "A00006",
+      null,
+      "2026-03-11T10:00:00",
+      "fee",
+      "system",
+      "debit",
+      "4.00",
+      "GBP",
+      "declined"
+     ],
+     [
+      "T000011",
+      "A00001",
+      null,
+      "2026-03-12T10:00:00",
+      null,
+      "atm",
+      "debit",
+      "200.00",
+      "EUR",
+      "posted"
+     ],
+     [
+      "T000012",
+      "A00008",
+      null,
+      "2026-03-13T10:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "2500.00",
+      "USD",
+      "posted"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice transactions feed",
+  "the lesson transactions",
+  "quarantine rules failing for exactly their limit",
+  "bad amounts just over their limit, while under the other rules' limit",
+  "missing amounts, currencies and transaction types within the limits",
+  "one transaction with a status that isn't allowed",
+  "one transaction with no status",
+  "an empty feed"
+ ]
+}

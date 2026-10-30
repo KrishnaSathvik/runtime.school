@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0148",
+  "slug": "catalogue-against-sales",
+  "lesson": "PS-L030",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Catalogue against sales",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "Merchandising wants every order line next to its product, and every product that never sold. Write `solve(order_items, products)` so it returns both, with nothing counted twice.",
+  "rules": [
+    "Each row of `order_items` appears exactly as many times as it does in `order_items`, with its product's `name`, or a missing `name` if the product isn't listed.",
+    "Each listed product that no line matches appears once, with a missing `order_id` and `line_no`.",
+    "The product list sometimes repeats a product row; repeated rows are exact copies. A missing `product_id` never matches anything, in either table.",
+    "Return `product_id`, `order_id`, `line_no` and `name`."
+  ],
+  "hints": [
+    "Rows from both sides must survive, matched or not: that's a `full` join on `product_id`.",
+    "A repeated product row would match every line of that product twice. Remove the copies from `products` before the join.",
+    "Don't remove duplicates after the join: two identical lines in `order_items` must both stay. A join never matches a missing key, so those rows come through unmatched on their own."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "order_items",
+    "products"
+  ],
+  "starter": "def solve(order_items, products):\n    # Every line with its product name, plus products that never sold.\n    return order_items.select(\"product_id\", \"order_id\", \"line_no\")\n",
+  "output": {
+    "columns": [
+      "product_id",
+      "order_id",
+      "line_no",
+      "name"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Remove the product copies first, then keep both sides: `order_items.join(products.dropDuplicates(), on=\"product_id\", how=\"full\").select(\"product_id\", \"order_id\", \"line_no\", \"name\")`. Joining with `on=\"product_id\"` gives one key column filled from whichever side has it, so an unsold product keeps its id. A missing `product_id` never equals anything in a join, so such a line comes out with no name and such a product comes out with no line, each once. A `left` join loses the unsold products, and `distinct()` after the join would merge two genuinely identical lines."
+}

@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0438",
+  "slug": "fill-in-missing-runtimes",
+  "lesson": "PS-L088",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Fill in missing runtimes",
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0"
+  },
+  "prompt": "Some films arrive without a runtime, and a few without a year. Write `solve(movies)` so every film gets a runtime: the real one when it's known, otherwise a model's estimate from its release year.",
+  "rules": [
+    "Fit a `LinearRegression` with default settings that predicts `runtime_min` from `release_year`, on the films that have both.",
+    "`runtime_filled` is the film's `runtime_min` when it has one. A film with no runtime but a year gets the model's prediction, rounded to the nearest minute.",
+    "A film with neither a runtime nor a year has a NULL `runtime_filled`. Keep every film.",
+    "Return `movie_id`, `runtime_min` and `runtime_filled` (an integer), in that order."
+  ],
+  "hints": [
+    "Train only on complete films: a missing label can't teach the model anything, and a missing feature stops the `VectorAssembler`.",
+    "To score every film, the assembler has to let a missing year through: `VectorAssembler(..., handleInvalid=\"keep\")` gives those films a NaN prediction instead of an error.",
+    "`F.when(...).when(...)` picks the known runtime first, then the rounded prediction, and leaves the rest NULL. `F.round(...)` gives a double, so cast it to `\"int\"`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "movies"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.ml import Pipeline\nfrom pyspark.ml.feature import VectorAssembler\nfrom pyspark.ml.regression import LinearRegression\n\n\ndef solve(movies):\n    # Fit year -> runtime on complete films, then fill only the missing runtimes.\n    return movies\n",
+  "output": {
+    "columns": [
+      "movie_id",
+      "runtime_min",
+      "runtime_filled"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Three kinds of film need three answers, and the model only serves one of them. Fit on the complete films: a missing runtime can't be a label, and a missing year stops the `VectorAssembler` with an error. Then score every film with an assembler set to `handleInvalid=\"keep\"`, so a film without a year passes through with a NaN prediction instead of failing the job. `F.when(runtime known, runtime).when(year known, F.round(\"prediction\").cast(\"int\"))` keeps real runtimes, fills the ones the model can estimate, and leaves the rest NULL. In the sample, M10 (2022) gets 105 and M11 (2026, newer than any known film) gets 91: a line keeps going past the data, so treat estimates far outside it with care. Filtering out films with no year instead would lose M09, whose runtime is known, and M12. Casting the prediction straight to `int` cuts 104.8 down to 104 instead of rounding it."
+}

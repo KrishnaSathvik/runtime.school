@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0043",
+  "slug": "attempts-for-the-analytics-feed",
+  "lesson": "PS-L009",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Attempts for the analytics feed",
+  "dataset": {
+    "id": "PS-D11",
+    "version": "1.0.0"
+  },
+  "prompt": "The analytics feed wants each attempt in its own units: time in seconds, how many tries came before it, and the score as a fraction. Write `solve(attempts)` so it returns those columns.",
+  "rules": [
+    "Return four columns, in this order: `attempt_id`, `seconds`, `earlier_tries` and `score_fraction`.",
+    "`seconds` is `minutes_spent` times 60 and stays a whole number (int). `earlier_tries` is `attempt_no` minus 1, also an int: 0 for a first try.",
+    "`score_fraction` is `score_pct / 100`, so 72.5 becomes 0.725 and 100 becomes 1.0.",
+    "Each new value is missing when the value it comes from is missing. Keep every attempt, duplicates included."
+  ],
+  "hints": [
+    "Each new column is a calculation on one column, wrapped in brackets and named with `.alias(...)`.",
+    "A whole-number column times a whole number stays whole. Multiplying by `60.0` would make it a `double`.",
+    "You don't need any special code for missing values: a calculation with a missing value is missing by itself."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "attempts"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(attempts):\n    # Return attempt_id, seconds, earlier_tries and score_fraction.\n    return attempts\n",
+  "output": {
+    "columns": [
+      "attempt_id",
+      "seconds",
+      "earlier_tries",
+      "score_fraction"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Three calculations in one `select`, each in brackets and named: `(F.col(\"minutes_spent\") * 60).alias(\"seconds\")`, `(F.col(\"attempt_no\") - 1).alias(\"earlier_tries\")` and `(F.col(\"score_pct\") / 100).alias(\"score_fraction\")`. Whole numbers times or minus whole numbers stay `int`, while `/` always gives a `double`. Missing values need no special care: an abandoned attempt has no score, so its fraction is missing, and the same goes for missing minutes or attempt numbers. The edges to watch are the types (`* 60.0` gives a `double`) and code that pulls rows into Python to do the arithmetic: `None * 60` is an error there."
+}

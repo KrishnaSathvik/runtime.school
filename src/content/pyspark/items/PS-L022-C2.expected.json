@@ -1,0 +1,39 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "transaction_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "problem",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "T000002",
+     "no account"
+    ]
+   ],
+   "row_count": 1
+  }
+ },
+ "hidden": [
+  "the full practice transactions table",
+  "transactions that break more than one rule",
+  "every transaction type, with right and wrong directions",
+  "transactions with missing values in different columns",
+  "a feed where every transaction is valid",
+  "an empty transactions table"
+ ]
+}

@@ -1,0 +1,103 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "encounter_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "patient_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "encounter_class",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "start_time",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "discharge_disposition",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "ENC000004",
+     "PAT00002",
+     "ambulatory",
+     "2026-01-13T13:45:00",
+     "home"
+    ],
+    [
+     "ENC000005",
+     "PAT00005",
+     "ambulatory",
+     "2026-01-16T10:30:00",
+     "home"
+    ],
+    [
+     "ENC000006",
+     "PAT00006",
+     "inpatient",
+     "2026-01-17T11:45:00",
+     "left_against_advice"
+    ],
+    [
+     "ENC000007",
+     "PAT00001",
+     "telehealth",
+     "2026-01-30T14:30:00",
+     null
+    ],
+    [
+     "ENC000008",
+     "PAT00004",
+     "telehealth",
+     "2026-01-31T10:45:00",
+     null
+    ],
+    [
+     "ENC000001",
+     "PAT00003",
+     "emergency",
+     "2025-12-03T03:00:00",
+     null
+    ],
+    [
+     "ENC000002",
+     "PAT00002",
+     "wellness",
+     "2025-12-18T11:15:00",
+     null
+    ],
+    [
+     "ENC000003",
+     "PAT00001",
+     "ambulatory",
+     "2025-12-20T09:00:00",
+     null
+    ]
+   ],
+   "row_count": 8
+  }
+ },
+ "hidden": [
+  "the full practice encounters",
+  "only visits from before the column was added",
+  "only visits from after the column was added"
+ ]
+}

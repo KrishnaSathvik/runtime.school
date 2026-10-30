@@ -1,0 +1,26 @@
+{
+  "id": "PS-L076-C2",
+  "slug": "route-transactions-to-quarantine",
+  "lesson": "PS-L076",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Route transactions to quarantine",
+  "dataset": { "id": "PS-D02", "version": "1.0.0" },
+  "prompt": "The gate allows quarantine, so the load is split. Write `solve(transactions)` so it returns `transaction_id`, `route` and `reason` for every transaction: `route` is `quarantine` with the first rule it breaks as `reason`, or `load` with no reason.",
+  "rules": [
+    "The contract requires a value in `account_id`, `amount`, `currency` and `direction`, checked in that order. A missing one gives the reason `missing_` and the column's name, for example `missing_amount`. `merchant_id` may be empty.",
+    "After those: `bad_amount` when `amount` is not more than 0, then `unknown_currency` when `currency` is not USD, EUR or GBP.",
+    "Every transaction appears once, in these three columns."
+  ],
+  "hints": [
+    "Keep the rules as a list of `(reason, condition)` pairs in order, each condition true for a good transaction. The required columns can be added to it in a loop.",
+    "Start `reason = F.when(...)` with the first rule and add `.when(...)` for each rule after it: the first broken rule wins, and a row that breaks none gets NULL.",
+    "`route` follows from `reason`: NULL means `load`."
+  ],
+  "entry": "solve",
+  "inputs": ["transactions"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(transactions):\n    # Return transaction_id, route and reason for every transaction.\n    return transactions.select(\"transaction_id\")\n",
+  "output": { "columns": ["transaction_id", "route", "reason"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "sample": true }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

@@ -1,0 +1,58 @@
+{
+  "id": "PS-Q0306",
+  "slug": "convert-pounds-to-dollars",
+  "lesson": "PS-L062",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Convert pounds to dollars",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "Finance wants the transactions table in one currency. Write `convert(path)` so it changes the Delta table in place: every transaction in pounds (`GBP`) becomes dollars, at 1.25 dollars to the pound.",
+  "rules": [
+    "A `GBP` transaction gets `amount` times 1.25 and `currency` `USD`. `amount` stays a decimal with two places.",
+    "Every other transaction is unchanged, including those with no currency.",
+    "Change the table itself; `solve` reads it back. Don't change `build_table` or `solve`."
+  ],
+  "hints": [
+    "`DeltaTable.forPath(spark, path).update(condition, set)` changes the rows that match the condition.",
+    "`set` maps each column to a SQL expression. Text needs its own quotes: `\"'USD'\"`.",
+    "Change both columns in one `update`. If the currency changes first, which rows still match `currency = 'GBP'`?"
+  ],
+  "explanation": "One call does it: `table.update(\"currency = 'GBP'\", {\"amount\": \"amount * 1.25\", \"currency\": \"'USD'\"})`. Every expression in `set` reads the row as it was before the update, so the amount is converted and the currency changed together, in one commit. Splitting it into two updates with the currency first leaves no `GBP` rows for the second one to find. Delta stores the result in the column's type, so `amount * 1.25` is rounded to cents, halves going up. A missing currency doesn't equal `GBP`, so those rows are left alone.",
+  "entry": "solve",
+  "inputs": [
+    "transactions"
+  ],
+  "starter": "import shutil\n\nfrom delta.tables import DeltaTable\n\n\ndef build_table(transactions, path):\n    # The morning load, on a fresh table. Don't change this.\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty folder on every run\n    transactions.write.format(\"delta\").save(path)\n\n\ndef convert(path):\n    # Turn every pound transaction into dollars.\n    pass\n\n\ndef solve(transactions):\n    path = \"/tmp/bank/transactions\"\n    build_table(transactions, path)\n    convert(path)\n    return spark.read.format(\"delta\").load(path)\n",
+  "output": {
+    "columns": [
+      "transaction_id",
+      "account_id",
+      "merchant_id",
+      "posted_at",
+      "txn_type",
+      "channel",
+      "direction",
+      "amount",
+      "currency",
+      "status"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

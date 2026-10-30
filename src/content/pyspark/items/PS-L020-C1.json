@@ -1,0 +1,27 @@
+{
+  "id": "PS-L020-C1",
+  "slug": "remove-repeated-order-rows",
+  "lesson": "PS-L020",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Remove repeated order rows",
+  "dataset": { "id": "PS-D01", "version": "1.1.0" },
+  "prompt": "The nightly export sometimes delivers the same order row more than once, which doubles revenue on the dashboard. Write `solve(orders)` so it returns the orders with each exact copy removed.",
+  "rules": [
+    "Two rows are copies only when every column matches. Keep one of them.",
+    "Rows for the same order that differ in any value, even only the status or the case of a word, are both kept.",
+    "Two missing values in the same column count as matching.",
+    "Return every column of `orders`, unchanged."
+  ],
+  "hints": [
+    "You don't need to pick key columns here.",
+    "`distinct()` and `dropDuplicates()` with no arguments compare whole rows.",
+    "`dropDuplicates([\"order_id\"])` would merge rows that differ, which isn't asked for."
+  ],
+  "entry": "solve",
+  "inputs": ["orders"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(orders):\n    # Return the orders with exact duplicate rows removed.\n    return orders\n",
+  "output": { "columns": ["order_id", "customer_id", "order_date", "status", "channel", "total"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

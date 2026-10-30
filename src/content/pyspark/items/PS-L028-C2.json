@@ -1,0 +1,26 @@
+{
+  "id": "PS-L028-C2",
+  "slug": "deliveries-inside-the-window",
+  "lesson": "PS-L028",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Deliveries inside the window",
+  "dataset": { "id": "PS-D08", "version": "1.0.0" },
+  "prompt": "Customers choose a delivery window, and the carrier is paid a bonus for each delivery inside it. Write `solve(shipment_events, deliveries)` so it returns the `delivered` events whose `event_time` falls inside their shipment's window.",
+  "rules": [
+    "Only events with `event_type` exactly `delivered` count. Match them to the delivery with the same `shipment_id`.",
+    "Inside means from `window_start` to `window_end`, both included. Use the times, not the `status` column.",
+    "Return `event_id`, `shipment_id`, `event_time`, `window_start` and `window_end`. Keep duplicate event rows."
+  ],
+  "hints": [
+    "Filter the events to `delivered` first.",
+    "The join condition has two parts joined with `&`: the same `shipment_id`, and `event_time` between the window's start and end.",
+    "Both tables have `shipment_id`, so use aliases or `df[\"shipment_id\"]` to say which one you select."
+  ],
+  "entry": "solve",
+  "inputs": ["shipment_events", "deliveries"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(shipment_events, deliveries):\n    # Return delivered events that fall inside their delivery window.\n    return shipment_events.select(\"event_id\", \"shipment_id\", \"event_time\")\n",
+  "output": { "columns": ["event_id", "shipment_id", "event_time", "window_start", "window_end"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

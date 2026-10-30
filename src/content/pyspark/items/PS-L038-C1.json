@@ -1,0 +1,26 @@
+{
+  "id": "PS-L038-C1",
+  "slug": "care-summary-struct",
+  "lesson": "PS-L038",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Care summary struct",
+  "dataset": { "id": "PS-D04", "version": "1.0.0" },
+  "prompt": "A partner system expects each visit with its care details packed into one nested column. Write `solve(encounters)` to build it.",
+  "rules": [
+    "Return `encounter_id`, `patient_id` and `care`, in that order.",
+    "`care` is a struct with three fields in this order: `provider` (from `provider_id`), `class` (from `encounter_class`) and `diagnoses`.",
+    "`diagnoses` is itself a struct with `count`, the number of entries in `diagnosis_codes`, and `codes`, the `diagnosis_codes` list unchanged."
+  ],
+  "hints": [
+    "Build `care` with `F.struct(...)` and give each field its name with `alias` inside.",
+    "`diagnoses` is an `F.struct(...)` inside the outer one.",
+    "`F.size(\"diagnosis_codes\").alias(\"count\")` and `F.col(\"diagnosis_codes\").alias(\"codes\")`; finish with `.alias(\"care\")` on the outer struct."
+  ],
+  "entry": "solve",
+  "inputs": ["encounters"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(encounters):\n    # Each visit with a nested care struct.\n    return encounters\n",
+  "output": { "columns": ["encounter_id", "patient_id", "care"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

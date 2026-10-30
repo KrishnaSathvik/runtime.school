@@ -1,0 +1,50 @@
+{
+  "id": "PS-Q0178",
+  "slug": "longest-finished-run",
+  "lesson": "PS-L036",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Longest run of finished films",
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0"
+  },
+  "prompt": "A member is on a roll when they finish film after film. Write `solve(watch_sessions)` so it returns each member's longest run of back-to-back completed plays.",
+  "rules": [
+    "Go through each `user_id`'s plays in `started_at` order (`watch_id` settles a tie).",
+    "A run is a stretch of consecutive plays with `completed` true. A single play that wasn't completed ends the run, however much time passes.",
+    "Return `user_id` and `longest_run`, the number of plays in the member's longest run. Leave out members who never completed a play."
+  ],
+  "hints": [
+    "Number the stretches first: mark each play whose `completed` differs from the previous play's, and take a running sum of the marks.",
+    "A member's first play has no previous one, so give `lag` a default. Think about which default makes a first completed play start a stretch.",
+    "Keep the completed plays, count them per member and stretch number, then take the largest count per member."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "watch_sessions"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(watch_sessions):\n    # One row per member who completed a play: their longest run of completed plays.\n    return watch_sessions\n",
+  "output": {
+    "columns": [
+      "user_id",
+      "longest_run"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Label the stretches of equal `completed` values, then measure the completed ones. With `w = Window.partitionBy(\"user_id\").orderBy(\"started_at\", \"watch_id\")`, mark a change with `(F.col(\"completed\") != F.lag(\"completed\", 1, False).over(w)).cast(\"int\")` and number the stretches with a running `F.sum` of the marks. Then `filter(F.col(\"completed\"))`, `groupBy(\"user_id\", \"run_no\").count()`, and take `F.max` of the counts per member; members with no completed play have nothing left and drop out. Counting all completed plays ignores the breaks, and without a `lag` default a member's first stretch has no number and can be split. Ordering by `watch_id` alone follows the ids instead of time."
+}

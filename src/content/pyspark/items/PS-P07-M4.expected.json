@@ -1,0 +1,872 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "example": {
+   "schema": [
+    {
+     "name": "claim_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "encounter_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "patient_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "provider_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "specialty",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "payer",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "encounter_class",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "primary_diagnosis",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "temperature_c",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "discharge_disposition",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "service_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "billed_amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "allowed_amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "paid_amount",
+     "type": "decimal(12,2)",
+     "nullable": false
+    },
+    {
+     "name": "claim_status",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "CLM900001",
+     "ENC900001",
+     "PAT90001",
+     "PRV0001",
+     "family_medicine",
+     "Bluebird Health",
+     "ambulatory",
+     "J06.9",
+     37.5,
+     "not_collected",
+     "2025-11-03",
+     "200.00",
+     "150.00",
+     "150.00",
+     "paid"
+    ],
+    [
+     "CLM900012",
+     "ENC900002",
+     "PAT90002",
+     "PRV0002",
+     "cardiology",
+     "Summit Senior Advantage",
+     "ambulatory",
+     "I10",
+     36.8,
+     "home",
+     "2026-01-05",
+     "480.00",
+     null,
+     "0.00",
+     "submitted"
+    ],
+    [
+     "CLM900003",
+     "ENC900003",
+     "PAT90003",
+     "PRV0003",
+     "pediatrics",
+     "Cedar State Medicaid",
+     "telehealth",
+     "F41.1",
+     null,
+     "not_applicable",
+     "2026-02-01",
+     "95.00",
+     "0.00",
+     "0.00",
+     "denied"
+    ],
+    [
+     "CLM900009",
+     "ENC900009",
+     "PAT90009",
+     "PRV0004",
+     "emergency_medicine",
+     "Bluebird Health",
+     "emergency",
+     "S52.501A",
+     38.4,
+     "home_with_care",
+     "2026-04-15",
+     "900.00",
+     "640.00",
+     "0.00",
+     "approved"
+    ],
+    [
+     "CLM900010",
+     "ENC900010",
+     "PAT90010",
+     "PRV0002",
+     "cardiology",
+     "Summit Senior Advantage",
+     null,
+     null,
+     null,
+     null,
+     "2026-05-06",
+     "310.00",
+     "250.00",
+     "250.00",
+     "paid"
+    ]
+   ],
+   "row_count": 5,
+   "inputs": {
+    "claims": [
+     [
+      "CLM900001",
+      "ENC900001",
+      "PAT90001",
+      "PRV0001",
+      "Bluebird Health",
+      "2025-11-03",
+      "2025-11-10",
+      "200.00",
+      "150.00",
+      "150.00",
+      "paid",
+      null
+     ],
+     [
+      "CLM900001",
+      "ENC900001",
+      "PAT90001",
+      "PRV0001",
+      "Bluebird Health",
+      "2025-11-03",
+      "2025-11-10",
+      "200.00",
+      "150.00",
+      "150.00",
+      "paid",
+      null
+     ],
+     [
+      "CLM900002",
+      "ENC900002",
+      "PAT90002",
+      "PRV0002",
+      "Summit Senior Advantage",
+      "2026-01-05",
+      "2026-01-20",
+      "480.00",
+      null,
+      null,
+      "submitted",
+      null
+     ],
+     [
+      "CLM900012",
+      "ENC900002",
+      "PAT90002",
+      "PRV0002",
+      "Summit Senior Advantage",
+      "2026-01-05",
+      "2026-02-15",
+      "480.00",
+      null,
+      null,
+      "submitted",
+      null
+     ],
+     [
+      "CLM900003",
+      "ENC900003",
+      "PAT90003",
+      null,
+      "Cedar State Medicaid",
+      "2026-02-01",
+      "2026-02-03",
+      "95.00",
+      "0.00",
+      "0.00",
+      "denied",
+      "not_covered"
+     ],
+     [
+      "CLM900004",
+      "ENC900004",
+      "PAT90004",
+      "PRV9123",
+      "Bluebird Health",
+      "2026-02-11",
+      "2026-02-20",
+      "130.00",
+      null,
+      null,
+      "submitted",
+      null
+     ],
+     [
+      "CLM900005",
+      "ENC900005",
+      "PAT90005",
+      "PRV9001",
+      "Bluebird Health",
+      "2026-03-10",
+      "2026-03-02",
+      "75.00",
+      null,
+      null,
+      "submitted",
+      null
+     ],
+     [
+      "CLM900006",
+      "ENC900006",
+      null,
+      "PRV0001",
+      "Cedar State Medicaid",
+      "2026-03-12",
+      null,
+      "60.00",
+      null,
+      null,
+      "submitted",
+      null
+     ],
+     [
+      "CLM900007",
+      "ENC900007",
+      "PAT90007",
+      "PRV0002",
+      "Summit Senior Advantage",
+      "2026-03-20",
+      "2026-03-28",
+      "100.00",
+      "120.00",
+      null,
+      "approved",
+      null
+     ],
+     [
+      "CLM900008",
+      "ENC900008",
+      "PAT90008",
+      "PRV0001",
+      "Bluebird Health",
+      "2026-04-02",
+      "2026-04-09",
+      "88.00",
+      null,
+      null,
+      "pending",
+      null
+     ],
+     [
+      "CLM900009",
+      "ENC900009",
+      "PAT90009",
+      "PRV0004",
+      "Bluebird Health",
+      "2026-04-15",
+      "2026-04-29",
+      "900.00",
+      "640.00",
+      null,
+      "approved",
+      null
+     ],
+     [
+      "CLM900010",
+      "ENC900010",
+      "PAT90010",
+      "PRV0002",
+      "Summit Senior Advantage",
+      "2026-05-06",
+      "2026-05-06",
+      "310.00",
+      "250.00",
+      "250.00",
+      "paid",
+      null
+     ]
+    ],
+    "encounters": [
+     [
+      "ENC900001",
+      "PAT90001",
+      "PRV0001",
+      "ambulatory",
+      "2025-11-03T09:00:00",
+      "2025-11-03T09:40:00",
+      "Visit",
+      "{\"heart_rate\":72,\"systolic\":120,\"diastolic\":78,\"temperature_c\":99.5}",
+      "[\"J06.9\"]",
+      null
+     ],
+     [
+      "ENC900002",
+      "PAT90002",
+      "PRV0002",
+      "ambulatory",
+      "2026-01-05T10:00:00",
+      "2026-01-05T10:30:00",
+      "Visit",
+      "{\"heart_rate\":72,\"systolic\":120,\"diastolic\":78,\"temperature_c\":36.8}",
+      "[\"I10\",\"E78.5\"]",
+      "home"
+     ],
+     [
+      "ENC900003",
+      "PAT90003",
+      "PRV0003",
+      "telehealth",
+      "2026-02-01T15:00:00",
+      "2026-02-01T15:20:00",
+      "Visit",
+      null,
+      "[\"F41.1\"]",
+      null
+     ],
+     [
+      "ENC900004",
+      "PAT90004",
+      "PRV0001",
+      "wellness",
+      "2026-02-11T08:30:00",
+      "2026-02-11T09:00:00",
+      "Visit",
+      "{\"heart_rate\":72,\"systolic\":120,\"diastolic\":78,\"temperature_c\":36.6}",
+      "[\"Z00.00\"]",
+      null
+     ],
+     [
+      "ENC900009",
+      "PAT90009",
+      "PRV0004",
+      "emergency",
+      "2026-04-15T22:10:00",
+      "2026-04-16T03:00:00",
+      "Visit",
+      "{\"heart_rate\":72,\"systolic\":120,\"diastolic\":78,\"temperature_c\":38.4}",
+      "[\"S52.501A\",\"W19\"]",
+      "home_with_care"
+     ]
+    ],
+    "providers": [
+     [
+      "PRV0001",
+      "Dr. Lena Okafor",
+      "family_medicine",
+      "Northfield Medical Group",
+      "Millbrook",
+      "true"
+     ],
+     [
+      "PRV0002",
+      "Dr. Tomas Varga",
+      "cardiology",
+      "Riverbend Heart Center",
+      "Riverton",
+      "true"
+     ],
+     [
+      "PRV0003",
+      "Dr. Priya Lund",
+      "pediatrics",
+      "Northfield Medical Group",
+      "Millbrook",
+      "false"
+     ],
+     [
+      "PRV0004",
+      "Dr. Owen Hale",
+      "emergency_medicine",
+      "Cedar Falls General",
+      "Cedar Falls",
+      "true"
+     ]
+    ]
+   }
+  },
+  "project": {
+   "schema": [
+    {
+     "name": "claim_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "encounter_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "patient_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "provider_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "specialty",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "payer",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "encounter_class",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "primary_diagnosis",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "temperature_c",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "discharge_disposition",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "service_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "billed_amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "allowed_amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "paid_amount",
+     "type": "decimal(12,2)",
+     "nullable": false
+    },
+    {
+     "name": "claim_status",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "CLM000001",
+     "ENC000001",
+     "PAT00136",
+     "PRV0020",
+     "orthopedics",
+     "Bluebird Health",
+     "inpatient",
+     "F41.1",
+     36.9,
+     "not_collected",
+     "2025-07-01",
+     "18140.74",
+     "0.00",
+     "0.00",
+     "denied"
+    ],
+    [
+     "CLM000002",
+     "ENC000003",
+     "PAT00508",
+     "PRV0032",
+     "family_medicine",
+     "Bluebird Health",
+     "telehealth",
+     "K21.9",
+     null,
+     "not_collected",
+     "2025-07-01",
+     "141.92",
+     "106.52",
+     "0.00",
+     "appealed"
+    ],
+    [
+     "CLM000003",
+     "ENC000004",
+     "PAT00010",
+     "PRV0019",
+     "internal_medicine",
+     "Bluebird Health",
+     "ambulatory",
+     "E78.5",
+     37.0,
+     "not_collected",
+     "2025-07-01",
+     "273.62",
+     "233.99",
+     "233.99",
+     "paid"
+    ],
+    [
+     "CLM000004",
+     "ENC000005",
+     "PAT00557",
+     "PRV0008",
+     "orthopedics",
+     "Cedar State Medicaid",
+     "wellness",
+     "Z00.00",
+     36.3,
+     "not_collected",
+     "2025-07-01",
+     "177.01",
+     null,
+     "0.00",
+     "submitted"
+    ],
+    [
+     "CLM000005",
+     "ENC000006",
+     "PAT00335",
+     "PRV0007",
+     "orthopedics",
+     "Cedar State Medicaid",
+     "telehealth",
+     "E11.9",
+     null,
+     "not_collected",
+     "2025-07-01",
+     "156.46",
+     "117.21",
+     "117.21",
+     "paid"
+    ],
+    [
+     "CLM000006",
+     "ENC000007",
+     "PAT00154",
+     "PRV0027",
+     "internal_medicine",
+     "Bluebird Health",
+     "ambulatory",
+     "S93.401A",
+     36.9,
+     "not_collected",
+     "2025-07-01",
+     "230.16",
+     "103.89",
+     "103.89",
+     "paid"
+    ],
+    [
+     "CLM000007",
+     "ENC000008",
+     "PAT00560",
+     "PRV0011",
+     "cardiology",
+     "Bluebird Health",
+     "inpatient",
+     "F41.1",
+     36.9,
+     "not_collected",
+     "2025-07-01",
+     "22953.41",
+     "11194.51",
+     "0.00",
+     "approved"
+    ],
+    [
+     "CLM000008",
+     "ENC000010",
+     "PAT00367",
+     "PRV0001",
+     "family_medicine",
+     "Cedar State Medicaid",
+     "ambulatory",
+     "N39.0",
+     38.1,
+     "not_collected",
+     "2025-07-02",
+     "417.93",
+     null,
+     "0.00",
+     "submitted"
+    ],
+    [
+     "CLM000009",
+     "ENC000011",
+     "PAT00483",
+     "PRV0035",
+     "orthopedics",
+     "Bluebird Health",
+     "ambulatory",
+     "I10",
+     37.0,
+     "not_collected",
+     "2025-07-02",
+     "313.97",
+     "257.80",
+     "0.00",
+     "approved"
+    ],
+    [
+     "CLM000011",
+     "ENC000014",
+     "PAT00638",
+     "PRV0012",
+     "cardiology",
+     "Bluebird Health",
+     "wellness",
+     "Z00.00",
+     37.3,
+     "not_collected",
+     "2025-07-02",
+     "155.12",
+     null,
+     "0.00",
+     "submitted"
+    ],
+    [
+     "CLM000012",
+     "ENC000015",
+     "PAT00251",
+     "PRV0003",
+     "pediatrics",
+     "Bluebird Health",
+     "telehealth",
+     "R51.9",
+     null,
+     "not_collected",
+     "2025-07-02",
+     "74.61",
+     "38.11",
+     "38.11",
+     "paid"
+    ],
+    [
+     "CLM000013",
+     "ENC000017",
+     "PAT00164",
+     "PRV0033",
+     "cardiology",
+     "Bluebird Health",
+     "ambulatory",
+     "I10",
+     36.7,
+     "not_collected",
+     "2025-07-02",
+     "152.64",
+     "83.73",
+     "83.73",
+     "paid"
+    ],
+    [
+     "CLM000014",
+     "ENC000018",
+     "PAT00039",
+     "PRV0009",
+     "cardiology",
+     "Cedar State Medicaid",
+     "ambulatory",
+     "N39.0",
+     36.9,
+     "not_collected",
+     "2025-07-02",
+     "276.07",
+     "195.24",
+     "195.24",
+     "paid"
+    ],
+    [
+     "CLM000015",
+     "ENC000019",
+     "PAT00644",
+     "PRV0004",
+     "emergency_medicine",
+     "Bluebird Health",
+     "emergency",
+     "J45.909",
+     36.2,
+     "not_collected",
+     "2025-07-03",
+     "3213.82",
+     "2303.39",
+     "0.00",
+     "approved"
+    ],
+    [
+     "CLM000016",
+     "ENC000020",
+     "PAT00621",
+     "PRV0028",
+     "family_medicine",
+     "Bluebird Health",
+     "telehealth",
+     "M54.5",
+     null,
+     "not_collected",
+     "2025-07-03",
+     "101.15",
+     "47.71",
+     "47.71",
+     "paid"
+    ],
+    [
+     "CLM000017",
+     "ENC000021",
+     "PAT00329",
+     "PRV0001",
+     "family_medicine",
+     "Summit Senior Advantage",
+     "telehealth",
+     "E11.9",
+     null,
+     "not_collected",
+     "2025-07-03",
+     "86.31",
+     "0.00",
+     "0.00",
+     "denied"
+    ],
+    [
+     "CLM000018",
+     "ENC000022",
+     "PAT00363",
+     "PRV0024",
+     "endocrinology",
+     "Summit Senior Advantage",
+     "ambulatory",
+     "I10",
+     36.8,
+     "not_collected",
+     "2025-07-03",
+     "379.23",
+     "233.77",
+     "233.77",
+     "paid"
+    ],
+    [
+     "CLM000019",
+     "ENC000023",
+     "PAT00458",
+     "PRV0030",
+     "pediatrics",
+     "Cedar State Medicaid",
+     "wellness",
+     "Z00.00",
+     37.2,
+     "not_collected",
+     "2025-07-03",
+     "242.77",
+     null,
+     "0.00",
+     "submitted"
+    ],
+    [
+     "CLM000020",
+     "ENC000024",
+     "PAT00181",
+     "PRV0002",
+     "internal_medicine",
+     "Cedar State Medicaid",
+     "ambulatory",
+     "E78.5",
+     36.3,
+     "not_collected",
+     "2025-07-03",
+     "163.49",
+     "0.00",
+     "0.00",
+     "denied"
+    ],
+    [
+     "CLM000021",
+     "ENC000025",
+     "PAT00621",
+     "PRV0035",
+     "orthopedics",
+     "Bluebird Health",
+     "ambulatory",
+     "S93.401A",
+     36.2,
+     "not_collected",
+     "2025-07-03",
+     "382.70",
+     "247.02",
+     "247.02",
+     "paid"
+    ]
+   ],
+   "row_count": 2330
+  }
+ },
+ "hidden": [
+  "the full practice claims, visits and providers",
+  "temperatures at 45 and just above, missing vitals and diagnoses, visits either side of the new column, a claim with no visit, and a visit provider nobody knows",
+  "an empty claims table"
+ ]
+}

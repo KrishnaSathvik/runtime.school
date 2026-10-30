@@ -1,0 +1,75 @@
+{
+ "id": "PS-P02-M5",
+ "slug": "publish-payroll-and-workforce-summary",
+ "project": "PS-P02",
+ "milestone": "PS-P02.m5",
+ "difficulty": "hard",
+ "minutes": 50,
+ "title": "Publish department payroll and the workforce summary",
+ "dataset": {
+  "id": "PS-D03",
+  "version": "1.0.0"
+ },
+ "prompt": "Two outputs go to the people team. `department_payroll` gives each department's headcount and salary bill on `AS_OF`. `workforce_summary` is one row that accounts for every employee, counts each problem the pipeline found, and checks that the payroll adds up.\n\nWrite `department_payroll(employees, departments, salary_history)` from your `salary_rankings`, then `workforce_summary(employees, departments, salary_history)` with the columns of `SUMMARY_SCHEMA`.",
+ "rules": [
+  "`department_payroll` returns `department_id`, `department_name`, `headcount` (people ranked) and `total_salary` (the exact sum of their salaries, as `decimal(12,2)`), one row per department in `salary_rankings`, including one with no name.",
+  "`employees` is the rows in `employees`. `not_employed` counts people not employed on `AS_OF`, `no_salary` people employed then but with no current salary, and `on_payroll` the rows in `salary_rankings`. The last three add up to `employees`.",
+  "`missing_manager` and `invalid_line` count `reporting_lines` rows with `line_status` `missing` and `invalid`.",
+  "`duplicate_salary_rows` is how many rows of `salary_history` are exact copies of an earlier row. `early_salary_rows` counts rows dated before their employee's `hire_date`.",
+  "`departments_paid` is the rows in `department_payroll` and `payroll_total` the sum of its `total_salary`, missing when nobody is paid.",
+  "`payroll_matches` is true when `department_payroll`'s headcounts add up to `on_payroll` and its total equals the sum of `salary` in `salary_rankings` (with nobody paid, both sides count as zero)."
+ ],
+ "hints": [
+  "`department_payroll` is one `groupBy(\"department_id\", \"department_name\").agg(...)` over `salary_rankings(...)`. Grouping keeps a `NULL` name as its own group.",
+  "Keep the number of Spark jobs small. `df.agg(F.count(\"*\"), F.sum(...))` gives several numbers in one job; for the employed count, sum `F.when(<employed>, 1).otherwise(0)`. Single-row results can be put side by side with `crossJoin` and read with one `.first()`.",
+  "`reporting_lines(...).groupBy(\"line_status\").count().collect()` gives every status in one job. For copies, `salary_history.groupBy(*salary_history.columns).count()` has one row per distinct row; each row's `count` minus 1 is its copies.",
+  "A sum over no rows is `None`, so compare with `(value or 0)`. Build the row as a tuple in the schema's order and pass `[row]` to `spark.createDataFrame`."
+ ],
+ "explanation": "Building `department_payroll` from `salary_rankings` means both outputs use the same current salaries and the same people, so their totals can be checked against each other; `payroll_matches` would turn false if a join or filter lost someone, for example a department that isn't in `departments`. The summary accounts for every employee exactly once: not employed on the date, employed but with no valid salary, or on the payroll. It also reports every deliberate problem in the export instead of hiding it: the manager line that forms a loop, repeated history rows (harmless for the latest salary, but they'd double a sum), and the history rows dated before a hire. Each number comes from a real Spark count or sum, so the same input always gives the same row.",
+ "entry": "workforce_summary",
+ "inputs": [
+  "employees",
+  "departments",
+  "salary_history"
+ ],
+ "file": "pipeline.py",
+ "append": "\n\ndef department_payroll(employees, departments, salary_history):\n    # Step 5: headcount and total salary per department, built from salary_rankings(...).\n    return salary_rankings(employees, departments, salary_history)\n\n\nSUMMARY_SCHEMA = (\n    \"employees BIGINT, not_employed BIGINT, no_salary BIGINT, on_payroll BIGINT, missing_manager BIGINT, \"\n    \"invalid_line BIGINT, duplicate_salary_rows BIGINT, early_salary_rows BIGINT, departments_paid BIGINT, \"\n    \"payroll_total DECIMAL(14,2), payroll_matches BOOLEAN\"\n)\n\n\ndef workforce_summary(employees, departments, salary_history):\n    # Step 5: one row of counts and checks for the whole workforce on AS_OF.\n    row = (0, 0, 0, 0, 0, 0, 0, 0, 0, None, False)\n    return spark.createDataFrame([row], SUMMARY_SCHEMA)\n",
+ "prerequisites": [
+  "PS-L031",
+  "PS-L020",
+  "PS-L027",
+  "PS-L007"
+ ],
+ "output": {
+  "columns": [
+   "employees",
+   "not_employed",
+   "no_salary",
+   "on_payroll",
+   "missing_manager",
+   "invalid_line",
+   "duplicate_salary_rows",
+   "early_salary_rows",
+   "departments_paid",
+   "payroll_total",
+   "payroll_matches"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "example",
+   "sample": true
+  },
+  {
+   "id": "project",
+   "edition": "project"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 300,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

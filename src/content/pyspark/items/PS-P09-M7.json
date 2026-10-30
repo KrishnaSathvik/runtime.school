@@ -1,0 +1,66 @@
+{
+ "id": "PS-P09-M7",
+ "slug": "validate-restart-and-replay",
+ "project": "PS-P09",
+ "milestone": "PS-P09.m7",
+ "difficulty": "hard",
+ "minutes": 50,
+ "title": "Validate restart and replay from the checkpoint",
+ "dataset": {
+  "id": "PS-D06",
+  "version": "1.1.0"
+ },
+ "prompt": "Before the stream goes live, the team wants proof that a crash loses nothing and repeats nothing. Write `recovery_evidence(page_views, cart_events, checkout_events)`. It runs the hourly stream three times over the same files: straight through on its own checkpoint, then on a second checkpoint with micro-batch 3 failing (`fail_at=3`), then on that second checkpoint again, which restarts it. It returns facts that compare the runs.",
+ "rules": [
+  "Use `event_stream(...)` and `run_hourly`. The straight run and the failing run each start from an empty checkpoint; the restart reuses the failing run's checkpoint.",
+  "Return `check`, `first_run` (the failing run), `restart` and `one_shot` (the straight run), one row per check: `micro-batches` (reports in each query's `recentProgress` that list state operators: a run with nothing to read still posts one empty report), `input rows` (the sum of their `numInputRows`), `hours published` (rows published) and `events published` (the sum of their `events`).",
+  "`passed` says whether the failing run and the restart together match the straight run. For `micro-batches`: the two runs' batch ids, one list after the other, equal the straight run's. For `hours published`: the rows both runs published, together, equal the straight run's rows, in any order. For the other two checks: the two numbers add up to the straight run's."
+ ],
+ "hints": [
+  "Build the stream once with `event_stream(...)`: the same streaming DataFrame can start several queries. Clear both checkpoints before the first run.",
+  "`run_hourly(stream, ck, fail_at=3)` stops when micro-batch 3 fails. The next `run_hourly(stream, ck)` on the same `ck` starts again at micro-batch 3: the checkpoint holds its plan but no commit.",
+  "Work out the facts in plain Python from each query's `recentProgress` and each `published` dict, then build the result with `spark.createDataFrame(rows, RECOVERY_SCHEMA)`."
+ ],
+ "explanation": "A checkpoint records each micro-batch's plan (which files, which watermark) before it runs and a commit after it finishes. Micro-batch 3 fails before its commit, so the restart finds its plan without a commit and runs it again with the same files and the same watermark, then carries on. Nothing committed runs twice, nothing is skipped, and the dropped late rows and published hours come out exactly as in the straight run. Comparing batch ids, rows read and the published rows themselves turns that into evidence instead of a hope. The straight run needs its own empty checkpoint, or it would have nothing left to read.",
+ "entry": "recovery_evidence",
+ "inputs": [
+  "page_views",
+  "cart_events",
+  "checkout_events"
+ ],
+ "file": "pipeline.py",
+ "append": "\n\nRECOVERY_SCHEMA = \"check STRING, first_run BIGINT, restart BIGINT, one_shot BIGINT, passed BOOLEAN\"\n\n\ndef recovery_evidence(page_views, cart_events, checkout_events):\n    # Step 7: one clean run, then a run that fails at micro-batch 3 and restarts from its checkpoint.\n    rows = []\n    return spark.createDataFrame(rows, RECOVERY_SCHEMA)\n",
+ "prerequisites": [
+  "PS-L072"
+ ],
+ "output": {
+  "columns": [
+   "check",
+   "first_run",
+   "restart",
+   "one_shot",
+   "passed"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "example",
+   "sample": true
+  },
+  {
+   "id": "project",
+   "edition": "project"
+  }
+ ],
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ },
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

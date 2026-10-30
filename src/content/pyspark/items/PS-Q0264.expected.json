@@ -1,0 +1,121 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "reading_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "device_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "battery_v",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "battery_pct",
+     "type": "double",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "R0001",
+     "DEV-001",
+     3.31,
+     25.8
+    ],
+    [
+     "R0004",
+     "DEV-004",
+     3.88,
+     73.3
+    ],
+    [
+     "R0002",
+     "DEV-002",
+     3.92,
+     76.7
+    ],
+    [
+     "R0003",
+     "DEV-003",
+     3.75,
+     62.5
+    ],
+    [
+     "R0007",
+     "DEV-003",
+     3.75,
+     62.5
+    ],
+    [
+     "R0005",
+     "DEV-001",
+     3.3,
+     25.0
+    ],
+    [
+     "R0008",
+     "DEV-004",
+     3.88,
+     73.3
+    ],
+    [
+     "R0011",
+     "DEV-003",
+     3.74,
+     61.7
+    ],
+    [
+     "R0012",
+     "DEV-004",
+     3.87,
+     72.5
+    ],
+    [
+     "R0010",
+     "DEV-002",
+     3.91,
+     75.8
+    ],
+    [
+     "R0009",
+     "DEV-001",
+     3.29,
+     24.2
+    ],
+    [
+     "R0011",
+     "DEV-003",
+     3.74,
+     61.7
+    ],
+    [
+     "R0006",
+     "DEV-002",
+     3.92,
+     76.7
+    ]
+   ],
+   "row_count": 13
+  }
+ },
+ "hidden": [
+  "the full practice readings",
+  "readings with no battery value or no payload",
+  "batteries at both ends of the working range and outside it",
+  "no readings at all"
+ ]
+}

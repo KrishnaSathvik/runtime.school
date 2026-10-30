@@ -1,0 +1,59 @@
+{
+  "id": "PS-Q0261",
+  "slug": "reading-delay-in-seconds",
+  "lesson": "PS-L053",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "How late each reading arrived",
+  "dataset": {
+    "id": "PS-D09",
+    "version": "1.0.0"
+  },
+  "prompt": "The platform team wants to see how long readings take to arrive. Write `solve(sensor_readings)` with `mapInPandas` so it returns `reading_id`, `device_id` and `delay_s`: the seconds between when a sensor measured and when the platform received it.",
+  "rules": [
+    "`delay_s` is `arrival_time` minus `event_time`, in whole seconds, as a long.",
+    "A reading with a missing `event_time` or `arrival_time` has a missing `delay_s`.",
+    "Keep every delivered row: a reading delivered twice gives two rows, each with its own delay.",
+    "Compute `delay_s` with `mapInPandas`: the check looks for it in the plan Spark runs.",
+    "Return `reading_id`, `device_id` and `delay_s`, in that order."
+  ],
+  "hints": [
+    "Inside the function, loop over the batches and `yield` one pandas DataFrame per batch. The schema string is `\"reading_id STRING, device_id STRING, delay_s LONG\"`.",
+    "Timestamps arrive as pandas datetimes, so `pdf[\"arrival_time\"] - pdf[\"event_time\"]` is a Series of time differences.",
+    "`.dt.total_seconds()` turns a time difference into seconds. `.dt.seconds` is only the seconds part of the last day, so a two-day delay would come out wrong."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "sensor_readings"
+  ],
+  "starter": "import pandas as pd\nfrom pyspark.sql import functions as F\n\n\ndef solve(sensor_readings):\n    readings = sensor_readings.select(\"reading_id\", \"device_id\", \"event_time\", \"arrival_time\")\n    # Return reading_id, device_id and delay_s, computed with mapInPandas.\n    return readings\n",
+  "output": {
+    "columns": [
+      "reading_id",
+      "device_id",
+      "delay_s"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "The function gets an iterator of pandas DataFrames, so it loops and yields: `for pdf in batches: pdf[\"delay_s\"] = (pdf[\"arrival_time\"] - pdf[\"event_time\"]).dt.total_seconds(); yield pdf[[\"reading_id\", \"device_id\", \"delay_s\"]]`, with the schema `reading_id STRING, device_id STRING, delay_s LONG`. Spark turns the float seconds into a long because the schema asks for one, and a missing time gives NaN, which comes back as NULL. Each row is worked out on its own, so this is batch-safe: however Spark splits the rows, the answer is the same. Reading R0006 took 37 minutes, and the two copies of R0011 get two different delays, which is why both rows are kept. `.dt.seconds` looks right on the sample but drops whole days from a very late reading. Casting both timestamps to seconds with built-ins would give the same rows; this question checks for `mapInPandas` because that's what it teaches.",
+  "technique": {
+    "name": "mapInPandas",
+    "plan": [
+      "MapInPandas"
+    ]
+  }
+}

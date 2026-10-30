@@ -1,0 +1,47 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D14",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "invoice_lines"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "1 partition\n1 4 1\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "['product_id=PRD-001', 'product_id=PRD-002', 'product_id=PRD-003', 'product_id=PRD-004', 'product_id=PRD-005']\n9 files after repartition(4)\n5 files after repartition(\"product_id\")\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "product_id=PRD-001 1\nproduct_id=PRD-002 2\nproduct_id=PRD-003 2\nproduct_id=PRD-004 1\nproduct_id=PRD-005 1\n7 files\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "5 files in the table\n1 for one product\n2 for quantity of 12 or more\n0 for quantity over 100\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "15 files after three loads\n1 partition, 3 files into 1\n13 files now\n4 partitions, 12 files into 4\n5 files now\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "",
+   "error": {
+    "type": "AnalysisException",
+    "message": "[DELTA_NON_PARTITION_COLUMN_REFERENCE] Predicate references non-partition column 'quantity'. Only the partition columns may be referenced: [product_id]",
+    "line": 10,
+    "condition": "DELTA_NON_PARTITION_COLUMN_REFERENCE"
+   }
+  }
+ }
+}

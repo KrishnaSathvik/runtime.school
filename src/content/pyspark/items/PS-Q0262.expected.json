@@ -1,0 +1,296 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "reading_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "device_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "building",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "floor",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "temperature_c",
+     "type": "double",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "R0001",
+     "DEV-001",
+     "B1",
+     0,
+     3.2
+    ],
+    [
+     "R0004",
+     "DEV-004",
+     "B2",
+     -1,
+     25.1
+    ],
+    [
+     "R0002",
+     "DEV-002",
+     "B2",
+     3,
+     21.4
+    ],
+    [
+     "R0003",
+     "DEV-003",
+     "G1",
+     0,
+     28.7
+    ],
+    [
+     "R0007",
+     "DEV-003",
+     "G1",
+     0,
+     29.6
+    ],
+    [
+     "R0005",
+     "DEV-001",
+     "B1",
+     0,
+     3.4
+    ],
+    [
+     "R0008",
+     "DEV-004",
+     "B2",
+     -1,
+     41.2
+    ],
+    [
+     "R0011",
+     "DEV-003",
+     "G1",
+     0,
+     31.4
+    ],
+    [
+     "R0009",
+     "DEV-001",
+     "B1",
+     0,
+     3.3
+    ],
+    [
+     "R0011",
+     "DEV-003",
+     "G1",
+     0,
+     31.4
+    ],
+    [
+     "R0006",
+     "DEV-002",
+     "B2",
+     3,
+     21.6
+    ],
+    [
+     "R0013",
+     "DEV-005",
+     null,
+     null,
+     19.8
+    ]
+   ],
+   "row_count": 12,
+   "inputs": {
+    "sensor_readings": [
+     [
+      "R0001",
+      "DEV-001",
+      "2026-04-14T09:00:00",
+      "2026-04-14T09:00:21",
+      "0",
+      "{\"temperature_c\":3.2,\"humidity_pct\":null,\"battery_v\":3.31,\"status\":\"low_battery\",\"tags\":[\"indoor\",\"cold_chain\",\"low_battery\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0004",
+      "DEV-004",
+      "2026-04-14T09:00:00",
+      "2026-04-14T09:00:43",
+      "0",
+      "{\"temperature_c\":25.1,\"humidity_pct\":37.9,\"battery_v\":3.88,\"status\":\"ok\",\"tags\":[\"indoor\",\"critical\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0002",
+      "DEV-002",
+      "2026-04-14T09:00:00",
+      "2026-04-14T09:00:44",
+      "0",
+      "{\"temperature_c\":21.4,\"humidity_pct\":41.5,\"battery_v\":3.92,\"status\":\"ok\",\"tags\":[\"indoor\",\"hvac\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0003",
+      "DEV-003",
+      "2026-04-14T09:00:00",
+      "2026-04-14T09:00:46",
+      "0",
+      "{\"temperature_c\":28.7,\"humidity_pct\":79.0,\"battery_v\":3.75,\"status\":\"ok\",\"tags\":[\"outdoor\",\"greenhouse\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0007",
+      "DEV-003",
+      "2026-04-14T09:15:00",
+      "2026-04-14T09:15:07",
+      "1",
+      "{\"temperature_c\":29.6,\"humidity_pct\":82.4,\"battery_v\":3.75,\"status\":\"ok\",\"tags\":[\"outdoor\",\"greenhouse\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0005",
+      "DEV-001",
+      "2026-04-14T09:15:00",
+      "2026-04-14T09:15:14",
+      "1",
+      "{\"temperature_c\":3.4,\"humidity_pct\":null,\"battery_v\":3.3,\"status\":\"low_battery\",\"tags\":[\"indoor\",\"cold_chain\",\"low_battery\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0008",
+      "DEV-004",
+      "2026-04-14T09:15:00",
+      "2026-04-14T09:15:49",
+      "1",
+      "{\"temperature_c\":41.2,\"humidity_pct\":33.0,\"battery_v\":3.88,\"status\":\"ok\",\"tags\":[\"indoor\",\"critical\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0011",
+      "DEV-003",
+      "2026-04-14T09:30:00",
+      "2026-04-14T09:30:15",
+      "2",
+      "{\"temperature_c\":31.4,\"humidity_pct\":80.6,\"battery_v\":3.74,\"status\":\"ok\",\"tags\":[\"outdoor\",\"greenhouse\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0009",
+      "DEV-001",
+      "2026-04-14T09:30:00",
+      "2026-04-14T09:30:48",
+      "2",
+      "{\"temperature_c\":3.3,\"humidity_pct\":null,\"battery_v\":3.29,\"status\":\"low_battery\",\"tags\":[\"indoor\",\"cold_chain\",\"low_battery\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0011",
+      "DEV-003",
+      "2026-04-14T09:30:00",
+      "2026-04-14T09:36:15",
+      "2",
+      "{\"temperature_c\":31.4,\"humidity_pct\":80.6,\"battery_v\":3.74,\"status\":\"ok\",\"tags\":[\"outdoor\",\"greenhouse\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0006",
+      "DEV-002",
+      "2026-04-14T09:15:00",
+      "2026-04-14T09:52:07",
+      "3",
+      "{\"temperature_c\":21.6,\"humidity_pct\":41.2,\"battery_v\":3.92,\"status\":\"ok\",\"tags\":[\"indoor\",\"hvac\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0013",
+      "DEV-005",
+      "2026-04-14T09:30:00",
+      "2026-04-14T09:30:52",
+      "2",
+      "{\"temperature_c\":19.8,\"humidity_pct\":44.1,\"battery_v\":4.05,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ]
+    ],
+    "device_locations": [
+     [
+      "DEV-001",
+      "cold_store",
+      "B1",
+      "0",
+      "52.3801",
+      "4.9012",
+      "2025-06-02",
+      null
+     ],
+     [
+      "DEV-002",
+      "office_north",
+      "B2",
+      "3",
+      "52.3815",
+      "4.904",
+      "2025-06-02",
+      null
+     ],
+     [
+      "DEV-003",
+      "office_north",
+      "B2",
+      "3",
+      "52.3815",
+      "4.904",
+      "2025-09-15",
+      "2026-01-11"
+     ],
+     [
+      "DEV-003",
+      "greenhouse",
+      "G1",
+      "0",
+      "52.3792",
+      "4.8987",
+      "2026-01-12",
+      null
+     ],
+     [
+      "DEV-004",
+      "server_room",
+      "B2",
+      "-1",
+      "52.3814",
+      "4.9043",
+      "2025-11-03",
+      null
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice readings and locations",
+  "sensors moved once and twice, with the current row listed first",
+  "sensors with no current location, an unknown sensor and a reading with no sensor",
+  "no readings at all"
+ ]
+}

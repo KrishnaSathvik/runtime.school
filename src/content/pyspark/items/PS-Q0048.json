@@ -1,0 +1,56 @@
+{
+  "id": "PS-Q0048",
+  "slug": "march-online-orders",
+  "lesson": "PS-L010",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "March online orders",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "The digital team reviews the online orders from March 2026. Write `solve(orders)` so it returns the orders placed through the web or the app in March 2026 that weren't cancelled or refunded.",
+  "rules": [
+    "Online means `channel` is `web` or `app`.",
+    "March runs from 1 March to 31 March 2026, and both days count.",
+    "Any status except `cancelled` and `refunded` stays in. An order with a missing status, channel or date is left out.",
+    "A missing `total` doesn't matter here: such an order still counts.",
+    "Return every column of `orders`, unchanged, duplicates included."
+  ],
+  "hints": [
+    "There are three separate rules: channel, date and status. Write one condition for each and join them with `&`, each in its own parentheses.",
+    "`isin` handles the two channels in one condition, and `~F.col(\"status\").isin(...)` means \"not one of these statuses\".",
+    "March needs two date checks, `>= \"2026-03-01\"` and `<= \"2026-03-31\"`. If you write the channels as two `==` joined with `|`, wrap that pair in its own parentheses, because `&` is worked out before `|`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "orders"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(orders):\n    # Return the March online orders that weren't cancelled or refunded.\n    return orders\n",
+  "output": {
+    "columns": [
+      "order_id",
+      "customer_id",
+      "order_date",
+      "status",
+      "channel",
+      "total"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Each rule becomes one condition, and `&` joins them: `orders.filter(F.col(\"channel\").isin(\"web\", \"app\") & (F.col(\"order_date\") >= \"2026-03-01\") & (F.col(\"order_date\") <= \"2026-03-31\") & ~F.col(\"status\").isin(\"cancelled\", \"refunded\"))`. An order with no status drops out even with `~`: the check on a missing status isn't true, and \"not\" of it isn't true either, so `filter` leaves the row out. A missing total doesn't appear in any condition, so those orders stay. The traps are the month's edges (`< \"2026-03-31\"` loses the last day, `<= \"2026-04-01\"` lets in an April order) and `(web) | (app) & (...)` without grouping, which keeps every web order whatever its date or status."
+}

@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0252",
+  "slug": "customer-mailing-labels",
+  "lesson": "PS-L051",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Mailing labels",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "The mailing house prints customers as surname, then initial: `Ines Okafor` becomes `Okafor, I.`. Write `solve(customers)` so it returns `customer_id` and `label`.",
+  "rules": [
+    "The surname is the last word of `name` and the initial is the first letter of the first word, followed by a full stop: `Ana Maria Ruiz` gives `Ruiz, A.`. Letters keep the case they have.",
+    "Words are separated by one or more spaces; spaces at the start or end don't count.",
+    "A one-word name is printed as it is (`Cher` gives `Cher`). A missing name, or one made only of spaces, gives a missing label.",
+    "Return `customer_id` and `label`, both text, in that order. Keep every customer."
+  ],
+  "hints": [
+    "This is easiest as a Python function: `words = name.split()`, then pick `words[-1]` and `words[0][0]`.",
+    "Handle the short cases before building the label: `None`, no words at all, and a single word.",
+    "Wrap it with `@F.udf(\"string\")` and use it in `select` with `alias(\"label\")`."
+  ],
+  "explanation": "A UDF reads naturally here: return `None` for a missing name or one with no words, the word itself when there's only one, and otherwise `f\"{words[-1]}, {words[0][0]}.\"`. `split()` without an argument ignores extra spaces; `split(\" \")` keeps empty strings, so `words[0]` can be `\"\"` and the job stops. Taking the second word as the surname breaks on three-word names, and returning an empty string for a blank name isn't the same as a missing label.",
+  "entry": "solve",
+  "inputs": [
+    "customers"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(customers):\n    # Return customer_id and the mailing label.\n    return customers\n",
+  "output": {
+    "columns": [
+      "customer_id",
+      "label"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

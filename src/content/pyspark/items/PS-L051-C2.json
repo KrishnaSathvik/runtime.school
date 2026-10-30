@@ -1,0 +1,48 @@
+{
+  "id": "PS-L051-C2",
+  "slug": "price-bands-without-a-udf",
+  "lesson": "PS-L051",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Price bands without a UDF",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "The starter labels products with a UDF. It works on the sample but stops the job on products that have no price yet, and the team would rather not run Python for this anyway. Rewrite `solve(products)` so it returns `product_id`, `name` and `price_band` by the rules below.",
+  "rules": [
+    "`budget` below 15.00, `standard` from 15.00 up to but not including 50.00, and `premium` from 50.00 up.",
+    "A product with a missing `unit_price` is `unpriced`.",
+    "Return `product_id`, `name` and `price_band`, all text, in that order. Keep every product."
+  ],
+  "hints": [
+    "`F.when(condition, value)` chains: `.when(...).when(...).otherwise(...)`. The first true condition wins.",
+    "A comparison with a missing price isn't true, so a missing price falls through to `otherwise`. Give `premium` its own `.when(...)`, so `otherwise` is left for the missing prices.",
+    "Check the boundaries: 15.00 is `standard` and 50.00 is `premium`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "products"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\n@F.udf(\"string\")\ndef band(price):\n    if price < 15:\n        return \"budget\"\n    if price < 50:\n        return \"standard\"\n    return \"premium\"\n\n\ndef solve(products):\n    return products.select(\"product_id\", \"name\", band(\"unit_price\").alias(\"price_band\"))\n",
+  "output": {
+    "columns": [
+      "product_id",
+      "name",
+      "price_band"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

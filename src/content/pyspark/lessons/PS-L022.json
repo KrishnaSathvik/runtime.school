@@ -1,0 +1,123 @@
+{
+  "id": "PS-L022",
+  "minutes": 20,
+  "lede": "Bad rows don't announce themselves. A negative amount or a missing account looks like any other row until you write down the rules a valid row must follow and check each one.",
+  "objectives": [
+    "Write each validity rule as a condition that is true for a good row",
+    "Find the rows that break a rule, without losing rows where the rule is NULL",
+    "Label every invalid row with the first rule it breaks, using `F.when`",
+    "Split a table into valid and invalid rows and check that the counts add up"
+  ],
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "transactions"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "The `transactions` table is a bank's card and account feed. A valid transaction follows a few rules:\n\n- it has an `account_id`;\n- its `amount` is more than 0 (the `direction` column says whether money leaves or arrives);\n- its `currency` is `USD`, `EUR` or `GBP`;\n- `purchase`, `atm_withdrawal` and `fee` are debits, and every other type is a credit.\n\nThe simplest check is a filter for rows that break one rule."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Rows that break one rule",
+      "code": "from pyspark.sql import functions as F\n\ntransactions.filter(F.col(\"account_id\").isNull()).select(\"transaction_id\", \"account_id\", \"txn_type\", \"amount\").show()\n\nno_merchant = transactions.filter((F.col(\"txn_type\").isin(\"purchase\", \"refund\")) & (F.col(\"merchant_id\").isNull()))\nprint(no_merchant.count(), \"purchases or refunds without a merchant\")\n",
+      "note": "One transaction lost its account on the way in. A count of 0 is a useful result too: it proves a rule holds."
+    },
+    {
+      "kind": "text",
+      "md": "The lesson's feed is almost clean, so the next examples use a small feed with a problem in most rows. Write each rule so it's **true for a good row**, and look at its value on every row before filtering."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "One column per rule",
+      "code": "from decimal import Decimal\nfrom pyspark.sql import functions as F\n\nfeed = spark.createDataFrame(\n    [\n        (\"X01\", \"A00001\", \"purchase\", \"debit\", Decimal(\"27.90\"), \"USD\"),\n        (\"X02\", \"A00001\", \"purchase\", \"debit\", Decimal(\"-36.59\"), \"USD\"),\n        (\"X03\", \"A00008\", \"deposit\", \"credit\", Decimal(\"800.00\"), \"ZZZ\"),\n        (\"X04\", \"A00006\", \"fee\", \"debit\", Decimal(\"4.00\"), None),\n        (\"X05\", None, \"refund\", \"credit\", Decimal(\"43.95\"), \"USD\"),\n        (\"X06\", \"A00008\", \"purchase\", \"debit\", None, \"GBP\"),\n        (\"X07\", \"A00008\", \"purchase\", \"credit\", Decimal(\"12.00\"), \"GBP\"),\n    ],\n    \"transaction_id STRING, account_id STRING, txn_type STRING, direction STRING, amount DECIMAL(12,2), currency STRING\",\n)\n\nfeed.select(\n    \"transaction_id\",\n    F.col(\"account_id\").isNotNull().alias(\"account_ok\"),\n    (F.col(\"amount\") > 0).alias(\"amount_ok\"),\n    F.col(\"currency\").isin(\"USD\", \"EUR\", \"GBP\").alias(\"currency_ok\"),\n).show()\n",
+      "note": "Look at X04 and X06. A rule on a missing value isn't true or false; it's NULL. That NULL is about to cause trouble."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "The NULL that slips through",
+      "code": "from decimal import Decimal\nfrom pyspark.sql import functions as F\n\nfeed = spark.createDataFrame(\n    [\n        (\"X01\", \"A00001\", \"purchase\", \"debit\", Decimal(\"27.90\"), \"USD\"),\n        (\"X02\", \"A00001\", \"purchase\", \"debit\", Decimal(\"-36.59\"), \"USD\"),\n        (\"X03\", \"A00008\", \"deposit\", \"credit\", Decimal(\"800.00\"), \"ZZZ\"),\n        (\"X04\", \"A00006\", \"fee\", \"debit\", Decimal(\"4.00\"), None),\n        (\"X05\", None, \"refund\", \"credit\", Decimal(\"43.95\"), \"USD\"),\n        (\"X06\", \"A00008\", \"purchase\", \"debit\", None, \"GBP\"),\n        (\"X07\", \"A00008\", \"purchase\", \"credit\", Decimal(\"12.00\"), \"GBP\"),\n    ],\n    \"transaction_id STRING, account_id STRING, txn_type STRING, direction STRING, amount DECIMAL(12,2), currency STRING\",\n)\n\nfeed.filter(~F.col(\"currency\").isin(\"USD\", \"EUR\", \"GBP\")).select(\"transaction_id\", \"currency\").show()\n\ncurrency_ok = F.col(\"currency\").isNotNull() & F.col(\"currency\").isin(\"USD\", \"EUR\", \"GBP\")\nfeed.filter(~currency_ok).select(\"transaction_id\", \"currency\").show()\n",
+      "note": "The first filter misses X04: `~` of NULL is still NULL, and `filter` keeps only true. Adding `isNotNull()` makes the rule false for a missing currency, so the second filter catches it. `F.coalesce(rule, F.lit(False))` is another way to turn NULL into false."
+    },
+    {
+      "kind": "text",
+      "md": "To report *why* a row is invalid, chain the rules with `F.when`. Spark checks them in order and uses the first one that matches, so put the most important rule first. A row that matches none gets NULL: it passed everything.\n\nFor the direction rule, work out the direction a row should have and compare. Here every row has a direction, so a plain `!=` is enough."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Label the first broken rule",
+      "code": "from decimal import Decimal\nfrom pyspark.sql import functions as F\n\nfeed = spark.createDataFrame(\n    [\n        (\"X01\", \"A00001\", \"purchase\", \"debit\", Decimal(\"27.90\"), \"USD\"),\n        (\"X02\", \"A00001\", \"purchase\", \"debit\", Decimal(\"-36.59\"), \"USD\"),\n        (\"X03\", \"A00008\", \"deposit\", \"credit\", Decimal(\"800.00\"), \"ZZZ\"),\n        (\"X04\", \"A00006\", \"fee\", \"debit\", Decimal(\"4.00\"), None),\n        (\"X05\", None, \"refund\", \"credit\", Decimal(\"43.95\"), \"USD\"),\n        (\"X06\", \"A00008\", \"purchase\", \"debit\", None, \"GBP\"),\n        (\"X07\", \"A00008\", \"purchase\", \"credit\", Decimal(\"12.00\"), \"GBP\"),\n    ],\n    \"transaction_id STRING, account_id STRING, txn_type STRING, direction STRING, amount DECIMAL(12,2), currency STRING\",\n)\n\nexpected = F.when(F.col(\"txn_type\").isin(\"purchase\", \"atm_withdrawal\", \"fee\"), \"debit\").otherwise(\"credit\")\n\nproblem = (\n    F.when(F.col(\"account_id\").isNull(), \"no account\")\n    .when(F.col(\"amount\").isNull() | (F.col(\"amount\") <= 0), \"bad amount\")\n    .when(F.col(\"currency\").isNull() | ~F.col(\"currency\").isin(\"USD\", \"EUR\", \"GBP\"), \"bad currency\")\n    .when(F.col(\"direction\") != expected, \"wrong direction\")\n)\n\nfeed.select(\"transaction_id\", \"txn_type\", \"direction\", \"amount\", \"currency\", problem.alias(\"problem\")).show()\n",
+      "note": "Each rule now says what's wrong, not what's right, and checks for NULL first. X01 breaks nothing, so its problem is NULL."
+    },
+    {
+      "kind": "text",
+      "md": "With a `problem` column, the split is two filters: rows where it is NULL are valid, the rest are invalid. Every row lands in exactly one of them, so the two counts must add up to the total. Checking that sum is a cheap way to prove no row was lost."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Valid plus invalid equals all",
+      "code": "from pyspark.sql import functions as F\n\nproblem = (\n    F.when(F.col(\"account_id\").isNull(), \"no account\")\n    .when(F.col(\"amount\").isNull() | (F.col(\"amount\") <= 0), \"bad amount\")\n    .when(F.col(\"currency\").isNull() | ~F.col(\"currency\").isin(\"USD\", \"EUR\", \"GBP\"), \"bad currency\")\n)\n\nchecked = transactions.select(\"transaction_id\", \"account_id\", \"amount\", \"currency\", problem.alias(\"problem\"))\nvalid = checked.filter(F.col(\"problem\").isNull())\ninvalid = checked.filter(F.col(\"problem\").isNotNull())\n\ninvalid.show()\nprint(transactions.count(), \"rows:\", valid.count(), \"valid +\", invalid.count(), \"invalid\")\n",
+      "note": "On the real feed only the transaction without an account fails. Some rows point at an account the bank doesn't have; finding those needs a second table, which the joins lessons cover."
+    }
+  ],
+  "challenges": [
+    "PS-L022-C1",
+    "PS-L022-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "A row's `currency` is missing. What is `F.col(\"currency\").isin(\"USD\", \"EUR\", \"GBP\")` for it?",
+      "choices": [
+        "false",
+        "true",
+        "NULL",
+        "An error"
+      ],
+      "answer": 2,
+      "why": "A comparison with a missing value is NULL, not false. That's why `filter(~rule)` doesn't return the row."
+    },
+    {
+      "id": "k2",
+      "prompt": "Which filter returns every row whose currency is missing or not one of the three?",
+      "choices": [
+        "feed.filter(~F.col(\"currency\").isin(\"USD\", \"EUR\", \"GBP\"))",
+        "feed.filter(F.col(\"currency\").isNull() | ~F.col(\"currency\").isin(\"USD\", \"EUR\", \"GBP\"))",
+        "feed.filter(F.col(\"currency\").isNotNull() & ~F.col(\"currency\").isin(\"USD\", \"EUR\", \"GBP\"))",
+        "feed.filter(F.col(\"currency\") != \"USD\")"
+      ],
+      "answer": 1,
+      "why": "The missing case has to be asked for with `isNull()`. Without it, a missing currency makes the condition NULL and the row is dropped."
+    },
+    {
+      "id": "k3",
+      "prompt": "A row has no account and a negative amount. The `F.when` chain checks the account first. What is its label?",
+      "choices": [
+        "Both labels",
+        "The amount label",
+        "NULL",
+        "The account label"
+      ],
+      "answer": 3,
+      "why": "`F.when` uses the first condition that is true, so the order of the rules decides the label."
+    }
+  ],
+  "review": [
+    "Write down the rules a valid row follows, then check each one with a condition.",
+    "A rule on a missing value is NULL, and `filter` keeps only true: ask for missing values with `isNull()` or turn NULL into false.",
+    "A count of 0 for a rule is a useful result: it proves the rule holds.",
+    "A `F.when` chain labels each row with the first rule it breaks; rows that break none get NULL.",
+    "Split on the label: NULL is valid, anything else is invalid.",
+    "Valid plus invalid must equal the total. Checking that sum proves no row was lost."
+  ],
+  "practice": ["PS-Q0106", "PS-Q0107", "PS-Q0108", "PS-Q0109", "PS-Q0110"]
+}

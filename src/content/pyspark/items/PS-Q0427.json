@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0427",
+  "slug": "compact-the-closed-statuses",
+  "lesson": "PS-L086",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Compact the closed statuses",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "The invoices table is partitioned by status, and every daily load adds a file to each status. Paid and void invoices never change, so billing wants those partitions compacted tonight, while the others are still being written to. Finish `compact_closed`.",
+  "rules": [
+    "Compact the `paid` and `void` partitions into as few files as OPTIMIZE makes.",
+    "Leave every other partition as it is, including invoices with no status.",
+    "Don't change `layout`, `build_table` or `solve`."
+  ],
+  "hints": [
+    "Run the starter: each status has three files, one per load.",
+    "`optimize().where(...)` compacts only the partitions its condition matches. The condition is SQL text on the partition column.",
+    "Two statuses: join two comparisons with `OR`, or use `IN`. And remember the builder does nothing until you execute the compaction."
+  ],
+  "explanation": "`DeltaTable.forPath(spark, path).optimize().where(\"status IN ('paid', 'void')\").executeCompaction()` picks the two partitions and packs each one's three files into one; `status = 'paid' OR status = 'void'` works the same. Every other partition keeps its three files, and so does the partition of invoices with no status: a NULL status matches neither value. Compacting the whole table touches partitions that are still being written to, and leaving out `executeCompaction()` builds the compaction without running it. When neither status has any invoices, the condition matches no partition and OPTIMIZE does nothing.",
+  "entry": "solve",
+  "inputs": [
+    "invoices"
+  ],
+  "starter": "import json\nimport os\nimport shutil\n\nfrom delta.tables import DeltaTable\n\n\ndef layout(path):\n    # One row per status: the table's data files and their invoices, from the log. Don't change this.\n    files = {}\n    log = path + \"/_delta_log/\"\n    for name in sorted(f for f in os.listdir(log) if f.endswith(\".json\")):\n        with open(log + name) as f:\n            for line in f:\n                action = json.loads(line)\n                if \"add\" in action:\n                    add = action[\"add\"]\n                    files[add[\"path\"]] = (add[\"partitionValues\"].get(\"status\"), json.loads(add[\"stats\"])[\"numRecords\"])\n                if \"remove\" in action:\n                    files.pop(action[\"remove\"][\"path\"], None)\n    by_value = {}\n    for value, rows in files.values():\n        by_value.setdefault(value, []).append(rows)\n    return spark.createDataFrame(\n        [(value, len(rows), sum(rows)) for value, rows in by_value.items()],\n        \"status STRING, files INT, invoices INT\",\n    )\n\n\ndef build_table(invoices, path):\n    # Three daily loads, replayed on a fresh table: each writes one file per status. Don't change this.\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty folder on every run\n    for day in range(3):\n        invoices.coalesce(1).write.format(\"delta\").mode(\"append\").partitionBy(\"status\").save(path)\n\n\ndef compact_closed(path):\n    # Compact the closed statuses only.\n    pass\n\n\ndef solve(invoices):\n    path = \"/tmp/billing/invoices\"\n    build_table(invoices, path)\n    compact_closed(path)\n    return layout(path)\n",
+  "output": {
+    "columns": [
+      "status",
+      "files",
+      "invoices"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

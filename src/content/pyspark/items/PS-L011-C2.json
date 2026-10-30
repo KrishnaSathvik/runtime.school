@@ -1,0 +1,27 @@
+{
+  "id": "PS-L011-C2",
+  "slug": "years-and-genres",
+  "lesson": "PS-L011",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Years and genres",
+  "dataset": { "id": "PS-D05", "version": "1.0.0" },
+  "prompt": "The catalogue team wants to see which genres came out in which year. Write `solve(movies)` so it returns each pair of `release_year` and `primary_genre` once, newest year first.",
+  "rules": [
+    "Each pair of `release_year` and `primary_genre` appears once, however many films share it.",
+    "Sort by `release_year`, newest first, then by `primary_genre` A to Z.",
+    "Missing values keep Spark's usual place: a missing year goes last, and a missing genre goes first within its year.",
+    "Return only `release_year` and `primary_genre`, in that order."
+  ],
+  "hints": [
+    "`distinct` compares whole rows, so pick the two columns before you call it.",
+    "`F.desc(\"release_year\")` puts the newest year first; the genre goes after it in `orderBy`.",
+    "Sort last: `distinct` doesn't keep any order."
+  ],
+  "entry": "solve",
+  "inputs": ["movies"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(movies):\n    # Return each year and genre pair once, newest year first.\n    return movies\n",
+  "output": { "columns": ["release_year", "primary_genre"], "order_sensitive": true },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

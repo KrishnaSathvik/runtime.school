@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0225",
+  "slug": "type-drift-between-parquet-and-csv",
+  "lesson": "PS-L045",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Type drift between Parquet and CSV",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "prompt": "Before moving a feed from Parquet to CSV, the team wants to see which column types would drift. Write `solve(trips)` so it saves the trips both ways and reports, for every column, the type each copy comes back with.",
+  "rules": [
+    "Save all of `trips` as Parquet at `parquet_path` and as CSV with a header at `csv_path`, replacing earlier copies.",
+    "Read the Parquet copy back as it is, and the CSV copy with its header and `inferSchema=True`, the way a tool that guesses types would.",
+    "Return `column_name`, `parquet_type` and `csv_type`, all text, one row per column of `trips`, in any order. Types are written as `dtypes` shows them, such as `decimal(8,2)` or `double`.",
+    "Columns are matched by name; every column of `trips` appears once."
+  ],
+  "hints": [
+    "`df.dtypes` lists `(name, type)` pairs; `dict(df.dtypes)` makes them easy to look up by name.",
+    "Build a list of `(name, parquet_type, csv_type)` tuples with a Python loop over the columns.",
+    "`spark.createDataFrame(rows, \"column_name STRING, parquet_type STRING, csv_type STRING\")` turns the list into the result."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "trips"
+  ],
+  "starter": "def solve(trips):\n    parquet_path = \"/tmp/taxi/drift_parquet\"\n    csv_path = \"/tmp/taxi/drift_csv\"\n    # Save trips both ways, read both back and return one row per column.\n    return trips\n",
+  "output": {
+    "columns": [
+      "column_name",
+      "parquet_type",
+      "csv_type"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Write both copies, read both back, and compare their `dtypes`: `p = dict(spark.read.parquet(parquet_path).dtypes)` and `c = dict(spark.read.csv(csv_path, header=True, inferSchema=True).dtypes)`, then `spark.createDataFrame([(name, p[name], c[name]) for name in trips.columns], \"column_name STRING, parquet_type STRING, csv_type STRING\")`. Parquet gives back the original types. The guessed CSV types drift: every money column becomes `double`, timestamps are recognised again, and a column with no values at all, or every column of an empty file, comes back as `string`, because there's nothing to guess from."
+}

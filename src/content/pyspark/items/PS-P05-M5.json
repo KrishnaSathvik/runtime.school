@@ -1,0 +1,74 @@
+{
+  "id": "PS-P05-M5",
+  "slug": "validate-the-split-and-features",
+  "project": "PS-P05",
+  "milestone": "PS-P05.m5",
+  "difficulty": "hard",
+  "minutes": 45,
+  "title": "Validate the split and the feature outputs",
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0"
+  },
+  "prompt": "Before the features go to the model, the team wants proof that the split is clean and the feature tables agree with it.\n\nWrite `split_summary(ratings, users, movies)`. It returns one row of facts about the training and evaluation rows and the two feature tables, built with your earlier functions.",
+  "rules": [
+    "`cutoff` is `CUTOFF`. `training_rows` and `evaluation_rows` count the rows of `training_interactions` and `evaluation_interactions`; `last_training_at` is the latest training `rated_at` and `first_evaluation_at` the earliest evaluation one (missing when there are none).",
+    "`featured_users` and `featured_movies` count the rows of `user_features` and `movie_features`; `cold_start_users` and `cold_start_movies` count their cold starts.",
+    "`cold_evaluation_rows` counts the evaluation rows whose member has no training row.",
+    "`features_match` is true when the `ratings` of `user_features` add up to `training_rows`, and so do those of `movie_features`.",
+    "`leak_free` is true when no `last_rated_at` in either feature table is on or after the cutoff.",
+    "Return one row with the columns of `SUMMARY_SCHEMA`."
+  ],
+  "hints": [
+    "`training.agg(F.count(\"*\"), F.max(\"rated_at\")).first()` gives a count and a time as plain values in one job; do the same for the evaluation rows with `F.min`.",
+    "A `left_anti` join of the evaluation rows against the training members keeps the rows of members the model has never seen. Count rows, not members.",
+    "One `agg` per feature table can give its row count, its cold starts (sum `cold_start` cast to int), its total `ratings` and how many `last_rated_at` reach the cutoff. Put all twelve values in one tuple, in the schema's order."
+  ],
+  "explanation": "Each fact checks one promise of the pipeline. `last_training_at` before the cutoff and `first_evaluation_at` on or after it show the split is by time. `features_match` shows the feature tables were built from exactly the training rows: if they came from all the ratings, their counts would add up to more. `leak_free` checks the same from the other side, through the latest time each feature has seen. `cold_evaluation_rows` tells the team how many test rows the model must answer with no history for that member, which is the cold-start problem in one number. Gathering each table's numbers in one `agg(...).first()` keeps the job to a handful of queries; caching the training rows, which four of them reuse, is the next saving if this ran on far more data.",
+  "entry": "split_summary",
+  "inputs": [
+    "ratings",
+    "users",
+    "movies"
+  ],
+  "file": "pipeline.py",
+  "append": "\n\nSUMMARY_SCHEMA = (\n    \"cutoff STRING, training_rows BIGINT, last_training_at TIMESTAMP, evaluation_rows BIGINT, first_evaluation_at TIMESTAMP, \"\n    \"featured_users BIGINT, cold_start_users BIGINT, featured_movies BIGINT, cold_start_movies BIGINT, \"\n    \"cold_evaluation_rows BIGINT, features_match BOOLEAN, leak_free BOOLEAN\"\n)\n\n\ndef split_summary(ratings, users, movies):\n    # Step 5: one row of facts about the split and the feature tables.\n    row = (CUTOFF, 0, None, 0, None, 0, 0, 0, 0, 0, False, False)\n    return spark.createDataFrame([row], SUMMARY_SCHEMA)\n",
+  "prerequisites": [
+    "PS-L007",
+    "PS-L026",
+    "PS-L060"
+  ],
+  "output": {
+    "columns": [
+      "cutoff",
+      "training_rows",
+      "last_training_at",
+      "evaluation_rows",
+      "first_evaluation_at",
+      "featured_users",
+      "cold_start_users",
+      "featured_movies",
+      "cold_start_movies",
+      "cold_evaluation_rows",
+      "features_match",
+      "leak_free"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "example",
+      "sample": true
+    },
+    {
+      "id": "project",
+      "edition": "project"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 300,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

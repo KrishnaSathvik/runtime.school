@@ -1,0 +1,55 @@
+{
+  "id": "PS-Q0138",
+  "slug": "orders-due-by-the-stock-count",
+  "lesson": "PS-L028",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Orders due by the stock count",
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0"
+  },
+  "prompt": "Planners check each stock count against the purchase orders that should have arrived by then. Write `solve(inventory, purchase_orders)` so it returns every stock line with the purchase order rows due on or before its count date.",
+  "rules": [
+    "A purchase order row matches a stock line when it has the same `warehouse_id`, the same `sku`, and an `expected_date` on or before the line's `as_of_date`. A missing `expected_date` never matches.",
+    "A stock line appears once per matching row (every version counts as its own row). A stock line with no matching row appears once, with `po_id`, `version` and `expected_date` missing.",
+    "Return `warehouse_id`, `sku`, `as_of_date`, `po_id`, `version` and `expected_date`, in that order."
+  ],
+  "hints": [
+    "The date rule only decides which purchase orders match. It must never remove a stock line.",
+    "Put all three conditions in the join itself, joined with `&`: same warehouse, same SKU, and `expected_date <= as_of_date`. Aliases keep the two sides apart.",
+    "A `filter` after a left join removes the stock lines whose purchase order columns are NULL, so every line without a due order would vanish."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "inventory",
+    "purchase_orders"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(inventory, purchase_orders):\n    # Every stock line with the purchase orders due by its count date.\n    return inventory\n",
+  "output": {
+    "columns": [
+      "warehouse_id",
+      "sku",
+      "as_of_date",
+      "po_id",
+      "version",
+      "expected_date"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Everything goes in the join condition of a left join: `(F.col(\"i.warehouse_id\") == F.col(\"p.warehouse_id\")) & (F.col(\"i.sku\") == F.col(\"p.sku\")) & (F.col(\"p.expected_date\") <= F.col(\"i.as_of_date\"))`. In the join, the date only decides which purchase orders pair up, and every stock line stays. As a `filter` after the join, it also removes each stock line whose only orders are late, or that has none, because a comparison with NULL isn't true. `<=` includes an order due on the count date itself. A missing expected date makes the comparison NULL, so that row never matches. Joining on `sku` alone pairs a stock line with other warehouses' orders."
+}

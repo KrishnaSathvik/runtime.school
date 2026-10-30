@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0190",
+  "slug": "visit-warehouse-record",
+  "lesson": "PS-L038",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Visit record for the warehouse",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "prompt": "The data warehouse loads each visit as one nested record. Write `solve(encounters)` so it returns `encounter_id` and a `record` struct in the warehouse's shape.",
+  "rules": [
+    "`record` has four fields, in order: `patient` (from `patient_id`), `primary_code` (the first entry of `diagnosis_codes`), `code_count` (the number of entries) and `vitals`.",
+    "Every code list that exists has at least one code. A visit with no code list gets a missing `primary_code` and `code_count`.",
+    "`vitals` is the visit's `vitals` with one field added at the end: `pulse_pressure`, `systolic` minus `diastolic`. A visit with no vitals keeps a missing `vitals`.",
+    "Return `encounter_id` and `record`."
+  ],
+  "hints": [
+    "Array positions start at 0: `F.col(\"diagnosis_codes\")[0]` is the first code, and `F.size` counts them.",
+    "`F.col(\"vitals\").withField(\"pulse_pressure\", ...)` adds a field at the end and leaves a missing struct missing.",
+    "Put the four pieces into one `F.struct`, giving each its name with `alias`, and name the struct `record`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "encounters"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(encounters):\n    # Return encounter_id and the warehouse record struct.\n    return encounters\n",
+  "output": {
+    "columns": [
+      "encounter_id",
+      "record"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "One `F.struct` with four named fields: `F.col(\"patient_id\").alias(\"patient\")`, `F.col(\"diagnosis_codes\")[0].alias(\"primary_code\")`, `F.size(\"diagnosis_codes\").alias(\"code_count\")` and `F.col(\"vitals\").withField(\"pulse_pressure\", F.col(\"vitals.systolic\") - F.col(\"vitals.diastolic\")).alias(\"vitals\")`. Positions start at 0, so `[1]` would be the second code and fails on a visit with only one. A missing list gives a missing first code and size, with no error. `withField` keeps a missing `vitals` missing; rebuilding the vitals with `F.struct` would give telehealth visits a struct of missing values."
+}

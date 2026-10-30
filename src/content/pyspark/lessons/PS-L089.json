@@ -1,0 +1,146 @@
+{
+  "id": "PS-L089",
+  "minutes": 35,
+  "lede": "Most model inputs are built, not found: yesterday's price, a moving average, how a trade compares with what was normal. Spark builds them for every key at once with windows and joins, and the one rule that matters is to use only what was known at the time.",
+  "objectives": [
+    "Build lag and moving-average features per key with windows whose frame ends before the current row",
+    "Tell a leaking feature (computed over all rows, the future included) from one computed over the past only",
+    "Turn numbers into buckets with `Bucketizer` and `QuantileDiscretizer`, and know which one learns from the data",
+    "Hash categories into a fixed-size vector with `FeatureHasher`, and join features back onto the rows they describe"
+  ],
+  "dataset": {
+    "id": "PS-D10",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "daily_prices",
+      "trades"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`daily_prices` has one row per stock (`symbol`) per trading day, with the day's `close` and `volume`. `trades` has one row per trade, with its `executed_at` time and `quantity`.\n\nSay a model should predict each day's move. Its features can describe the day **before**, never the day itself: in production the close isn't known until the market shuts. A feature that peeks at the answer, or at anything later, is called **leakage**. It makes a model look excellent in testing and fail in use.\n\nThe tools are the window functions you know. `Window.partitionBy(\"symbol\").orderBy(\"trade_date\")` puts each symbol's rows in date order; `F.lag` reads the previous row. Spark sends each symbol's rows to one task, so every symbol's features are computed side by side. Here that means two cores on one machine, but the code is the same on a cluster."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Yesterday's close as today's feature",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\nw = Window.partitionBy(\"symbol\").orderBy(\"trade_date\")\nclose = F.col(\"close\").cast(\"double\")\n\ndaily_prices.select(\n    \"symbol\", \"trade_date\", \"close\",\n    F.lag(\"close\").over(w).alias(\"prev_close\"),\n    F.round(close / F.lag(close).over(w) - 1, 3).alias(\"ret_1d\"),\n).orderBy(\"symbol\", \"trade_date\").show()\n",
+      "note": "Each symbol's first row has no previous row, so its features are NULL. BRVO.SX has no price on 2026-01-20, so its 2026-01-21 return compares with 2026-01-16. ALDR.SX seems to lose half its value on 2026-01-21: that's a 2-for-1 split, and these prices aren't adjusted for it. Clean the data before you trust a feature."
+    },
+    {
+      "kind": "text",
+      "md": "A moving average is an aggregate over a **frame**. `rowsBetween(-2, 0)` is the current row and the two before it, so a feature for predicting today would contain today's close: leakage. `rowsBetween(-3, -1)` is the three rows **before** the current one and stops in time.\n\nAt the start of a symbol the frame holds fewer rows, and the average of one or two closes isn't the same feature as the average of three. Count the rows in the frame and keep the average only when it's full."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "A moving average that stops before today",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\nw = Window.partitionBy(\"symbol\").orderBy(\"trade_date\")\nwith_today = w.rowsBetween(-2, 0)\nbefore_today = w.rowsBetween(-3, -1)\nclose = F.col(\"close\").cast(\"double\")\n\ndaily_prices.filter(F.col(\"symbol\") == \"CYPH.SX\").select(\n    \"trade_date\", \"close\",\n    F.round(F.avg(close).over(with_today), 2).alias(\"avg_incl_today\"),\n    F.round(F.avg(close).over(before_today), 2).alias(\"avg_before\"),\n    F.count(\"close\").over(before_today).alias(\"rows_before\"),\n    F.when(F.count(\"close\").over(before_today) == 3, F.round(F.avg(close).over(before_today), 2)).alias(\"ma_3\"),\n).orderBy(\"trade_date\").show()\n",
+      "note": "`avg_incl_today` moves with today's close, which the model is meant to predict. `avg_before` on the first day is NULL (an empty frame) and on the next two days averages only one or two closes. `ma_3` keeps only full frames."
+    },
+    {
+      "kind": "text",
+      "md": "Per-key aggregates make good features too: a symbol's typical volume tells you whether today's is unusual. The easy way is `groupBy(\"symbol\")` and a join back onto every row. But that average uses **every** day, the later ones included, so each row's feature knows the future.\n\nA window with the frame `rowsBetween(Window.unboundedPreceding, -1)` gives the average of all **earlier** rows instead: the same idea, computed only from the past."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "A symbol's average volume: all days or days so far",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\nall_days = daily_prices.groupBy(\"symbol\").agg(F.avg(\"volume\").alias(\"avg_all_days\"))\n\nso_far = Window.partitionBy(\"symbol\").orderBy(\"trade_date\").rowsBetween(Window.unboundedPreceding, -1)\n\nfeatures = daily_prices.join(all_days, \"symbol\").select(\n    \"symbol\", \"trade_date\", \"volume\",\n    F.round(\"avg_all_days\").cast(\"long\").alias(\"avg_all_days\"),\n    F.round(F.avg(\"volume\").over(so_far)).cast(\"long\").alias(\"avg_so_far\"),\n)\nfeatures.filter(F.col(\"symbol\") == \"ALDR.SX\").orderBy(\"trade_date\").show()\n",
+      "note": "`avg_all_days` is the same on every row, the first day included, and it already contains the split day's 11.7 million shares. `avg_so_far` only uses what came before each row, so on 2026-01-21 it can't know about that day's volume."
+    },
+    {
+      "kind": "text",
+      "md": "`lag` and moving frames only mean something in an order. Leave out `orderBy` and Spark refuses to run the query."
+    },
+    {
+      "kind": "error-example",
+      "id": "e4",
+      "title": "lag needs an ordered window",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\nw = Window.partitionBy(\"symbol\")\ndaily_prices.select(\"symbol\", \"trade_date\", F.lag(\"close\").over(w).alias(\"prev_close\")).show()\n",
+      "error": "AnalysisException",
+      "note": "The message says the window function requires the window to be ordered. Add `.orderBy(\"trade_date\")`: without it, \"previous\" has no meaning."
+    },
+    {
+      "kind": "text",
+      "md": "Some models work better with ranges than raw numbers. `Bucketizer` from `pyspark.ml.feature` is a transformer: you give it the `splits`, and a value goes into the bucket whose range starts at or below it, so a value equal to a split lands in the upper bucket. Use `float(\"-inf\")` and `float(\"inf\")` at the ends to catch everything.\n\n`QuantileDiscretizer` is an estimator: `fit` looks at the data and chooses splits so that the buckets hold about the same number of rows, and returns a `Bucketizer`. It finds the quantiles **approximately** (`relativeError`, 0.001 by default), so on large data the splits can move slightly with the partitioning. Fit it on training rows only, like any estimator, and check its splits."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Fixed buckets and quantile buckets",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\nfrom pyspark.ml.feature import Bucketizer, QuantileDiscretizer\n\nw = Window.partitionBy(\"symbol\").orderBy(\"trade_date\")\nclose = F.col(\"close\").cast(\"double\")\nmoves = daily_prices.select(\n    \"symbol\", \"trade_date\", \"volume\",\n    F.round(close / F.lag(close).over(w) - 1, 3).alias(\"ret_1d\"),\n).filter(F.col(\"ret_1d\").isNotNull())\n\ndirection = Bucketizer(splits=[float(\"-inf\"), -0.01, 0.01, float(\"inf\")], inputCol=\"ret_1d\", outputCol=\"direction\")\n\nfitted = QuantileDiscretizer(numBuckets=3, inputCol=\"volume\", outputCol=\"volume_band\").fit(moves)\nprint(type(fitted).__name__, fitted.getSplits())\nprint(fitted.getSplits() == QuantileDiscretizer(numBuckets=3, inputCol=\"volume\", outputCol=\"volume_band\").fit(moves.repartition(3)).getSplits())\n\nfitted.transform(direction.transform(moves)).orderBy(\"symbol\", \"trade_date\").show()\n",
+      "note": "Moves of less than 1% either way are bucket 1.0. The fitted splits are real volumes from the data, and with 11 rows they come out the same for 3 partitions too. Each volume band holds three or four days."
+    },
+    {
+      "kind": "text",
+      "md": "Categories need numbers too. A `StringIndexer` must `fit` a list of every value, and a value it never saw needs special handling. `FeatureHasher` needs no fit: it hashes each `column=value` pair to one of `numFeatures` positions and puts a 1.0 there. Number columns are not hashed by value: their name picks the position and the number itself is stored.\n\nNew symbols simply hash somewhere. The price is **collisions**: two different values can share a position. More positions mean fewer collisions; `numFeatures` is 262144 by default, and a power of two spreads values most evenly."
+    },
+    {
+      "kind": "example",
+      "id": "e6",
+      "title": "Hash categories into a fixed-size vector",
+      "code": "from pyspark.ml.feature import FeatureHasher\nfrom pyspark.ml.functions import vector_to_array\n\nhasher = FeatureHasher(inputCols=[\"symbol\", \"side\", \"quantity\"], outputCol=\"features\", numFeatures=16)\nhashed = hasher.transform(trades)\n\nhashed.select(\"trade_id\", \"symbol\", \"side\", \"quantity\", \"features\").orderBy(\"trade_id\").show(truncate=False)\nhashed.select(\"trade_id\", vector_to_array(\"features\").alias(\"as_array\")).orderBy(\"trade_id\").show(3, truncate=False)\n",
+      "note": "Position 7 holds the quantity on every row. The symbol and the side each set one position, and here you can see a collision: `symbol=BRVO.SX` and `side=sell` both hash to position 0, so TR-000002 has 2.0 there and the model can't tell those two facts apart. The positions come from a fixed hash, so they are the same in every run; a larger `numFeatures` makes collisions rarer."
+    }
+  ],
+  "challenges": [
+    "PS-L089-C1",
+    "PS-L089-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "A model predicts each day's close. Which frame gives a moving-average feature without leakage?",
+      "choices": [
+        "`rowsBetween(-2, 0)`",
+        "`rowsBetween(-3, -1)`",
+        "`rowsBetween(-1, 1)`",
+        "No frame: `Window.partitionBy(\"symbol\")`"
+      ],
+      "answer": 1,
+      "why": "`rowsBetween(-3, -1)` covers the three rows before the current one and stops there. The others include the current day, and with `1` or no frame at all, later days too."
+    },
+    {
+      "id": "k2",
+      "prompt": "Each row gets its symbol's average volume from `groupBy(\"symbol\")` joined back. Why is that a problem for a model trained on past days?",
+      "choices": [
+        "The join makes duplicate rows",
+        "The average includes later days, so early rows carry information from the future",
+        "`groupBy` can't compute averages of `BIGINT`",
+        "It isn't a problem: one number per symbol can't leak"
+      ],
+      "answer": 1,
+      "why": "The group average covers every day, the future included. A frame like `rowsBetween(Window.unboundedPreceding, -1)` averages only the earlier rows."
+    },
+    {
+      "id": "k3",
+      "prompt": "`Bucketizer(splits=[0, 100, 250, float(\"inf\")])` gets a quantity of exactly 100. Which bucket?",
+      "choices": [
+        "0.0",
+        "1.0",
+        "2.0",
+        "It raises an error"
+      ],
+      "answer": 1,
+      "why": "Each bucket includes its lower split and excludes the upper one, so 100 starts bucket 1.0, which runs up to 249.99…"
+    }
+  ],
+  "review": [
+    "A feature may use only what was known at prediction time; anything later is leakage and flatters the model in testing.",
+    "`F.lag` over `Window.partitionBy(key).orderBy(time)` reads the previous row: the previous trading day, not the previous calendar day.",
+    "`rowsBetween(-3, -1)` stops before the current row; count the frame's rows to keep only full windows.",
+    "A `groupBy` aggregate joined back uses every row, the future included. `rowsBetween(Window.unboundedPreceding, -1)` uses only the past.",
+    "`Bucketizer` uses splits you give it, value-equals-split going up. `QuantileDiscretizer` is an estimator with approximate splits: fit it on training rows and check them.",
+    "`FeatureHasher` maps categories to a fixed-size vector with no fit; new values are fine, collisions are the cost."
+  ],
+  "practice": [
+    "PS-Q0441",
+    "PS-Q0442",
+    "PS-Q0443",
+    "PS-Q0444",
+    "PS-Q0445"
+  ]
+}

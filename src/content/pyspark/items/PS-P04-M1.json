@@ -1,0 +1,66 @@
+{
+  "id": "PS-P04-M1",
+  "slug": "load-and-sign-transactions",
+  "project": "PS-P04",
+  "milestone": "PS-P04.m1",
+  "difficulty": "medium",
+  "minutes": 20,
+  "title": "Load the transactions and sign the amounts",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "The bank's finance team reconciles its books every month, and it starts from two tables: `accounts`, one row per account, and `transactions`, 4,637 card, cash and account movements straight from the feed. Look at them first. Add `accounts.printSchema()`, `transactions.printSchema()` and `print(transactions.count())` to your file and press Run.\n\nEvery `amount` is written as a positive number, and `direction` says which way the money went. Write `transaction_view(transactions)`. It returns the columns the reconciliation uses, plus a `signed_amount` that can simply be added up.",
+  "rules": [
+    "Return `transaction_id`, `account_id`, `posted_at`, `txn_type`, `status`, `currency`, `amount` and `signed_amount`, in that order.",
+    "`signed_amount` is `-amount` when `direction` is `debit` (money left the account) and `amount` when it's `credit` (money arrived).",
+    "Money stays exact: `signed_amount` is a `decimal(12,2)`, the same type as `amount`. No doubles.",
+    "Every row stays, even the strange ones. The next step decides which rows are valid."
+  ],
+  "hints": [
+    "`select` picks the columns in the order you list them, and a new column can go at the end with `.alias(\"signed_amount\")`.",
+    "`F.when(F.col(\"direction\") == \"debit\", ...).otherwise(F.col(\"amount\"))` chooses between the two values.",
+    "Write the negative as `-F.col(\"amount\")`: it keeps `decimal(12,2)`. Multiplying by `-1` widens the type, and a double can't hold cents exactly."
+  ],
+  "explanation": "A bank stores every amount as a positive decimal and keeps the sign in `direction`, so the first job is a signed amount that can be summed: `F.when(F.col(\"direction\") == \"debit\", -F.col(\"amount\")).otherwise(F.col(\"amount\"))`. Negating a decimal keeps its type, `decimal(12,2)`, so no cent is ever approximated. Multiplying by `-1` would also give the right numbers, but as `decimal(23,2)`, and casting to a double would store 0.1 as 0.1000000000000000055…, which is how totals drift by a cent. Nothing is filtered yet: the view keeps every row so that the next step can decide, and count, what it drops.",
+  "entry": "transaction_view",
+  "inputs": [
+    "transactions"
+  ],
+  "file": "pipeline.py",
+  "starter": "from pyspark.sql import Window\nfrom pyspark.sql import functions as F\n\n\ndef transaction_view(transactions):\n    # Step 1: the columns the reconciliation uses, plus signed_amount.\n    return transactions\n",
+  "prerequisites": [
+    "PS-L012",
+    "PS-L014",
+    "PS-L017"
+  ],
+  "output": {
+    "columns": [
+      "transaction_id",
+      "account_id",
+      "posted_at",
+      "txn_type",
+      "status",
+      "currency",
+      "amount",
+      "signed_amount"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "example",
+      "sample": true
+    },
+    {
+      "id": "project",
+      "edition": "project"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

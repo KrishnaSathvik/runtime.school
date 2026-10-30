@@ -1,0 +1,119 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "log_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "logged_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "level",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "service",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "message",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "LOG-000001",
+     "2026-04-14T10:00:02.142000",
+     "INFO",
+     "catalog-api",
+     "GET /v1/catalog/items 200"
+    ],
+    [
+     "LOG-000002",
+     "2026-04-14T10:00:09.061000",
+     "INFO",
+     "auth-service",
+     "POST /v1/auth/token 200"
+    ],
+    [
+     "LOG-000003",
+     "2026-04-14T10:00:14.936000",
+     "INFO",
+     "checkout-api",
+     "POST /v1/checkout 201"
+    ],
+    [
+     "LOG-000004",
+     "2026-04-14T10:00:21.418000",
+     "INFO",
+     "search-api",
+     "GET /v1/search 200"
+    ],
+    [
+     "LOG-000005",
+     "2026-04-14T10:00:47.224000",
+     "INFO",
+     "iot-gateway",
+     "POST /v1/devices/{device_id}/telemetry 201"
+    ],
+    [
+     "LOG-000006",
+     "2026-04-14T10:01:00.140000",
+     "ERROR",
+     "checkout-api",
+     "POST /v1/payments/authorize failed with 500"
+    ],
+    [
+     "LOG-000007",
+     "2026-04-14T10:01:03",
+     "WARN",
+     "iot-gateway",
+     "no heartbeat for 10 minutes"
+    ],
+    [
+     "LOG-000008",
+     "2026-04-14T10:01:12.522000",
+     "INFO",
+     "iot-gateway",
+     "POST /v1/devices/{device_id}/telemetry 201"
+    ],
+    [
+     "LOG-000009",
+     "2026-04-14T10:01:21.562000",
+     "INFO",
+     "search-api",
+     "GET /v1/search 200"
+    ],
+    [
+     "LOG-000010",
+     "2026-04-14T10:01:28",
+     "ERROR",
+     "notification-worker",
+     "email provider did not answer within 10 s"
+    ]
+   ],
+   "row_count": 10
+  }
+ },
+ "hidden": [
+  "the full practice log file",
+  "cut-off records, a missing closing brace, a plain-text line and a blank line",
+  "records with a missing field, a missing time or a time that isn't valid",
+  "the same record shipped twice",
+  "a file where no line parses"
+ ]
+}

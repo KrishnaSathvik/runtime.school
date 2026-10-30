@@ -1,0 +1,29 @@
+{
+  "id": "PS-P01-M1",
+  "slug": "explore-the-orders",
+  "project": "PS-P01",
+  "milestone": "PS-P01.m1",
+  "difficulty": "easy",
+  "minutes": 20,
+  "title": "Explore the orders and pick the report's columns",
+  "dataset": { "id": "PS-D01", "version": "1.1.0" },
+  "prompt": "The sales team's daily report starts from the shop's raw order export: the `orders` table below, 3,012 rows straight from the system. Look at it first. Add `orders.printSchema()` and `print(orders.count())` inside `order_view`, before its `return`, and press Run to see its columns and size.\n\nThen write `order_view(orders)`. It returns the columns the report uses, in the report's order, with `total` renamed to `order_total`. Every row stays, even the strange ones: this step only shapes the columns.",
+  "rules": [
+    "`order_view(orders)` returns `order_id`, `order_date`, `customer_id`, `status` and `order_total`, in that order.",
+    "`order_total` is `total` under its new name, with the same type and values.",
+    "Every row of `orders` is still there, duplicates and odd rows included."
+  ],
+  "hints": [
+    "`select` picks columns in the order you list them.",
+    "`F.col(\"total\").alias(\"order_total\")` renames a column inside `select`.",
+    "Don't filter yet: the next step decides which rows the report can use."
+  ],
+  "entry": "order_view",
+  "inputs": ["orders"],
+  "file": "pipeline.py",
+  "starter": "from pyspark.sql import functions as F\n\n\ndef order_view(orders):\n    # Step 1: the report's columns, in the report's order.\n    return orders\n",
+  "prerequisites": ["PS-L007", "PS-L008", "PS-L009"],
+  "output": { "columns": ["order_id", "order_date", "customer_id", "status", "order_total"], "order_sensitive": false },
+  "visible": [{ "id": "project", "edition": "project" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

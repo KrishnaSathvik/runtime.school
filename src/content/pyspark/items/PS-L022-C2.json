@@ -1,0 +1,26 @@
+{
+  "id": "PS-L022-C2",
+  "slug": "label-the-problem",
+  "lesson": "PS-L022",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Label the problem",
+  "dataset": { "id": "PS-D02", "version": "1.0.0" },
+  "prompt": "The data team wants a list of the invalid transactions, each with the reason it failed. Write `solve(transactions)` so it returns `transaction_id` and `problem` for every transaction that breaks a rule.",
+  "rules": [
+    "Check the rules in this order and use the first one broken: `no account` (missing `account_id`), `bad amount` (missing or not more than 0), `bad currency` (missing or not `USD`, `EUR` or `GBP`), `wrong direction`.",
+    "`purchase`, `atm_withdrawal` and `fee` must have `direction` `debit`; every other type must be `credit`. A missing direction is wrong.",
+    "Return only the invalid transactions, with only `transaction_id` and `problem`."
+  ],
+  "hints": [
+    "Chain the rules with `F.when(...).when(...)` in the order given; leave out `otherwise` so valid rows get NULL.",
+    "Work out the expected direction with its own `F.when(...).otherwise(...)`, then compare it with `direction`. Remember a missing direction.",
+    "Select `transaction_id` and the label, then filter for rows where the label `isNotNull()`."
+  ],
+  "entry": "solve",
+  "inputs": ["transactions"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(transactions):\n    # Return transaction_id and problem for every invalid transaction.\n    return transactions.select(\"transaction_id\")\n",
+  "output": { "columns": ["transaction_id", "problem"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

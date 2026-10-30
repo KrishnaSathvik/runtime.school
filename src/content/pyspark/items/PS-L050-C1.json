@@ -1,0 +1,65 @@
+{
+  "id": "PS-L050-C1",
+  "slug": "requests-and-errors-per-service",
+  "lesson": "PS-L050",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Requests and server errors per service",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "The on-call report needs, for each service, how many requests it answered and how many of them were server errors. Write `solve(api_requests)` with pair RDD functions so it returns `service`, `requests` and `server_errors`.",
+  "rules": [
+    "One row per service, in any order.",
+    "A server error has a `status_code` from 500 to 599. A 4xx code, such as 404 or 499, is not one, and neither is a missing code.",
+    "Every request counts in `requests`, whatever its status.",
+    "Return `service` (text), `requests` and `server_errors` (both `bigint`), in that order. An empty table gives an empty result."
+  ],
+  "hints": [
+    "Map each row to `(service, (1, error))`, where `error` is 1 or 0.",
+    "Add both parts of the tuple in `reduceByKey`.",
+    "A missing status is `None` in Python, and `None >= 500` raises an error: check for `None` first. Finish with `toDF(\"service string, requests bigint, server_errors bigint\")`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "api_requests"
+  ],
+  "starter": "def solve(api_requests):\n    pairs = api_requests.rdd.map(lambda r: (r[\"service\"], r[\"status_code\"]))\n    # Count requests and server errors per service.\n    return api_requests\n",
+  "output": {
+    "columns": [
+      "service",
+      "requests",
+      "server_errors"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "technique": {
+    "name": "pair RDD functions",
+    "plan": [
+      "Scan"
+    ],
+    "source": [
+      "reduceByKey",
+      "groupByKey",
+      "aggregateByKey",
+      "combineByKey",
+      "foldByKey",
+      "mapValues",
+      "flatMapValues",
+      "countByKey"
+    ]
+  }
+}

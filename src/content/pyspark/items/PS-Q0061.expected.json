@@ -1,0 +1,91 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "encounter_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "patient_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "systolic",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "diastolic",
+     "type": "int",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "ENC000001",
+     "PAT00003",
+     115,
+     72
+    ],
+    [
+     "ENC000002",
+     "PAT00002",
+     107,
+     65
+    ],
+    [
+     "ENC000003",
+     "PAT00001",
+     144,
+     66
+    ],
+    [
+     "ENC000004",
+     "PAT00002",
+     100,
+     55
+    ],
+    [
+     "ENC000005",
+     "PAT00005",
+     131,
+     91
+    ],
+    [
+     "ENC000006",
+     "PAT00006",
+     125,
+     64
+    ],
+    [
+     "ENC000007",
+     "PAT00001",
+     null,
+     null
+    ],
+    [
+     "ENC000008",
+     "PAT00004",
+     null,
+     null
+    ]
+   ],
+   "row_count": 8
+  }
+ },
+ "hidden": [
+  "the full practice visits table",
+  "video visits with no vitals, and a reading that wasn't taken",
+  "the same visit delivered twice",
+  "an empty visits table"
+ ]
+}

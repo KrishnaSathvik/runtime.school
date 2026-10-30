@@ -1,0 +1,87 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "event_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "shipment_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "warehouse_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "event_type",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "event_time",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "location",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "sequence",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "load_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "is_correction",
+     "type": "boolean",
+     "nullable": true
+    },
+    {
+     "name": "reason",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "E0000013",
+     "SH9999",
+     "WH02",
+     "departed",
+     "2026-03-08T21:20:00",
+     "WH02",
+     100013,
+     "2026-03-08",
+     false,
+     "unknown shipment"
+    ]
+   ],
+   "row_count": 1
+  }
+ },
+ "hidden": [
+  "the full practice events table",
+  "event types in the wrong case, misspelled or missing",
+  "events with a missing or unknown shipment, time or sequence",
+  "events that break more than one rule",
+  "a feed where every event can be loaded",
+  "an empty events table"
+ ]
+}

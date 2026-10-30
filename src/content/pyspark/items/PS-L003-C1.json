@@ -1,0 +1,18 @@
+{
+  "id": "PS-L003-C1",
+  "kind": "predict",
+  "slug": "the-running-session",
+  "lesson": "PS-L003",
+  "difficulty": "easy",
+  "minutes": 4,
+  "title": "The running session",
+  "prompt": "This program asks the builder for a session and then looks inside it. What does it print? Type each line on its own line.",
+  "program": "from pyspark.sql import SparkSession\n\ns = SparkSession.builder.getOrCreate()\nprint(s is spark)\nprint(s.sparkContext.master)\nprint(s.conf.get(\"spark.sql.shuffle.partitions\"))\n",
+  "dataset": { "id": "PS-D11", "version": "1.0.0" },
+  "edition": "lesson",
+  "hints": [
+    "A session is already running, so think about what `getOrCreate()` does when one exists.",
+    "`master` says where Spark runs and with how many cores.",
+    "Settings come back as text, and this environment changed the shuffle setting from Spark's usual 200."
+  ]
+}

@@ -1,0 +1,214 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "endpoint",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "requests",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "share",
+     "type": "double",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "/v1/catalog/items",
+     4,
+     0.3333333333333333
+    ],
+    [
+     "/v1/search",
+     3,
+     0.25
+    ],
+    [
+     null,
+     3,
+     0.25
+    ]
+   ],
+   "row_count": 3,
+   "inputs": {
+    "api_requests": [
+     [
+      "REQ-000001",
+      "13b64b22ba0fbc6c",
+      "2026-04-14T10:00:02.100000",
+      "catalog-api",
+      "GET",
+      "/v1/catalog/items",
+      "200",
+      "42",
+      "17950",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36",
+      "us-east"
+     ],
+     [
+      "REQ-000002",
+      "a64fadafa3e59936",
+      "2026-04-14T10:00:05.400000",
+      "catalog-api",
+      "GET",
+      "/v1/catalog/items",
+      "200",
+      "38",
+      "18220",
+      "RuntimeShop-iOS/4.12.0 (iPhone; iOS 17.5)",
+      "eu-west"
+     ],
+     [
+      "REQ-000003",
+      "0a5f722afabaf005",
+      "2026-04-14T10:00:09",
+      "auth-service",
+      "POST",
+      null,
+      "200",
+      "61",
+      "702",
+      "RuntimeShop-Android/4.11.2 (Android 14)",
+      "us-east"
+     ],
+     [
+      "REQ-000004",
+      "bee00ecb217ae5e3",
+      "2026-04-14T10:00:14.700000",
+      "checkout-api",
+      "POST",
+      null,
+      "201",
+      "236",
+      "1580",
+      "RuntimeShop-iOS/4.12.0 (iPhone; iOS 17.5)",
+      "us-west"
+     ],
+     [
+      "REQ-000005",
+      "bae0b151a3d78dc9",
+      "2026-04-14T10:00:21.300000",
+      "search-api",
+      "GET",
+      "/v1/search",
+      "200",
+      "118",
+      "9410",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36",
+      "eu-west"
+     ],
+     [
+      "REQ-000006",
+      "cc2702f716e39bf2",
+      "2026-04-14T10:00:33.800000",
+      "search-api",
+      "GET",
+      "/v1/search",
+      "200",
+      "12",
+      "9120",
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 Version/17.5 Safari/605.1.15",
+      "us-east"
+     ],
+     [
+      "REQ-000007",
+      "830a8c89a751c0b5",
+      "2026-04-14T10:00:47.200000",
+      "iot-gateway",
+      "POST",
+      "/v1/devices/{device_id}/telemetry",
+      "201",
+      "24",
+      "118",
+      "SensorHub-Agent/2.3 (firmware 1.8.4)",
+      "ap-south"
+     ],
+     [
+      "REQ-000008",
+      "c43d1a266b993fd1",
+      "2026-04-14T10:00:58.900000",
+      "checkout-api",
+      "POST",
+      null,
+      "500",
+      "1240",
+      "0",
+      "RuntimeShop-Android/4.11.2 (Android 14)",
+      "us-east"
+     ],
+     [
+      "REQ-000009",
+      "22bfa062eda1037e",
+      "2026-04-14T10:01:06",
+      "catalog-api",
+      "GET",
+      "/v1/catalog/items",
+      "200",
+      "51",
+      "18030",
+      "okhttp/4.12.0",
+      "us-west"
+     ],
+     [
+      "REQ-000010",
+      "d984a7b4b7458060",
+      "2026-04-14T10:01:12.500000",
+      "iot-gateway",
+      "POST",
+      "/v1/devices/{device_id}/telemetry",
+      "201",
+      "22",
+      "121",
+      "SensorHub-Agent/2.3 (firmware 1.8.4)",
+      "ap-south"
+     ],
+     [
+      "REQ-000011",
+      "6e956dfb98bbfb49",
+      "2026-04-14T10:01:21.400000",
+      "search-api",
+      "GET",
+      "/v1/search",
+      "200",
+      "162",
+      "10220",
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 Version/17.5 Safari/605.1.15",
+      "us-east"
+     ],
+     [
+      "REQ-000012",
+      "591fa0b8bf211d90",
+      "2026-04-14T10:01:35.600000",
+      "catalog-api",
+      "GET",
+      "/v1/catalog/items",
+      "200",
+      "40",
+      "17780",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36",
+      "eu-west"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice requests, one endpoint far ahead of the rest",
+  "an endpoint with exactly a quarter of the requests",
+  "half of the requests have no endpoint recorded",
+  "traffic spread evenly, no endpoint near a quarter",
+  "no requests at all"
+ ]
+}

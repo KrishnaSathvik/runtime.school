@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0108",
+  "slug": "account-record-check",
+  "lesson": "PS-L022",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Account record check",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "The bank's account records must follow a few rules before they're migrated. Write `solve(accounts)` so it returns `account_id`, `account_type`, `overdraft_limit` and `is_valid` for every account.",
+  "rules": [
+    "An account is valid when `customer_id` is present, `account_type` is `checking`, `savings` or `credit_card`, `currency` is `USD`, `EUR` or `GBP`, and `status` is `active`, `closed` or `frozen`.",
+    "A `checking` account must also have an `overdraft_limit` of 0.00 or more. A `savings` or `credit_card` account must have no `overdraft_limit` at all (missing).",
+    "`is_valid` is a boolean, `true` or `false`, and never empty: a rule that can't be checked because a value is missing counts as broken."
+  ],
+  "hints": [
+    "Join the rules with `&` and look at the result on a row with a missing value: it can be NULL instead of false.",
+    "For the overdraft, write the two cases and join them with `|`: a checking account with a limit of at least 0, or another account type with a missing limit.",
+    "`F.coalesce(rule, F.lit(False))` turns a NULL result into false."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "accounts"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(accounts):\n    # Return account_id, account_type, overdraft_limit and is_valid.\n    return accounts\n",
+  "output": {
+    "columns": [
+      "account_id",
+      "account_type",
+      "overdraft_limit",
+      "is_valid"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "The overdraft rule depends on the type, so it's two cases joined with `|`: `((F.col(\"account_type\") == \"checking\") & (F.col(\"overdraft_limit\") >= 0)) | (F.col(\"account_type\").isin(\"savings\", \"credit_card\") & F.col(\"overdraft_limit\").isNull())`. Joined with `&` to the presence and list checks, that gives the rule. The edge is what happens on a missing value: `F.col(\"account_type\").isin(...)` on a missing type is NULL, and NULL `&` true is NULL, so some rows would come out with an empty `is_valid`. `F.coalesce(rule, F.lit(False))` turns that into false, as the rules ask. `F.when(rule, True).otherwise(False)` does the same. Note that a missing limit is the right answer for savings, so `isNull()` there is part of the rule, not an error check."
+}

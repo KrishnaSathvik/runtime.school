@@ -1,0 +1,136 @@
+{
+  "id": "PS-L031",
+  "minutes": 20,
+  "lede": "Most reports are one line per something: revenue per channel, orders per customer, units per product. `groupBy` collects the rows that share a value, and `agg` boils each group down to the numbers you ask for.",
+  "objectives": [
+    "Count the rows in each group with `groupBy(...).count()`",
+    "Compute several totals at once with `agg` and `F.count`, `F.sum`, `F.avg`, `F.min`, `F.max` and `F.countDistinct`",
+    "Group by more than one column, or summarise a whole table with `agg` alone",
+    "Predict how aggregates treat missing values: `count(\"*\")` counts every row, the others skip NULLs"
+  ],
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0",
+    "edition": "lesson",
+    "tables": [
+      "orders",
+      "order_items"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "The `orders` table has one row per order, and `order_items` one row per line of an order. Both are loaded as DataFrames with those names, and `F` is `pyspark.sql.functions`.\n\n`orders.groupBy(\"status\")` sorts the rows into groups, one per distinct `status`. On its own it isn't a DataFrame yet: you finish it by saying what to compute per group. The simplest is `.count()`, which adds a `count` column.\n\nGrouped output has no fixed row order, so the examples end with `orderBy(...)`, which only sorts what's printed. The sorting lesson covers it."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "How many orders in each status",
+      "code": "by_status = orders.groupBy(\"status\").count()\nby_status.orderBy(\"status\").show()\nby_status.printSchema()\n",
+      "note": "Twelve orders collapse into five rows, one per status. The result has the grouping column plus `count`, a `long`."
+    },
+    {
+      "kind": "text",
+      "md": "For anything beyond a count, use `.agg(...)` and list the aggregates you want, each with its own name from `.alias`:\n\n- `F.count(\"*\")` counts rows, and `F.count(\"col\")` counts the rows where `col` isn't missing.\n- `F.sum`, `F.avg`, `F.min` and `F.max` do what their names say. `min` and `max` also work on dates and text.\n- `F.countDistinct(\"col\")` counts the different values."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Several totals per channel",
+      "code": "from pyspark.sql import functions as F\n\nby_channel = orders.groupBy(\"channel\").agg(\n    F.count(\"*\").alias(\"orders\"),\n    F.sum(\"total\").alias(\"revenue\"),\n    F.avg(\"total\").alias(\"avg_total\"),\n    F.max(\"total\").alias(\"biggest\"),\n    F.min(\"order_date\").alias(\"first_order\"),\n    F.countDistinct(\"customer_id\").alias(\"customers\"),\n)\nby_channel.orderBy(\"channel\").show()\n",
+      "note": "One row per channel, one column per aggregate. The sum of exact decimals stays exact; the average of decimals is a decimal with more places."
+    },
+    {
+      "kind": "text",
+      "md": "An aggregate can work on a calculation, not just a column. Each line of an order is `quantity × unit_price`, so summing that per `order_id` gives what each order's lines add up to.\n\nGroup by two columns and you get one row per **combination** that appears in the data."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "A calculation inside an aggregate, and two keys",
+      "code": "from pyspark.sql import functions as F\n\nper_order = order_items.groupBy(\"order_id\").agg(\n    F.count(\"*\").alias(\"lines\"),\n    F.sum(\"quantity\").alias(\"units\"),\n    F.sum(F.col(\"quantity\") * F.col(\"unit_price\")).alias(\"line_total\"),\n)\nper_order.orderBy(\"order_id\").show(5)\n\npairs = orders.groupBy(\"customer_id\", \"channel\").agg(F.count(\"*\").alias(\"orders\"))\npairs.orderBy(\"customer_id\", \"channel\").show()\n",
+      "note": "`line_total` matches each order's `total`. In the second table C0001 appears three times, once per channel it used; a combination with no orders has no row."
+    },
+    {
+      "kind": "text",
+      "md": "Leave out `groupBy` and `agg` summarises the whole table as one group, so you get exactly one row."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "One row for the whole table",
+      "code": "from pyspark.sql import functions as F\n\norders.agg(\n    F.count(\"*\").alias(\"orders\"),\n    F.sum(\"total\").alias(\"revenue\"),\n    F.countDistinct(\"customer_id\").alias(\"customers\"),\n    F.max(\"order_date\").alias(\"latest\"),\n).show()\n",
+      "note": "Twelve orders from six different customers. `count(\"*\")` and `countDistinct` answer different questions: how many rows, and how many different values."
+    },
+    {
+      "kind": "error-example",
+      "id": "e5",
+      "title": "A column that isn't grouped or aggregated",
+      "code": "from pyspark.sql import functions as F\n\norders.groupBy(\"status\").agg(F.col(\"order_id\")).show()\n",
+      "error": "AnalysisException",
+      "note": "Each group becomes one row, but a group has many `order_id`s, and Spark won't guess which one you mean. Every column in `agg` must be wrapped in an aggregate such as `F.count` or `F.max`."
+    },
+    {
+      "kind": "text",
+      "md": "Missing values matter. `F.count(\"*\")` counts every row; `F.count(\"total\")`, `F.sum`, `F.avg`, `F.min` and `F.max` skip rows where the column is missing. A missing value in the grouping column forms a group of its own."
+    },
+    {
+      "kind": "example",
+      "id": "e6",
+      "title": "How aggregates treat missing values",
+      "code": "from decimal import Decimal\nfrom pyspark.sql import functions as F\n\nbaskets = spark.createDataFrame(\n    [(\"web\", Decimal(\"10.00\")), (\"web\", None), (\"web\", Decimal(\"30.00\")), (None, Decimal(\"5.00\"))],\n    \"channel STRING, total DECIMAL(10,2)\",\n)\n\nbaskets.groupBy(\"channel\").agg(\n    F.count(\"*\").alias(\"rows\"),\n    F.count(\"total\").alias(\"priced\"),\n    F.sum(\"total\").alias(\"revenue\"),\n    F.avg(\"total\").alias(\"avg_total\"),\n).orderBy(\"channel\").show()\n",
+      "note": "The web group has three rows but only two totals, so the average is 40.00 / 2 = 20.00, not 40.00 / 3. The row with no channel is its own group, shown as NULL."
+    }
+  ],
+  "challenges": [
+    "PS-L031-C1",
+    "PS-L031-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "A group has 4 rows, and one of them has a missing `total`. What does `F.count(\"total\")` give for that group?",
+      "choices": [
+        "4",
+        "3",
+        "NULL",
+        "An error"
+      ],
+      "answer": 1,
+      "why": "`F.count(\"col\")` counts only the rows where the column isn't missing. `F.count(\"*\")` would give 4."
+    },
+    {
+      "id": "k2",
+      "prompt": "What does `orders.agg(F.sum(\"total\").alias(\"revenue\"))` return?",
+      "choices": [
+        "One row per order",
+        "One row per status",
+        "Exactly one row, with the sum over the whole table",
+        "A plain Python number"
+      ],
+      "answer": 2,
+      "why": "Without `groupBy`, the whole table is one group, so `agg` returns a DataFrame with a single row."
+    },
+    {
+      "id": "k3",
+      "prompt": "Customers placed orders on these channels: C1 web, C1 web, C1 app, C2 web. How many rows does `orders.groupBy(\"customer_id\", \"channel\").count()` give?",
+      "choices": [
+        "2",
+        "3",
+        "4",
+        "6"
+      ],
+      "answer": 1,
+      "why": "One row per combination that appears: (C1, web), (C1, app) and (C2, web)."
+    }
+  ],
+  "review": [
+    "`df.groupBy(\"col\")` groups rows that share a value; finish it with `.count()` or `.agg(...)`.",
+    "Inside `agg`, give each aggregate a name with `.alias`: `F.sum(\"total\").alias(\"revenue\")`.",
+    "`F.count(\"*\")` counts rows; `F.count(\"col\")`, `F.sum`, `F.avg`, `F.min` and `F.max` skip missing values.",
+    "`F.countDistinct(\"col\")` counts different values, not rows.",
+    "Group by several columns for one row per combination; use `agg` without `groupBy` for one row for the whole table.",
+    "Every column in `agg` must be an aggregate, and grouped output has no fixed order."
+  ],
+  "practice": ["PS-Q0151", "PS-Q0152", "PS-Q0153", "PS-Q0154", "PS-Q0155"]
+}

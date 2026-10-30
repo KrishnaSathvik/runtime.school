@@ -1,0 +1,24 @@
+{
+ "id": "PS-Q0363",
+ "kind": "predict",
+ "slug": "the-claim-in-neither-table",
+ "lesson": "PS-L073",
+ "role": "edge",
+ "format": "concept_or_trace",
+ "difficulty": "medium",
+ "minutes": 7,
+ "title": "The claim in neither table",
+ "prompt": "`claims` has seven claims: one was submitted before its visit, and one is still waiting for the payer, so its `allowed_amount` is empty. This program splits bronze into silver with `filter(passes)` and quarantine with `filter(~passes)`. What does it print? Type each line on its own line.",
+ "program": "from pyspark.sql import functions as F\n\nbronze = claims.select(\"*\", F.lit(\"claims_2026-02-28.csv\").alias(\"_source_file\"), F.lit(1).alias(\"_batch_id\"))\nbronze.write.format(\"delta\").save(\"/tmp/clinic/bronze/claims\")\nbronze = spark.read.format(\"delta\").load(\"/tmp/clinic/bronze/claims\")\n\npasses = (\n    (F.col(\"service_date\") <= F.col(\"submitted_date\"))\n    & (F.col(\"allowed_amount\") <= F.col(\"billed_amount\"))\n    & F.col(\"claim_status\").isin(\"submitted\", \"approved\", \"paid\", \"denied\", \"appealed\")\n)\nbronze.filter(passes).write.format(\"delta\").save(\"/tmp/clinic/silver/claims\")\nbronze.filter(~passes).write.format(\"delta\").save(\"/tmp/clinic/quarantine/claims\")\n\nsilver = spark.read.format(\"delta\").load(\"/tmp/clinic/silver/claims\")\nquarantine = spark.read.format(\"delta\").load(\"/tmp/clinic/quarantine/claims\")\nprint(bronze.count(), silver.count(), quarantine.count())\nprint(silver.count() + quarantine.count() == bronze.count())\n",
+ "dataset": {
+  "id": "PS-D04",
+  "version": "1.0.0"
+ },
+ "edition": "lesson",
+ "hints": [
+  "For the claim submitted before its visit, the first comparison is false. What is `false & ...`?",
+  "For the waiting claim, `allowed_amount <= billed_amount` compares with NULL. What does that give, and what is `true & NULL`?",
+  "`filter` keeps a row only when the condition is true. What is `~` of NULL?"
+ ],
+ "explanation": "The claim submitted before its visit makes `passes` false, so `~passes` is true and it goes to quarantine. The waiting claim has no `allowed_amount`, so that comparison is NULL, and `true & NULL & true` is NULL too. `filter` drops a row whose condition is NULL, and `~NULL` is still NULL, so the claim is in neither table: bronze has 7, silver 5 and quarantine 1, and the counts don't add up. A rule that should accept a missing value says so (`F.col(\"allowed_amount\").isNull() | ...`), and the quarantine filter wraps the rule in `F.coalesce(..., F.lit(False))` before negating it, or uses a `when` chain that names the problem. Then every bronze row lands in exactly one table."
+}

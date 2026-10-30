@@ -1,0 +1,52 @@
+{
+  "id": "PS-L089-C2",
+  "slug": "trade-features-known-before-the-day",
+  "lesson": "PS-L089",
+  "difficulty": "hard",
+  "minutes": 23,
+  "title": "Trade features known before the day",
+  "dataset": {
+    "id": "PS-D10",
+    "version": "1.0.0"
+  },
+  "prompt": "A model scores each trade as it happens, so the day's own close and volume aren't known yet. Write `solve(trades, daily_prices)` so every trade gets the close and volume of its symbol's previous trading day, and a size bucket.",
+  "rules": [
+    "A trade's day is the date of `executed_at`. `prev_close` and `prev_volume` come from the symbol's latest `daily_prices` row before that day: after a weekend, a holiday or a missing day, that is further back than one calendar day.",
+    "A trade on a symbol's first day of prices has NULL `prev_close` and `prev_volume`. Keep every trade.",
+    "`size_bucket` is 0.0 for a `quantity` below 100, 1.0 from 100 up to 249, and 2.0 from 250 up.",
+    "Return `trade_id`, `symbol`, `prev_close`, `prev_volume` and `size_bucket`, in that order."
+  ],
+  "hints": [
+    "Work out the features on `daily_prices` first: `F.lag` over each symbol's rows in date order puts the previous trading day on every row.",
+    "Then join on `symbol` and the trade's date, `F.to_date(\"executed_at\")`. Which join keeps trades whose features are NULL?",
+    "`Bucketizer(splits=[...], inputCol=\"quantity\", outputCol=\"size_bucket\")` puts a value equal to a split in the upper bucket; the last split can be `float(\"inf\")`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "trades",
+    "daily_prices"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\nfrom pyspark.ml.feature import Bucketizer\n\n\ndef solve(trades, daily_prices):\n    # Give each trade its symbol's previous trading day's close and volume, and a size bucket.\n    return trades\n",
+  "output": {
+    "columns": [
+      "trade_id",
+      "symbol",
+      "prev_close",
+      "prev_volume",
+      "size_bucket"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

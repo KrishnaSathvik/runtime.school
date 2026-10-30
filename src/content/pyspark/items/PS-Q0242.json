@@ -1,0 +1,60 @@
+{
+  "id": "PS-Q0242",
+  "slug": "route-parameters-per-request",
+  "lesson": "PS-L049",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Route parameters per request",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "The API team is renaming route parameters and wants to see every request that uses one. Write `solve(api_requests)` with RDD functions so it returns one row per parameter in each request's `endpoint`: the `request_id` and the parameter's name.",
+  "rules": [
+    "A parameter is a name in curly braces in the endpoint template: `/v1/catalog/items/{sku}` has one parameter, `sku`. Return the name without the braces.",
+    "An endpoint with two parameters gives two rows; one with none, or a missing endpoint, gives no rows.",
+    "Keep repeated requests. Return `request_id` and `parameter`, both text, in that order. An empty table gives an empty result."
+  ],
+  "hints": [
+    "One request can give zero, one or two rows. Which RDD function allows that?",
+    "Write a named function that returns a list of `(request_id, name)` tuples, empty when there's nothing to return.",
+    "`re.findall(r\"\\{([^}]*)\\}\", endpoint)` returns every name between braces. Check for a missing endpoint first."
+  ],
+  "explanation": "Each request turns into a list of `(request_id, name)` tuples, one per `{...}` in its endpoint, and `flatMap` adds each tuple separately, so requests without parameters simply contribute nothing. `re.findall` with a group returns the names without braces; a loop over `split(\"/\")` that keeps segments starting with `{` works as well. `map` would give one list per request, which `toDF` can't turn into two text columns, and a missing endpoint must be checked before calling `re.findall`.",
+  "entry": "solve",
+  "inputs": [
+    "api_requests"
+  ],
+  "starter": "def solve(api_requests):\n    # One row per route parameter of each request, with RDD functions.\n    return api_requests\n",
+  "output": {
+    "columns": [
+      "request_id",
+      "parameter"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "technique": {
+    "name": "RDD functions",
+    "plan": [
+      "Scan"
+    ],
+    "source": [
+      "rdd",
+      "parallelize"
+    ]
+  }
+}

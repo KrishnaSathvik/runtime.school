@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0298",
+  "kind": "predict",
+  "slug": "what-the-storage-manager-holds",
+  "lesson": "PS-L060",
+  "role": "edge",
+  "format": "concept_or_trace",
+  "difficulty": "hard",
+  "minutes": 8,
+  "title": "What the storage manager holds",
+  "prompt": "What does this program print? `cached_partitions()` lists (partitions kept, partitions in total) for each cached dataset, sorted. `reads_cache` is the lesson's helper. Of the 15 lesson ratings, 10 are 4.0 or more and none is above 5.0; `ratings` is read as one partition. Type each printed line on its own line.",
+  "program": "from pyspark.sql import functions as F\n\n\ndef cached_partitions():\n    infos = spark.sparkContext._jsc.sc().getRDDStorageInfo()\n    return sorted((i.numCachedPartitions(), i.numPartitions()) for i in infos)\n\n\ndef reads_cache(df):\n    return \"InMemoryTableScan\" in df._jdf.queryExecution().executedPlan().toString()\n\n\nliked = ratings.filter(F.col(\"rating\") >= 4.0).cache()\nprint(liked.select(\"movie_id\").is_cached, reads_cache(liked.select(\"movie_id\")))\n\nnone = ratings.filter(F.col(\"rating\") > 5.0).cache()\nprint(none.count(), cached_partitions())\nprint(liked.count(), cached_partitions())\n\nspread = ratings.repartition(4).cache()\nprint(spread.count(), cached_partitions())\n\nliked.unpersist()\nprint(reads_cache(liked.select(\"movie_id\")), cached_partitions())\n",
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "`is_cached` says whether that exact DataFrame was marked. A new DataFrame built on a cached one isn't marked, but its plan can still read the cache.",
+    "Each action fills only the cache it computes. A partition is kept even when it holds no rows.",
+    "`repartition(4)` makes four partitions, and `unpersist()` removes one dataset from the list."
+  ],
+  "explanation": "`liked.select(\"movie_id\")` is a new DataFrame nobody marked, so `is_cached` is `False`, yet its plan reads the cached `liked`: `False True`. `none.count()` fills only `none`'s cache: no rating is above 5.0, but its one partition is still computed and kept, empty, so `0 [(1, 1)]`. `liked.count()` fills `liked`, so two entries. `spread` has four partitions and one count keeps all four. After `liked.unpersist()` a fresh plan on `liked` reads the file again, and only the other two caches remain. These are facts about what's stored, the same on every run; the program never measures time."
+}

@@ -132,8 +132,10 @@ export function QuestionScreen({ slug }: { slug: string }) {
       subject="python"
       section="practice"
       path={[{ label: "python", href: "/python" }, { label: "practice", href: "/python/practice" }, { label: mod.title }, { label: q.title }]}
+      status={["Python", `question ${i + 1}/${all.length}`, mod.title, ready ? (rec?.solved ? "✓ solved" : rec?.assisted ? "solved with help" : "draft saves as you type") : "…"]}
     >
-      <div className="p2 workspace-bounded">
+      {/* Same desktop editor chrome as Playground / SQL practice: sticky split, no workspace-bounded clamp. */}
+      <div className="p2">
         <TaskBar
           label="All questions"
           heading="Practice questions"

@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0165",
+  "slug": "departments-by-payroll",
+  "lesson": "PS-L033",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Departments ranked by payroll",
+  "dataset": {
+    "id": "PS-D03",
+    "version": "1.0.0"
+  },
+  "prompt": "Finance wants to compare departments by what they pay in total. Write `solve(employees)` to return one row per department with its headcount, total salary and payroll rank.",
+  "rules": [
+    "`headcount` is the number of employees in the department and `total_salary` the sum of their `salary`. Count everyone in the table, whatever their status.",
+    "`payroll_rank` is 1 for the largest `total_salary`. Equal totals share a rank and the next rank skips (1, 1, 3).",
+    "Return `department_id`, `headcount`, `total_salary` and `payroll_rank`, sorted by `department_id`."
+  ],
+  "hints": [
+    "Two stages: first collapse the employees to one row per department with `groupBy(...).agg(...)`, then rank those rows.",
+    "The ranking covers every department at once, so the window has no `partitionBy`: `Window.orderBy(F.col(\"total_salary\").desc())`.",
+    "Ranking doesn't sort the result for you in the order asked. Finish with `.orderBy(\"department_id\")`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "employees"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(employees):\n    # One row per department: headcount, total salary and payroll rank, sorted by department_id.\n    return employees\n",
+  "output": {
+    "columns": [
+      "department_id",
+      "headcount",
+      "total_salary",
+      "payroll_rank"
+    ],
+    "order_sensitive": true
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Aggregate, then rank, then sort. `totals = employees.groupBy(\"department_id\").agg(F.count(\"*\").alias(\"headcount\"), F.sum(\"salary\").alias(\"total_salary\"))` gives one row per department. Rank those rows across the whole table with `F.rank().over(Window.orderBy(F.col(\"total_salary\").desc()))`; there's no `partitionBy` because every department competes with every other, and Spark warns that it moves all rows to one partition, which is fine for a handful of departments. `rank` shares a rank on equal totals and skips the next. Finally `.orderBy(\"department_id\")`, because the rows come out of the window in payroll order. Ranking by `headcount` instead of pay is the common slip."
+}

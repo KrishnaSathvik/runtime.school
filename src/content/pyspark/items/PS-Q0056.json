@@ -1,0 +1,57 @@
+{
+  "id": "PS-Q0056",
+  "slug": "levels-gained-per-promotion",
+  "lesson": "PS-L012",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Levels gained per promotion",
+  "dataset": {
+    "id": "PS-D03",
+    "version": "1.0.0"
+  },
+  "prompt": "The promotions board shows how many levels each promotion moved someone up. Write `solve(promotions)` so it returns the promotions table with that number added and the raise column renamed.",
+  "rules": [
+    "Add `levels_gained` at the end: `to_level` minus `from_level`. A missing level gives a missing `levels_gained`.",
+    "Rename `salary_increase` to `raise_amount`, in the same position.",
+    "Keep every other column as it is, and every row, duplicates included."
+  ],
+  "hints": [
+    "`withColumn` adds a column at the end and keeps all the others.",
+    "Subtract one column from another: `F.col(\"to_level\") - F.col(\"from_level\")`.",
+    "`withColumnRenamed(\"old\", \"new\")` renames a column and leaves it where it was."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "promotions"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(promotions):\n    # Add levels_gained and rename salary_increase to raise_amount.\n    return promotions\n",
+  "output": {
+    "columns": [
+      "promotion_id",
+      "employee_id",
+      "effective_date",
+      "from_title",
+      "to_title",
+      "from_level",
+      "to_level",
+      "raise_amount",
+      "levels_gained"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Two small changes, chained: `promotions.withColumn(\"levels_gained\", F.col(\"to_level\") - F.col(\"from_level\")).withColumnRenamed(\"salary_increase\", \"raise_amount\")`. `withColumn` keeps every column and adds the new one at the end; `withColumnRenamed` keeps the renamed column in its place. The order of the two steps doesn't matter here. A missing level makes the difference missing without extra code. Most promotions move one level, so `F.lit(1)` looks right on the sample but is wrong for a promotion that skips a level."
+}

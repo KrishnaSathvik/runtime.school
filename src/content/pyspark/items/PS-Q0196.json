@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0196",
+  "slug": "gateway-device-details",
+  "lesson": "PS-L040",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Device behind each log line",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "The IoT team wants to see the device behind each log line, when there is one. Write `solve(application_logs)` so every line shows whether it names a device, and which device and firmware.",
+  "rules": [
+    "`has_device` is true when `attributes` has the key `device_id`, even if its value is missing, and false when it doesn't. It is missing when the line has no map at all.",
+    "`device_id` and `firmware` are the values under those keys, missing when the key isn't there. Keys match exactly, so `Device_ID` is a different key.",
+    "Return `log_id`, `service`, `has_device`, `device_id` and `firmware`, one row per log line."
+  ],
+  "hints": [
+    "`F.map_contains_key(col, key)` checks for a key without reading its value.",
+    "Read a value by key with `F.col(\"attributes\")[\"device_id\"]` or `.getItem(\"device_id\")`; a missing key gives a missing value, not an error.",
+    "Give each column its name with `alias`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "application_logs"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(application_logs):\n    # Return log_id, service, has_device, device_id and firmware.\n    return application_logs\n",
+  "output": {
+    "columns": [
+      "log_id",
+      "service",
+      "has_device",
+      "device_id",
+      "firmware"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Check the key and read the two values: `F.map_contains_key(\"attributes\", \"device_id\").alias(\"has_device\")`, `F.col(\"attributes\")[\"device_id\"].alias(\"device_id\")` and `F.col(\"attributes\")[\"firmware\"].alias(\"firmware\")`. `map_contains_key` looks at the keys only, so a key stored with no value still counts, and a line with no map gives a missing answer rather than false. Reading a key that isn't there gives a missing value with no error. Searching `F.map_values` for the text `device_id` looks in the wrong place: the name is a key, not a value."
+}

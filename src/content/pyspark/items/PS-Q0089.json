@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0089",
+  "slug": "fix-the-perth-forecast-board",
+  "lesson": "PS-L018",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 6,
+  "title": "Fix the Perth forecast board",
+  "dataset": {
+    "id": "PS-D13",
+    "version": "1.0.0"
+  },
+  "prompt": "The Perth office's board shows when each forecast is valid on Perth's clock, but the times are off by many hours and the afternoon ones look like morning. Fix `solve(forecasts)`.",
+  "rules": [
+    "`valid_for` is UTC. `perth_valid_for` is the same moment as a clock in the `Australia/Perth` zone shows it, as a timestamp.",
+    "`perth_label` is that local time written as text like `08/03 14:00`: day, month, then the hour on a 24-hour clock and the minutes.",
+    "A missing `valid_for` gives missing results. Return `forecast_id`, `station_id`, `perth_valid_for` and `perth_label`, in that order, for every forecast."
+  ],
+  "hints": [
+    "Perth is 8 hours ahead of UTC. Compare one row of the starter's output with `valid_for`: which way did it move?",
+    "`to_utc_timestamp` goes from a local clock to UTC. Going from UTC to a local clock is the other function.",
+    "In a date pattern, `hh` is the hour on a 12-hour clock, so 14:00 prints as 02:00. The 24-hour clock is `HH`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "forecasts"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(forecasts):\n    perth = F.to_utc_timestamp(\"valid_for\", \"Australia/Perth\")\n    return forecasts.select(\n        \"forecast_id\",\n        \"station_id\",\n        perth.alias(\"perth_valid_for\"),\n        F.date_format(perth, \"dd/MM hh:mm\").alias(\"perth_label\"),\n    )\n",
+  "output": {
+    "columns": [
+      "forecast_id",
+      "station_id",
+      "perth_valid_for",
+      "perth_label"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Two bugs. `F.to_utc_timestamp(col, zone)` treats `valid_for` as a Perth clock time and turns it into UTC, which moves it 8 hours the wrong way; showing a UTC moment on Perth's clock is `F.from_utc_timestamp(\"valid_for\", \"Australia/Perth\")`. Then the pattern: `hh` is the 12-hour clock, so 14:00 prints as 02:00 with nothing to say it's afternoon; `HH` is the 24-hour hour. The fixed function selects `perth.alias(\"perth_valid_for\")` and `F.date_format(perth, \"dd/MM HH:mm\").alias(\"perth_label\")`. Keep the label built from the converted time: a label from `valid_for` would show UTC. Watch `MM` and `mm` too: `MM` is the month, `mm` the minutes."
+}

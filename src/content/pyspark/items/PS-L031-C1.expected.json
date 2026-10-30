@@ -1,0 +1,62 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "channel",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "orders",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "priced",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "revenue",
+     "type": "decimal(20,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "web",
+     3,
+     3,
+     "529.98"
+    ],
+    [
+     "app",
+     6,
+     6,
+     "1219.75"
+    ],
+    [
+     "store",
+     3,
+     3,
+     "263.46"
+    ]
+   ],
+   "row_count": 3
+  }
+ },
+ "hidden": [
+  "the full practice orders table",
+  "channels where some or all totals are missing",
+  "orders with a missing channel",
+  "the same order delivered twice",
+  "an empty orders table"
+ ]
+}

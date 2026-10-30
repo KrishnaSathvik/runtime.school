@@ -1,0 +1,2683 @@
+{
+ "id": "PS-D03",
+ "version": "1.0.0",
+ "title": "Employee & HR",
+ "generated_by": "services/spark-runner/datasets/d03_hr.py",
+ "rules": [
+  "employees.manager_id points at another employee (a self join). The chief executive is the only employee with a null manager_id; following manager_id upward from anyone reaches the chief executive.",
+  "level is 1 (individual contributor), 2 (senior), 3 (team manager), 4 (department head) or 5 (chief executive). Heads report to the chief executive, team managers to their head, everyone else to a team manager or the head.",
+  "Salaries are multiples of 2,500, so several people in a department often earn the same amount (ties for rank versus dense_rank).",
+  "employees.salary equals the salary on the employee's latest salary_history row. Every employee has a hire row on hire_date; raises are merit (2026-01-01), market_adjustment (2026-04-01) or promotion.",
+  "Each promotion has a matching salary_history row with change_reason promotion on the same date, and salary_increase is the difference.",
+  "status is active, on_leave or terminated; termination_date is set only for terminated employees, who have no attendance after it. On-leave employees have no attendance rows.",
+  "attendance: hours_worked and check_in are null for sick and vacation days; absent days have 0 hours and no check_in.",
+  "managers lists management appointments; effective_to is null for current ones. The chief executive was acting head of some departments until their head was hired.",
+  "employees_raw is the HR system's export: `;` between fields, a header line, job titles that contain `;` wrapped in double quotes, and exactly one malformed line (too few fields). Read it with spark.read.text, or as CSV with sep=';'.",
+  "The lesson edition is clean except one job title with stray spaces and lower case, and one email in mixed case. It has no merit or market raises, only hires and promotions, so the history fits on screen.",
+  "practice and project editions have messy text to standardise: job titles in the wrong case or with extra spaces, emails with capitals, and phone numbers in five formats (555-201-3344, (555) 201-3344, 555.201.3344, +1 555 201 3344, 5552013344).",
+  "The project edition (P02) has deliberate errors: one manager cycle (a team manager's manager_id was set to one of their own reports, so neither chain reaches the chief executive), 3 salary_history rows repeated exactly, and 2 salary_history rows dated before the employee's hire_date."
+ ],
+ "relationships": [
+  {
+   "from": "departments.head_employee_id",
+   "to": "employees.employee_id"
+  },
+  {
+   "from": "employees.department_id",
+   "to": "departments.department_id"
+  },
+  {
+   "from": "employees.manager_id",
+   "to": "employees.employee_id"
+  },
+  {
+   "from": "salary_history.employee_id",
+   "to": "employees.employee_id"
+  },
+  {
+   "from": "promotions.employee_id",
+   "to": "employees.employee_id"
+  },
+  {
+   "from": "attendance.employee_id",
+   "to": "employees.employee_id"
+  },
+  {
+   "from": "managers.manager_id",
+   "to": "employees.employee_id"
+  },
+  {
+   "from": "managers.department_id",
+   "to": "departments.department_id"
+  }
+ ],
+ "tables": {
+  "departments": {
+   "note": "One row per department, with its cost center, office and head.",
+   "columns": [
+    {
+     "name": "department_id",
+     "type": "string"
+    },
+    {
+     "name": "department_name",
+     "type": "string"
+    },
+    {
+     "name": "cost_center",
+     "type": "string"
+    },
+    {
+     "name": "location",
+     "type": "string"
+    },
+    {
+     "name": "head_employee_id",
+     "type": "string"
+    }
+   ],
+   "key": [
+    "department_id"
+   ],
+   "rows": {
+    "lesson": 3,
+    "practice": 8,
+    "project": 10
+   },
+   "lesson": [
+    [
+     "D01",
+     "Executive",
+     "CC-100",
+     "Austin",
+     "E0001"
+    ],
+    [
+     "D02",
+     "Engineering",
+     "CC-200",
+     "Austin",
+     "E0002"
+    ],
+    [
+     "D03",
+     "Finance",
+     "CC-300",
+     "Leeds",
+     "E0007"
+    ]
+   ],
+   "practice_head": [
+    [
+     "D01",
+     "Executive",
+     "CC-100",
+     "Austin",
+     "E0001"
+    ],
+    [
+     "D02",
+     "Engineering",
+     "CC-200",
+     "Austin",
+     "E0002"
+    ],
+    [
+     "D03",
+     "Finance",
+     "CC-300",
+     "Leeds",
+     "E0021"
+    ],
+    [
+     "D04",
+     "Sales",
+     "CC-400",
+     "Denver",
+     "E0035"
+    ],
+    [
+     "D05",
+     "People",
+     "CC-500",
+     "Leeds",
+     "E0045"
+    ],
+    [
+     "D06",
+     "Marketing",
+     "CC-600",
+     "Denver",
+     "E0063"
+    ],
+    [
+     "D07",
+     "Customer Support",
+     "CC-700",
+     "Lyon",
+     "E0074"
+    ],
+    [
+     "D08",
+     "Data",
+     "CC-800",
+     "Austin",
+     "E0093"
+    ]
+   ],
+   "project_head": [
+    [
+     "D01",
+     "Executive",
+     "CC-100",
+     "Austin",
+     "E0001"
+    ],
+    [
+     "D02",
+     "Engineering",
+     "CC-200",
+     "Austin",
+     "E0002"
+    ],
+    [
+     "D03",
+     "Finance",
+     "CC-300",
+     "Leeds",
+     "E0022"
+    ],
+    [
+     "D04",
+     "Sales",
+     "CC-400",
+     "Denver",
+     "E0037"
+    ],
+    [
+     "D05",
+     "People",
+     "CC-500",
+     "Leeds",
+     "E0063"
+    ],
+    [
+     "D06",
+     "Marketing",
+     "CC-600",
+     "Denver",
+     "E0097"
+    ],
+    [
+     "D07",
+     "Customer Support",
+     "CC-700",
+     "Lyon",
+     "E0114"
+    ],
+    [
+     "D08",
+     "Data",
+     "CC-800",
+     "Austin",
+     "E0142"
+    ],
+    [
+     "D09",
+     "Operations",
+     "CC-900",
+     "Lyon",
+     "E0165"
+    ],
+    [
+     "D10",
+     "Legal",
+     "CC-950",
+     "Leeds",
+     "E0195"
+    ]
+   ]
+  },
+  "employees": {
+   "note": "One row per person ever employed: contact details, title, level, department, manager and current salary.",
+   "columns": [
+    {
+     "name": "employee_id",
+     "type": "string"
+    },
+    {
+     "name": "first_name",
+     "type": "string"
+    },
+    {
+     "name": "last_name",
+     "type": "string"
+    },
+    {
+     "name": "email",
+     "type": "string"
+    },
+    {
+     "name": "phone",
+     "type": "string"
+    },
+    {
+     "name": "job_title",
+     "type": "string"
+    },
+    {
+     "name": "level",
+     "type": "int"
+    },
+    {
+     "name": "department_id",
+     "type": "string"
+    },
+    {
+     "name": "manager_id",
+     "type": "string"
+    },
+    {
+     "name": "hire_date",
+     "type": "date"
+    },
+    {
+     "name": "employment_type",
+     "type": "string"
+    },
+    {
+     "name": "salary",
+     "type": "decimal(10,2)"
+    },
+    {
+     "name": "status",
+     "type": "string"
+    },
+    {
+     "name": "termination_date",
+     "type": "date"
+    }
+   ],
+   "key": [
+    "employee_id"
+   ],
+   "rows": {
+    "lesson": 9,
+    "practice": 104,
+    "project": 221
+   },
+   "lesson": [
+    [
+     "E0001",
+     "Tomas",
+     "Haddad",
+     "tomas.haddad@corp.example",
+     "555-490-5027",
+     "Chief Executive Officer",
+     "5",
+     "D01",
+     null,
+     "2025-01-06",
+     "full_time",
+     "260000.00",
+     "active",
+     null
+    ],
+    [
+     "E0002",
+     "Noor",
+     "Novak",
+     "noor.novak@corp.example",
+     "555-919-2731",
+     "Head of Engineering",
+     "4",
+     "D02",
+     "E0001",
+     "2025-05-26",
+     "full_time",
+     "200000.00",
+     "active",
+     null
+    ],
+    [
+     "E0003",
+     "Lena",
+     "Duarte",
+     "lena.duarte@corp.example",
+     "555-831-2628",
+     "Software Engineer",
+     "1",
+     "D02",
+     "E0002",
+     "2025-07-15",
+     "full_time",
+     "75000.00",
+     "active",
+     null
+    ],
+    [
+     "E0004",
+     "Anika",
+     "Silva",
+     "anika.silva@corp.example",
+     "555-574-7551",
+     "  senior software engineer",
+     "2",
+     "D02",
+     "E0002",
+     "2025-08-15",
+     "full_time",
+     "70000.00",
+     "active",
+     null
+    ],
+    [
+     "E0005",
+     "Elif",
+     "Rao",
+     "elif.rao@corp.example",
+     "555-717-5507",
+     "Senior Software Engineer",
+     "2",
+     "D02",
+     "E0002",
+     "2025-07-07",
+     "full_time",
+     "70000.00",
+     "active",
+     null
+    ],
+    [
+     "E0006",
+     "Maya",
+     "Rao",
+     "maya.rao@corp.example",
+     "555-528-4265",
+     "Senior Software Engineer",
+     "2",
+     "D02",
+     "E0002",
+     "2025-08-10",
+     "full_time",
+     "62500.00",
+     "active",
+     null
+    ],
+    [
+     "E0007",
+     "Ines",
+     "Novak",
+     "Ines.novak@Corp.Example",
+     "555-507-4003",
+     "Head of Finance",
+     "4",
+     "D03",
+     "E0001",
+     "2025-01-06",
+     "full_time",
+     "150000.00",
+     "active",
+     null
+    ],
+    [
+     "E0008",
+     "Elif",
+     "Weber",
+     "elif.weber@corp.example",
+     "555-849-0611",
+     "Senior Financial Analyst",
+     "2",
+     "D03",
+     "E0007",
+     "2025-05-20",
+     "full_time",
+     "75000.00",
+     "active",
+     null
+    ],
+    [
+     "E0009",
+     "Anika",
+     "Grant",
+     "anika.grant@corp.example",
+     "555-993-9407",
+     "Senior Financial Analyst",
+     "2",
+     "D03",
+     "E0007",
+     "2025-05-08",
+     "full_time",
+     "90000.00",
+     "active",
+     null
+    ]
+   ],
+   "practice_head": [
+    [
+     "E0001",
+     "Elif",
+     "Silva",
+     "Elif.Silva@corp.example",
+     "555-816-3380",
+     "Chief Executive Officer",
+     "5",
+     "D01",
+     null,
+     "2025-01-06",
+     "full_time",
+     "260000.00",
+     "active",
+     null
+    ],
+    [
+     "E0002",
+     "Kenji",
+     "Okafor",
+     "Kenji.Okafor@corp.example",
+     "555-653-2601",
+     "Head of Engineering",
+     "4",
+     "D02",
+     "E0001",
+     "2025-01-06",
+     "full_time",
+     "167500.00",
+     "active",
+     null
+    ],
+    [
+     "E0003",
+     "Elif",
+     "Grant",
+     "elif.grant@corp.example",
+     "5556028954",
+     "Engineering Manager",
+     "3",
+     "D02",
+     "E0002",
+     "2025-02-02",
+     "full_time",
+     "147500.00",
+     "active",
+     null
+    ],
+    [
+     "E0004",
+     "Arjun",
+     "Kowal",
+     "arjun.kowal@corp.example",
+     "555-372-5213",
+     "Engineering Manager",
+     "3",
+     "D02",
+     "E0002",
+     "2025-04-10",
+     "full_time",
+     "102500.00",
+     "active",
+     null
+    ],
+    [
+     "E0005",
+     "Sana",
+     "Novak",
+     "sana.novak@corp.example",
+     "5555546160",
+     "Software Engineer",
+     "1",
+     "D02",
+     "E0003",
+     "2025-07-11",
+     "part_time",
+     "62500.00",
+     "active",
+     null
+    ],
+    [
+     "E0006",
+     "Dmitri",
+     "Mori",
+     "dmitri.mori@corp.example",
+     "+1 555 713 0991",
+     "  Software Engineer",
+     "1",
+     "D02",
+     "E0003",
+     "2025-03-20",
+     "full_time",
+     "57500.00",
+     "active",
+     null
+    ],
+    [
+     "E0007",
+     "Dmitri",
+     "Costa",
+     "dmitri.costa@corp.example",
+     "555.928.8708",
+     "Software Engineer",
+     "1",
+     "D02",
+     "E0004",
+     "2026-02-27",
+     "full_time",
+     "57500.00",
+     "active",
+     null
+    ],
+    [
+     "E0008",
+     "Kofi",
+     "Novak",
+     "kofi.novak@corp.example",
+     "555-749-5027",
+     "Software Engineer",
+     "1",
+     "D02",
+     "E0003",
+     "2025-08-03",
+     "full_time",
+     "77500.00",
+     "active",
+     null
+    ],
+    [
+     "E0009",
+     "Anika",
+     "Lind",
+     "anika.lind@corp.example",
+     "555-768-7563",
+     "Software Engineer",
+     "1",
+     "D02",
+     "E0004",
+     "2026-01-03",
+     "full_time",
+     "62500.00",
+     "active",
+     null
+    ],
+    [
+     "E0010",
+     "Priya",
+     "Costa",
+     "priya.costa@corp.example",
+     "(555) 679-5567",
+     "Software Engineer",
+     "1",
+     "D02",
+     "E0003",
+     "2025-10-17",
+     "full_time",
+     "80000.00",
+     "active",
+     null
+    ],
+    [
+     "E0011",
+     "Kenji",
+     "Duarte",
+     "kenji.duarte@corp.example",
+     "555.789.8598",
+     "Software Engineer",
+     "1",
+     "D02",
+     "E0004",
+     "2025-11-07",
+     "full_time",
+     "62500.00",
+     "active",
+     null
+    ],
+    [
+     "E0012",
+     "Ada",
+     "Silva",
+     "ada.silva@corp.example",
+     "(555) 406-5367",
+     "Software Engineer",
+     "1",
+     "D02",
+     "E0004",
+     "2026-02-19",
+     "full_time",
+     "60000.00",
+     "active",
+     null
+    ],
+    [
+     "E0013",
+     "Anika",
+     "Rao",
+     "anika.rao@corp.example",
+     "555-328-2102",
+     "Software Engineer",
+     "1",
+     "D02",
+     "E0004",
+     "2025-05-26",
+     "part_time",
+     "72500.00",
+     "active",
+     null
+    ],
+    [
+     "E0014",
+     "Omar",
+     "Weber",
+     "omar.weber@corp.example",
+     "555-737-9052",
+     "Senior Software Engineer",
+     "2",
+     "D02",
+     "E0004",
+     "2025-08-22",
+     "full_time",
+     "95000.00",
+     "active",
+     null
+    ],
+    [
+     "E0015",
+     "Priya",
+     "Costa",
+     "Priya.costa2@Corp.Example",
+     "555.651.6481",
+     "Software Engineer",
+     "1",
+     "D02",
+     "E0003",
+     "2025-04-07",
+     "full_time",
+     "80000.00",
+     "active",
+     null
+    ],
+    [
+     "E0016",
+     "Maya",
+     "Mori",
+     "maya.mori@corp.example",
+     "555.733.3593",
+     "Software Engineer",
+     "1",
+     "D02",
+     "E0003",
+     "2025-07-11",
+     "part_time",
+     "65000.00",
+     "active",
+     null
+    ],
+    [
+     "E0017",
+     "Tomas",
+     "Lind",
+     "tomas.lind@corp.example",
+     "555-396-9607",
+     "Senior Software Engineer",
+     "2",
+     "D02",
+     "E0003",
+     "2026-02-25",
+     "part_time",
+     "105000.00",
+     "active",
+     null
+    ],
+    [
+     "E0018",
+     "Jonas",
+     "Duarte",
+     "jonas.duarte@corp.example",
+     "(555) 782-6382",
+     "Software Engineer",
+     "1",
+     "D02",
+     "E0004",
+     "2025-08-09",
+     "full_time",
+     "60000.00",
+     "active",
+     null
+    ],
+    [
+     "E0019",
+     "Kenji",
+     "Lind",
+     "kenji.lind@corp.example",
+     "(555) 241-1965",
+     "Software Engineer",
+     "1",
+     "D02",
+     "E0004",
+     "2025-12-20",
+     "contractor",
+     "57500.00",
+     "active",
+     null
+    ],
+    [
+     "E0020",
+     "Priya",
+     "Weber",
+     "priya.weber@corp.example",
+     "555-230-7390",
+     "Software Engineer",
+     "1",
+     "D02",
+     "E0003",
+     "2025-07-25",
+     "full_time",
+     "80000.00",
+     "terminated",
+     "2026-06-14"
+    ]
+   ],
+   "project_head": [
+    [
+     "E0001",
+     "Priya",
+     "Silva",
+     "priya.silva@corp.example",
+     "+1 555 278 7973",
+     "Chief Executive Officer",
+     "5",
+     "D01",
+     null,
+     "2025-01-06",
+     "full_time",
+     "260000.00",
+     "active",
+     null
+    ],
+    [
+     "E0002",
+     "Ada",
+     "Kowal",
+     "ada.kowal@corp.example",
+     "(555) 299-3872",
+     "Head of Engineering",
+     "4",
+     "D02",
+     "E0001",
+     "2025-03-07",
+     "full_time",
+     "167500.00",
+     "active",
+     null
+    ],
+    [
+     "E0003",
+     "Lena",
+     "Duarte",
+     "lena.duarte@corp.example",
+     "(555) 317-4274",
+     "Engineering Manager",
+     "3",
+     "D02",
+     "E0005",
+     "2025-05-13",
+     "full_time",
+     "122500.00",
+     "active",
+     null
+    ],
+    [
+     "E0004",
+     "Maya",
+     "Lind",
+     "maya.lind@corp.example",
+     "555-367-6535",
+     "Engineering Manager",
+     "3",
+     "D02",
+     "E0002",
+     "2025-04-01",
+     "full_time",
+     "90000.00",
+     "active",
+     null
+    ],
+    [
+     "E0005",
+     "Jonas",
+     "Mori",
+     "jonas.mori@corp.example",
+     "(555) 972-7410",
+     "Software Engineer",
+     "1",
+     "D02",
+     "E0003",
+     "2025-06-05",
+     "full_time",
+     "67500.00",
+     "active",
+     null
+    ],
+    [
+     "E0006",
+     "Maya",
+     "Sato",
+     "maya.sato@corp.example",
+     "+1 555 761 5743",
+     "software engineer",
+     "1",
+     "D02",
+     "E0004",
+     "2025-09-14",
+     "part_time",
+     "82500.00",
+     "active",
+     null
+    ],
+    [
+     "E0007",
+     "Jonas",
+     "Novak",
+     "jonas.novak@corp.example",
+     "(555) 557-7323",
+     "Software Engineer",
+     "1",
+     "D02",
+     "E0004",
+     "2025-10-19",
+     "full_time",
+     "57500.00",
+     "active",
+     null
+    ],
+    [
+     "E0008",
+     "Lena",
+     "Haddad",
+     "lena.haddad@corp.example",
+     "555.230.2574",
+     "Software Engineer",
+     "1",
+     "D02",
+     "E0003",
+     "2026-01-16",
+     "full_time",
+     "75000.00",
+     "active",
+     null
+    ],
+    [
+     "E0009",
+     "Omar",
+     "Weber",
+     "Omar.Weber@corp.example",
+     "+1 555 850 2896",
+     "Software Engineer",
+     "1",
+     "D02",
+     "E0004",
+     "2025-06-26",
+     "full_time",
+     "67500.00",
+     "active",
+     null
+    ],
+    [
+     "E0010",
+     "Tomas",
+     "Rao",
+     "tomas.rao@corp.example",
+     "555-334-7803",
+     "Software Engineer",
+     "1",
+     "D02",
+     "E0004",
+     "2025-10-10",
+     "full_time",
+     "65000.00",
+     "active",
+     null
+    ],
+    [
+     "E0011",
+     "Tomas",
+     "Sato",
+     "tomas.sato@corp.example",
+     "555-440-6710",
+     "Senior Software Engineer",
+     "2",
+     "D02",
+     "E0003",
+     "2025-12-15",
+     "full_time",
+     "112500.00",
+     "active",
+     null
+    ],
+    [
+     "E0012",
+     "Ines",
+     "Haddad",
+     "ines.haddad@corp.example",
+     "555-973-7652",
+     "Software  Engineer",
+     "1",
+     "D02",
+     "E0004",
+     "2025-06-12",
+     "contractor",
+     "77500.00",
+     "active",
+     null
+    ],
+    [
+     "E0013",
+     "Mateo",
+     "Mori",
+     "mateo.mori@corp.example",
+     "5556474533",
+     "Senior Software Engineer",
+     "2",
+     "D02",
+     "E0003",
+     "2026-01-17",
+     "full_time",
+     "95000.00",
+     "active",
+     null
+    ],
+    [
+     "E0014",
+     "Omar",
+     "Haddad",
+     "omar.haddad@corp.example",
+     "5556847803",
+     "Senior Software Engineer",
+     "2",
+     "D02",
+     "E0003",
+     "2025-11-19",
+     "full_time",
+     "107500.00",
+     "active",
+     null
+    ],
+    [
+     "E0015",
+     "Anika",
+     "Lind",
+     "anika.lind@corp.example",
+     "5554495260",
+     "Senior Software Engineer",
+     "2",
+     "D02",
+     "E0004",
+     "2025-05-12",
+     "full_time",
+     "92500.00",
+     "active",
+     null
+    ],
+    [
+     "E0016",
+     "Leo",
+     "Lind",
+     "leo.lind@corp.example",
+     "555-305-9432",
+     "Senior Software Engineer",
+     "2",
+     "D02",
+     "E0003",
+     "2025-10-31",
+     "full_time",
+     "107500.00",
+     "active",
+     null
+    ],
+    [
+     "E0017",
+     "Kenji",
+     "Kowal",
+     "kenji.kowal@corp.example",
+     "5559647971",
+     "Senior Software Engineer",
+     "2",
+     "D02",
+     "E0003",
+     "2026-03-19",
+     "full_time",
+     "87500.00",
+     "active",
+     null
+    ],
+    [
+     "E0018",
+     "Felix",
+     "Novak",
+     "felix.novak@corp.example",
+     "555-983-7231",
+     "Software Engineer",
+     "1",
+     "D02",
+     "E0003",
+     "2025-06-11",
+     "full_time",
+     "57500.00",
+     "active",
+     null
+    ],
+    [
+     "E0019",
+     "Kofi",
+     "Rao",
+     "kofi.rao@corp.example",
+     "(555) 781-7684",
+     "Software Engineer",
+     "1",
+     "D02",
+     "E0003",
+     "2026-01-21",
+     "full_time",
+     "60000.00",
+     "active",
+     null
+    ],
+    [
+     "E0020",
+     "Mateo",
+     "Silva",
+     "mateo.silva@corp.example",
+     "5554804995",
+     "Software Engineer",
+     "1",
+     "D02",
+     "E0003",
+     "2025-12-02",
+     "full_time",
+     "67500.00",
+     "active",
+     null
+    ]
+   ]
+  },
+  "salary_history": {
+   "note": "One row per salary change: the new salary and the date it took effect.",
+   "columns": [
+    {
+     "name": "employee_id",
+     "type": "string"
+    },
+    {
+     "name": "effective_date",
+     "type": "date"
+    },
+    {
+     "name": "salary",
+     "type": "decimal(10,2)"
+    },
+    {
+     "name": "change_reason",
+     "type": "string"
+    }
+   ],
+   "key": [
+    "employee_id",
+    "effective_date"
+   ],
+   "rows": {
+    "lesson": 14,
+    "practice": 172,
+    "project": 347
+   },
+   "lesson": [
+    [
+     "E0001",
+     "2025-01-06",
+     "260000.00",
+     "hire"
+    ],
+    [
+     "E0002",
+     "2025-05-26",
+     "200000.00",
+     "hire"
+    ],
+    [
+     "E0003",
+     "2025-07-15",
+     "75000.00",
+     "hire"
+    ],
+    [
+     "E0004",
+     "2025-08-15",
+     "57500.00",
+     "hire"
+    ],
+    [
+     "E0004",
+     "2026-05-13",
+     "70000.00",
+     "promotion"
+    ],
+    [
+     "E0005",
+     "2025-07-07",
+     "67500.00",
+     "hire"
+    ],
+    [
+     "E0005",
+     "2026-03-18",
+     "70000.00",
+     "promotion"
+    ],
+    [
+     "E0006",
+     "2025-08-10",
+     "55000.00",
+     "hire"
+    ],
+    [
+     "E0006",
+     "2026-01-13",
+     "62500.00",
+     "promotion"
+    ],
+    [
+     "E0007",
+     "2025-01-06",
+     "150000.00",
+     "hire"
+    ],
+    [
+     "E0008",
+     "2025-05-20",
+     "65000.00",
+     "hire"
+    ],
+    [
+     "E0008",
+     "2025-11-23",
+     "75000.00",
+     "promotion"
+    ],
+    [
+     "E0009",
+     "2025-05-08",
+     "77500.00",
+     "hire"
+    ],
+    [
+     "E0009",
+     "2026-01-06",
+     "90000.00",
+     "promotion"
+    ]
+   ],
+   "practice_head": [
+    [
+     "E0001",
+     "2025-01-06",
+     "260000.00",
+     "hire"
+    ],
+    [
+     "E0002",
+     "2025-01-06",
+     "165000.00",
+     "hire"
+    ],
+    [
+     "E0002",
+     "2026-01-01",
+     "167500.00",
+     "merit"
+    ],
+    [
+     "E0003",
+     "2025-02-02",
+     "145000.00",
+     "hire"
+    ],
+    [
+     "E0003",
+     "2026-01-01",
+     "147500.00",
+     "merit"
+    ],
+    [
+     "E0004",
+     "2025-04-10",
+     "87500.00",
+     "hire"
+    ],
+    [
+     "E0004",
+     "2025-11-13",
+     "100000.00",
+     "promotion"
+    ],
+    [
+     "E0004",
+     "2026-01-01",
+     "102500.00",
+     "merit"
+    ],
+    [
+     "E0005",
+     "2025-07-11",
+     "57500.00",
+     "hire"
+    ],
+    [
+     "E0005",
+     "2026-01-01",
+     "62500.00",
+     "merit"
+    ],
+    [
+     "E0006",
+     "2025-03-20",
+     "55000.00",
+     "hire"
+    ],
+    [
+     "E0006",
+     "2026-01-01",
+     "57500.00",
+     "merit"
+    ],
+    [
+     "E0007",
+     "2026-02-27",
+     "57500.00",
+     "hire"
+    ],
+    [
+     "E0008",
+     "2025-08-03",
+     "75000.00",
+     "hire"
+    ],
+    [
+     "E0008",
+     "2026-01-01",
+     "77500.00",
+     "merit"
+    ],
+    [
+     "E0009",
+     "2026-01-03",
+     "62500.00",
+     "hire"
+    ],
+    [
+     "E0010",
+     "2025-10-17",
+     "80000.00",
+     "hire"
+    ],
+    [
+     "E0011",
+     "2025-11-07",
+     "62500.00",
+     "hire"
+    ],
+    [
+     "E0012",
+     "2026-02-19",
+     "60000.00",
+     "hire"
+    ],
+    [
+     "E0013",
+     "2025-05-26",
+     "67500.00",
+     "hire"
+    ]
+   ],
+   "project_head": [
+    [
+     "E0001",
+     "2025-01-06",
+     "260000.00",
+     "hire"
+    ],
+    [
+     "E0002",
+     "2025-03-07",
+     "165000.00",
+     "hire"
+    ],
+    [
+     "E0002",
+     "2026-01-01",
+     "167500.00",
+     "merit"
+    ],
+    [
+     "E0003",
+     "2025-05-13",
+     "120000.00",
+     "hire"
+    ],
+    [
+     "E0003",
+     "2026-01-01",
+     "122500.00",
+     "merit"
+    ],
+    [
+     "E0004",
+     "2025-04-01",
+     "80000.00",
+     "hire"
+    ],
+    [
+     "E0004",
+     "2026-01-01",
+     "82500.00",
+     "merit"
+    ],
+    [
+     "E0004",
+     "2026-01-18",
+     "90000.00",
+     "promotion"
+    ],
+    [
+     "E0005",
+     "2025-06-05",
+     "65000.00",
+     "hire"
+    ],
+    [
+     "E0005",
+     "2026-01-01",
+     "67500.00",
+     "merit"
+    ],
+    [
+     "E0006",
+     "2025-09-14",
+     "77500.00",
+     "hire"
+    ],
+    [
+     "E0006",
+     "2026-01-01",
+     "82500.00",
+     "merit"
+    ],
+    [
+     "E0007",
+     "2025-10-19",
+     "57500.00",
+     "hire"
+    ],
+    [
+     "E0008",
+     "2026-01-16",
+     "75000.00",
+     "hire"
+    ],
+    [
+     "E0009",
+     "2025-06-26",
+     "65000.00",
+     "hire"
+    ],
+    [
+     "E0009",
+     "2026-01-01",
+     "67500.00",
+     "merit"
+    ],
+    [
+     "E0010",
+     "2025-10-10",
+     "65000.00",
+     "hire"
+    ],
+    [
+     "E0011",
+     "2025-12-15",
+     "112500.00",
+     "hire"
+    ],
+    [
+     "E0012",
+     "2025-06-12",
+     "77500.00",
+     "hire"
+    ],
+    [
+     "E0013",
+     "2026-01-17",
+     "95000.00",
+     "hire"
+    ]
+   ]
+  },
+  "promotions": {
+   "note": "One row per promotion: the old and new title and level, and the raise that came with it.",
+   "columns": [
+    {
+     "name": "promotion_id",
+     "type": "string"
+    },
+    {
+     "name": "employee_id",
+     "type": "string"
+    },
+    {
+     "name": "effective_date",
+     "type": "date"
+    },
+    {
+     "name": "from_title",
+     "type": "string"
+    },
+    {
+     "name": "to_title",
+     "type": "string"
+    },
+    {
+     "name": "from_level",
+     "type": "int"
+    },
+    {
+     "name": "to_level",
+     "type": "int"
+    },
+    {
+     "name": "salary_increase",
+     "type": "decimal(10,2)"
+    }
+   ],
+   "key": [
+    "promotion_id"
+   ],
+   "rows": {
+    "lesson": 5,
+    "practice": 6,
+    "project": 15
+   },
+   "lesson": [
+    [
+     "PR0001",
+     "E0008",
+     "2025-11-23",
+     "Financial Analyst",
+     "Senior Financial Analyst",
+     "1",
+     "2",
+     "10000.00"
+    ],
+    [
+     "PR0002",
+     "E0009",
+     "2026-01-06",
+     "Financial Analyst",
+     "Senior Financial Analyst",
+     "1",
+     "2",
+     "12500.00"
+    ],
+    [
+     "PR0003",
+     "E0006",
+     "2026-01-13",
+     "Software Engineer",
+     "Senior Software Engineer",
+     "1",
+     "2",
+     "7500.00"
+    ],
+    [
+     "PR0004",
+     "E0005",
+     "2026-03-18",
+     "Software Engineer",
+     "Senior Software Engineer",
+     "1",
+     "2",
+     "2500.00"
+    ],
+    [
+     "PR0005",
+     "E0004",
+     "2026-05-13",
+     "Software Engineer",
+     "Senior Software Engineer",
+     "1",
+     "2",
+     "12500.00"
+    ]
+   ],
+   "practice_head": [
+    [
+     "PR0001",
+     "E0044",
+     "2025-11-10",
+     "Account Executive",
+     "Senior Account Executive",
+     "1",
+     "2",
+     "7500.00"
+    ],
+    [
+     "PR0002",
+     "E0004",
+     "2025-11-13",
+     "Senior Software Engineer",
+     "Engineering Manager",
+     "2",
+     "3",
+     "12500.00"
+    ],
+    [
+     "PR0003",
+     "E0077",
+     "2025-11-18",
+     "Support Specialist",
+     "Senior Support Specialist",
+     "1",
+     "2",
+     "7500.00"
+    ],
+    [
+     "PR0004",
+     "E0098",
+     "2026-01-27",
+     "Data Analyst",
+     "Senior Data Analyst",
+     "1",
+     "2",
+     "12500.00"
+    ],
+    [
+     "PR0005",
+     "E0024",
+     "2026-02-05",
+     "Financial Analyst",
+     "Senior Financial Analyst",
+     "1",
+     "2",
+     "10000.00"
+    ],
+    [
+     "PR0006",
+     "E0070",
+     "2026-06-01",
+     "Marketing Specialist",
+     "Senior Marketing Specialist",
+     "1",
+     "2",
+     "12500.00"
+    ]
+   ],
+   "project_head": [
+    [
+     "PR0001",
+     "E0067",
+     "2025-08-02",
+     "Senior People Partner",
+     "People Manager",
+     "2",
+     "3",
+     "7500.00"
+    ],
+    [
+     "PR0002",
+     "E0150",
+     "2025-09-24",
+     "Data Analyst",
+     "Senior Data Analyst",
+     "1",
+     "2",
+     "7500.00"
+    ],
+    [
+     "PR0003",
+     "E0166",
+     "2025-10-02",
+     "Senior Operations Analyst",
+     "Operations Manager",
+     "2",
+     "3",
+     "7500.00"
+    ],
+    [
+     "PR0004",
+     "E0023",
+     "2025-10-10",
+     "Senior Financial Analyst",
+     "Finance Manager",
+     "2",
+     "3",
+     "7500.00"
+    ],
+    [
+     "PR0005",
+     "E0092",
+     "2025-11-16",
+     "People Partner",
+     "Senior People Partner",
+     "1",
+     "2",
+     "7500.00"
+    ],
+    [
+     "PR0006",
+     "E0200",
+     "2025-11-18",
+     "Legal Counsel",
+     "Senior Legal Counsel",
+     "1",
+     "2",
+     "7500.00"
+    ],
+    [
+     "PR0007",
+     "E0152",
+     "2026-01-17",
+     "Data Analyst",
+     "Senior Data Analyst",
+     "1",
+     "2",
+     "7500.00"
+    ],
+    [
+     "PR0008",
+     "E0004",
+     "2026-01-18",
+     "Senior Software Engineer",
+     "Engineering Manager",
+     "2",
+     "3",
+     "7500.00"
+    ],
+    [
+     "PR0009",
+     "E0078",
+     "2026-01-22",
+     "People Partner",
+     "Senior People Partner",
+     "1",
+     "2",
+     "12500.00"
+    ],
+    [
+     "PR0010",
+     "E0065",
+     "2026-02-06",
+     "Senior People Partner",
+     "People Manager",
+     "2",
+     "3",
+     "12500.00"
+    ],
+    [
+     "PR0011",
+     "E0079",
+     "2026-02-17",
+     "People Partner",
+     "Senior People Partner",
+     "1",
+     "2",
+     "10000.00"
+    ],
+    [
+     "PR0012",
+     "E0080",
+     "2026-02-21",
+     "People Partner",
+     "Senior People Partner",
+     "1",
+     "2",
+     "12500.00"
+    ],
+    [
+     "PR0013",
+     "E0049",
+     "2026-02-22",
+     "Account Executive",
+     "Senior Account Executive",
+     "1",
+     "2",
+     "12500.00"
+    ],
+    [
+     "PR0014",
+     "E0024",
+     "2026-03-04",
+     "Financial Analyst",
+     "Senior Financial Analyst",
+     "1",
+     "2",
+     "10000.00"
+    ],
+    [
+     "PR0015",
+     "E0113",
+     "2026-03-29",
+     "Marketing Specialist",
+     "Senior Marketing Specialist",
+     "1",
+     "2",
+     "7500.00"
+    ]
+   ]
+  },
+  "attendance": {
+   "note": "One row per employee per working day in the period: present, remote, sick, vacation or absent.",
+   "columns": [
+    {
+     "name": "employee_id",
+     "type": "string"
+    },
+    {
+     "name": "work_date",
+     "type": "date"
+    },
+    {
+     "name": "status",
+     "type": "string"
+    },
+    {
+     "name": "check_in",
+     "type": "timestamp"
+    },
+    {
+     "name": "hours_worked",
+     "type": "double"
+    }
+   ],
+   "key": [
+    "employee_id",
+    "work_date"
+   ],
+   "rows": {
+    "lesson": 10,
+    "practice": 2002,
+    "project": 5243
+   },
+   "lesson": [
+    [
+     "E0003",
+     "2026-03-02",
+     "remote",
+     "2026-03-02T07:13:00",
+     "7.5"
+    ],
+    [
+     "E0008",
+     "2026-03-02",
+     "present",
+     "2026-03-02T09:11:00",
+     "9.5"
+    ],
+    [
+     "E0003",
+     "2026-03-03",
+     "present",
+     "2026-03-03T08:22:00",
+     "8.0"
+    ],
+    [
+     "E0008",
+     "2026-03-03",
+     "vacation",
+     null,
+     null
+    ],
+    [
+     "E0003",
+     "2026-03-04",
+     "present",
+     "2026-03-04T07:31:00",
+     "7.0"
+    ],
+    [
+     "E0008",
+     "2026-03-04",
+     "present",
+     "2026-03-04T08:43:00",
+     "7.75"
+    ],
+    [
+     "E0003",
+     "2026-03-05",
+     "sick",
+     null,
+     null
+    ],
+    [
+     "E0008",
+     "2026-03-05",
+     "present",
+     "2026-03-05T09:16:00",
+     "7.75"
+    ],
+    [
+     "E0003",
+     "2026-03-06",
+     "sick",
+     null,
+     null
+    ],
+    [
+     "E0008",
+     "2026-03-06",
+     "present",
+     "2026-03-06T07:16:00",
+     "8.25"
+    ]
+   ],
+   "practice_head": [
+    [
+     "E0001",
+     "2026-03-02",
+     "remote",
+     "2026-03-02T09:42:00",
+     "8.5"
+    ],
+    [
+     "E0002",
+     "2026-03-02",
+     "present",
+     "2026-03-02T09:01:00",
+     "7.5"
+    ],
+    [
+     "E0003",
+     "2026-03-02",
+     "vacation",
+     null,
+     null
+    ],
+    [
+     "E0004",
+     "2026-03-02",
+     "present",
+     "2026-03-02T07:00:00",
+     "9.0"
+    ],
+    [
+     "E0005",
+     "2026-03-02",
+     "present",
+     "2026-03-02T08:54:00",
+     "9.0"
+    ],
+    [
+     "E0006",
+     "2026-03-02",
+     "remote",
+     "2026-03-02T07:52:00",
+     "9.5"
+    ],
+    [
+     "E0007",
+     "2026-03-02",
+     "present",
+     "2026-03-02T09:25:00",
+     "7.0"
+    ],
+    [
+     "E0008",
+     "2026-03-02",
+     "vacation",
+     null,
+     null
+    ],
+    [
+     "E0009",
+     "2026-03-02",
+     "present",
+     "2026-03-02T09:49:00",
+     "9.5"
+    ],
+    [
+     "E0010",
+     "2026-03-02",
+     "present",
+     "2026-03-02T09:10:00",
+     "8.25"
+    ],
+    [
+     "E0011",
+     "2026-03-02",
+     "present",
+     "2026-03-02T09:11:00",
+     "7.0"
+    ],
+    [
+     "E0012",
+     "2026-03-02",
+     "vacation",
+     null,
+     null
+    ],
+    [
+     "E0013",
+     "2026-03-02",
+     "present",
+     "2026-03-02T08:59:00",
+     "7.75"
+    ],
+    [
+     "E0014",
+     "2026-03-02",
+     "present",
+     "2026-03-02T07:28:00",
+     "7.75"
+    ],
+    [
+     "E0015",
+     "2026-03-02",
+     "present",
+     "2026-03-02T08:10:00",
+     "7.5"
+    ],
+    [
+     "E0016",
+     "2026-03-02",
+     "absent",
+     null,
+     "0.0"
+    ],
+    [
+     "E0017",
+     "2026-03-02",
+     "present",
+     "2026-03-02T08:51:00",
+     "8.0"
+    ],
+    [
+     "E0018",
+     "2026-03-02",
+     "present",
+     "2026-03-02T08:59:00",
+     "7.0"
+    ],
+    [
+     "E0019",
+     "2026-03-02",
+     "present",
+     "2026-03-02T07:18:00",
+     "8.0"
+    ],
+    [
+     "E0020",
+     "2026-03-02",
+     "present",
+     "2026-03-02T09:12:00",
+     "9.5"
+    ]
+   ],
+   "project_head": [
+    [
+     "E0001",
+     "2026-03-02",
+     "present",
+     "2026-03-02T07:38:00",
+     "8.0"
+    ],
+    [
+     "E0002",
+     "2026-03-02",
+     "present",
+     "2026-03-02T07:10:00",
+     "8.25"
+    ],
+    [
+     "E0003",
+     "2026-03-02",
+     "present",
+     "2026-03-02T09:45:00",
+     "9.5"
+    ],
+    [
+     "E0004",
+     "2026-03-02",
+     "present",
+     "2026-03-02T07:38:00",
+     "8.0"
+    ],
+    [
+     "E0005",
+     "2026-03-02",
+     "present",
+     "2026-03-02T07:23:00",
+     "7.0"
+    ],
+    [
+     "E0006",
+     "2026-03-02",
+     "present",
+     "2026-03-02T09:47:00",
+     "9.0"
+    ],
+    [
+     "E0007",
+     "2026-03-02",
+     "present",
+     "2026-03-02T07:50:00",
+     "8.25"
+    ],
+    [
+     "E0008",
+     "2026-03-02",
+     "present",
+     "2026-03-02T09:06:00",
+     "8.0"
+    ],
+    [
+     "E0009",
+     "2026-03-02",
+     "present",
+     "2026-03-02T09:45:00",
+     "7.5"
+    ],
+    [
+     "E0010",
+     "2026-03-02",
+     "present",
+     "2026-03-02T08:55:00",
+     "8.5"
+    ],
+    [
+     "E0011",
+     "2026-03-02",
+     "absent",
+     null,
+     "0.0"
+    ],
+    [
+     "E0012",
+     "2026-03-02",
+     "present",
+     "2026-03-02T08:28:00",
+     "7.75"
+    ],
+    [
+     "E0013",
+     "2026-03-02",
+     "remote",
+     "2026-03-02T08:27:00",
+     "8.25"
+    ],
+    [
+     "E0014",
+     "2026-03-02",
+     "present",
+     "2026-03-02T08:26:00",
+     "7.5"
+    ],
+    [
+     "E0015",
+     "2026-03-02",
+     "present",
+     "2026-03-02T08:43:00",
+     "7.5"
+    ],
+    [
+     "E0016",
+     "2026-03-02",
+     "present",
+     "2026-03-02T09:44:00",
+     "8.5"
+    ],
+    [
+     "E0018",
+     "2026-03-02",
+     "present",
+     "2026-03-02T07:37:00",
+     "9.5"
+    ],
+    [
+     "E0019",
+     "2026-03-02",
+     "remote",
+     "2026-03-02T09:24:00",
+     "8.25"
+    ],
+    [
+     "E0020",
+     "2026-03-02",
+     "present",
+     "2026-03-02T08:39:00",
+     "7.5"
+    ],
+    [
+     "E0021",
+     "2026-03-02",
+     "present",
+     "2026-03-02T08:56:00",
+     "8.0"
+    ]
+   ]
+  },
+  "managers": {
+   "note": "One row per management appointment: who led which department or team, from when, and until when.",
+   "columns": [
+    {
+     "name": "manager_id",
+     "type": "string"
+    },
+    {
+     "name": "department_id",
+     "type": "string"
+    },
+    {
+     "name": "role",
+     "type": "string"
+    },
+    {
+     "name": "effective_from",
+     "type": "date"
+    },
+    {
+     "name": "effective_to",
+     "type": "date"
+    }
+   ],
+   "key": [
+    "manager_id",
+    "department_id",
+    "effective_from"
+   ],
+   "rows": {
+    "lesson": 4,
+    "practice": 23,
+    "project": 38
+   },
+   "lesson": [
+    [
+     "E0001",
+     "D01",
+     "chief_executive",
+     "2025-01-06",
+     null
+    ],
+    [
+     "E0001",
+     "D02",
+     "acting_head",
+     "2025-01-06",
+     "2025-05-25"
+    ],
+    [
+     "E0002",
+     "D02",
+     "department_head",
+     "2025-05-26",
+     null
+    ],
+    [
+     "E0007",
+     "D03",
+     "department_head",
+     "2025-01-06",
+     null
+    ]
+   ],
+   "practice_head": [
+    [
+     "E0001",
+     "D01",
+     "chief_executive",
+     "2025-01-06",
+     null
+    ],
+    [
+     "E0002",
+     "D02",
+     "department_head",
+     "2025-01-06",
+     null
+    ],
+    [
+     "E0003",
+     "D02",
+     "team_manager",
+     "2025-02-02",
+     null
+    ],
+    [
+     "E0004",
+     "D02",
+     "team_manager",
+     "2025-11-13",
+     null
+    ],
+    [
+     "E0001",
+     "D03",
+     "acting_head",
+     "2025-01-06",
+     "2025-01-12"
+    ],
+    [
+     "E0021",
+     "D03",
+     "department_head",
+     "2025-01-13",
+     null
+    ],
+    [
+     "E0022",
+     "D03",
+     "team_manager",
+     "2025-03-19",
+     null
+    ],
+    [
+     "E0035",
+     "D04",
+     "department_head",
+     "2025-01-06",
+     null
+    ],
+    [
+     "E0036",
+     "D04",
+     "team_manager",
+     "2025-02-07",
+     null
+    ],
+    [
+     "E0001",
+     "D05",
+     "acting_head",
+     "2025-01-06",
+     "2025-05-25"
+    ],
+    [
+     "E0045",
+     "D05",
+     "department_head",
+     "2025-05-26",
+     null
+    ],
+    [
+     "E0046",
+     "D05",
+     "team_manager",
+     "2025-06-19",
+     null
+    ],
+    [
+     "E0047",
+     "D05",
+     "team_manager",
+     "2025-07-23",
+     null
+    ],
+    [
+     "E0001",
+     "D06",
+     "acting_head",
+     "2025-01-06",
+     "2025-04-10"
+    ],
+    [
+     "E0063",
+     "D06",
+     "department_head",
+     "2025-04-11",
+     null
+    ],
+    [
+     "E0064",
+     "D06",
+     "team_manager",
+     "2025-06-14",
+     null
+    ],
+    [
+     "E0001",
+     "D07",
+     "acting_head",
+     "2025-01-06",
+     "2025-02-04"
+    ],
+    [
+     "E0074",
+     "D07",
+     "department_head",
+     "2025-02-05",
+     null
+    ],
+    [
+     "E0075",
+     "D07",
+     "team_manager",
+     "2025-03-03",
+     null
+    ],
+    [
+     "E0076",
+     "D07",
+     "team_manager",
+     "2025-02-19",
+     null
+    ]
+   ],
+   "project_head": [
+    [
+     "E0001",
+     "D01",
+     "chief_executive",
+     "2025-01-06",
+     null
+    ],
+    [
+     "E0001",
+     "D02",
+     "acting_head",
+     "2025-01-06",
+     "2025-03-06"
+    ],
+    [
+     "E0002",
+     "D02",
+     "department_head",
+     "2025-03-07",
+     null
+    ],
+    [
+     "E0003",
+     "D02",
+     "team_manager",
+     "2025-05-13",
+     null
+    ],
+    [
+     "E0004",
+     "D02",
+     "team_manager",
+     "2026-01-18",
+     null
+    ],
+    [
+     "E0001",
+     "D03",
+     "acting_head",
+     "2025-01-06",
+     "2025-02-04"
+    ],
+    [
+     "E0022",
+     "D03",
+     "department_head",
+     "2025-02-05",
+     null
+    ],
+    [
+     "E0023",
+     "D03",
+     "team_manager",
+     "2025-10-10",
+     null
+    ],
+    [
+     "E0001",
+     "D04",
+     "acting_head",
+     "2025-01-06",
+     "2025-02-04"
+    ],
+    [
+     "E0037",
+     "D04",
+     "department_head",
+     "2025-02-05",
+     null
+    ],
+    [
+     "E0038",
+     "D04",
+     "team_manager",
+     "2025-05-28",
+     null
+    ],
+    [
+     "E0039",
+     "D04",
+     "team_manager",
+     "2025-03-23",
+     null
+    ],
+    [
+     "E0040",
+     "D04",
+     "team_manager",
+     "2025-06-02",
+     null
+    ],
+    [
+     "E0063",
+     "D05",
+     "department_head",
+     "2025-01-06",
+     null
+    ],
+    [
+     "E0064",
+     "D05",
+     "team_manager",
+     "2025-03-06",
+     null
+    ],
+    [
+     "E0065",
+     "D05",
+     "team_manager",
+     "2026-02-06",
+     null
+    ],
+    [
+     "E0066",
+     "D05",
+     "team_manager",
+     "2025-04-03",
+     null
+    ],
+    [
+     "E0067",
+     "D05",
+     "team_manager",
+     "2025-08-02",
+     null
+    ],
+    [
+     "E0001",
+     "D06",
+     "acting_head",
+     "2025-01-06",
+     "2025-03-06"
+    ],
+    [
+     "E0097",
+     "D06",
+     "department_head",
+     "2025-03-07",
+     null
+    ]
+   ]
+  },
+  "employees_raw": {
+   "note": "One row per line of the raw `;`-delimited HR export, read as text: a header, then one line per employee.",
+   "columns": [
+    {
+     "name": "value",
+     "type": "string"
+    }
+   ],
+   "key": [],
+   "rows": {
+    "lesson": 10,
+    "practice": 105,
+    "project": 222
+   },
+   "lesson": [
+    [
+     "employee_id;full_name;job_title;department;salary;hire_date"
+    ],
+    [
+     "E0001;Tomas Haddad;Chief Executive Officer;Executive;260000.00;2025-01-06"
+    ],
+    [
+     "E0002;Noor Novak;Head of Engineering;Engineering;200000.00;2025-05-26"
+    ],
+    [
+     "E0003;Lena Duarte;Software Engineer;Engineering;75000.00;2025-07-15"
+    ],
+    [
+     "E0004;Anika Silva;Senior Software Engineer;Engineering;70000.00;2025-08-15"
+    ],
+    [
+     "E0005;Elif Rao;Senior Software Engineer"
+    ],
+    [
+     "E0006;Maya Rao;Senior Software Engineer;Engineering;62500.00;2025-08-10"
+    ],
+    [
+     "E0007;Ines Novak;\"Head of Finance; Onboarding\";Finance;150000.00;2025-01-06"
+    ],
+    [
+     "E0008;Elif Weber;Senior Financial Analyst;Finance;75000.00;2025-05-20"
+    ],
+    [
+     "E0009;Anika Grant;Senior Financial Analyst;Finance;90000.00;2025-05-08"
+    ]
+   ],
+   "practice_head": [
+    [
+     "employee_id;full_name;job_title;department;salary;hire_date"
+    ],
+    [
+     "E0001;Elif Silva;Chief Executive Officer;Executive;260000.00;2025-01-06"
+    ],
+    [
+     "E0002;Kenji Okafor;Head of Engineering;Engineering;167500.00;2025-01-06"
+    ],
+    [
+     "E0003;Elif Grant;Engineering Manager;Engineering;147500.00;2025-02-02"
+    ],
+    [
+     "E0004;Arjun Kowal;Engineering Manager;Engineering;102500.00;2025-04-10"
+    ],
+    [
+     "E0005;Sana Novak;Software Engineer;Engineering;62500.00;2025-07-11"
+    ],
+    [
+     "E0006;Dmitri Mori;Software Engineer;Engineering;57500.00;2025-03-20"
+    ],
+    [
+     "E0007;Dmitri Costa;Software Engineer;Engineering;57500.00;2026-02-27"
+    ],
+    [
+     "E0008;Kofi Novak;Software Engineer;Engineering;77500.00;2025-08-03"
+    ],
+    [
+     "E0009;Anika Lind;Software Engineer;Engineering;62500.00;2026-01-03"
+    ],
+    [
+     "E0010;Priya Costa;Software Engineer;Engineering;80000.00;2025-10-17"
+    ],
+    [
+     "E0011;Kenji Duarte;\"Software Engineer; EMEA\";Engineering;62500.00;2025-11-07"
+    ],
+    [
+     "E0012;Ada Silva;\"Software Engineer; Pricing\";Engineering;60000.00;2026-02-19"
+    ],
+    [
+     "E0013;Anika Rao;Software Engineer;Engineering;72500.00;2025-05-26"
+    ],
+    [
+     "E0014;Omar Weber;Senior Software Engineer;Engineering;95000.00;2025-08-22"
+    ],
+    [
+     "E0015;Priya Costa;Software Engineer;Engineering;80000.00;2025-04-07"
+    ],
+    [
+     "E0016;Maya Mori;Software Engineer;Engineering;65000.00;2025-07-11"
+    ],
+    [
+     "E0017;Tomas Lind;Senior Software Engineer;Engineering;105000.00;2026-02-25"
+    ],
+    [
+     "E0018;Jonas Duarte;Software Engineer;Engineering;60000.00;2025-08-09"
+    ],
+    [
+     "E0019;Kenji Lind;Software Engineer;Engineering;57500.00;2025-12-20"
+    ]
+   ],
+   "project_head": [
+    [
+     "employee_id;full_name;job_title;department;salary;hire_date"
+    ],
+    [
+     "E0001;Priya Silva;Chief Executive Officer;Executive;260000.00;2025-01-06"
+    ],
+    [
+     "E0002;Ada Kowal;Head of Engineering;Engineering;167500.00;2025-03-07"
+    ],
+    [
+     "E0003;Lena Duarte;Engineering Manager;Engineering;122500.00;2025-05-13"
+    ],
+    [
+     "E0004;Maya Lind;Engineering Manager;Engineering;90000.00;2025-04-01"
+    ],
+    [
+     "E0005;Jonas Mori;Software Engineer;Engineering;67500.00;2025-06-05"
+    ],
+    [
+     "E0006;Maya Sato;Software Engineer;Engineering;82500.00;2025-09-14"
+    ],
+    [
+     "E0007;Jonas Novak;\"Software Engineer; EMEA\";Engineering;57500.00;2025-10-19"
+    ],
+    [
+     "E0008;Lena Haddad;Software Engineer;Engineering;75000.00;2026-01-16"
+    ],
+    [
+     "E0009;Omar Weber;Software Engineer;Engineering;67500.00;2025-06-26"
+    ],
+    [
+     "E0010;Tomas Rao;Software Engineer;Engineering;65000.00;2025-10-10"
+    ],
+    [
+     "E0011;Tomas Sato;Senior Software Engineer;Engineering;112500.00;2025-12-15"
+    ],
+    [
+     "E0012;Ines Haddad;Software Engineer;Engineering;77500.00;2025-06-12"
+    ],
+    [
+     "E0013;Mateo Mori;Senior Software Engineer;Engineering;95000.00;2026-01-17"
+    ],
+    [
+     "E0014;Omar Haddad;Senior Software Engineer;Engineering;107500.00;2025-11-19"
+    ],
+    [
+     "E0015;Anika Lind;Senior Software Engineer;Engineering;92500.00;2025-05-12"
+    ],
+    [
+     "E0016;Leo Lind;Senior Software Engineer;Engineering;107500.00;2025-10-31"
+    ],
+    [
+     "E0017;Kenji Kowal;Senior Software Engineer;Engineering;87500.00;2026-03-19"
+    ],
+    [
+     "E0018;Felix Novak;Software Engineer;Engineering;57500.00;2025-06-11"
+    ],
+    [
+     "E0019;Kofi Rao;Software Engineer;Engineering;60000.00;2026-01-21"
+    ]
+   ],
+   "format": "text"
+  }
+ }
+}

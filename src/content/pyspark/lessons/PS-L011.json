@@ -1,0 +1,135 @@
+{
+  "id": "PS-L011",
+  "minutes": 20,
+  "lede": "A table has no built-in order, so \"the top five\" or \"newest first\" only means something once you sort. `orderBy` sorts, `distinct` removes repeated rows and `limit` keeps the first few.",
+  "objectives": [
+    "Sort rows with `orderBy` (or `sort`), ascending or descending",
+    "Break ties with a second sort column so the order is always the same",
+    "Remove repeated rows with `distinct` and count what's left",
+    "Get a top N with `orderBy` followed by `limit`, and say where missing values sort"
+  ],
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "movies",
+      "ratings"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "The tables above come from a small streaming service: `movies`, one row per film, and `ratings`, one row each time a member rated a film from 0.5 to 5.0 stars. On this page they're loaded as DataFrames with those names, and `F` is `pyspark.sql.functions`.\n\n`df.orderBy(\"col\")` gives back a **new** DataFrame with the same rows, sorted by that column, smallest first. To sort the other way, pass `F.desc(\"col\")` or `F.col(\"col\").desc()`. `sort` is the same method under another name."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Shortest and longest films first",
+      "code": "from pyspark.sql import functions as F\n\nmovies.orderBy(\"runtime_min\").select(\"title\", \"runtime_min\").show(3)\n\nmovies.orderBy(F.desc(\"runtime_min\")).select(\"title\", \"runtime_min\").show(3)\n",
+      "note": "Ascending is the default. `F.desc` flips it, so the longest film comes first. `select` only trims what's printed; the sort keeps every column."
+    },
+    {
+      "kind": "text",
+      "md": "When two rows have the same value in the sort column, Spark may put them in **either** order, and it can change from one run to the next. Add a second column to decide ties. Each column can go its own way: here the newest year comes first, and within a year the titles go from A to Z."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Break ties with a second column",
+      "code": "from pyspark.sql import functions as F\n\nby_year = movies.orderBy(F.desc(\"release_year\"), \"title\")\nby_year.select(\"title\", \"release_year\").show()\n",
+      "note": "Three films came out in 2024. Sorting by year alone would leave their order to chance; the title settles it."
+    },
+    {
+      "kind": "text",
+      "md": "`distinct()` keeps one copy of each row and drops the repeats. It compares **whole rows**, so `select` the columns you care about first. The rows come back in no particular order, so sort them afterwards if order matters."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "The list of genres",
+      "code": "genres = movies.select(\"primary_genre\").distinct()\ngenres.orderBy(\"primary_genre\").show()\n\nprint(genres.count(), \"genres\")\nprint(movies.select(\"primary_genre\", \"language\").distinct().count(), \"genre and language pairs\")\n",
+      "note": "Ten films, eight genres: Drama and Thriller appear twice. With two columns, a row is a repeat only when both values match, so every film here is its own pair."
+    },
+    {
+      "kind": "text",
+      "md": "`limit(n)` keeps at most `n` rows. On its own it keeps whichever rows Spark reaches first, which isn't a top anything. **Sort first, then limit**, and include enough sort columns that ties are settled."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "The three highest ratings",
+      "code": "from pyspark.sql import functions as F\n\ntop = ratings.orderBy(F.desc(\"rating\"), \"movie_id\", \"user_id\").limit(3)\ntop.show()\n",
+      "note": "Two ratings of 5.0 tie, and so do two of 4.5. `movie_id` and then `user_id` decide which come first, so the same three rows come back every time."
+    },
+    {
+      "kind": "text",
+      "md": "Missing values have a fixed place too: they come **first** when sorting ascending and **last** when sorting descending. To choose, use `asc_nulls_last()`, `asc_nulls_first()`, `desc_nulls_first()` or `desc_nulls_last()` on a column."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Where missing values go",
+      "code": "from pyspark.sql import functions as F\n\nruntimes = spark.createDataFrame([(\"M01\", 118), (\"M02\", None), (\"M03\", 92)], \"movie_id STRING, runtime_min INT\")\n\nruntimes.orderBy(\"runtime_min\").show()\nruntimes.orderBy(F.col(\"runtime_min\").asc_nulls_last()).show()\n",
+      "note": "The missing runtime sorts before 92 at first. `asc_nulls_last()` keeps the order ascending but moves it to the end."
+    },
+    {
+      "kind": "error-example",
+      "id": "e6",
+      "title": "Forgetting the brackets on desc",
+      "code": "from pyspark.sql import functions as F\n\nmovies.orderBy(F.col(\"release_year\").desc).show()\n",
+      "error": "PySparkTypeError",
+      "note": "`desc` is a method, so it needs brackets: `F.col(\"release_year\").desc()`. Without them `orderBy` gets the method itself instead of a column, and says so."
+    }
+  ],
+  "challenges": [
+    "PS-L011-C1",
+    "PS-L011-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "`movies.limit(3)` runs without `orderBy`. Which three films do you get?",
+      "choices": [
+        "The three newest films",
+        "The three films with the smallest movie_id",
+        "Whichever three rows Spark reaches first; there's no promise which",
+        "Three films picked at random on purpose"
+      ],
+      "answer": 2,
+      "why": "A DataFrame has no order until you sort it. `limit` just stops after `n` rows, so sort first when you mean \"top\"."
+    },
+    {
+      "id": "k2",
+      "prompt": "A column has the values 3, missing and 1. In what order does `orderBy(\"v\")` put them?",
+      "choices": [
+        "missing, 1, 3",
+        "1, 3, missing",
+        "1, missing, 3",
+        "It stops with an error"
+      ],
+      "answer": 0,
+      "why": "Missing values come first when sorting ascending and last when sorting descending. `asc_nulls_last()` changes that."
+    },
+    {
+      "id": "k3",
+      "prompt": "What does `movies.select(\"primary_genre\", \"language\").distinct()` keep?",
+      "choices": [
+        "One row per genre",
+        "One row per language",
+        "One row per different pair of genre and language",
+        "Only the pairs that appear once"
+      ],
+      "answer": 2,
+      "why": "`distinct` compares whole rows. Two rows are repeats only when every column matches, so here each different genre and language pair stays once."
+    }
+  ],
+  "review": [
+    "`df.orderBy(\"col\")` sorts ascending; `F.desc(\"col\")` or `F.col(\"col\").desc()` sorts descending. `sort` is the same method.",
+    "Rows that tie on the sort columns can come back in any order. Add another column to settle ties.",
+    "Missing values sort first ascending and last descending; `asc_nulls_last()` and friends choose.",
+    "`distinct()` keeps one copy of each whole row. Select the columns you care about first, then sort if order matters.",
+    "`limit(n)` keeps at most `n` rows. For a top N, sort first, then limit."
+  ],
+  "practice": ["PS-Q0051", "PS-Q0052", "PS-Q0053", "PS-Q0054", "PS-Q0055"]
+}

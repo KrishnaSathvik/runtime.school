@@ -1,0 +1,58 @@
+{
+ "id": "PS-Q0332",
+ "slug": "completed-orders-from-the-checkout-stream",
+ "lesson": "PS-L067",
+ "role": "business",
+ "format": "dataframe_coding",
+ "difficulty": "hard",
+ "minutes": 17,
+ "title": "Completed orders from the checkout stream",
+ "dataset": {
+  "id": "PS-D06",
+  "version": "1.0.0"
+ },
+ "prompt": "Finance books an order when its checkout reaches the `complete` step. Write `solve(checkout_events)` so a streaming query reads the delivery files and returns `order_id`, `user_id`, `payment_method`, `lines` and `order_total` for every completed checkout.",
+ "rules": [
+  "A checkout is completed when `step` is `complete`; the earlier steps aren't orders yet.",
+  "`payment_method` is the payment's `method`, and `lines` is the number of items in the basket.",
+  "Anonymous shoppers have no `user_id`: keep their orders, with `user_id` missing.",
+  "The rows must come from a streaming query over the delivery files: filtering `checkout_events` itself doesn't count."
+ ],
+ "hints": [
+  "`payment` is a struct: `\"payment.method\"` reaches its field. `F.size(\"items\")` counts the basket's items.",
+  "Filter and select on the stream, then collect each micro-batch inside `foreachBatch`.",
+  "A payment step has a payment too, so test the step, not whether `payment` is set."
+ ],
+ "explanation": "Stream the folder with the table's schema, then `filter(F.col(\"step\") == \"complete\")` and `select` the order columns, with `F.col(\"payment.method\").alias(\"payment_method\")` and `F.size(\"items\").alias(\"lines\")`. `foreachBatch` collects each micro-batch into the list, and `availableNow` with `awaitTermination()` makes sure every delivery was read before the list becomes a DataFrame. Filtering on `payment` being set also keeps the payment steps, which aren't orders yet, and the provider is the company behind the method, not the method. An anonymous order is still an order: nothing in the filter should look at `user_id`.",
+ "entry": "solve",
+ "inputs": [
+  "checkout_events"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef solve(checkout_events):\n    make_batches(checkout_events, \"/tmp/checkout\")\n    rows = []\n    # Stream /tmp/checkout, keep the completed checkouts, and add\n    # (order_id, user_id, payment_method, lines, order_total) to rows from each micro-batch.\n\n    return spark.createDataFrame(rows, \"order_id STRING, user_id STRING, payment_method STRING, lines INT, order_total DOUBLE\")\n",
+ "output": {
+  "columns": [
+   "order_id",
+   "user_id",
+   "payment_method",
+   "lines",
+   "order_total"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

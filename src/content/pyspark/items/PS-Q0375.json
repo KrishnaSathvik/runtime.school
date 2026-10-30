@@ -1,0 +1,62 @@
+{
+ "id": "PS-Q0375",
+ "slug": "every-change-its-own-version",
+ "lesson": "PS-L075",
+ "role": "integration",
+ "format": "dataframe_coding",
+ "difficulty": "hard",
+ "minutes": 17,
+ "title": "Every change its own version",
+ "dataset": {
+  "id": "PS-D14",
+  "version": "1.0.0"
+ },
+ "prompt": "Applying the feed in batches keeps only each batch's newest change. Audit wants the full history instead: every change its own version. Write `build_history(accounts, customer_cdc)` so it writes that type 2 table to `PATH` from the snapshot and the whole feed at once.",
+ "rules": [
+  "Each snapshot account has a version from `2026-01-01 00:00:00`. Every insert or update is a version of its own, from its `changed_at`.",
+  "A version ends (`effective_to`) at the account's next change in `sequence` order, whatever its kind, and is open (NULL) if there's none. `is_current` is true exactly for open versions. The file isn't always in sequence order.",
+  "A delete ends the version before it and adds none. An account inserted again after a delete gets a new version.",
+  "Columns: `COLS`, then `effective_from`, `effective_to`, `is_current`. Don't change `solve`."
+ ],
+ "hints": [
+  "Number each account's changes with `F.row_number()` over a window ordered by `sequence`, and think of the snapshot version as number 0.",
+  "Version n ends where change n + 1 starts: a table of `account_id`, `n - 1` and `changed_at` lets a left join find each version's end.",
+  "The snapshot versions and the change versions have the same columns, so you can write one to the Delta table and append the other."
+ ],
+ "entry": "solve",
+ "inputs": [
+  "accounts",
+  "customer_cdc"
+ ],
+ "starter": "import shutil\n\nfrom pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\nPATH = \"/tmp/crm/dim_accounts\"\nCOLS = [\"account_id\", \"account_name\", \"industry\", \"country\", \"segment\", \"account_owner\", \"credit_limit\", \"created_on\", \"is_active\"]\nSNAPSHOT = \"2026-01-01 00:00:00\"\n\n\ndef build_history(accounts, customer_cdc):\n    # Write the full type 2 history to PATH: the snapshot versions, then one version per insert or update.\n    shutil.rmtree(PATH, ignore_errors=True)  # start from an empty folder on every run\n    pass\n\ndef solve(accounts, customer_cdc):\n    build_history(accounts, customer_cdc)\n    return spark.read.format(\"delta\").load(PATH)\n",
+ "output": {
+  "columns": [
+   "account_id",
+   "account_name",
+   "industry",
+   "country",
+   "segment",
+   "account_owner",
+   "credit_limit",
+   "created_on",
+   "is_active",
+   "effective_from",
+   "effective_to",
+   "is_current"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 180,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "explanation": "Number each account's changes by `sequence` with `row_number`, so the snapshot version is 0 and change k is version k. The end of version n is the `changed_at` of change n + 1: select `account_id`, `n - 1` and `changed_at` as `effective_to`, and left-join it to the snapshot rows (n = 0) and to the inserts and updates. The left join leaves the last version of each account open. Deletes are numbered and used as ends, but never become versions. Write the snapshot versions, append the change versions, and set `is_current` from `effective_to` being NULL. Here ACC-0001 gets four versions instead of the two a single batch gives. Leave the deletes out before numbering and ACC-0003's snapshot version never closes; cut the feed to the newest change per account and you're back to batch history."
+}

@@ -1,0 +1,63 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "department_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "headcount",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "total_salary",
+     "type": "decimal(20,2)",
+     "nullable": true
+    },
+    {
+     "name": "payroll_rank",
+     "type": "int",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "D01",
+     1,
+     "260000.00",
+     3
+    ],
+    [
+     "D02",
+     5,
+     "477500.00",
+     1
+    ],
+    [
+     "D03",
+     3,
+     "315000.00",
+     2
+    ]
+   ],
+   "row_count": 3
+  }
+ },
+ "hidden": [
+  "the full practice employees table",
+  "two departments with the same total pay",
+  "a large department with low salaries",
+  "employees listed in no particular order",
+  "a single department",
+  "an empty employees table"
+ ]
+}

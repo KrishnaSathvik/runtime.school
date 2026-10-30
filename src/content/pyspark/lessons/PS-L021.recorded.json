@@ -1,0 +1,48 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D03",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "employees",
+   "employees_raw"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "+-----------+--------------------------+-------------------------+\n|employee_id|job_title                 |email                    |\n+-----------+--------------------------+-------------------------+\n|E0001      |Chief Executive Officer   |tomas.haddad@corp.example|\n|E0002      |Head of Engineering       |noor.novak@corp.example  |\n|E0003      |Software Engineer         |lena.duarte@corp.example |\n|E0004      |  senior software engineer|anika.silva@corp.example |\n|E0005      |Senior Software Engineer  |elif.rao@corp.example    |\n|E0006      |Senior Software Engineer  |maya.rao@corp.example    |\n|E0007      |Head of Finance           |Ines.novak@Corp.Example  |\n|E0008      |Senior Financial Analyst  |elif.weber@corp.example  |\n|E0009      |Senior Financial Analyst  |anika.grant@corp.example |\n+-----------+--------------------------+-------------------------+\n\n+-----------+------------------------+-------------------------+\n|employee_id|job_title               |email                    |\n+-----------+------------------------+-------------------------+\n|E0001      |Chief Executive Officer |tomas.haddad@corp.example|\n|E0002      |Head of Engineering     |noor.novak@corp.example  |\n|E0003      |Software Engineer       |lena.duarte@corp.example |\n|E0004      |senior software engineer|anika.silva@corp.example |\n|E0005      |Senior Software Engineer|elif.rao@corp.example    |\n|E0006      |Senior Software Engineer|maya.rao@corp.example    |\n|E0007      |Head of Finance         |ines.novak@corp.example  |\n|E0008      |Senior Financial Analyst|elif.weber@corp.example  |\n|E0009      |Senior Financial Analyst|anika.grant@corp.example |\n+-----------+------------------------+-------------------------+\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "+---------------------+------+-------------------+----------+\n|job_title            |length|title_key          |key_length|\n+---------------------+------+-------------------+----------+\n|Software  Engineer   |18    |software engineer  |17        |\n|  data manager       |15    |data manager       |12        |\n|SENIOR   Data Analyst|21    |senior data analyst|19        |\n+---------------------+------+-------------------+----------+\n\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "+---------------+-----------+------------+\n|          phone|     digits|    standard|\n+---------------+-----------+------------+\n|   555-201-3344| 5552013344|555-201-3344|\n| (555) 201-3344| 5552013344|555-201-3344|\n|   555.201.3344| 5552013344|555-201-3344|\n|+1 555 201 3344|15552013344|555-201-3344|\n|     5552013344| 5552013344|555-201-3344|\n|           NULL|       NULL|        NULL|\n+---------------+-----------+------------+\n\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "+-----------+-----------+\n|employee_id| department|\n+-----------+-----------+\n|         E1|engineering|\n|         E2|        eng|\n|         E3|engineering|\n|         E4|        fin|\n|         E5|    finance|\n+-----------+-----------+\n\n+-----------+-----------+\n|employee_id| department|\n+-----------+-----------+\n|         E1|engineering|\n|         E2|engineering|\n|         E3|engineering|\n|         E4|    finance|\n|         E5|    finance|\n+-----------+-----------+\n\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "",
+   "error": {
+    "type": "ArrayIndexOutOfBoundsException",
+    "message": "[INVALID_ARRAY_INDEX] The index 3 is out of bounds. The array has 3 elements. Use the SQL function `get()` to tolerate accessing element at invalid index and return NULL instead. SQLSTATE: 22003",
+    "line": 4,
+    "condition": "INVALID_ARRAY_INDEX"
+   }
+  },
+  "e6": {
+   "stdout": "+-----------+------------+------+\n|employee_id|department  |fields|\n+-----------+------------+------+\n|E0001      |Executive   |6     |\n|E0002      |Engineering |6     |\n|E0003      |Engineering |6     |\n|E0004      |Engineering |6     |\n|E0005      |NULL        |3     |\n|E0006      |Engineering |6     |\n|E0007      | Onboarding\"|7     |\n|E0008      |Finance     |6     |\n|E0009      |Finance     |6     |\n+-----------+------------+------+\n\n",
+   "error": null
+  }
+ }
+}

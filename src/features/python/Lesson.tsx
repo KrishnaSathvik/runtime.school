@@ -298,22 +298,25 @@ function ConceptCheck({ lesson, challenges }: { lesson: PyLesson; challenges: st
   return (
     <div className="p2-quiz">
       {lesson.concept.map((q, i) => (
-        <fieldset key={q.id} className="p2-q">
-          <legend><b>{i + 1}.</b> <Inline text={q.prompt} /></legend>
+        <section key={q.id} className="p2-q">
+          <p className="p2-q-prompt" id={`${lesson.id}-${q.id}`}><b>{i + 1}.</b> <Inline text={q.prompt} /></p>
           {q.program && <Code code={q.program} label="The program" />}
-          <div className="p2-choices">
+          <p className="p2-quiz-prompt">pick one answer</p>
+          <div className="p2-choices" role="radiogroup" aria-labelledby={`${lesson.id}-${q.id}`}>
             {q.choices.map((c, j) => {
-              const state = checked && picks[q.id] === j ? (j === q.answer ? "right" : "wrong") : "";
+              const state = checked && picks[q.id] === j ? (j === q.answer ? "right" : "wrong") : picks[q.id] === j ? "on" : "";
+              const output = c.includes("\n");
               return (
                 <label key={j} className={state}>
-                  <input type="radio" name={`${lesson.id}-${q.id}`} checked={picks[q.id] === j} onChange={() => { setChecked(false); setPicks((p) => ({ ...p, [q.id]: j })); }} />
-                  <span className="c">{c}</span>
+                  <input className="sr-only" type="radio" name={`${lesson.id}-${q.id}`} checked={picks[q.id] === j} onChange={() => { setChecked(false); setPicks((p) => ({ ...p, [q.id]: j })); }} />
+                  <span className="p2-opt" aria-hidden="true">{String.fromCharCode(97 + j)}</span>
+                  <span className={output ? "c" : "c prose"}>{c}</span>
                 </label>
               );
             })}
           </div>
           {checked && picks[q.id] !== undefined && <p className="p2-note" role="status">{right(q.id) ? "✓ " : "✗ "}<Inline text={q.why} /></p>}
-        </fieldset>
+        </section>
       ))}
       <div>
         <button type="button" className="p2-btn primary" onClick={submit} disabled={!all}>Check answers</button>
@@ -368,6 +371,7 @@ export function LessonScreen({ slug }: { slug: string }) {
       subject="python"
       section="learn"
       path={[{ label: "python", href: "/python" }, { label: "learn", href: "/python" }, { label: mod.title }, { label: lesson.title }]}
+      status={["Python", `lesson ${lesson.number}/${TOTAL_LESSONS}`, "python · runs in your browser", mastered ? "✓ mastered" : "drafts save as you type"]}
     >
       <div className="p2 workspace-bounded">
         <TaskBar

@@ -1,0 +1,130 @@
+{
+ "id": "PS-P01",
+ "workspace": "guided",
+ "file": "pipeline.py",
+ "dataset": {
+  "id": "PS-D01",
+  "version": "1.1.0",
+  "edition": "project"
+ },
+ "inputs": [
+  "orders",
+  "order_items",
+  "products"
+ ],
+ "task": "The shop's sales team gets a raw order export every morning and builds its reports by hand. Some rows are broken, some are repeated, and the totals never quite agree. Build a pipeline that cleans the orders, joins what was sold, and publishes daily and category sales that add up, with a summary of every row it dropped and why.",
+ "skills": [
+  "select and rename",
+  "filters",
+  "joins",
+  "group and aggregate",
+  "removing duplicates"
+ ],
+ "problems": [
+  "Statuses outside the six the shop uses: wrong case, unknown words, missing.",
+  "Negative or missing order totals.",
+  "Missing order dates and dates outside 2026.",
+  "Rows delivered twice by the export (exact copies).",
+  "Order lines whose product isn't in the catalogue."
+ ],
+ "revenue": "A sale is a paid, shipped or delivered order. Its value is the sum of its lines' quantity × unit_price, the price on the line. The order's stored total is that same sum when it's priced, but the report never adds totals: it adds lines, so it can be split by category.",
+ "milestones": [
+  {
+   "step": 1,
+   "summary": "Look at the export and shape the report's columns.",
+   "label": "Explore orders"
+  },
+  {
+   "step": 2,
+   "summary": "Keep only orders with a valid status, total and date.",
+   "label": "Clean orders"
+  },
+  {
+   "step": 3,
+   "summary": "Join each clean order to its lines and the product's category.",
+   "label": "Join lines"
+  },
+  {
+   "step": 4,
+   "summary": "Apply the sales rules and total sales by category.",
+   "label": "Category sales"
+  },
+  {
+   "step": 5,
+   "summary": "Remove repeated rows, total sales by day, and check the report adds up.",
+   "label": "Publish report"
+  }
+ ],
+ "artifacts": [
+  {
+   "name": "order_view",
+   "inputs": [
+    "orders"
+   ],
+   "step": 1,
+   "about": "The export's columns the report uses."
+  },
+  {
+   "name": "clean_orders",
+   "inputs": [
+    "orders"
+   ],
+   "step": 2,
+   "about": "Orders that pass every check.",
+   "deliverable": true
+  },
+  {
+   "name": "order_lines",
+   "inputs": [
+    "orders",
+    "order_items",
+    "products"
+   ],
+   "step": 3,
+   "about": "One row per line of a clean order, with its category."
+  },
+  {
+   "name": "sales_lines",
+   "inputs": [
+    "orders",
+    "order_items",
+    "products"
+   ],
+   "step": 4,
+   "about": "Lines of sales only, with a net amount each."
+  },
+  {
+   "name": "category_sales",
+   "inputs": [
+    "orders",
+    "order_items",
+    "products"
+   ],
+   "step": 4,
+   "about": "Orders, units and net sales per category.",
+   "deliverable": true
+  },
+  {
+   "name": "daily_sales",
+   "inputs": [
+    "orders",
+    "order_items",
+    "products"
+   ],
+   "step": 5,
+   "about": "Orders, units and net sales per day.",
+   "deliverable": true
+  },
+  {
+   "name": "quality_summary",
+   "inputs": [
+    "orders",
+    "order_items",
+    "products"
+   ],
+   "step": 5,
+   "about": "Rows in, rows dropped by reason, and the two tables checked against each other.",
+   "deliverable": true
+  }
+ ]
+}

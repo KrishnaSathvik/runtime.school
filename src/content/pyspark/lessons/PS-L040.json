@@ -1,0 +1,139 @@
+{
+  "id": "PS-L040",
+  "minutes": 22,
+  "lede": "Log lines, event tags and product attributes rarely share one fixed set of fields: a checkout line carries an order reference, a device line a firmware version. A map column holds whatever keys each row has, and you read, list and reshape them by key.",
+  "objectives": [
+    "Read a value from a map by key, and predict what a missing key gives",
+    "List a map's keys and values, count them and check for a key",
+    "Turn a map into key and value rows with `F.explode`",
+    "Build and combine maps, and parse JSON text with changing keys into a map"
+  ],
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "application_logs",
+      "application_logs_raw"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`application_logs` has one row per structured log line from several services: when it was logged, its `level`, the `service`, a `message`, and `attributes`, a **map** from text keys to text values. `application_logs_raw` is the same log file before parsing: one line of text per row, in a column called `value`. Both are loaded as DataFrames, and `F` is `pyspark.sql.functions`.\n\nA struct has the same fields on every row, fixed by the schema. A map doesn't: each row has its own keys. Every line here has `host`, but only checkout lines have `order_ref`, and only gateway lines have `device_id`."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "A column of maps",
+      "code": "application_logs.printSchema()\napplication_logs.select(\"log_id\", \"service\", \"attributes\").show(5, truncate=False)\n",
+      "note": "`attributes` is a `map` with `string` keys and `string` values. `show` prints each map as `{key -> value, ...}`, and the keys differ from service to service."
+    },
+    {
+      "kind": "text",
+      "md": "Read a value by its key with brackets, `F.col(\"attributes\")[\"region\"]`, or with `.getItem(\"region\")`. A dot path, `\"attributes.region\"`, works on maps too.\n\nA row that doesn't have the key gives NULL, with no error. All values in this map are text, even numbers like `latency_ms`."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Look up keys",
+      "code": "from pyspark.sql import functions as F\n\napplication_logs.select(\n    \"log_id\", \"service\",\n    F.col(\"attributes\")[\"region\"].alias(\"region\"),\n    F.col(\"attributes\").getItem(\"device_id\").alias(\"device_id\"),\n    F.col(\"attributes.latency_ms\").alias(\"latency_ms\"),\n).show()\n",
+      "note": "Only the gateway lines have a `device_id`; everywhere else it's NULL. The two lines from background jobs have no `region` and no `latency_ms`."
+    },
+    {
+      "kind": "text",
+      "md": "To look at the keys themselves:\n\n- `F.map_keys(col)` and `F.map_values(col)` give arrays of the keys and of the values.\n- `F.size(col)` counts the entries, as it does for arrays.\n- `F.map_contains_key(col, key)` is true when the row has that key."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Keys, values and counts",
+      "code": "from pyspark.sql import functions as F\n\napplication_logs.select(\n    \"log_id\",\n    F.map_keys(\"attributes\").alias(\"keys\"),\n    F.size(\"attributes\").alias(\"entries\"),\n    F.map_contains_key(\"attributes\", \"order_ref\").alias(\"has_order_ref\"),\n).show(truncate=False)\n",
+      "note": "Two checkout lines carry an `order_ref`. The keys come back in the order they were stored."
+    },
+    {
+      "kind": "text",
+      "md": "`F.explode` on a map gives **one row per entry**, with two columns, the key and the value. Name them with `.alias(\"key\", \"value\")`. A row with an empty map gives no rows. This long shape is handy when you don't know the keys in advance."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "One row per key",
+      "code": "from pyspark.sql import functions as F\n\nentries = application_logs.select(\"log_id\", F.explode(\"attributes\").alias(\"key\", \"value\"))\nentries.show(12)\nprint(entries.count(), \"entries from\", application_logs.count(), \"log lines\")\n",
+      "note": "Each line becomes as many rows as it has keys: 43 entries from 10 lines."
+    },
+    {
+      "kind": "text",
+      "md": "You can build maps as well. `F.create_map(key1, value1, key2, value2, ...)` takes keys and values in pairs; `F.lit(\"level\")` makes a column holding the same text on every row, to use as a key. `F.map_concat(m1, m2)` joins two maps into one. The maps must not share a key: by default a repeated key stops the job."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Build and combine maps",
+      "code": "from pyspark.sql import functions as F\n\nextra = F.create_map(F.lit(\"service\"), F.col(\"service\"), F.lit(\"level\"), F.col(\"level\"))\n\napplication_logs.select(\"log_id\", F.map_concat(\"attributes\", extra).alias(\"all_attributes\")).show(3, truncate=False)\n",
+      "note": "Each map gains two entries at the end. None of the lines already had a `service` or `level` key, so nothing clashes."
+    },
+    {
+      "kind": "text",
+      "md": "Maps are also how you parse JSON whose keys change from row to row. In `F.from_json`, give the changing part a map type, `MAP<STRING, STRING>`, instead of a struct with fixed fields. Lines that aren't valid JSON give missing values, as before; here three lines of the raw log are broken."
+    },
+    {
+      "kind": "example",
+      "id": "e6",
+      "title": "Parse changing keys into a map",
+      "code": "from pyspark.sql import functions as F\n\nparsed = application_logs_raw.select(F.from_json(\"value\", \"log_id STRING, attributes MAP<STRING, STRING>\").alias(\"log\"))\nparsed.printSchema()\nparsed.select(\"log.log_id\", F.size(\"log.attributes\").alias(\"entries\"), F.col(\"log.attributes\")[\"host\"].alias(\"host\")).show()\n",
+      "note": "Every good line keeps all its keys, whatever they are. So `entries` changes from line to line. The three broken lines give NULL in every column: a map type makes changing keys readable, not broken JSON."
+    }
+  ],
+  "challenges": [
+    "PS-L040-C1",
+    "PS-L040-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "A row's `attributes` map has no `device_id` key. What does `F.col(\"attributes\")[\"device_id\"]` give?",
+      "choices": [
+        "An error",
+        "An empty string",
+        "NULL",
+        "The text \"device_id\""
+      ],
+      "answer": 2,
+      "why": "Looking up a key the map doesn't have gives NULL."
+    },
+    {
+      "id": "k2",
+      "prompt": "Why use a map instead of a struct for `attributes`?",
+      "choices": [
+        "Maps are faster to read",
+        "The keys differ from row to row, and a struct's fields are fixed by the schema",
+        "Structs can't hold text",
+        "Maps keep their keys sorted"
+      ],
+      "answer": 1,
+      "why": "A struct has the same fields on every row. A map holds whatever keys each row brings."
+    },
+    {
+      "id": "k3",
+      "prompt": "A log line's map has 4 entries. How many rows does `F.explode(\"attributes\")` give for it?",
+      "choices": [
+        "1",
+        "2",
+        "4",
+        "8"
+      ],
+      "answer": 2,
+      "why": "One row per entry, each with its key and value: 4 rows."
+    }
+  ],
+  "review": [
+    "A map holds keys and values that differ from row to row; a struct's fields are fixed.",
+    "Read a value with `F.col(\"m\")[\"key\"]`, `.getItem(\"key\")` or `\"m.key\"`; a missing key gives NULL.",
+    "`F.map_keys`, `F.map_values`, `F.size` and `F.map_contains_key` describe a map without opening it up.",
+    "`F.explode` on a map gives one row per entry; name the columns with `.alias(\"key\", \"value\")`.",
+    "`F.create_map` builds a map from key and value pairs; `F.map_concat` combines maps that don't share keys.",
+    "Parse JSON with changing keys using a `MAP<STRING, STRING>` type in `F.from_json`."
+  ],
+  "practice": ["PS-Q0196", "PS-Q0197", "PS-Q0198", "PS-Q0199", "PS-Q0200"]
+}

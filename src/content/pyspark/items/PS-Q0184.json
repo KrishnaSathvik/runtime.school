@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0184",
+  "slug": "fix-checkout-payment-columns",
+  "lesson": "PS-L037",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Fix the checkout payment report",
+  "dataset": {
+    "id": "PS-D06",
+    "version": "1.0.0"
+  },
+  "prompt": "This report should show, for each checkout step, how the customer paid and how many lines the basket had, but its two payment columns come out wrong. Fix `solve(checkout_events)`.",
+  "rules": [
+    "Return `event_id`, `step`, `payment_method`, `payment_provider`, `basket_lines` and `order_total`, in that order.",
+    "`payment_method` and `payment_provider` are text, read from `payment.method` and `payment.provider`. A step with no payment yet has both missing.",
+    "`basket_lines` is the number of entries in `items`."
+  ],
+  "hints": [
+    "Run the starter and compare its `payment_method` and `payment_provider` with the expected result. `printSchema()` on the result shows their types.",
+    "`F.col(\"payment\")` is the whole struct, not one of its fields.",
+    "Each payment column needs its own dot path into `payment`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "checkout_events"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(checkout_events):\n    return checkout_events.select(\n        \"event_id\",\n        \"step\",\n        F.col(\"payment\").alias(\"payment_method\"),\n        F.col(\"payment.method\").alias(\"payment_provider\"),\n        F.size(\"items\").alias(\"basket_lines\"),\n        \"order_total\",\n    )\n",
+  "output": {
+    "columns": [
+      "event_id",
+      "step",
+      "payment_method",
+      "payment_provider",
+      "basket_lines",
+      "order_total"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "The starter has two bugs. `F.col(\"payment\")` selects the whole struct, so `payment_method` comes out as a struct instead of text; it needs `F.col(\"payment.method\")`. `payment_provider` was copied from the line above and still reads `payment.method`; it needs `F.col(\"payment.provider\")`. `F.col(\"payment\").getField(\"provider\")` works too. A `begin` step has no `payment` yet, and both dot paths return a missing value for it without any extra code. The rest of the starter was right: `F.size(\"items\")` counts the basket lines."
+}

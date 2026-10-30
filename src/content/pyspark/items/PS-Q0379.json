@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0379",
+  "slug": "fix-the-quarantine-reasons",
+  "lesson": "PS-L076",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Fix the quarantine reasons",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "The quarantine step should set aside every transaction that breaks a rule, with the first rule it breaks as `reason`. The audit found transactions without an account in the load, and some that reached neither table. Fix `solve(transactions)` so it returns the quarantined transactions.",
+  "rules": [
+    "The rules are checked in the order of the list; the first one a transaction breaks is its `reason`.",
+    "A missing value breaks the rule that checks it: a missing amount is a `bad_amount`, a missing currency an `unknown_currency`.",
+    "Return `transaction_id`, `account_id`, `amount`, `currency` and `reason` for the quarantined transactions only."
+  ],
+  "hints": [
+    "Run the starter on the sample. Which reasons ever come out? Look at what `reason` holds after the loop.",
+    "`reason = F.when(...)` inside the loop replaces the expression each time. Start the chain with the first rule and add `.when(...)` for each later one.",
+    "A rule on a missing value is NULL, and `F.when` skips NULL. Turn it into a failure with `F.coalesce(condition, F.lit(False))`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "transactions"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(transactions):\n    rules = [\n        (\"missing_account\", F.col(\"account_id\").isNotNull()),\n        (\"bad_amount\", F.col(\"amount\") > 0),\n        (\"unknown_currency\", F.col(\"currency\").isin(\"USD\", \"EUR\", \"GBP\")),\n        (\"unknown_status\", F.col(\"status\").isin(\"posted\", \"pending\", \"declined\")),\n    ]\n    for name, passes in rules:\n        reason = F.when(~passes, name)\n    checked = transactions.select(\"transaction_id\", \"account_id\", \"amount\", \"currency\", reason.alias(\"reason\"))\n    return checked.filter(F.col(\"reason\").isNotNull())\n",
+  "output": {
+    "columns": [
+      "transaction_id",
+      "account_id",
+      "amount",
+      "currency",
+      "reason"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "The loop rebuilt `reason` from scratch on every pass, so only the last rule, `unknown_status`, ever labelled a row: a transaction without an account got no reason and went to the load. The fix starts the chain with the first rule and adds `.when(...)` for each later rule, so the first broken rule wins. The second bug is NULL: `amount > 0` on a missing amount is NULL, `F.when` treats that as not matched, and the row got no reason, so it was in neither table. `F.coalesce(condition, F.lit(False))` makes it count as broken. A quick check after the fix: the rows with a reason plus the rows without one add up to the whole feed."
+}

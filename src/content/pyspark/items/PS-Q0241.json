@@ -1,0 +1,61 @@
+{
+  "id": "PS-Q0241",
+  "slug": "app-versions-from-user-agents",
+  "lesson": "PS-L049",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "App versions from user agents",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "The mobile team wants to know which app versions are calling the API. Write `solve(api_requests)` with RDD functions so it returns, for every request made by our apps, the `request_id`, the `platform` and the `app_version`.",
+  "rules": [
+    "A request comes from our apps when its `user_agent` starts with exactly `RuntimeShop-`, such as `RuntimeShop-iOS/4.12.0 (iPhone; iOS 17.5)`. Skip every other request, including those with no user agent.",
+    "`platform` is the text between `RuntimeShop-` and the first `/` (`iOS`); `app_version` is the text after that `/`, up to the first space or the end (`4.12.0`).",
+    "Keep repeated requests. Return `request_id`, `platform` and `app_version`, all text, in that order. An empty table gives an empty result."
+  ],
+  "hints": [
+    "Use `api_requests.rdd.filter(...)` with a named function that checks the user agent, then `map` each row to a tuple.",
+    "A missing user agent arrives as `None`, and `None.startswith(...)` raises. Check for `None` first.",
+    "Plain Python does the parsing: cut off the prefix, `split(\"/\", 1)`, then keep the part before the first space. Finish with `toDF(\"request_id string, ...\")`."
+  ],
+  "explanation": "Filter with a function that returns `agent is not None and agent.startswith(\"RuntimeShop-\")`, then map each row to `(request_id, platform, version)`, where the agent without its prefix is split once on `/` and the version is cut at the first space. `toDF` with a schema string gives the column names and types, and works even when no request matches; with names only it fails on an empty RDD. Testing `\"RuntimeShop\" in agent` without the `None` check stops the job on a request with no user agent.",
+  "entry": "solve",
+  "inputs": [
+    "api_requests"
+  ],
+  "starter": "def solve(api_requests):\n    # Keep the app requests and parse their user agents with RDD functions.\n    return api_requests\n",
+  "output": {
+    "columns": [
+      "request_id",
+      "platform",
+      "app_version"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "technique": {
+    "name": "RDD functions",
+    "plan": [
+      "Scan"
+    ],
+    "source": [
+      "rdd",
+      "parallelize"
+    ]
+  }
+}

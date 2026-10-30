@@ -1,0 +1,55 @@
+{
+  "id": "PS-Q0046",
+  "slug": "orders-ready-to-ship",
+  "lesson": "PS-L010",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Orders ready to ship",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "The warehouse picks an order once it has been paid for and is worth at least 100.00. Write `solve(orders)` so it returns those orders.",
+  "rules": [
+    "An order is ready when `status` is exactly `paid` and `total` is at least 100.00 (100.00 itself counts).",
+    "An order with a missing `status` or `total` is not ready.",
+    "Return every column of `orders`, in the same order, with the same types.",
+    "Keep rows exactly as they appear, duplicates included. Removing duplicates is a later step."
+  ],
+  "hints": [
+    "`orders.filter(...)` keeps the rows where a condition is true and leaves every column as it was.",
+    "Combine two conditions with `&`, and wrap each one in parentheses: `(cond1) & (cond2)`.",
+    "\"At least 100.00\" means `>=`, not `>`. A comparison with a missing value is never true, so those rows drop out on their own."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "orders"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(orders):\n    # Return the orders that are ready to ship.\n    return orders\n",
+  "output": {
+    "columns": [
+      "order_id",
+      "customer_id",
+      "order_date",
+      "status",
+      "channel",
+      "total"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Two rules must both hold, so the answer is two conditions joined with `&`, each in its own parentheses: `orders.filter((F.col(\"status\") == \"paid\") & (F.col(\"total\") >= 100))`. `filter` keeps every column as it is, so there's nothing to select. An order with a missing status or total drops out without extra code, because a comparison with a missing value isn't true. `where(...)` or a SQL string such as `orders.where(\"status = 'paid' AND total >= 100\")` give the same rows. The usual slip is `>` instead of `>=`, which loses an order of exactly 100.00."
+}

@@ -1,0 +1,38 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D13",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "observations"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "0 rows with == None\n+--------------+----------+-------------+\n|observation_id|station_id|temperature_c|\n+--------------+----------+-------------+\n|    OBS-000012|    NYC-01|         NULL|\n+--------------+----------+-------------+\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "+--------------+----------------+-------+------+-----------+\n|observation_id|precipitation_mm|is_null|is_nan|more_than_0|\n+--------------+----------------+-------+------+-----------+\n|    OBS-000001|             0.0|  false| false|      false|\n|    OBS-000002|             0.0|  false| false|      false|\n|    OBS-000003|             0.0|  false| false|      false|\n|    OBS-000004|             0.0|  false| false|      false|\n|    OBS-000005|             0.0|  false| false|      false|\n|    OBS-000006|             NaN|  false|  true|       true|\n|    OBS-000007|             0.0|  false| false|      false|\n|    OBS-000008|             0.0|  false| false|      false|\n|    OBS-000009|             0.0|  false| false|      false|\n|    OBS-000010|             0.0|  false| false|      false|\n|    OBS-000011|             0.2|  false| false|       true|\n|    OBS-000012|             0.4|  false| false|       true|\n+--------------+----------------+-------+------+-----------+\n\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "+--------------+------------+\n|observation_id|pressure_hpa|\n+--------------+------------+\n|    OBS-000001|      1012.7|\n|    OBS-000002|     -9999.0|\n|    OBS-000003|      1008.9|\n+--------------+------------+\nonly showing top 3 rows\n+--------------+------------+\n|observation_id|pressure_hpa|\n+--------------+------------+\n|    OBS-000001|      1012.7|\n|    OBS-000002|        NULL|\n|    OBS-000003|      1008.9|\n+--------------+------------+\nonly showing top 3 rows\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "12 readings\n9 with all five measurements\n11 with a temperature\n12 with at least four of the five\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "+--------------+----------------+\n|observation_id|precipitation_mm|\n+--------------+----------------+\n|    OBS-000001|             0.0|\n|    OBS-000002|             0.0|\n|    OBS-000003|             0.0|\n|    OBS-000004|             0.0|\n|    OBS-000005|             0.0|\n|    OBS-000006|             0.0|\n|    OBS-000007|             0.0|\n+--------------+----------------+\nonly showing top 7 rows\n+--------------+-------------+---------------------+\n|observation_id|temperature_c|temperature_or_marker|\n+--------------+-------------+---------------------+\n|    OBS-000001|         21.3|                 21.3|\n|    OBS-000002|         21.0|                 21.0|\n|    OBS-000003|         24.8|                 24.8|\n|    OBS-000004|         24.1|                 24.1|\n|    OBS-000005|         11.4|                 11.4|\n|    OBS-000006|         11.0|                 11.0|\n|    OBS-000007|          2.1|                  2.1|\n|    OBS-000008|         33.4|                 33.4|\n|    OBS-000009|          1.6|                  1.6|\n|    OBS-000010|          1.2|                  1.2|\n|    OBS-000011|          0.9|                  0.9|\n|    OBS-000012|         NULL|                -99.0|\n+--------------+-------------+---------------------+\n\n",
+   "error": null
+  }
+ }
+}

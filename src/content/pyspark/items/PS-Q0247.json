@@ -1,0 +1,69 @@
+{
+  "id": "PS-Q0247",
+  "slug": "errors-by-service-and-type",
+  "lesson": "PS-L050",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Errors by service and type",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "The on-call dashboard lists each kind of error per service: how often it happened and when it last did. Write `solve(error_events)` with pair RDD functions so it returns `service`, `error_type`, `errors` and `last_seen`.",
+  "rules": [
+    "One row per combination of `service` and `error_type`. The same error type in two services gives two rows.",
+    "`errors` counts the events, repeated ones included. `last_seen` is the latest `occurred_at`.",
+    "An event with no `occurred_at` still counts, but can't be the latest; if no event of a combination has a time, `last_seen` is missing.",
+    "Return `service`, `error_type` (text), `errors` (`bigint`) and `last_seen` (timestamp), in that order."
+  ],
+  "hints": [
+    "A key can be a tuple: `((service, error_type), value)`.",
+    "Carry `(1, occurred_at)` as the value and combine two values into `(count, later time)`.",
+    "Python's `max` can't compare a `datetime` with `None`. Write a small `later(a, b)` that returns the other one when one is missing."
+  ],
+  "explanation": "Key each event by the tuple `(service, error_type)` with the value `(1, occurred_at)`, then `reduceByKey(lambda a, b: (a[0] + b[0], later(a[1], b[1])))`, where `later` skips a missing time. Flatten `((service, type), (n, last))` into four values and use `toDF` with a schema string. Keying by `error_type` alone merges types that two services share, `min` gives the first time instead of the last, and plain `max` fails on a missing time.",
+  "entry": "solve",
+  "inputs": [
+    "error_events"
+  ],
+  "starter": "def solve(error_events):\n    # Errors and the last time seen, per service and error type, with pair RDD functions.\n    return error_events\n",
+  "output": {
+    "columns": [
+      "service",
+      "error_type",
+      "errors",
+      "last_seen"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "technique": {
+    "name": "pair RDD functions",
+    "plan": [
+      "Scan"
+    ],
+    "source": [
+      "reduceByKey",
+      "groupByKey",
+      "aggregateByKey",
+      "combineByKey",
+      "foldByKey",
+      "mapValues",
+      "flatMapValues",
+      "countByKey"
+    ]
+  }
+}

@@ -1,0 +1,64 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "service",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "requests",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "server_errors",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "catalog-api",
+     5,
+     0
+    ],
+    [
+     "auth-service",
+     1,
+     0
+    ],
+    [
+     "checkout-api",
+     2,
+     1
+    ],
+    [
+     "search-api",
+     2,
+     0
+    ],
+    [
+     "iot-gateway",
+     2,
+     0
+    ]
+   ],
+   "row_count": 5
+  }
+ },
+ "hidden": [
+  "the full practice requests, including an incident",
+  "status codes on both sides of the server-error range",
+  "requests with a missing status code",
+  "a single service with only server errors",
+  "an empty requests table"
+ ]
+}

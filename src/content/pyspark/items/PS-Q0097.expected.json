@@ -1,0 +1,199 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "order_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "customer_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "order_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "channel",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "O00001",
+     "C0001",
+     "2026-06-11",
+     "store"
+    ],
+    [
+     "O00002",
+     "C0001",
+     "2026-03-11",
+     "app"
+    ],
+    [
+     "O00003",
+     "C0002",
+     "2026-08-28",
+     "app"
+    ],
+    [
+     "O00004",
+     "C0004",
+     "2026-03-24",
+     "app"
+    ],
+    [
+     "O00005",
+     "C0006",
+     "2026-01-18",
+     "app"
+    ],
+    [
+     "O00007",
+     "C0003",
+     "2026-03-23",
+     "web"
+    ],
+    [
+     "O00008",
+     "C0001",
+     "2026-04-03",
+     "web"
+    ],
+    [
+     "O00012",
+     "C0005",
+     "2026-03-03",
+     "app"
+    ],
+    [
+     "O00013",
+     "C0003",
+     "2026-03-23",
+     "web"
+    ]
+   ],
+   "row_count": 9,
+   "inputs": {
+    "orders": [
+     [
+      "O00001",
+      "C0001",
+      "2026-06-11",
+      "paid",
+      "store",
+      "117.99"
+     ],
+     [
+      "O00002",
+      "C0001",
+      "2026-03-11",
+      "delivered",
+      "app",
+      "79.96"
+     ],
+     [
+      "O00003",
+      "C0002",
+      "2026-08-28",
+      "paid",
+      "app",
+      "291.95"
+     ],
+     [
+      "O00004",
+      "C0004",
+      "2026-03-24",
+      "shipped",
+      "app",
+      "418.96"
+     ],
+     [
+      "O00005",
+      "C0006",
+      "2026-01-18",
+      "shipped",
+      "app",
+      "71.97"
+     ],
+     [
+      "O00007",
+      "C0003",
+      "2026-03-23",
+      "placed",
+      "web",
+      "227.48"
+     ],
+     [
+      "O00008",
+      "C0001",
+      "2026-04-03",
+      "paid",
+      "web",
+      "59.50"
+     ],
+     [
+      "O00012",
+      "C0005",
+      "2026-03-03",
+      "refunded",
+      "app",
+      "57.00"
+     ],
+     [
+      "O00002",
+      "C0001",
+      "2026-03-11",
+      "shipped",
+      "app",
+      "79.96"
+     ],
+     [
+      "O00004",
+      "C0004",
+      "2026-03-24",
+      "shipped",
+      "app",
+      "418.96"
+     ],
+     [
+      "O00007",
+      "C0003",
+      "2026-03-23",
+      "placed",
+      "web",
+      "212.48"
+     ],
+     [
+      "O00013",
+      "C0003",
+      "2026-03-23",
+      "placed",
+      "web",
+      "227.48"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice orders table",
+  "orders sent again after each status change",
+  "orders priced after they were first sent",
+  "different orders with the same customer, date and channel",
+  "the same order row delivered twice",
+  "an empty orders table"
+ ]
+}

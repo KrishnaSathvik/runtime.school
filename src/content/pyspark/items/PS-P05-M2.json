@@ -1,0 +1,61 @@
+{
+  "id": "PS-P05-M2",
+  "slug": "clean-and-deduplicate-the-interactions",
+  "project": "PS-P05",
+  "milestone": "PS-P05.m2",
+  "difficulty": "medium",
+  "minutes": 30,
+  "title": "Clean and deduplicate the interactions",
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0"
+  },
+  "prompt": "The export is a raw event log. Some rows arrive twice, and some members rate the same film again later with a new opinion. A model should see each member's current opinion of a film once.\n\nWrite `clean_interactions(ratings)`. It returns one row per member and film: the latest rating of that pair.",
+  "rules": [
+    "One row per `user_id` and `movie_id`: the row with the latest `rated_at`. A re-rating replaces the earlier rating, whether it's higher or lower.",
+    "If two rows of a pair share the latest `rated_at`, keep the higher `rating`, so every run gives the same answer.",
+    "Exact copies count once.",
+    "Return `user_id`, `movie_id`, `rating` and `rated_at`, the values of the row you kept."
+  ],
+  "hints": [
+    "This is \"the latest row per group\": number the rows of each pair with a window, then keep row 1.",
+    "`Window.partitionBy(\"user_id\", \"movie_id\").orderBy(F.col(\"rated_at\").desc(), ...)`: the second sort column breaks ties.",
+    "Use `F.row_number()`, not `rank()`: tied rows share a rank, and you'd keep both. Drop the number column at the end."
+  ],
+  "explanation": "A window per member and film, sorted newest first, puts the current opinion in row 1. Sorting by `rating` descending as well makes the choice repeatable when two rows share the same moment; without it Spark could keep either. `row_number` gives exactly one row 1 per pair, so exact copies and ties collapse to one row, where `rank` would keep both tied rows. `dropDuplicates([\"user_id\", \"movie_id\"])` looks similar but keeps an arbitrary row, often the oldest. The function returns the columns it reads, so it can clean any ratings table, including one that's already clean: the next steps rely on that.",
+  "entry": "clean_interactions",
+  "inputs": [
+    "ratings"
+  ],
+  "file": "pipeline.py",
+  "append": "\n\ndef clean_interactions(ratings):\n    # Step 2: one row per member and film, the latest rating wins.\n    return ratings\n",
+  "prerequisites": [
+    "PS-L020",
+    "PS-L033"
+  ],
+  "output": {
+    "columns": [
+      "user_id",
+      "movie_id",
+      "rating",
+      "rated_at"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "example",
+      "sample": true
+    },
+    {
+      "id": "project",
+      "edition": "project"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

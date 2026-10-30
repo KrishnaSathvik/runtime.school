@@ -1,0 +1,64 @@
+{
+  "id": "PS-P05-M3",
+  "slug": "calculate-member-and-film-features",
+  "project": "PS-P05",
+  "milestone": "PS-P05.m3",
+  "difficulty": "medium",
+  "minutes": 35,
+  "title": "Calculate member and film features",
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0"
+  },
+  "prompt": "Now describe each member and each film with a few numbers a recommender can use. Some members have an account but have never rated anything, and a few films have no ratings: a recommender has to handle these cold starts too, so they keep their row.\n\nWrite `user_stats(ratings, users)`, one row per member, and `movie_stats(ratings, movies)`, one row per film. Both start from your `clean_interactions(ratings)`. This step checks `user_stats`; the next one checks `movie_stats`.",
+  "rules": [
+    "`user_stats` returns every member in `users`: `user_id`, `ratings` (how many clean interactions), `average_rating` (their mean, rounded to 2 decimals), `last_rated_at` (the latest) and `cold_start`.",
+    "A member with no ratings has `ratings` 0, a missing `average_rating` and `last_rated_at`, and `cold_start` true. Everyone else has `cold_start` false.",
+    "`movie_stats` returns every film in `movies` the same way: `movie_id`, `primary_genre`, `ratings`, `average_rating`, `liked_share`, `last_rated_at` and `cold_start`.",
+    "`liked_share` is the share of a film's ratings that are 4.0 or more, rounded to 3 decimals; missing when the film has no ratings."
+  ],
+  "hints": [
+    "Group `clean_interactions(ratings)` by `user_id` first. Then join `users.select(\"user_id\")` to it with a left join, so members without ratings stay.",
+    "After the left join, a cold-start member has a missing count. `F.coalesce(F.col(\"ratings\"), F.lit(0))` turns it into 0, and `F.col(\"ratings\").isNull()` before that tells you who they are.",
+    "For `liked_share`, average a 1-or-0 column: `F.avg(F.when(F.col(\"rating\") >= 4.0, 1.0).otherwise(0.0))`."
+  ],
+  "explanation": "Aggregating the clean interactions first and joining the result onto the full member list keeps every member, including those who never rated anything. That left join is what makes cold starts visible: their count arrives missing, which is turned into 0 and flagged in `cold_start`, while their average stays missing because there's nothing to average. An inner join, or grouping the ratings alone, would silently drop them, and the recommender would never learn who they are. Starting from `clean_interactions` means a re-rated film counts once with its current value. Averaging a 1-or-0 column is a short way to compute a share. Because both functions take a ratings table, the next step can feed them any slice of time.",
+  "entry": "user_stats",
+  "inputs": [
+    "ratings",
+    "users"
+  ],
+  "file": "pipeline.py",
+  "append": "\n\ndef user_stats(ratings, users):\n    # Step 3: one row per member, built from clean_interactions(ratings).\n    return users\n\n\ndef movie_stats(ratings, movies):\n    # Step 3: one row per film, built from clean_interactions(ratings).\n    return movies\n",
+  "prerequisites": [
+    "PS-L019",
+    "PS-L025",
+    "PS-L031"
+  ],
+  "output": {
+    "columns": [
+      "user_id",
+      "ratings",
+      "average_rating",
+      "last_rated_at",
+      "cold_start"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "example",
+      "sample": true
+    },
+    {
+      "id": "project",
+      "edition": "project"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

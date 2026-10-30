@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0156",
+  "slug": "campaigns-per-channel",
+  "lesson": "PS-L032",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Campaigns per channel",
+  "dataset": {
+    "id": "PS-D12",
+    "version": "1.0.0"
+  },
+  "prompt": "The marketing lead wants a quick count of campaigns on each channel. Write `solve(campaigns)` so it returns, for each `channel`, how many campaigns there are, how many are active and how many aim for purchases.",
+  "rules": [
+    "`campaigns` counts every campaign on the channel.",
+    "`active` counts those whose `status` is `active`, and `purchase_goal` those whose `objective` is `purchase`.",
+    "A channel with no active or no purchase campaign shows 0, not a missing value. A missing status or objective doesn't match.",
+    "Return `channel`, `campaigns`, `active` and `purchase_goal`, one row per channel."
+  ],
+  "hints": [
+    "Group by `channel`. Every count you need goes inside one `agg`.",
+    "`F.when(F.col(\"status\") == \"active\", 1).otherwise(0)` is 1 on active campaigns and 0 on the rest; sum it.",
+    "Filtering to active campaigns first would drop a channel with none, and make the other counts wrong."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "campaigns"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(campaigns):\n    # Return channel, campaigns, active and purchase_goal.\n    return campaigns\n",
+  "output": {
+    "columns": [
+      "channel",
+      "campaigns",
+      "active",
+      "purchase_goal"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Group once and count conditionally: `campaigns.groupBy(\"channel\").agg(F.count(\"*\").alias(\"campaigns\"), F.sum(F.when(F.col(\"status\") == \"active\", 1).otherwise(0)).alias(\"active\"), F.sum(F.when(F.col(\"objective\") == \"purchase\", 1).otherwise(0)).alias(\"purchase_goal\"))`. `otherwise(0)` makes a channel with no matches add up to 0, and a missing status falls through to `otherwise` too. `F.count(F.when(cond, True))` gives the same numbers. Filtering first can't work here, because the three counts need different rows."
+}

@@ -1,0 +1,119 @@
+{
+ "id": "PS-P03",
+ "workspace": "guided",
+ "file": "pipeline.py",
+ "dataset": {
+  "id": "PS-D11",
+  "version": "1.0.0",
+  "edition": "project"
+ },
+ "inputs": [
+  "attempts",
+  "lessons",
+  "courses",
+  "learners"
+ ],
+ "task": "A learning platform's team wants to know who is making progress, which courses get finished and which learners have gone quiet. Its activity export lists every try at every lesson, but it was re-run once and some rows can't be placed in time. Build a pipeline that cleans the attempts, tracks each learner through each course, measures completion against a stated denominator and lists inactive learners, all as of one fixed day, with checks that the numbers add up.",
+ "skills": [
+  "dates from timestamps",
+  "removing duplicates",
+  "joins",
+  "distinct counts",
+  "completion rates",
+  "inactivity windows"
+ ],
+ "problems": [
+  "About 2% of attempt rows are exact copies from a re-run export.",
+  "Learners retry lessons, so one lesson can have several attempts.",
+  "Some attempts were abandoned: no score, and passed is false.",
+  "Some learners signed up and never attempted anything."
+ ],
+ "revenue": "Every number is measured as of 2026-06-28, the last day of the data, set once in the file as AS_OF_DATE and never taken from today's date. A course's completion rate is its learners who passed every lesson (lessons passed equals the course's lesson count) out of its enrolled learners: everyone with at least one clean attempt in the course. A learner is inactive with no clean attempt in the 30 days up to and including the as-of date.",
+ "milestones": [
+  {
+   "step": 1,
+   "summary": "Look at the activity export and shape the attempt columns.",
+   "label": "Explore attempts"
+  },
+  {
+   "step": 2,
+   "summary": "Remove repeated attempts and drop rows that can't be placed in time.",
+   "label": "Clean attempts"
+  },
+  {
+   "step": 3,
+   "summary": "Track each learner's attempts and passed lessons in every course.",
+   "label": "Track progress"
+  },
+  {
+   "step": 4,
+   "summary": "Measure each course's completion rate and engagement.",
+   "label": "Completion rates"
+  },
+  {
+   "step": 5,
+   "summary": "List inactive learners and check the reports against each other.",
+   "label": "Inactive learners"
+  }
+ ],
+ "artifacts": [
+  {
+   "name": "attempt_view",
+   "inputs": [
+    "attempts"
+   ],
+   "step": 1,
+   "about": "The attempt columns the reports use, with each attempt's day."
+  },
+  {
+   "name": "clean_attempts",
+   "inputs": [
+    "attempts"
+   ],
+   "step": 2,
+   "about": "Attempts without copies, each placed on or before the as-of date."
+  },
+  {
+   "name": "learner_progress",
+   "inputs": [
+    "attempts",
+    "lessons"
+   ],
+   "step": 3,
+   "about": "One row per learner and course: attempts, lessons tried and passed, last activity.",
+   "deliverable": true
+  },
+  {
+   "name": "course_completion",
+   "inputs": [
+    "attempts",
+    "lessons",
+    "courses"
+   ],
+   "step": 4,
+   "about": "Enrolled and completed learners, completion rate and attempts per course.",
+   "deliverable": true
+  },
+  {
+   "name": "inactive_learners",
+   "inputs": [
+    "attempts",
+    "learners"
+   ],
+   "step": 5,
+   "about": "Learners with no clean attempt in the last 30 days, and how long they've been quiet.",
+   "deliverable": true
+  },
+  {
+   "name": "metric_checks",
+   "inputs": [
+    "attempts",
+    "lessons",
+    "courses",
+    "learners"
+   ],
+   "step": 5,
+   "about": "Rows removed by cleaning, and the reports checked against each other."
+  }
+ ]
+}

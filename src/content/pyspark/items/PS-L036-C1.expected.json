@@ -1,0 +1,98 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "user_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "session_start",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "session_end",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "plays",
+     "type": "bigint",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "U01",
+     "2026-07-07T19:00:00",
+     "2026-07-07T21:20:00",
+     2
+    ],
+    [
+     "U01",
+     "2026-07-07T23:25:00",
+     "2026-07-07T23:58:00",
+     1
+    ],
+    [
+     "U01",
+     "2026-07-08T08:10:00",
+     "2026-07-08T10:16:00",
+     1
+    ],
+    [
+     "U01",
+     "2026-07-09T20:00:00",
+     "2026-07-09T21:32:00",
+     1
+    ],
+    [
+     "U02",
+     "2026-07-07T22:05:00",
+     "2026-07-07T23:49:00",
+     1
+    ],
+    [
+     "U02",
+     "2026-07-09T23:15:00",
+     "2026-07-10T01:55:00",
+     2
+    ],
+    [
+     "U03",
+     "2026-07-08T20:30:00",
+     "2026-07-08T22:19:00",
+     1
+    ],
+    [
+     "U04",
+     "2026-07-08T21:00:00",
+     "2026-07-09T00:32:00",
+     2
+    ],
+    [
+     "U05",
+     "2026-07-09T17:00:00",
+     "2026-07-09T17:25:00",
+     1
+    ]
+   ],
+   "row_count": 9
+  }
+ },
+ "hidden": [
+  "the full practice viewing history",
+  "gaps of exactly 30 minutes, just over, and 45 minutes",
+  "two members watching at the same time",
+  "plays with no end time, out of order in the file",
+  "an empty viewing history"
+ ]
+}

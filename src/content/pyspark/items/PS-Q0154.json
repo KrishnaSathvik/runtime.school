@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0154",
+  "slug": "fix-customers-per-status",
+  "lesson": "PS-L031",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 6,
+  "title": "Fix customers per status",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "This report should show how many orders and how many different customers each order status has, but `customers` always equals `orders`. Find the bug and fix `solve(orders)`.",
+  "rules": [
+    "`orders` counts every row of the status, repeated rows included.",
+    "`customers` counts the different `customer_id` values with that status. A customer with three paid orders counts once for `paid`, and a missing id isn't counted.",
+    "Orders with a missing `status` form their own row. Return `status`, `orders` and `customers`."
+  ],
+  "hints": [
+    "Compare the two aggregates. What does `F.count(\"customer_id\")` count?",
+    "`F.count(\"col\")` counts rows where the column isn't missing, so a customer with three orders counts three times.",
+    "You need an aggregate that counts each different value once. `F` has a \"distinct\" version of count."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "orders"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(orders):\n    return orders.groupBy(\"status\").agg(\n        F.count(\"*\").alias(\"orders\"),\n        F.count(\"customer_id\").alias(\"customers\"),\n    )\n",
+  "output": {
+    "columns": [
+      "status",
+      "orders",
+      "customers"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`F.count(\"customer_id\")` counts rows that have a customer id, so it equals `orders` whenever every order has a customer. Different customers are a distinct count: `F.countDistinct(\"customer_id\").alias(\"customers\")`. It counts each id once per group and skips missing ids. Keep `F.count(\"*\")` for `orders`; switching that to a distinct count of `order_id` would hide repeated rows."
+}

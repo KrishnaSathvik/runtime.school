@@ -1,0 +1,26 @@
+{
+  "id": "PS-L026-C1",
+  "slug": "merchants-never-used",
+  "lesson": "PS-L026",
+  "difficulty": "easy",
+  "minutes": 6,
+  "title": "Merchants never used",
+  "dataset": { "id": "PS-D02", "version": "1.0.0" },
+  "prompt": "The partnerships team wants to know which signed-up merchants no customer has paid yet. Write `solve(merchants, transactions)` so it returns every merchant that appears in no transaction.",
+  "rules": [
+    "A merchant counts as used if any transaction has its `merchant_id`, whatever the transaction's status.",
+    "Transactions without a merchant, such as deposits, don't make any merchant used.",
+    "Return every column of `merchants`, unchanged, one row per unused merchant."
+  ],
+  "hints": [
+    "You want the merchants with no match in `transactions`.",
+    "One join type keeps exactly the left rows that have no match.",
+    "`merchants.join(transactions, on=\"merchant_id\", how=...)`."
+  ],
+  "entry": "solve",
+  "inputs": ["merchants", "transactions"],
+  "starter": "def solve(merchants, transactions):\n    # Return the merchants that appear in no transaction.\n    return merchants\n",
+  "output": { "columns": ["merchant_id", "merchant_name", "mcc_code", "category", "country"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

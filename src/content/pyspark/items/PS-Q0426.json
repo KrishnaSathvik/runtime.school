@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0426",
+  "slug": "three-equal-export-files",
+  "lesson": "PS-L086",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Three equal export files",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "A partner loads the invoice lines with three workers, one file each. Finish `write_export` so the Delta table it writes has exactly three data files of about the same size. `layout` reports the files from the log.",
+  "rules": [
+    "The table has three data files, and every line is in one of them. With no lines there are no files.",
+    "File sizes differ by at most one line.",
+    "Don't change `layout` or `solve`."
+  ],
+  "hints": [
+    "Run the starter and check `files`: how many partitions does `invoice_lines` have when it's read?",
+    "A write makes one file per partition that has rows. Which call can make more partitions than there are?",
+    "`coalesce` can only merge partitions. `repartition(n)` shuffles the rows evenly into `n`."
+  ],
+  "explanation": "`invoice_lines` is read from one small file, so it has one partition and the write makes one file. `repartition(3)` shuffles the rows round-robin into three partitions whose sizes differ by at most one, so the write makes three files: for ten lines, 4, 3 and 3. `coalesce(3)` can't help: it only merges partitions, and there's just one to start with. A cap with `maxRecordsPerFile` set to a third of the lines rounded up gives three files too, but the last one is short: 4, 4 and 2.",
+  "entry": "solve",
+  "inputs": [
+    "invoice_lines"
+  ],
+  "starter": "import json\nimport os\nimport shutil\n\n\ndef layout(path):\n    # The table's data files from the log: how many, the lines in all, and the most and fewest lines in one file.\n    # Don't change this.\n    files = {}\n    log = path + \"/_delta_log/\"\n    for name in sorted(f for f in os.listdir(log) if f.endswith(\".json\")):\n        with open(log + name) as f:\n            for line in f:\n                action = json.loads(line)\n                if \"add\" in action:\n                    files[action[\"add\"][\"path\"]] = json.loads(action[\"add\"][\"stats\"])[\"numRecords\"]\n                if \"remove\" in action:\n                    files.pop(action[\"remove\"][\"path\"], None)\n    sizes = list(files.values()) or [0]\n    return spark.createDataFrame(\n        [(len(files), sum(sizes), max(sizes), min(sizes))],\n        \"files INT, lines INT, largest INT, smallest INT\",\n    )\n\n\ndef write_export(invoice_lines, path):\n    # Three files of about the same size.\n    invoice_lines.write.format(\"delta\").save(path)\n\n\ndef solve(invoice_lines):\n    path = \"/tmp/erp/export\"\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty folder on every run\n    write_export(invoice_lines, path)\n    return layout(path)\n",
+  "output": {
+    "columns": [
+      "files",
+      "lines",
+      "largest",
+      "smallest"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

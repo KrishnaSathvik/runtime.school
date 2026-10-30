@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0002",
+  "kind": "predict",
+  "slug": "attempts-per-learner",
+  "lesson": "PS-L001",
+  "role": "business",
+  "format": "concept_or_trace",
+  "difficulty": "easy",
+  "minutes": 4,
+  "title": "Attempts per learner",
+  "prompt": "A product manager asks how many attempts the average learner makes. This program works it out from the `attempts` and `learners` tables. What does it print? Type each line on its own line.",
+  "program": "n_attempts = attempts.count()\nn_learners = learners.count()\nprint(n_attempts / n_learners)\nprint(n_attempts // n_learners, n_attempts % n_learners)\n",
+  "dataset": {
+    "id": "PS-D11",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "`count()` gives back a plain Python whole number, so ordinary arithmetic works on it.",
+    "Count the attempts and the learners first: every row is one attempt or one learner.",
+    "In Python, `/` always gives a decimal number, `//` drops the remainder and `%` is the remainder."
+  ],
+  "explanation": "There are 13 attempts and 5 learners, and `count()` hands both back as Python numbers. `13 / 5` is `2.6`, while `13 // 5` is 2 with a remainder (`13 % 5`) of 3. Once a count is back in Python, it's just a number."
+}

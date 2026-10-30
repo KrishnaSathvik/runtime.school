@@ -1,0 +1,138 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "customer_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "line",
+     "type": "string",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "C0001",
+     "Ines Okafor, Leeds"
+    ],
+    [
+     "C0002",
+     "Kofi Mori, Lisbon"
+    ],
+    [
+     "C0003",
+     "Tomas Okafor, Denver"
+    ],
+    [
+     "C0004",
+     "Ines Costa, Denver"
+    ],
+    [
+     "C0005",
+     "Maya Rao, New York"
+    ],
+    [
+     "C0006",
+     "Hana Rao"
+    ],
+    [
+     "C0007",
+     "Osaka"
+    ],
+    [
+     "C0008",
+     ""
+    ],
+    [
+     "C0008",
+     ""
+    ]
+   ],
+   "row_count": 9,
+   "inputs": {
+    "customers": [
+     [
+      "C0001",
+      "Ines Okafor",
+      "Leeds",
+      "consumer",
+      "2025-04-30"
+     ],
+     [
+      "C0002",
+      "Kofi Mori",
+      "Lisbon",
+      "consumer",
+      "2024-11-19"
+     ],
+     [
+      "C0003",
+      "Tomas Okafor",
+      "Denver",
+      "consumer",
+      "2024-05-08"
+     ],
+     [
+      "C0004",
+      "  ines   COSTA ",
+      "denver",
+      "business",
+      "2024-11-15"
+     ],
+     [
+      "C0005",
+      "MAYA RAO",
+      "  New   york ",
+      "consumer",
+      "2024-05-01"
+     ],
+     [
+      "C0006",
+      "Hana Rao",
+      null,
+      "consumer",
+      "2025-11-07"
+     ],
+     [
+      "C0007",
+      null,
+      "Osaka",
+      "business",
+      "2025-02-14"
+     ],
+     [
+      "C0008",
+      null,
+      null,
+      "consumer",
+      "2025-06-21"
+     ],
+     [
+      "C0008",
+      null,
+      null,
+      "consumer",
+      "2025-06-21"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice customers table",
+  "names and cities with extra spaces at the ends and between words",
+  "names and cities in capitals or mixed case",
+  "customers with a missing name, city or both",
+  "the same customer delivered twice",
+  "an empty customers table"
+ ]
+}

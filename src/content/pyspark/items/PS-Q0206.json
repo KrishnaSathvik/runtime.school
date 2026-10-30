@@ -1,0 +1,55 @@
+{
+  "id": "PS-Q0206",
+  "slug": "firmware-and-tags-per-reading",
+  "lesson": "PS-L042",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Firmware and tags per reading",
+  "dataset": {
+    "id": "PS-D09",
+    "version": "1.0.0"
+  },
+  "prompt": "The device team keeps track of which firmware each sensor runs and how many placement tags it reports. Write `solve(sensor_readings)` so it returns one flat row per reading with its status, firmware and tag count.",
+  "rules": [
+    "Return `reading_id`, `device_id`, `status`, `firmware_version`, `firmware_build` and `tag_count`, in that order.",
+    "`status` comes from `payload.status`; `firmware_version` and `firmware_build` are the `version` and `build` fields of `firmware`.",
+    "`tag_count` is the number of entries in `payload.tags`, repeats included. An empty list counts 0.",
+    "A missing struct, field or list gives a missing value. Keep every reading, one row each."
+  ],
+  "hints": [
+    "`printSchema()` shows the fields inside `payload` and `firmware`.",
+    "Reach a field with its path, such as `F.col(\"firmware.build\")`, and name it with `.alias(...)`.",
+    "`F.size(...)` counts the entries of an array, and it works on a path into a struct too."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "sensor_readings"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(sensor_readings):\n    # Return one flat row per reading with status, firmware and tag count.\n    return sensor_readings\n",
+  "output": {
+    "columns": [
+      "reading_id",
+      "device_id",
+      "status",
+      "firmware_version",
+      "firmware_build",
+      "tag_count"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Every column is a path plus a name: `F.col(\"payload.status\").alias(\"status\")`, `F.col(\"firmware.version\").alias(\"firmware_version\")`, `F.col(\"firmware.build\").alias(\"firmware_build\")`, and `F.size(\"payload.tags\").alias(\"tag_count\")`. Prefixing the firmware fields keeps their origin in the name, as the lesson suggests. A reading with no `firmware` struct gets missing values in both firmware columns, without an error. `F.size` gives 0 for an empty list and a missing value when the list itself is missing. Without the aliases, the columns would be called `status`, `version` and `build`, which isn't what the report expects."
+}

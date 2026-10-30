@@ -1,0 +1,172 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "reading_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "device_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "event_time",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "temperature_c",
+     "type": "double",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "R0008",
+     "DEV-004",
+     "2026-04-14T09:15:00",
+     41.2
+    ],
+    [
+     "R0011",
+     "DEV-003",
+     "2026-04-14T09:30:00",
+     31.4
+    ],
+    [
+     "R0011",
+     "DEV-003",
+     "2026-04-14T09:30:00",
+     31.4
+    ]
+   ],
+   "row_count": 3,
+   "inputs": {
+    "sensor_readings": [
+     [
+      "R0001",
+      "DEV-001",
+      "2026-04-14T09:00:00",
+      "2026-04-14T09:00:21",
+      "0",
+      "{\"temperature_c\":3.2,\"humidity_pct\":null,\"battery_v\":3.31,\"status\":\"low_battery\",\"tags\":[\"indoor\",\"cold_chain\",\"low_battery\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0004",
+      "DEV-004",
+      "2026-04-14T09:00:00",
+      "2026-04-14T09:00:43",
+      "0",
+      "{\"temperature_c\":25.1,\"humidity_pct\":37.9,\"battery_v\":3.88,\"status\":\"ok\",\"tags\":[\"indoor\",\"critical\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0002",
+      "DEV-002",
+      "2026-04-14T09:00:00",
+      "2026-04-14T09:00:44",
+      "0",
+      "{\"temperature_c\":21.4,\"humidity_pct\":41.5,\"battery_v\":3.92,\"status\":\"ok\",\"tags\":[\"indoor\",\"hvac\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0003",
+      "DEV-003",
+      "2026-04-14T09:00:00",
+      "2026-04-14T09:00:46",
+      "0",
+      "{\"temperature_c\":28.7,\"humidity_pct\":79.0,\"battery_v\":3.75,\"status\":\"ok\",\"tags\":[\"outdoor\",\"greenhouse\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0007",
+      "DEV-003",
+      "2026-04-14T09:15:00",
+      "2026-04-14T09:15:07",
+      "1",
+      "{\"temperature_c\":29.6,\"humidity_pct\":82.4,\"battery_v\":3.75,\"status\":\"ok\",\"tags\":[\"outdoor\",\"greenhouse\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0005",
+      "DEV-001",
+      "2026-04-14T09:15:00",
+      "2026-04-14T09:15:14",
+      "1",
+      "{\"temperature_c\":3.4,\"humidity_pct\":null,\"battery_v\":3.3,\"status\":\"low_battery\",\"tags\":[\"indoor\",\"cold_chain\",\"low_battery\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0008",
+      "DEV-004",
+      "2026-04-14T09:15:00",
+      "2026-04-14T09:15:49",
+      "1",
+      "{\"temperature_c\":41.2,\"humidity_pct\":33.0,\"battery_v\":3.88,\"status\":\"ok\",\"tags\":[\"indoor\",\"critical\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0011",
+      "DEV-003",
+      "2026-04-14T09:30:00",
+      "2026-04-14T09:30:15",
+      "2",
+      "{\"temperature_c\":31.4,\"humidity_pct\":80.6,\"battery_v\":3.74,\"status\":\"ok\",\"tags\":[\"outdoor\",\"greenhouse\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0012",
+      "DEV-004",
+      "2026-04-14T09:30:00",
+      "2026-04-14T09:30:21",
+      "2",
+      "{\"temperature_c\":999.0,\"humidity_pct\":37.5,\"battery_v\":3.87,\"status\":\"ok\",\"tags\":[\"indoor\",\"critical\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0010",
+      "DEV-002",
+      "2026-04-14T09:30:00",
+      "2026-04-14T09:30:25",
+      "2",
+      "{\"temperature_c\":30.0,\"humidity_pct\":40.8,\"battery_v\":3.91,\"status\":\"ok\",\"tags\":[\"indoor\",\"hvac\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0009",
+      "DEV-001",
+      "2026-04-14T09:30:00",
+      "2026-04-14T09:30:48",
+      "2",
+      "{\"temperature_c\":3.3,\"humidity_pct\":null,\"battery_v\":3.29,\"status\":\"low_battery\",\"tags\":[\"indoor\",\"cold_chain\",\"low_battery\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0011",
+      "DEV-003",
+      "2026-04-14T09:30:00",
+      "2026-04-14T09:36:15",
+      "2",
+      "{\"temperature_c\":31.4,\"humidity_pct\":80.6,\"battery_v\":3.74,\"status\":\"ok\",\"tags\":[\"outdoor\",\"greenhouse\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the first five hourly deliveries of the practice readings",
+  "glitches next to real hot and almost-hot readings",
+  "no hot reading, with 30.0 exactly and missing temperatures"
+ ]
+}

@@ -1,0 +1,79 @@
+{
+ "id": "PS-P08-M2",
+ "slug": "set-the-event-key-rules",
+ "project": "PS-P08",
+ "milestone": "PS-P08.m2",
+ "difficulty": "hard",
+ "minutes": 35,
+ "title": "Set the key and ordering rules for scans",
+ "dataset": {
+  "id": "PS-D08",
+  "version": "1.0.0"
+ },
+ "also": [
+  {
+   "id": "PS-D14",
+   "version": "1.0.0",
+   "tables": [
+    "accounts",
+    "customer_cdc"
+   ]
+  }
+ ],
+ "prompt": "Each tracking scan is one step of a shipment, and `sequence` is its place in the source system's log: within a shipment, a higher sequence is a later step. The feed breaks that in three ways. Some scans are delivered again, with the same `event_id`, sometimes on a later day. Some steps get a late correction: a new row with a new `event_id`, the same `shipment_id` and `sequence`, a fixed `event_time` or `location`, and `is_correction` true. And a few scans are for shipments that don't exist.\n\nWrite `event_log(shipment_events, shipments)`. It returns one row per shipment step that the rest of the pipeline can trust.",
+ "rules": [
+  "A scan delivered more than once (the same `event_id`) is kept once: the row from its earliest `load_date`.",
+  "Scans whose `shipment_id` isn't in `shipments` are left out.",
+  "A correction replaces the scan it corrects: for each `shipment_id` and `sequence`, keep the correction, even when a copy of the original loads after it.",
+  "Return the columns of `shipment_events`, in its order."
+ ],
+ "hints": [
+  "Number the rows of each `event_id` by `load_date` with `row_number` over a window, and keep number 1.",
+  "A `left_semi` join with `shipments` on `shipment_id` keeps only scans of known shipments, without adding columns.",
+  "A second window over `shipment_id` and `sequence`, ordered by `is_correction` descending, puts the correction first. Remove repeated deliveries before this one, or a late copy of the original can win."
+ ],
+ "explanation": "The order of the rules matters. Repeated deliveries go first, keyed on `event_id` and keeping the earliest load: `dropDuplicates()` would miss copies that loaded on a different day, and keeping the latest load would date a scan by its copy. Only then is each step (`shipment_id`, `sequence`) cut to one row, with the correction first. Ordering that window by `load_date` alone works on most rows, but a copy of the original that loads after the correction would beat it; `is_correction` says which row is the fix whatever day it arrived. The `left_semi` join quarantines scans of unknown shipments without changing the columns.",
+ "entry": "event_log",
+ "inputs": [
+  "shipment_events",
+  "shipments"
+ ],
+ "file": "pipeline.py",
+ "append": "\n\ndef event_log(shipment_events, shipments):\n    # Step 2: one row per shipment step, after the key and ordering rules.\n    return shipment_events\n",
+ "prerequisites": [
+  "PS-L020",
+  "PS-L026",
+  "PS-L033",
+  "PS-L064"
+ ],
+ "output": {
+  "columns": [
+   "event_id",
+   "shipment_id",
+   "warehouse_id",
+   "event_type",
+   "event_time",
+   "location",
+   "sequence",
+   "load_date",
+   "is_correction"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "example",
+   "sample": true
+  },
+  {
+   "id": "project",
+   "edition": "project"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 60,
+  "check_timeout_s": 180,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

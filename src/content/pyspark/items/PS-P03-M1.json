@@ -1,0 +1,62 @@
+{
+  "id": "PS-P03-M1",
+  "slug": "explore-the-learning-activity",
+  "project": "PS-P03",
+  "milestone": "PS-P03.m1",
+  "difficulty": "easy",
+  "minutes": 20,
+  "title": "Explore the attempts and shape the activity columns",
+  "dataset": {
+    "id": "PS-D11",
+    "version": "1.0.0"
+  },
+  "prompt": "The learning team wants to know who is making progress, which courses get finished and who has gone quiet. Everything starts from the platform's activity export: `attempts`, one row per try at a lesson, beside the `learners`, `courses` and `lessons` tables in the project data. Look at it first. Add `attempts.printSchema()` and `print(attempts.count())` inside the function and press Run.\n\nThen write `attempt_view(attempts)`. It returns the columns the reports use, in order, plus `activity_date`: the calendar day of `started_at`. Every row stays: this step only shapes the columns.",
+  "rules": [
+    "`attempt_view(attempts)` returns `attempt_id`, `learner_id`, `lesson_id`, `attempt_no`, `started_at`, `activity_date`, `score_pct` and `passed`, in that order.",
+    "`activity_date` is the day of `started_at`, as a date. An attempt with no start time has no `activity_date`.",
+    "Every row of `attempts` is still there, repeated and odd rows included."
+  ],
+  "hints": [
+    "`select` picks columns in the order you list them; `minutes_spent` isn't one of them.",
+    "`F.to_date(\"started_at\")` turns a timestamp into its day. Name it with `.alias(\"activity_date\")`.",
+    "Don't filter yet: the next step decides which attempts count."
+  ],
+  "explanation": "`select` both chooses and orders the columns, and `F.to_date(\"started_at\").alias(\"activity_date\")` adds the day each attempt started, as a real date. Later steps compare days, not times of day, so having that column once, in the first function, keeps every report using the same day. Nothing is filtered: the export's repeated and broken rows are dealt with, and counted, in the next steps.",
+  "entry": "attempt_view",
+  "inputs": [
+    "attempts"
+  ],
+  "file": "pipeline.py",
+  "starter": "from pyspark.sql import functions as F\n\n\ndef attempt_view(attempts):\n    # Step 1: the activity columns, in order, with the attempt's day added.\n    return attempts\n",
+  "prerequisites": [
+    "PS-L001",
+    "PS-L008",
+    "PS-L009",
+    "PS-L018"
+  ],
+  "output": {
+    "columns": [
+      "attempt_id",
+      "learner_id",
+      "lesson_id",
+      "attempt_no",
+      "started_at",
+      "activity_date",
+      "score_pct",
+      "passed"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "project",
+      "edition": "project"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0296",
+  "kind": "predict",
+  "slug": "which-storage-level-sticks",
+  "lesson": "PS-L060",
+  "role": "foundation",
+  "format": "concept_or_trace",
+  "difficulty": "medium",
+  "minutes": 7,
+  "title": "Which storage level sticks?",
+  "prompt": "What does this program print? Type each printed line on its own line.",
+  "program": "from pyspark import StorageLevel\n\nprint(movies.is_cached, movies.storageLevel)\n\nmovies.persist(StorageLevel.DISK_ONLY)\nmovies.cache()\nprint(movies.is_cached, movies.storageLevel)\n\nmovies.unpersist()\nprint(movies.is_cached)\n\nmovies.cache()\nprint(movies.storageLevel)\n",
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "Before anything is marked, the level names no memory and no disk: `Serialized 1x Replicated`.",
+    "Once a level is set, a second `persist` or `cache()` changes nothing until you `unpersist()`.",
+    "`cache()` on a DataFrame keeps it in memory and spills to disk; its rows are kept deserialized."
+  ],
+  "explanation": "A DataFrame starts unmarked: `is_cached` is `False` and the level is the empty one, `Serialized 1x Replicated`. The first `persist(StorageLevel.DISK_ONLY)` sets the level, and the `cache()` after it changes nothing (Spark only logs a warning), so it's still `Disk Serialized 1x Replicated`. `unpersist()` removes the mark. With the slate clean, `cache()` applies its own level, memory and disk: `Disk Memory Deserialized 1x Replicated`. None of these lines runs a job; marking and unmarking are instant."
+}

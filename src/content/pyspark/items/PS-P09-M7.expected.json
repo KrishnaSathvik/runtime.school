@@ -1,0 +1,408 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "example": {
+   "schema": [
+    {
+     "name": "check",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "first_run",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "restart",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "one_shot",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "passed",
+     "type": "boolean",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "micro-batches",
+     3,
+     2,
+     5,
+     true
+    ],
+    [
+     "input rows",
+     15,
+     6,
+     21,
+     true
+    ],
+    [
+     "hours published",
+     1,
+     4,
+     5,
+     true
+    ],
+    [
+     "events published",
+     4,
+     9,
+     13,
+     true
+    ]
+   ],
+   "row_count": 4,
+   "inputs": {
+    "page_views": [
+     [
+      "PV-W01",
+      "SES-21",
+      "U00021",
+      "2026-03-05T08:10:00",
+      "2026-03-05T08:10:03",
+      "1",
+      "/home",
+      "home",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":\"search.example\",\"utm\":null}",
+      "30"
+     ],
+     [
+      "PV-W02",
+      "SES-21",
+      "U00021",
+      "2026-03-05T08:40:00",
+      "2026-03-05T08:40:06",
+      "1",
+      "/product",
+      "product",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":\"search.example\",\"utm\":null}",
+      "30"
+     ],
+     [
+      "PV-W03",
+      "SES-21",
+      "U00021",
+      "2026-03-05T09:20:00",
+      "2026-03-05T09:20:05",
+      "1",
+      "/product",
+      "product",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":\"search.example\",\"utm\":null}",
+      "30"
+     ],
+     [
+      "PV-W10",
+      "SES-23",
+      null,
+      "2026-03-05T10:15:00",
+      "2026-03-05T10:15:02",
+      "2",
+      "/home",
+      "home",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":\"search.example\",\"utm\":null}",
+      "30"
+     ],
+     [
+      "PV-W11",
+      "SES-23",
+      null,
+      "2026-03-05T10:45:00",
+      "2026-03-05T10:45:05",
+      "2",
+      "/product",
+      "product",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":\"search.example\",\"utm\":null}",
+      "30"
+     ],
+     [
+      "PV-W03",
+      "SES-21",
+      "U00021",
+      "2026-03-05T09:20:00",
+      "2026-03-05T10:02:00",
+      "2",
+      "/product",
+      "product",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":\"search.example\",\"utm\":null}",
+      "30"
+     ],
+     [
+      "PV-W04",
+      "SES-22",
+      null,
+      "2026-03-05T08:20:00",
+      "2026-03-05T10:20:00",
+      "2",
+      "/home",
+      "home",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":\"search.example\",\"utm\":null}",
+      "30"
+     ],
+     [
+      "PV-W12",
+      "SES-24",
+      "U00024",
+      "2026-03-05T12:10:00",
+      "2026-03-05T12:10:04",
+      "3",
+      "/product",
+      "product",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":\"search.example\",\"utm\":null}",
+      "30"
+     ],
+     [
+      "PV-W05",
+      "SES-22",
+      null,
+      "2026-03-05T08:50:00",
+      "2026-03-05T12:30:00",
+      "3",
+      "/product",
+      "product",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":\"search.example\",\"utm\":null}",
+      "30"
+     ],
+     [
+      "PV-W06",
+      "SES-20",
+      null,
+      "2026-03-05T07:30:00",
+      "2026-03-05T12:31:00",
+      "3",
+      "/home",
+      "home",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":\"search.example\",\"utm\":null}",
+      "30"
+     ],
+     [
+      "PV-W14",
+      "SES-25",
+      "U00025",
+      "2026-03-05T14:20:00",
+      "2026-03-05T14:20:03",
+      "4",
+      "/home",
+      "home",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":\"search.example\",\"utm\":null}",
+      "30"
+     ],
+     [
+      "PV-W12",
+      "SES-24",
+      "U00024",
+      "2026-03-05T12:10:00",
+      "2026-03-05T14:25:00",
+      "4",
+      "/product",
+      "product",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":\"search.example\",\"utm\":null}",
+      "30"
+     ]
+    ],
+    "cart_events": [
+     [
+      "CA-W01",
+      "SES-21",
+      "U00021",
+      "2026-03-05T09:30:00",
+      "2026-03-05T09:30:04",
+      "1",
+      "add",
+      "[{\"sku\":\"SKU-1\",\"qty\":1,\"price\":15.0}]"
+     ],
+     [
+      "CA-W02",
+      "SES-23",
+      null,
+      "2026-03-05T11:30:00",
+      "2026-03-05T11:30:02",
+      "2",
+      "add",
+      "[{\"sku\":\"SKU-2\",\"qty\":2,\"price\":9.0}]"
+     ],
+     [
+      "CA-W03",
+      "SES-26",
+      null,
+      "2026-03-05T09:40:00",
+      "2026-03-05T14:40:00",
+      "4",
+      "add",
+      "[{\"sku\":\"SKU-3\",\"qty\":1,\"price\":4.0}]"
+     ],
+     [
+      "CA-W04",
+      "SES-26",
+      null,
+      "2026-03-05T09:10:00",
+      "2026-03-05T14:41:00",
+      "4",
+      "add",
+      "[{\"sku\":\"SKU-4\",\"qty\":1,\"price\":6.0}]"
+     ]
+    ],
+    "checkout_events": [
+     [
+      "CO-W01",
+      "SES-21",
+      "U00021",
+      "2026-03-05T09:45:00",
+      "2026-03-05T09:45:02",
+      "1",
+      "begin",
+      null,
+      null,
+      "[{\"sku\":\"SKU-1\",\"qty\":1,\"price\":15.0}]",
+      "15.0",
+      "{}"
+     ],
+     [
+      "CO-W02",
+      "SES-21",
+      "U00021",
+      "2026-03-05T09:50:00",
+      "2026-03-05T09:50:03",
+      "1",
+      "complete",
+      "ORD-W1",
+      "{\"method\":\"card\",\"provider\":\"paycore\"}",
+      "[{\"sku\":\"SKU-1\",\"qty\":1,\"price\":15.0}]",
+      "15.0",
+      "{}"
+     ],
+     [
+      "CO-W03",
+      "SES-24",
+      "U00024",
+      "2026-03-05T13:40:00",
+      "2026-03-05T13:40:05",
+      "3",
+      "complete",
+      "ORD-W2",
+      "{\"method\":\"card\",\"provider\":\"paycore\"}",
+      "[{\"sku\":\"SKU-7\",\"qty\":2,\"price\":11.0}]",
+      "22.0",
+      "{}"
+     ],
+     [
+      "CO-W04",
+      "SES-25",
+      "U00025",
+      "2026-03-05T15:10:00",
+      "2026-03-05T15:10:04",
+      "4",
+      "complete",
+      "ORD-W3",
+      "{\"method\":\"card\",\"provider\":\"paycore\"}",
+      "[{\"sku\":\"SKU-8\",\"qty\":1,\"price\":30.0}]",
+      "30.0",
+      "{}"
+     ],
+     [
+      "CO-W02",
+      "SES-21",
+      "U00021",
+      "2026-03-05T09:50:00",
+      "2026-03-05T14:55:00",
+      "4",
+      "complete",
+      "ORD-W1",
+      "{\"method\":\"card\",\"provider\":\"paycore\"}",
+      "[{\"sku\":\"SKU-1\",\"qty\":1,\"price\":15.0}]",
+      "15.0",
+      "{}"
+     ]
+    ]
+   }
+  },
+  "project": {
+   "schema": [
+    {
+     "name": "check",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "first_run",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "restart",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "one_shot",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "passed",
+     "type": "boolean",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "micro-batches",
+     3,
+     3,
+     6,
+     true
+    ],
+    [
+     "input rows",
+     2172,
+     1448,
+     3620,
+     true
+    ],
+    [
+     "hours published",
+     1,
+     6,
+     7,
+     true
+    ],
+    [
+     "events published",
+     288,
+     2290,
+     2578,
+     true
+    ]
+   ],
+   "row_count": 4
+  }
+ },
+ "hidden": [
+  "three deliveries, so micro-batch 3 is the last one, with no data",
+  "two deliveries, so no micro-batch 3 and nothing to restart"
+ ]
+}

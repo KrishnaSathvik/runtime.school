@@ -1,0 +1,150 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "order_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "customer_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "order_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "channel",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "total",
+     "type": "decimal(10,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "O00002",
+     "C0001",
+     "2026-03-11",
+     "delivered",
+     "app",
+     "79.96"
+    ],
+    [
+     "O00008",
+     "C0001",
+     "2026-04-03",
+     "paid",
+     "web",
+     "59.50"
+    ],
+    [
+     "O00009",
+     "C0001",
+     "2026-06-27",
+     "shipped",
+     "store",
+     "105.49"
+    ],
+    [
+     "O00011",
+     "C0005",
+     "2026-01-23",
+     "delivered",
+     "web",
+     "243.00"
+    ],
+    [
+     "O00001",
+     "C0001",
+     "2026-06-11",
+     "paid",
+     "store",
+     "117.99"
+    ],
+    [
+     "O00003",
+     "C0002",
+     "2026-08-28",
+     "paid",
+     "app",
+     "291.95"
+    ],
+    [
+     "O00005",
+     "C0006",
+     "2026-01-18",
+     "shipped",
+     "app",
+     "71.97"
+    ],
+    [
+     "O00010",
+     "C0006",
+     "2026-01-11",
+     "paid",
+     "app",
+     "299.91"
+    ],
+    [
+     "O00004",
+     "C0004",
+     "2026-03-24",
+     "shipped",
+     "app",
+     "418.96"
+    ],
+    [
+     "O00006",
+     "C0004",
+     "2026-06-18",
+     "delivered",
+     "store",
+     "39.98"
+    ],
+    [
+     "O00007",
+     "C0003",
+     "2026-03-23",
+     "placed",
+     "web",
+     "227.48"
+    ],
+    [
+     "O00012",
+     "C0005",
+     "2026-03-03",
+     "refunded",
+     "app",
+     "57.00"
+    ]
+   ],
+   "row_count": 12
+  }
+ },
+ "hidden": [
+  "the full practice orders table",
+  "orders delivered two and three times",
+  "rows for the same order that differ in one value",
+  "repeated rows with missing values",
+  "an empty orders table"
+ ]
+}

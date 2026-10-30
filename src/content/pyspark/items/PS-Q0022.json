@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0022",
+  "kind": "predict",
+  "slug": "eu-west-latency",
+  "lesson": "PS-L005",
+  "role": "business",
+  "format": "concept_or_trace",
+  "difficulty": "easy",
+  "minutes": 4,
+  "title": "Latency for European callers",
+  "prompt": "The on-call team wants a quick look at how fast the service answers callers in `eu-west`. What does this program print? Type each line on its own line.",
+  "program": "eu = api_requests.rdd.filter(lambda r: r[\"client_region\"] == \"eu-west\")\nlatency = eu.map(lambda r: r[\"latency_ms\"]).collect()\nprint(latency)\nprint(len(latency), sum(latency) // len(latency), max(latency))\n",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "Find the requests whose `client_region` is `eu-west`, in table order.",
+    "`collect()` returns a plain Python list of the `latency_ms` values.",
+    "`//` drops the remainder after dividing."
+  ],
+  "explanation": "Three requests came from `eu-west`: REQ-000002 (38 ms), REQ-000005 (118 ms) and REQ-000012 (40 ms). `collect()` gives the Python list `[38, 118, 40]`; it adds up to 196, so the whole-number average is `196 // 3` = 65, and the slowest is 118."
+}

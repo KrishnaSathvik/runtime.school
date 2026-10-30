@@ -1,0 +1,62 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "channel",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "campaigns",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "active",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "purchase_goal",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "social",
+     1,
+     1,
+     1
+    ],
+    [
+     "display",
+     1,
+     1,
+     0
+    ],
+    [
+     "search",
+     2,
+     2,
+     1
+    ]
+   ],
+   "row_count": 3
+  }
+ },
+ "hidden": [
+  "the full practice campaigns",
+  "a channel whose campaigns are all paused or ended",
+  "campaigns with a missing status, objective or channel",
+  "every campaign on one channel",
+  "no campaigns"
+ ]
+}

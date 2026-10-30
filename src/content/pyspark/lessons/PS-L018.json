@@ -1,0 +1,136 @@
+{
+  "id": "PS-L018",
+  "minutes": 25,
+  "lede": "Weather stations around the world report in one clock, UTC, but people read the weather in their own. Dates and timestamps have their own functions for taking them apart, doing arithmetic and moving between time zones, including the days when clocks jump.",
+  "objectives": [
+    "Take dates and timestamps apart with `to_date`, `hour`, `dayofweek` and `date_format`",
+    "Turn text into dates and timestamps with a format, and handle text that doesn't parse",
+    "Add days and measure gaps with `date_add`, `datediff` and timestamp differences in seconds",
+    "Convert UTC to a local time with `from_utc_timestamp`, and see what midnight and daylight saving do"
+  ],
+  "dataset": {
+    "id": "PS-D13",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "observations",
+      "forecasts"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "The tables above come from a few weather stations: `observations`, one reading per row, and `forecasts`, issued each day for some hours ahead. They're loaded as DataFrames with those names, and `F` is `pyspark.sql.functions`. **Every timestamp here is UTC**, and so is the clock Spark uses on this page.\n\nA `date` is a calendar day; a `timestamp` is a moment, to the second. `F.to_date` takes the day from a timestamp. `F.year`, `F.month`, `F.dayofmonth`, `F.hour` and `F.minute` take out one part as a number, and `F.dayofweek` counts from Sunday = 1 to Saturday = 7. `F.date_format(col, pattern)` writes a date or timestamp as text in the pattern you choose."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Take a timestamp apart",
+      "code": "from pyspark.sql import functions as F\n\nobservations.select(\n    \"observation_id\",\n    \"observed_at\",\n    F.to_date(\"observed_at\").alias(\"day\"),\n    F.hour(\"observed_at\").alias(\"hour\"),\n    F.dayofweek(\"observed_at\").alias(\"weekday\"),\n    F.date_format(\"observed_at\", \"EEE d MMM, HH:mm\").alias(\"label\"),\n).show(4, truncate=False)\n",
+      "note": "7 March 2026 is a Saturday, day 7. In the pattern, `EEE` is the short day name, `d` the day, `MMM` the short month, and `HH:mm` the 24-hour time."
+    },
+    {
+      "kind": "text",
+      "md": "Dates often arrive as text in some local style. `F.to_date(col, \"dd/MM/yyyy\")` and `F.to_timestamp(col, \"yyyy-MM-dd HH:mm\")` read text written in that pattern. Without a pattern they expect the standard `2026-03-08` and `2026-03-08 06:30:00` forms.\n\nText that doesn't fit the pattern, or names a day that doesn't exist, stops the job in Spark 4. `F.try_to_timestamp(col, F.lit(pattern))` gives `NULL` instead, like `try_cast` in lesson 14."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Read dates written as text",
+      "code": "from pyspark.sql import functions as F\n\ntext = spark.createDataFrame([(\"08/03/2026\", \"2026-03-08 06:30\"), (\"09/03/2026\", \"not a time\")], \"day STRING, moment STRING\")\ntext.select(\n    F.to_date(\"day\", \"dd/MM/yyyy\").alias(\"day\"),\n    F.try_to_timestamp(\"moment\", F.lit(\"yyyy-MM-dd HH:mm\")).alias(\"moment\"),\n).show()\n",
+      "note": "`08/03/2026` is read day first, as 8 March. `not a time` doesn't parse, so `try_to_timestamp` gives `NULL`."
+    },
+    {
+      "kind": "error-example",
+      "id": "e3",
+      "title": "A day that doesn't exist",
+      "code": "from pyspark.sql import functions as F\n\ntext = spark.createDataFrame([(\"31/02/2026\",)], \"day STRING\")\ntext.select(F.to_date(\"day\", \"dd/MM/yyyy\")).show()\n",
+      "error": "DateTimeException",
+      "note": "February has no 31st. Spark refuses the value and suggests the `try_` version."
+    },
+    {
+      "kind": "text",
+      "md": "For calendar arithmetic, `F.date_add(col, n)` and `F.date_sub(col, n)` move a date by `n` days, and `F.datediff(end, start)` counts the days between two dates.\n\nFor the time between two timestamps, cast each one to `long`: that gives seconds since 1 January 1970, so their difference is in seconds. Divide by 3600 for hours."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "How far ahead is each forecast?",
+      "code": "from pyspark.sql import functions as F\n\nseconds = F.col(\"valid_for\").cast(\"long\") - F.col(\"issued_at\").cast(\"long\")\nforecasts.select(\n    \"forecast_id\",\n    \"issued_at\",\n    \"valid_for\",\n    (seconds / 3600).alias(\"hours_ahead\"),\n    F.date_add(F.to_date(\"issued_at\"), 1).alias(\"next_issue\"),\n).show(4)\n",
+      "note": "Forecasts are issued at midnight UTC for 6 or 12 hours ahead. Dividing with `/` gives a `double`; cast it to `int` if you want a whole number."
+    },
+    {
+      "kind": "text",
+      "md": "`F.from_utc_timestamp(col, \"Asia/Kolkata\")` turns a UTC timestamp into what a clock in that zone shows. Use a zone name like `Europe/Lisbon` rather than a fixed offset, so daylight saving is handled for you. `F.to_utc_timestamp` goes the other way.\n\nNear midnight, the local **date** can differ from the UTC date: here every reading is shown on Kolkata's clock, five and a half hours ahead of UTC."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "UTC to local time",
+      "code": "from pyspark.sql import functions as F\n\nkolkata = F.from_utc_timestamp(\"observed_at\", \"Asia/Kolkata\")\nobservations.select(\n    \"station_id\",\n    \"observed_at\",\n    \"observation_date\",\n    kolkata.alias(\"kolkata_time\"),\n    F.to_date(kolkata).alias(\"kolkata_date\"),\n).show(5)\n",
+      "note": "Look at PNQ-01, the station in Pune: its 18:45 UTC reading is 00:15 on 8 March in local time, while `observation_date` still says the 7th."
+    },
+    {
+      "kind": "text",
+      "md": "On the day clocks spring forward, one local hour doesn't exist. In New York on 8 March 2026 the clocks went from 01:59 straight to 03:00, so readings an hour apart in UTC can be two hours apart on the local clock. UTC itself never jumps, which is why data is stored in it."
+    },
+    {
+      "kind": "example",
+      "id": "e6",
+      "title": "The hour that doesn't exist",
+      "code": "from pyspark.sql import functions as F\n\nutc = spark.createDataFrame([(\"2026-03-08 05:00:00\",), (\"2026-03-08 06:00:00\",), (\"2026-03-08 07:00:00\",), (\"2026-03-08 08:00:00\",)], \"utc STRING\")\nutc = utc.select(F.to_timestamp(\"utc\").alias(\"utc\"))\nutc.select(\"utc\", F.from_utc_timestamp(\"utc\", \"America/New_York\").alias(\"new_york\")).show()\n",
+      "note": "Four readings, one hour apart. On the New York clock they're 00:00, 01:00, 03:00 and 04:00: there's no 02:00 that day."
+    }
+  ],
+  "challenges": [
+    "PS-L018-C1",
+    "PS-L018-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "A reading is at 2026-03-07 18:45 UTC. Kolkata is five and a half hours ahead. What is `F.to_date(F.from_utc_timestamp(\"observed_at\", \"Asia/Kolkata\"))`?",
+      "choices": [
+        "2026-03-07",
+        "2026-03-08",
+        "2026-03-06",
+        "NULL, because the zone is different"
+      ],
+      "answer": 1,
+      "why": "18:45 plus 5:30 is 00:15 the next day, so the local date is 8 March even though the UTC date is the 7th."
+    },
+    {
+      "id": "k2",
+      "prompt": "What does `F.to_date(\"day\", \"dd/MM/yyyy\")` do with the text `31/02/2026` in Spark 4?",
+      "choices": [
+        "Gives 2026-03-03",
+        "Gives 2026-02-28",
+        "Gives NULL",
+        "Stops the job with an error"
+      ],
+      "answer": 3,
+      "why": "There's no 31 February, so parsing fails and the job stops. The `try_` functions, like `try_to_timestamp`, give `NULL` instead."
+    },
+    {
+      "id": "k3",
+      "prompt": "A forecast is issued at 2026-03-08 06:00 UTC for 2026-03-08 12:00 UTC, the day New York's clocks spring forward. How many hours ahead is it?",
+      "choices": [
+        "5",
+        "6",
+        "7",
+        "It depends on the station"
+      ],
+      "answer": 1,
+      "why": "Both timestamps are UTC, which has no daylight saving, so the gap is simply 6 hours."
+    }
+  ],
+  "review": [
+    "`to_date`, `year`, `month`, `dayofmonth`, `hour` and `dayofweek` take a date or timestamp apart; `date_format` writes it as text.",
+    "`to_date(col, pattern)` and `to_timestamp(col, pattern)` read text. Bad text stops the job; `try_to_timestamp` gives `NULL`.",
+    "`date_add`, `date_sub` and `datediff` work in days.",
+    "Cast timestamps to `long` for seconds; the difference divided by 3600 is hours.",
+    "`from_utc_timestamp(col, zone)` shows a UTC moment on a local clock. Near midnight the local date can differ.",
+    "Use zone names, not fixed offsets, so daylight-saving jumps are handled. UTC never jumps."
+  ],
+  "practice": ["PS-Q0086", "PS-Q0087", "PS-Q0088", "PS-Q0089", "PS-Q0090"]
+}

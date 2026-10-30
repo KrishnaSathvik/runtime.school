@@ -1,0 +1,55 @@
+{
+  "id": "PS-Q0139",
+  "slug": "fix-express-shipments-board",
+  "lesson": "PS-L028",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Fix the express shipments board",
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0"
+  },
+  "prompt": "The dispatch board should list every warehouse with its express shipments, and warehouses with none should still show up. Instead, those warehouses disappear. Find the bug and fix `solve(warehouses, shipments)`.",
+  "rules": [
+    "A shipment belongs to the warehouse with the same `warehouse_id`. Only shipments whose `service_level` is exactly `express` are listed.",
+    "Every warehouse appears: once per express shipment, or once with `shipment_id`, `sku` and `quantity` missing if it has none.",
+    "Return `warehouse_id`, `name`, `city`, `shipment_id`, `sku` and `quantity`, in that order."
+  ],
+  "hints": [
+    "Which rows does the `filter` remove? Look at a warehouse whose shipments are all standard, and at one with no shipments.",
+    "After a left join, a warehouse with no match has NULL in `service_level`, and `NULL == \"express\"` isn't true, so the filter drops it.",
+    "The fix belongs in or before the join, not after it: narrow only the shipments, so every warehouse still gets its row."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "warehouses",
+    "shipments"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(warehouses, shipments):\n    joined = warehouses.join(shipments, on=\"warehouse_id\", how=\"left\")\n    express = joined.filter(F.col(\"service_level\") == \"express\")\n    return express.select(\"warehouse_id\", \"name\", \"city\", \"shipment_id\", \"sku\", \"quantity\")\n",
+  "output": {
+    "columns": [
+      "warehouse_id",
+      "name",
+      "city",
+      "shipment_id",
+      "sku",
+      "quantity"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "The filter runs after the left join, so it removes warehouses too. A warehouse whose shipments are all standard keeps only standard rows, which the filter drops, and a warehouse with no shipments has NULL `service_level`, which the filter also drops. The express rule should only decide which shipments match. Put it in the join: `w.join(s, (F.col(\"w.warehouse_id\") == F.col(\"s.warehouse_id\")) & (F.col(\"s.service_level\") == \"express\"), \"left\")`, or filter first: `warehouses.join(shipments.filter(F.col(\"service_level\") == \"express\"), on=\"warehouse_id\", how=\"left\")`. Either keeps every warehouse."
+}

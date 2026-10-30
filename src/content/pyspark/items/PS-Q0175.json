@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0175",
+  "slug": "credits-reach-a-thousand",
+  "lesson": "PS-L035",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "When credits reached 1,000.00",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "Compliance reviews an account once the money credited to it adds up to 1,000.00. Write `solve(ledger_entries)` so it returns, for each account that got there, the entry that took it to 1,000.00 or more.",
+  "rules": [
+    "Only `credit` entries count. Work per `account_id`, in `booked_at` order, then `entry_id` order for entries booked at the same moment. Entries with a missing `account_id` form one group of their own.",
+    "`credited_so_far` is the sum of `amount` over the account's credits up to and including this one.",
+    "Return one row per account whose `credited_so_far` ever reaches 1,000.00 or more (1,000.00 itself counts): the first entry where it does. Leave out accounts that never get there.",
+    "Return `account_id`, `entry_id`, `booked_at` and `credited_so_far`."
+  ],
+  "hints": [
+    "Work in steps: keep the credits, add the running total, then keep the rows at or over the line.",
+    "After that filter, an account can still have several rows. The first of them is the one you want.",
+    "Number the remaining rows per account with `F.row_number()` over a window ordered by `booked_at` and `entry_id`, and keep number 1."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "ledger_entries"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(ledger_entries):\n    # Return the entry that first takes each account's credits to 1,000.00 or more.\n    return ledger_entries\n",
+  "output": {
+    "columns": [
+      "account_id",
+      "entry_id",
+      "booked_at",
+      "credited_so_far"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Three steps. Keep the credits and add a running total: `w = Window.partitionBy(\"account_id\").orderBy(\"booked_at\", \"entry_id\").rowsBetween(Window.unboundedPreceding, Window.currentRow)` and `F.sum(\"amount\").over(w)`. Keep the rows where it is `>= 1000`. Then number what's left per account with `F.row_number()` over `Window.partitionBy(\"account_id\").orderBy(\"booked_at\", \"entry_id\")` and keep number 1. Without that last step every later entry would be returned too; with `>` an account that lands exactly on 1,000.00 is missed; and without the tie-breaker and row frame, two credits booked at the same moment would be added together before either was counted."
+}

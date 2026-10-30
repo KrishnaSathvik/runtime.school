@@ -1,0 +1,50 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D01",
+  "version": "1.1.0",
+  "edition": "lesson",
+  "tables": [
+   "orders",
+   "customers",
+   "products",
+   "order_items"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "root\n |-- customer_id: string (nullable = true)\n |-- order_id: string (nullable = true)\n |-- order_date: date (nullable = true)\n |-- status: string (nullable = true)\n |-- channel: string (nullable = true)\n |-- total: decimal(10,2) (nullable = true)\n |-- name: string (nullable = true)\n |-- city: string (nullable = true)\n |-- segment: string (nullable = true)\n |-- signup_date: date (nullable = true)\n\n+--------+-----------+------------+------+------+\n|order_id|customer_id|        name|  city| total|\n+--------+-----------+------------+------+------+\n|  O00001|      C0001| Ines Okafor| Leeds|117.99|\n|  O00002|      C0001| Ines Okafor| Leeds| 79.96|\n|  O00003|      C0002|   Kofi Mori|Lisbon|291.95|\n|  O00004|      C0004|  Ines Costa|Denver|418.96|\n|  O00005|      C0006|    Hana Rao| Osaka| 71.97|\n|  O00006|      C0004|  Ines Costa|Denver| 39.98|\n|  O00007|      C0003|Tomas Okafor|Denver|227.48|\n|  O00008|      C0001| Ines Okafor| Leeds| 59.50|\n|  O00009|      C0001| Ines Okafor| Leeds|105.49|\n|  O00010|      C0006|    Hana Rao| Osaka|299.91|\n|  O00011|      C0005|    Maya Rao| Perth|243.00|\n|  O00012|      C0005|    Maya Rao| Perth| 57.00|\n+--------+-----------+------------+------+------+\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "+----------+------------+--------+\n|product_id|        name|in_stock|\n+----------+------------+--------+\n|      P001|  Chef Knife|      14|\n|      P004|Camp Lantern|       0|\n+----------+------------+--------+\n\n+----------+----------------+--------+\n|product_id|            name|in_stock|\n+----------+----------------+--------+\n|      P001|      Chef Knife|      14|\n|      P002|Pour-Over Kettle|    NULL|\n|      P003|    Trail Bottle|    NULL|\n|      P004|    Camp Lantern|       0|\n|      P005|       Desk Lamp|    NULL|\n|      P006|    Notebook Set|    NULL|\n|      P007|     Linen Throw|    NULL|\n|      P008|      Wall Clock|    NULL|\n+----------+----------------+--------+\n\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "+----------+------------+--------+\n|product_id|        name|in_stock|\n+----------+------------+--------+\n|      P001|  Chef Knife|      14|\n|      P004|Camp Lantern|       0|\n|      P009|        NULL|      30|\n+----------+------------+--------+\n\n+----------+----------------+--------+\n|product_id|            name|in_stock|\n+----------+----------------+--------+\n|      P001|      Chef Knife|      14|\n|      P002|Pour-Over Kettle|    NULL|\n|      P003|    Trail Bottle|    NULL|\n|      P004|    Camp Lantern|       0|\n|      P005|       Desk Lamp|    NULL|\n|      P006|    Notebook Set|    NULL|\n|      P007|     Linen Throw|    NULL|\n|      P008|      Wall Clock|    NULL|\n|      P009|            NULL|      30|\n+----------+----------------+--------+\n\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "['product_id', 'name', 'category', 'unit_price', 'active', 'product_id', 'in_stock']\n",
+   "error": {
+    "type": "AnalysisException",
+    "message": "[AMBIGUOUS_REFERENCE] Reference `product_id` is ambiguous, could be: [`product_id`, `product_id`]. SQLSTATE: 42704",
+    "line": 5,
+    "condition": "AMBIGUOUS_REFERENCE"
+   }
+  },
+  "e5": {
+   "stdout": "+------------+--------+----------------+--------+\n|catalogue_id|stock_id|            name|in_stock|\n+------------+--------+----------------+--------+\n|        NULL|    P009|            NULL|      30|\n|        P001|    P001|      Chef Knife|      14|\n|        P002|    NULL|Pour-Over Kettle|    NULL|\n|        P003|    NULL|    Trail Bottle|    NULL|\n|        P004|    P004|    Camp Lantern|       0|\n|        P005|    NULL|       Desk Lamp|    NULL|\n|        P006|    NULL|    Notebook Set|    NULL|\n|        P007|    NULL|     Linen Throw|    NULL|\n|        P008|    NULL|      Wall Clock|    NULL|\n+------------+--------+----------------+--------+\n\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "+--------+-------+------------+--------+----------+---------+\n|order_id|line_no|        name|quantity|unit_price|   status|\n+--------+-------+------------+--------+----------+---------+\n|  O00001|      1|   Desk Lamp|       3|     19.99|     paid|\n|  O00001|      2|   Desk Lamp|       3|     17.99|     paid|\n|  O00001|      3|Camp Lantern|       1|      4.05|     paid|\n|  O00002|      1|  Chef Knife|       3|     19.99|delivered|\n|  O00002|      2|  Chef Knife|       1|     19.99|delivered|\n|  O00003|      1|  Chef Knife|       2|     19.99|     paid|\n|  O00003|      2| Linen Throw|       3|     59.99|     paid|\n|  O00003|      3|Trail Bottle|       3|     24.00|     paid|\n+--------+-------+------------+--------+----------+---------+\nonly showing top 8 rows\n",
+   "error": null
+  }
+ }
+}

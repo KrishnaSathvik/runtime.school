@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0253",
+  "slug": "sale-prices-to-the-cent",
+  "lesson": "PS-L051",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Sale prices to the cent",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "For the spring sale every product is 15% off. Write `solve(products)` so it returns `product_id`, `unit_price` and `sale_price`, the sale price as an exact amount of money.",
+  "rules": [
+    "`sale_price` is `unit_price` × 0.85, rounded to the cent with halves rounded up: 0.10 gives 0.085, which becomes 0.09.",
+    "`sale_price` is a `decimal(10,2)`, exact like `unit_price`; it must never be missing for a product that has a price.",
+    "A product with a missing `unit_price` has a missing `sale_price`.",
+    "Return `product_id`, `unit_price` and `sale_price`, in that order. Keep every product."
+  ],
+  "hints": [
+    "A `DECIMAL` column arrives in a UDF as Python's `Decimal`. Multiply it by `Decimal(\"0.85\")`, not by the float `0.85`.",
+    "`value.quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)` rounds to cents. Without `rounding=`, `Decimal` rounds halves to the even cent.",
+    "Declare the UDF as `\"decimal(10,2)\"` and return a `Decimal`: a `float` returned for a decimal type silently becomes NULL."
+  ],
+  "explanation": "Inside a UDF declared `\"decimal(10,2)\"`, return `None` for a missing price and otherwise `(price * Decimal(\"0.85\")).quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)`. Every trap here is silent: computing with floats and returning a float gives NULL for a decimal type, `quantize` without a rounding mode rounds 0.085 down to 0.08, and Python's `round` on a float works on an approximation of the value. Keeping `Decimal` all the way gives exact cents.",
+  "entry": "solve",
+  "inputs": [
+    "products"
+  ],
+  "starter": "from decimal import ROUND_HALF_UP, Decimal\n\nfrom pyspark.sql import functions as F\n\n\ndef solve(products):\n    # Return product_id, unit_price and the 15%-off sale_price.\n    return products\n",
+  "output": {
+    "columns": [
+      "product_id",
+      "unit_price",
+      "sale_price"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

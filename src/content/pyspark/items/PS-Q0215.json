@@ -1,0 +1,56 @@
+{
+  "id": "PS-Q0215",
+  "slug": "raise-preview-for-clean-lines",
+  "lesson": "PS-L043",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Raise preview for clean lines",
+  "dataset": {
+    "id": "PS-D03",
+    "version": "1.0.0"
+  },
+  "prompt": "Payroll is planning a flat raise of 2,500.00 for everyone and wants a preview built only from export lines that are fully valid. Finish `solve(employees_raw)` so it reads the saved export and adds each employee's salary after the raise.",
+  "rules": [
+    "Fields are separated by `;`, the first line is a header, and quoted values can contain `;`. Columns: `employee_id STRING, full_name STRING, job_title STRING, department STRING, salary DECIMAL(10,2), hire_date DATE`.",
+    "Leave out malformed lines: too few or too many fields, or a salary or date that isn't valid. An empty field is NULL, not malformed.",
+    "Return the six columns, then `salary_after_raise`: `salary` plus 2,500.00, kept exact (a decimal, not a double). A NULL salary gives NULL.",
+    "Keep duplicate lines."
+  ],
+  "hints": [
+    "Read with the six-column schema and the mode that leaves malformed lines out.",
+    "Work out the new column in a `select` with arithmetic, as in the lesson on selecting columns: `\"*\"` keeps every column you read.",
+    "Adding a whole number to a decimal keeps it a decimal. A Python float such as `2500.0` makes it a double."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "employees_raw"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(employees_raw):\n    path = \"/tmp/hr/export\"\n    employees_raw.write.mode(\"overwrite\").text(path)\n    # Read the file at `path`, leave out malformed lines and add salary_after_raise.\n    return employees_raw\n",
+  "output": {
+    "columns": [
+      "employee_id",
+      "full_name",
+      "job_title",
+      "department",
+      "salary",
+      "hire_date",
+      "salary_after_raise"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Read, then compute: `clean = spark.read.csv(path, sep=\";\", header=True, schema=schema, mode=\"DROPMALFORMED\")` and `clean.select(\"*\", (F.col(\"salary\") + 2500).alias(\"salary_after_raise\"))`. The whole number 2500 keeps the sum exact; Spark widens it to `decimal(11,2)` so the larger value fits. `selectExpr(\"*\", \"salary + 2500 AS salary_after_raise\")` gives the same. Returning all six columns matters here too: Spark only checks the columns a query reads, so selecting just a few could keep a line whose date is broken. With `+ 2500.0` the new column would be a double, and the default `PERMISSIVE` mode would keep the broken lines in the preview."
+}

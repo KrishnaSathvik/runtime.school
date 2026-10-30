@@ -1,0 +1,21 @@
+{
+  "id": "PS-L080-C1",
+  "kind": "predict",
+  "slug": "size-the-memory-pool",
+  "lesson": "PS-L080",
+  "difficulty": "medium",
+  "minutes": 7,
+  "title": "Size the memory pool",
+  "prompt": "This program submits a script that reports its heap in MiB, its unified memory pool in MiB, its executor memory setting and its cores. It prints the exit code, then the script's lines without their `app:` prefix. What does it print? Type each line on its own line.",
+  "program": "import os, subprocess\n\nopen(\"/tmp/size.py\", \"w\").write(\"\"\"\nfrom pyspark.sql import SparkSession\n\nspark = SparkSession.builder.getOrCreate()\nsc = spark.sparkContext\nheap = sc._jvm.java.lang.Runtime.getRuntime().maxMemory()\npool = sc._jsc.sc().getExecutorMemoryStatus().values().head()._1()\nprint(\"app:\", heap // 1024**2)\nprint(\"app:\", pool // 1024**2)\nprint(\"app:\", sc.getConf().get(\"spark.executor.memory\", \"not set\"))\nprint(\"app:\", sc.defaultParallelism)\nspark.stop()\n\"\"\")\n\nenv = {**os.environ, \"SPARK_LOCAL_IP\": \"127.0.0.1\"}\nrun = subprocess.run(\n    [\"spark-submit\", \"--master\", \"local[4]\",\n     \"--driver-memory\", \"1500m\", \"--executor-memory\", \"8g\",\n     \"--conf\", \"spark.memory.fraction=0.5\", \"/tmp/size.py\"],\n    capture_output=True, text=True, env=env)\nprint(run.returncode)\nfor line in run.stdout.splitlines():\n    if line.startswith(\"app:\"):\n        print(line[5:])\n",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "In local mode the heap is set by `--driver-memory`: 1500m is 1500 MiB.",
+    "The pool is (heap - 300 MiB) × `spark.memory.fraction`, and this command changes the fraction.",
+    "In local mode there's no separate executor, so spark-submit doesn't pass `--executor-memory` on. The cores come from the master."
+  ]
+}

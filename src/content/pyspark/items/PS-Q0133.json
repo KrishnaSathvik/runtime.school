@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0133",
+  "slug": "skip-level-manager",
+  "lesson": "PS-L027",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Skip-level manager",
+  "dataset": {
+    "id": "PS-D03",
+    "version": "1.0.0"
+  },
+  "prompt": "Skip-level meetings pair each employee with their manager's manager. Write `solve(employees)` so it returns every employee with their skip-level manager's id and first name.",
+  "rules": [
+    "The skip-level manager is the employee whose `employee_id` equals the `manager_id` of the employee's manager.",
+    "`skip_level_id` and `skip_level_name` are missing when the employee has no manager, when the manager isn't in the table, or when the manager's manager isn't in the table.",
+    "`employees` sometimes holds an exact copy of a row, loaded twice. Every employee still appears exactly once.",
+    "Return `employee_id`, `manager_id`, `skip_level_id` and `skip_level_name`, in that order."
+  ],
+  "hints": [
+    "Three copies of `employees`, each with its own `alias`: the employee, the manager, the manager's manager.",
+    "Each join climbs one level, and each must be a left join, or employees near the top disappear. The skip-level id must come from the third copy, not from the manager's `manager_id`: that id may name nobody.",
+    "A copied row matches twice in every join it takes part in. Remove the exact copies with `distinct()` first."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "employees"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(employees):\n    # Every employee with their manager's manager.\n    return employees\n",
+  "output": {
+    "columns": [
+      "employee_id",
+      "manager_id",
+      "skip_level_id",
+      "skip_level_name"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Remove copies first, `people = employees.distinct()`, then chain two left self joins: `e.join(m, F.col(\"e.manager_id\") == F.col(\"m.employee_id\"), \"left\").join(s, F.col(\"m.manager_id\") == F.col(\"s.employee_id\"), \"left\")`. Left joins keep the chief executive, the heads (whose manager has no manager) and anyone whose manager is unknown, each with NULL skip-level columns. Take `skip_level_id` from `s.employee_id`, not `m.manager_id`: when the manager's manager isn't in the table, `m.manager_id` still holds an id that names nobody. Without `distinct()`, a copied manager row doubles each of their reports, and a copied employee row appears twice."
+}

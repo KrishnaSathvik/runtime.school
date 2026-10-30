@@ -1,0 +1,2294 @@
+{
+ "id": "PS-D07",
+ "version": "1.0.0",
+ "title": "Transportation & Taxi",
+ "generated_by": "services/spark-runner/datasets/d07_taxi.py",
+ "rules": [
+  "fare is what the meter charged under the trip's rate code: base_fare + per_mile \u00d7 trip_distance + per_minute \u00d7 minutes, at least minimum_fare, rounded half up to cents; airport trips pay the flat_fare instead.",
+  "total = fare + tip + tolls + surcharge, exactly, in every edition (including the damaged project rows).",
+  "Card and wallet tips are a percentage of fare (mostly 15, 18, 20 or 25%) rounded half up to cents, so 18% of 11.25 = 2.025 is stored as 2.03 (lesson trip T006) and a 15.625 meter fare as 15.63 (T001); cash tips are recorded as 0.00.",
+  "trip_distance is the meter's reading in miles with two decimals; values ending in 5 (2.25, 2.35, 0.95 in the lesson edition) show the difference between round() (half up) and bround() (half even).",
+  "Night trips (pickup 20:00 to 05:59) use the night rate code; trips touching an airport zone use airport_flat.",
+  "payment_type is card, cash, wallet, no_charge or dispute; no_charge and dispute trips have a tip of 0.00.",
+  "weather_enrichment has one row per date and hour (obs_hour 0 to 23) of the edition's period; join it on to_date(pickup_at) and hour(pickup_at).",
+  "passenger_count is missing (null) for about 2% of practice and project trips where the driver didn't key it in.",
+  "The project edition is a raw meter export with problems to clean: zero-distance trips (about 1.5%), negative fares and totals from reversed charges (about 1%), dropoff_at earlier than pickup_at (about 1%) and pickup or dropoff zone ids 0 or 99 that are not in taxi_zones (about 1.5%).",
+  "Lesson and practice trips are clean: positive distances and fares, dropoff after pickup, known zones and drivers."
+ ],
+ "relationships": [
+  {
+   "from": "trips.pickup_zone_id",
+   "to": "taxi_zones.zone_id"
+  },
+  {
+   "from": "trips.dropoff_zone_id",
+   "to": "taxi_zones.zone_id"
+  },
+  {
+   "from": "trips.driver_id",
+   "to": "drivers.driver_id"
+  },
+  {
+   "from": "trips.rate_code",
+   "to": "fare_rules.rate_code"
+  },
+  {
+   "from": "drivers.home_zone_id",
+   "to": "taxi_zones.zone_id"
+  }
+ ],
+ "tables": {
+  "trips": {
+   "note": "One row per completed taxi trip: when and where it started and ended, the meter distance and what was paid.",
+   "columns": [
+    {
+     "name": "trip_id",
+     "type": "string"
+    },
+    {
+     "name": "driver_id",
+     "type": "string"
+    },
+    {
+     "name": "pickup_at",
+     "type": "timestamp"
+    },
+    {
+     "name": "dropoff_at",
+     "type": "timestamp"
+    },
+    {
+     "name": "pickup_zone_id",
+     "type": "int"
+    },
+    {
+     "name": "dropoff_zone_id",
+     "type": "int"
+    },
+    {
+     "name": "passenger_count",
+     "type": "int"
+    },
+    {
+     "name": "trip_distance",
+     "type": "double"
+    },
+    {
+     "name": "rate_code",
+     "type": "string"
+    },
+    {
+     "name": "fare",
+     "type": "decimal(8,2)"
+    },
+    {
+     "name": "tip",
+     "type": "decimal(8,2)"
+    },
+    {
+     "name": "tolls",
+     "type": "decimal(8,2)"
+    },
+    {
+     "name": "surcharge",
+     "type": "decimal(8,2)"
+    },
+    {
+     "name": "total",
+     "type": "decimal(8,2)"
+    },
+    {
+     "name": "payment_type",
+     "type": "string"
+    }
+   ],
+   "key": [
+    "trip_id"
+   ],
+   "rows": {
+    "lesson": 12,
+    "practice": 3000,
+    "project": 5200
+   },
+   "lesson": [
+    [
+     "T001",
+     "DRV-001",
+     "2026-04-07T07:05:07",
+     "2026-04-07T07:19:07",
+     "4",
+     "5",
+     "1",
+     "2.25",
+     "standard",
+     "15.63",
+     "2.81",
+     "0.00",
+     "0.50",
+     "18.94",
+     "card"
+    ],
+    [
+     "T002",
+     "DRV-002",
+     "2026-04-07T07:12:14",
+     "2026-04-07T07:27:14",
+     "10",
+     "4",
+     "2",
+     "2.35",
+     "standard",
+     "16.38",
+     "3.28",
+     "0.00",
+     "0.50",
+     "20.16",
+     "card"
+    ],
+    [
+     "T003",
+     "DRV-001",
+     "2026-04-07T07:40:21",
+     "2026-04-07T07:46:51",
+     "5",
+     "4",
+     "1",
+     "0.95",
+     "standard",
+     "8.63",
+     "0.00",
+     "0.00",
+     "0.50",
+     "9.13",
+     "cash"
+    ],
+    [
+     "T004",
+     "DRV-003",
+     "2026-04-07T08:02:28",
+     "2026-04-07T08:33:28",
+     "16",
+     "1",
+     "3",
+     "10.05",
+     "airport_flat",
+     "52.00",
+     "7.80",
+     "6.55",
+     "1.75",
+     "68.10",
+     "card"
+    ],
+    [
+     "T005",
+     "DRV-002",
+     "2026-04-07T08:25:35",
+     "2026-04-07T08:47:35",
+     "4",
+     "22",
+     "1",
+     "4.6",
+     "standard",
+     "25.50",
+     "6.38",
+     "0.00",
+     "0.50",
+     "32.38",
+     "wallet"
+    ],
+    [
+     "T006",
+     "DRV-001",
+     "2026-04-07T08:51:42",
+     "2026-04-07T09:00:42",
+     "5",
+     "10",
+     "1",
+     "1.5",
+     "standard",
+     "11.25",
+     "2.03",
+     "0.00",
+     "0.50",
+     "13.78",
+     "card"
+    ],
+    [
+     "T007",
+     "DRV-003",
+     "2026-04-07T09:30:49",
+     "2026-04-07T10:08:49",
+     "1",
+     "10",
+     "2",
+     "11.8",
+     "airport_flat",
+     "52.00",
+     "10.40",
+     "6.55",
+     "1.75",
+     "70.70",
+     "card"
+    ],
+    [
+     "T008",
+     "DRV-002",
+     "2026-04-07T09:44:56",
+     "2026-04-07T09:56:56",
+     "22",
+     "16",
+     "4",
+     "3.15",
+     "standard",
+     "16.88",
+     "0.00",
+     "0.00",
+     "0.50",
+     "17.38",
+     "cash"
+    ],
+    [
+     "T009",
+     "DRV-001",
+     "2026-04-07T10:15:03",
+     "2026-04-07T10:26:03",
+     "10",
+     "5",
+     "1",
+     "2.25",
+     "standard",
+     "14.13",
+     "2.12",
+     "0.00",
+     "0.50",
+     "16.75",
+     "card"
+    ],
+    [
+     "T010",
+     "DRV-003",
+     "2026-04-07T10:58:10",
+     "2026-04-07T11:16:10",
+     "4",
+     "16",
+     "1",
+     "3.85",
+     "standard",
+     "21.63",
+     "0.00",
+     "0.00",
+     "0.50",
+     "22.13",
+     "dispute"
+    ],
+    [
+     "T011",
+     "DRV-002",
+     "2026-04-07T11:20:17",
+     "2026-04-07T11:28:17",
+     "16",
+     "22",
+     "2",
+     "1.25",
+     "standard",
+     "10.13",
+     "2.53",
+     "0.00",
+     "0.50",
+     "13.16",
+     "card"
+    ],
+    [
+     "T012",
+     "DRV-001",
+     "2026-04-07T12:03:24",
+     "2026-04-07T12:19:24",
+     "22",
+     "4",
+     "1",
+     "3.4",
+     "standard",
+     "19.50",
+     "3.51",
+     "0.00",
+     "0.50",
+     "23.51",
+     "card"
+    ]
+   ],
+   "practice_head": [
+    [
+     "T000001",
+     "DRV-050",
+     "2026-04-06T00:13:39",
+     "2026-04-06T00:41:34",
+     "22",
+     "17",
+     "1",
+     "7.61",
+     "night",
+     "39.78",
+     "11.93",
+     "0.00",
+     "1.00",
+     "52.71",
+     "card"
+    ],
+    [
+     "T000002",
+     "DRV-077",
+     "2026-04-06T00:27:16",
+     "2026-04-06T00:43:58",
+     "4",
+     "22",
+     "2",
+     "4.51",
+     "night",
+     "25.09",
+     "0.00",
+     "0.00",
+     "1.00",
+     "26.09",
+     "cash"
+    ],
+    [
+     "T000003",
+     "DRV-085",
+     "2026-04-06T00:49:50",
+     "2026-04-06T01:07:46",
+     "8",
+     "5",
+     "1",
+     "4.56",
+     "night",
+     "25.91",
+     "4.66",
+     "0.00",
+     "1.00",
+     "31.57",
+     "card"
+    ],
+    [
+     "T000004",
+     "DRV-039",
+     "2026-04-06T00:52:48",
+     "2026-04-06T01:17:53",
+     "22",
+     "10",
+     "1",
+     "6.46",
+     "night",
+     "35.06",
+     "0.00",
+     "0.00",
+     "1.00",
+     "36.06",
+     "card"
+    ],
+    [
+     "T000005",
+     "DRV-059",
+     "2026-04-06T01:04:47",
+     "2026-04-06T01:27:18",
+     "10",
+     "6",
+     "2",
+     "6.4",
+     "night",
+     "33.48",
+     "8.37",
+     "0.00",
+     "1.00",
+     "42.85",
+     "wallet"
+    ],
+    [
+     "T000006",
+     "DRV-093",
+     "2026-04-06T01:13:48",
+     "2026-04-06T01:35:09",
+     "23",
+     "10",
+     "1",
+     "6.62",
+     "night",
+     "33.45",
+     "6.02",
+     "3.25",
+     "1.00",
+     "43.72",
+     "card"
+    ],
+    [
+     "T000007",
+     "DRV-022",
+     "2026-04-06T01:18:41",
+     "2026-04-06T02:06:01",
+     "30",
+     "2",
+     "1",
+     "15.45",
+     "airport_flat",
+     "52.00",
+     "7.80",
+     "0.00",
+     "1.75",
+     "61.55",
+     "card"
+    ],
+    [
+     "T000008",
+     "DRV-035",
+     "2026-04-06T01:51:39",
+     "2026-04-06T02:42:29",
+     "2",
+     "13",
+     "2",
+     "17.42",
+     "airport_flat",
+     "52.00",
+     "15.60",
+     "6.55",
+     "1.75",
+     "75.90",
+     "card"
+    ],
+    [
+     "T000009",
+     "DRV-032",
+     "2026-04-06T02:23:40",
+     "2026-04-06T02:51:33",
+     "21",
+     "10",
+     "1",
+     "7.73",
+     "night",
+     "40.10",
+     "0.00",
+     "0.00",
+     "1.00",
+     "41.10",
+     "cash"
+    ],
+    [
+     "T000010",
+     "DRV-057",
+     "2026-04-06T03:27:18",
+     "2026-04-06T03:38:57",
+     "9",
+     "4",
+     "3",
+     "2.62",
+     "night",
+     "17.11",
+     "2.57",
+     "0.00",
+     "1.00",
+     "20.68",
+     "card"
+    ],
+    [
+     "T000011",
+     "DRV-072",
+     "2026-04-06T05:02:51",
+     "2026-04-06T05:31:25",
+     "29",
+     "24",
+     "6",
+     "9.8",
+     "night",
+     "46.16",
+     "8.31",
+     "3.25",
+     "1.00",
+     "58.72",
+     "wallet"
+    ],
+    [
+     "T000012",
+     "DRV-100",
+     "2026-04-06T05:11:07",
+     "2026-04-06T06:00:21",
+     "14",
+     "2",
+     "5",
+     "17.54",
+     "airport_flat",
+     "52.00",
+     "0.00",
+     "0.00",
+     "1.75",
+     "53.75",
+     "cash"
+    ],
+    [
+     "T000013",
+     "DRV-073",
+     "2026-04-06T06:01:53",
+     "2026-04-06T07:00:39",
+     "7",
+     "2",
+     "2",
+     "14.52",
+     "airport_flat",
+     "52.00",
+     "10.40",
+     "0.00",
+     "1.75",
+     "64.15",
+     "wallet"
+    ],
+    [
+     "T000014",
+     "DRV-114",
+     "2026-04-06T06:02:38",
+     "2026-04-06T06:20:03",
+     "17",
+     "19",
+     "1",
+     "3.67",
+     "standard",
+     "20.88",
+     "3.76",
+     "0.00",
+     "0.50",
+     "25.14",
+     "card"
+    ],
+    [
+     "T000015",
+     "DRV-023",
+     "2026-04-06T06:07:43",
+     "2026-04-06T06:45:34",
+     "23",
+     "21",
+     "1",
+     "9.09",
+     "standard",
+     "44.65",
+     "0.00",
+     "0.00",
+     "0.50",
+     "45.15",
+     "cash"
+    ],
+    [
+     "T000016",
+     "DRV-096",
+     "2026-04-06T06:10:25",
+     "2026-04-06T07:23:50",
+     "2",
+     "20",
+     "2",
+     "18.76",
+     "airport_flat",
+     "52.00",
+     "9.36",
+     "6.55",
+     "1.75",
+     "69.66",
+     "card"
+    ],
+    [
+     "T000017",
+     "DRV-083",
+     "2026-04-06T06:15:54",
+     "2026-04-06T06:56:59",
+     "24",
+     "19",
+     null,
+     "9.91",
+     "standard",
+     "48.32",
+     "7.25",
+     "0.00",
+     "0.50",
+     "56.07",
+     "card"
+    ],
+    [
+     "T000018",
+     "DRV-048",
+     "2026-04-06T06:17:26",
+     "2026-04-06T06:40:22",
+     "11",
+     "16",
+     "1",
+     "5.28",
+     "standard",
+     "27.67",
+     "5.53",
+     "0.00",
+     "0.50",
+     "33.70",
+     "card"
+    ],
+    [
+     "T000019",
+     "DRV-056",
+     "2026-04-06T07:00:15",
+     "2026-04-06T07:05:44",
+     "6",
+     "6",
+     "2",
+     "0.39",
+     "standard",
+     "7.00",
+     "1.26",
+     "0.00",
+     "0.50",
+     "8.76",
+     "card"
+    ],
+    [
+     "T000020",
+     "DRV-115",
+     "2026-04-06T07:04:44",
+     "2026-04-06T07:47:21",
+     "17",
+     "25",
+     "1",
+     "6.9",
+     "standard",
+     "41.56",
+     "6.23",
+     "0.00",
+     "0.50",
+     "48.29",
+     "card"
+    ]
+   ],
+   "project_head": [
+    [
+     "T000001",
+     "DRV-060",
+     "2026-05-04T00:12:05",
+     "2026-05-04T00:38:44",
+     "23",
+     "4",
+     "1",
+     "8.18",
+     "night",
+     "40.65",
+     "4.07",
+     "0.00",
+     "1.00",
+     "45.72",
+     "card"
+    ],
+    [
+     "T000002",
+     "DRV-173",
+     "2026-05-04T00:38:30",
+     "2026-05-04T01:05:54",
+     "11",
+     "17",
+     "4",
+     "8.65",
+     "night",
+     "42.36",
+     "4.24",
+     "0.00",
+     "1.00",
+     "47.60",
+     "card"
+    ],
+    [
+     "T000003",
+     "DRV-062",
+     "2026-05-04T00:43:19",
+     "2026-05-04T01:17:24",
+     "28",
+     "20",
+     "1",
+     "11.99",
+     "night",
+     "55.22",
+     "0.00",
+     "0.00",
+     "1.00",
+     "56.22",
+     "cash"
+    ],
+    [
+     "T000004",
+     "DRV-090",
+     "2026-05-04T00:55:06",
+     "2026-05-04T01:17:13",
+     "12",
+     "20",
+     "2",
+     "6.88",
+     "night",
+     "34.58",
+     "6.92",
+     "0.00",
+     "1.00",
+     "42.50",
+     "card"
+    ],
+    [
+     "T000005",
+     "DRV-154",
+     "2026-05-04T01:25:02",
+     "2026-05-04T01:35:46",
+     "26",
+     "27",
+     "3",
+     "3.16",
+     "night",
+     "18.09",
+     "3.62",
+     "0.00",
+     "1.00",
+     "22.71",
+     "card"
+    ],
+    [
+     "T000006",
+     "DRV-119",
+     "2026-05-04T01:30:27",
+     "2026-05-04T01:50:26",
+     "6",
+     "25",
+     "2",
+     "5.53",
+     "night",
+     "29.70",
+     "2.97",
+     "0.00",
+     "1.00",
+     "33.67",
+     "card"
+    ],
+    [
+     "T000007",
+     "DRV-021",
+     "2026-05-04T01:38:17",
+     "2026-05-04T01:53:10",
+     "10",
+     "6",
+     "1",
+     "3.64",
+     "night",
+     "21.69",
+     "0.00",
+     "0.00",
+     "1.00",
+     "22.69",
+     "cash"
+    ],
+    [
+     "T000008",
+     "DRV-017",
+     "2026-05-04T02:00:11",
+     "2026-05-04T02:54:01",
+     "1",
+     "12",
+     null,
+     "18.84",
+     "airport_flat",
+     "52.00",
+     "9.36",
+     "0.00",
+     "1.75",
+     "63.11",
+     "card"
+    ],
+    [
+     "T000009",
+     "DRV-175",
+     "2026-05-04T02:17:19",
+     "2026-05-04T02:49:38",
+     "26",
+     "2",
+     "2",
+     "10.48",
+     "airport_flat",
+     "52.00",
+     "0.00",
+     "6.55",
+     "1.75",
+     "60.30",
+     "cash"
+    ],
+    [
+     "T000010",
+     "DRV-095",
+     "2026-05-04T02:21:26",
+     "2026-05-04T02:42:33",
+     "5",
+     "26",
+     "2",
+     "6.37",
+     "night",
+     "32.63",
+     "4.89",
+     "0.00",
+     "1.00",
+     "38.52",
+     "card"
+    ],
+    [
+     "T000011",
+     "DRV-122",
+     "2026-05-04T02:28:44",
+     "2026-05-04T02:49:03",
+     "13",
+     "18",
+     "3",
+     "7.01",
+     "night",
+     "33.95",
+     "6.79",
+     "0.00",
+     "1.00",
+     "41.74",
+     "card"
+    ],
+    [
+     "T000012",
+     "DRV-123",
+     "2026-05-04T04:04:02",
+     "2026-05-04T04:22:28",
+     "10",
+     "25",
+     "1",
+     "5.82",
+     "night",
+     "29.65",
+     "0.00",
+     "0.00",
+     "1.00",
+     "30.65",
+     "cash"
+    ],
+    [
+     "T000013",
+     "DRV-001",
+     "2026-05-04T04:21:11",
+     "2026-05-04T04:47:18",
+     "6",
+     "24",
+     "1",
+     "7.7",
+     "night",
+     "39.04",
+     "0.00",
+     "0.00",
+     "1.00",
+     "40.04",
+     "cash"
+    ],
+    [
+     "T000014",
+     "DRV-054",
+     "2026-05-04T05:01:22",
+     "2026-05-04T05:27:26",
+     "8",
+     "11",
+     "1",
+     "8.67",
+     "night",
+     "41.68",
+     "7.50",
+     "0.00",
+     "1.00",
+     "50.18",
+     "card"
+    ],
+    [
+     "T000015",
+     "DRV-115",
+     "2026-05-04T05:40:43",
+     "2026-05-04T06:06:36",
+     "14",
+     "16",
+     "2",
+     "8.04",
+     "night",
+     "39.84",
+     "7.97",
+     "0.00",
+     "1.00",
+     "48.81",
+     "card"
+    ],
+    [
+     "T000016",
+     "DRV-074",
+     "2026-05-04T06:04:43",
+     "2026-05-04T06:23:20",
+     "21",
+     "4",
+     "2",
+     "3.7",
+     "standard",
+     "21.56",
+     "3.23",
+     "0.00",
+     "0.50",
+     "25.29",
+     "card"
+    ],
+    [
+     "T000017",
+     "DRV-073",
+     "2026-05-04T06:12:25",
+     "2026-05-04T06:34:30",
+     "10",
+     "8",
+     "1",
+     "5.57",
+     "standard",
+     "27.97",
+     "5.03",
+     "0.00",
+     "0.50",
+     "33.50",
+     "card"
+    ],
+    [
+     "T000018",
+     "DRV-007",
+     "2026-05-04T06:33:25",
+     "2026-05-04T06:49:21",
+     "25",
+     "23",
+     "1",
+     "3.63",
+     "standard",
+     "20.04",
+     "3.61",
+     "0.00",
+     "0.50",
+     "24.15",
+     "card"
+    ],
+    [
+     "T000019",
+     "DRV-153",
+     "2026-05-04T06:55:33",
+     "2026-05-04T06:35:35",
+     "4",
+     "13",
+     "1",
+     "4.82",
+     "standard",
+     "25.04",
+     "3.76",
+     "0.00",
+     "0.50",
+     "29.30",
+     "wallet"
+    ],
+    [
+     "T000020",
+     "DRV-093",
+     "2026-05-04T07:09:15",
+     "2026-05-04T08:14:03",
+     "12",
+     "19",
+     "2",
+     "11.44",
+     "standard",
+     "64.00",
+     "9.60",
+     "0.00",
+     "0.50",
+     "74.10",
+     "card"
+    ]
+   ]
+  },
+  "taxi_zones": {
+   "note": "One row per pickup/dropoff zone of the city, with its borough.",
+   "columns": [
+    {
+     "name": "zone_id",
+     "type": "int"
+    },
+    {
+     "name": "zone_name",
+     "type": "string"
+    },
+    {
+     "name": "borough",
+     "type": "string"
+    },
+    {
+     "name": "service_zone",
+     "type": "string"
+    }
+   ],
+   "key": [
+    "zone_id"
+   ],
+   "rows": {
+    "lesson": 6,
+    "practice": 30,
+    "project": 30
+   },
+   "lesson": [
+    [
+     "1",
+     "Kestrel Airport Terminal A",
+     "Airport",
+     "Airports"
+    ],
+    [
+     "4",
+     "Cathedral Steps",
+     "Old Quarter",
+     "Core"
+    ],
+    [
+     "5",
+     "Market Square",
+     "Old Quarter",
+     "Core"
+    ],
+    [
+     "10",
+     "Harbor Point",
+     "Northbank",
+     "Core"
+    ],
+    [
+     "16",
+     "Ferry Landing",
+     "Riverside",
+     "Core"
+    ],
+    [
+     "22",
+     "Orchard Park",
+     "Eastfield",
+     "Core"
+    ]
+   ],
+   "practice_head": [
+    [
+     "1",
+     "Kestrel Airport Terminal A",
+     "Airport",
+     "Airports"
+    ],
+    [
+     "2",
+     "Kestrel Airport Terminal B",
+     "Airport",
+     "Airports"
+    ],
+    [
+     "3",
+     "Kestrel Airport Cargo",
+     "Airport",
+     "Airports"
+    ],
+    [
+     "4",
+     "Cathedral Steps",
+     "Old Quarter",
+     "Core"
+    ],
+    [
+     "5",
+     "Market Square",
+     "Old Quarter",
+     "Core"
+    ],
+    [
+     "6",
+     "Guild Hall",
+     "Old Quarter",
+     "Core"
+    ],
+    [
+     "7",
+     "Clocktower",
+     "Old Quarter",
+     "Core"
+    ],
+    [
+     "8",
+     "Printers Court",
+     "Old Quarter",
+     "Core"
+    ],
+    [
+     "9",
+     "Dock Gate",
+     "Old Quarter",
+     "Core"
+    ],
+    [
+     "10",
+     "Harbor Point",
+     "Northbank",
+     "Core"
+    ],
+    [
+     "11",
+     "Mill District",
+     "Northbank",
+     "Core"
+    ],
+    [
+     "12",
+     "Signal Hill",
+     "Northbank",
+     "Core"
+    ],
+    [
+     "13",
+     "Lantern Row",
+     "Northbank",
+     "Core"
+    ],
+    [
+     "14",
+     "Cedar Flats",
+     "Northbank",
+     "Core"
+    ],
+    [
+     "15",
+     "Glassworks",
+     "Northbank",
+     "Core"
+    ],
+    [
+     "16",
+     "Ferry Landing",
+     "Riverside",
+     "Core"
+    ],
+    [
+     "17",
+     "Otter Bend",
+     "Riverside",
+     "Core"
+    ],
+    [
+     "18",
+     "Willow Quay",
+     "Riverside",
+     "Core"
+    ],
+    [
+     "19",
+     "Saltmarsh",
+     "Riverside",
+     "Core"
+    ],
+    [
+     "20",
+     "Brickfield",
+     "Riverside",
+     "Core"
+    ]
+   ],
+   "project_head": [
+    [
+     "1",
+     "Kestrel Airport Terminal A",
+     "Airport",
+     "Airports"
+    ],
+    [
+     "2",
+     "Kestrel Airport Terminal B",
+     "Airport",
+     "Airports"
+    ],
+    [
+     "3",
+     "Kestrel Airport Cargo",
+     "Airport",
+     "Airports"
+    ],
+    [
+     "4",
+     "Cathedral Steps",
+     "Old Quarter",
+     "Core"
+    ],
+    [
+     "5",
+     "Market Square",
+     "Old Quarter",
+     "Core"
+    ],
+    [
+     "6",
+     "Guild Hall",
+     "Old Quarter",
+     "Core"
+    ],
+    [
+     "7",
+     "Clocktower",
+     "Old Quarter",
+     "Core"
+    ],
+    [
+     "8",
+     "Printers Court",
+     "Old Quarter",
+     "Core"
+    ],
+    [
+     "9",
+     "Dock Gate",
+     "Old Quarter",
+     "Core"
+    ],
+    [
+     "10",
+     "Harbor Point",
+     "Northbank",
+     "Core"
+    ],
+    [
+     "11",
+     "Mill District",
+     "Northbank",
+     "Core"
+    ],
+    [
+     "12",
+     "Signal Hill",
+     "Northbank",
+     "Core"
+    ],
+    [
+     "13",
+     "Lantern Row",
+     "Northbank",
+     "Core"
+    ],
+    [
+     "14",
+     "Cedar Flats",
+     "Northbank",
+     "Core"
+    ],
+    [
+     "15",
+     "Glassworks",
+     "Northbank",
+     "Core"
+    ],
+    [
+     "16",
+     "Ferry Landing",
+     "Riverside",
+     "Core"
+    ],
+    [
+     "17",
+     "Otter Bend",
+     "Riverside",
+     "Core"
+    ],
+    [
+     "18",
+     "Willow Quay",
+     "Riverside",
+     "Core"
+    ],
+    [
+     "19",
+     "Saltmarsh",
+     "Riverside",
+     "Core"
+    ],
+    [
+     "20",
+     "Brickfield",
+     "Riverside",
+     "Core"
+    ]
+   ]
+  },
+  "fare_rules": {
+   "note": "One row per rate code: how the meter prices a trip under it.",
+   "columns": [
+    {
+     "name": "rate_code",
+     "type": "string"
+    },
+    {
+     "name": "description",
+     "type": "string"
+    },
+    {
+     "name": "base_fare",
+     "type": "decimal(6,2)"
+    },
+    {
+     "name": "per_mile",
+     "type": "decimal(6,2)"
+    },
+    {
+     "name": "per_minute",
+     "type": "decimal(6,2)"
+    },
+    {
+     "name": "minimum_fare",
+     "type": "decimal(6,2)"
+    },
+    {
+     "name": "flat_fare",
+     "type": "decimal(6,2)"
+    },
+    {
+     "name": "surcharge",
+     "type": "decimal(6,2)"
+    }
+   ],
+   "key": [
+    "rate_code"
+   ],
+   "rows": {
+    "lesson": 4,
+    "practice": 4,
+    "project": 4
+   },
+   "lesson": [
+    [
+     "standard",
+     "Day meter rate",
+     "3.00",
+     "2.50",
+     "0.50",
+     "7.00",
+     null,
+     "0.50"
+    ],
+    [
+     "night",
+     "Night meter rate, 20:00 to 05:59",
+     "3.50",
+     "2.75",
+     "0.55",
+     "8.00",
+     null,
+     "1.00"
+    ],
+    [
+     "airport_flat",
+     "Flat fare to or from an airport zone",
+     "0.00",
+     "0.00",
+     "0.00",
+     "52.00",
+     "52.00",
+     "1.75"
+    ],
+    [
+     "shared",
+     "Shared ride, per rider",
+     "2.00",
+     "1.60",
+     "0.30",
+     "5.00",
+     null,
+     "0.50"
+    ]
+   ],
+   "practice_head": [
+    [
+     "standard",
+     "Day meter rate",
+     "3.00",
+     "2.50",
+     "0.50",
+     "7.00",
+     null,
+     "0.50"
+    ],
+    [
+     "night",
+     "Night meter rate, 20:00 to 05:59",
+     "3.50",
+     "2.75",
+     "0.55",
+     "8.00",
+     null,
+     "1.00"
+    ],
+    [
+     "airport_flat",
+     "Flat fare to or from an airport zone",
+     "0.00",
+     "0.00",
+     "0.00",
+     "52.00",
+     "52.00",
+     "1.75"
+    ],
+    [
+     "shared",
+     "Shared ride, per rider",
+     "2.00",
+     "1.60",
+     "0.30",
+     "5.00",
+     null,
+     "0.50"
+    ]
+   ],
+   "project_head": [
+    [
+     "standard",
+     "Day meter rate",
+     "3.00",
+     "2.50",
+     "0.50",
+     "7.00",
+     null,
+     "0.50"
+    ],
+    [
+     "night",
+     "Night meter rate, 20:00 to 05:59",
+     "3.50",
+     "2.75",
+     "0.55",
+     "8.00",
+     null,
+     "1.00"
+    ],
+    [
+     "airport_flat",
+     "Flat fare to or from an airport zone",
+     "0.00",
+     "0.00",
+     "0.00",
+     "52.00",
+     "52.00",
+     "1.75"
+    ],
+    [
+     "shared",
+     "Shared ride, per rider",
+     "2.00",
+     "1.60",
+     "0.30",
+     "5.00",
+     null,
+     "0.50"
+    ]
+   ]
+  },
+  "drivers": {
+   "note": "One row per licensed driver: their vehicle, when they joined and their home zone.",
+   "columns": [
+    {
+     "name": "driver_id",
+     "type": "string"
+    },
+    {
+     "name": "display_name",
+     "type": "string"
+    },
+    {
+     "name": "vehicle_type",
+     "type": "string"
+    },
+    {
+     "name": "joined_date",
+     "type": "date"
+    },
+    {
+     "name": "home_zone_id",
+     "type": "int"
+    },
+    {
+     "name": "active",
+     "type": "boolean"
+    }
+   ],
+   "key": [
+    "driver_id"
+   ],
+   "rows": {
+    "lesson": 4,
+    "practice": 120,
+    "project": 180
+   },
+   "lesson": [
+    [
+     "DRV-001",
+     "Amara K.",
+     "sedan",
+     "2023-04-02",
+     "4",
+     "true"
+    ],
+    [
+     "DRV-002",
+     "Dario M.",
+     "ev",
+     "2024-09-15",
+     "10",
+     "true"
+    ],
+    [
+     "DRV-003",
+     "Esme T.",
+     "suv",
+     "2025-01-20",
+     "16",
+     "true"
+    ],
+    [
+     "DRV-004",
+     "Hugo B.",
+     "van",
+     "2022-11-07",
+     "22",
+     "false"
+    ]
+   ],
+   "practice_head": [
+    [
+     "DRV-001",
+     "Quinn B.",
+     "suv",
+     "2019-12-05",
+     "21",
+     "true"
+    ],
+    [
+     "DRV-002",
+     "Bastian M.",
+     "sedan",
+     "2020-11-04",
+     "19",
+     "true"
+    ],
+    [
+     "DRV-003",
+     "Pavel M.",
+     "suv",
+     "2021-11-19",
+     "6",
+     "true"
+    ],
+    [
+     "DRV-004",
+     "Lionel E.",
+     "sedan",
+     "2024-08-07",
+     "12",
+     "true"
+    ],
+    [
+     "DRV-005",
+     "Pavel F.",
+     "sedan",
+     "2024-04-17",
+     "8",
+     "true"
+    ],
+    [
+     "DRV-006",
+     "Bastian H.",
+     "sedan",
+     "2020-03-21",
+     "4",
+     "true"
+    ],
+    [
+     "DRV-007",
+     "Hugo J.",
+     "sedan",
+     "2022-02-14",
+     "23",
+     "true"
+    ],
+    [
+     "DRV-008",
+     "Esme P.",
+     "sedan",
+     "2020-08-23",
+     "17",
+     "true"
+    ],
+    [
+     "DRV-009",
+     "Hugo R.",
+     "suv",
+     "2021-09-17",
+     "13",
+     "true"
+    ],
+    [
+     "DRV-010",
+     "Greta A.",
+     "sedan",
+     "2020-08-18",
+     "24",
+     "true"
+    ],
+    [
+     "DRV-011",
+     "Soren F.",
+     "sedan",
+     "2025-08-27",
+     "14",
+     "true"
+    ],
+    [
+     "DRV-012",
+     "Greta P.",
+     "ev",
+     "2019-08-02",
+     "30",
+     "true"
+    ],
+    [
+     "DRV-013",
+     "Rosa S.",
+     "ev",
+     "2023-01-05",
+     "12",
+     "true"
+    ],
+    [
+     "DRV-014",
+     "Bastian L.",
+     "sedan",
+     "2019-12-15",
+     "29",
+     "true"
+    ],
+    [
+     "DRV-015",
+     "Kaia A.",
+     "van",
+     "2024-05-17",
+     "20",
+     "true"
+    ],
+    [
+     "DRV-016",
+     "Ilse D.",
+     "ev",
+     "2020-02-22",
+     "19",
+     "true"
+    ],
+    [
+     "DRV-017",
+     "Ilse G.",
+     "sedan",
+     "2025-11-22",
+     "23",
+     "true"
+    ],
+    [
+     "DRV-018",
+     "Pavel J.",
+     "suv",
+     "2019-06-26",
+     "12",
+     "true"
+    ],
+    [
+     "DRV-019",
+     "Talia W.",
+     "sedan",
+     "2024-04-07",
+     "19",
+     "true"
+    ],
+    [
+     "DRV-020",
+     "Esme F.",
+     "sedan",
+     "2023-05-02",
+     "8",
+     "true"
+    ]
+   ],
+   "project_head": [
+    [
+     "DRV-001",
+     "Ilse B.",
+     "suv",
+     "2020-11-04",
+     "11",
+     "true"
+    ],
+    [
+     "DRV-002",
+     "Ilse N.",
+     "sedan",
+     "2023-06-08",
+     "18",
+     "true"
+    ],
+    [
+     "DRV-003",
+     "Pavel M.",
+     "sedan",
+     "2024-11-26",
+     "10",
+     "true"
+    ],
+    [
+     "DRV-004",
+     "Quinn C.",
+     "sedan",
+     "2021-03-01",
+     "23",
+     "true"
+    ],
+    [
+     "DRV-005",
+     "Calla W.",
+     "ev",
+     "2025-09-22",
+     "30",
+     "true"
+    ],
+    [
+     "DRV-006",
+     "Esme P.",
+     "suv",
+     "2019-08-17",
+     "25",
+     "true"
+    ],
+    [
+     "DRV-007",
+     "Odile C.",
+     "ev",
+     "2019-06-02",
+     "14",
+     "true"
+    ],
+    [
+     "DRV-008",
+     "Calla C.",
+     "sedan",
+     "2019-10-20",
+     "26",
+     "true"
+    ],
+    [
+     "DRV-009",
+     "Esme N.",
+     "sedan",
+     "2025-10-24",
+     "17",
+     "true"
+    ],
+    [
+     "DRV-010",
+     "Mira R.",
+     "sedan",
+     "2023-12-07",
+     "6",
+     "true"
+    ],
+    [
+     "DRV-011",
+     "Nico A.",
+     "van",
+     "2025-03-25",
+     "8",
+     "true"
+    ],
+    [
+     "DRV-012",
+     "Greta M.",
+     "ev",
+     "2019-09-02",
+     "25",
+     "true"
+    ],
+    [
+     "DRV-013",
+     "Odile N.",
+     "sedan",
+     "2024-02-14",
+     "24",
+     "true"
+    ],
+    [
+     "DRV-014",
+     "Mira J.",
+     "van",
+     "2023-06-20",
+     "17",
+     "true"
+    ],
+    [
+     "DRV-015",
+     "Faris E.",
+     "sedan",
+     "2024-02-12",
+     "5",
+     "true"
+    ],
+    [
+     "DRV-016",
+     "Hugo P.",
+     "ev",
+     "2022-05-08",
+     "17",
+     "true"
+    ],
+    [
+     "DRV-017",
+     "Bastian D.",
+     "suv",
+     "2022-07-26",
+     "28",
+     "true"
+    ],
+    [
+     "DRV-018",
+     "Joaquin R.",
+     "suv",
+     "2022-09-13",
+     "21",
+     "true"
+    ],
+    [
+     "DRV-019",
+     "Calla P.",
+     "suv",
+     "2020-01-10",
+     "7",
+     "true"
+    ],
+    [
+     "DRV-020",
+     "Bastian P.",
+     "ev",
+     "2020-10-02",
+     "26",
+     "true"
+    ]
+   ]
+  },
+  "weather_enrichment": {
+   "note": "One row per hour of the trip period: temperature, rain, wind and conditions, to join on pickup date and hour.",
+   "columns": [
+    {
+     "name": "obs_date",
+     "type": "date"
+    },
+    {
+     "name": "obs_hour",
+     "type": "int"
+    },
+    {
+     "name": "temperature_c",
+     "type": "double"
+    },
+    {
+     "name": "precipitation_mm",
+     "type": "double"
+    },
+    {
+     "name": "wind_kph",
+     "type": "double"
+    },
+    {
+     "name": "conditions",
+     "type": "string"
+    }
+   ],
+   "key": [
+    "obs_date",
+    "obs_hour"
+   ],
+   "rows": {
+    "lesson": 6,
+    "practice": 336,
+    "project": 504
+   },
+   "lesson": [
+    [
+     "2026-04-07",
+     "7",
+     "8.4",
+     "0.0",
+     "9.0",
+     "cloudy"
+    ],
+    [
+     "2026-04-07",
+     "8",
+     "9.1",
+     "0.4",
+     "12.5",
+     "rain"
+    ],
+    [
+     "2026-04-07",
+     "9",
+     "9.8",
+     "2.6",
+     "18.0",
+     "heavy_rain"
+    ],
+    [
+     "2026-04-07",
+     "10",
+     "10.5",
+     "1.1",
+     "15.5",
+     "rain"
+    ],
+    [
+     "2026-04-07",
+     "11",
+     "11.9",
+     "0.0",
+     "11.0",
+     "cloudy"
+    ],
+    [
+     "2026-04-07",
+     "12",
+     "13.2",
+     "0.0",
+     "8.5",
+     "clear"
+    ]
+   ],
+   "practice_head": [
+    [
+     "2026-04-06",
+     "0",
+     "4.6",
+     "7.3",
+     "20.4",
+     "heavy_rain"
+    ],
+    [
+     "2026-04-06",
+     "1",
+     "4.9",
+     "0.0",
+     "12.5",
+     "clear"
+    ],
+    [
+     "2026-04-06",
+     "2",
+     "3.2",
+     "0.3",
+     "18.3",
+     "rain"
+    ],
+    [
+     "2026-04-06",
+     "3",
+     "3.9",
+     "0.0",
+     "4.9",
+     "fog"
+    ],
+    [
+     "2026-04-06",
+     "4",
+     "4.9",
+     "0.0",
+     "10.0",
+     "clear"
+    ],
+    [
+     "2026-04-06",
+     "5",
+     "5.9",
+     "0.0",
+     "10.4",
+     "clear"
+    ],
+    [
+     "2026-04-06",
+     "6",
+     "6.8",
+     "0.0",
+     "13.0",
+     "cloudy"
+    ],
+    [
+     "2026-04-06",
+     "7",
+     "7.1",
+     "0.0",
+     "11.1",
+     "cloudy"
+    ],
+    [
+     "2026-04-06",
+     "8",
+     "6.5",
+     "0.6",
+     "13.4",
+     "rain"
+    ],
+    [
+     "2026-04-06",
+     "9",
+     "7.7",
+     "0.5",
+     "11.1",
+     "rain"
+    ],
+    [
+     "2026-04-06",
+     "10",
+     "9.9",
+     "1.6",
+     "19.7",
+     "rain"
+    ],
+    [
+     "2026-04-06",
+     "11",
+     "10.2",
+     "0.5",
+     "19.4",
+     "rain"
+    ],
+    [
+     "2026-04-06",
+     "12",
+     "11.9",
+     "0.7",
+     "8.8",
+     "rain"
+    ],
+    [
+     "2026-04-06",
+     "13",
+     "12.3",
+     "1.8",
+     "18.0",
+     "rain"
+    ],
+    [
+     "2026-04-06",
+     "14",
+     "12.7",
+     "0.7",
+     "8.4",
+     "rain"
+    ],
+    [
+     "2026-04-06",
+     "15",
+     "13.8",
+     "0.5",
+     "10.1",
+     "rain"
+    ],
+    [
+     "2026-04-06",
+     "16",
+     "13.1",
+     "0.1",
+     "17.4",
+     "rain"
+    ],
+    [
+     "2026-04-06",
+     "17",
+     "12.4",
+     "1.6",
+     "25.4",
+     "rain"
+    ],
+    [
+     "2026-04-06",
+     "18",
+     "12.3",
+     "5.6",
+     "8.8",
+     "heavy_rain"
+    ],
+    [
+     "2026-04-06",
+     "19",
+     "10.2",
+     "1.0",
+     "12.3",
+     "rain"
+    ]
+   ],
+   "project_head": [
+    [
+     "2026-05-04",
+     "0",
+     "6.1",
+     "0.0",
+     "8.5",
+     "clear"
+    ],
+    [
+     "2026-05-04",
+     "1",
+     "6.0",
+     "0.0",
+     "1.1",
+     "clear"
+    ],
+    [
+     "2026-05-04",
+     "2",
+     "5.1",
+     "0.0",
+     "7.8",
+     "fog"
+    ],
+    [
+     "2026-05-04",
+     "3",
+     "4.4",
+     "0.0",
+     "2.4",
+     "cloudy"
+    ],
+    [
+     "2026-05-04",
+     "4",
+     "4.8",
+     "0.0",
+     "14.0",
+     "cloudy"
+    ],
+    [
+     "2026-05-04",
+     "5",
+     "5.1",
+     "0.0",
+     "13.5",
+     "cloudy"
+    ],
+    [
+     "2026-05-04",
+     "6",
+     "5.7",
+     "0.0",
+     "16.4",
+     "cloudy"
+    ],
+    [
+     "2026-05-04",
+     "7",
+     "7.4",
+     "0.0",
+     "12.1",
+     "clear"
+    ],
+    [
+     "2026-05-04",
+     "8",
+     "8.0",
+     "0.0",
+     "13.7",
+     "clear"
+    ],
+    [
+     "2026-05-04",
+     "9",
+     "9.8",
+     "0.0",
+     "14.7",
+     "clear"
+    ],
+    [
+     "2026-05-04",
+     "10",
+     "11.9",
+     "0.0",
+     "10.5",
+     "clear"
+    ],
+    [
+     "2026-05-04",
+     "11",
+     "12.9",
+     "0.0",
+     "15.0",
+     "clear"
+    ],
+    [
+     "2026-05-04",
+     "12",
+     "13.8",
+     "0.0",
+     "13.5",
+     "clear"
+    ],
+    [
+     "2026-05-04",
+     "13",
+     "13.5",
+     "0.0",
+     "7.1",
+     "cloudy"
+    ],
+    [
+     "2026-05-04",
+     "14",
+     "14.2",
+     "0.0",
+     "12.8",
+     "cloudy"
+    ],
+    [
+     "2026-05-04",
+     "15",
+     "14.2",
+     "0.0",
+     "6.9",
+     "cloudy"
+    ],
+    [
+     "2026-05-04",
+     "16",
+     "14.7",
+     "0.0",
+     "10.0",
+     "cloudy"
+    ],
+    [
+     "2026-05-04",
+     "17",
+     "13.7",
+     "0.0",
+     "10.7",
+     "cloudy"
+    ],
+    [
+     "2026-05-04",
+     "18",
+     "12.2",
+     "1.2",
+     "13.4",
+     "rain"
+    ],
+    [
+     "2026-05-04",
+     "19",
+     "11.1",
+     "0.8",
+     "10.6",
+     "rain"
+    ]
+   ]
+  }
+ }
+}

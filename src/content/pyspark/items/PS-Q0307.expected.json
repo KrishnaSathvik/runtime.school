@@ -1,0 +1,58 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "version",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "operation",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "transactions",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     3,
+     "UPDATE",
+     14
+    ],
+    [
+     2,
+     "DELETE",
+     14
+    ],
+    [
+     1,
+     "WRITE",
+     16
+    ],
+    [
+     0,
+     "WRITE",
+     14
+    ]
+   ],
+   "row_count": 4
+  }
+ },
+ "hidden": [
+  "the full practice transactions",
+  "a morning load with no declined transactions",
+  "the only transaction with no account is a declined one",
+  "an empty morning load"
+ ]
+}

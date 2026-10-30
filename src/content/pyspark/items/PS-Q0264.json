@@ -1,0 +1,59 @@
+{
+  "id": "PS-Q0264",
+  "slug": "fix-the-battery-percent",
+  "lesson": "PS-L053",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Fix the battery percent",
+  "dataset": {
+    "id": "PS-D09",
+    "version": "1.0.0"
+  },
+  "prompt": "The maintenance app shows each sensor's battery as a percent of its working range. This `mapInPandas` job stops with an error, and there's a second mistake behind it. Fix `solve(sensor_readings)`, keeping `mapInPandas`.",
+  "rules": [
+    "`battery_pct` is (battery_v − 3.0) ÷ 1.2 × 100, rounded to 1 decimal place, as a double.",
+    "A reading with a missing `battery_v` has a missing `battery_pct`.",
+    "Keep the calculation in `mapInPandas`: the check looks for it in the plan Spark runs.",
+    "Keep every delivered row. Return `reading_id`, `device_id`, `battery_v` and `battery_pct`, in that order."
+  ],
+  "hints": [
+    "Read the error: the function is treated like a pandas DataFrame, but what does `mapInPandas` actually pass it?",
+    "The function gets an iterator of batches. Loop over it and `yield` a DataFrame for each batch; a `return` inside the loop ends the function instead.",
+    "Once it runs, compare `battery_pct` with the rule. Spark fits each yielded column to the type in the schema string."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "sensor_readings"
+  ],
+  "starter": "import pandas as pd\nfrom pyspark.sql import functions as F\n\n\ndef add_battery_pct(pdf):\n    pdf[\"battery_pct\"] = ((pdf[\"battery_v\"] - 3.0) / 1.2 * 100).round(1)\n    return pdf[[\"reading_id\", \"device_id\", \"battery_v\", \"battery_pct\"]]\n\n\ndef solve(sensor_readings):\n    readings = sensor_readings.select(\"reading_id\", \"device_id\", F.col(\"payload.battery_v\").alias(\"battery_v\"))\n    return readings.mapInPandas(add_battery_pct, \"reading_id STRING, device_id STRING, battery_v DOUBLE, battery_pct INT\")\n",
+  "output": {
+    "columns": [
+      "reading_id",
+      "device_id",
+      "battery_v",
+      "battery_pct"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "First bug: the function is written for one DataFrame, but `mapInPandas` passes an iterator of DataFrames, so `pdf[\"battery_pct\"] = ...` fails with a TypeError about a `map` object. Loop over the batches and `yield` each result. Second bug: the schema says `battery_pct INT`. Spark doesn't complain; it fits the yielded floats to the type you declared and cuts off the decimals, so 3.31 V shows 25 instead of 25.8. The schema is a promise about types, and Spark converts to it, so it must say `DOUBLE`. A missing voltage is NaN, and NaN comes back as NULL, so it needs no extra code. A plain `F.round` expression would give the same rows; this question is about fixing the `mapInPandas` job, so the check looks for it in Spark's plan.",
+  "technique": {
+    "name": "mapInPandas",
+    "plan": [
+      "MapInPandas"
+    ]
+  }
+}

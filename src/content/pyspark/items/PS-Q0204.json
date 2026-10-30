@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0204",
+  "slug": "fix-the-basket-flags",
+  "lesson": "PS-L041",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Fix the basket flags",
+  "dataset": {
+    "id": "PS-D06",
+    "version": "1.0.0"
+  },
+  "prompt": "This checkout report should list the skus bought two or more at a time and flag baskets with a premium item, but both columns come out wrong. Fix `solve(checkout_events)`.",
+  "rules": [
+    "Return `event_id`, `step`, `repeat_skus` and `has_premium`, in that order.",
+    "`repeat_skus` lists the skus of items with a `qty` of 2 or more, in basket order.",
+    "`has_premium` is true when at least one item has a unit `price` of 150.00 or more. An empty basket gives an empty `repeat_skus` and false.",
+    "Keep one row per checkout step, duplicates included."
+  ],
+  "hints": [
+    "Run the starter and compare a basket with an item bought twice, such as CO-0001, against the expected result.",
+    "Read each comparison aloud: does `> 2` include 2?",
+    "\"At least one item\" and \"every item\" are different higher-order functions."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "checkout_events"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(checkout_events):\n    repeats = F.filter(\"items\", lambda x: x[\"qty\"] > 2)\n    return checkout_events.select(\n        \"event_id\",\n        \"step\",\n        F.transform(repeats, lambda x: x[\"sku\"]).alias(\"repeat_skus\"),\n        F.forall(\"items\", lambda x: x[\"price\"] >= 150).alias(\"has_premium\"),\n    )\n",
+  "output": {
+    "columns": [
+      "event_id",
+      "step",
+      "repeat_skus",
+      "has_premium"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Two bugs. The filter used `x[\"qty\"] > 2`, which leaves out items bought exactly twice; \"2 or more\" is `>= 2`. And `has_premium` used `F.forall`, which asks whether every item is premium; one premium item is enough, which is `F.exists(\"items\", lambda x: x[\"price\"] >= 150)`. The `forall` version also says true for an empty basket, since no item fails, while `exists` correctly says false. The fixed report keeps the filter-then-transform chain for `repeat_skus`."
+}

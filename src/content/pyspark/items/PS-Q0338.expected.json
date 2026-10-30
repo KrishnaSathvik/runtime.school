@@ -1,0 +1,142 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "alert_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "device_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "rule_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "observed_value",
+     "type": "double",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "AL0002",
+     "DEV-004",
+     "TEMP_CRIT",
+     41.2
+    ],
+    [
+     "AL0004",
+     "DEV-003",
+     "TEMP_HIGH",
+     31.4
+    ],
+    [
+     "AL0006",
+     "DEV-001",
+     "BATT_LOW",
+     3.27
+    ]
+   ],
+   "row_count": 3,
+   "inputs": {
+    "alerts": [
+     [
+      "AL0001",
+      "DEV-003",
+      "R0007",
+      "HUM_HIGH",
+      "humidity_pct",
+      ">",
+      "80.0",
+      "82.4",
+      "warning",
+      "2026-04-14T09:15:07",
+      "true"
+     ],
+     [
+      "AL0002",
+      "DEV-004",
+      "R0008",
+      "TEMP_CRIT",
+      "temperature_c",
+      ">",
+      "40.0",
+      "41.2",
+      "critical",
+      "2026-04-14T09:15:49",
+      "false"
+     ],
+     [
+      "AL0003",
+      "DEV-004",
+      "R0008",
+      "TEMP_HIGH",
+      "temperature_c",
+      ">",
+      "30.0",
+      "41.2",
+      "warning",
+      "2026-04-14T09:15:49",
+      "true"
+     ],
+     [
+      "AL0004",
+      "DEV-003",
+      "R0011",
+      "TEMP_HIGH",
+      "temperature_c",
+      ">",
+      "30.0",
+      "31.4",
+      "warning",
+      "2026-04-14T09:30:15",
+      null
+     ],
+     [
+      "AL0005",
+      "DEV-001",
+      "R0009",
+      "BATT_LOW",
+      "battery_v",
+      "<",
+      "3.3",
+      "3.29",
+      "warning",
+      "2026-04-14T09:30:48",
+      "true"
+     ],
+     [
+      "AL0006",
+      "DEV-001",
+      "R0021",
+      "BATT_LOW",
+      "battery_v",
+      "<",
+      "3.3",
+      "3.27",
+      "warning",
+      "2026-04-14T13:00:12",
+      "false"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice alerts",
+  "every alert acknowledged",
+  "open alerts with missing devices, readings and values"
+ ]
+}

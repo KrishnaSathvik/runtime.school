@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0304",
+  "slug": "commit-summary-shows-extra-rows",
+  "lesson": "PS-L061",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Too many commits in the summary",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "`commit_summary(path)` reads a Delta table's log and lists each commit with how many data files it added and removed. The table was written three times, but the summary shows more rows than that, some of them with nothing added or removed. Fix `commit_summary`.",
+  "rules": [
+    "One row per commit in the log: its `version`, `files_added` and `files_removed`.",
+    "A commit that removes nothing has `files_removed` 0.",
+    "Don't count versions by hand: a write that changes nothing makes no commit. Don't change `build_table` or `solve`."
+  ],
+  "hints": [
+    "Print `sorted(os.listdir(path + \"/_delta_log\"))`. Which of those names are commits?",
+    "Next to each commit, Delta keeps a `.crc` checksum file, plus hidden files and a folder for its own use.",
+    "Only files ending in `.json` are commits, and their name is the version."
+  ],
+  "explanation": "`_delta_log` holds more than commits: each `00…0N.json` has a `00…0N.crc` file next to it (a summary Delta keeps to check the table), and there are hidden `.crc` files and a `_staged_commits` folder. The starter keeps every name that starts with `0`, so each checksum file becomes an extra row with nothing added or removed. Keep only names that end in `.json` and don't start with a dot. The version is the number in the file name, which also works when there are fewer commits: with no accounts, the append and overwrite change nothing, so only version 0 exists.",
+  "entry": "solve",
+  "inputs": [
+    "accounts"
+  ],
+  "starter": "import json\nimport os\nimport shutil\n\n\ndef build_table(accounts, path):\n    # Three loads, partitioned by country, on a fresh table. Don't change this.\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty folder on every run\n    accounts.write.format(\"delta\").partitionBy(\"country\").save(path)\n    accounts.write.format(\"delta\").mode(\"append\").save(path)\n    accounts.write.format(\"delta\").mode(\"overwrite\").save(path)\n\n\ndef commit_summary(path):\n    # One row per commit: its version and how many files it added and removed.\n    rows = []\n    log = path + \"/_delta_log\"\n    for name in sorted(os.listdir(log)):\n        if not name.startswith(\"0\"):\n            continue  # skip hidden files and folders\n        with open(log + \"/\" + name) as f:\n            actions = [json.loads(line) for line in f]\n        added = len([a for a in actions if \"add\" in a])\n        removed = len([a for a in actions if \"remove\" in a])\n        rows.append((int(name[:20]), added, removed))\n    return spark.createDataFrame(rows, \"version BIGINT, files_added BIGINT, files_removed BIGINT\")\n\n\ndef solve(accounts):\n    path = \"/tmp/crm/accounts_by_country\"\n    build_table(accounts, path)\n    return commit_summary(path)\n",
+  "output": {
+    "columns": [
+      "version",
+      "files_added",
+      "files_removed"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

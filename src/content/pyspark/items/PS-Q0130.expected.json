@@ -1,0 +1,85 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "full_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "overdraft_limit",
+     "type": "decimal(12,2)",
+     "nullable": false
+    },
+    {
+     "name": "action",
+     "type": "string",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "A00002",
+     "Maya Lind",
+     "closed",
+     "250.00",
+     "archive"
+    ],
+    [
+     "A00003",
+     "Tomas Okafor",
+     "active",
+     "0.00",
+     "send reminder"
+    ],
+    [
+     "A00004",
+     "Tomas Okafor",
+     "closed",
+     "0.00",
+     "archive"
+    ],
+    [
+     "A00005",
+     "Tomas Okafor",
+     "frozen",
+     "0.00",
+     "review"
+    ],
+    [
+     "A00007",
+     "Leo Mori",
+     "closed",
+     "0.00",
+     "archive"
+    ]
+   ],
+   "row_count": 5
+  }
+ },
+ "hidden": [
+  "the full practice accounts, transactions and customers",
+  "unused accounts with no overdraft limit set",
+  "an unused account whose holder isn't on file",
+  "unused accounts in every status",
+  "accounts whose only transactions were declined",
+  "an empty transactions table"
+ ]
+}

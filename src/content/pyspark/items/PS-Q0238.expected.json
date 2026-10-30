@@ -1,0 +1,193 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "invoice_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "line_no",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "product_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "quantity",
+     "type": "int",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "INV-000004",
+     2,
+     "PRD-001",
+     5
+    ],
+    [
+     "INV-000001",
+     2,
+     "PRD-001",
+     10
+    ],
+    [
+     "INV-000002",
+     2,
+     "PRD-004",
+     12
+    ],
+    [
+     "INV-000005",
+     2,
+     "PRD-003",
+     10
+    ],
+    [
+     "INV-000002",
+     1,
+     "PRD-003",
+     20
+    ],
+    [
+     "INV-000002",
+     1,
+     "PRD-003",
+     20
+    ]
+   ],
+   "row_count": 6,
+   "inputs": {
+    "invoice_lines": [
+     [
+      "INV-000001",
+      "1",
+      "PRD-002",
+      "2",
+      "65.00",
+      "0.00",
+      "130.00"
+     ],
+     [
+      "INV-000001",
+      "2",
+      "PRD-001",
+      "10",
+      "12.00",
+      "5.00",
+      "114.00"
+     ],
+     [
+      "INV-000002",
+      "1",
+      "PRD-003",
+      "20",
+      "8.90",
+      "0.00",
+      "178.00"
+     ],
+     [
+      "INV-000002",
+      "2",
+      "PRD-004",
+      "12",
+      "4.50",
+      "0.00",
+      "54.00"
+     ],
+     [
+      "INV-000003",
+      "1",
+      "PRD-002",
+      "1",
+      "69.00",
+      "0.00",
+      "69.00"
+     ],
+     [
+      "INV-000003",
+      "2",
+      "PRD-003",
+      "50",
+      "8.90",
+      "10.00",
+      "400.50"
+     ],
+     [
+      "INV-000004",
+      "1",
+      "PRD-002",
+      "3",
+      "74.50",
+      "0.00",
+      "223.50"
+     ],
+     [
+      "INV-000004",
+      "2",
+      "PRD-001",
+      "5",
+      "12.00",
+      "0.00",
+      "60.00"
+     ],
+     [
+      "INV-000005",
+      "1",
+      "PRD-005",
+      "4",
+      "39.00",
+      "0.00",
+      "156.00"
+     ],
+     [
+      "INV-000005",
+      "2",
+      "PRD-003",
+      "10",
+      "8.90",
+      "0.00",
+      "89.00"
+     ],
+     [
+      "INV-000002",
+      "1",
+      "PRD-003",
+      "20",
+      "8.90",
+      "0.00",
+      "178.00"
+     ],
+     [
+      "INV-000005",
+      "3",
+      "PRD-006",
+      null,
+      "15.00",
+      "0.00",
+      null
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice invoice lines",
+  "quantities just inside and just outside both ends, zero and a negative return",
+  "several lines with no quantity, and in-range lines with other values missing",
+  "the same line stored twice, inside and outside the range",
+  "lines that are all too small or too big",
+  "an empty invoice lines table"
+ ]
+}

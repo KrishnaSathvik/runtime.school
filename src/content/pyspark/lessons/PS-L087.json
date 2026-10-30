@@ -1,0 +1,138 @@
+{
+ "id": "PS-L087",
+ "minutes": 35,
+ "lede": "Some streaming rules need memory that a `groupBy` can't express: the last good reading of a sensor, two alerts in a row, a session that ends after a silence. `applyInPandasWithState` lets you keep that memory per key yourself, and timeouts let you forget it again.",
+ "objectives": [
+  "Keep per-key state with `applyInPandasWithState` and `GroupState`: read it, update it and remove it",
+  "Handle order and copies yourself: sort each micro-batch and skip readings that aren't newer than the state",
+  "Build sessions with `session_window`, or by hand with an event-time timeout",
+  "Keep state small with watermarks, timeouts and `state.remove()`, and check it in the progress report"
+ ],
+ "dataset": {
+  "id": "PS-D09",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "sensor_readings"
+  ]
+ },
+ "blocks": [
+  {
+   "kind": "text",
+   "md": "`sensor_readings` has the same 13 readings as the watermark lesson: four sensors, one reading every 15 minutes from 09:00 to 09:30, delivered in four micro-batches by the `batch` column. **R0006** (DEV-002, 09:15) arrives late, in the last micro-batch, and **R0011** (DEV-003, 09:30) is delivered twice. The examples use the same helpers as before: `make_batches` writes one file per `batch` value, and `run_stream(writer)` runs a query with `trigger(availableNow=True)` until it has read every file.\n\nSo far Spark kept the state for you: running counts, open windows, ids already seen. Some rules don't fit a `groupBy` with an aggregate: \"the last good temperature of each sensor\", \"alert on the second hot reading in a row\", \"a sensor's online session\". For those you write the logic per key yourself with `applyInPandasWithState`:\n\n```python\ndf.groupBy(\"device_id\").applyInPandasWithState(func, output_schema, state_schema, output_mode, timeout)\n```\n\nIn every micro-batch, Spark calls `func(key, batches, state)` once for each key that has new rows:\n\n- `key` is a tuple with the key's values, so `key[0]` is the `device_id`.\n- `batches` gives that key's new rows as one or more **pandas DataFrames**. pandas is Python's table library; `pdf.itertuples()` walks the rows, and `r.temp` reads a column.\n- `state` is a `GroupState`: `state.exists` says whether the key has state yet, `state.get` returns it as a tuple, `state.update((...))` saves a new value and `state.remove()` deletes it.\n\nThe function yields pandas DataFrames with the output rows, in the columns of `output_schema`. `state_schema` describes the tuple you keep. Spark saves the state in the checkpoint after every micro-batch, like a running count's."
+  },
+  {
+   "kind": "example",
+   "id": "e1",
+   "title": "The last good reading of each sensor",
+   "code": "import json, os, shutil\nimport pandas as pd\nfrom pyspark.sql import functions as F\nfrom pyspark.sql.streaming.state import GroupStateTimeout\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\nspark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\nshutil.rmtree(\"/tmp/ck\", ignore_errors=True)\n# DEV-004 sends a glitch, an impossible 999.0, at 09:45, in the last file.\nglitch = (sensor_readings.filter(F.col(\"reading_id\") == \"R0012\")\n          .withColumn(\"reading_id\", F.lit(\"R0016\"))\n          .withColumn(\"event_time\", F.to_timestamp(F.lit(\"2026-04-14 09:45:00\")))\n          .withColumn(\"payload\", F.col(\"payload\").withField(\"temperature_c\", F.lit(999.0)))  # replace one field\n          .withColumn(\"batch\", F.lit(3)))\nmake_batches(sensor_readings.unionByName(glitch), \"/tmp/in\")\nreadings = spark.readStream.schema(sensor_readings.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\nflat = readings.select(\"device_id\", \"event_time\", F.col(\"payload.temperature_c\").alias(\"temp\"))\n\n\ndef last_good(key, batches, state):\n    \"\"\"Called once per sensor that has new readings in this micro-batch.\"\"\"\n    deliveries, last_time, last_temp = state.get if state.exists else (0, None, None)\n    for pdf in batches:                                   # this sensor's new rows, as pandas DataFrames\n        for r in pdf.itertuples():\n            deliveries += 1\n            if r.temp != 999.0 and (last_time is None or r.event_time > last_time):\n                last_time, last_temp = r.event_time, r.temp\n    state.update((deliveries, last_time, last_temp))\n    yield pd.DataFrame({\"device_id\": [key[0]], \"deliveries\": [deliveries],\n                        \"last_time\": [last_time], \"last_temp\": [last_temp]})\n\n\nlatest = flat.groupBy(\"device_id\").applyInPandasWithState(\n    last_good,\n    \"device_id STRING, deliveries LONG, last_time TIMESTAMP, last_temp DOUBLE\",   # rows it returns\n    \"deliveries LONG, last_time TIMESTAMP, last_temp DOUBLE\",                     # what the state holds\n    \"update\", GroupStateTimeout.NoTimeout)\n\n\ndef show(batch_df, batch_id):\n    rows = sorted((r.device_id, r.deliveries, r.last_time.strftime(\"%H:%M\"), r.last_temp) for r in batch_df.collect())\n    print(\"micro-batch\", batch_id, rows)\n\n\nq = run_stream(latest.writeStream.outputMode(\"update\").foreachBatch(show)\n               .option(\"checkpointLocation\", \"/tmp/ck\"))\nprint(\"sensors in state:\", q.lastProgress[\"stateOperators\"][0][\"numRowsTotal\"])\n",
+   "note": "Micro-batch 3 called the function only for DEV-002 and DEV-004, the two sensors in that file; the others kept their state as it was. DEV-002's late 09:15 reading counts as a delivery, but it isn't newer than 09:30, so the last good reading stays at 09:30. DEV-004's glitch at 09:45 is newer but skipped, so 26.0 stays. DEV-003 shows 4 deliveries for three measurements, because the copy of R0011 counted too. The state holds one row per sensor."
+  },
+  {
+   "kind": "text",
+   "md": "Two things in that function are worth copying. It ignores a reading that isn't newer than the one it kept, so \"last\" means latest in event time, not latest to arrive. And it skips the glitch instead of storing it.\n\nA rule like \"two hot readings in a row\" depends on order, and Spark hands a micro-batch's rows over in **no fixed order**. Sort each pandas DataFrame by `event_time` first, with `pdf.sort_values(...)`.\n\nCopies matter here too. If the copy of R0011 counted, DEV-003 would have two hot readings in a row from one measurement. `dropDuplicatesWithinWatermark` would remove it, but a custom state can do it as well: keep the newest event time taken for each sensor and skip any reading that isn't newer. That one check skips copies and readings that arrive after newer ones. Whether a late reading should still count is your rule to choose; here it doesn't, because \"in a row\" only makes sense in order.\n\nIn output mode `\"append\"` every row the function yields is written once. The state still holds one row per sensor."
+  },
+  {
+   "kind": "example",
+   "id": "e2",
+   "title": "Hot readings in a row, copies skipped",
+   "code": "import json, os, shutil\nimport pandas as pd\nfrom pyspark.sql import functions as F\nfrom pyspark.sql.streaming.state import GroupStateTimeout\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\nspark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\nshutil.rmtree(\"/tmp/ck\", ignore_errors=True)\nmake_batches(sensor_readings, \"/tmp/in\")\nreadings = spark.readStream.schema(sensor_readings.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\nflat = readings.select(\"device_id\", \"reading_id\", \"event_time\", F.col(\"payload.temperature_c\").alias(\"temp\"))\n\n\ndef hot_streak(key, batches, state):\n    in_a_row, newest = state.get if state.exists else (0, None)\n    out = []\n    for pdf in batches:\n        for r in pdf.sort_values([\"event_time\", \"reading_id\"]).itertuples():   # rows come in no fixed order\n            if newest is not None and r.event_time <= newest:\n                out.append((key[0], r.reading_id, \"skipped\", in_a_row))        # a copy, or older than what we have\n                continue\n            newest = r.event_time\n            in_a_row = in_a_row + 1 if r.temp > 30 else 0\n            out.append((key[0], r.reading_id, \"ALERT\" if in_a_row == 2 else \"ok\", in_a_row))\n    state.update((in_a_row, newest))\n    yield pd.DataFrame(out, columns=[\"device_id\", \"reading_id\", \"result\", \"hot_in_a_row\"])\n\n\nchecked = flat.groupBy(\"device_id\").applyInPandasWithState(\n    hot_streak, \"device_id STRING, reading_id STRING, result STRING, hot_in_a_row LONG\",\n    \"hot_in_a_row LONG, newest TIMESTAMP\", \"append\", GroupStateTimeout.NoTimeout)\n\n\ndef show(batch_df, batch_id):\n    rows = sorted(tuple(r) for r in batch_df.collect())\n    print(\"micro-batch\", batch_id, rows)\n\n\nq = run_stream(checked.writeStream.outputMode(\"append\").foreachBatch(show)\n               .option(\"checkpointLocation\", \"/tmp/ck\"))\n",
+   "note": "DEV-004's 41.2 at 09:15 made one hot reading in a row, and its 26.0 at 09:30 set the run back to 0. DEV-003 reached 1 with 31.4 at 09:30. Its copy came next in the same micro-batch, wasn't newer, and was skipped; without that check it would have made 2 and raised a false ALERT. DEV-002's late R0006 was skipped too, because DEV-002 already had a reading from 09:30."
+  },
+  {
+   "kind": "text",
+   "md": "**Sessions** are another common pattern: group a sensor's readings into runs with no long silence in between. Spark has a built-in for it. `F.session_window(\"event_time\", \"20 minutes\")` starts a session at a reading and keeps it open while the next reading comes within 20 minutes. The session ends 20 minutes after its last reading. With a watermark, a session is final once the watermark passes its end, and append mode writes it then.\n\nThe example puts the duplicate check from the watermark lesson in front, so the copy of R0011 counts once, and adds one reading: DEV-001 is back at 10:30 after an hour of silence. That reading moves the watermark far enough to close the first sessions."
+  },
+  {
+   "kind": "example",
+   "id": "e3",
+   "title": "Online sessions with session_window",
+   "code": "import json, os, shutil\nimport pandas as pd\nfrom pyspark.sql import functions as F\nfrom pyspark.sql.streaming.state import GroupStateTimeout\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\nspark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\nshutil.rmtree(\"/tmp/ck\", ignore_errors=True)\n# DEV-001 is back at 10:30, after an hour of silence, in the last file.\nback = (sensor_readings.filter(F.col(\"reading_id\") == \"R0009\")\n        .withColumn(\"reading_id\", F.lit(\"R0016\"))\n        .withColumn(\"event_time\", F.to_timestamp(F.lit(\"2026-04-14 10:30:00\")))\n        .withColumn(\"batch\", F.lit(3)))\nmake_batches(sensor_readings.unionByName(back), \"/tmp/in\")\nreadings = spark.readStream.schema(sensor_readings.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\n\nsessions = (readings.withWatermark(\"event_time\", \"10 minutes\")\n            .dropDuplicatesWithinWatermark([\"reading_id\"])\n            .groupBy(\"device_id\", F.session_window(\"event_time\", \"20 minutes\"))\n            .count())\n\n\ndef show(batch_df, batch_id):\n    rows = sorted((r.device_id, r.session_window.start.strftime(\"%H:%M\"), r.session_window.end.strftime(\"%H:%M\"), r[\"count\"])\n                  for r in batch_df.collect())\n    print(\"micro-batch\", batch_id, rows)\n\n\nq = run_stream(sessions.writeStream.outputMode(\"append\").foreachBatch(show)\n               .option(\"checkpointLocation\", \"/tmp/ck\"))\nfor op in q.lastProgress[\"stateOperators\"]:\n    print(op[\"operatorName\"], \"rows in state:\", op[\"numRowsTotal\"])\n",
+   "note": "Nothing was final until the 10:30 reading moved the watermark to 10:20. Micro-batch 4 has no data: `availableNow` ran it to close the sessions under the new watermark. Each session ends at 09:50, 20 minutes after its last reading. DEV-002 had two sessions, 09:00 and 09:30, until the late R0006 at 09:15 filled the gap and merged them into one with 3 readings. DEV-003 has 3 readings, not 4: the duplicate check removed the copy. The one session still open is DEV-001's from 10:30."
+  },
+  {
+   "kind": "text",
+   "md": "State you never remove stays forever. One row per sensor is fine for four sensors. One row per session, per order or per user isn't: the state grows every day. Built-in steps clean up with the watermark. A custom state needs a **timeout**.\n\nWith `GroupStateTimeout.EventTimeTimeout` the function calls `state.setTimeoutTimestamp(t)`. Once the watermark passes `t`, Spark calls the function for that key again, with no rows and `state.hasTimedOut` set to true. That's the moment to write the result and call `state.remove()`. An event-time timeout follows the data, so it fires at the same point every run, and it needs `withWatermark` on the stream.\n\nThere's also `GroupStateTimeout.ProcessingTimeTimeout` with `state.setTimeoutDuration(...)`, which follows the clock of the machine. Whether it has fired depends on when each micro-batch happens to run, so its output changes from run to run. That's why this lesson doesn't run it.\n\nThe next example builds the sessions by hand. A gap of more than 20 minutes ends a session at once; otherwise the timeout ends it. The progress report shows the state of both steps shrinking."
+  },
+  {
+   "kind": "example",
+   "id": "e4",
+   "title": "Custom sessions that time out",
+   "code": "import json, os, shutil\nfrom datetime import timedelta\nimport pandas as pd\nfrom pyspark.sql import functions as F\nfrom pyspark.sql.streaming.state import GroupStateTimeout\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\nspark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\nshutil.rmtree(\"/tmp/ck\", ignore_errors=True)\n# DEV-001 is back at 10:30, after an hour of silence, in the last file.\nback = (sensor_readings.filter(F.col(\"reading_id\") == \"R0009\")\n        .withColumn(\"reading_id\", F.lit(\"R0016\"))\n        .withColumn(\"event_time\", F.to_timestamp(F.lit(\"2026-04-14 10:30:00\")))\n        .withColumn(\"batch\", F.lit(3)))\nmake_batches(sensor_readings.unionByName(back), \"/tmp/in\")\nreadings = spark.readStream.schema(sensor_readings.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\nonce = (readings.withWatermark(\"event_time\", \"10 minutes\")\n        .dropDuplicatesWithinWatermark([\"reading_id\"])\n        .select(\"device_id\", \"event_time\"))\nGAP = timedelta(minutes=20)\n\n\ndef sessions(key, batches, state):\n    if state.hasTimedOut:                      # the watermark passed the timeout: the session is over\n        start, end, n = state.get\n        state.remove()                         # forget this sensor until it sends again\n        yield pd.DataFrame({\"device_id\": [key[0]], \"start\": [start], \"end\": [end], \"readings\": [n]})\n        return\n    start, end, n = state.get if state.exists else (None, None, 0)\n    done = []\n    for pdf in batches:\n        for t in sorted(pdf[\"event_time\"]):\n            if end is not None and t > end + GAP:  # a gap: the old session ends here\n                done.append((key[0], start, end, n))\n                start, end, n = None, None, 0\n            start = t if start is None or t < start else start\n            end = t if end is None or t > end else end\n            n += 1\n    state.update((start, end, n))\n    state.setTimeoutTimestamp(end + GAP)       # time out once the watermark passes this\n    yield pd.DataFrame(done, columns=[\"device_id\", \"start\", \"end\", \"readings\"])\n\n\nout = once.groupBy(\"device_id\").applyInPandasWithState(\n    sessions, \"device_id STRING, start TIMESTAMP, end TIMESTAMP, readings LONG\",\n    \"start TIMESTAMP, end TIMESTAMP, readings LONG\", \"append\", GroupStateTimeout.EventTimeTimeout)\n\n\ndef show(batch_df, batch_id):\n    rows = sorted((r.device_id, r.start.strftime(\"%H:%M\"), r.end.strftime(\"%H:%M\"), r.readings) for r in batch_df.collect())\n    print(\"micro-batch\", batch_id, rows)\n\n\nq = run_stream(out.writeStream.outputMode(\"append\").foreachBatch(show)\n               .option(\"checkpointLocation\", \"/tmp/ck\"))\nfor p in q.recentProgress:\n    print(\"after micro-batch\", p[\"batchId\"], [(op[\"operatorName\"], op[\"numRowsTotal\"]) for op in p[\"stateOperators\"]])\n",
+   "note": "DEV-002 had a 30-minute gap between 09:00 and 09:30, so the function wrote its 09:00 session as soon as the 09:30 reading came, in micro-batch 2. The late R0006 then joined the new session, which now starts at 09:15. Unlike `session_window`, a hand-made session can't take back a row it has already written. In micro-batch 3, DEV-001's 10:30 reading ended its first session the same way. That reading moved the watermark to 10:20, past the other sessions' timeouts at 09:50, so micro-batch 4 ran with no data, only for the timeouts. Each wrote its session and removed its state: 4 rows fell to 1, DEV-001's new session. The duplicate check forgot ids as the watermark passed them, from 11 to 9 and then 1."
+  },
+  {
+   "kind": "text",
+   "md": "How to keep state small:\n\n- Give every stateful step a way to forget. Windows, session windows and `dropDuplicatesWithinWatermark` forget with the watermark. A custom state forgets with a timeout and `state.remove()`.\n- A plain `dropDuplicates([\"reading_id\"])` on a stream without a watermark remembers every id it has ever seen. Use it only when the keys are few.\n- Keep only what the rule needs in the state: a count and a time, not the readings.\n- Watch `numRowsTotal` in the progress report for each stateful step, or read the state with the `statestore` source from the checkpoint lesson.\n\nAn event-time timeout without a watermark has nothing to follow, so Spark refuses the query when it starts."
+  },
+  {
+   "kind": "error-example",
+   "id": "e5",
+   "title": "An event-time timeout needs a watermark",
+   "code": "import json, os, shutil\nimport pandas as pd\nfrom pyspark.sql import functions as F\nfrom pyspark.sql.streaming.state import GroupStateTimeout\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\nspark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\nshutil.rmtree(\"/tmp/ck\", ignore_errors=True)\nmake_batches(sensor_readings, \"/tmp/in\")\nreadings = spark.readStream.schema(sensor_readings.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\n\n\ndef count_readings(key, batches, state):\n    n = state.get[0] if state.exists else 0\n    for pdf in batches:\n        n += len(pdf)\n    state.update((n,))\n    state.setTimeoutTimestamp(60_000)\n    yield pd.DataFrame({\"device_id\": [key[0]], \"readings\": [n]})\n\n\n# No withWatermark: an event-time timeout has no clock to follow.\nout = readings.select(\"device_id\", \"event_time\").groupBy(\"device_id\").applyInPandasWithState(\n    count_readings, \"device_id STRING, readings LONG\", \"readings LONG\", \"update\", GroupStateTimeout.EventTimeTimeout)\nq = run_stream(out.writeStream.outputMode(\"update\").foreachBatch(lambda batch_df, batch_id: batch_df.collect())\n               .option(\"checkpointLocation\", \"/tmp/ck\"))\n",
+   "error": "AnalysisException",
+   "note": "The message asks for `withWatermark` before `applyInPandasWithState`. Add `.withWatermark(\"event_time\", \"10 minutes\")` to the stream and the query starts."
+  },
+  {
+   "kind": "text",
+   "md": "Newer Spark releases add a second API, `transformWithStateInPandas`. You write a class with handlers, and each key can keep several named states (a single value, a list or a map), timers and an expiry time per state. It stores its state in RocksDB, an embedded database that this environment can't load yet, so the lessons use `applyInPandasWithState`. The patterns are the same: keep little per key, handle order and copies yourself, and make sure every key's state ends.\n\nThis environment is one machine, and the state lives under `/tmp`. On a cluster the state is split across executors by key, and the checkpoint sits on shared storage, but the function, the timeouts and the output are the same."
+  }
+ ],
+ "challenges": [
+  "PS-L087-C1",
+  "PS-L087-C2"
+ ],
+ "concept": [
+  {
+   "id": "k1",
+   "prompt": "A query uses `applyInPandasWithState` with `GroupStateTimeout.NoTimeout`, grouped by `device_id`. In a micro-batch, which sensors does Spark call the function for?",
+   "choices": [
+    "Every sensor that has state",
+    "Only the sensors with new rows in that micro-batch",
+    "Every sensor in the devices table",
+    "Only the sensors whose state changed in the previous micro-batch"
+   ],
+   "answer": 1,
+   "why": "Without a timeout the function runs only for keys with new rows. In the first example, micro-batch 3 called it for the two sensors in that file and no others."
+  },
+  {
+   "id": "k2",
+   "prompt": "With `GroupStateTimeout.EventTimeTimeout`, a sensor's state calls `state.setTimeoutTimestamp` with 09:50. When does it time out?",
+   "choices": [
+    "When the machine's clock reaches 09:50",
+    "When the watermark passes 09:50",
+    "When the sensor's next reading arrives",
+    "Only when the function calls `state.remove()`"
+   ],
+   "answer": 1,
+   "why": "An event-time timeout follows the watermark, not the clock. Spark then calls the function with no rows and `state.hasTimedOut` set, which is where you write the result and remove the state."
+  },
+  {
+   "id": "k3",
+   "prompt": "A custom state keeps one row per `session_id` and is never removed. What keeps it from growing forever?",
+   "choices": [
+    "Setting `spark.sql.shuffle.partitions` to 1",
+    "Sorting each micro-batch by `event_time`",
+    "An event-time timeout per session that writes the result and calls `state.remove()`",
+    "Writing to a memory sink instead of files"
+   ],
+   "answer": 2,
+   "why": "State goes away only when something removes it. A timeout tied to the watermark ends each session, and `state.remove()` deletes its row."
+  }
+ ],
+ "review": [
+  "`applyInPandasWithState(func, output_schema, state_schema, mode, timeout)` calls `func(key, batches, state)` for each key with new rows, and the function yields pandas DataFrames.",
+  "`state.exists`, `state.get`, `state.update((...))` and `state.remove()` read, save and delete one key's state. Spark keeps it in the checkpoint.",
+  "A micro-batch's rows come in no fixed order. Sort them, and skip readings that aren't newer than the state to drop copies and late arrivals.",
+  "`F.session_window(col, gap)` builds sessions that end a gap after the last reading. With a watermark, append mode writes each session once.",
+  "`EventTimeTimeout` with `setTimeoutTimestamp` fires when the watermark passes the time: write the result there and call `state.remove()`. Processing-time timeouts follow the clock and change from run to run.",
+  "Every stateful step needs a way to forget: a watermark or a timeout. Watch `numRowsTotal` in the progress report."
+ ],
+ "practice": [
+  "PS-Q0431",
+  "PS-Q0432",
+  "PS-Q0433",
+  "PS-Q0434",
+  "PS-Q0435"
+ ]
+}

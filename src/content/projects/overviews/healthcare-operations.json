@@ -1,0 +1,59 @@
+{
+  "id": "healthcare-operations",
+  "task": "You support the operations director of a regional clinic network. Missed appointments waste clinician time, and finance is worried about unpaid costs and repeat emergency visits. Before the director funds a reminder service or a care-coordination pilot, find out how many bookings are missed, where no-shows are highest, who pays for care and how often emergency patients come back within 30 days.",
+  "produce": [
+    {
+      "name": "Appointment outcomes",
+      "about": "Appointments and share for each booking status."
+    },
+    {
+      "name": "No-shows by specialty",
+      "about": "Past appointments, no-shows and no-show rate for each larger specialty."
+    },
+    {
+      "name": "Payer mix",
+      "about": "Encounters, average cost and the share payers covered for each insurance type."
+    },
+    {
+      "name": "Emergency returns",
+      "about": "Emergency patients, visits and returns within 30 days."
+    },
+    {
+      "name": "Operations brief",
+      "about": "Three findings and one funding recommendation."
+    }
+  ],
+  "labels": {
+    "understand-data": "Explore visits",
+    "appointment-outcomes": "Outcomes",
+    "no-shows": "No-shows",
+    "payer-mix": "Payer mix",
+    "emergency-returns": "ER returns",
+    "synthesis": "Conclusions",
+    "report": "Report"
+  },
+  "summaries": {
+    "understand-data": "Follow a completed appointment to its encounter, and find visits with no appointment.",
+    "appointment-outcomes": "Count bookings that were completed, cancelled, missed or are still scheduled.",
+    "no-shows": "Compare no-show rates across specialties with enough past appointments.",
+    "payer-mix": "Measure how much billed cost payers cover for each insurance type.",
+    "emergency-returns": "Find emergency visits followed by another within 30 days.",
+    "synthesis": "Weigh the evidence for a reminder service against care coordination.",
+    "report": "Write three findings and one funding recommendation."
+  },
+  "problems": [
+    "22 appointments are still scheduled after the data ends, so they have no outcome yet.",
+    "Every emergency, inpatient and urgent-care visit has no appointment, so appointment counts miss them.",
+    "Cancelled and missed appointments link to no encounter.",
+    "Self-pay visits show nothing paid by a payer, so their whole cost is unpaid.",
+    "Three of the nine specialties have fewer than 200 past appointments, too few for a stable rate."
+  ],
+  "preparation": [
+    "connect-tables-with-join",
+    "group-into-summaries",
+    "filter-groups-with-having",
+    "conditional-aggregation",
+    "lead-and-the-next-event",
+    "dates-and-monthly-analysis"
+  ]
+}

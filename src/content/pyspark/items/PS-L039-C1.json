@@ -1,0 +1,26 @@
+{
+  "id": "PS-L039-C1",
+  "slug": "one-label-per-unit",
+  "lesson": "PS-L039",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "One label per unit",
+  "dataset": { "id": "PS-D01", "version": "1.1.0" },
+  "prompt": "The packing station prints one label for every unit ordered, numbered within its order line. Write `solve(order_items)` so it returns one row per label.",
+  "rules": [
+    "A line with `quantity` 3 gives three rows, with `unit_no` 1, 2 and 3.",
+    "A line with a `quantity` of 0 or less, or a missing quantity, gets no labels.",
+    "Return `order_id`, `line_no`, `product_id` and `unit_no`."
+  ],
+  "hints": [
+    "Build an array that holds the product once per unit with `F.array_repeat`.",
+    "`F.posexplode` turns the array into rows and gives each one its position.",
+    "Positions start at 0, so `unit_no` is the position plus 1. `explode_outer` would keep lines that should print nothing."
+  ],
+  "entry": "solve",
+  "inputs": ["order_items"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(order_items):\n    # One row per unit: order_id, line_no, product_id, unit_no.\n    return order_items\n",
+  "output": { "columns": ["order_id", "line_no", "product_id", "unit_no"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 12000 }
+}

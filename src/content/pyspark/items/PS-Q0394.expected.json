@@ -1,0 +1,65 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "key",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "value",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "exit code",
+     "0"
+    ],
+    [
+     "master",
+     "local[2]"
+    ],
+    [
+     "cores",
+     "2"
+    ],
+    [
+     "shuffle partitions",
+     "6"
+    ],
+    [
+     "hour",
+     "2026-04-14T10"
+    ],
+    [
+     "service",
+     "checkout-api"
+    ],
+    [
+     "requests",
+     "2"
+    ],
+    [
+     "server errors",
+     "1"
+    ]
+   ],
+   "row_count": 8
+  }
+ },
+ "hidden": [
+  "an hour with no checkout requests",
+  "checkout requests from another hour",
+  "several server errors",
+  "server errors in other services"
+ ]
+}

@@ -1,0 +1,72 @@
+{
+  "id": "PS-P01-M5",
+  "slug": "publish-the-sales-report",
+  "project": "PS-P01",
+  "milestone": "PS-P01.m5",
+  "difficulty": "hard",
+  "minutes": 45,
+  "title": "Remove duplicates, report quality and publish the outputs",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "Before the report goes out, the export's repeated rows have to go, and the team wants to see how many rows were dropped and why.\n\nWrite `daily_sales(orders, order_items, products)`, one row per day, like `category_sales`. Then write `quality_summary(orders, order_items, products)`. It removes the exact copies from `orders`, builds both sales tables from what's left, and returns one row that counts every removed row and checks the two tables against each other.",
+  "rules": [
+    "`daily_sales` returns `order_date`, `orders`, `units` and `net_sales`, one row per day with sales, by the same rules as `category_sales`.",
+    "Duplicates are exact copies: every column of the order row the same. Two rows with the same `order_id` that differ anywhere are both kept.",
+    "`rows_in` is the rows in `orders`; `duplicates` is how many copies were removed.",
+    "Of the rows left, each row that fails is counted once, under the first check it fails, in this order: `bad_status`, then `bad_total`, then `bad_date`. `clean_orders` is the rows that pass all three.",
+    "`sales_days` is the rows in `daily_sales`, `sales_orders` the sum of its `orders`, `sales_units` the sum of its `units`, and `daily_net_sales` the sum of its `net_sales`. `category_net_sales` is the sum of `category_sales`'s `net_sales`. Both tables are built from the orders without copies.",
+    "Return one row with the columns of `SUMMARY_SCHEMA`. With no sales at all, the four sums are missing, as `F.sum` gives."
+  ],
+  "hints": [
+    "`unique = orders.dropDuplicates()` removes exact copies. Pass `unique` to `clean_orders`, `daily_sales` and `category_sales`: they work on any orders table.",
+    "Count step by step: `order_view(unique)`, then filter the status, then the total, then the date. Each check's count is the rows before it minus the rows after it.",
+    "`daily.agg(F.count(\"*\"), F.sum(\"orders\"), F.sum(\"units\"), F.sum(\"net_sales\")).first()` gives the day count and the three sums as plain values, in one job. Put all eleven numbers in one tuple, in the schema's order, and pass `[row]` to `spark.createDataFrame`."
+  ],
+  "explanation": "Removing exact copies first, with `dropDuplicates()` on the raw rows, means a repeated order can't count twice. A key-based `dropDuplicates([\"order_id\"])` would also throw away a row that only shares its id, and would choose between them at random. Because each earlier function takes an orders table, passing the de-duplicated `unique` through `clean_orders`, `daily_sales` and `category_sales` publishes both tables without changing them. Counting the checks in a fixed order, each on what the previous one kept, puts every dropped row under exactly one reason, so the counts add up: `rows_in` = `duplicates` + the three bad counts + `clean_orders`. Finally, both tables must add up to the same net sales; if they don't, a row went missing in one of them.",
+  "entry": "quality_summary",
+  "inputs": [
+    "orders",
+    "order_items",
+    "products"
+  ],
+  "file": "pipeline.py",
+  "append": "\n\ndef daily_sales(orders, order_items, products):\n    # Step 5: one row per day, built from sales_lines(...).\n    return sales_lines(orders, order_items, products)\n\n\nSUMMARY_SCHEMA = (\n    \"rows_in BIGINT, duplicates BIGINT, bad_status BIGINT, bad_total BIGINT, bad_date BIGINT, clean_orders BIGINT, \"\n    \"sales_days BIGINT, sales_orders BIGINT, sales_units BIGINT, daily_net_sales DECIMAL(12,2), category_net_sales DECIMAL(12,2)\"\n)\n\n\ndef quality_summary(orders, order_items, products):\n    # Step 5: remove exact copies, count what each check drops, and check the two sales tables.\n    row = (0, 0, 0, 0, 0, 0, 0, 0, 0, None, None)\n    return spark.createDataFrame([row], SUMMARY_SCHEMA)\n",
+  "prerequisites": [
+    "PS-L019",
+    "PS-L020"
+  ],
+  "output": {
+    "columns": [
+      "rows_in",
+      "duplicates",
+      "bad_status",
+      "bad_total",
+      "bad_date",
+      "clean_orders",
+      "sales_days",
+      "sales_orders",
+      "sales_units",
+      "daily_net_sales",
+      "category_net_sales"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "example",
+      "sample": true
+    },
+    {
+      "id": "project",
+      "edition": "project"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 240,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

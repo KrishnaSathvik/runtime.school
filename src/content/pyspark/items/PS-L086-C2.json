@@ -1,0 +1,21 @@
+{
+  "id": "PS-L086-C2",
+  "kind": "predict",
+  "slug": "files-a-read-opens",
+  "lesson": "PS-L086",
+  "difficulty": "medium",
+  "minutes": 6,
+  "title": "Files a read opens",
+  "prompt": "This program writes the ten invoice lines shown to a Delta table partitioned by product, counts the files three reads would open, then rewrites the table with at most 2 lines per file. What does it print? Type each line on its own line.",
+  "program": "path = \"/tmp/c2/lines\"\ninvoice_lines.coalesce(1).write.format(\"delta\").partitionBy(\"product_id\").save(path)\ntable = spark.read.format(\"delta\").load(path)\nprint(len(table.inputFiles()))\nprint(len(table.where(\"product_id = 'PRD-002'\").inputFiles()))\nprint(len(table.where(\"quantity >= 10\").inputFiles()))\n\n(invoice_lines.coalesce(1)\n    .write.format(\"delta\")\n    .mode(\"overwrite\")\n    .partitionBy(\"product_id\")\n    .option(\"maxRecordsPerFile\", 2)\n    .save(path))\nprint(len(spark.read.format(\"delta\").load(path).inputFiles()))\n",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "One task writes one file for each product it holds. How many products are there?",
+    "A condition on the partition column picks folders; on another column, a file is skipped only if its min/max range can't match.",
+    "With a cap of 2, a product with three lines needs two files."
+  ]
+}

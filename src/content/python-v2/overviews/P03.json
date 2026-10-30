@@ -1,0 +1,23 @@
+{
+  "id": "P03",
+  "task": "You're reading real daily weather for Wichita, Orlando and Sioux Falls, from January through April 2024. Build the code that counts the days, skips blank readings, averages one city's highs, and flags every day hot or cold enough for an alert, then writes the alert count to a file.",
+  "produce": [
+    { "name": "insights.py", "about": "Day count, blank check, a station's mean high, the alert days and the report writer." },
+    { "name": "main.py", "about": "Runs each step on the weather file and prints its result." },
+    { "name": "alerts.txt", "about": "One line with the number of alert days." }
+  ],
+  "steps": {
+    "P03.m1": "Read the observations and count the days.",
+    "P03.m2": "Count the days with a blank high temperature.",
+    "P03.m3": "Average one station's highs, skipping blanks.",
+    "P03.m4": "List the days that reach 32 C or fall to -15 C.",
+    "P03.m5": "Write the number of alert days to a file."
+  },
+  "problems": [
+    "The file mixes three stations, 121 days each, so a station's average must use only its own rows.",
+    "No temperature in this file is blank, but a blank means the station didn't report, so the code must skip it rather than read it as zero.",
+    "Temperatures are text and 32 days have a high below zero, so they must become numbers before any comparison.",
+    "22 days cross an alert line: 4 hot days at 32 C or more and 18 cold days at -15 C or less."
+  ],
+  "preparation": ["PY-L20-05", "PY-L20-01", "PY-L17-02", "PY-L02-04", "PY-L03-03", "PY-L14-05", "PY-L19-02"]
+}

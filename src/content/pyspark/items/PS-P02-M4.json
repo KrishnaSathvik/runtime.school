@@ -1,0 +1,69 @@
+{
+ "id": "PS-P02-M4",
+ "slug": "rank-current-salaries",
+ "project": "PS-P02",
+ "milestone": "PS-P02.m4",
+ "difficulty": "medium",
+ "minutes": 40,
+ "title": "Find current salaries and rank them by department",
+ "dataset": {
+  "id": "PS-D03",
+  "version": "1.0.0"
+ },
+ "prompt": "`salary_history` has one row per pay change: the hire salary, merit raises, market adjustments and promotions, each with the date it takes effect. Payroll is reported as of `AS_OF`, 31 March 2026, so a raise that starts in April doesn't count yet.\n\nFirst write `current_salaries(employees, salary_history)`: the salary in force on `AS_OF` for each person employed that day. Then write `salary_rankings(employees, departments, salary_history)`, which ranks each department's people by that salary, ties and all.",
+ "rules": [
+  "Someone is employed on `AS_OF` when their `hire_date` is on or before it and they have no `termination_date` on or before it. A status of `terminated` with a later date still counts.",
+  "A person's current salary is their latest `salary_history` row dated on or before `AS_OF`. Rows dated before the person's `hire_date` are mistakes and don't count. Someone with no row left has no current salary and isn't ranked.",
+  "`current_salaries` returns `employee_id`, `salary_date` (the row's `effective_date`) and `salary`.",
+  "`salary_rankings` returns `department_id`, `department_name`, `employee_id`, `full_name`, `salary`, `salary_date`, `salary_rank` and `position`, one row per person with a current salary. Names come from your `reporting_lines`.",
+  "Within each `department_id`, highest salary first. `salary_rank`: equal salaries share a rank and the next rank skips (1, 1, 3). `position`: 1, 2, 3… with no ties; equal salaries are ordered by earlier `hire_date`, then by `employee_id`."
+ ],
+ "hints": [
+  "Filter `employee_clean(employees)` to the people employed on `AS_OF`, join their `employee_id` and `hire_date` to `salary_history`, and keep rows with `effective_date` between `hire_date` and `AS_OF`.",
+  "Latest row per person: `Window.partitionBy(\"employee_id\").orderBy(F.col(\"effective_date\").desc())`, number the rows with `F.row_number()`, keep number 1. Exact copies of a row give the same answer whichever is kept.",
+  "Two windows over `department_id`: one ordered by salary only for `F.rank()`, one ordered by salary, `hire_date` and `employee_id` for `F.row_number()`. Get `hire_date` from `employee_clean`."
+ ],
+ "explanation": "Pay is a history, so \"current\" needs a date. Filtering to rows on or before `AS_OF`, then keeping each person's latest with `row_number`, gives the salary in force that day: the April market adjustments are ignored, and the `salary` column in `employees`, which already includes them, would be wrong. Two history rows in this export are dated before the person was hired; dropping them leaves those two people with no salary on record, and the summary in the next step counts them instead of guessing. Employment also depends on the date: four people marked `terminated` left after 31 March, so they're still on the payroll. `rank` lets equal salaries share a place, and `row_number` with `hire_date` and `employee_id` after the salary gives every person a fixed position, so the ranking is the same on every run.",
+ "entry": "salary_rankings",
+ "inputs": [
+  "employees",
+  "departments",
+  "salary_history"
+ ],
+ "file": "pipeline.py",
+ "append": "\n\nfrom pyspark.sql.window import Window\n\nAS_OF = \"2026-03-31\"\n\n\ndef current_salaries(employees, salary_history):\n    # Step 4: the salary in force on AS_OF for each person employed that day.\n    return salary_history\n\n\ndef salary_rankings(employees, departments, salary_history):\n    # Step 4: rank each department's people by their current salary.\n    return current_salaries(employees, salary_history)\n",
+ "prerequisites": [
+  "PS-L033",
+  "PS-L025",
+  "PS-L010"
+ ],
+ "output": {
+  "columns": [
+   "department_id",
+   "department_name",
+   "employee_id",
+   "full_name",
+   "salary",
+   "salary_date",
+   "salary_rank",
+   "position"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "example",
+   "sample": true
+  },
+  {
+   "id": "project",
+   "edition": "project"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 60,
+  "check_timeout_s": 240,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

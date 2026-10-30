@@ -1,0 +1,243 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "transaction_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "posted_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "typical_before",
+     "type": "decimal(16,6)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     null,
+     "T000002",
+     "2026-01-16T07:14:10",
+     "60.53",
+     null
+    ],
+    [
+     "A00001",
+     "T000003",
+     "2026-01-26T16:39:39",
+     "27.90",
+     null
+    ],
+    [
+     "A00001",
+     "T000008",
+     "2026-02-19T10:23:22",
+     "15.99",
+     "27.900000"
+    ],
+    [
+     "A00001",
+     "T000010",
+     "2026-02-21T13:36:29",
+     "19.23",
+     "21.945000"
+    ],
+    [
+     "A00001",
+     "T000015",
+     "2026-03-01T09:12:40",
+     "40.00",
+     "21.040000"
+    ],
+    [
+     "A00001",
+     "T000018",
+     "2026-03-03T11:05:11",
+     "12.00",
+     "25.073333"
+    ],
+    [
+     "A00006",
+     "T000014",
+     "2026-02-28T18:17:37",
+     "60.53",
+     null
+    ],
+    [
+     "A00008",
+     "T000011",
+     "2026-02-24T12:49:59",
+     "7.60",
+     null
+    ]
+   ],
+   "row_count": 8,
+   "inputs": {
+    "transactions": [
+     [
+      "T000002",
+      null,
+      "M004",
+      "2026-01-16T07:14:10",
+      "purchase",
+      "online",
+      "debit",
+      "60.53",
+      "GBP",
+      "posted"
+     ],
+     [
+      "T000003",
+      "A00001",
+      "M003",
+      "2026-01-26T16:39:39",
+      "purchase",
+      "card_present",
+      "debit",
+      "27.90",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000008",
+      "A00001",
+      "M002",
+      "2026-02-19T10:23:22",
+      "purchase",
+      "card_present",
+      "debit",
+      "15.99",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000009",
+      "A00008",
+      "M001",
+      "2026-02-20T12:56:02",
+      "refund",
+      "card_present",
+      "credit",
+      "43.95",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000010",
+      "A00001",
+      "M004",
+      "2026-02-21T13:36:29",
+      "purchase",
+      "card_present",
+      "debit",
+      "19.23",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000011",
+      "A00008",
+      "M003",
+      "2026-02-24T12:49:59",
+      "purchase",
+      "card_present",
+      "debit",
+      "7.60",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000014",
+      "A00006",
+      "M004",
+      "2026-02-28T18:17:37",
+      "purchase",
+      "online",
+      "debit",
+      "60.53",
+      "GBP",
+      "posted"
+     ],
+     [
+      "T000015",
+      "A00001",
+      "M001",
+      "2026-03-01T09:12:40",
+      "purchase",
+      "card_present",
+      "debit",
+      "40.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000016",
+      "A00001",
+      "M003",
+      "2026-03-02T09:30:02",
+      "purchase",
+      "online",
+      "debit",
+      "300.00",
+      "USD",
+      "declined"
+     ],
+     [
+      "T000017",
+      "A00001",
+      null,
+      "2026-03-02T15:47:55",
+      "withdrawal",
+      "atm",
+      "debit",
+      "100.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000018",
+      "A00001",
+      "M002",
+      "2026-03-03T11:05:11",
+      "purchase",
+      "card_present",
+      "debit",
+      "12.00",
+      "USD",
+      "posted"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice transactions table",
+  "an account with six purchases, so the frame slides",
+  "deposits, withdrawals, fees and unposted purchases between posted ones",
+  "two purchases at the same moment, out of order in the file",
+  "accounts with only one or two purchases",
+  "purchases that lost their account",
+  "an empty transactions table"
+ ]
+}

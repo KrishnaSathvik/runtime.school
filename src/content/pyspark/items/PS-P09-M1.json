@@ -1,0 +1,74 @@
+{
+ "id": "PS-P09-M1",
+ "slug": "parse-the-nested-click-events",
+ "project": "PS-P09",
+ "milestone": "PS-P09.m1",
+ "difficulty": "medium",
+ "minutes": 30,
+ "title": "Parse the nested click events",
+ "dataset": {
+  "id": "PS-D06",
+  "version": "1.1.0"
+ },
+ "prompt": "The shop's site sends three event feeds as nested JSON: `page_views`, `cart_events` and `checkout_events`. Each has its own shape: the campaign hides in `context.utm`, and a basket is an `items` array. Add `checkout_events.printSchema()` to your file and press Run to see one.\n\nWrite `parse_events(page_views, cart_events, checkout_events)`. It returns every event of the three feeds in one flat table with the same twelve columns, so the rest of the pipeline reads one shape.",
+ "rules": [
+  "Return `event_id`, `session_id`, `user_id`, `event_time`, `arrival_time`, `batch`, `event_type`, `action`, `campaign_id`, `units`, `order_id` and `order_total`, in that order.",
+  "`event_type` is `page_view`, `cart` or `checkout`, by feed. `action` is the page view's `page_type`, the cart event's `action`, or the checkout event's `step`.",
+  "`campaign_id` is `context.utm.campaign` on page views, missing when the visit has no `utm` or no `context`. It is missing on cart and checkout events.",
+  "`units` (an int) is the sum of `qty` over `items` on cart and checkout events, 0 when `items` is empty, and missing on page views. `order_id` and `order_total` come from checkout events and are missing on the others.",
+  "Keep every row, repeated deliveries included. A later step removes them."
+ ],
+ "hints": [
+  "Write one `select` per feed with the same twelve columns in the same order, then put them together with `unionByName`.",
+  "Nested fields read with dots: `F.col(\"context.utm.campaign\")`. A column a feed doesn't have is `F.lit(None).cast(\"string\")` (or `\"int\"`, `\"double\"`) under the right name.",
+  "`F.aggregate(\"items\", F.lit(0), lambda total, item: total + item[\"qty\"])` adds up an array without exploding it, so an empty basket gives 0 instead of losing its row."
+ ],
+ "explanation": "Each feed gets its own `select` that produces the same twelve columns, and `unionByName` stacks them by name, so a column in the wrong position can't slip into another one. Dotted paths read nested structs and give null when any level is missing, which is exactly what a visit without `utm` needs. `F.aggregate` folds the `items` array into one number per row. Exploding the array and summing would drop every event with an empty basket, because `explode` makes no row for an empty array. Repeated deliveries stay for now: the streaming steps need to see them arrive, and the session step removes them on purpose.",
+ "entry": "parse_events",
+ "inputs": [
+  "page_views",
+  "cart_events",
+  "checkout_events"
+ ],
+ "file": "pipeline.py",
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\n\ndef parse_events(page_views, cart_events, checkout_events):\n    # Step 1: every event in one flat table, with the nested fields pulled out.\n    return page_views\n",
+ "prerequisites": [
+  "PS-L037",
+  "PS-L038",
+  "PS-L041",
+  "PS-L029"
+ ],
+ "output": {
+  "columns": [
+   "event_id",
+   "session_id",
+   "user_id",
+   "event_time",
+   "arrival_time",
+   "batch",
+   "event_type",
+   "action",
+   "campaign_id",
+   "units",
+   "order_id",
+   "order_total"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "example",
+   "sample": true
+  },
+  {
+   "id": "project",
+   "edition": "project"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 45,
+  "check_timeout_s": 120,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

@@ -1,0 +1,52 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D07",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "trips"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "4 files in the table\n4 files to read\n12 trips\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "removed 4 added 1\n1 file in the table, 5 on disk\n12 trips\nagain: removed 0 added 0\n+-------+---------+\n|version|operation|\n+-------+---------+\n|      1| OPTIMIZE|\n|      0|    WRITE|\n+-------+---------+\n\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "[(1, 22), (4, 10), (4, 16), (4, 22)]\n4 files to read\n[(1, 5), (10, 22)]\n1 file to read\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "",
+   "error": {
+    "type": "IllegalArgumentException",
+    "message": "requirement failed: Are you sure you would like to vacuum files with such a low retention period? If you have",
+    "line": 8,
+    "condition": null
+   }
+  },
+  "e5": {
+   "stdout": "5 files on disk\n5 after vacuum with the default retention\n1 after vacuum with 0 hours\n+-------+------------+\n|version|   operation|\n+-------+------------+\n|      5|  VACUUM END|\n|      4|VACUUM START|\n|      3|  VACUUM END|\n|      2|VACUUM START|\n|      1|    OPTIMIZE|\n|      0|       WRITE|\n+-------+------------+\n\n12 trips\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "",
+   "error": {
+    "type": "Py4JJavaError",
+    "message": "org.apache.spark.SparkException: [FAILED_READ_FILE.FILE_NOT_EXIST] Encountered error while reading file file:/tmp/taxi/trips/part-00000-b32c6512-c604-406c-b54c-764bbe409512-c000.snappy.parquet. File does not exist. It is possible the underlying files have been updated.",
+    "line": 11,
+    "condition": null
+   }
+  }
+ }
+}

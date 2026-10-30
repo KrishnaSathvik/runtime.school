@@ -1,0 +1,174 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "service",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "error_type",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "errors",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "last_seen",
+     "type": "timestamp",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "checkout-api",
+     "UpstreamError",
+     3,
+     "2026-04-14T10:01:00.140000"
+    ],
+    [
+     "iot-gateway",
+     "HeartbeatMissed",
+     1,
+     "2026-04-14T10:01:03"
+    ],
+    [
+     "iot-gateway",
+     "ClockSkew",
+     1,
+     "2026-04-14T10:01:12.522000"
+    ],
+    [
+     "notification-worker",
+     "ProviderTimeout",
+     2,
+     "2026-04-14T10:01:28"
+    ],
+    [
+     "catalog-api",
+     "UpstreamError",
+     1,
+     "2026-04-14T10:02:10"
+    ],
+    [
+     "iot-gateway",
+     "DeviceAuthFailed",
+     1,
+     null
+    ]
+   ],
+   "row_count": 6,
+   "inputs": {
+    "error_events": [
+     [
+      "ERR-00001",
+      "2026-04-14T10:01:00.140000",
+      "checkout-api",
+      "UpstreamError",
+      "payment authorizer returned an unexpected response",
+      "error",
+      "REQ-000008",
+      null
+     ],
+     [
+      "ERR-00002",
+      "2026-04-14T10:01:03",
+      "iot-gateway",
+      "HeartbeatMissed",
+      "no heartbeat for 10 minutes",
+      "warning",
+      null,
+      "DEV-0002"
+     ],
+     [
+      "ERR-00003",
+      "2026-04-14T10:01:12.522000",
+      "iot-gateway",
+      "ClockSkew",
+      "device clock more than 5 minutes off server time",
+      "warning",
+      "REQ-000010",
+      "DEV-0001"
+     ],
+     [
+      "ERR-00004",
+      "2026-04-14T10:01:28",
+      "notification-worker",
+      "ProviderTimeout",
+      "email provider did not answer within 10 s",
+      "error",
+      null,
+      null
+     ],
+     [
+      "ERR-00005",
+      "2026-04-14T10:00:30",
+      "checkout-api",
+      "UpstreamError",
+      "payment authorizer returned an unexpected response",
+      "error",
+      "REQ-000004",
+      null
+     ],
+     [
+      "ERR-00001",
+      "2026-04-14T10:01:00.140000",
+      "checkout-api",
+      "UpstreamError",
+      "payment authorizer returned an unexpected response",
+      "error",
+      "REQ-000008",
+      null
+     ],
+     [
+      "ERR-00006",
+      "2026-04-14T10:02:10",
+      "catalog-api",
+      "UpstreamError",
+      "inventory service returned an unexpected response",
+      "error",
+      "REQ-000012",
+      null
+     ],
+     [
+      "ERR-00007",
+      null,
+      "notification-worker",
+      "ProviderTimeout",
+      "email provider did not answer within 10 s",
+      "error",
+      null,
+      null
+     ],
+     [
+      "ERR-00008",
+      null,
+      "iot-gateway",
+      "DeviceAuthFailed",
+      "device certificate has expired",
+      "error",
+      null,
+      "DEV-0003"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice errors",
+  "the same error type in two services",
+  "one kind of error happening several times, not in time order",
+  "events with no time, including a kind with no time at all",
+  "an empty errors table"
+ ]
+}

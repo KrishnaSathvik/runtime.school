@@ -1,0 +1,110 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "transaction_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "legacy_amount",
+     "type": "decimal(6,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "T000001",
+     "800.00",
+     "800.00"
+    ],
+    [
+     "T000002",
+     "60.53",
+     "60.53"
+    ],
+    [
+     "T000003",
+     "27.90",
+     "27.90"
+    ],
+    [
+     "T000004",
+     "800.00",
+     "800.00"
+    ],
+    [
+     "T000005",
+     "3100.00",
+     "3100.00"
+    ],
+    [
+     "T000006",
+     "21.91",
+     "21.91"
+    ],
+    [
+     "T000007",
+     "10.01",
+     "10.01"
+    ],
+    [
+     "T000008",
+     "15.99",
+     "15.99"
+    ],
+    [
+     "T000009",
+     "43.95",
+     "43.95"
+    ],
+    [
+     "T000010",
+     "19.23",
+     "19.23"
+    ],
+    [
+     "T000011",
+     "7.60",
+     "7.60"
+    ],
+    [
+     "T000012",
+     "500.00",
+     "500.00"
+    ],
+    [
+     "T000013",
+     "800.00",
+     "800.00"
+    ],
+    [
+     "T000014",
+     "60.53",
+     "60.53"
+    ]
+   ],
+   "row_count": 14
+  }
+ },
+ "hidden": [
+  "the full practice transactions table",
+  "amounts just inside and just outside what the type holds",
+  "large deposits and withdrawals",
+  "transactions with a missing amount",
+  "the same transaction delivered twice",
+  "an empty transactions table"
+ ]
+}

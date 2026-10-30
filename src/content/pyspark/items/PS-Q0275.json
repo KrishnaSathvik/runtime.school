@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0275",
+  "slug": "stages-of-the-tip-audit",
+  "lesson": "PS-L055",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Stages of the tip audit",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "prompt": "The tip audit spreads the trips over 3 partitions, then keeps card trips longer than 2 miles with their tip. Write `solve(trips)` so it returns those trips, with the number of stages and tasks one `collect()` of the result runs.",
+  "rules": [
+    "Spread the trips over 3 partitions with `repartition(3)` before filtering.",
+    "Keep trips whose `payment_type` is `card` and whose `trip_distance` is more than 2 (2 itself doesn't count). A trip missing either value is left out.",
+    "Measure with adaptive execution off. `stages` is the number of stages in the job that `collect()` starts; `tasks` is the total number of tasks across them.",
+    "Return the columns `trip_id`, `tip`, `stages`, `tasks`; `with_counts` in the starter adds the last two."
+  ],
+  "hints": [
+    "Two conditions can be two `filter` calls in a row.",
+    "Which steps here are narrow and which one moves rows between partitions? Only a shuffle starts a new stage.",
+    "Tasks per stage follow partitions: one for the one-file read, then one per partition `repartition(3)` makes."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "trips"
+  ],
+  "starter": "import uuid\n\nfrom pyspark.sql import functions as F\n\n\ndef new_job_group(label):\n    # Every test calls solve() in the same Spark session, so each call needs a group name of its own.\n    name = label + \"-\" + uuid.uuid4().hex\n    spark.sparkContext.setJobGroup(name, label)\n    return name\n\n\ndef with_counts(df, stages, tasks):\n    # Adds two columns, stages and tasks, holding the same number on every row.\n    return df.withColumn(\"stages\", F.lit(stages)).withColumn(\"tasks\", F.lit(tasks))\n\n\ndef solve(trips):\n    sc = spark.sparkContext\n    tracker = sc.statusTracker()\n    audit = trips.select(\"trip_id\", \"tip\")\n    # Spread, filter, measure one collect(), then add the counts.\n    return with_counts(audit, 0, 0)\n",
+  "output": {
+    "columns": [
+      "trip_id",
+      "tip",
+      "stages",
+      "tasks"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`repartition(3)` is the only shuffle, so with adaptive execution off the job has two stages: 1 task reads the one-file table, then 3 tasks, one per new partition, each filter its partition and keep two columns. `filter` and `select` are narrow, so they run inside the second stage and add no stage of their own: 2 stages, 4 tasks. A comparison with a missing value is never true, so trips with no distance or payment type drop out on their own. Common slips: counting each `filter` as a stage, using `coalesce(3)`, which can't add partitions to a one-partition table (so no shuffle and 1 task), or measuring with adaptive execution on, which runs the stage before the shuffle as a separate job."
+}

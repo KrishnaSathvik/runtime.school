@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0396",
+  "kind": "predict",
+  "slug": "what-the-driver-can-take-back",
+  "lesson": "PS-L080",
+  "role": "foundation",
+  "format": "concept_or_trace",
+  "difficulty": "easy",
+  "minutes": 5,
+  "title": "What the driver can take back",
+  "prompt": "This program submits a job whose driver may take back at most 64 KiB of results per action (`spark.driver.maxResultSize=64k`). The job runs four actions on 50,000 numbers and prints each result, or `failed`. The program prints the exit code, then the job's lines without their `app:` prefix. What does it print? Type each line on its own line.",
+  "program": "import os, subprocess\n\nopen(\"/tmp/results.py\", \"w\").write(\"\"\"\nfrom pyspark.sql import SparkSession\nfrom pyspark.sql import functions as F\n\nspark = SparkSession.builder.getOrCreate()\nids = spark.range(0, 50000, 1, 2)\n\ndef attempt(label, action):\n    try:\n        print(\"app:\", label, action())\n    except Exception:\n        print(\"app:\", label, \"failed\")\n\nattempt(\"count\", lambda: ids.count())\nattempt(\"take\", lambda: len(ids.take(10)))\nattempt(\"small collect\", lambda: len(ids.filter(F.col(\"id\") < 100).collect()))\nattempt(\"collect\", lambda: len(ids.collect()))\nspark.stop()\n\"\"\")\n\nenv = {**os.environ, \"SPARK_LOCAL_IP\": \"127.0.0.1\"}\nrun = subprocess.run(\n    [\"spark-submit\", \"--master\", \"local[2]\", \"--conf\", \"spark.driver.maxResultSize=64k\", \"/tmp/results.py\"],\n    capture_output=True, text=True, env=env)\nprint(run.returncode)\nfor line in run.stdout.splitlines():\n    if line.startswith(\"app:\"):\n        print(line[5:])\n",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "The limit is on what the tasks send back to the driver, not on how much data the job reads.",
+    "`count()` sends back one number per task, and `take(10)` only ten rows. Filtering before `collect()` shrinks what comes back.",
+    "50,000 rows are far more than 64 KiB. The job catches the error, so it carries on and finishes."
+  ],
+  "explanation": "`spark.driver.maxResultSize` caps the results the driver receives in one action. `count()` brings back a number per task, `take(10)` ten rows, and the filtered `collect()` 100 rows: all small, all fine. The full `collect()` would bring back all 50,000 rows, more than 64 KiB, so Spark stops that job, and the job prints `failed` because it catches the error. The job itself carries on and stops cleanly, so the exit code is 0. The data never had to fit on the driver; only the results do, which is why you aggregate, filter or limit before bringing rows back."
+}

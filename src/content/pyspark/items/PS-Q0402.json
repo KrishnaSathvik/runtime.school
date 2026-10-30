@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0402",
+  "slug": "what-the-driver-log-gave-up-on",
+  "lesson": "PS-L081",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "What the driver log gave up on",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "The on-call engineer pastes a failed run's driver log into `application_logs_raw`, one log line per row, with the time cut off the start of each line and the stack-trace lines removed. Write `solve(application_logs_raw)` so it returns one row per task Spark gave up on: its stage, its task number, how many attempts it had and the exception's class.",
+  "rules": [
+    "Spark gives up on a task in a line like `ERROR TaskSetManager: Task 0 in stage 1.0 failed 2 times; aborting job`: task 0, stage 1, 2 attempts. Only these lines make rows.",
+    "Each attempt that threw has a line like `ERROR Executor: Exception in task 0.1 in stage 1.0 (TID 5)` (task 0, attempt 1), and the next line starts with the exception's class, up to the first `:`. Use it for `error`.",
+    "A task that threw and then succeeded on a later attempt was never given up on, so it has no row.",
+    "Columns, in order: `stage`, `task` and `attempts` (whole numbers of type `int`) and `error` (text). A log with no give-up lines gives no rows."
+  ],
+  "hints": [
+    "Go through the lines in order. A regular expression such as `Task (\\d+) in stage (\\d+)\\.\\d+ failed (\\d+) times` picks out the three numbers.",
+    "For `error`, first note the line after each `Exception in task` line, keyed by its stage and task (the number before the dot), then look it up for each give-up line.",
+    "`(TID 5)` is a task id numbered across the whole application, not the task's number in its stage, and `0.1` is task 0's second attempt, not task 1."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "application_logs_raw"
+  ],
+  "starter": "import re\n\n\ndef solve(application_logs_raw):\n    # collect() brings the log back to Python, one line per row, in file order.\n    lines = [row.value for row in application_logs_raw.collect()]\n    rows = []\n    # Find the tasks Spark gave up on, how many attempts each had, and the exception class.\n    # spark.createDataFrame builds a DataFrame from a list of Python tuples, with these columns and types.\n    return spark.createDataFrame(rows, \"stage INT, task INT, attempts INT, error STRING\")\n",
+  "output": {
+    "columns": [
+      "stage",
+      "task",
+      "attempts",
+      "error"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Only `TaskSetManager` give-up lines make rows; they carry the task, the stage and the attempt count. The `Executor` lines above them are one per failed attempt, so counting them gives a row per attempt, and their `0.1` means task 0, attempt 1. The exception's class starts the line right after an `Executor` line, before the first `:`; in the sample one task divided by zero (`SparkArithmeticException`) and another hit a bad cast (`SparkNumberFormatException`). A task that threw once and then succeeded leaves an `Executor` line but no give-up line, which is why a log full of errors can belong to a job that finished. These lines are real driver output from runs on this machine, where each task could be tried 2 or 3 times (`local[2,2]`, `local[1,3]`); a cluster tries 4 times by default."
+}

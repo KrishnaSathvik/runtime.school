@@ -9,6 +9,7 @@ import { useHydrated, useLearning } from "@/lib/learning-state";
 import { BRAND_TAGLINE } from "@/platform/brand";
 import { subjects } from "@/platform/subjects";
 import { sqlLessonHref } from "@/platform/sql-lesson-href";
+import { PS_HOME } from "@/content/pyspark/paths";
 import { NotifyInterest } from "../NotifyInterest";
 import { Shell } from "../Shell";
 
@@ -22,8 +23,8 @@ const subjectMarks: Partial<Record<(typeof subjects)[number]["id"], string>> = {
   "ai-engineering": "/subjects/ai.svg",
 };
 
-/** Python is offered only where its existing runtime gate permits execution. */
-export function Landing({ pythonAvailable = false }: { pythonAvailable?: boolean }) {
+/** Python is offered only where its existing runtime gate permits execution; PySpark only behind NEXT_PUBLIC_PYSPARK. */
+export function Landing({ pythonAvailable = false, pysparkAvailable = false }: { pythonAvailable?: boolean; pysparkAvailable?: boolean }) {
   const router = useRouter();
   const ready = useHydrated();
   const state = useLearning();
@@ -56,9 +57,9 @@ export function Landing({ pythonAvailable = false }: { pythonAvailable?: boolean
           {subjects.map((s) => {
             const Icon = s.icon;
             const mark = subjectMarks[s.id];
-            const available = s.availability === "available" || (s.id === "python" && pythonAvailable);
-            const subjectHref = s.id === "python" ? "/python" : startHref;
-            const subjectLabel = s.id === "python" ? "Start Python" : startLabel;
+            const available = s.availability === "available" || (s.id === "python" && pythonAvailable) || (s.id === "pyspark" && pysparkAvailable);
+            const subjectHref = s.id === "python" ? "/python" : s.id === "pyspark" ? PS_HOME : startHref;
+            const subjectLabel = s.id === "python" ? "Start Python" : s.id === "pyspark" ? "Start PySpark" : startLabel;
             return (
               <li key={s.id} className={`rx-subject ${available ? "on" : "off"}`}>
                 {available && <Link href={subjectHref} className="rx-home-cover" aria-label={`${subjectLabel}: ${s.title}`} />}

@@ -1,0 +1,552 @@
+# runtime.school — PySpark Execution Engine Architecture
+
+For PySpark, we need to build a real Apache Spark execution engine behind runtime.school. It cannot work exactly like our existing SQL or Python execution environments because Spark runs on the JVM, manages execution plans, uses partitions, and can start multiple worker processes.
+
+The good news: we do not need to build our own Spark engine or operate a Databricks cluster for every learner. We can use Apache Spark itself, build our own execution and grading layer around it, and scale the infrastructure gradually.
+
+## 1. My recommended architecture
+
+runtime.school — Next.js Frontend
+
+Learn · Practice · Projects · Playground · Labs
+
+Execution API — Python/FastAPI
+
+Authentication · Input validation · Run/Submit · Job status
+
+Job Queue + Scheduler
+
+Concurrency control · Resource limits · Cancellation · Retries
+
+Isolated Spark Execution Workers
+
+Worker A
+
+DataFrames
+
+Worker B
+
+DataFrames
+
+Worker C
+
+Delta/ETL
+
+Actual PySpark + Java + SparkSession inside each isolated environment
+
+Dataset Storage
+
+15 datasets · Versioned fixtures
+
+Grading Service
+
+Outputs · Schemas · Tests
+
+The key distinction is that FastAPI coordinates execution; isolated Spark workers actually execute the learner's code. We should never run arbitrary learner Python directly inside the API process.
+
+## 2. Which execution technology should we use?
+
+I compared the practical options based on Apache Spark's current architecture and Spark Connect documentation.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://spark.apache.org\&sz=32)
+
+Spark 4.2.0 Documentation
+
++2
+
+
+
+| Option                                  | Real PySpark?            | Suitability                                    |
+| --------------------------------------- | ------------------------ | ---------------------------------------------- |
+| Browser-only Pyodide                    | No full JVM-backed Spark | Not suitable                                   |
+| DuckDB/Polars pretending to be PySpark  | No                       | Incorrect semantics and APIs                   |
+| Local-mode Spark in isolated containers | Yes                      | Best initial architecture                      |
+| Shared Spark Connect server             | Yes, with API limits     | Useful later for controlled trusted workloads  |
+| Spark on Kubernetes                     | Yes, distributed         | Best for advanced scaling                      |
+| Databricks compute                      | Yes                      | Optional specialized integration, not required |
+
+### Why local-mode Spark is the right starting point
+
+Apache Spark explicitly supports local execution using `local[2]`, `local[4]`, and similar configurations. These execute real Spark jobs using local CPU cores.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://spark.apache.org\&sz=32)
+
+Spark 4.0.1 Documentation
+
+
+
+For our first 300 or so ordinary DataFrame challenges, depending on their actual content, local-mode Spark should be sufficient.
+
+It supports real `SparkSession`, DataFrames, SQL, joins, aggregations, windows, Parquet, execution plans, and RDD operations.
+
+But local mode does not simulate a genuine multi-node network. For lessons about cross-node behavior or production cluster performance, we will eventually need distributed Spark workers.
+
+### Why I wouldn't start with a shared Spark Connect server
+
+Spark Connect is attractive because it separates clients from Spark servers, but it does not support `SparkContext` and RDD APIs. Our curriculum explicitly includes both. More importantly, Spark itself treats arbitrary user-code execution as a fundamental capability, not something it sandboxes automatically.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://spark.apache.org\&sz=32)
+
+Spark 4.2.0 Documentation
+
++1
+
+
+
+So my choice is:
+
+Start with isolated classic PySpark jobs. Add distributed Spark on Kubernetes for advanced labs. Keep Spark Connect as an optional future execution adapter, not our only engine.
+
+## 3. How Run and Submit will actually work
+
+Imagine a learner solving Q0127 — Accounts Without Transactions.
+
+They write:
+
+```
+def solve(accounts, transactions):    return accounts.join(        transactions,        on="account_id",        how="left_anti"    )
+```
+
+When the learner clicks Run, the system follows this sequence:
+
+01
+
+Receive code
+
+Frontend sends question ID, code and execution mode to the API
+
+02
+
+Create execution job
+
+API checks limits, identifies the dataset fixture and queues the job
+
+03
+
+Start isolated environment
+
+Runner launches a sandbox containing real PySpark and the permitted dataset files
+
+04
+
+Load input DataFrames
+
+Trusted harness creates accounts and transactions using the required schemas
+
+05
+
+Execute learner code
+
+Spark evaluates the returned DataFrame and materializes a bounded preview
+
+06
+
+Return results
+
+Frontend receives output rows, schema, errors and execution status
+
+The same infrastructure handles Submit, but with a different dataset fixture and grading process.
+
+| Behavior                    | Run                            | Submit                    |
+| --------------------------- | ------------------------------ | ------------------------- |
+| Dataset                     | Visible sample                 | Private test fixtures     |
+| Output                      | Rows, schema, execution errors | Passed/failed results     |
+| Full expected answer        | Visible for provided sample    | Hidden                    |
+| Saves progress              | Can save code                  | Records submission result |
+| Typical resource allocation | Small                          | Depends on challenge      |
+| Objective                   | Experiment and debug           | Verify correctness        |
+
+On Submit, the system should recreate a clean environment for each independent test fixture. The submitted code must not access reference solutions or expected outputs.
+
+## 4. The Spark runner itself
+
+Here's the actual software stack I recommend for our initial implementation.
+
+| Component         | Technology                          | Responsibility                             |
+| ----------------- | ----------------------------------- | ------------------------------------------ |
+| Frontend          | Existing Next.js application        | Code editor, results, submission interface |
+| Execution API     | FastAPI                             | Job creation and status                    |
+| Queue             | Redis + Python worker orchestration | Concurrency and scheduling                 |
+| Spark environment | Docker image with Java + PySpark    | Real code execution                        |
+| Data storage      | S3-compatible object storage        | Versioned Parquet/CSV/JSON fixtures        |
+| Metadata          | PostgreSQL                          | Jobs, questions, attempts, progress        |
+| Grader            | Python + PySpark testing utilities  | Correctness and schema validation          |
+| Isolation         | Sandboxed containers or microVMs    | Protect platform and other learners        |
+| Advanced scaling  | Kubernetes                          | Distributed Spark and larger labs          |
+
+### Spark version
+
+For an initial reproducible baseline, I'd prototype with:
+
+- Apache Spark / PySpark 4.0.1
+- Python 3.11
+- Java 17
+- Delta Lake 4.0.1
+- A Linux container image with pinned dependencies
+
+This is a proposed compatibility baseline, not necessarily the newest release. Spark 4.0 supports Java 17 and Python 3.9+, and Delta Lake's compatibility table lists Delta 4.0.x with Spark 4.0.x. We can certify a newer version after passing our test suite.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://spark.apache.org\&sz=32)
+
+Spark 4.0.1 Documentation
+
++1
+
+
+
+### A trusted runner harness
+
+The learner shouldn't have to create a SparkSession in every practice question. We create it automatically.
+
+```
+from pyspark.sql import SparkSessionspark = (    SparkSession.builder    .master("local[2]")    .appName("runtime-school")    .config("spark.sql.shuffle.partitions", "4")    .config("spark.ui.enabled", "false")    .getOrCreate())accounts = spark.read.parquet(    "/datasets/D02/sample/accounts")transactions = spark.read.parquet(    "/datasets/D02/sample/transactions")# Trusted harness loads the learner's# solve() function inside the isolated job.# The function must return a DataFrame.result = solve(accounts, transactions)result.printSchema()result.show(20, truncate=False)spark.stop()
+```
+
+This is a simplified illustration of the harness, not a secure runner by itself. In production, the source code must execute only inside the isolated job, with resource controls and no privileged platform access.
+
+The user sees a familiar Python editor. Behind the scenes, it is real Spark.
+
+## 5. How we grade the output
+
+Spark already provides testing utilities such as `assertDataFrameEqual` and `assertSchemaEqual`. They support comparing DataFrame results without assuming row order unless ordering is required.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://spark.apache.org\&sz=32)
+
+PySpark 4.0.0 documentation
+
+
+
+Our grading engine would apply question-specific rules.
+
+Example — Q0127 submission feedback
+
+Test 1: Accounts with and without transactions
+
+Passed
+
+Test 2: Empty transaction table
+
+Passed
+
+Test 3: Duplicate transactions
+
+Passed
+
+Test 4: Null account identifiers
+
+Failed
+
+3 of 4 tests passed
+
+Review how missing join keys should behave. Check the question's null-matching rules.
+
+Illustrative failure feedback. Our reference implementation must establish the exact expected semantics for each question.
+
+For normal PySpark challenges, we'll validate exact output schema and row multiplicities. Floating-point tolerances should be explicit, while financial decimals should be compared according to defined precision rules.
+
+For pipeline tasks, simply comparing the final DataFrame isn't enough. We also test output files, tables, duplicate handling, and replay behavior.
+
+## 6. How one engine supports all six tools
+
+We should not build six separate execution backends. We'll have one execution service with different adapters.
+
+| runtime.school tool           | Execution capability                                                |
+| ----------------------------- | ------------------------------------------------------------------- |
+| PySpark Playground            | Executes arbitrary PySpark scripts in a sandbox                     |
+| Datasets Explorer             | Reads approved dataset metadata and bounded sample rows             |
+| Spark SQL Lab                 | Executes Spark SQL using registered dataset views                   |
+| Query Plans & Performance Lab | Collects physical plans, job metrics and benchmark results          |
+| Compare Approaches            | Runs two solutions under the same data and controlled settings      |
+| Pipeline & Streaming Lab      | Executes multi-step jobs with isolated state and checkpoint storage |
+
+### Example: Compare Approaches
+
+A learner wants to compare two joins.
+
+## Compare Approaches — Join Optimization
+
+D01 Retail Commerce · Sample execution-plan comparison
+
+Approach A
+
+```
+result = orders.join(    products,    "product_id")        
+```
+
+Approach B
+
+```
+result = orders.join(    broadcast(products),    "product_id")        
+```
+
+The engine checks that both solutions produce equivalent results, collects physical plans, and benchmarks repeated executions under the same resource limits.
+
+We should never claim B is faster just because it uses a broadcast hint. The engine must actually measure it, and the data must be large enough for a meaningful comparison.
+
+Spark exposes formatted and extended execution plans, which we can use to build the Query Plans tool without inventing our own optimizer.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://spark.incubator.apache.org\&sz=32)
+
+Spark 4.1.0 Documentation
+
+
+
+## 7. How real streaming and Delta projects will execute
+
+Advanced exercises need a more capable runner.
+
+Take P09, our clickstream project.
+
+The learner implements Structured Streaming logic that processes event batches, performs event-time aggregations, handles late events, and writes outputs.
+
+Our testing system can supply reproducible batches:
+
+P09 — Streaming test scenario
+
+| Batch 1    | Product views and clicks                    |
+| ---------- | ------------------------------------------- |
+| Batch 2    | Add-to-cart and purchase events             |
+| Batch 3    | Delayed events with earlier timestamps      |
+| Restart    | Resume from an isolated checkpoint          |
+| Validation | Verify final aggregates and replay behavior |
+
+The engine would:
+
+1. Create an isolated project workspace.
+2. Inject a known sequence of streaming files or events.
+3. Execute the learner's Structured Streaming query.
+4. Stop and restart the job for recovery tests.
+5. Inspect output tables and checkpoint-dependent behavior.
+6. Return correctness and diagnostic feedback.
+
+This can initially use file-based streaming sources, which Spark officially supports, so we do not need a dedicated Kafka cluster for the first streaming exercises.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://spark.apache.org\&sz=32)
+
+Spark 4.2.0-preview5 Documentation
+
+
+
+For Delta Lake projects, each execution gets a private Delta table directory and transaction log. That enables realistic `MERGE`, SCD Type 2, schema evolution, and time-travel tests without corrupting another learner's work.
+
+## 8. Performance labs need a different environment
+
+This is where we should be careful.
+
+A two-core local Spark worker is perfectly reasonable for learning joins, windows, and explain plans. But it cannot accurately represent an enterprise cluster with multiple physical machines.
+
+I recommend three execution tiers:
+
+| Tier            | Workload                                                | Engine                              |
+| --------------- | ------------------------------------------------------- | ----------------------------------- |
+| A — Standard    | Lessons, most practice, Playground                      | Isolated local-mode Spark           |
+| B — Engineering | Delta, ETL, streaming, small performance tests          | Isolated higher-resource Spark jobs |
+| C — Distributed | Cluster tuning, true network shuffle, failure scenarios | Kubernetes-backed Spark cluster     |
+
+We don't need Tier C at launch, provided advanced lessons requiring it aren't advertised as fully executable until their runtime is ready.
+
+Apache Spark supports launching applications on Kubernetes with separate driver and executor pods, so there is a documented scaling route when we need it.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://spark.apache.org\&sz=32)
+
+Spark 4.2.0 Documentation
+
+
+
+## 9. Security is a release blocker, not an optional enhancement
+
+There is one fundamental issue: learners are writing arbitrary Python code, and Apache Spark will execute that code.
+
+A regular Docker container alone is not a sufficient security boundary for running hostile multi-tenant workloads. We should use hardened workload isolation such as gVisor or microVMs, plus strict restrictions and security testing.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://github.com\&sz=32)
+
+GitHub
+
++1
+
+
+
+Our public execution system must enforce:
+
+- Separate sandbox per execution or securely isolated learner workspace.
+- CPU, memory, process-count, disk, output-size, and wall-clock limits.
+- No outbound internet access for ordinary exercises; only necessary internal Spark communication.
+- Read-only dataset mounts and separate writable scratch storage.
+- No root privileges, privileged containers, host mounts, Docker socket, or cloud credentials exposed to learner code.
+- Execution cancellation that terminates the complete process tree and job resources.
+- API rate limits, per-user concurrency limits, and queue quotas.
+- Trusted grading logic and expected answers outside learner-accessible files.
+
+For example, these are reasonable initial experimental limits, to tune after measurement:
+
+| Resource                    | Starter policy                          |
+| --------------------------- | --------------------------------------- |
+| CPU                         | 2 vCPU                                  |
+| Memory                      | 4 GiB                                   |
+| Ordinary Run timeout        | 45 seconds                              |
+| Submit timeout              | 90 seconds total, subject to test count |
+| Maximum displayed rows      | 100                                     |
+| Concurrent jobs per learner | 1                                       |
+| Project/streaming limits    | Separate controlled budget              |
+
+Those are our proposed limits, not proven capacity figures. Spark startup time, Python worker processes, memory usage, and fixture size will determine the real limits.
+
+## 10. Deployment architecture for runtime.school
+
+Since the learning frontend can stay on Vercel, we should split frontend delivery from execution infrastructure.
+
+Vercel — runtime.school frontend
+
+Next.js pages, editor, dataset browser, progress, authentication interface
+
+Backend service — execution API
+
+FastAPI, request validation, job orchestration, progress/status endpoints
+
+Private job infrastructure
+
+Queue, sandbox scheduler, PySpark worker images, grading orchestration
+
+Persistent storage
+
+PostgreSQL for metadata, object storage for datasets and project artifacts
+
+Render is an option for hosting the API and ordinary background services because it supports Docker deployments and background workers. But we must separately verify a host capable of launching strongly isolated per-user sandboxes; a normal Render background worker is not automatically a secure code-execution platform.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://render.com\&sz=32)
+
+Render Docs
+
++1
+
+
+
+Vercel should handle web requests and job status, not host long-lived JVM workloads.
+
+## 11. API and codebase design
+
+I would introduce a separate execution service in the runtime.school repository.
+
+```
+runtime-school/
+  apps/
+    web/                     # Existing Next.js frontend
+
+  services/
+    spark-execution/
+      api/
+        jobs.py
+        submissions.py
+        results.py
+      scheduler/
+        queue.py
+        quotas.py
+        cancellation.py
+      runner/
+        harness.py
+        dataset_loader.py
+        output_serializer.py
+      grading/
+        dataframe.py
+        pipeline.py
+        streaming.py
+        performance.py
+      adapters/
+        local_spark.py
+        kubernetes_spark.py
+
+  infrastructure/
+    spark-images/
+    sandbox-policies/
+
+  curriculum/
+    pyspark/
+      datasets/
+      lessons/
+      questions/
+      projects/
+```
+
+The frontend calls a simple contract:
+
+```
+POST /api/spark/jobs
+```
+
+```
+{
+  "mode": "run",
+  "question_id": "Q0127",
+  "code": "def solve(accounts, transactions):\n    ...",
+  "dataset_version": "1.0.0"
+}
+```
+
+The API returns a job ID and initial status. The frontend subscribes to status updates or polls for completion rather than keeping a long-running HTTP request open.
+
+The server must resolve the dataset and execution policy from trusted question metadata—not simply trust any fixture path, image, or resource request supplied by the browser.
+
+## 12. How we should build it, in order
+
+01
+
+Local PySpark proof of execution
+
+One pinned Spark image, one dataset, one learner function, structured output and errors
+
+A real join executes with no fake PySpark APIs
+
+02
+
+Sandbox and execution API
+
+FastAPI, job queue, isolation, cancellation, CPU/memory limits and abuse controls
+
+Untrusted code cannot access host or other learner resources
+
+03
+
+Correctness grader
+
+Visible tests, hidden tests, schema checks, duplicate-sensitive comparisons, feedback
+
+Valid solutions pass; flawed solutions fail predictably
+
+04
+
+Connect the learning tools
+
+Playground, Dataset Explorer, Spark SQL Lab, Compare Approaches and explain plans
+
+All tools use the same dataset versions and execution contracts
+
+05
+
+Projects and stateful workloads
+
+Multi-file projects, isolated Delta tables, streaming fixtures, restart/replay tests
+
+Project milestones are reproducible and independently gradable
+
+06
+
+Production scaling
+
+Warm sandbox capacity, queue monitoring, user quotas and distributed Spark for advanced labs
+
+Concurrent jobs remain isolated, responsive and within budget
+
+We should also test startup latency and cost before deciding how many sandboxes to keep warm. Spark takes more resources to initialize than ordinary Python execution, so the user experience should communicate when a job is queued, starting, running, or complete.
+
+## Final recommendation
+
+I would build one reusable Spark Execution Platform, initially backed by real PySpark running in isolated local-mode environments.
+
+That same platform will power our 90 lessons, 450 practice questions, 10 projects, and six tools using the 15 shared datasets.
+
+We should avoid creating a custom Spark interpreter, a shared unrestricted Spark server, or an expensive Databricks dependency at the beginning.
+
+The first concrete engineering milestone should be: open a PySpark lesson in runtime.school, write a real DataFrame transformation, click Run, see the actual Spark output, click Submit, and receive correct feedback from hidden tests—all running in a safely isolated environment.
+
+Once that complete flow works with D01 Retail and D02 Banking, we have the foundation to build the rest of PySpark without redesigning the engine every time.

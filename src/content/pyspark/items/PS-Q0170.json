@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0170",
+  "slug": "best-and-worst-days",
+  "lesson": "PS-L034",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Best and worst days",
+  "dataset": {
+    "id": "PS-D10",
+    "version": "1.0.0"
+  },
+  "prompt": "The monthly factsheet shows each stock's biggest daily rise and biggest daily fall. Write `solve(daily_prices)` so it returns, for each symbol, its number of trading rows and its largest and smallest change from the previous row.",
+  "rules": [
+    "A row's change is its `close` minus the `close` of the same symbol's previous row by `trade_date`. A symbol's first row has no change.",
+    "`days` counts every row of the symbol.",
+    "`best_change` is the largest change and `worst_change` the smallest; rows with no change are skipped, and a symbol with no changes has both missing.",
+    "Return `symbol`, `days`, `best_change` and `worst_change`, one row per symbol."
+  ],
+  "hints": [
+    "First add a `change` column with `F.lag` over each symbol in date order. A window function can't go inside `agg`.",
+    "Then group the result by `symbol` and use `F.count(\"*\")`, `F.max(\"change\")` and `F.min(\"change\")`.",
+    "`max` and `min` skip the missing change on each first row, and `count(\"*\")` still counts that row."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "daily_prices"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(daily_prices):\n    # Return symbol, days, best_change and worst_change.\n    return daily_prices\n",
+  "output": {
+    "columns": [
+      "symbol",
+      "days",
+      "best_change",
+      "worst_change"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Do it in two steps, because a window function can't sit inside an aggregate. First the change per row: `w = Window.partitionBy(\"symbol\").orderBy(\"trade_date\")` and `moves = daily_prices.select(\"symbol\", (F.col(\"close\") - F.lag(\"close\").over(w)).alias(\"change\"))`. Then `moves.groupBy(\"symbol\").agg(F.count(\"*\").alias(\"days\"), F.max(\"change\").alias(\"best_change\"), F.min(\"change\").alias(\"worst_change\"))`. The first row's change is missing, so `max` and `min` skip it while `count(\"*\")` still counts the day; `F.count(\"change\")` would come out one short. Note that prices aren't adjusted for splits, so a split day shows up as the worst change."
+}

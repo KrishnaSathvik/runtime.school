@@ -70,7 +70,7 @@ if(batch==='editor'){
  });
  await step('Project file switch preserves undo and error filename',async()=>{
   await page.goto(`${BASE}/python/projects/smart-shopping-cart`);
-  await page.getByRole('button',{name:'Start →',exact:true}).click();
+  await page.getByRole('button',{name:/^(Start the project|Continue) →$/}).click();
   const initial=await ed().innerText();
   await code('# history marker\nanswer = 42');
   await page.getByRole('tab',{name:'main.py',exact:true}).click();
@@ -90,7 +90,8 @@ if(batch==='editor'){
   await page.getByRole('button',{name:'Undo Reset',exact:true}).click();
   assert.match(await ed().innerText(),/multi reset marker/);
   await page.getByRole('tab',{name:'catalogue.py',exact:true}).click();assert.equal(await ed().innerText(),helper);
-  await page.reload();assert.match(await ed().innerText(),/helper probe/);
+  // A project reopens on its overview; Continue resumes the step.
+  await page.reload();await page.getByRole('button',{name:'Continue →',exact:true}).click();assert.match(await ed().innerText(),/helper probe/);
  });
 }
 if(batch==='feedback'){
@@ -160,7 +161,7 @@ if(batch==='layout'){
  const geometries=[];
  for(const path of ['/sql/lesson/meet-your-first-select','/sql/practice/customer-list','/sql/projects/retail-performance-review?stage=baseline','/python/learn/python-execution','/python/practice/fix-the-note','/python/projects/smart-shopping-cart']){
   await page.setViewportSize({width:1440,height:1000});await page.goto(BASE+path);
-  if(path.includes('smart-shopping'))await page.getByRole('button',{name:'Start →',exact:true}).click();
+  if(path.includes('smart-shopping'))await page.getByRole('button',{name:/^(Start the project|Continue) →$/}).click();
   await ed().waitFor();
   const split=page.locator(path.includes('/python/')?'.p2-split':'.rx-task-split').first();
   for(const viewport of [{width:1440,height:1000},{width:768,height:900},{width:390,height:844},{width:320,height:640},{width:390,height:440}]){
@@ -226,18 +227,18 @@ if(batch==='journeys'){
  await step('SQL project valid checkpoint then edited evidence',async()=>{
   await page.goto(`${BASE}/sql/projects/retail-performance-review?stage=baseline`);
   const source=readFileSync('src/content/projects/beginner.ts','utf8');const answer=source.match(/sql: `([\s\S]*?)`/)[1].replace('${SALE_LINES}','orders AS o JOIN order_items AS i ON i.order_id = o.order_id');
-  await code(answer);await page.getByRole('button',{name:'Check',exact:true}).click();await page.getByText('✓ Check passed',{exact:true}).waitFor({timeout:30000});
+  await code(answer);await page.getByRole('button',{name:'Check step',exact:true}).click();await page.getByText('✓ Check passed',{exact:true}).waitFor({timeout:30000});
   await code('SELECT 44 AS project_probe;');assert.equal(await page.getByText('✓ Check passed',{exact:true}).count(),0);
   await page.getByRole('button',{name:'Run',exact:true}).click();await page.getByRole('cell',{name:'44',exact:true}).waitFor();
   await page.reload();assert.equal(await ed().innerText(),'SELECT 44 AS project_probe;');assert.match(page.url(),/stage=baseline/);
  });
  await step('Python project checks, next milestone and cumulative files',async()=>{
-  await page.goto(`${BASE}/python/projects/smart-shopping-cart`);await page.getByRole('button',{name:'Start →',exact:true}).click();
+  await page.goto(`${BASE}/python/projects/smart-shopping-cart`);await page.getByRole('button',{name:/^(Start the project|Continue) →$/}).click();
   const source=readFileSync('src/content/python-v2/projects/P01.ts','utf8');const answer=source.match(/const CATALOGUE_M1 = `([\s\S]*?)`;/)[1];
   await code(answer);await page.getByRole('button',{name:'Check step',exact:true}).click();await page.locator('.p2-results').getByText(/All 4 checks pass/).waitFor({timeout:45000});
   await page.getByRole('button',{name:/^Next: Cart add/}).click();await page.getByRole('tab',{name:'catalogue.py',exact:true}).click();
   assert.match(await ed().innerText(),/def build_catalogue/);assert.match(await ed().innerText(),/wanted = text.lower/);
-  await page.reload();assert.match(await ed().innerText(),/wanted = text.lower/);
+  await page.reload();await page.getByRole('button',{name:'Continue →',exact:true}).click();assert.match(await ed().innerText(),/wanted = text.lower/);
  });
 }
 

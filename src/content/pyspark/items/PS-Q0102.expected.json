@@ -1,0 +1,232 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "employee_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "dial_number",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "extension",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "E0001",
+     "+15554905027",
+     "5027"
+    ],
+    [
+     "E0002",
+     "+15559192731",
+     "2731"
+    ],
+    [
+     "E0003",
+     "+15558312628",
+     "2628"
+    ],
+    [
+     "E0004",
+     "+15555747551",
+     "7551"
+    ],
+    [
+     "E0005",
+     "+15557175507",
+     "5507"
+    ],
+    [
+     "E0006",
+     null,
+     null
+    ],
+    [
+     "E0007",
+     "+15555074003",
+     "4003"
+    ],
+    [
+     "E0008",
+     "+15558490611",
+     "0611"
+    ],
+    [
+     "E0009",
+     "+15559939407",
+     "9407"
+    ]
+   ],
+   "row_count": 9,
+   "inputs": {
+    "employees": [
+     [
+      "E0001",
+      "Tomas",
+      "Haddad",
+      "tomas.haddad@corp.example",
+      "555-490-5027",
+      "Chief Executive Officer",
+      "5",
+      "D01",
+      null,
+      "2025-01-06",
+      "full_time",
+      "260000.00",
+      "active",
+      null
+     ],
+     [
+      "E0002",
+      "Noor",
+      "Novak",
+      "noor.novak@corp.example",
+      "(555) 919-2731",
+      "Head of Engineering",
+      "4",
+      "D02",
+      "E0001",
+      "2025-05-26",
+      "full_time",
+      "200000.00",
+      "active",
+      null
+     ],
+     [
+      "E0003",
+      "Lena",
+      "Duarte",
+      "lena.duarte@corp.example",
+      "555.831.2628",
+      "Software Engineer",
+      "1",
+      "D02",
+      "E0002",
+      "2025-07-15",
+      "full_time",
+      "75000.00",
+      "active",
+      null
+     ],
+     [
+      "E0004",
+      "Anika",
+      "Silva",
+      "anika.silva@corp.example",
+      "+1 555 574 7551",
+      "  senior software engineer",
+      "2",
+      "D02",
+      "E0002",
+      "2025-08-15",
+      "full_time",
+      "70000.00",
+      "active",
+      null
+     ],
+     [
+      "E0005",
+      "Elif",
+      "Rao",
+      "elif.rao@corp.example",
+      "5557175507",
+      "Senior Software Engineer",
+      "2",
+      "D02",
+      "E0002",
+      "2025-07-07",
+      "full_time",
+      "70000.00",
+      "active",
+      null
+     ],
+     [
+      "E0006",
+      "Maya",
+      "Rao",
+      "maya.rao@corp.example",
+      null,
+      "Senior Software Engineer",
+      "2",
+      "D02",
+      "E0002",
+      "2025-08-10",
+      "full_time",
+      "62500.00",
+      "active",
+      null
+     ],
+     [
+      "E0007",
+      "Ines",
+      "Novak",
+      "Ines.novak@Corp.Example",
+      "555-507-4003",
+      "Head of Finance",
+      "4",
+      "D03",
+      "E0001",
+      "2025-01-06",
+      "full_time",
+      "150000.00",
+      "active",
+      null
+     ],
+     [
+      "E0008",
+      "Elif",
+      "Weber",
+      "elif.weber@corp.example",
+      "+1-555-849-0611",
+      "Senior Financial Analyst",
+      "2",
+      "D03",
+      "E0007",
+      "2025-05-20",
+      "full_time",
+      "75000.00",
+      "active",
+      null
+     ],
+     [
+      "E0009",
+      "Anika",
+      "Grant",
+      "anika.grant@corp.example",
+      "555-993-9407",
+      "Senior Financial Analyst",
+      "2",
+      "D03",
+      "E0007",
+      "2025-05-08",
+      "full_time",
+      "90000.00",
+      "active",
+      null
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice employees table",
+  "the same number written in each of the five formats",
+  "numbers that already carry the country code",
+  "employees with no phone",
+  "an empty employees table"
+ ]
+}

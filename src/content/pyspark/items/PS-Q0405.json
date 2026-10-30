@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0405",
+  "kind": "predict",
+  "slug": "what-the-log-lines-cost",
+  "lesson": "PS-L081",
+  "role": "integration",
+  "format": "concept_or_trace",
+  "difficulty": "medium",
+  "minutes": 7,
+  "title": "What the log lines cost",
+  "prompt": "A report logs with Python's `logging`, set to `WARNING`, and counts the Spark jobs it ran in its job group. `api_requests` is the 12 lesson requests, one of them with status 500. What does it print? Type each line on its own line.",
+  "program": "import logging, sys\nfrom pyspark.sql import functions as F\n\nlogging.basicConfig(stream=sys.stdout, level=logging.WARNING,\n                    format=\"%(levelname)s %(message)s\", force=True)\nlog = logging.getLogger(\"requests_report\")\n\nspark.conf.set(\"spark.sql.adaptive.enabled\", \"false\")\nsc = spark.sparkContext\ntracker = sc.statusTracker()\n\nsc.setJobGroup(\"report\", \"nightly requests report\")\nlog.info(\"requests: %d\", api_requests.count())\nerrors = api_requests.filter(F.col(\"status_code\") >= 500)\nlog.warning(\"built the server-error filter\")\nif log.isEnabledFor(logging.DEBUG):\n    log.debug(\"first error: %s\", errors.first()[\"request_id\"])\nlog.error(\"server errors: %d\", errors.count())\nprint(len(tracker.getJobIdsForGroup(\"report\")), \"jobs\")\n",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "At `WARNING`, `info` and `debug` lines print nothing, and `warning` and `error` lines print with the format `LEVEL message`.",
+    "A log call's arguments are worked out before the logger decides whether to print, so an action inside a hidden `info` line still runs. `isEnabledFor` is checked first.",
+    "`filter` is a transformation: it starts no job. With adaptive execution off, each `count()` here is one job."
+  ],
+  "explanation": "The logger is at `WARNING`. The `info` line prints nothing, but Python works out its argument first, so `api_requests.count()` runs a job anyway. `filter` only describes the work (lesson 4), so the warning line prints straight away with no job. `isEnabledFor(logging.DEBUG)` is false, so the `if` skips the debug line and its `first()` never runs: that's the cheap way to guard an expensive debug line. The `error` line prints, and its `errors.count()` is the second job. Two jobs, one of them for a line nobody saw."
+}

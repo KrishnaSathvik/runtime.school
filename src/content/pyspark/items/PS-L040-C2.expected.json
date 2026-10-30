@@ -1,0 +1,121 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "log_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "service",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "region",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "latency_ms",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "LOG-000001",
+     "catalog-api",
+     "us-east",
+     "42"
+    ],
+    [
+     "LOG-000002",
+     "auth-service",
+     "us-east",
+     "61"
+    ],
+    [
+     "LOG-000003",
+     "checkout-api",
+     "us-west",
+     "236"
+    ],
+    [
+     null,
+     null,
+     null,
+     null
+    ],
+    [
+     "LOG-000004",
+     "search-api",
+     "eu-west",
+     "118"
+    ],
+    [
+     "LOG-000005",
+     "iot-gateway",
+     "ap-south",
+     "24"
+    ],
+    [
+     "LOG-000006",
+     "checkout-api",
+     "us-east",
+     "1240"
+    ],
+    [
+     null,
+     null,
+     null,
+     null
+    ],
+    [
+     "LOG-000007",
+     "iot-gateway",
+     null,
+     null
+    ],
+    [
+     "LOG-000008",
+     "iot-gateway",
+     "ap-south",
+     "22"
+    ],
+    [
+     "LOG-000009",
+     "search-api",
+     "us-east",
+     "162"
+    ],
+    [
+     null,
+     null,
+     null,
+     null
+    ],
+    [
+     "LOG-000010",
+     "notification-worker",
+     null,
+     null
+    ]
+   ],
+   "row_count": 13
+  }
+ },
+ "hidden": [
+  "the full practice raw log",
+  "a cut-off line, a line missing its closing brace and a plain-text line",
+  "lines without a region or latency, and an empty attributes object",
+  "an empty log file"
+ ]
+}

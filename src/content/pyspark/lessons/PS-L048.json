@@ -1,0 +1,143 @@
+{
+  "id": "PS-L048",
+  "minutes": 25,
+  "lede": "A lot of business data lives in databases, not files. JDBC lets Spark read a table straight from a database, ask the database to do the filtering, and write results back, and then join that data with files from other systems.",
+  "objectives": [
+    "Read a database table into a DataFrame with the JDBC options `url`, `dbtable` and `driver`",
+    "Push work to the database with the `query` option or a subquery as `dbtable`",
+    "Read a table in parallel with `partitionColumn`, `lowerBound`, `upperBound` and `numPartitions`",
+    "Write a DataFrame back to a database with a save mode, and join a database table with a CSV file"
+  ],
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "invoices",
+      "invoice_lines",
+      "accounts"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "**JDBC** is Java's standard way to talk to a database. Spark runs on Java, so it can read any database that has a JDBC driver: PostgreSQL, MySQL, SQL Server, Oracle and many more. You tell it three things:\n\n- `url`: where the database is, as a JDBC URL. For a server it looks like `jdbc:postgresql://db-host:5432/billing`.\n- `dbtable`: the table to read.\n- `driver`: the driver's class name. It's often optional, because Spark can pick the driver from the URL.\n\nA real server also needs `user` and `password` options, which belong in a secret store, not in your code.\n\nThere's no database server here. Instead, each example uses **SQLite**, a database that lives in a single file, created under `/tmp` inside the job. The JDBC options are the same as for a server; only the URL changes. In the first example, plain Python's `sqlite3` module plays the payments app and creates a small table."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Read a database table",
+      "code": "import os, sqlite3\n\nif os.path.exists(\"/tmp/payments.db\"):\n    os.remove(\"/tmp/payments.db\")\ncon = sqlite3.connect(\"/tmp/payments.db\")\ncon.execute(\"CREATE TABLE payments (payment_id TEXT, invoice_id TEXT, amount DECIMAL(12,2), paid_on TEXT)\")\ncon.executemany(\"INSERT INTO payments VALUES (?, ?, ?, ?)\", [\n    (\"PAY-001\", \"INV-000001\", \"244.00\", \"2025-11-02\"),\n    (\"PAY-002\", \"INV-000002\", \"100.00\", \"2025-12-01\"),\n    (\"PAY-003\", \"INV-000002\", \"132.00\", \"2025-12-15\"),\n])\ncon.commit()\ncon.close()\n\npayments = (spark.read.format(\"jdbc\")\n            .option(\"url\", \"jdbc:sqlite:/tmp/payments.db\")\n            .option(\"dbtable\", \"payments\")\n            .option(\"driver\", \"org.sqlite.JDBC\")\n            .load())\npayments.printSchema()\npayments.orderBy(\"payment_id\").show()\n",
+      "note": "Three payments, read through JDBC: `format(\"jdbc\")` picks the source, each `option` sets one of its settings, and `load()` reads. The column types come from the table's definition: `TEXT` became `string` and `DECIMAL(12,2)` became `decimal(12,2)`. `paid_on` was declared as text, so it's a string, not a date."
+    },
+    {
+      "kind": "text",
+      "md": "From here on, each example first saves a dataset table into the database with one line, `invoices.coalesce(1).write.jdbc(url, \"invoices\", mode=\"overwrite\")`. Writing is covered at the end of the lesson; for now it's just the way to get a table into the database. `spark.read.jdbc(url, table)` is the short form of the read in the first example.\n\nReading a whole table copies every row into Spark. Often you only need some rows and columns, and the database can pick them out before anything is sent. That's called **pushdown**. There are two ways to do it:\n\n- the `query` option takes a SQL query instead of `dbtable`.\n- `dbtable` also accepts a subquery in brackets, with a name: `(SELECT ...) AS paid`.\n\nEither way, the SQL runs inside the database, in the database's own dialect."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Let the database filter",
+      "code": "url = \"jdbc:sqlite:/tmp/billing.db\"\ninvoices.coalesce(1).write.jdbc(url, \"invoices\", mode=\"overwrite\")\n\ndue = (spark.read.format(\"jdbc\")\n       .option(\"url\", url)\n       .option(\"query\", \"SELECT invoice_id, account_id, status, total_amount FROM invoices WHERE status IN ('open', 'overdue')\")\n       .load())\ndue.orderBy(\"invoice_id\").show()\n\npaid = spark.read.jdbc(url, \"(SELECT invoice_id, total_amount FROM invoices WHERE status = 'paid') AS paid\")\npaid.orderBy(\"invoice_id\").show()\n",
+      "note": "The database ran the `WHERE`, so Spark only received the rows it asked for: one open and one overdue invoice in the first read, two paid invoices in the second. The result has only the columns the query selected."
+    },
+    {
+      "kind": "text",
+      "md": "By default a JDBC read is **one query on one connection**, so one task reads the whole table, however many cores you have. For a big table, give Spark a column to split on and it sends several queries at once, one per partition:\n\n- `partitionColumn`: a number, date or timestamp column, ideally spread evenly.\n- `lowerBound` and `upperBound`: the range that's cut into equal slices.\n- `numPartitions`: how many slices, which is also how many connections may be open at once.\n\nWith bounds 5 and 20 and 3 partitions, the slices are 5 wide, and Spark runs three queries: `quantity < 10 OR quantity IS NULL`, `quantity >= 10 AND quantity < 15`, and `quantity >= 15`. The first and last slices are open-ended, so the bounds only decide where the cuts go. They never filter rows."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Read in parallel",
+      "code": "url = \"jdbc:sqlite:/tmp/billing.db\"\ninvoice_lines.coalesce(1).write.jdbc(url, \"invoice_lines\", mode=\"overwrite\")\n\nlines = (spark.read.format(\"jdbc\")\n         .option(\"url\", url)\n         .option(\"dbtable\", \"invoice_lines\")\n         .option(\"partitionColumn\", \"quantity\")\n         .option(\"lowerBound\", 5)\n         .option(\"upperBound\", 20)\n         .option(\"numPartitions\", 3)\n         .load())\nprint(lines.rdd.getNumPartitions(), \"partitions,\", lines.count(), \"lines\")\nlines.select(\"invoice_id\", \"line_no\", \"quantity\").orderBy(\"quantity\", \"invoice_id\").show()\n",
+      "note": "Three partitions, one per query, and all 10 lines; `df.rdd.getNumPartitions()` counts a DataFrame's partitions. Quantities 1 to 4 are below the lower bound and 50 is above the upper one, but they're still read: the small ones fall in the first slice, 50 in the last. Choose bounds near the column's real minimum and maximum, or most rows land in one slice. To split a pushed-down query, pass it as a subquery in `dbtable`: the `query` option can't be combined with `partitionColumn`."
+    },
+    {
+      "kind": "text",
+      "md": "Real pipelines rarely have one source. Invoices sit in the billing database, while account details arrive as a CSV export from the CRM. Once each is read, both are just DataFrames, and a join combines them like any other. Here the CRM export is saved to `/tmp/crm/accounts` first, then read with the same schema as the `accounts` table."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Join a database table with a CSV file",
+      "code": "url = \"jdbc:sqlite:/tmp/billing.db\"\ninvoices.coalesce(1).write.jdbc(url, \"invoices\", mode=\"overwrite\")\naccounts.write.mode(\"overwrite\").csv(\"/tmp/crm/accounts\", header=True)\n\nunpaid = spark.read.jdbc(url, \"(SELECT invoice_id, account_id, status, total_amount FROM invoices WHERE status <> 'paid') AS unpaid\")\ncrm = spark.read.csv(\"/tmp/crm/accounts\", header=True, schema=accounts.schema)\n\nreport = unpaid.join(crm, on=\"account_id\", how=\"left\")\nreport.select(\"invoice_id\", \"account_name\", \"country\", \"status\", \"total_amount\").orderBy(\"invoice_id\").show(truncate=False)\n",
+      "note": "Three unpaid invoices from the database, each with the account's name and country from the CSV file. A left join keeps an invoice even if the CRM export has no row for its account; here every account was found."
+    },
+    {
+      "kind": "text",
+      "md": "`df.write.jdbc(url, table, mode=...)` writes a DataFrame into a database table. The long form is `df.write.format(\"jdbc\")` with `url` and `dbtable` options, `.mode(...)` and `.save()`. If the table doesn't exist, Spark creates it from the DataFrame's schema. The **mode** decides what happens when it does exist:\n\n- `error` (also `errorifexists`, the default) refuses and raises an error.\n- `overwrite` replaces the table's rows with the new ones.\n- `append` inserts the new rows next to the old ones. Nothing checks for repeats.\n- `ignore` does nothing if the table exists.\n\nEach partition of the DataFrame writes over its own connection. A database server handles that well, but SQLite allows only one writer at a time, so the examples write from a single partition with `coalesce(1)`."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Write back with a mode",
+      "code": "import sqlite3\n\nurl = \"jdbc:sqlite:/tmp/billing.db\"\nsummary = invoices.select(\"invoice_id\", \"account_id\", \"status\", \"total_amount\")\n\nsummary.coalesce(1).write.jdbc(url, \"invoice_summary\", mode=\"overwrite\")\nprint(\"overwrite:\", spark.read.jdbc(url, \"invoice_summary\").count())\n\nsummary.coalesce(1).write.jdbc(url, \"invoice_summary\", mode=\"append\")\nprint(\"append:   \", spark.read.jdbc(url, \"invoice_summary\").count())\n\nsummary.coalesce(1).write.jdbc(url, \"invoice_summary\", mode=\"ignore\")\nprint(\"ignore:   \", spark.read.jdbc(url, \"invoice_summary\").count())\n\n(summary.coalesce(1).write.format(\"jdbc\")\n    .option(\"url\", url)\n    .option(\"dbtable\", \"invoice_summary\")\n    .mode(\"overwrite\")\n    .save())\nprint(\"overwrite:\", spark.read.jdbc(url, \"invoice_summary\").count())\n\ncon = sqlite3.connect(\"/tmp/billing.db\")\nprint(con.execute(\"SELECT COUNT(*), SUM(total_amount) FROM invoice_summary\").fetchone())\ncon.close()\n",
+      "note": "Appending the same 5 rows gave 10; `ignore` left the table alone; `overwrite` put it back to 5. Plain Python's `sqlite3` reads the same table, just as any other program using the database would: 5 rows, totalling 1474."
+    },
+    {
+      "kind": "error-example",
+      "id": "e6",
+      "title": "Writing to a table that exists",
+      "code": "url = \"jdbc:sqlite:/tmp/billing.db\"\nsummary = invoices.select(\"invoice_id\", \"account_id\", \"status\", \"total_amount\")\nsummary.coalesce(1).write.jdbc(url, \"invoice_summary\", mode=\"overwrite\")\n\nsummary.coalesce(1).write.jdbc(url, \"invoice_summary\")\n",
+      "error": "AnalysisException",
+      "note": "The second write has no mode, so it uses `error` and refuses to touch the existing table. Say what you want: `overwrite`, `append` or `ignore`."
+    }
+  ],
+  "challenges": [
+    "PS-L048-C1",
+    "PS-L048-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "You read with the `query` option set to `SELECT invoice_id FROM invoices WHERE status = 'paid'`. Where does the `WHERE` run?",
+      "choices": [
+        "In Spark, after the whole table is copied",
+        "In the database, so only paid invoices are sent to Spark",
+        "In the JDBC driver on each executor",
+        "Nowhere: `query` ignores `WHERE`"
+      ],
+      "answer": 1,
+      "why": "The query is sent to the database and runs there. Spark only receives the rows and columns it returns."
+    },
+    {
+      "id": "k2",
+      "prompt": "A read uses `partitionColumn=\"quantity\"`, `lowerBound=5`, `upperBound=20` and `numPartitions=3`. What happens to a line with quantity 50?",
+      "choices": [
+        "It's dropped, because it's above the upper bound",
+        "It causes an error",
+        "It's read, in the last partition",
+        "It's read twice"
+      ],
+      "answer": 2,
+      "why": "The bounds only decide where the slices are cut. The last slice is `quantity >= 15` with no upper limit, so 50 is read there."
+    },
+    {
+      "id": "k3",
+      "prompt": "A table is written with `mode=\"overwrite\"` from a DataFrame of 5 rows, then the same DataFrame is written twice with `mode=\"append\"`. How many rows does the table have?",
+      "choices": [
+        "5",
+        "10",
+        "15",
+        "An error on the second append"
+      ],
+      "answer": 2,
+      "why": "Overwrite leaves 5 rows and each append adds 5 more. Nothing checks for repeats."
+    }
+  ],
+  "review": [
+    "A JDBC read needs a `url` and a `dbtable`; `driver` names the driver class, and a server also needs `user` and `password`.",
+    "`spark.read.jdbc(url, table)` is the short form of `spark.read.format(\"jdbc\")...load()`.",
+    "Push work to the database with the `query` option or a subquery `(SELECT ...) AS t` as `dbtable`.",
+    "`partitionColumn`, `lowerBound`, `upperBound` and `numPartitions` split a read into parallel queries. The bounds never filter rows.",
+    "`df.write.jdbc(url, table, mode=...)` writes back; the default mode refuses an existing table, and `append` adds repeats without checking.",
+    "Data read from a database and data read from files are both DataFrames, so a join combines them."
+  ],
+  "practice": [
+    "PS-Q0236",
+    "PS-Q0237",
+    "PS-Q0238",
+    "PS-Q0239",
+    "PS-Q0240"
+  ]
+}

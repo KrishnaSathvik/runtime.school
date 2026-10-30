@@ -1,0 +1,23 @@
+{
+  "id": "P08",
+  "task": "A product team logs every view and purchase as a line of JSON, and some events get delivered twice. Build the code that streams the events, counts them, remembers the last one it handled, and counts each event only once in the report it writes.",
+  "produce": [
+    { "name": "stream.py", "about": "Reads the events, counts them, writes a checkpoint, removes repeats and writes the report." },
+    { "name": "main.py", "about": "Runs each step on the event file and prints its result." },
+    { "name": "checkpoint.txt", "about": "The id of the last event handled." },
+    { "name": "report.txt", "about": "Unique view counts per product, one per line." }
+  ],
+  "steps": {
+    "P08.m1": "Read every event from the JSON lines file, in order.",
+    "P08.m2": "Count events for a product and kind, repeats included.",
+    "P08.m3": "Save the last event's id to a checkpoint file.",
+    "P08.m4": "Count each event id only once.",
+    "P08.m5": "Write the unique view counts per product to a file."
+  },
+  "problems": [
+    "One event appears twice, as an exact copy with the same id.",
+    "The mug has both a view and a purchase, so a count must match the kind as well as the product.",
+    "Counting the copy gives 2 mug views; counting each event once gives 1."
+  ],
+  "preparation": ["PY-L37-05", "PY-L20-05", "PY-L20-03", "PY-L12-05", "PY-L08-04", "PY-L19-02"]
+}

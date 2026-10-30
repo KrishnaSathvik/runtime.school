@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0006",
+  "kind": "predict",
+  "slug": "tasks-per-step",
+  "lesson": "PS-L002",
+  "role": "foundation",
+  "format": "concept_or_trace",
+  "difficulty": "easy",
+  "minutes": 4,
+  "title": "Tasks per step",
+  "prompt": "The `deployments` table is read from one small file. This program spreads it out twice. What does it print? Type each line on its own line.",
+  "program": "by4 = deployments.repartition(4)\nby6 = by4.repartition(6)\nprint(deployments.rdd.getNumPartitions(), by4.rdd.getNumPartitions(), by6.rdd.getNumPartitions())\nprint(by6.count())\nprint(by6.rdd.getNumPartitions() // spark.sparkContext.defaultParallelism)\n",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "Spark reads a small file as a single partition.",
+    "`repartition(n)` gives back a new DataFrame with exactly `n` partitions and the same rows.",
+    "A step over 6 partitions is 6 tasks. How many rounds do 2 cores need to run them?"
+  ],
+  "explanation": "The file is read as 1 partition, `by4` has 4 and `by6` has 6, and none of them changes the others. Spreading rows never changes how many there are, so `by6` still holds the 4 deployments. A step over `by6` is 6 tasks, and with 2 cores they run in `6 // 2` = 3 rounds."
+}

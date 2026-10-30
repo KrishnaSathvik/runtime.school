@@ -1,0 +1,300 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "example": {
+   "schema": [
+    {
+     "name": "run",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "outcome",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "batch_ids",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "committed",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "alerts_in_sink",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     1,
+     "failed",
+     "0,1,2,3",
+     "0,1,2",
+     5
+    ],
+    [
+     2,
+     "finished",
+     "3,4,5",
+     "0,1,2,3,4,5",
+     5
+    ]
+   ],
+   "row_count": 2,
+   "inputs": {
+    "sensor_readings": [
+     [
+      "R9001",
+      "DEV-101",
+      "2026-05-12T00:00:00",
+      "2026-05-12T00:02:00",
+      "0",
+      "{\"temperature_c\":31.0,\"humidity_pct\":60.0,\"battery_v\":3.9,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9002",
+      "DEV-101",
+      "2026-05-12T00:30:00",
+      "2026-05-12T00:31:00",
+      "0",
+      "{\"temperature_c\":33.5,\"humidity_pct\":82.0,\"battery_v\":3.9,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9003",
+      "DEV-102",
+      "2026-05-12T00:15:00",
+      "2026-05-12T00:15:40",
+      "0",
+      "{\"temperature_c\":2.0,\"humidity_pct\":null,\"battery_v\":3.25,\"status\":\"low_battery\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9002",
+      "DEV-101",
+      "2026-05-12T00:30:00",
+      "2026-05-12T00:45:00",
+      "0",
+      "{\"temperature_c\":33.5,\"humidity_pct\":82.0,\"battery_v\":3.9,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9004",
+      "DEV-199",
+      "2026-05-12T01:00:00",
+      "2026-05-12T01:00:10",
+      "1",
+      "{\"temperature_c\":20.0,\"humidity_pct\":50.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9005",
+      "DEV-103",
+      "2026-05-12T01:00:00",
+      "2026-05-12T01:00:20",
+      "1",
+      "{\"temperature_c\":45.0,\"humidity_pct\":50.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9006",
+      "DEV-101",
+      "2026-05-12T01:20:00",
+      "2026-05-12T02:25:00",
+      "2",
+      "{\"temperature_c\":34.0,\"humidity_pct\":70.0,\"battery_v\":3.9,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9007",
+      "DEV-104",
+      "2026-05-12T02:00:00",
+      "2026-05-12T02:01:00",
+      "2",
+      "{\"temperature_c\":999.0,\"humidity_pct\":50.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9007",
+      "DEV-104",
+      "2026-05-12T02:00:00",
+      "2026-05-12T03:05:00",
+      "3",
+      "{\"temperature_c\":999.0,\"humidity_pct\":50.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9008",
+      "DEV-101",
+      "2026-05-12T03:15:00",
+      "2026-05-12T03:16:00",
+      "3",
+      "{\"temperature_c\":null,\"humidity_pct\":85.0,\"battery_v\":3.9,\"status\":null,\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9009",
+      "DEV-101",
+      "2026-05-12T00:45:00",
+      "2026-05-12T04:10:00",
+      "4",
+      "{\"temperature_c\":36.0,\"humidity_pct\":70.0,\"battery_v\":3.9,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9010",
+      "DEV-104",
+      "2026-05-12T06:30:00",
+      "2026-05-12T06:31:00",
+      "6",
+      "{\"temperature_c\":25.0,\"humidity_pct\":null,\"battery_v\":3.7,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      null
+     ]
+    ],
+    "devices": [
+     [
+      "DEV-101",
+      "climate",
+      "TH-210",
+      "2025-06-01",
+      "true"
+     ],
+     [
+      "DEV-102",
+      "temp",
+      "T-100",
+      "2025-06-01",
+      "true"
+     ],
+     [
+      "DEV-103",
+      "climate",
+      "TH-210",
+      "2025-06-01",
+      "false"
+     ],
+     [
+      "DEV-104",
+      "climate",
+      "TH-210",
+      "2025-06-01",
+      "true"
+     ]
+    ],
+    "device_locations": [
+     [
+      "DEV-101",
+      "greenhouse",
+      "B1",
+      "0",
+      "52.38",
+      "4.9",
+      "2025-06-01",
+      null
+     ],
+     [
+      "DEV-102",
+      "cold_store",
+      "B1",
+      "0",
+      "52.38",
+      "4.9",
+      "2025-06-01",
+      null
+     ],
+     [
+      "DEV-103",
+      "office_north",
+      "B1",
+      "0",
+      "52.38",
+      "4.9",
+      "2025-06-01",
+      null
+     ],
+     [
+      "DEV-104",
+      "server_room",
+      "B1",
+      "0",
+      "52.38",
+      "4.9",
+      "2025-01-01",
+      "2026-05-11"
+     ],
+     [
+      "DEV-104",
+      "office_north",
+      "B1",
+      "0",
+      "52.38",
+      "4.9",
+      "2026-05-12",
+      null
+     ]
+    ]
+   }
+  },
+  "project": {
+   "schema": [
+    {
+     "name": "run",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "outcome",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "batch_ids",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "committed",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "alerts_in_sink",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     1,
+     "failed",
+     "0,1,2,3",
+     "0,1,2",
+     66
+    ],
+    [
+     2,
+     "finished",
+     "3,4,5,6",
+     "0,1,2,3,4,5,6",
+     85
+    ]
+   ],
+   "row_count": 2
+  }
+ },
+ "hidden": [
+  "only two micro-batches, so the sink never drops",
+  "the outage falls on the last micro-batch"
+ ]
+}

@@ -1,0 +1,175 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "window_start",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "device_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "readings",
+     "type": "bigint",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "2026-04-14T09:00:00",
+     "DEV-002",
+     1
+    ],
+    [
+     "2026-04-14T09:00:00",
+     "DEV-001",
+     1
+    ],
+    [
+     "2026-04-14T09:15:00",
+     "DEV-001",
+     1
+    ],
+    [
+     "2026-04-14T09:30:00",
+     "DEV-001",
+     1
+    ],
+    [
+     "2026-04-14T09:30:00",
+     "DEV-002",
+     1
+    ]
+   ],
+   "row_count": 5,
+   "inputs": {
+    "sensor_readings": [
+     [
+      "R0401",
+      "DEV-001",
+      "2026-04-14T09:00:00",
+      "2026-04-14T09:00:20",
+      "0",
+      "{\"temperature_c\":3.3,\"humidity_pct\":null,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"cold_chain\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0402",
+      "DEV-002",
+      "2026-04-14T09:00:00",
+      "2026-04-14T09:00:31",
+      "0",
+      "{\"temperature_c\":21.5,\"humidity_pct\":41.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"hvac\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0403",
+      "DEV-001",
+      "2026-04-14T09:15:00",
+      "2026-04-14T09:15:12",
+      "1",
+      "{\"temperature_c\":3.3,\"humidity_pct\":null,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"cold_chain\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0404",
+      "DEV-002",
+      "2026-04-14T09:15:00",
+      "2026-04-14T09:15:40",
+      "1",
+      "{\"temperature_c\":999.0,\"humidity_pct\":41.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"hvac\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0401",
+      "DEV-001",
+      "2026-04-14T09:00:00",
+      "2026-04-14T09:06:20",
+      "1",
+      "{\"temperature_c\":3.3,\"humidity_pct\":null,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"cold_chain\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0405",
+      "DEV-001",
+      "2026-04-14T09:30:00",
+      "2026-04-14T09:30:18",
+      "2",
+      "{\"temperature_c\":3.3,\"humidity_pct\":null,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"cold_chain\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0406",
+      "DEV-002",
+      "2026-04-14T09:30:00",
+      "2026-04-14T09:30:44",
+      "2",
+      "{\"temperature_c\":null,\"humidity_pct\":41.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"hvac\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0406",
+      "DEV-002",
+      "2026-04-14T09:30:00",
+      "2026-04-14T09:36:44",
+      "2",
+      "{\"temperature_c\":null,\"humidity_pct\":41.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"hvac\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0407",
+      "DEV-001",
+      "2026-04-14T09:45:00",
+      "2026-04-14T09:45:09",
+      "3",
+      "{\"temperature_c\":3.3,\"humidity_pct\":null,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"cold_chain\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0408",
+      "DEV-002",
+      "2026-04-14T09:45:00",
+      "2026-04-14T09:45:27",
+      "3",
+      "{\"temperature_c\":21.5,\"humidity_pct\":41.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"hvac\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0409",
+      "DEV-001",
+      "2026-04-14T10:00:00",
+      "2026-04-14T10:00:15",
+      "4",
+      "{\"temperature_c\":3.3,\"humidity_pct\":null,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"cold_chain\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0410",
+      "DEV-002",
+      "2026-04-14T10:00:00",
+      "2026-04-14T10:00:38",
+      "4",
+      "{\"temperature_c\":21.5,\"humidity_pct\":41.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"hvac\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "two days of practice readings with repeats and glitches, in five micro-batches",
+  "copies one micro-batch later, a reading sent three times, and a repeated glitch",
+  "no repeats and no glitches",
+  "glitches next to readings with no temperature"
+ ]
+}

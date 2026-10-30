@@ -1,0 +1,365 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "table",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "rule",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "failed",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "checked",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "decision",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "transactions",
+     "required_account_id",
+     1,
+     12,
+     "quarantine"
+    ],
+    [
+     "transactions",
+     "required_amount",
+     0,
+     12,
+     "pass"
+    ],
+    [
+     "transactions",
+     "known_currency",
+     1,
+     12,
+     "quarantine"
+    ],
+    [
+     "transactions",
+     "positive_amount",
+     0,
+     12,
+     "pass"
+    ],
+    [
+     "transfers",
+     "required_from_account_id",
+     1,
+     10,
+     "quarantine"
+    ],
+    [
+     "transfers",
+     "required_to_account_id",
+     0,
+     10,
+     "pass"
+    ],
+    [
+     "transfers",
+     "different_accounts",
+     2,
+     10,
+     "stop"
+    ],
+    [
+     "transfers",
+     "positive_amount",
+     1,
+     10,
+     "stop"
+    ]
+   ],
+   "row_count": 8,
+   "inputs": {
+    "transactions": [
+     [
+      "T000001",
+      "A00001",
+      null,
+      "2026-03-02T10:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "800.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000002",
+      null,
+      null,
+      "2026-03-03T10:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "25.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000003",
+      "A00001",
+      "M001",
+      "2026-03-04T10:00:00",
+      "purchase",
+      "branch",
+      "debit",
+      "25.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000004",
+      "A00001",
+      null,
+      "2026-03-05T10:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "25.00",
+      null,
+      "posted"
+     ],
+     [
+      "T000005",
+      "A00001",
+      null,
+      "2026-03-06T10:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "25.00",
+      "GBP",
+      "posted"
+     ],
+     [
+      "T000006",
+      "A00001",
+      null,
+      "2026-03-07T10:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "25.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000007",
+      "A00008",
+      null,
+      "2026-03-08T10:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "25.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000008",
+      "A00001",
+      null,
+      "2026-03-09T10:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "3100.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000009",
+      "A00001",
+      null,
+      "2026-03-10T10:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "25.00",
+      "EUR",
+      "posted"
+     ],
+     [
+      "T000010",
+      "A00001",
+      null,
+      "2026-03-11T10:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "25.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000011",
+      "A00006",
+      null,
+      "2026-03-12T10:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "25.00",
+      "GBP",
+      "posted"
+     ],
+     [
+      "T000012",
+      "A00001",
+      null,
+      "2026-03-13T10:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "12.40",
+      "USD",
+      "posted"
+     ]
+    ],
+    "transfers": [
+     [
+      "TR00001",
+      "A00001",
+      "A00008",
+      "50.00",
+      "USD",
+      "2026-03-02T09:00:00",
+      "completed",
+      "Rent 101",
+      null
+     ],
+     [
+      "TR00002",
+      null,
+      "A00008",
+      "50.00",
+      "USD",
+      "2026-03-03T09:00:00",
+      "completed",
+      "Rent 102",
+      null
+     ],
+     [
+      "TR00003",
+      "A00008",
+      "A00008",
+      "50.00",
+      "USD",
+      "2026-03-04T09:00:00",
+      "completed",
+      "Rent 103",
+      null
+     ],
+     [
+      "TR00004",
+      "A00001",
+      "A00008",
+      "0.00",
+      "USD",
+      "2026-03-05T09:00:00",
+      "completed",
+      "Rent 104",
+      null
+     ],
+     [
+      "TR00005",
+      "A00001",
+      "A00008",
+      "50.00",
+      "USD",
+      "2026-03-06T09:00:00",
+      "completed",
+      "Rent 105",
+      null
+     ],
+     [
+      "TR00006",
+      "A00001",
+      "A00008",
+      "50.00",
+      "USD",
+      "2026-03-07T09:00:00",
+      "completed",
+      "Rent 106",
+      "TR00005"
+     ],
+     [
+      "TR00007",
+      "A00001",
+      "A00008",
+      "50.00",
+      "USD",
+      "2026-03-08T09:00:00",
+      "completed",
+      "Rent 107",
+      null
+     ],
+     [
+      "TR00008",
+      "A00001",
+      "A00006",
+      "50.00",
+      "USD",
+      "2026-03-09T09:00:00",
+      "completed",
+      "Rent 108",
+      null
+     ],
+     [
+      "TR00009",
+      "A00006",
+      "A00008",
+      "50.00",
+      "USD",
+      "2026-03-10T09:00:00",
+      "completed",
+      "Rent 109",
+      null
+     ],
+     [
+      "TR00010",
+      "A00001",
+      "A00008",
+      "50.00",
+      "USD",
+      "2026-03-11T09:00:00",
+      "completed",
+      "Rent 110",
+      null
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice feeds",
+  "feeds of different sizes, each with rules failing for exactly 10% and for more",
+  "missing accounts, amounts and currencies in both feeds",
+  "no transactions today, but some transfers",
+  "two empty feeds"
+ ]
+}

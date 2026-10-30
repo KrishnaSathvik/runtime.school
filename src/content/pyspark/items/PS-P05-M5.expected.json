@@ -1,0 +1,321 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "example": {
+   "schema": [
+    {
+     "name": "cutoff",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "training_rows",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "last_training_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "evaluation_rows",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "first_evaluation_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "featured_users",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "cold_start_users",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "featured_movies",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "cold_start_movies",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "cold_evaluation_rows",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "features_match",
+     "type": "boolean",
+     "nullable": true
+    },
+    {
+     "name": "leak_free",
+     "type": "boolean",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "2026-07-01 00:00:00",
+     4,
+     "2026-06-30T23:59:59",
+     4,
+     "2026-07-01T00:00:00",
+     5,
+     3,
+     4,
+     2,
+     3,
+     true,
+     true
+    ]
+   ],
+   "row_count": 1,
+   "inputs": {
+    "ratings": [
+     [
+      "U01",
+      "M01",
+      "3.0",
+      "2026-03-01T10:00:00"
+     ],
+     [
+      "U01",
+      "M01",
+      "3.0",
+      "2026-03-01T10:00:00"
+     ],
+     [
+      "U01",
+      "M02",
+      "4.0",
+      "2026-05-10T09:00:00"
+     ],
+     [
+      "U02",
+      "M01",
+      "2.0",
+      "2026-06-20T08:00:00"
+     ],
+     [
+      "U02",
+      "M01",
+      "4.5",
+      "2026-07-03T08:00:00"
+     ],
+     [
+      "U03",
+      "M02",
+      "5.0",
+      "2026-07-01T00:00:00"
+     ],
+     [
+      "U03",
+      "M03",
+      "3.5",
+      "2026-08-02T21:00:00"
+     ],
+     [
+      "U03",
+      "M03",
+      "4.0",
+      "2026-08-15T21:00:00"
+     ],
+     [
+      "U02",
+      "M02",
+      "3.5",
+      "2026-06-30T23:59:59"
+     ],
+     [
+      "U04",
+      "M03",
+      "1.0",
+      "2026-09-01T12:00:00"
+     ]
+    ],
+    "users": [
+     [
+      "U01",
+      "2025-01-10",
+      "US",
+      "25-34",
+      "tv"
+     ],
+     [
+      "U02",
+      "2025-02-11",
+      "US",
+      "25-34",
+      "tv"
+     ],
+     [
+      "U03",
+      "2025-03-12",
+      "US",
+      "25-34",
+      "tv"
+     ],
+     [
+      "U04",
+      "2025-04-13",
+      "US",
+      "25-34",
+      "tv"
+     ],
+     [
+      "U05",
+      "2025-05-14",
+      "US",
+      "25-34",
+      "tv"
+     ]
+    ],
+    "movies": [
+     [
+      "M01",
+      "Film 01",
+      "2000",
+      "Drama",
+      "Drama|Drama",
+      "90",
+      "en",
+      "PG"
+     ],
+     [
+      "M02",
+      "Film 02",
+      "2001",
+      "Comedy",
+      "Comedy|Drama",
+      "91",
+      "en",
+      "PG"
+     ],
+     [
+      "M03",
+      "Film 03",
+      "2002",
+      "Sci-Fi",
+      "Sci-Fi|Drama",
+      "92",
+      "en",
+      "PG"
+     ],
+     [
+      "M04",
+      "Film 04",
+      "2003",
+      "Horror",
+      "Horror|Drama",
+      "93",
+      "en",
+      "PG"
+     ]
+    ]
+   }
+  },
+  "project": {
+   "schema": [
+    {
+     "name": "cutoff",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "training_rows",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "last_training_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "evaluation_rows",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "first_evaluation_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "featured_users",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "cold_start_users",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "featured_movies",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "cold_start_movies",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "cold_evaluation_rows",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "features_match",
+     "type": "boolean",
+     "nullable": true
+    },
+    {
+     "name": "leak_free",
+     "type": "boolean",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "2026-07-01 00:00:00",
+     3102,
+     "2026-06-30T23:00:33",
+     1466,
+     "2026-07-01T01:42:29",
+     900,
+     225,
+     320,
+     6,
+     354,
+     true,
+     true
+    ]
+   ],
+   "row_count": 1
+  }
+ },
+ "hidden": [
+  "the full practice tables",
+  "re-ratings across the cutoff, ties, copies and members seen only after it",
+  "every rating on or after the cutoff",
+  "empty tables"
+ ]
+}

@@ -1,0 +1,47 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D15",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "api_requests"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "false\nNone\nfalse\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "",
+   "error": {
+    "type": "IllegalArgumentException",
+    "message": "requirement failed: Supplied level VERBOSE did not match one of: ALL,DEBUG,ERROR,WARN,INFO,OFF,FATAL,TRACE",
+    "line": 1,
+    "condition": null
+   }
+  },
+  "e3": {
+   "stdout": "INFO requests_report: read 12 requests in 1 partition(s)\nWARNING requests_report: 1 partition(s) for 2 cores: some cores will sit idle\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "4\nfailed with ArithmeticException\ngood SUCCEEDED [(2, 0), (1, 0)]\nbad FAILED [(2, 1)]\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "exit code: 0\napp: rows 8\napp: failed with ArithmeticException\njob 0 JobSucceeded\njob 1 JobFailed\n5 tasks ended\n4 succeeded\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "exit code: 0\napp: rows 8\napp: failed with ArithmeticException\nERROR TaskSetManager: Task 2 in stage 1.0 failed 1 times; aborting job\n",
+   "error": null
+  }
+ }
+}

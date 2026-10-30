@@ -1,0 +1,51 @@
+{
+  "id": "PS-L089-C1",
+  "slug": "price-features-from-the-past",
+  "lesson": "PS-L089",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Price features from the past",
+  "dataset": {
+    "id": "PS-D10",
+    "version": "1.0.0"
+  },
+  "prompt": "A model will predict each day's move, so its inputs may only use what was known before that day closed. Write `solve(daily_prices)` so every price row gets the day's return and the average of the three trading days before it.",
+  "rules": [
+    "Work on each `symbol` on its own, in `trade_date` order. \"Previous\" means the symbol's previous row, whatever the calendar gap.",
+    "`ret_1d` is `close` divided by the previous row's `close`, minus 1, rounded to 3 decimal places. It is NULL on a symbol's first row.",
+    "`ma_3` is the average `close` of the three rows before the current one, not including it, rounded to 2 decimal places. It is NULL until a symbol has three earlier rows.",
+    "Return `symbol`, `trade_date`, `close`, `ret_1d` and `ma_3`, in that order, with `ret_1d` and `ma_3` as doubles. Keep every row."
+  ],
+  "hints": [
+    "One window, `Window.partitionBy(\"symbol\").orderBy(\"trade_date\")`, serves `F.lag` and, with a frame, the moving average.",
+    "`rowsBetween(-3, -1)` is the three rows before the current one. Near the start of a symbol the frame holds fewer rows, so check `F.count(\"close\")` over the same frame.",
+    "Cast `close` to double before dividing and averaging, then `F.round`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "daily_prices"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(daily_prices):\n    # Add ret_1d and ma_3, using only earlier rows of the same symbol.\n    return daily_prices\n",
+  "output": {
+    "columns": [
+      "symbol",
+      "trade_date",
+      "close",
+      "ret_1d",
+      "ma_3"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

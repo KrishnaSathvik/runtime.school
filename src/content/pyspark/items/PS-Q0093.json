@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0093",
+  "slug": "wet-readings",
+  "lesson": "PS-L019",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Wet readings",
+  "dataset": {
+    "id": "PS-D13",
+    "version": "1.0.0"
+  },
+  "prompt": "The flood team studies every reading where rain fell. Write `solve(observations)` so it returns the `observation_id`, `station_id`, `observed_at` and `precipitation_mm` of the readings with rain that weren't flagged suspect.",
+  "rules": [
+    "Rain fell when `precipitation_mm` is more than 0.0. A reading of exactly 0.0 was dry.",
+    "NaN in `precipitation_mm` is a gauge fault, not rain, so leave it out. An empty value is left out too.",
+    "Leave out readings whose `quality_flag` is `suspect`. A reading with no flag at all stays in.",
+    "Return the four columns in that order, duplicates included."
+  ],
+  "hints": [
+    "Try `F.col(\"precipitation_mm\") > 0` on its own and look at the result: a NaN reading is there. Spark treats NaN as larger than every number.",
+    "Add `~F.isnan(\"precipitation_mm\")` to shut out the faulty readings. An empty value already fails `> 0`.",
+    "`quality_flag != \"suspect\"` isn't true for an empty flag, so that row would vanish. Keep it with `F.col(\"quality_flag\").isNull() | (F.col(\"quality_flag\") != \"suspect\")`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "observations"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(observations):\n    # Return the rainy readings that weren't flagged suspect.\n    return observations\n",
+  "output": {
+    "columns": [
+      "observation_id",
+      "station_id",
+      "observed_at",
+      "precipitation_mm"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Two different kinds of missing value pull in opposite directions. NaN is a real value, and Spark sorts it above every number, so `precipitation_mm > 0` is true for a faulty gauge; `~F.isnan(\"precipitation_mm\")` removes it. A null is the other way round: a comparison with it isn't true, so an empty rain value drops out by itself, but so does an empty `quality_flag` under `!= \"suspect\"`, which is why the flag check needs `isNull() |`. Together: `observations.filter((F.col(\"precipitation_mm\") > 0) & ~F.isnan(\"precipitation_mm\") & (F.col(\"quality_flag\").isNull() | (F.col(\"quality_flag\") != \"suspect\"))).select(\"observation_id\", \"station_id\", \"observed_at\", \"precipitation_mm\")`. `observations.dropna(subset=[\"precipitation_mm\"])` before the filter also works, because `dropna` counts NaN as missing."
+}

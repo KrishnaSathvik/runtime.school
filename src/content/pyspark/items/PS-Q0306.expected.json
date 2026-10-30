@@ -1,0 +1,241 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "transaction_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "merchant_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "posted_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "txn_type",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "channel",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "direction",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "currency",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "T000001",
+     "A00006",
+     null,
+     "2026-01-05T10:51:19",
+     "deposit",
+     "branch",
+     "credit",
+     "1000.00",
+     "USD",
+     "posted"
+    ],
+    [
+     "T000002",
+     null,
+     "M004",
+     "2026-01-16T07:14:10",
+     "purchase",
+     "online",
+     "debit",
+     "75.66",
+     "USD",
+     "posted"
+    ],
+    [
+     "T000003",
+     "A00001",
+     "M003",
+     "2026-01-26T16:39:39",
+     "purchase",
+     "card_present",
+     "debit",
+     "27.90",
+     "USD",
+     "posted"
+    ],
+    [
+     "T000004",
+     "A00008",
+     null,
+     "2026-01-27T08:46:16",
+     "deposit",
+     "branch",
+     "credit",
+     "800.00",
+     "USD",
+     "declined"
+    ],
+    [
+     "T000005",
+     "A00008",
+     null,
+     "2026-01-31T06:31:56",
+     "deposit",
+     "branch",
+     "credit",
+     "3100.00",
+     "USD",
+     "posted"
+    ],
+    [
+     "T000006",
+     "A00001",
+     null,
+     "2026-02-08T14:02:36",
+     "interest",
+     "system",
+     "credit",
+     "21.91",
+     "USD",
+     "posted"
+    ],
+    [
+     "T000007",
+     "A00006",
+     null,
+     "2026-02-18T17:19:13",
+     "interest",
+     "system",
+     "credit",
+     "12.51",
+     "USD",
+     "posted"
+    ],
+    [
+     "T000008",
+     "A00001",
+     "M002",
+     "2026-02-19T10:23:22",
+     "purchase",
+     "card_present",
+     "debit",
+     "15.99",
+     "USD",
+     "posted"
+    ],
+    [
+     "T000009",
+     "A00008",
+     "M001",
+     "2026-02-20T12:56:02",
+     "refund",
+     "card_present",
+     "credit",
+     "43.95",
+     "USD",
+     "posted"
+    ],
+    [
+     "T000010",
+     "A00001",
+     "M004",
+     "2026-02-21T13:36:29",
+     "purchase",
+     "card_present",
+     "debit",
+     "19.23",
+     "USD",
+     "posted"
+    ],
+    [
+     "T000011",
+     "A00008",
+     "M003",
+     "2026-02-24T12:49:59",
+     "purchase",
+     "card_present",
+     "debit",
+     "7.60",
+     "USD",
+     "posted"
+    ],
+    [
+     "T000012",
+     "A00001",
+     null,
+     "2026-02-25T22:51:19",
+     "deposit",
+     "branch",
+     "credit",
+     "500.00",
+     "USD",
+     "posted"
+    ],
+    [
+     "T000013",
+     "A99999",
+     null,
+     "2026-02-27T07:45:58",
+     "deposit",
+     "branch",
+     "credit",
+     "800.00",
+     "USD",
+     "declined"
+    ],
+    [
+     "T000014",
+     "A00006",
+     "M004",
+     "2026-02-28T18:17:37",
+     "purchase",
+     "online",
+     "debit",
+     "75.66",
+     "USD",
+     "posted"
+    ]
+   ],
+   "row_count": 14
+  }
+ },
+ "hidden": [
+  "the full practice transactions",
+  "pound amounts whose dollar value ends in half a cent",
+  "transactions with no currency or no amount",
+  "an empty morning load"
+ ]
+}

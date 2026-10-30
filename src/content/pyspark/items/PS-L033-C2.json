@@ -1,0 +1,26 @@
+{
+  "id": "PS-L033-C2",
+  "slug": "second-highest-salary",
+  "lesson": "PS-L033",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Second-highest salary",
+  "dataset": { "id": "PS-D03", "version": "1.0.0" },
+  "prompt": "For a pay benchmark, HR needs the people on the second-highest salary of each department, counting only active staff. Write `solve(employees)` to find them.",
+  "rules": [
+    "Only employees whose `status` is `active` count. Leave out on-leave and terminated people before working out the salaries.",
+    "The second-highest salary is the next salary below the highest in the `department_id`. If two people share the highest, the second-highest is the salary after theirs.",
+    "Return everyone on that salary: `department_id`, `employee_id` and `salary`. A department with only one salary returns nothing."
+  ],
+  "hints": [
+    "Filter to active employees first, then rank salaries within each department.",
+    "You want distinct salary levels, numbered without gaps, so equal salaries share a number.",
+    "`F.dense_rank()` gives equal salaries the same number with no gaps. Order its window per department from the highest salary down, then keep number 2. `rank` would skip 2 after a tie at the top."
+  ],
+  "entry": "solve",
+  "inputs": ["employees"],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(employees):\n    # The active people on each department's second-highest salary.\n    return employees\n",
+  "output": { "columns": ["department_id", "employee_id", "salary"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

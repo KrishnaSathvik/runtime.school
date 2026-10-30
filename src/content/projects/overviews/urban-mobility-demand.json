@@ -1,0 +1,60 @@
+{
+  "id": "urban-mobility-demand",
+  "task": "You support a city transportation planning team that is placing curb space and taxi stands for 2026. Using trusted records only, find which taxi trips can be trusted, when and where demand peaks, and how airport trips differ from the rest.",
+  "produce": [
+    {
+      "name": "Trip quality check",
+      "about": "Trips, each kind of bad record, and the valid trips that remain."
+    },
+    {
+      "name": "Demand by hour",
+      "about": "Valid trips, share and average fare for each pickup hour."
+    },
+    {
+      "name": "Demand by borough",
+      "about": "Valid trips, revenue and average distance for each pickup borough."
+    },
+    {
+      "name": "Airport comparison",
+      "about": "Airport and other card-paid pickups compared on fare, distance and tipping."
+    },
+    {
+      "name": "Demand profile",
+      "about": "Three findings and one planning recommendation."
+    }
+  ],
+  "labels": {
+    "understand-data": "Explore trips",
+    "validate-trips": "Valid trips",
+    "demand-time": "By hour",
+    "demand-location": "By borough",
+    "airports": "Airports",
+    "synthesis": "Conclusions",
+    "report": "Report"
+  },
+  "summaries": {
+    "understand-data": "Find a zero-distance trip and a negative total, and decide whether they count as demand.",
+    "validate-trips": "Count each kind of bad record and how many valid trips remain.",
+    "demand-time": "Profile valid trips and fares by hour of pickup.",
+    "demand-location": "Compare pickup boroughs by trips, revenue and trip length.",
+    "airports": "Compare airport and other pickups on fare, distance and tips.",
+    "synthesis": "Decide where and when curb space matters most, and what excluding bad trips changed.",
+    "report": "Write three findings and one planning recommendation."
+  },
+  "problems": [
+    "Over 3,000 trips report a distance of zero.",
+    "A few trips report more than 100 miles, the longest over 200,000 miles.",
+    "About 2,200 trips have a negative total from refunds and voids.",
+    "Over 300 trips have a drop-off time that isn't after the pickup.",
+    "One trip was picked up on 31 December 2024, before the quarter starts.",
+    "Tips are recorded only for card payments, so cash trips look like they never tip."
+  ],
+  "preparation": [
+    "filter-with-where",
+    "combine-conditions",
+    "group-into-summaries",
+    "connect-tables-with-join",
+    "readable-queries-with-ctes",
+    "dates-and-monthly-analysis"
+  ]
+}

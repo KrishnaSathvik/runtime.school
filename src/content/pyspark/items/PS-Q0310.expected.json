@@ -1,0 +1,56 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "transaction_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "posted_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "T000004",
+     "A00008",
+     "2026-01-27",
+     "800.00"
+    ],
+    [
+     "T000013",
+     "A99999",
+     "2026-02-27",
+     "800.00"
+    ]
+   ],
+   "row_count": 2
+  }
+ },
+ "hidden": [
+  "the full practice transactions",
+  "a morning load with no declined transactions, so the clean-up deleted nothing",
+  "a declined transaction listed twice, next to a posted copy of another",
+  "a declined transaction with no account, time or amount",
+  "an empty morning load"
+ ]
+}

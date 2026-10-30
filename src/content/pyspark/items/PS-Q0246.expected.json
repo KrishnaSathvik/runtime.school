@@ -1,0 +1,59 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "client_region",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "requests",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "bytes_sent",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "us-east",
+     5,
+     28872
+    ],
+    [
+     "eu-west",
+     3,
+     45410
+    ],
+    [
+     "us-west",
+     2,
+     19610
+    ],
+    [
+     "ap-south",
+     2,
+     239
+    ]
+   ],
+   "row_count": 4
+  }
+ },
+ "hidden": [
+  "the full practice requests",
+  "requests with no bytes value, including a region with none at all",
+  "requests with no region",
+  "every request from one region",
+  "an empty requests table"
+ ]
+}

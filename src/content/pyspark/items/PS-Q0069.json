@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0069",
+  "slug": "fix-the-disputed-cents",
+  "lesson": "PS-L014",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 6,
+  "title": "Fix the disputed cents",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "The card network wants each disputed amount in whole cents as a `bigint`. The function below was written for it, but the network rejects the file, and some amounts come out a cent short. Fix `solve(disputes)`.",
+  "rules": [
+    "Return three columns, in this order: `dispute_id`, `status`, `disputed_cents`.",
+    "`disputed_cents` is `disputed_amount` in cents, as a `bigint`, exactly: 9.29 is 929. No cent may be lost.",
+    "A missing amount stays missing. Keep every dispute, duplicates included."
+  ],
+  "hints": [
+    "Press Check and read the first message: the type of `disputed_cents` is wrong.",
+    "With the type fixed, some amounts are still a cent short. A `double` can't hold 9.29 exactly; it holds something a hair below it.",
+    "Decimal arithmetic is exact. Multiply the decimal itself by 100 and cast only the result."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "disputes"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(disputes):\n    return disputes.select(\n        \"dispute_id\",\n        \"status\",\n        (F.col(\"disputed_amount\").cast(\"double\") * 100).cast(\"int\").alias(\"disputed_cents\"),\n    )\n",
+  "output": {
+    "columns": [
+      "dispute_id",
+      "status",
+      "disputed_cents"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Two bugs. The result is cast to `int` where the network wants a `bigint`. And the amount goes through a `double` first: 9.29 as a double is 9.2899999…, times 100 is 928.9999…, and casting to a whole number drops the fraction, so it becomes 928. Keep the arithmetic in decimals, where it is exact, and cast at the end: `(F.col(\"disputed_amount\") * 100).cast(\"bigint\")`. Most amounts happen to survive the double, which is why the sample looks fine once the type is right."
+}

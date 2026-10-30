@@ -1,0 +1,57 @@
+{
+  "id": "PS-Q0226",
+  "slug": "contacts-as-avro",
+  "lesson": "PS-L046",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Contacts as Avro",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "The event platform takes contacts as Avro files. Write `save(contacts, path)` so it saves the contacts at `path` as Avro. `solve` is written for you: it saves them and reads the folder back as Avro.",
+  "rules": [
+    "Save every contact with every column, as Avro, at `path`.",
+    "The folder may already hold an earlier export: replace it, don't add to it.",
+    "`solve` returns what reading the folder gives: the columns of `contacts`, in the same order, with the same types.",
+    "Keep repeated rows. An empty table gives an empty export."
+  ],
+  "hints": [
+    "Avro is written through the general writer: `format(...)`, then `save(path)`.",
+    "Writing to a folder that already exists fails unless you choose a mode.",
+    "`.mode(\"overwrite\")` replaces the folder; `append` would leave the old rows next to the new ones."
+  ],
+  "explanation": "One line does it: `contacts.write.mode(\"overwrite\").format(\"avro\").save(path)`. Avro keeps the schema inside the file, so `is_primary` comes back as a boolean and the columns keep their order without any read options. `overwrite` matters because the folder is there from the run before; the default mode raises an error and `append` doubles the rows. Writing Parquet or JSON instead fails here, because the folder is read as Avro.",
+  "entry": "solve",
+  "inputs": [
+    "contacts"
+  ],
+  "starter": "def save(contacts, path):\n    # Save the contacts at `path` as Avro.\n    pass\n\n\ndef solve(contacts):\n    path = \"/tmp/platform/contacts_avro\"\n    save(contacts, path)\n    return spark.read.format(\"avro\").load(path)\n",
+  "output": {
+    "columns": [
+      "contact_id",
+      "account_id",
+      "first_name",
+      "last_name",
+      "job_title",
+      "email",
+      "phone",
+      "is_primary"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

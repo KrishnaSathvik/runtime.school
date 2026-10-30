@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0301",
+  "slug": "rows-written-per-version",
+  "lesson": "PS-L061",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Rows written per version",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "The accounts table was loaded, appended to by a rerun, then overwritten. Write `solve` so it returns the table's history: one row per version, with the write mode Delta recorded and how many rows that write wrote.",
+  "rules": [
+    "One row per version in the table's history. Don't count versions by hand: a write that changes nothing makes no version.",
+    "`mode` is the mode Delta recorded for the write, such as `Append`.",
+    "`rows_written` is the number of rows the write wrote, as a whole number (`bigint`).",
+    "Don't change `build_table`."
+  ],
+  "hints": [
+    "`DeltaTable.forPath(spark, path).history()` is a DataFrame with one row per version. Print its columns.",
+    "`operationParameters` and `operationMetrics` are maps of text to text. Read a key with brackets, as with a struct field: `F.col(\"operationParameters\")[\"mode\"]`.",
+    "The rows a write wrote are under `numOutputRows`, stored as text. Cast it."
+  ],
+  "explanation": "History already has everything: select `version`, read the mode from the `operationParameters` map and the row count from the `operationMetrics` map, and cast the count, which is stored as text, to `bigint`: `history().select(\"version\", F.col(\"operationParameters\")[\"mode\"].alias(\"mode\"), F.col(\"operationMetrics\")[\"numOutputRows\"].cast(\"bigint\").alias(\"rows_written\"))`. Collecting the rows and building a DataFrame from `row.operationParameters[\"mode\"]` works too. Writing three rows by hand breaks when there are no accounts: with nothing to add and nothing to replace, the append and the overwrite write no version, and the history has only version 0.",
+  "entry": "solve",
+  "inputs": [
+    "accounts"
+  ],
+  "starter": "import shutil\n\nfrom pyspark.sql import functions as F\nfrom delta.tables import DeltaTable\n\n\ndef build_table(accounts, path):\n    # Three loads, replayed on a fresh table. Don't change this.\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty folder on every run\n    accounts.write.format(\"delta\").save(path)  # first load\n    accounts.write.format(\"delta\").mode(\"append\").save(path)  # a rerun that appended\n    accounts.write.format(\"delta\").mode(\"overwrite\").save(path)  # the fix: replace the table\n\n\ndef solve(accounts):\n    path = \"/tmp/crm/accounts\"\n    build_table(accounts, path)\n    # One row per version: version, mode, rows_written.\n    return DeltaTable.forPath(spark, path).history().select(\"version\")\n",
+  "output": {
+    "columns": [
+      "version",
+      "mode",
+      "rows_written"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

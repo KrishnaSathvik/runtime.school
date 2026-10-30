@@ -1,0 +1,121 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "log_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "logged_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "level",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "service",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "attributes_json",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "LOG-000001",
+     "2026-04-14T10:00:02.142000",
+     "INFO",
+     "catalog-api",
+     "{\"cache\":\"hit\",\"host\":\"catalog-api-7f9c2\",\"latency_ms\":\"42\",\"region\":\"us-east\"}"
+    ],
+    [
+     "LOG-000002",
+     "2026-04-14T10:00:09.061000",
+     "INFO",
+     "auth-service",
+     "{\"grant_type\":\"client_credentials\",\"host\":\"auth-service-a41d8\",\"latency_ms\":\"61\",\"region\":\"us-east\"}"
+    ],
+    [
+     "LOG-000003",
+     "2026-04-14T10:00:14.936000",
+     "INFO",
+     "checkout-api",
+     "{\"host\":\"checkout-api-7f9c2\",\"latency_ms\":\"236\",\"order_ref\":\"ord-730917\",\"payment_provider\":\"banklink\",\"region\":\"us-west\"}"
+    ],
+    [
+     "LOG-000004",
+     "2026-04-14T10:00:21.418000",
+     "INFO",
+     "search-api",
+     "{\"host\":\"search-api-c03be\",\"latency_ms\":\"118\",\"query_terms\":\"4\",\"region\":\"eu-west\",\"result_count\":\"48\"}"
+    ],
+    [
+     "LOG-000005",
+     "2026-04-14T10:00:47.224000",
+     "INFO",
+     "iot-gateway",
+     "{\"device_id\":\"DEV-0003\",\"firmware\":\"1.8.4\",\"host\":\"iot-gateway-a41d8\",\"latency_ms\":\"24\",\"region\":\"ap-south\"}"
+    ],
+    [
+     "LOG-000006",
+     "2026-04-14T10:01:00.140000",
+     "ERROR",
+     "checkout-api",
+     "{\"host\":\"checkout-api-a41d8\",\"latency_ms\":\"1240\",\"order_ref\":\"ord-673729\",\"payment_provider\":\"banklink\",\"region\":\"us-east\"}"
+    ],
+    [
+     "LOG-000007",
+     "2026-04-14T10:01:03",
+     "WARN",
+     "iot-gateway",
+     "{\"device_id\":\"DEV-0002\",\"error_type\":\"HeartbeatMissed\",\"host\":\"iot-gateway-a41d8\"}"
+    ],
+    [
+     "LOG-000008",
+     "2026-04-14T10:01:12.522000",
+     "INFO",
+     "iot-gateway",
+     "{\"device_id\":\"DEV-0001\",\"firmware\":\"1.8.4\",\"host\":\"iot-gateway-a41d8\",\"latency_ms\":\"22\",\"region\":\"ap-south\"}"
+    ],
+    [
+     "LOG-000009",
+     "2026-04-14T10:01:21.562000",
+     "INFO",
+     "search-api",
+     "{\"host\":\"search-api-7f9c2\",\"latency_ms\":\"162\",\"query_terms\":\"1\",\"region\":\"us-east\",\"result_count\":\"3\"}"
+    ],
+    [
+     "LOG-000010",
+     "2026-04-14T10:01:28",
+     "ERROR",
+     "notification-worker",
+     "{\"error_type\":\"ProviderTimeout\",\"host\":\"notification-worker-7f9c2\"}"
+    ]
+   ],
+   "row_count": 10
+  }
+ },
+ "hidden": [
+  "the full practice log file",
+  "attributes whose keys aren't in alphabetical order",
+  "records with missing, null or empty attributes",
+  "records whose time isn't a valid timestamp",
+  "a cut-off line, a missing brace and a plain-text line",
+  "the same record shipped twice",
+  "an empty log file"
+ ]
+}

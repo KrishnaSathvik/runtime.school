@@ -1,0 +1,337 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "project": {
+   "schema": [
+    {
+     "name": "employee_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "full_name",
+     "type": "string",
+     "nullable": false
+    },
+    {
+     "name": "email",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "phone",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "job_title",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "level",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "department_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "manager_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "hire_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "termination_date",
+     "type": "date",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "E0001",
+     "Priya Silva",
+     "priya.silva@corp.example",
+     "+1 555 278 7973",
+     "Chief Executive Officer",
+     5,
+     "D01",
+     null,
+     "2025-01-06",
+     "active",
+     null
+    ],
+    [
+     "E0002",
+     "Ada Kowal",
+     "ada.kowal@corp.example",
+     "(555) 299-3872",
+     "Head of Engineering",
+     4,
+     "D02",
+     "E0001",
+     "2025-03-07",
+     "active",
+     null
+    ],
+    [
+     "E0003",
+     "Lena Duarte",
+     "lena.duarte@corp.example",
+     "(555) 317-4274",
+     "Engineering Manager",
+     3,
+     "D02",
+     "E0005",
+     "2025-05-13",
+     "active",
+     null
+    ],
+    [
+     "E0004",
+     "Maya Lind",
+     "maya.lind@corp.example",
+     "555-367-6535",
+     "Engineering Manager",
+     3,
+     "D02",
+     "E0002",
+     "2025-04-01",
+     "active",
+     null
+    ],
+    [
+     "E0005",
+     "Jonas Mori",
+     "jonas.mori@corp.example",
+     "(555) 972-7410",
+     "Software Engineer",
+     1,
+     "D02",
+     "E0003",
+     "2025-06-05",
+     "active",
+     null
+    ],
+    [
+     "E0006",
+     "Maya Sato",
+     "maya.sato@corp.example",
+     "+1 555 761 5743",
+     "software engineer",
+     1,
+     "D02",
+     "E0004",
+     "2025-09-14",
+     "active",
+     null
+    ],
+    [
+     "E0007",
+     "Jonas Novak",
+     "jonas.novak@corp.example",
+     "(555) 557-7323",
+     "Software Engineer",
+     1,
+     "D02",
+     "E0004",
+     "2025-10-19",
+     "active",
+     null
+    ],
+    [
+     "E0008",
+     "Lena Haddad",
+     "lena.haddad@corp.example",
+     "555.230.2574",
+     "Software Engineer",
+     1,
+     "D02",
+     "E0003",
+     "2026-01-16",
+     "active",
+     null
+    ],
+    [
+     "E0009",
+     "Omar Weber",
+     "Omar.Weber@corp.example",
+     "+1 555 850 2896",
+     "Software Engineer",
+     1,
+     "D02",
+     "E0004",
+     "2025-06-26",
+     "active",
+     null
+    ],
+    [
+     "E0010",
+     "Tomas Rao",
+     "tomas.rao@corp.example",
+     "555-334-7803",
+     "Software Engineer",
+     1,
+     "D02",
+     "E0004",
+     "2025-10-10",
+     "active",
+     null
+    ],
+    [
+     "E0011",
+     "Tomas Sato",
+     "tomas.sato@corp.example",
+     "555-440-6710",
+     "Senior Software Engineer",
+     2,
+     "D02",
+     "E0003",
+     "2025-12-15",
+     "active",
+     null
+    ],
+    [
+     "E0012",
+     "Ines Haddad",
+     "ines.haddad@corp.example",
+     "555-973-7652",
+     "Software  Engineer",
+     1,
+     "D02",
+     "E0004",
+     "2025-06-12",
+     "active",
+     null
+    ],
+    [
+     "E0013",
+     "Mateo Mori",
+     "mateo.mori@corp.example",
+     "5556474533",
+     "Senior Software Engineer",
+     2,
+     "D02",
+     "E0003",
+     "2026-01-17",
+     "active",
+     null
+    ],
+    [
+     "E0014",
+     "Omar Haddad",
+     "omar.haddad@corp.example",
+     "5556847803",
+     "Senior Software Engineer",
+     2,
+     "D02",
+     "E0003",
+     "2025-11-19",
+     "active",
+     null
+    ],
+    [
+     "E0015",
+     "Anika Lind",
+     "anika.lind@corp.example",
+     "5554495260",
+     "Senior Software Engineer",
+     2,
+     "D02",
+     "E0004",
+     "2025-05-12",
+     "active",
+     null
+    ],
+    [
+     "E0016",
+     "Leo Lind",
+     "leo.lind@corp.example",
+     "555-305-9432",
+     "Senior Software Engineer",
+     2,
+     "D02",
+     "E0003",
+     "2025-10-31",
+     "active",
+     null
+    ],
+    [
+     "E0017",
+     "Kenji Kowal",
+     "kenji.kowal@corp.example",
+     "5559647971",
+     "Senior Software Engineer",
+     2,
+     "D02",
+     "E0003",
+     "2026-03-19",
+     "active",
+     null
+    ],
+    [
+     "E0018",
+     "Felix Novak",
+     "felix.novak@corp.example",
+     "555-983-7231",
+     "Software Engineer",
+     1,
+     "D02",
+     "E0003",
+     "2025-06-11",
+     "active",
+     null
+    ],
+    [
+     "E0019",
+     "Kofi Rao",
+     "kofi.rao@corp.example",
+     "(555) 781-7684",
+     "Software Engineer",
+     1,
+     "D02",
+     "E0003",
+     "2026-01-21",
+     "active",
+     null
+    ],
+    [
+     "E0020",
+     "Mateo Silva",
+     "mateo.silva@corp.example",
+     "5554804995",
+     "Software Engineer",
+     1,
+     "D02",
+     "E0003",
+     "2025-12-02",
+     "active",
+     null
+    ]
+   ],
+   "row_count": 221
+  }
+ },
+ "hidden": [
+  "the full practice employees table",
+  "odd rows: messy text, a missing manager, a repeated row",
+  "an empty employees table"
+ ]
+}

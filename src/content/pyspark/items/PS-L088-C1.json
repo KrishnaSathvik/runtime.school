@@ -1,0 +1,49 @@
+{
+  "id": "PS-L088-C1",
+  "slug": "score-films-for-next-year",
+  "lesson": "PS-L088",
+  "difficulty": "hard",
+  "minutes": 17,
+  "title": "Score films for next year",
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0"
+  },
+  "prompt": "The catalogue team wants to know which films will keep a high rating. Write `solve(ratings)` so it trains a model on how films did in 2025 and 2026, then scores every film rated in 2026 from its 2026 ratings.",
+  "rules": [
+    "A film's feature is its average `rating` over the period. Ratings before 2026-01-01 are 2025; ratings from 2026-01-01 on are 2026.",
+    "Train on films rated in both periods: the feature is the 2025 average, and the label is 1.0 when the 2026 average is 4.0 or more, else 0.0. Use `LogisticRegression` with its default settings.",
+    "Score every film that has a 2026 rating, using its 2026 average as the feature.",
+    "Return `movie_id`, `prediction` and `p_high`, the probability of 1.0 rounded to 2 decimal places."
+  ],
+  "hints": [
+    "One `groupBy(\"movie_id\")` can give both averages: `F.avg` of a `F.when(...)` that is NULL outside the period skips the other period's ratings.",
+    "Training and scoring rows need the same feature column name, so the pipeline's `VectorAssembler` finds it in both. Fit the `Pipeline` on the training rows, then `transform` the scoring rows.",
+    "`vector_to_array(\"probability\")[1]` is the probability of label 1.0."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "ratings"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.ml import Pipeline\nfrom pyspark.ml.feature import VectorAssembler\nfrom pyspark.ml.classification import LogisticRegression\nfrom pyspark.ml.functions import vector_to_array\n\n\ndef solve(ratings):\n    # Train on 2025 averages with 2026 labels, then score films from their 2026 averages.\n    return ratings\n",
+  "output": {
+    "columns": [
+      "movie_id",
+      "prediction",
+      "p_high"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 150,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

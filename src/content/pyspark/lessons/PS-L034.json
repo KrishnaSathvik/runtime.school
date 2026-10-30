@@ -1,0 +1,116 @@
+{
+  "id": "PS-L034",
+  "minutes": 22,
+  "lede": "How much did the price move since yesterday? How long since the last order? Questions about change compare each row with the one before it. `lag` and `lead` bring the previous or next row's value onto the current row, so the comparison is ordinary arithmetic.",
+  "objectives": [
+    "Read the previous or next row's value in a group with `F.lag` and `F.lead`",
+    "Compute changes, percentage changes and gaps in days between consecutive rows",
+    "Predict what the first and last row of each group get, and set a default",
+    "Explain why \"the previous row\" isn't always \"the previous day\""
+  ],
+  "dataset": {
+    "id": "PS-D10",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "daily_prices"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`daily_prices` has one row per stock (`symbol`) per trading day, with the day's `close` price and `volume`. It's loaded as a DataFrame, and `F` is `pyspark.sql.functions`.\n\n`F.lag(\"close\").over(w)` is the `close` of the **previous row** in the window: same partition, one step back in the window's order. So the window says \"each symbol on its own, in date order\": `Window.partitionBy(\"symbol\").orderBy(\"trade_date\")`. A symbol has one row per date, so the order has no ties.\n\nThe first row of each symbol has no previous row, so its `lag` is NULL. And because \"previous\" only means something in an order, a window used with `lag` or `lead` must have an `orderBy`; without one, Spark stops with an error."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Yesterday's close next to today's",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\nw = Window.partitionBy(\"symbol\").orderBy(\"trade_date\")\n\nmoves = daily_prices.select(\n    \"symbol\", \"trade_date\", \"close\",\n    F.lag(\"close\").over(w).alias(\"prev_close\"),\n    (F.col(\"close\") - F.lag(\"close\").over(w)).alias(\"change\"),\n)\nmoves.orderBy(\"symbol\", \"trade_date\").show()\n",
+      "note": "Each symbol's first day has no previous close, so `prev_close` and `change` are NULL there: a calculation with NULL is NULL. Every row is kept."
+    },
+    {
+      "kind": "text",
+      "md": "`F.lead` is the mirror image: the value from the **next** row, NULL on the last row of each group. Both take two optional arguments: how many rows to step (`F.lag(\"close\", 2)` is two rows back), and a default to use instead of NULL when there's no such row."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "The next row, further back, and a default",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\nw = Window.partitionBy(\"symbol\").orderBy(\"trade_date\")\n\ndaily_prices.filter(F.col(\"symbol\") == \"CYPH.SX\").select(\n    \"trade_date\", \"volume\",\n    F.lead(\"volume\").over(w).alias(\"next_volume\"),\n    F.lag(\"volume\", 2).over(w).alias(\"volume_2_back\"),\n    F.lag(\"volume\", 1, 0).over(w).alias(\"prev_or_0\"),\n).orderBy(\"trade_date\").show()\n",
+      "note": "`next_volume` is NULL on the last day, `volume_2_back` on the first two. With a default of 0, the first day gets 0 instead of NULL; use a default only when it really means something."
+    },
+    {
+      "kind": "text",
+      "md": "A percentage change divides the change by the previous value. Dividing two decimals gives a decimal with many places, so cast the result to the precision you want; `cast(\"decimal(10,2)\")` rounds half up to two places.\n\nLarge moves stand out once the change is a column: filter on it like any other column. Add the calculated columns first, then filter the result."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Percentage change, and the big moves",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\nw = Window.partitionBy(\"symbol\").orderBy(\"trade_date\")\nprev = F.lag(\"close\").over(w)\n\npct = daily_prices.select(\n    \"symbol\", \"trade_date\", \"close\",\n    ((F.col(\"close\") - prev) / prev * 100).cast(\"decimal(10,2)\").alias(\"pct_change\"),\n)\npct.orderBy(\"symbol\", \"trade_date\").show()\n\npct.filter((F.col(\"pct_change\") > 5) | (F.col(\"pct_change\") < -5)).orderBy(\"symbol\", \"trade_date\").show()\n",
+      "note": "ALDR.SX looks like it lost half its value on 21 January. It didn't: the company split each share in two that day, so the price halved and far more shares changed hands. Prices here aren't adjusted for splits, so a change across a split compares two different things."
+    },
+    {
+      "kind": "text",
+      "md": "`lag` steps to the previous **row**, which is not always the previous **day**. Markets are closed at weekends and on holidays, and a data feed can simply miss a day. To see how far back the previous row is, lag the date too and measure the gap with `F.datediff(later, earlier)`, which counts days."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "How far back is the previous row?",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\nw = Window.partitionBy(\"symbol\").orderBy(\"trade_date\")\n\ngaps = daily_prices.select(\n    \"symbol\", \"trade_date\",\n    F.lag(\"trade_date\").over(w).alias(\"prev_date\"),\n    F.datediff(F.col(\"trade_date\"), F.lag(\"trade_date\").over(w)).alias(\"gap_days\"),\n)\ngaps.orderBy(\"symbol\", \"trade_date\").show()\n",
+      "note": "Friday 16 to Tuesday 20 January is 4 days: a weekend plus a holiday Monday, for every symbol. BRVO.SX also has no row for the 20th, so its 21 January compares with the 16th, 5 days back. A change computed on that row covers three trading days, not one."
+    }
+  ],
+  "challenges": [
+    "PS-L034-C1",
+    "PS-L034-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "What does `F.lag(\"close\").over(Window.partitionBy(\"symbol\").orderBy(\"trade_date\"))` give on each symbol's first trading day?",
+      "choices": [
+        "0",
+        "NULL",
+        "The last close of the previous symbol",
+        "The same day's close"
+      ],
+      "answer": 1,
+      "why": "There's no earlier row in that symbol's partition, so `lag` returns NULL, unless you pass a default as the third argument."
+    },
+    {
+      "id": "k2",
+      "prompt": "A stock has rows for Friday and the following Tuesday only. On Tuesday, what is `F.lag(\"close\")` over the symbol in date order?",
+      "choices": [
+        "NULL, because Monday is missing",
+        "Friday's close",
+        "Monday's close, filled in by Spark",
+        "Tuesday's close"
+      ],
+      "answer": 1,
+      "why": "`lag` steps to the previous row, whatever its date. Lag the date as well if you need to know how far back that row is."
+    },
+    {
+      "id": "k3",
+      "prompt": "Which expression gives the change from the previous row?",
+      "choices": [
+        "F.col(\"close\") - F.lead(\"close\").over(w)",
+        "F.lag(\"close\").over(w) - F.col(\"close\")",
+        "F.col(\"close\") - F.lag(\"close\").over(w)",
+        "F.lag(F.col(\"close\") - 1).over(w)"
+      ],
+      "answer": 2,
+      "why": "Change is now minus before: the current `close` minus the previous row's. `lead` would compare with the next row, and the reversed subtraction flips the sign."
+    }
+  ],
+  "review": [
+    "`F.lag(col).over(w)` is the previous row's value in the window; `F.lead(col).over(w)` the next row's.",
+    "The window needs an order, or Spark raises an error: `Window.partitionBy(\"symbol\").orderBy(\"trade_date\")`.",
+    "The first row of each group has no `lag` (NULL) and the last has no `lead`; a third argument sets a default.",
+    "`F.lag(col, n)` steps `n` rows instead of one.",
+    "Change is `col - lag(col)`; a percentage change divides by `lag(col)`. Cast to a decimal to round.",
+    "The previous row isn't always the previous day: lag the date and use `F.datediff` to see the gap."
+  ],
+  "practice": ["PS-Q0166", "PS-Q0167", "PS-Q0168", "PS-Q0169", "PS-Q0170"]
+}

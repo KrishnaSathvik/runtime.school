@@ -1,0 +1,27 @@
+{
+  "id": "PS-L040-C2",
+  "slug": "parse-the-raw-log",
+  "lesson": "PS-L040",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Parse the raw log",
+  "dataset": { "id": "PS-D15", "version": "1.0.0" },
+  "prompt": "The raw log file arrives as one line of JSON text per record, and each record's attributes have different keys. Write `solve(application_logs_raw)` so it parses every line and returns the log id, service, region and latency.",
+  "rules": [
+    "Each line of `value` is a JSON object with `log_id`, `service` and an `attributes` object whose keys change from line to line.",
+    "`region` and `latency_ms` are the text values under those keys in `attributes`; a line without the key has a missing value.",
+    "A line that isn't valid JSON gives a row with every column missing. Keep one row per line.",
+    "Return `log_id`, `service`, `region` and `latency_ms`, all as text."
+  ],
+  "hints": [
+    "Parse `value` with `F.from_json` and a schema string that names only what you need.",
+    "Give `attributes` a map type in the schema, `MAP<STRING, STRING>`, because its keys aren't fixed.",
+    "Then read `parsed.log_id`, `parsed.service` and `F.col(\"parsed.attributes\")[\"region\"]`, each with an `alias`."
+  ],
+  "entry": "solve",
+  "inputs": ["application_logs_raw"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(application_logs_raw):\n    # Parse each raw line: log_id, service, region and latency_ms.\n    return application_logs_raw\n",
+  "output": { "columns": ["log_id", "service", "region", "latency_ms"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

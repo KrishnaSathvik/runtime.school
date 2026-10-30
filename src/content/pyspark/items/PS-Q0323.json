@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0323",
+  "kind": "predict",
+  "slug": "what-each-write-leaves",
+  "lesson": "PS-L065",
+  "role": "edge",
+  "format": "concept_or_trace",
+  "difficulty": "medium",
+  "minutes": 6,
+  "title": "What each write leaves",
+  "prompt": "`claims` has seven rows. The program writes to one Delta table five times and, after each write but the first, prints the table's columns and row count. What does it print? Type each line on its own line.",
+  "program": "path = \"/tmp/clinic/claims\"\n\n\ndef show_table():\n    t = spark.read.format(\"delta\").load(path)\n    print(\" \".join(t.columns), t.count())\n\n\nclaims.select(\"claim_id\", \"billed_amount\").write.format(\"delta\").save(path)\n\nclaims.select(\"claim_status\", \"billed_amount\", \"claim_id\").write.format(\"delta\").mode(\"append\").option(\"mergeSchema\", \"true\").save(path)\nshow_table()\n\nclaims.select(\"claim_id\").write.format(\"delta\").mode(\"overwrite\").save(path)\nshow_table()\n\nclaims.select(\"claim_id\", \"payer\").write.format(\"delta\").mode(\"overwrite\").option(\"mergeSchema\", \"true\").save(path)\nshow_table()\n\nclaims.select(\"claim_id\", \"payer\").write.format(\"delta\").mode(\"overwrite\").option(\"overwriteSchema\", \"true\").save(path)\nshow_table()\n",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "`mergeSchema` adds a new column at the end of the table's columns, wherever it sits in the batch.",
+    "A plain `overwrite` replaces the rows but keeps the table's schema; a column the batch doesn't have is empty, not gone.",
+    "With `mergeSchema`, an overwrite can still only add columns. Only `overwriteSchema` replaces the schema."
+  ],
+  "explanation": "The first append brings `claim_status` first, but `mergeSchema` adds a new column at the end, and the other columns are matched by name: `claim_id billed_amount claim_status`, 7 + 7 = 14 rows. The plain overwrite writes only `claim_id`, yet the table keeps its three columns (the other two are NULL now) and has 7 rows. Overwriting with `mergeSchema` still merges: `payer` is added at the end and nothing is removed. Only `overwriteSchema` makes the table's schema the batch's: `claim_id payer`, 7 rows."
+}

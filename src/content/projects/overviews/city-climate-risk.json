@@ -1,0 +1,60 @@
+{
+  "id": "city-climate-risk",
+  "task": "You work for a company that runs warehouses in U.S. cities, where extreme heat and heavy rain have disrupted several sites. Before the facilities team budgets for cooling and flood protection, find out how reliable the weather record is, which cities face the most extreme heat and which regions get the most heavy-rain days.",
+  "produce": [
+    {
+      "name": "Coverage check",
+      "about": "Stations, reported days out of all possible days, and days missing a maximum temperature."
+    },
+    {
+      "name": "Heat by year",
+      "about": "Days at or above 35 °C each year and the cities that had them."
+    },
+    {
+      "name": "Hottest cities",
+      "about": "The ten cities with the most extreme-heat days per year."
+    },
+    {
+      "name": "Heavy rain by region",
+      "about": "Heavy-rain days per 1,000 measured days in each census region."
+    },
+    {
+      "name": "Climate-risk brief",
+      "about": "Three findings and one budgeting recommendation."
+    }
+  ],
+  "labels": {
+    "understand-data": "Explore stations",
+    "coverage": "Coverage",
+    "heat-by-year": "Heat by year",
+    "hottest-cities": "Hottest cities",
+    "heavy-rain": "Heavy rain",
+    "synthesis": "Conclusions",
+    "report": "Report"
+  },
+  "summaries": {
+    "understand-data": "Find one city's primary station and count the days it reported.",
+    "coverage": "Measure how many station-days were reported and how many lack a temperature.",
+    "heat-by-year": "Count extreme-heat days per year at primary stations.",
+    "hottest-cities": "Rank cities by extreme-heat days per year.",
+    "heavy-rain": "Compare census regions by their rate of heavy-rain days.",
+    "synthesis": "Decide which sites need cooling and which need flood protection.",
+    "report": "Write three findings and one budgeting recommendation."
+  },
+  "problems": [
+    "A day a station didn't report has no row at all, so missing days are invisible unless you compare with the calendar.",
+    "Three cities have a second station, so counting every station double-counts them.",
+    "Some reported days have no maximum temperature or no rain measurement; these are missing, not zero.",
+    "One city's primary station reported only 850 of the 1,096 days.",
+    "Trace rain is recorded as zero millimetres with a separate flag."
+  ],
+  "preparation": [
+    "count-sum-and-avg",
+    "group-into-summaries",
+    "make-decisions-with-case",
+    "conditional-aggregation",
+    "connect-tables-with-join",
+    "understand-null",
+    "dates-and-monthly-analysis"
+  ]
+}

@@ -1,0 +1,67 @@
+{
+ "id": "PS-P10-M6",
+ "slug": "restart-after-a-sink-outage",
+ "project": "PS-P10",
+ "milestone": "PS-P10.m6",
+ "difficulty": "hard",
+ "minutes": 50,
+ "title": "Survive a sink outage and restart from the checkpoint",
+ "dataset": {
+  "id": "PS-D09",
+  "version": "1.0.0"
+ },
+ "prompt": "The alerts go out through a sink that can fail. In the setup, its connection drops once, right after micro-batch `OUTAGE_AFTER` is written, and the query stops with an error. The stub runs once, appends every micro-batch to one folder, and doesn't recover.\n\nFix `recovery_run(sensor_readings, devices, device_locations)` so the stream restarts from its checkpoint, every alert is delivered exactly once, and the function returns one row per run describing what happened.",
+ "rules": [
+  "Keep the setup's outage and the `calls` log. The alert stream is `episodes(...)`, delivered by `deliver` through `foreachBatch`.",
+  "When a run fails, start the same query again with the same checkpoint. Stop after a run finishes.",
+  "The micro-batch that failed runs again. Its alerts must still be in the sink only once: write each micro-batch to its own folder, `batch_id=<id>` under the sink, replacing what's there.",
+  "One row per run: `run` (1, 2), `outcome` (`failed` or `finished`), `batch_ids` (the micro-batch ids `deliver` was called with during that run, in order, comma-separated), `committed` (`committed(checkpoint)` after the run) and `alerts_in_sink` (`rows_in(sink)` after the run)."
+ ],
+ "hints": [
+  "`run_stream(writer)` raises when the query stops with an error. Catch it with `try`/`except Exception`, note the outcome, and loop at most twice. Clear `calls` at the start of each run.",
+  "The checkpoint's `commits` folder gets a file only after `deliver` returns, so the failed micro-batch has no commit and the restart runs it again with the same `batch_id`.",
+  "`batch_df.write.mode(\"overwrite\").parquet(f\"{base}/sink/batch_id={batch_id}\")` makes a second delivery of the same micro-batch replace the first."
+ ],
+ "explanation": "A checkpoint writes a micro-batch's offsets before it runs and its commit after the sink returns. When `deliver` raises, that micro-batch has offsets but no commit, so restarting with the same checkpoint runs it again, with the same input, the same `batch_id` and the state as it was before it: the episode rule gives exactly the same events. That's at-least-once delivery. Writing each micro-batch to its own folder and replacing it turns the second delivery into a no-op, which is exactly-once in the sink. Starting over with a fresh checkpoint would instead replay every micro-batch from the beginning, and appending would deliver the failed batch's alerts twice; the run rows show both mistakes.",
+ "entry": "recovery_run",
+ "inputs": [
+  "sensor_readings",
+  "devices",
+  "device_locations"
+ ],
+ "file": "pipeline.py",
+ "append": "\n\nOUTAGE_AFTER = 3  # setup: the alert sink's connection drops once, right after micro-batch 3 is written\nRUN_SCHEMA = \"run INT, outcome STRING, batch_ids STRING, committed STRING, alerts_in_sink BIGINT\"\n\n\ndef committed(checkpoint):\n    \"\"\"The micro-batch ids a checkpoint has committed, as text: \"0,1,2\".\"\"\"\n    folder = f\"{checkpoint}/commits\"\n    ids = sorted(int(f) for f in os.listdir(folder) if f.isdigit()) if os.path.isdir(folder) else []\n    return \",\".join(str(i) for i in ids)\n\n\ndef rows_in(folder):\n    \"\"\"How many rows the sink folder holds (0 before anything is written).\"\"\"\n    return spark.read.parquet(folder).count() if os.path.isdir(folder) else 0\n\n\ndef recovery_run(sensor_readings, devices, device_locations):\n    # Step 6: deliver the alert stream through a sink that drops once; restart from the checkpoint; one row per run.\n    base = \"/tmp/p10/recovery\"\n    shutil.rmtree(base, ignore_errors=True)\n    make_batches(sensor_readings, f\"{base}/in\")\n    outage = [OUTAGE_AFTER]\n    calls = []\n\n    def deliver(batch_df, batch_id):\n        calls.append(batch_id)\n        batch_df.write.mode(\"append\").parquet(f\"{base}/sink\")\n        if batch_id in outage:\n            outage.remove(batch_id)\n            raise ConnectionError(\"alert sink connection dropped\")\n\n    stream = spark.readStream.schema(sensor_readings.schema).option(\"maxFilesPerTrigger\", 1).json(f\"{base}/in\")\n    writer = (episodes(stream, devices, device_locations).writeStream.outputMode(\"append\")\n              .foreachBatch(deliver).option(\"checkpointLocation\", f\"{base}/ck\"))\n    run_stream(writer)\n    runs = [(1, \"finished\", \",\".join(str(b) for b in calls), committed(f\"{base}/ck\"), rows_in(f\"{base}/sink\"))]\n    return spark.createDataFrame(runs, RUN_SCHEMA)\n",
+ "prerequisites": [
+  "PS-L072"
+ ],
+ "output": {
+  "columns": [
+   "run",
+   "outcome",
+   "batch_ids",
+   "committed",
+   "alerts_in_sink"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "example",
+   "sample": true
+  },
+  {
+   "id": "project",
+   "edition": "project"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

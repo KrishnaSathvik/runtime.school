@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0315",
+  "slug": "restock-after-the-count",
+  "lesson": "PS-L063",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 23,
+  "title": "Deliveries due after a late batch",
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0"
+  },
+  "prompt": "Buying keeps a Delta table of purchase orders at their newest version, and the ERP's batches arrive out of order. Write `apply_batch(batch, path)` to merge one batch in, and `due_report` to list the orders still on their way that are due by 10 March 2026, with each warehouse's city.",
+  "rules": [
+    "Match on `po_id`. A batch row replaces the order's row, every column, only when its `version` is higher; an order the table doesn't have is added.",
+    "An order is due when its newest `status` is `open`, `confirmed` or `shipped` and its `expected_date` is on or before 10 March 2026.",
+    "Return `po_id`, `status`, `expected_date` and `city`, by `expected_date` then `po_id`. An order in a warehouse missing from `warehouses` is kept, with a missing `city`.",
+    "Don't change `solve`."
+  ],
+  "hints": [
+    "`solve` applies version 3, then 4, then 2. Without a condition, the late version 2 overwrites the newer one.",
+    "Give the update a condition, `whenMatchedUpdateAll(condition=\"s.version > t.version\")`, so an older version never wins.",
+    "In the report, `isin` checks the status, `<= \"2026-03-10\"` the date, and a left join to `warehouses` keeps an unlisted warehouse."
+  ],
+  "explanation": "The merge matches on `po_id` and updates every column, but only under `condition=\"s.version > t.version\"`: `solve` applies the version 2 batch last, and without the condition it would put orders back to an older status. That matters for the report, because an order received or cancelled in version 3 would look due again. The report filters on the newest status with `isin(\"open\", \"confirmed\", \"shipped\")` and on `expected_date <= \"2026-03-10\"`, left-joins `warehouses` so an order in an unlisted warehouse keeps its place with a missing city, and sorts by date then `po_id`. An inner join drops that order, and `<` loses the orders due on the 10th.",
+  "entry": "solve",
+  "inputs": [
+    "purchase_orders",
+    "warehouses"
+  ],
+  "starter": "import shutil\n\nfrom pyspark.sql import functions as F\nfrom delta.tables import DeltaTable\n\n\ndef apply_batch(batch, path):\n    # Merge one batch of order versions into the orders table.\n    pass\n\n\ndef due_report(orders, warehouses):\n    # Orders still on their way that are due by 10 March 2026, with the warehouse's city.\n    return orders\n\n\ndef solve(purchase_orders, warehouses):\n    path = \"/tmp/buying/orders\"\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty folder on every run\n    purchase_orders.where(\"version = 1\").write.format(\"delta\").save(path)\n    for v in (3, 4, 2):  # the ERP's batches, in the order they arrived\n        apply_batch(purchase_orders.where(f\"version = {v}\"), path)\n    return due_report(spark.read.format(\"delta\").load(path), warehouses)\n",
+  "output": {
+    "columns": [
+      "po_id",
+      "status",
+      "expected_date",
+      "city"
+    ],
+    "order_sensitive": true
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

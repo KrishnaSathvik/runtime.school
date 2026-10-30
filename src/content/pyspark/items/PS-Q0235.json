@@ -1,0 +1,55 @@
+{
+  "id": "PS-Q0235",
+  "slug": "files-by-new-york-day",
+  "lesson": "PS-L047",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Files by New York day",
+  "dataset": {
+    "id": "PS-D13",
+    "version": "1.0.0"
+  },
+  "prompt": "The New York team files every reading under its New York calendar date, not the UTC one. Write `save(observations, path)` so it saves the readings as Parquet with one folder per New York date. `solve` is written for you: it reads the folder back and notes which folder each reading came from.",
+  "rules": [
+    "`local_date` is the date on a New York clock when the reading was taken. `observed_at` is UTC, and New York moved its clocks forward on 2026-03-08.",
+    "Save `observation_id`, `station_id`, `observed_at`, `temperature_c` and `local_date`, partitioned by `local_date`, so each reading sits in a folder such as `local_date=2026-03-07`.",
+    "The folder may hold an earlier save: replace it.",
+    "Keep every reading, repeated rows included. An empty batch saves no folders."
+  ],
+  "hints": [
+    "`F.from_utc_timestamp(\"observed_at\", \"America/New_York\")` shows a UTC time on New York's clock; `F.to_date` keeps the day.",
+    "Use the zone's name, not a fixed offset: New York is 5 hours behind UTC before 2026-03-08 07:00 UTC and 4 hours after.",
+    "`select` the four columns plus the new date with `alias(\"local_date\")`, then `write.mode(\"overwrite\").partitionBy(\"local_date\").parquet(path)`."
+  ],
+  "explanation": "Work out the New York date with `F.to_date(F.from_utc_timestamp(\"observed_at\", \"America/New_York\"))`, select it as `local_date` next to the four columns, and save with `.write.mode(\"overwrite\").partitionBy(\"local_date\").parquet(path)`. A reading at 04:00 UTC on 2026-03-08 is still 23:00 on 2026-03-07 in New York, so `observation_date` or `to_date(observed_at)` files it under the wrong day. A fixed offset of -5 hours goes wrong after the clocks change, and saving `local_date` inside the files instead of partitioning by it leaves every reading outside a date folder.",
+  "entry": "solve",
+  "inputs": [
+    "observations"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef save(observations, path):\n    # Save the readings at `path`, one folder per New York date.\n    pass\n\n\ndef solve(observations):\n    path = \"/tmp/weather/new_york_days\"\n    save(observations, path)\n    files = spark.read.schema(\"observation_id STRING, station_id STRING, observed_at TIMESTAMP, temperature_c DOUBLE, local_date DATE\").parquet(path)\n    # Which folder each reading was found in, such as local_date=2026-03-07.\n    return files.select(\"*\", F.regexp_extract(\"_metadata.file_path\", r\"/(local_date=[^/]*)/\", 1).alias(\"folder\"))\n",
+  "output": {
+    "columns": [
+      "observation_id",
+      "station_id",
+      "observed_at",
+      "temperature_c",
+      "local_date",
+      "folder"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

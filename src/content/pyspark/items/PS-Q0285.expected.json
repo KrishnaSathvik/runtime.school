@@ -1,0 +1,74 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "borough",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "trips",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "revenue",
+     "type": "decimal(18,2)",
+     "nullable": true
+    },
+    {
+     "name": "shuffles",
+     "type": "int",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "Northbank",
+     2,
+     "36.91",
+     2
+    ],
+    [
+     "Eastfield",
+     2,
+     "40.89",
+     2
+    ],
+    [
+     "Old Quarter",
+     5,
+     "96.36",
+     2
+    ],
+    [
+     "Airport",
+     1,
+     "70.70",
+     2
+    ],
+    [
+     "Riverside",
+     2,
+     "81.26",
+     2
+    ]
+   ],
+   "row_count": 5
+  }
+ },
+ "hidden": [
+  "the full practice trips and zones",
+  "trips starting in a zone the zone table doesn't list",
+  "trips with no pickup zone",
+  "trips from different zones of the same borough",
+  "no trips at all"
+ ]
+}

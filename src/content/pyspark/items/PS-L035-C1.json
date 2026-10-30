@@ -1,0 +1,27 @@
+{
+  "id": "PS-L035-C1",
+  "slug": "running-card-spend",
+  "lesson": "PS-L035",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Running spend",
+  "dataset": { "id": "PS-D02", "version": "1.0.0" },
+  "prompt": "The banking app shows how much each account has spent so far after every payment. Write `solve(transactions)` so it returns each posted debit with the account's running spend up to and including it.",
+  "rules": [
+    "Only rows with `direction` `debit` and `status` `posted` count. Leave out credits and pending or declined rows.",
+    "Within each `account_id`, go in `posted_at` order. Two debits at the same moment go in `transaction_id` order, so their running totals differ.",
+    "`spend_so_far` is the sum of `amount` from the account's first debit up to this one. Rows with a missing `account_id` form one group of their own.",
+    "Return `account_id`, `transaction_id`, `posted_at`, `amount` and `spend_so_far`."
+  ],
+  "hints": [
+    "Filter first, then add the running total with `F.sum(\"amount\").over(w)`.",
+    "Order the window by `posted_at` and then `transaction_id`, so no two rows tie.",
+    "Give the window a frame: `.rowsBetween(Window.unboundedPreceding, Window.currentRow)`."
+  ],
+  "entry": "solve",
+  "inputs": ["transactions"],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(transactions):\n    # Each posted debit with the account's running spend.\n    return transactions\n",
+  "output": { "columns": ["account_id", "transaction_id", "posted_at", "amount", "spend_so_far"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

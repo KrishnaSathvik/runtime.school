@@ -1,0 +1,145 @@
+{
+  "id": "PS-L052",
+  "minutes": 25,
+  "lede": "A Python UDF gets one value at a time. A pandas UDF gets a whole batch of values as a pandas Series, moved between Spark and Python with Apache Arrow, so your function works on a column at once instead of looping.",
+  "objectives": [
+    "Write a pandas UDF with `@F.pandas_udf` that takes pandas Series and returns a Series of the same length",
+    "Convert `DECIMAL` columns before arithmetic, and know that NaN in the result becomes NULL",
+    "Explain what Arrow moves between Spark and Python, and turn it on for `toPandas()`",
+    "Choose between a built-in function, a pandas UDF and a Python UDF"
+  ],
+  "dataset": {
+    "id": "PS-D10",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "daily_prices"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`daily_prices` has one row per stock per trading day: the `open`, `high`, `low` and `close` prices (as `DECIMAL`) and the `volume` of shares traded.\n\nThe Python UDFs of the last lesson are called once per row. Spark packs each value, sends it to a Python process, calls your function, and packs the answer back. A **pandas UDF** is called once per **batch** of rows. Spark sends the batch in Apache Arrow's column format, PySpark turns each column into a pandas `Series`, and your function returns a `Series` of the same length.\n\nWrite one with the `@F.pandas_udf(\"type\")` decorator. The type hints `pd.Series -> pd.Series` say this is the Series-in, Series-out kind."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Volume in millions, one batch at a time",
+      "code": "import pandas as pd\nfrom pyspark.sql import functions as F\n\n\n@F.pandas_udf(\"double\")\ndef in_millions(volume: pd.Series) -> pd.Series:\n    return volume / 1_000_000\n\n\n@F.pandas_udf(\"long\")\ndef rows_in_call(volume: pd.Series) -> pd.Series:\n    return pd.Series([len(volume)] * len(volume))\n\n\ndaily_prices.select(\n    \"symbol\", \"trade_date\", \"volume\",\n    in_millions(\"volume\").alias(\"volume_m\"),\n    rows_in_call(\"volume\").alias(\"rows_in_call\"),\n).show()\n",
+      "note": "`volume / 1_000_000` divides the whole Series in one step; there's no loop. The second function shows the batch: all 14 rows arrived in a single call. On a bigger table Spark sends several batches, one partition at a time."
+    },
+    {
+      "kind": "text",
+      "md": "Inside the function you write pandas, not Spark. `BIGINT` arrives as `int64`, but a `DECIMAL` column arrives as a Series of Python `Decimal` objects (pandas dtype `object`). Arithmetic on them gives more `Decimal` objects, and Arrow can't turn those into a `double` column.\n\nThe function below finds where the close sits in the day's range: 0 means it closed at the low, 1 at the high."
+    },
+    {
+      "kind": "error-example",
+      "id": "e2",
+      "title": "Decimal values into a double result",
+      "code": "import pandas as pd\nfrom pyspark.sql import functions as F\n\n\n@F.pandas_udf(\"double\")\ndef close_position(high: pd.Series, low: pd.Series, close: pd.Series) -> pd.Series:\n    return (close - low) / (high - low)\n\n\ndaily_prices.select(\"symbol\", \"trade_date\", close_position(\"high\", \"low\", \"close\")).show()\n",
+      "error": "PythonException",
+      "note": "The result is a Series of `Decimal` objects, and converting it to an Arrow `double` array fails in the Python worker. A Python UDF would have given NULL silently here; a pandas UDF stops with an error."
+    },
+    {
+      "kind": "text",
+      "md": "Convert first: `series.astype(\"float64\")` turns `Decimal` values into floats. Then pandas works as usual, including `.round(2)`. A function can take several columns; Spark passes them in the order you list them."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Convert, compute, round",
+      "code": "import pandas as pd\nfrom pyspark.sql import functions as F\n\n\n@F.pandas_udf(\"double\")\ndef close_position(high: pd.Series, low: pd.Series, close: pd.Series) -> pd.Series:\n    h = high.astype(\"float64\")\n    l = low.astype(\"float64\")\n    c = close.astype(\"float64\")\n    return ((c - l) / (h - l)).round(2)\n\n\ndaily_prices.select(\n    \"symbol\", \"trade_date\", \"low\", \"high\", \"close\",\n    close_position(\"high\", \"low\", \"close\").alias(\"close_position\"),\n).show()\n",
+      "note": "BRVO.SX closed right at its low on 2026-01-21 (0.1) and CYPH.SX near its high on 2026-01-15 (0.81)."
+    },
+    {
+      "kind": "text",
+      "md": "Missing values need no special code in most pandas UDFs. A NULL `DECIMAL` arrives as `None`, `astype(\"float64\")` turns it into `NaN`, arithmetic with `NaN` gives `NaN`, and **a `NaN` in the returned Series becomes NULL** in Spark.\n\nOne rule is strict: the returned Series must have exactly as many values as the input. A shorter or longer result stops the job with an error."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "A missing price gives NULL",
+      "code": "import pandas as pd\nfrom decimal import Decimal\nfrom pyspark.sql import functions as F\n\n\n@F.pandas_udf(\"double\")\ndef close_position(high: pd.Series, low: pd.Series, close: pd.Series) -> pd.Series:\n    h = high.astype(\"float64\")\n    l = low.astype(\"float64\")\n    c = close.astype(\"float64\")\n    return ((c - l) / (h - l)).round(2)\n\n\nprices = spark.createDataFrame(\n    [\n        (\"ALDR.SX\", Decimal(\"192.26\"), Decimal(\"186.69\"), Decimal(\"191.95\")),\n        (\"BRVO.SX\", None, Decimal(\"54.08\"), Decimal(\"54.62\")),\n    ],\n    \"symbol STRING, high DECIMAL(10,2), low DECIMAL(10,2), close DECIMAL(10,2)\",\n)\nresult = prices.select(\"symbol\", close_position(\"high\", \"low\", \"close\").alias(\"close_position\"))\nresult.show()\nprint(result.filter(F.col(\"close_position\").isNull()).count(), \"missing value\")\n",
+      "note": "The second row has no `high`, so its result is NULL, not NaN: `isNull()` finds it."
+    },
+    {
+      "kind": "text",
+      "md": "Arrow helps outside UDFs too. `df.toPandas()` copies a whole DataFrame to the driver as a pandas DataFrame. With `spark.sql.execution.arrow.pyspark.enabled` set to `\"true\"`, Spark makes that copy in Arrow column batches instead of converting row by row. It's off unless you turn it on, and the result is the same either way.\n\n`toPandas()` puts every row in the driver's memory, so use it only on small results, such as a summary you want to plot."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "toPandas with Arrow",
+      "code": "print(spark.conf.get(\"spark.sql.execution.arrow.pyspark.enabled\"))\nspark.conf.set(\"spark.sql.execution.arrow.pyspark.enabled\", \"true\")\n\npdf = daily_prices.toPandas()\nprint(type(pdf).__name__, pdf.shape)\nprint(pdf.dtypes)\nprint(pdf[pdf[\"symbol\"] == \"ALDR.SX\"][[\"trade_date\", \"close\", \"volume\"]])\n",
+      "note": "`pdf` is an ordinary pandas DataFrame with 14 rows and 7 columns. The prices and dates came across as Python objects (dtype `object`); only `volume` became a numeric dtype, so convert prices before pandas arithmetic here too."
+    },
+    {
+      "kind": "text",
+      "md": "So which tool when?\n\n- **A built-in function** first, always, when one exists: it runs in the JVM and the optimiser can see it.\n- **A pandas UDF** when you need Python, especially pandas or NumPy, over whole columns. Values travel in Arrow batches and your code runs vectorised.\n- **A Python UDF** for logic that is naturally one value at a time, such as parsing an odd string. Every value is packed and unpacked on its own.\n\nThe pandas and Python UDFs below give the same answers; only how the values travel differs."
+    },
+    {
+      "kind": "example",
+      "id": "e6",
+      "title": "The same result, two ways",
+      "code": "import pandas as pd\nfrom pyspark.sql import functions as F\n\nper_row = F.udf(lambda v: v / 1_000_000, \"double\")\n\n\n@F.pandas_udf(\"double\")\ndef per_batch(volume: pd.Series) -> pd.Series:\n    return volume / 1_000_000\n\n\ndaily_prices.select(\"symbol\", \"trade_date\", per_row(\"volume\").alias(\"python_udf\"), per_batch(\"volume\").alias(\"pandas_udf\")).show(5)\n",
+      "note": "The Python UDF's lambda ran once per row; the pandas UDF ran once for the batch. On large tables that difference is why pandas UDFs are preferred when you need Python."
+    }
+  ],
+  "challenges": [
+    "PS-L052-C1",
+    "PS-L052-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "A function is declared with `@F.pandas_udf(\"double\")` and `def f(s: pd.Series) -> pd.Series`. What is `s` when Spark calls it?",
+      "choices": [
+        "One value from one row",
+        "A batch of the column's values, as one pandas Series",
+        "The whole table as a pandas DataFrame",
+        "A Spark Column object"
+      ],
+      "answer": 1,
+      "why": "Spark sends rows in batches through Arrow, and each argument is that batch of one column as a pandas Series."
+    },
+    {
+      "id": "k2",
+      "prompt": "A pandas UDF returns a Series with `NaN` for one row. What does that row hold in the Spark result?",
+      "choices": [
+        "NaN",
+        "0.0",
+        "NULL",
+        "The job stops with an error"
+      ],
+      "answer": 2,
+      "why": "When the result goes back through Arrow, a `NaN` in the returned Series becomes NULL, so `isNull()` finds it."
+    },
+    {
+      "id": "k3",
+      "prompt": "A pandas UDF gets a Series of 14 values and returns a Series of 1 value. What happens?",
+      "choices": [
+        "Spark repeats the value for all 14 rows",
+        "The other 13 rows get NULL",
+        "Only the first row is kept",
+        "The job stops with an error about the result length"
+      ],
+      "answer": 3,
+      "why": "The result must have exactly as many values as the input. Spark checks, and stops with an error saying it expected 14 and got 1."
+    }
+  ],
+  "review": [
+    "A pandas UDF (`@F.pandas_udf(\"type\")`, `pd.Series -> pd.Series`) is called once per batch, not once per row.",
+    "Spark moves each batch with Arrow and hands every column to your function as a pandas Series.",
+    "`DECIMAL` columns arrive as `Decimal` objects: `astype(\"float64\")` before arithmetic, or converting the result fails.",
+    "`NaN` in the returned Series becomes NULL. The result must be as long as the input.",
+    "`spark.sql.execution.arrow.pyspark.enabled` makes `toPandas()` copy in Arrow batches; `toPandas()` is for small results only.",
+    "Prefer built-ins; use a pandas UDF when you need Python over whole columns, and a Python UDF for one-value-at-a-time logic."
+  ],
+  "practice": [
+    "PS-Q0256",
+    "PS-Q0257",
+    "PS-Q0258",
+    "PS-Q0259",
+    "PS-Q0260"
+  ]
+}

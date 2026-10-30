@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0074",
+  "slug": "fix-the-order-numbers",
+  "lesson": "PS-L015",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Fix the name split",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "The mailing list wants each customer's first name, last name and initials in their own columns. The function below stops with an error, and its initials are wrong for a customer with no name. Fix `solve(customers)`.",
+  "rules": [
+    "Return `customer_id`, `first_name`, `last_name` and `initials`, in that order, one row per customer, duplicates included.",
+    "Every name is a first name and a last name with one space between them: `Ines Okafor` gives `Ines`, `Okafor` and `IO`.",
+    "A missing name gives a missing `first_name`, `last_name` and `initials`, not empty text."
+  ],
+  "hints": [
+    "Read the error: which position does `split` say is out of bounds?",
+    "`substring` counts from 1, but the pieces of a `split` count from 0, so the first name is `[0]` and the last name `[1]`.",
+    "`concat_ws` skips missing parts and gives `\"\"` when all are missing; `concat` gives a missing result if any part is missing."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "customers"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(customers):\n    parts = F.split(\"name\", \" \")\n    first = parts[1]\n    last = parts[2]\n    initials = F.concat_ws(\"\", F.substring(first, 1, 1), F.substring(last, 1, 1))\n    return customers.select(\"customer_id\", first.alias(\"first_name\"), last.alias(\"last_name\"), initials.alias(\"initials\"))\n",
+  "output": {
+    "columns": [
+      "customer_id",
+      "first_name",
+      "last_name",
+      "initials"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Two mix-ups. `F.split` gives an array, and array positions start at 0, so `parts[2]` asks for a third piece that a two-word name doesn't have and the job stops. The first name is `parts[0]` and the last name `parts[1]`; it's `F.substring` whose positions start at 1. Then the initials: `concat_ws` skips missing parts, so a customer with no name gets `\"\"` instead of a missing value. `F.concat(F.substring(first, 1, 1), F.substring(last, 1, 1))` is missing as soon as a part is."
+}

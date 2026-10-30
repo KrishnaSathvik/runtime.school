@@ -1,0 +1,75 @@
+{
+  "id": "PS-P07-M2",
+  "slug": "quarantine-bad-claims",
+  "project": "PS-P07",
+  "milestone": "PS-P07.m2",
+  "difficulty": "hard",
+  "minutes": 35,
+  "title": "Validate the claims and quarantine the bad ones",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "prompt": "Some claims break the input contract: a missing id, a claim sent before the visit happened, an amount that can't be right, a provider nobody knows. They mustn't reach Silver, but they mustn't vanish either.\n\nWrite `checked_claims(claims, providers)`: every row of `bronze_claims(claims)` plus `_reason`, the first rule it breaks. Then write `rejected_claims(claims, providers)`, the quarantine: only the rows that break a rule.",
+  "rules": [
+    "Check in this order and name the first rule broken: `missing_id` (`claim_id`, `encounter_id` or `patient_id` missing), `bad_dates` (`service_date` or `submitted_date` missing, or the service after the submission), `bad_amount` (`billed_amount` missing or negative, or `allowed_amount` above it), `unknown_status` (`claim_status` missing or not one of `STATUSES`, written exactly), `unknown_provider` (a `provider_id` that isn't in `providers`).",
+    "A missing `allowed_amount` is fine, and so is a missing `provider_id`: a later step takes it from the visit.",
+    "`checked_claims` returns Bronze's columns, in Bronze's order, then `_reason`, missing when the row passes. Every Bronze row stays.",
+    "`rejected_claims` returns the same columns, for the rows with a reason only. Repeated rows stay repeated."
+  ],
+  "hints": [
+    "Chain `F.when(rule, \"name\").when(...)` in the rules' order. With no `otherwise`, a row that matches nothing gets a missing value.",
+    "A comparison with a missing value is missing, and a missing condition doesn't fire a `when`. Test `isNull()` first, and wrap `isin` in `F.coalesce(..., F.lit(False))` before negating it.",
+    "Left-join a small table of known ids, `providers.select(\"provider_id\", F.lit(True).alias(\"_known\"))`. The join moves `provider_id` to the front, so end with `select(*bronze.columns, ...)`."
+  ],
+  "explanation": "A quarantine needs every bad row to land in exactly one place with exactly one reason. A `when` chain in a fixed order gives that: the first rule broken wins, and a row that breaks none keeps a missing reason. Each rule tests for missing values first, because a comparison with NULL is NULL and would let the row slip through. The provider rule needs the other table: a left join against the known ids keeps every claim and leaves `_known` missing only for ids that aren't there, while a missing `provider_id` isn't an error at all, since the visit says who saw the patient. An inner join would have silently dropped the unknown providers instead of quarantining them. Splitting one checked table into passed and rejected means the two parts always add up to Bronze.",
+  "entry": "rejected_claims",
+  "inputs": [
+    "claims",
+    "providers"
+  ],
+  "file": "pipeline.py",
+  "append": "\n\nSTATUSES = [\"submitted\", \"approved\", \"paid\", \"denied\", \"appealed\"]\n\n\ndef checked_claims(claims, providers):\n    # Step 2: every bronze claim, plus `_reason`: the first rule it breaks, or missing when it passes.\n    return bronze_claims(claims)\n\n\ndef rejected_claims(claims, providers):\n    # Step 2: the quarantine: only the claims that break a rule.\n    return checked_claims(claims, providers)\n",
+  "prerequisites": [
+    "PS-L022",
+    "PS-L023",
+    "PS-L025",
+    "PS-L076"
+  ],
+  "output": {
+    "columns": [
+      "claim_id",
+      "encounter_id",
+      "patient_id",
+      "provider_id",
+      "payer",
+      "service_date",
+      "submitted_date",
+      "billed_amount",
+      "allowed_amount",
+      "paid_amount",
+      "claim_status",
+      "denial_reason",
+      "_source_file",
+      "_load_month",
+      "_reason"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "example",
+      "sample": true
+    },
+    {
+      "id": "project",
+      "edition": "project"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

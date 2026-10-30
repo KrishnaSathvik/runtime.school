@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0098",
+  "slug": "picking-list-lines",
+  "lesson": "PS-L020",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Picking list lines",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "The picking robot needs each order line once: the order, the line number and the product to fetch. The line feed repeats lines, sometimes with a corrected quantity or price. Write `solve(order_items)` so it returns `order_id`, `line_no` and `product_id`.",
+  "rules": [
+    "A line is identified by `order_id` and `line_no` together. Every copy of a line has the same `product_id`; `quantity` and `unit_price` may differ between copies.",
+    "Two lines of one order with different line numbers are different lines, even when they hold the same product.",
+    "A missing `order_id` or `line_no` is compared like any other value: two missing values match.",
+    "Return the three columns, in that order, one row per line."
+  ],
+  "hints": [
+    "A corrected copy differs in `quantity` or `unit_price`, so removing exact copies isn't enough.",
+    "The key here is two columns: `dropDuplicates([\"order_id\", \"line_no\"])`.",
+    "The product is the same on every copy, so it doesn't matter which copy Spark keeps. Don't use the product as part of the key: one order can hold the same product on two lines."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "order_items"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(order_items):\n    # Return order_id, line_no and product_id, one row per line.\n    return order_items\n",
+  "output": {
+    "columns": [
+      "order_id",
+      "line_no",
+      "product_id"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "The key is the pair `order_id`, `line_no`: `order_items.dropDuplicates([\"order_id\", \"line_no\"]).select(\"order_id\", \"line_no\", \"product_id\")`. Spark keeps an arbitrary copy of each line, which is safe because the product doesn't change between copies. `order_items.select(\"order_id\", \"line_no\", \"product_id\").distinct()` gives the same rows. Two traps: `dropDuplicates()` on every column keeps a corrected copy next to the original, because their quantities differ; and keying on `order_id` and `product_id` merges two lines that hold the same product, like an order that buys one item at two prices. Missing line numbers in the same order match each other, so they collapse to one row, as `distinct` treats any other repeated value."
+}

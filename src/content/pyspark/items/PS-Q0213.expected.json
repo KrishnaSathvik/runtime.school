@@ -1,0 +1,61 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "column_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "guessed_type",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "employee_id",
+     "string"
+    ],
+    [
+     "full_name",
+     "string"
+    ],
+    [
+     "job_title",
+     "string"
+    ],
+    [
+     "department",
+     "string"
+    ],
+    [
+     "salary",
+     "double"
+    ],
+    [
+     "hire_date",
+     "date"
+    ]
+   ],
+   "row_count": 6
+  }
+ },
+ "hidden": [
+  "the full practice export",
+  "salaries written without cents",
+  "a salary at and just past the largest whole number an int holds",
+  "salaries with and without cents in one export",
+  "a salary that isn't a number and a date that doesn't exist",
+  "a column that's empty on every line",
+  "hire dates that include a time of day",
+  "an export with a header and no employees"
+ ]
+}

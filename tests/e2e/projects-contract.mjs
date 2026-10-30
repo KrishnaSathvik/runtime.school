@@ -9,39 +9,40 @@ try {
   const p = await b.newPage({ viewport: { width: 1440, height: 1000 } });
   const errors = []; p.on('pageerror', e => errors.push(e.message));
   await p.goto(`${base}/sql/projects/retail-performance-review`);
-  await p.getByRole('button', { name: 'Begin project →' }).waitFor({ timeout: 60000 });
+  await p.getByRole('button', { name: 'Start the project →' }).waitFor({ timeout: 60000 });
   assert.equal(await p.getByText('Saved', {exact:true}).count(), 0);
-  await p.getByRole('button', {name:'All projects',exact:true}).click();
-  const projectLinks = p.getByRole('navigation', {name:'Choose a project'}).getByRole('link');
-  assert.equal(await projectLinks.count(), 10);
-  const otherTitle = await projectLinks.nth(1).innerText();
-  await projectLinks.nth(1).click();
-  await p.getByRole('heading', {name:otherTitle,exact:true}).waitFor();
-  await p.getByRole('button', {name:'Begin project →'}).waitFor();
-  await p.getByRole('button', {name:'All projects',exact:true}).click();
-  await p.getByRole('navigation', {name:'Choose a project'}).getByRole('link', {name:'Retail Performance Review',exact:true}).click();
+  // "All projects" goes back to the library, as in Python and PySpark.
+  await p.getByRole('link', {name:'All projects',exact:true}).click();
+  await p.waitForURL(/\/sql\/projects$/);
+  await p.locator('a.rx-project-card', {hasText:'Retail Performance Review'}).click();
   await p.getByRole('heading', {name:'Retail Performance Review',exact:true}).waitFor();
   await p.screenshot({ path: '/tmp/projects-brief.png' });
   assert.equal(await p.locator('.cm-editor').count(), 0);
-  assert.equal(await p.getByRole('navigation', { name: 'Project stages', exact: true }).getByRole('button').count(), 8);
-  const stageNav = p.getByRole('navigation', { name: 'Project stages', exact: true });
+  // The overview has no step bar; Start opens the workspace, whose bar lists Overview, every stage and Review.
+  assert.equal(await p.getByRole('list', { name: 'Steps', exact: true }).count(), 0);
+  // Data lives on the overview only (as in Python); Start opens the first coding step.
+  const overviewData = p.locator('.project-data-browser');
+  await overviewData.locator('.rx-ds-table').first().waitFor();
+  assert.equal(await overviewData.locator('.rx-ds-table').count(), 5);
+  assert.ok(await overviewData.getByRole('list', { name: 'Relationships' }).count() > 0);
+  await overviewData.locator('.rx-ds-table').first().locator('summary').click();
+  await overviewData.getByRole('button', { name: /Preview \d+ rows/ }).first().click();
+  assert.ok(await overviewData.locator('.rx-ds-preview tbody tr').count() > 0);
+  await p.screenshot({ path: '/tmp/projects-data.png', fullPage: true });
+  await p.getByRole('button', { name: 'Start the project →' }).click();
+  const stageNav = p.getByRole('list', { name: 'Steps', exact: true });
+  // Overview, the four coding steps and Review; understand-data is skipped.
+  assert.equal(await stageNav.getByRole('button').count(), 6);
   for (const button of await stageNav.getByRole('button').all()) assert.ok(await button.isEnabled());
-  await stageNav.getByRole('button', { name: 'Stage 8: Report', exact: true }).click();
+  await stageNav.getByRole('button', { name: 'Review', exact: true }).click();
+  await p.getByRole('button', { name: 'Write the final report', exact: true }).click();
   await p.getByRole('heading', { name: 'Final report' }).waitFor();
   await p.reload();
   await p.getByRole('heading', { name: 'Final report' }).waitFor();
   assert.ok(await p.getByRole('button', { name: 'Complete project', exact: true }).isDisabled());
-  await stageNav.getByRole('button', { name: 'Stage 1: Project brief', exact: true }).click();
-  await p.getByRole('button', { name: 'Begin project →' }).click();
-  const dataBrowser = p.locator('.project-data-browser');
-  await dataBrowser.locator('.rx-ds-table').first().waitFor();
-  assert.equal(await dataBrowser.locator('.rx-ds-table').count(), 5);
-  assert.ok(await dataBrowser.getByRole('list', { name: 'Relationships' }).count() > 0);
-  await dataBrowser.locator('.rx-ds-table').first().locator('summary').click();
-  await dataBrowser.getByRole('button', { name: /Preview \d+ rows/ }).first().click();
-  assert.ok(await dataBrowser.locator('.rx-ds-preview tbody tr').count() > 0);
-  await p.screenshot({ path: '/tmp/projects-data.png', fullPage: true });
-  await p.getByRole('button', { name: 'Continue to analysis →' }).click();
+  await stageNav.getByRole('button', { name: 'Overview', exact: true }).click();
+  await p.getByRole('button', { name: 'Continue →' }).waitFor();
+  await p.locator('.pf-steps button', { hasText: 'Size sales and cancellations' }).click();
   await p.locator('.cm-content').waitFor();
   assert.equal(await p.getByRole('textbox', { name: /What did you learn/ }).count(), 0);
   const setSql = async sql => { await p.locator('.cm-content').click(); await p.keyboard.press('Meta+a'); await p.keyboard.insertText(sql); };
@@ -49,34 +50,26 @@ try {
     const sql = references.split(`"${id}": \``)[1].split('`.trim()')[0].trim();
     await setSql(sql);
     if (i === 0) {
+      // Coding steps show the task only — no metrics block, no duplicated data browser.
+      assert.equal(await p.getByRole('tab', { name: 'Tables', exact: true }).count(), 0);
       assert.equal(await p.locator('.project-metrics').count(), 0);
+      assert.equal(await p.getByRole('button', { name: 'Metrics', exact: true }).count(), 0);
       assert.equal(await p.locator('.project-data-browser').count(), 0);
-      await p.getByRole('tab', { name: 'Metrics', exact: true }).click();
-      assert.ok((await p.getByRole('tabpanel').innerText()).includes('adjustment_rate'));
-      assert.equal(await p.locator('.project-data-browser').count(), 0);
-      assert.equal(await p.getByRole('heading', { name: 'What to return', exact: true }).count(), 0);
-      await p.getByRole('tab', { name: 'Tables', exact: true }).click();
-      assert.equal(await p.locator('.project-data-browser .rx-ds-table').count(), 2);
-      assert.ok(await p.locator('.project-data-browser').getByRole('list', { name: 'Relationships' }).count() > 0);
-      assert.equal(await p.locator('.project-metrics').count(), 0);
       assert.ok((await p.locator('.cm-content').innerText()).includes('adjustment_rate'));
-      await p.getByRole('tab', { name: 'Task', exact: true }).click();
-      await p.keyboard.press('ArrowRight');
-      assert.equal(await p.getByRole('tab', { name: 'Tables', exact: true }).getAttribute('aria-selected'), 'true');
-      await p.keyboard.press('Home');
-      assert.equal(await p.getByRole('tab', { name: 'Task', exact: true }).getAttribute('aria-selected'), 'true');
     }
-    await p.getByRole('button', { name: 'Check', exact: true }).click();
+    await p.getByRole('button', { name: 'Check step', exact: true }).click();
     await p.getByText('✓ Check passed', { exact: true }).waitFor({ timeout: 60000 });
-    assert.ok(await p.getByRole('button', { name: 'Save & continue →' }).isDisabled());
+    assert.equal(await p.getByRole('button', { name: 'Save & continue →' }).count(), 0);
+    assert.equal(await p.getByText('Pass the check to continue.', { exact: true }).count(), 0);
+    await p.locator('.rx-brief').getByRole('button', { name: /^Next:/ }).waitFor();
     await p.locator('textarea').fill(`Finding ${i + 1}: Net sales need to account for returns.`);
     if (i === 0) {
       await p.evaluate(() => window.scrollTo(0, 0));
       await p.screenshot({ path: '/tmp/projects-checkpoint.png' });
       await p.goto(`${base}/sql/projects/retail-performance-review`);
-      await p.getByRole('button', { name: 'Begin project →' }).waitFor();
+      await p.getByRole('button', { name: 'Continue →' }).waitFor();
       assert.equal(await p.locator('.cm-editor').count(), 0);
-      await p.getByRole('navigation', { name: 'Project stages', exact: true }).getByRole('button', { name: 'Stage 3: Size the adjustment problem', exact: true }).click();
+      await p.locator('.pf-steps button', { hasText: 'Size sales and cancellations' }).click();
       await p.reload();
       await p.getByText('✓ Check passed', { exact: true }).waitFor();
       assert.ok((await p.locator('textarea').inputValue()).includes('Finding 1'));
@@ -85,14 +78,12 @@ try {
       const [left, right] = await Promise.all([p.locator('.rx-brief').boundingBox(), p.locator('.rx-work').boundingBox()]);
       assert.ok(right.y >= left.y + left.height - 1);
       await p.screenshot({ path: '/tmp/projects-mobile.png', fullPage: true });
-      await p.getByRole('tab', { name: 'Tables', exact: true }).click();
       assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
       const stageBoxes = await stageNav.getByRole('button').evaluateAll(buttons => buttons.map(b => b.getBoundingClientRect().y));
       assert.ok(stageBoxes.every(y => y === stageBoxes[0]));
-      await p.getByRole('tab', { name: 'Task', exact: true }).click();
       await p.setViewportSize({ width: 1440, height: 1000 });
     }
-    await p.getByRole('button', { name: 'Save & continue →' }).click();
+    await p.locator('.rx-brief').getByRole('button', { name: /^Next:/ }).click();
   }
   await p.getByRole('heading', { name: 'Review your analysis' }).waitFor();
   assert.equal(await p.locator('.cm-editor').count(), 0);
@@ -115,7 +106,7 @@ try {
   await p.evaluate(() => window.scrollTo(0, 0));
   await p.screenshot({ path: '/tmp/projects-report.png', fullPage: true });
   await p.getByRole('button', { name: 'Complete project' }).click();
-  await p.getByRole('heading', { name: 'Project complete', exact: true }).waitFor();
+  await p.getByText('Project complete', { exact: true }).waitFor();
   await p.getByRole('button', { name: 'Preview report', exact: true }).click();
   await p.getByRole('dialog').getByRole('region', { name: 'Certificate of completion' }).waitFor();
   await p.screenshot({path:'/tmp/projects-certificate-preview.png'});
@@ -131,12 +122,12 @@ try {
   assert.equal(file.suggestedFilename(), 'retail-performance-review-certificate-and-report.pdf');
   await file.saveAs('/tmp/projects-browser-certificate.pdf');
   assert.equal(fs.readFileSync('/tmp/projects-browser-certificate.pdf').subarray(0,5).toString(), '%PDF-');
-  await p.getByRole('link', { name: 'Back to Projects', exact: true }).click();
+  await p.getByRole('link', { name: 'More projects', exact: true }).click();
   assert.ok((await p.getByRole('link', { name: /Retail Performance Review/ }).innerText()).includes('Completed'));
   await p.goto(`${base}/sql/projects/trusted-retail-warehouse`);
-  await p.getByRole('button', { name: 'Begin project →' }).click();
+  await p.getByRole('button', { name: 'Start the project →' }).click();
   await setSql('SELECT COUNT(*) AS orders FROM orders');
-  assert.equal(await p.getByRole('button', { name: 'Check', exact: true }).count(), 0);
+  assert.equal(await p.getByRole('button', { name: 'Check step', exact: true }).count(), 0);
   await p.getByRole('button', { name: 'Run', exact: true }).click();
   await p.getByRole('button', { name: 'Run', exact: true }).waitFor();
   await p.locator('textarea').fill('Orders include cancelled headers.');
@@ -150,12 +141,12 @@ try {
   await setSql('SELECT 1');
   await p.getByRole('button', { name: 'Validate', exact: true }).click();
   await p.getByText(/Not quite/).waitFor({ timeout: 60000 });
-  assert.ok(await p.getByRole('button', { name: 'Save & continue →' }).isDisabled());
+  assert.equal(await p.getByRole('button', { name: 'Save & continue →' }).count(), 0);
   await setSql('CREATE TABLE stg_orders AS SELECT * FROM orders; CREATE TABLE stg_order_items AS SELECT * FROM order_items;');
   await p.getByRole('button', { name: 'Validate', exact: true }).click();
   await p.getByText('✓ Validation passed', { exact: true }).waitFor({ timeout: 60000 });
   await p.locator('textarea').fill('Preserved the complete source including cancellation headers.');
-  await p.getByRole('button', { name: 'Save & continue →' }).click();
+  await p.locator('.rx-brief').getByRole('button', { name: /^Next:/ }).click();
   await setSql('SELECT COUNT(*) FROM stg_orders;');
   await p.getByRole('button', { name: 'Execute', exact: true }).click();
   await p.getByRole('button', { name: 'Execute', exact: true }).waitFor();

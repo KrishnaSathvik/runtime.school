@@ -1,0 +1,134 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "transaction_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "posted_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "txn_type",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "money_in",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "money_out",
+     "type": "decimal(12,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "T000001",
+     "2026-01-05T10:51:19",
+     "deposit",
+     "800.00",
+     null
+    ],
+    [
+     "T000002",
+     "2026-01-16T07:14:10",
+     "purchase",
+     null,
+     "60.53"
+    ],
+    [
+     "T000003",
+     "2026-01-26T16:39:39",
+     "purchase",
+     null,
+     "27.90"
+    ],
+    [
+     "T000005",
+     "2026-01-31T06:31:56",
+     "deposit",
+     "3100.00",
+     null
+    ],
+    [
+     "T000006",
+     "2026-02-08T14:02:36",
+     "interest",
+     "21.91",
+     null
+    ],
+    [
+     "T000007",
+     "2026-02-18T17:19:13",
+     "interest",
+     "10.01",
+     null
+    ],
+    [
+     "T000008",
+     "2026-02-19T10:23:22",
+     "purchase",
+     null,
+     "15.99"
+    ],
+    [
+     "T000009",
+     "2026-02-20T12:56:02",
+     "refund",
+     "43.95",
+     null
+    ],
+    [
+     "T000010",
+     "2026-02-21T13:36:29",
+     "purchase",
+     null,
+     "19.23"
+    ],
+    [
+     "T000011",
+     "2026-02-24T12:49:59",
+     "purchase",
+     null,
+     "7.60"
+    ],
+    [
+     "T000012",
+     "2026-02-25T22:51:19",
+     "deposit",
+     "500.00",
+     null
+    ],
+    [
+     "T000014",
+     "2026-02-28T18:17:37",
+     "purchase",
+     null,
+     "60.53"
+    ]
+   ],
+   "row_count": 12
+  }
+ },
+ "hidden": [
+  "the full practice transactions table",
+  "a posted transaction of every type",
+  "transactions with every status, and with none",
+  "directions that are missing or spelled differently",
+  "the same posted transaction delivered twice",
+  "an empty transactions table"
+ ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "P02",
+  "task": "A small cinema desk wants a quick way to explore its film list. Using a six-film sample small enough to read in one look, build the code that searches titles, keeps one genre, adds up the stars, ranks the films and writes that ranking to a file.",
+  "produce": [
+    { "name": "explore.py", "about": "Search, genre filter, star totals, the ranking and the report writer." },
+    { "name": "main.py", "about": "Runs each step on the film file and prints its result." },
+    { "name": "report.txt", "about": "Every title in ranking order, one per line." }
+  ],
+  "steps": {
+    "P02.m1": "Find titles that contain some text, ignoring case.",
+    "P02.m2": "Keep the films in one genre, sorted A to Z.",
+    "P02.m3": "Add up a genre's stars and count its films.",
+    "P02.m4": "Rank the films by stars, breaking ties A to Z.",
+    "P02.m5": "Write the ranking to a file, one title per line."
+  },
+  "problems": [
+    "Three of the six films have 5 stars, so the ranking needs a tie-break.",
+    "Stars are stored as text, so they must be turned into numbers before adding or sorting.",
+    "Titles start with capitals, so a search typed in capitals only matches when case is ignored."
+  ],
+  "preparation": ["PY-L14-05", "PY-L14-02", "PY-L12-01", "PY-L06-03", "PY-L02-04", "PY-L07-05", "PY-L19-02"]
+}

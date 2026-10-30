@@ -1,0 +1,26 @@
+{
+  "id": "PS-L013-C1",
+  "slug": "two-test-visits",
+  "lesson": "PS-L013",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Two test visits",
+  "dataset": { "id": "PS-D04", "version": "1.0.0" },
+  "prompt": "A teammate needs two made-up visits, with nested vitals and a list of codes, to test a dashboard. Write `solve()` so it builds them with exactly the columns and types below.",
+  "rules": [
+    "Columns, in order: `encounter_id` (text), `vitals` (a struct with `heart_rate` as int, then `temperature_c` as double), `diagnosis_codes` (an array of text).",
+    "Visit `T1`: heart rate 88, temperature 36.9, one code `J06.9`.",
+    "Visit `T2` was by video: the whole `vitals` value is missing. Its codes are `Z00.00` and `E78.5`, in that order."
+  ],
+  "hints": [
+    "Nest a `StructType` inside a `StructField` for `vitals`, and use `ArrayType(StringType())` for the codes.",
+    "A struct value is a tuple with one item per field; an array value is a Python list.",
+    "Missing vitals is `None` for the whole struct, not a tuple of `None`s."
+  ],
+  "entry": "solve",
+  "inputs": [],
+  "starter": "from pyspark.sql.types import StructType, StructField, StringType, IntegerType, DoubleType, ArrayType\n\n\ndef solve():\n    # Build the two test visits with an explicit schema.\n    schema = StructType([StructField(\"encounter_id\", StringType())])\n    rows = []\n    return spark.createDataFrame(rows, schema)\n",
+  "output": { "columns": ["encounter_id", "vitals", "diagnosis_codes"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0111",
+  "slug": "claim-rule-flags",
+  "lesson": "PS-L023",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Claim rule flags",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "prompt": "The billing team wants to see, for every claim, which contract rules it passes. Write `solve(claims)` so it returns `claim_id` and one true/false column per rule.",
+  "rules": [
+    "`dates_in_order`: `service_date` and `submitted_date` are both present and the service is not after the submission.",
+    "`billed_positive`: `billed_amount` is present and more than 0. `status_known`: `claim_status` is exactly one of submitted, approved, paid, denied, appealed.",
+    "Each flag is `true` or `false`, never empty: a rule that can't be checked because a value is missing is `false`.",
+    "Return `claim_id`, `dates_in_order`, `billed_positive` and `status_known`, in that order, one row per claim (duplicates included)."
+  ],
+  "hints": [
+    "Write each rule as a condition that is true for a good claim, then `select` it with `.alias(...)` to name the column.",
+    "A comparison with a missing value gives NULL, not false. `F.coalesce(rule, F.lit(False))` turns that NULL into `false`.",
+    "Keeping the rules in a list of `(name, condition)` pairs lets one list comprehension build all three columns inside `select`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "claims"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(claims):\n    # One true/false column per contract rule.\n    return claims\n",
+  "output": {
+    "columns": [
+      "claim_id",
+      "dates_in_order",
+      "billed_positive",
+      "status_known"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Write the rules as data, each true for a good claim: `F.col(\"service_date\") <= F.col(\"submitted_date\")`, `F.col(\"billed_amount\") > 0` and `F.col(\"claim_status\").isin(...)`. On its own each of these is NULL when a value is missing, and the contract wants `false`, so wrap each one: `F.coalesce(rule, F.lit(False)).alias(name)`. Then `claims.select(\"claim_id\", *[F.coalesce(c, F.lit(False)).alias(n) for n, c in rules])` builds every flag at once. The usual slips are leaving out `coalesce`, which shows empty flags for claims with a missing date or amount, and `<` instead of `<=`, which marks a claim submitted on the day of the visit as out of order."
+}

@@ -1,0 +1,55 @@
+{
+ "id": "PS-L069-C1",
+ "slug": "daily-impressions-and-spend",
+ "lesson": "PS-L069",
+ "format": "dataframe_coding",
+ "difficulty": "easy",
+ "minutes": 8,
+ "title": "Daily impressions and spend",
+ "dataset": {
+  "id": "PS-D12",
+  "version": "1.0.0"
+ },
+ "prompt": "Finance wants a daily table per campaign that stays right as deliveries come in. Write `solve(impressions)` so a streaming query keeps, in a memory table, the number of impressions and the total `cost` per campaign per day, and return `day_start`, `campaign_id`, `impressions` and `spend` from that table.",
+ "rules": [
+  "Count each impression on the day it was shown (`event_time`), in UTC days, even when it arrived later.",
+  "After the last delivery the table has exactly one row per day and campaign, with the final totals.",
+  "`day_start` is the start of the day's window; `spend` is the sum of `cost`.",
+  "The totals must come from that streaming query: grouping `impressions` itself doesn't count."
+ ],
+ "hints": [
+  "`F.window(\"event_time\", \"1 day\")` puts each impression in its day; group by it and `campaign_id`, then `agg` a count and a sum.",
+  "A late impression changes a day that was already written. Which output mode leaves the memory table with one row per window?",
+  "Read the table with `spark.table(name)` and take `window.start` as `day_start`."
+ ],
+ "entry": "solve",
+ "inputs": [
+  "impressions"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef solve(impressions):\n    spark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")  # small data: one partition keeps the stream fast\n    make_batches(impressions, \"/tmp/ads\")\n    stream = spark.readStream.schema(impressions.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/ads\")\n    # Count impressions and add up cost per day and campaign, keep the totals in a memory table,\n    # and return day_start, campaign_id, impressions and spend from it.\n    return impressions\n",
+ "output": {
+  "columns": [
+   "day_start",
+   "campaign_id",
+   "impressions",
+   "spend"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

@@ -1,0 +1,159 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "reading_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "device_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "reading_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "late_s",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "firmware_build",
+     "type": "int",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "R0001",
+     "DEV-001",
+     "2026-04-14",
+     21,
+     "low_battery",
+     231
+    ],
+    [
+     "R0004",
+     "DEV-004",
+     "2026-04-14",
+     43,
+     "ok",
+     240
+    ],
+    [
+     "R0002",
+     "DEV-002",
+     "2026-04-14",
+     44,
+     "ok",
+     240
+    ],
+    [
+     "R0003",
+     "DEV-003",
+     "2026-04-14",
+     46,
+     "ok",
+     231
+    ],
+    [
+     "R0007",
+     "DEV-003",
+     "2026-04-14",
+     7,
+     "ok",
+     231
+    ],
+    [
+     "R0005",
+     "DEV-001",
+     "2026-04-14",
+     14,
+     "low_battery",
+     231
+    ],
+    [
+     "R0008",
+     "DEV-004",
+     "2026-04-14",
+     49,
+     "ok",
+     240
+    ],
+    [
+     "R0011",
+     "DEV-003",
+     "2026-04-14",
+     15,
+     "ok",
+     231
+    ],
+    [
+     "R0012",
+     "DEV-004",
+     "2026-04-14",
+     21,
+     "ok",
+     240
+    ],
+    [
+     "R0010",
+     "DEV-002",
+     "2026-04-14",
+     25,
+     "ok",
+     240
+    ],
+    [
+     "R0009",
+     "DEV-001",
+     "2026-04-14",
+     48,
+     "low_battery",
+     231
+    ],
+    [
+     "R0011",
+     "DEV-003",
+     "2026-04-14",
+     375,
+     "ok",
+     231
+    ],
+    [
+     "R0006",
+     "DEV-002",
+     "2026-04-14",
+     2227,
+     "ok",
+     240
+    ]
+   ],
+   "row_count": 13
+  }
+ },
+ "hidden": [
+  "the full practice readings",
+  "readings measured before midnight that arrived after it",
+  "readings that arrived hours late, and one that arrived in the same second",
+  "readings with no payload or no firmware block",
+  "the same reading delivered twice",
+  "no readings"
+ ]
+}

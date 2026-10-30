@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0238",
+  "slug": "lines-with-5-to-20-units",
+  "lesson": "PS-L048",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Lines with 5 to 20 units",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "The warehouse plans pallets for mid-sized orders and wants every invoice line with 5 to 20 units. The starter reads the lines in 3 parallel queries split on `quantity`, with bounds 5 and 20. Change `solve(invoice_lines)` so it returns `invoice_id`, `line_no`, `product_id` and `quantity` for those lines only.",
+  "rules": [
+    "Keep a line when `quantity` is from 5 to 20; lines with exactly 5 or exactly 20 units count.",
+    "A line with no quantity recorded is not kept.",
+    "Keep every matching row the database returns, repeats included.",
+    "Return `invoice_id`, `line_no` (integer), `product_id` and `quantity` (integer), in that order."
+  ],
+  "hints": [
+    "Run the starter on the sample. Do the bounds remove the lines with 1 or 50 units?",
+    "The database can pick the rows: put a subquery `(SELECT ... WHERE ...) AS mid` in `dbtable`. The partition options still work on it.",
+    "Check both ends and the missing quantity. Which partition's query reads a line with no quantity?"
+  ],
+  "explanation": "`lowerBound` and `upperBound` only decide where the 3 slices are cut. The first query is `quantity < 10 OR quantity IS NULL` and the last is `quantity >= 15`, so lines with 1, 50 or no units are all read. The rows have to be picked in the database: `.option(\"dbtable\", \"(SELECT invoice_id, line_no, product_id, quantity FROM invoice_lines WHERE quantity BETWEEN 5 AND 20) AS mid\")`, keeping the partition options. `BETWEEN` includes both ends, and a missing quantity is dropped because the comparison isn't true. Watch for `> 5` or `< 20`, which lose the lines of exactly 5 or 20 units, and for `distinct`, which merges a line stored twice. The `query` option would also filter, but it can't be combined with `partitionColumn`.",
+  "entry": "solve",
+  "inputs": [
+    "invoice_lines"
+  ],
+  "starter": "def solve(invoice_lines):\n    url = \"jdbc:sqlite:/tmp/billing.db\"\n    invoice_lines.coalesce(1).write.jdbc(url, \"invoice_lines\", mode=\"overwrite\")\n    # The table is big, so it's read in 3 parallel queries split on quantity.\n    # Return invoice_id, line_no, product_id and quantity for the lines with 5 to 20 units.\n    lines = (spark.read.format(\"jdbc\")\n             .option(\"url\", url)\n             .option(\"dbtable\", \"invoice_lines\")\n             .option(\"partitionColumn\", \"quantity\")\n             .option(\"lowerBound\", 5)\n             .option(\"upperBound\", 20)\n             .option(\"numPartitions\", 3)\n             .load())\n    return lines.select(\"invoice_id\", \"line_no\", \"product_id\", \"quantity\")\n",
+  "output": {
+    "columns": [
+      "invoice_id",
+      "line_no",
+      "product_id",
+      "quantity"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

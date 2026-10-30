@@ -1,0 +1,50 @@
+{
+  "id": "PS-Q0274",
+  "slug": "payment-types-used-often",
+  "lesson": "PS-L055",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 6,
+  "title": "Payment types used more than once",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "prompt": "This function should return every payment type used on at least 2 trips, with its number of trips. It returns every payment type instead. Find the bug and fix `solve(trips)`.",
+  "rules": [
+    "Keep a payment type when at least 2 trips used it (exactly 2 counts).",
+    "Trips with no payment type form a group of their own, kept by the same rule.",
+    "Return the columns `payment_type` and `count`, one row per kept payment type."
+  ],
+  "hints": [
+    "Run the starter on the sample. How many payment types does it return, and what number is `counts.count()` comparing?",
+    "`counts` is a DataFrame with a `count` column. `counts.count()` is an action that counts the rows of `counts`: one number for the whole table.",
+    "Keep the rows whose own `count` column is at least 2, with `filter` and `F.col(\"count\")`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "trips"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(trips):\n    counts = trips.groupBy(\"payment_type\").count()\n    # Keep the payment types used on at least 2 trips.\n    if counts.count() >= 2:\n        return counts\n    return counts.limit(0)\n",
+  "output": {
+    "columns": [
+      "payment_type",
+      "count"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`trips.groupBy(\"payment_type\").count()` is a transformation: it returns a DataFrame with one row per payment type and a `count` column. `counts.count()` is something else, an action that runs a job and returns how many rows `counts` has. The lesson trips have 4 payment types, so the test is `4 >= 2` and the starter returns them all. The fix compares each row's own column: `counts.filter(F.col(\"count\") >= 2)`. That also removes the extra job the `if` started. Use `>=`, not `>`: cash has exactly 2 lesson trips and must stay."
+}

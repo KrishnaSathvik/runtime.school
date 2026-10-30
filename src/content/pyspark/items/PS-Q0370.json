@@ -1,0 +1,56 @@
+{
+ "id": "PS-Q0370",
+ "slug": "each-event-once-across-loads",
+ "lesson": "PS-L074",
+ "role": "integration",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 10,
+ "title": "Each event once across loads",
+ "dataset": {
+  "id": "PS-D08",
+  "version": "1.0.0"
+ },
+ "prompt": "The tracking feed sometimes delivers an event twice, on the same day or a day later. `process()` already appends each new load to bronze. Finish it so silver gets one row per event, adding only the events it doesn't have yet.",
+ "rules": [
+  "Silver has one row per `event_id`, with the columns in `EVENT_COLUMNS` (no `load_date`). A repeated delivery is the same event, whether it comes in the same load or a later one.",
+  "Every landed event is in silver, however often `process()` runs.",
+  "Each run adds to silver; it doesn't rebuild it from bronze.",
+  "Don't change step 1, `deliver` or `solve`."
+ ],
+ "hints": [
+  "Without `load_date`, two deliveries of one event are the same row: `select(EVENT_COLUMNS).distinct()` keeps one.",
+  "An event can already be in silver from an earlier run. Collect silver's `event_id` values into a list and drop the new events whose id is in it, with `~F.col(\"event_id\").isin(...)`.",
+  "On the first run there's no silver table yet: check with `DeltaTable.isDeltaTable`."
+ ],
+ "entry": "solve",
+ "inputs": [
+  "shipment_events"
+ ],
+ "starter": "import shutil\n\nfrom pyspark.sql import functions as F\nfrom delta.tables import DeltaTable\n\nLANDING = \"/tmp/landing/shipment_events\"\nBRONZE = \"/tmp/bronze/shipment_events\"\nSILVER = \"/tmp/silver/events\"\nEVENT_COLUMNS = [\"event_id\", \"shipment_id\", \"warehouse_id\", \"event_type\", \"event_time\", \"location\", \"sequence\"]\n\n\ndef deliver(shipment_events, days):\n    # These load days land in the landing folder, one folder per day. Don't change this.\n    (shipment_events.filter(F.col(\"load_date\").isin(days))\n        .write.mode(\"append\").partitionBy(\"load_date\").parquet(LANDING))\n\n\ndef process():\n    # 1. Bronze: append the landed rows after bronze's high-water mark, as they arrived.\n    if DeltaTable.isDeltaTable(spark, BRONZE):\n        mark = spark.read.format(\"delta\").load(BRONZE).select(F.max(\"load_date\")).first()[0]\n    else:\n        mark = None\n    landing = spark.read.parquet(LANDING)\n    new = landing if mark is None else landing.filter(F.col(\"load_date\") > mark)\n    new.write.format(\"delta\").mode(\"append\").save(BRONZE)\n\n    # 2. Silver: one row per event; add only events it doesn't have yet.\n    pass\n\ndef solve(shipment_events):\n    shutil.rmtree(\"/tmp/landing\", ignore_errors=True)  # start from empty folders on every run\n    shutil.rmtree(\"/tmp/bronze\", ignore_errors=True)\n    shutil.rmtree(\"/tmp/silver\", ignore_errors=True)\n    days = sorted(r.load_date for r in shipment_events.select(\"load_date\").distinct().collect())\n    deliver(shipment_events, days[:1])\n    process()\n    deliver(shipment_events, days[1:])\n    process()\n    process()  # a rerun: nothing new has landed\n    return spark.read.format(\"delta\").load(SILVER)\n",
+ "output": {
+  "columns": [
+   "event_id",
+   "shipment_id",
+   "warehouse_id",
+   "event_type",
+   "event_time",
+   "location",
+   "sequence"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 180,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "explanation": "Bronze keeps every delivery with its `load_date`; silver keeps the event. Repeats come in two ways. In one load, `new.select(EVENT_COLUMNS).distinct()` folds copies together, because without `load_date` they are the same row, even when the copy landed a day later in the same delivery. Across loads, the copy of E0000007 lands on 4 March, after the first run has already put the event in silver, so the run also drops the events whose `event_id` silver already has: collect those ids and filter with `~F.col(\"event_id\").isin(seen)`. On the rerun there's nothing new, so the append is empty. `distinct()` with `load_date` still in the rows keeps a copy that landed a day later, and overwriting silver with each load loses the earlier runs."
+}

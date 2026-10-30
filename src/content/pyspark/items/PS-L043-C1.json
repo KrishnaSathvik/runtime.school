@@ -1,0 +1,52 @@
+{
+  "id": "PS-L043-C1",
+  "slug": "typed-hr-export",
+  "lesson": "PS-L043",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "A typed HR export",
+  "dataset": {
+    "id": "PS-D03",
+    "version": "1.0.0"
+  },
+  "prompt": "Payroll wants the HR export as a proper table. The starter saves the export as a file; write the rest of `solve(employees_raw)` so it reads that file with the right options and returns the six columns with their types, leaving out malformed lines.",
+  "rules": [
+    "Fields are separated by `;`, the first line is a header, and quoted values can contain `;`.",
+    "Columns and types: `employee_id STRING, full_name STRING, job_title STRING, department STRING, salary DECIMAL(10,2), hire_date DATE`.",
+    "Leave out malformed lines: too few or too many fields, or a salary or date that isn't valid. An empty field is NULL, not malformed.",
+    "Return all six columns, in this order. Keep duplicate lines."
+  ],
+  "hints": [
+    "`spark.read.csv(path, sep=..., header=...)`: the default separator is a comma.",
+    "Pass the schema string as `schema=` so salary is an exact decimal and hire_date a date.",
+    "`mode=\"DROPMALFORMED\"` leaves out the lines that don't fit the schema."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "employees_raw"
+  ],
+  "starter": "def solve(employees_raw):\n    path = \"/tmp/hr/employees\"\n    employees_raw.write.mode(\"overwrite\").text(path)\n    # Read the file at `path` as CSV and return the typed rows.\n    return employees_raw\n",
+  "output": {
+    "columns": [
+      "employee_id",
+      "full_name",
+      "job_title",
+      "department",
+      "salary",
+      "hire_date"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

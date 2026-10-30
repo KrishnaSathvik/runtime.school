@@ -1,0 +1,44 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D08",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "shipments",
+   "warehouses",
+   "inventory"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "10485760b\ntrue\nTrue False\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "False True\n2 shuffles\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "True\nTrue\n+-----------+------------+-------------------+------+\n|shipment_id|warehouse_id|               name|region|\n+-----------+------------+-------------------+------+\n|     SH0001|        WH03| Sunbelt Cross-Dock| south|\n|     SH0002|        WH01|    Harbor Point DC| north|\n|     SH0003|        WH02|Ridgeway Fulfilment| north|\n|     SH0004|        WH02|Ridgeway Fulfilment| north|\n+-----------+------------+-------------------+------+\n\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "before running: True False\n4 rows\nTrue\nfinal plan: True False\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "hint on shipments False\nhint on warehouses True\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "8 rows joined on sku alone\n4 rows joined on warehouse and sku\n+-----------+------------+--------+--------+-------+\n|shipment_id|warehouse_id|     sku|quantity|on_hand|\n+-----------+------------+--------+--------+-------+\n|     SH0001|        WH03|SKU-1003|       1|    388|\n|     SH0002|        WH01|SKU-1003|       2|    560|\n|     SH0003|        WH02|SKU-1014|      24|    266|\n|     SH0004|        WH02|SKU-1014|      24|    266|\n+-----------+------------+--------+--------+-------+\n\n",
+   "error": null
+  }
+ }
+}

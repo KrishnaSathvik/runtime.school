@@ -1,0 +1,50 @@
+{
+  "id": "PS-Q0096",
+  "slug": "channels-each-customer-uses",
+  "lesson": "PS-L020",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Channels each customer uses",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "The marketing team wants to know which channels each customer has ordered through. Write `solve(orders)` so it returns `customer_id` and `channel`, with each combination once.",
+  "rules": [
+    "One row for every customer and channel that appear together on at least one order, however many orders that is.",
+    "Values are compared exactly: `App` and `app` are different channels. Two missing values count as the same.",
+    "Return `customer_id` and `channel`, in that order."
+  ],
+  "hints": [
+    "You only need two columns, so start by selecting them.",
+    "After the `select`, rows for the same customer and channel are exact copies. `distinct()` keeps one of each.",
+    "Removing copies before the `select` doesn't help: two orders are never copies of each other, even when their customer and channel match."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "orders"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(orders):\n    # Return each customer and channel combination once.\n    return orders\n",
+  "output": {
+    "columns": [
+      "customer_id",
+      "channel"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Select the two columns first, then remove the copies: `orders.select(\"customer_id\", \"channel\").distinct()`. `dropDuplicates()` in place of `distinct()` gives the same rows. The order matters: `orders.distinct()` compares whole orders, and two different orders always differ in `order_id`, so nothing is removed and the later `select` leaves the repeats in. `orders.dropDuplicates([\"customer_id\"])` goes too far the other way and keeps one channel per customer. A missing channel is compared like any other value, so a customer's orders with no channel give one row with a missing channel."
+}

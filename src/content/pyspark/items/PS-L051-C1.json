@@ -1,0 +1,48 @@
+{
+  "id": "PS-L051-C1",
+  "slug": "customer-initials-udf",
+  "lesson": "PS-L051",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Customer initials",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "Name badges show each customer's initials. Write `solve(customers)` so it returns `customer_id` and `initials`: the first letter of each word of `name`, in capitals. A UDF is a fine way to do it.",
+  "rules": [
+    "Words are separated by one or more spaces; spaces at the start or end don't count.",
+    "Initials are in capitals: `ana ruiz` gives `AR`. A name made only of spaces gives an empty string.",
+    "A missing name gives a missing `initials`.",
+    "Return `customer_id` and `initials`, both text, in that order. Keep every customer."
+  ],
+  "hints": [
+    "In Python, `name.split()` with no argument splits on any run of spaces and ignores spaces at the ends.",
+    "Return `None` when the name is `None`, so a missing name doesn't stop the job.",
+    "Wrap the function with `F.udf(function, \"string\")`, or use the `@F.udf(\"string\")` decorator."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "customers"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(customers):\n    # Return customer_id and the initials of each name.\n    return customers\n",
+  "output": {
+    "columns": [
+      "customer_id",
+      "initials"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

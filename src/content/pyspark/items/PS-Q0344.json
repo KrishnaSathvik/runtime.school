@@ -1,0 +1,55 @@
+{
+ "id": "PS-Q0344",
+ "slug": "fix-the-hourly-click-counts",
+ "lesson": "PS-L069",
+ "role": "debugging",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 10,
+ "title": "Fix the hourly click counts",
+ "dataset": {
+  "id": "PS-D12",
+  "version": "1.0.0"
+ },
+ "prompt": "Billing counts clicks per campaign per clock hour. A colleague's stream gives counts that are too high, and a late click lands days after it happened. Fix `solve(clicks)` so it returns `hour_start`, `campaign_id` and `clicks` from the memory table.",
+ "rules": [
+  "Each click counts once, in the clock hour of its `event_time`, even when it arrived later.",
+  "After the last delivery the table has one row per hour and campaign, with the final count.",
+  "The counts must come from the streaming query's memory table, not from grouping `clicks` itself."
+ ],
+ "hints": [
+  "Compare the sample's expected and actual hours. Which column puts K0006 on 5 March?",
+  "Count how many windows each click lands in. What does the third argument of `F.window` do?",
+  "Clock hours don't overlap: a window with no slide tumbles."
+ ],
+ "explanation": "Two bugs. `F.window(\"arrival_time\", ...)` groups clicks by when they reached the pipeline, so the late click K0006 from 3 March is counted on 5 March; billing needs `event_time`. And the third argument, `\"30 minutes\"`, makes sliding windows that start every half hour, so each click is counted in two overlapping hours and the totals are doubled. Clock hours tumble: `F.window(\"event_time\", \"1 hour\")`. Complete mode was right already: it leaves each hour once in the memory table.",
+ "entry": "solve",
+ "inputs": [
+  "clicks"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef solve(clicks):\n    spark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")  # small data: one partition keeps the stream fast\n    make_batches(clicks, \"/tmp/clicks\")\n    stream = spark.readStream.schema(clicks.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/clicks\")\n    result = stream.groupBy(F.window(\"arrival_time\", \"1 hour\", \"30 minutes\"), \"campaign_id\").count()\n    q = result.writeStream.outputMode(\"complete\").format(\"memory\").queryName(\"hourly_clicks\").trigger(availableNow=True).start()\n    q.awaitTermination()\n    return spark.table(\"hourly_clicks\").select(F.col(\"window.start\").alias(\"hour_start\"), \"campaign_id\", F.col(\"count\").alias(\"clicks\"))\n",
+ "output": {
+  "columns": [
+   "hour_start",
+   "campaign_id",
+   "clicks"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

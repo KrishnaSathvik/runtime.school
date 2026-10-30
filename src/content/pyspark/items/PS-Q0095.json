@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0095",
+  "slug": "station-health-feed",
+  "lesson": "PS-L019",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Station health feed",
+  "dataset": {
+    "id": "PS-D13",
+    "version": "1.0.0"
+  },
+  "prompt": "The station health page lists every reading that wasn't flagged suspect and says whether all five of its measurements arrived. Write `solve(observations)` so it returns `observation_id`, `station_id`, `observed_at`, `quality_flag` and `completeness`.",
+  "rules": [
+    "The five measurements are `temperature_c`, `humidity_pct`, `precipitation_mm`, `wind_speed_kph` and `pressure_hpa`. One is missing when it's empty (null), NaN, or the station's `-9999` code.",
+    "`completeness` is `complete` when none of the five is missing, and `incomplete` otherwise.",
+    "Leave out readings flagged `suspect`. A reading with no flag stays in, and its `quality_flag` shows as `unchecked`.",
+    "Keep duplicates."
+  ],
+  "hints": [
+    "Start by turning -9999 into null in the five columns with `na.replace`. Then a missing measurement is simply one that `isNull()` or `F.isnan(...)` finds.",
+    "Join one missing-value check per column with `|`, and give that to `F.when(missing, \"incomplete\").otherwise(\"complete\")`. Name the result with `.alias(\"completeness\")`.",
+    "An empty flag isn't `!= \"suspect\"`, so keep it with `isNull() |`. `fillna(\"unchecked\", subset=[\"quality_flag\"])` or `F.coalesce` gives it its label."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "observations"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(observations):\n    # Return observation_id, station_id, observed_at, quality_flag and completeness.\n    return observations\n",
+  "output": {
+    "columns": [
+      "observation_id",
+      "station_id",
+      "observed_at",
+      "quality_flag",
+      "completeness"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Three kinds of missing value turn up here, and each needs its own tool. `na.replace(-9999, None, subset=MEASURES)` turns the code into a real null, so afterwards a measurement is missing when `F.col(c).isNull() | F.isnan(c)`; joining that for the five columns with `|` gives one `missing` condition, and `F.when(missing, \"incomplete\").otherwise(\"complete\")` labels the reading. NaN must be checked with `isnan`, because `isNull()` is false for it. The suspect readings go with `filter(F.col(\"quality_flag\").isNull() | (F.col(\"quality_flag\") != \"suspect\"))`, which keeps a missing flag, and `fillna(\"unchecked\", subset=[\"quality_flag\"])` (or `F.coalesce(F.col(\"quality_flag\"), F.lit(\"unchecked\"))`) gives it its label. A final `select` with `.alias(\"completeness\")` shapes the columns. Doing the `fillna` before the `filter` works too, since `unchecked` is never `suspect`."
+}

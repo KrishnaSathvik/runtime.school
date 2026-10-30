@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0007",
+  "kind": "predict",
+  "slug": "spread-work-across-cores",
+  "lesson": "PS-L002",
+  "role": "business",
+  "format": "concept_or_trace",
+  "difficulty": "easy",
+  "minutes": 4,
+  "title": "Spread the work across cores",
+  "prompt": "The platform team wants three tasks per core when it processes `api_requests`. This program sizes the partitions from the cores Spark has. What does it print? Type each line on its own line.",
+  "program": "cores = spark.sparkContext.defaultParallelism\nspread = api_requests.repartition(cores * 3)\nprint(cores)\nprint(spread.rdd.getNumPartitions())\nprint(spread.count() / spread.rdd.getNumPartitions())\n",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "Spark here runs as `local[2]`, and `defaultParallelism` follows the number of cores.",
+    "`repartition(n)` makes exactly `n` partitions.",
+    "The last line divides the number of requests by the number of partitions, with Python's `/`."
+  ],
+  "explanation": "`defaultParallelism` is 2, one per core, so `repartition(6)` makes 6 partitions. The 12 requests are only moved around, so on average each partition holds `12 / 6` = `2.0` rows; Python's `/` always gives a decimal number."
+}

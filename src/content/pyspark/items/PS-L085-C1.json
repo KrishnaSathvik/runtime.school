@@ -1,0 +1,21 @@
+{
+  "id": "PS-L085-C1",
+  "kind": "predict",
+  "slug": "where-the-rows-went",
+  "lesson": "PS-L085",
+  "difficulty": "medium",
+  "minutes": 6,
+  "title": "Where the rows went",
+  "prompt": "What does this program print? `profile` is the lesson's helper; the loop prints each step's rows, or the rows it shuffled for an `Exchange`. Of the 12 lesson trips, 6 were paid by card and are longer than 2 miles, and 3 drivers drove them. `trips` is one CSV file of 1,436 bytes. Type each printed line on its own line.",
+  "program": "from pyspark.sql import functions as F\n\nspark.conf.set(\"spark.sql.adaptive.enabled\", \"false\")\n\n\ndef profile(df):\n    \"\"\"Run df once, then list the plan steps Spark ran with the counts it kept.\"\"\"\n    df.collect()\n    labels = {\"numOutputRows\": \"rows\", \"shuffleRecordsWritten\": \"shuffled rows\", \"numFiles\": \"files\", \"filesSize\": \"bytes\"}\n    steps = []\n\n    def walk(node, depth):\n        name = node.nodeName().strip()\n        if name == \"AdaptiveSparkPlan\":\n            return walk(node.executedPlan(), depth)\n        if name.endswith(\"QueryStage\"):\n            return walk(node.plan(), depth)\n        metrics = node.metrics()\n        counts = {label: metrics.apply(key).value() for key, label in labels.items() if metrics.contains(key)}\n        if counts:\n            steps.append((\"  \" * depth + name, counts))\n            depth += 1\n        children = node.children()\n        for i in range(children.size()):\n            walk(children.apply(i), depth)\n\n    walk(df._jdf.queryExecution().executedPlan(), 0)\n    return steps\n\n\nlong_card = trips.filter((F.col(\"payment_type\") == \"card\") & (F.col(\"trip_distance\") > 2))\nper_driver = long_card.groupBy(\"driver_id\").agg(F.sum(\"total\").alias(\"revenue\"))\n\nsteps = profile(per_driver)\nfor step, counts in steps:\n    print(step.strip(), counts.get(\"rows\", counts.get(\"shuffled rows\")))\nprint(steps[-1][1][\"files\"], steps[-1][1][\"bytes\"])\n",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "Plans print top-down, so the scan of the file comes last.",
+    "Simple conditions on columns are pushed into the CSV reader, so the scan hands on only the rows that match. It still reads the whole file to find them.",
+    "A grouping adds up rows within each partition before the shuffle and again after it. `trips` is one partition."
+  ]
+}

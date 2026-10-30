@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0067",
+  "slug": "statement-lines-as-text",
+  "lesson": "PS-L014",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Statement lines as text",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "The old statement printer takes amounts as text and needs only the day of each transaction. Write `solve(transactions)` so it returns `transaction_id`, `account_id`, `posted_on` and `amount_text`.",
+  "rules": [
+    "`posted_on` is the date part of `posted_at`, as a `date`.",
+    "`amount_text` is `amount` as text, with both decimal places kept: 800.00 is `800.00`, not `800.0`.",
+    "A missing time or amount stays missing. Return the four columns, in that order, for every transaction, duplicates included."
+  ],
+  "hints": [
+    "Two casts, each with an `alias`: one to `\"date\"`, one to `\"string\"`.",
+    "Casting a timestamp to a date keeps the day and drops the time.",
+    "Cast the decimal straight to text. Going through a `double` first loses the trailing zero."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "transactions"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(transactions):\n    # transaction_id, account_id, posted_on, amount_text\n    return transactions\n",
+  "output": {
+    "columns": [
+      "transaction_id",
+      "account_id",
+      "posted_on",
+      "amount_text"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Two casts in one `select`: `transactions.select(\"transaction_id\", \"account_id\", F.col(\"posted_at\").cast(\"date\").alias(\"posted_on\"), F.col(\"amount\").cast(\"string\").alias(\"amount_text\"))`. A decimal cast to text keeps its scale, so `800.00` stays `800.00`; cast to a `double` first and it prints as `800.0`. Casting the timestamp to `\"string\"` instead of `\"date\"` gives text with the time still on it. Missing values stay missing through both casts."
+}

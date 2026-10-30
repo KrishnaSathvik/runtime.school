@@ -1,0 +1,146 @@
+{
+  "id": "PS-L066",
+  "minutes": 30,
+  "lede": "A table that's written to every few minutes ends up as thousands of tiny files, and every overwrite leaves the old files behind. OPTIMIZE packs small files together, Z-ordering arranges rows so reads can skip files, and VACUUM deletes what no version needs any more.",
+  "objectives": [
+    "Count a Delta table's files with `detail()` and `inputFiles()`, and tell them apart from the files on disk",
+    "Compact small files with `optimize().executeCompaction()` and read its metrics",
+    "Use `executeZOrderBy` and the log's min/max values to explain how reads skip files",
+    "Delete old files with `vacuum`, and explain the retention check and what it costs time travel"
+  ],
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "trips"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`trips` holds twelve taxi rides from one morning. A real trip feed doesn't arrive once a day: it lands every few minutes, and every load that's appended to a Delta table adds at least one Parquet file. A month later the table is thousands of files holding a few rows each.\n\nSmall files cost time on every read. Spark has to list them, open each one and read its footer before it reads a single row, and the log has one `add` action per file to replay. The rows are fine; the **layout** is the problem.\n\nTo show that layout with twelve rows, the examples write `trips` with the option `maxRecordsPerFile` set to 3. It caps how many rows go into one file, so the write makes four files of three trips: the same layout four small loads would leave.\n\nTwo ways to count a table's files:\n\n- `DeltaTable.forPath(spark, path).detail()` is a one-row DataFrame describing the current version. Its `numFiles` column is the number of data files that version is made of.\n- `df.inputFiles()` lists the files a read of `df` will open."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Four small files",
+      "code": "from delta.tables import DeltaTable\n\npath = \"/tmp/taxi/trips\"\ntrips.write.format(\"delta\").option(\"maxRecordsPerFile\", 3).save(path)\n\ntable = DeltaTable.forPath(spark, path)\nprint(table.detail().first().numFiles, \"files in the table\")\n\ndf = spark.read.format(\"delta\").load(path)\nprint(len(df.inputFiles()), \"files to read\")\nprint(df.count(), \"trips\")\n",
+      "note": "Twelve trips, at most three per file: four files. Both counts come from the log, so they agree."
+    },
+    {
+      "kind": "text",
+      "md": "**Compaction** rewrites many small files as a few bigger ones. In Delta it's `OPTIMIZE`: `table.optimize().executeCompaction()` in Python, or `OPTIMIZE delta.` and the path in backticks in SQL.\n\nOPTIMIZE groups the small files into bins of up to about 1 GB (`spark.databricks.delta.optimize.maxFileSize`), writes each bin as one new file, and commits `add` for the new files and `remove` for the old ones. The rows don't change, so the commit marks its actions `dataChange: false`: jobs that read the table's changes know nothing new arrived.\n\nIt returns a DataFrame with one row. Its `metrics` column says how many files were removed and added."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Compact with OPTIMIZE",
+      "code": "import os\nfrom delta.tables import DeltaTable\n\n\ndef files_on_disk(path):\n    return len([f for f in os.listdir(path) if f.endswith(\".parquet\")])\n\npath = \"/tmp/taxi/trips\"\ntrips.write.format(\"delta\").option(\"maxRecordsPerFile\", 3).save(path)\ntable = DeltaTable.forPath(spark, path)\n\nmetrics = table.optimize().executeCompaction().first().metrics\nprint(\"removed\", metrics.numFilesRemoved, \"added\", metrics.numFilesAdded)\nprint(table.detail().first().numFiles, \"file in the table,\", files_on_disk(path), \"on disk\")\nprint(spark.read.format(\"delta\").load(path).count(), \"trips\")\n\nagain = table.optimize().executeCompaction().first().metrics\nprint(\"again: removed\", again.numFilesRemoved, \"added\", again.numFilesAdded)\ntable.history().select(\"version\", \"operation\").show()\n",
+      "note": "The four files became one, and the table still has its twelve trips. The four old files are still in the folder: removed in the log, not deleted, so there are five on disk. The second OPTIMIZE found one file and nothing to merge, so it changed nothing and made no commit. The history has just the write and one `OPTIMIZE`."
+    },
+    {
+      "kind": "text",
+      "md": "Compaction decides how many files there are. **Z-ordering** decides which rows go into which file.\n\nEvery `add` action in the log carries each column's minimum and maximum value in that file (lesson 61). A read with a condition, such as `where(\"pickup_zone_id = 4\")`, which keeps the rows where the condition is true, compares the condition with those values first. A file whose range can't contain a match isn't opened at all. That's **data skipping**, and it only helps when each file covers a narrow range.\n\n`table.optimize().executeZOrderBy(\"pickup_zone_id\")` rewrites the files with rows that have close values of the column stored together. Here the trips were written in pickup order, so every file holds a mix of zones. With twelve rows everything would fit in one file, so the example sets the target file size to 6,000 bytes to get more than one."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Z-order so reads skip files",
+      "code": "import json\nimport os\nfrom delta.tables import DeltaTable\n\n\ndef zone_ranges(path):\n    # Each current file's min and max pickup_zone_id, from the log.\n    files = {}\n    for name in sorted(f for f in os.listdir(path + \"/_delta_log\") if f.endswith(\".json\")):\n        with open(path + \"/_delta_log/\" + name) as f:\n            for line in f:\n                action = json.loads(line)\n                if \"add\" in action:\n                    stats = json.loads(action[\"add\"][\"stats\"])\n                    files[action[\"add\"][\"path\"]] = (stats[\"minValues\"][\"pickup_zone_id\"], stats[\"maxValues\"][\"pickup_zone_id\"])\n                if \"remove\" in action:\n                    files.pop(action[\"remove\"][\"path\"])\n    return sorted(files.values())\n\npath = \"/tmp/taxi/trips\"\ntrips.write.format(\"delta\").option(\"maxRecordsPerFile\", 3).save(path)\nprint(zone_ranges(path))\nprint(len(spark.read.format(\"delta\").load(path).where(\"pickup_zone_id = 4\").inputFiles()), \"files to read\")\n\nspark.conf.set(\"spark.databricks.delta.optimize.maxFileSize\", 6000)\nDeltaTable.forPath(spark, path).optimize().executeZOrderBy(\"pickup_zone_id\")\nprint(zone_ranges(path))\nprint(len(spark.read.format(\"delta\").load(path).where(\"pickup_zone_id = 4\").inputFiles()), \"file to read\")\n",
+      "note": "Before, every file's range includes zone 4, so the read opens all four. After Z-ordering, one file holds zones 1 to 5 and the other 10 to 22, and the read opens one. Z-ordering is still an OPTIMIZE: the history calls it `OPTIMIZE`, with the column in its parameters. It works best on a column queries often filter on and that has many values; you can give several columns, but each one you add makes the ordering on the others looser."
+    },
+    {
+      "kind": "text",
+      "md": "Compaction and every overwrite, update or delete leave files that the current version no longer uses. They're what makes time travel work, and they cost storage. `table.vacuum(retentionHours)` (SQL: `VACUUM delta.` path `RETAIN n HOURS`) **deletes** files that are no longer in the current version and were removed more than `retentionHours` ago.\n\nThe default retention is 168 hours, seven days, set per table by the property `delta.deletedFileRetentionDuration`. A job reading an older version, or a writer still working, may need a file removed a minute ago, so Delta refuses a shorter retention than the table's unless you switch off its safety check."
+    },
+    {
+      "kind": "error-example",
+      "id": "e4",
+      "title": "VACUUM refuses a short retention",
+      "code": "from delta.tables import DeltaTable\n\npath = \"/tmp/taxi/trips\"\ntrips.write.format(\"delta\").option(\"maxRecordsPerFile\", 3).save(path)\ntable = DeltaTable.forPath(spark, path)\ntable.optimize().executeCompaction()\n\ntable.vacuum(0)\n",
+      "note": "Delta asks whether you're sure. The full message goes on to name the setting that turns the check off, `spark.databricks.delta.retentionDurationCheck.enabled`, and to suggest at least 168 hours. Nothing is deleted.",
+      "error": "IllegalArgumentException"
+    },
+    {
+      "kind": "text",
+      "md": "On a table nobody else is using, such as this example's, you can switch the check off and vacuum with 0 hours. Never do that on a shared table: a job that's reading an older version would lose its files halfway through.\n\nVACUUM lists every file in the table's folder with a Spark job. Its default split, `spark.sql.sources.parallelPartitionDiscovery.parallelism`, is 10,000 pieces, sized for huge tables on a cluster; in this course's two-core environment that alone takes longer than an example may run, so the examples set it to 2."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "VACUUM deletes old files",
+      "code": "import os\nfrom delta.tables import DeltaTable\n\n\ndef files_on_disk(path):\n    return len([f for f in os.listdir(path) if f.endswith(\".parquet\")])\n\nspark.conf.set(\"spark.sql.sources.parallelPartitionDiscovery.parallelism\", \"2\")\n\npath = \"/tmp/taxi/trips\"\ntrips.write.format(\"delta\").option(\"maxRecordsPerFile\", 3).save(path)\ntable = DeltaTable.forPath(spark, path)\ntable.optimize().executeCompaction()\nprint(files_on_disk(path), \"files on disk\")\n\ntable.vacuum()\nprint(files_on_disk(path), \"after vacuum with the default retention\")\n\nspark.conf.set(\"spark.databricks.delta.retentionDurationCheck.enabled\", \"false\")\ntable.vacuum(0)\nprint(files_on_disk(path), \"after vacuum with 0 hours\")\n\ntable.history().select(\"version\", \"operation\").show()\nprint(spark.read.format(\"delta\").load(path).count(), \"trips\")\n",
+      "note": "The default keeps files removed in the last seven days, and these were removed seconds ago, so nothing went. With 0 hours the four old files are deleted and only the current one is left. Each VACUUM writes two commits, `VACUUM START` and `VACUUM END`, but changes no rows."
+    },
+    {
+      "kind": "text",
+      "md": "The history still lists every version after a VACUUM. What's gone is the data files the old versions point to. `option(\"versionAsOf\", n)` on a read asks for the table as it was at version `n`: that's **time travel**. Here an overwrite replaces the four small files, so version 0 needs files the current version doesn't.\n\nSo retention is a choice: how far back do you need to read? Keep at least that many hours. Commits themselves are kept for 30 days by default (`delta.logRetentionDuration`), but a version is only readable while its data files exist too."
+    },
+    {
+      "kind": "error-example",
+      "id": "e6",
+      "title": "Time travel after VACUUM",
+      "code": "from delta.tables import DeltaTable\n\nspark.conf.set(\"spark.sql.sources.parallelPartitionDiscovery.parallelism\", \"2\")\nspark.conf.set(\"spark.databricks.delta.retentionDurationCheck.enabled\", \"false\")\n\npath = \"/tmp/taxi/trips\"\ntrips.write.format(\"delta\").option(\"maxRecordsPerFile\", 3).save(path)\ntrips.write.format(\"delta\").mode(\"overwrite\").save(path)\nDeltaTable.forPath(spark, path).vacuum(0)\n\nspark.read.format(\"delta\").option(\"versionAsOf\", 0).load(path).show()\n",
+      "note": "The overwrite replaced version 0's four files, and VACUUM deleted them. The log still says which files version 0 had, so Spark tries to read them and finds they're not there: `FAILED_READ_FILE.FILE_NOT_EXIST`, wrapped in a Java error. The file name in the message is different on every run. The current version reads fine.",
+      "error": "Py4JJavaError"
+    }
+  ],
+  "challenges": [
+    "PS-L066-C1",
+    "PS-L066-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "A Delta table is made of four small files. You run OPTIMIZE. How many Parquet files are in its folder afterwards?",
+      "choices": [
+        "1: the old ones are replaced",
+        "4: OPTIMIZE only changes the log",
+        "5: one new file, and the four old ones until a VACUUM deletes them",
+        "0 until the next write"
+      ],
+      "answer": 2,
+      "why": "OPTIMIZE writes the new file and marks the old ones removed in the log. Only VACUUM deletes files, so `numFiles` says 1 while the folder holds 5."
+    },
+    {
+      "id": "k2",
+      "prompt": "Why does `vacuum(0)` raise an error unless you change a setting?",
+      "choices": [
+        "0 isn't a valid number of hours",
+        "A reader of an older version or a writer still working may need files removed moments ago",
+        "VACUUM only runs once a week",
+        "The table must be optimized first"
+      ],
+      "answer": 1,
+      "why": "Deleting recently removed files can break jobs that are still using them. The retention check refuses anything shorter than the table's retention, seven days by default."
+    },
+    {
+      "id": "k3",
+      "prompt": "After `vacuum(0)`, what happens when you read version 0 of a table that has been overwritten since?",
+      "choices": [
+        "You get the current rows",
+        "You get an empty table",
+        "The read fails: the log still lists version 0's files, but they've been deleted",
+        "Version 0 is gone from the history"
+      ],
+      "answer": 2,
+      "why": "VACUUM deletes data files, not commits. The history still has version 0, but its files no longer exist."
+    }
+  ],
+  "review": [
+    "Frequent small writes leave many small files; every read pays to list and open each one.",
+    "`detail().numFiles` and `inputFiles()` count the files of the current version; the folder also holds removed files.",
+    "`optimize().executeCompaction()` packs small files into bigger ones as a commit that changes no rows; with nothing to merge it makes no commit.",
+    "Each file's min/max values in the log let reads skip files; `executeZOrderBy(column)` stores close values together so ranges are narrow.",
+    "`vacuum(hours)` deletes files removed longer ago than the retention, 7 days by default; shorter retention needs the safety check switched off.",
+    "After a VACUUM, versions whose files were deleted can't be read: choose the retention by how far back you need time travel."
+  ],
+  "practice": [
+    "PS-Q0326",
+    "PS-Q0327",
+    "PS-Q0328",
+    "PS-Q0329",
+    "PS-Q0330"
+  ]
+}

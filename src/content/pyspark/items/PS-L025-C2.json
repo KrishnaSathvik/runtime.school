@@ -1,0 +1,50 @@
+{
+  "id": "PS-L025-C2",
+  "slug": "catalogue-against-order-lines",
+  "lesson": "PS-L025",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Catalogue against order lines",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "The catalogue team is checking products against what was sold. Write `solve(products, order_items)` so it returns `product_id`, `name`, `order_id` and `line_no` for every product and every order line, matched where they can be.",
+  "rules": [
+    "A product with order lines appears once per line. A product that was never sold appears once, with `order_id` and `line_no` missing.",
+    "An order line whose product isn't in `products` still appears, with `name` missing.",
+    "`product_id` is always filled in, from whichever side has it. Return only these four columns, in this order."
+  ],
+  "hints": [
+    "Nothing may be dropped from either side. Which join type keeps every row of both?",
+    "With `on=\"product_id\"`, Spark keeps one `product_id` column and fills it from whichever side matched.",
+    "Join first, then `select` the four columns."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "products",
+    "order_items"
+  ],
+  "starter": "def solve(products, order_items):\n    # Return product_id, name, order_id and line_no for every product and every order line.\n    return products\n",
+  "output": {
+    "columns": [
+      "product_id",
+      "name",
+      "order_id",
+      "line_no"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

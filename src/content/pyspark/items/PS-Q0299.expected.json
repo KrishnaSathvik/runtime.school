@@ -1,0 +1,67 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "user_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "movie_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "rating",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "storage",
+     "type": "string",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "U01",
+     "M06",
+     4.0,
+     "Disk Serialized 1x Replicated"
+    ],
+    [
+     "U03",
+     "M09",
+     4.5,
+     "Disk Serialized 1x Replicated"
+    ],
+    [
+     "U04",
+     "M10",
+     5.0,
+     "Disk Serialized 1x Replicated"
+    ],
+    [
+     "U05",
+     "M06",
+     4.0,
+     "Disk Serialized 1x Replicated"
+    ]
+   ],
+   "row_count": 4
+  }
+ },
+ "hidden": [
+  "the full practice ratings",
+  "ratings at midnight on New Year's Day and just before, missing values and times",
+  "no rating qualifies",
+  "no ratings at all"
+ ]
+}

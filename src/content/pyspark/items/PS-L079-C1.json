@@ -1,0 +1,21 @@
+{
+  "id": "PS-L079-C1",
+  "kind": "predict",
+  "slug": "read-a-submit-command",
+  "lesson": "PS-L079",
+  "difficulty": "medium",
+  "minutes": 7,
+  "title": "Read a submit command",
+  "prompt": "This program writes a small job and submits it with `spark-submit`. It prints the exit code, then the lines the job printed, without their `app:` prefix. What does it print? Type each line on its own line.",
+  "program": "import os, subprocess\n\nopen(\"/tmp/job.py\", \"w\").write(\"\"\"\nimport sys\nfrom pyspark.sql import SparkSession\n\nspark = (SparkSession.builder\n         .config(\"spark.sql.shuffle.partitions\", \"2\")\n         .getOrCreate())\nsc = spark.sparkContext\nprint(\"app:\", sc.appName)\nprint(\"app:\", sc.master, sc.defaultParallelism)\nprint(\"app:\", spark.conf.get(\"spark.sql.shuffle.partitions\"))\nprint(\"app:\", sys.argv[1:])\nspark.stop()\n\"\"\")\n\nenv = {**os.environ, \"SPARK_LOCAL_IP\": \"127.0.0.1\"}\nrun = subprocess.run(\n    [\"spark-submit\", \"--master\", \"local[3]\", \"--name\", \"hourly-errors\",\n     \"--conf\", \"spark.sql.shuffle.partitions=6\",\n     \"/tmp/job.py\", \"2026-02-01\", \"checkout-api\"],\n    capture_output=True, text=True, env=env)\nprint(run.returncode)\nfor line in run.stdout.splitlines():\n    if line.startswith(\"app:\"):\n        print(line[5:])\n",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "`--name` and `--master` set the application name and the master; `local[3]` means 3 cores, and `defaultParallelism` follows the cores.",
+    "The job's builder sets the shuffle partitions too. Which wins: the code or `--conf`?",
+    "Only the words after the script's path reach `sys.argv[1:]`."
+  ]
+}

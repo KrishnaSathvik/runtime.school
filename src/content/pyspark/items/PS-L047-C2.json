@@ -1,0 +1,21 @@
+{
+  "id": "PS-L047-C2",
+  "kind": "predict",
+  "slug": "folders-after-each-write",
+  "lesson": "PS-L047",
+  "difficulty": "medium",
+  "minutes": 6,
+  "title": "Folders after each write",
+  "prompt": "The lesson's 12 observations cover 2026-03-07 (5 readings) and 2026-03-08 (7 readings). This program writes them partitioned by day, then writes one late reading for 2026-03-09 three different ways. What does it print? Type each line on its own line.",
+  "program": "import os\nfrom datetime import date, datetime\n\npath = \"/tmp/c2/obs\"\n\n\ndef folders():\n    return sorted(d for d in os.listdir(path) if \"=\" in d)\n\n\nobservations.write.mode(\"overwrite\").partitionBy(\"observation_date\").parquet(path)\nprint(folders())\n\nlate = spark.createDataFrame([(\"OBS-000013\", \"NYC-01\", datetime(2026, 3, 9, 0, 0), date(2026, 3, 9), 0.5, 78, 0.0, 10.0, 1015.0, \"ok\")], observations.schema)\nlate.write.mode(\"append\").partitionBy(\"observation_date\").parquet(path)\nprint(len(folders()), spark.read.parquet(path).count())\n\nlate.write.mode(\"overwrite\").option(\"partitionOverwriteMode\", \"dynamic\").partitionBy(\"observation_date\").parquet(path)\nprint(len(folders()), spark.read.parquet(path).count())\n\nlate.write.mode(\"overwrite\").partitionBy(\"observation_date\").parquet(path)\nprint(folders(), spark.read.parquet(path).count())\n",
+  "dataset": {
+    "id": "PS-D13",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "`partitionBy` makes one `observation_date=...` folder per day; the list is sorted.",
+    "`append` adds a new day's folder. A dynamic overwrite replaces only the folder for 2026-03-09.",
+    "A plain overwrite replaces the whole path, every day."
+  ]
+}

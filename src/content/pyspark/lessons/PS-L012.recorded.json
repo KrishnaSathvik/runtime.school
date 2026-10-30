@@ -1,0 +1,43 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D03",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "employees"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "+-----------+---------+----------+\n|employee_id|   salary|new_salary|\n+-----------+---------+----------+\n|      E0001|260000.00| 262500.00|\n|      E0002|200000.00| 202500.00|\n|      E0003| 75000.00|  77500.00|\n|      E0004| 70000.00|  72500.00|\n+-----------+---------+----------+\nonly showing top 4 rows\n14 columns before, 15 after\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "+-----------+--------------------+-----+\n|employee_id|           job_title|level|\n+-----------+--------------------+-----+\n|      E0001|Chief Executive O...|    6|\n|      E0002| Head of Engineering|    5|\n|      E0003|   Software Engineer|    2|\n+-----------+--------------------+-----+\nonly showing top 3 rows\n+-----------+---------+--------+-----------+\n|employee_id|   salary|currency|review_year|\n+-----------+---------+--------+-----------+\n|      E0001|260000.00|     USD|       2026|\n|      E0002|200000.00|     USD|       2026|\n|      E0003| 75000.00|     USD|       2026|\n+-----------+---------+--------+-----------+\nonly showing top 3 rows\nroot\n |-- employee_id: string (nullable = true)\n |-- first_name: string (nullable = true)\n |-- last_name: string (nullable = true)\n |-- email: string (nullable = true)\n |-- phone: string (nullable = true)\n |-- job_title: string (nullable = true)\n |-- level: integer (nullable = true)\n |-- department_id: string (nullable = true)\n |-- manager_id: string (nullable = true)\n |-- hire_date: date (nullable = true)\n |-- employment_type: string (nullable = true)\n |-- salary: decimal(10,2) (nullable = true)\n |-- status: string (nullable = true)\n |-- termination_date: date (nullable = true)\n |-- currency: string (nullable = false)\n |-- review_year: integer (nullable = false)\n\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "",
+   "error": {
+    "type": "PySparkTypeError",
+    "message": "[NOT_COLUMN] Argument `col` should be a Column, got int.",
+    "line": 1,
+    "condition": "NOT_COLUMN"
+   }
+  },
+  "e4": {
+   "stdout": "['emp_id', 'first_name', 'last_name', 'email', 'phone', 'job_title', 'level', 'dept_id', 'manager_id', 'hire_date', 'employment_type', 'salary', 'status', 'termination_date']\n['employee_id', 'first_name', 'last_name', 'job_title', 'level', 'department_id', 'manager_id', 'hire_date', 'employment_type', 'status', 'termination_date']\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "True\n",
+   "error": null
+  }
+ }
+}

@@ -1,0 +1,57 @@
+{
+ "id": "PS-Q0336",
+ "slug": "archive-temperatures-to-parquet",
+ "lesson": "PS-L068",
+ "role": "foundation",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 12,
+ "title": "Archive temperatures to Parquet",
+ "dataset": {
+  "id": "PS-D09",
+  "version": "1.0.0"
+ },
+ "prompt": "The data team archives every temperature reading as Parquet files. Write `solve(sensor_readings)` so a streaming query saves `reading_id`, `device_id`, `event_time` and `temperature_c` from the delivery files into `/tmp/archive/data`, and return what that folder holds once the stream is done.",
+ "rules": [
+  "`temperature_c` comes from the nested `payload` struct; a reading without one has it missing.",
+  "Keep every delivery: a reading delivered twice appears twice.",
+  "Each call to `solve` is a fresh run: files or progress left by an earlier call must not change its result.",
+  "The rows must come from a streaming query over the delivery files: selecting from `sensor_readings` itself doesn't count."
+ ],
+ "hints": [
+  "A Parquet sink is `writeStream.format(\"parquet\").option(\"path\", folder)`, and it won't start without `option(\"checkpointLocation\", ...)`.",
+  "Use `trigger(availableNow=True)` and `awaitTermination()`, then read the folder with `spark.read.parquet`.",
+  "A checkpoint remembers which files it has read, and the sink's folder remembers which micro-batches it wrote. Clear `/tmp/archive` before starting, or a second run reads nothing new."
+ ],
+ "explanation": "Select the four columns on the stream, then write with `format(\"parquet\")`, a `path` and a `checkpointLocation`; without the checkpoint `start()` raises an `AnalysisException`. After `awaitTermination()`, `spark.read.parquet` reads the folder as an ordinary table. The delivery files of every call have the same names, so a checkpoint left from the call before says they were all read already, and the sink's own log in the output folder says those micro-batches were written: the new run adds nothing and you get the old rows back. Removing the whole `/tmp/archive` folder (data and checkpoint) first makes each call a fresh run. A memory sink would give the same rows; the archive is the Parquet folder.",
+ "entry": "solve",
+ "inputs": [
+  "sensor_readings"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef solve(sensor_readings):\n    make_batches(sensor_readings, \"/tmp/readings\")\n    # Stream /tmp/readings into Parquet files under /tmp/archive/data with a checkpoint,\n    # wait for the stream to finish, and return what the folder holds.\n    return sensor_readings\n",
+ "output": {
+  "columns": [
+   "reading_id",
+   "device_id",
+   "event_time",
+   "temperature_c"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

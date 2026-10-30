@@ -1,0 +1,409 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "example": {
+   "schema": [
+    {
+     "name": "learner_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "course_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "attempts",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "lessons_attempted",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "lessons_passed",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "last_activity",
+     "type": "date",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "L01",
+     "C01",
+     4,
+     2,
+     2,
+     "2026-06-20"
+    ],
+    [
+     "L03",
+     "C02",
+     2,
+     2,
+     1,
+     "2026-06-27"
+    ],
+    [
+     "L02",
+     "C01",
+     1,
+     1,
+     0,
+     "2026-06-10"
+    ]
+   ],
+   "row_count": 3,
+   "inputs": {
+    "attempts": [
+     [
+      "A001",
+      "L01",
+      "C01-L01",
+      "1",
+      "2026-06-01T09:00:00",
+      "12",
+      "82.0",
+      "true"
+     ],
+     [
+      "A002",
+      "L01",
+      "C01-L02",
+      "1",
+      "2026-06-03T10:00:00",
+      "20",
+      "64.5",
+      "false"
+     ],
+     [
+      "A003",
+      "L01",
+      "C01-L02",
+      "2",
+      "2026-06-05T11:00:00",
+      "18",
+      "75.0",
+      "true"
+     ],
+     [
+      "A003",
+      "L01",
+      "C01-L02",
+      "2",
+      "2026-06-05T11:00:00",
+      "18",
+      "75.0",
+      "true"
+     ],
+     [
+      "A004",
+      "L01",
+      "C01-L01",
+      "2",
+      "2026-06-20T19:30:00",
+      "10",
+      "91.0",
+      "true"
+     ],
+     [
+      "A005",
+      "L02",
+      "C01-L01",
+      "1",
+      "2026-06-10T20:00:00",
+      "3",
+      null,
+      "false"
+     ],
+     [
+      "A006",
+      "L02",
+      "C02-L01",
+      "1",
+      "2026-06-29T08:00:00",
+      "14",
+      "90.0",
+      "true"
+     ],
+     [
+      "A007",
+      "L03",
+      "C02-L01",
+      "1",
+      "2026-06-12T07:45:00",
+      "21",
+      "77.5",
+      "true"
+     ],
+     [
+      "A008",
+      "L03",
+      "X09-L01",
+      "1",
+      "2026-06-14T07:50:00",
+      "15",
+      "88.0",
+      "true"
+     ],
+     [
+      "A009",
+      "L03",
+      "C02-L02",
+      "1",
+      "2026-06-27T21:10:00",
+      "9",
+      "52.0",
+      "false"
+     ]
+    ],
+    "lessons": [
+     [
+      "C01-L01",
+      "C01",
+      "1",
+      "Your first SELECT",
+      "20"
+     ],
+     [
+      "C01-L02",
+      "C01",
+      "2",
+      "Filtering rows",
+      "25"
+     ],
+     [
+      "C02-L01",
+      "C02",
+      "1",
+      "Variables and types",
+      "25"
+     ],
+     [
+      "C02-L02",
+      "C02",
+      "2",
+      "Lists and loops",
+      "10"
+     ]
+    ]
+   }
+  },
+  "project": {
+   "schema": [
+    {
+     "name": "learner_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "course_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "attempts",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "lessons_attempted",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "lessons_passed",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "last_activity",
+     "type": "date",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "L0161",
+     "C02",
+     7,
+     6,
+     6,
+     "2026-01-22"
+    ],
+    [
+     "L0184",
+     "C05",
+     13,
+     7,
+     7,
+     "2026-03-06"
+    ],
+    [
+     "L0002",
+     "C02",
+     12,
+     6,
+     6,
+     "2026-01-25"
+    ],
+    [
+     "L0055",
+     "C05",
+     16,
+     7,
+     7,
+     "2026-01-30"
+    ],
+    [
+     "L0135",
+     "C01",
+     8,
+     6,
+     6,
+     "2026-02-15"
+    ],
+    [
+     "L0174",
+     "C02",
+     8,
+     6,
+     6,
+     "2026-01-27"
+    ],
+    [
+     "L0095",
+     "C05",
+     10,
+     7,
+     7,
+     "2026-01-28"
+    ],
+    [
+     "L0086",
+     "C01",
+     7,
+     6,
+     6,
+     "2026-01-30"
+    ],
+    [
+     "L0116",
+     "C05",
+     8,
+     7,
+     7,
+     "2026-02-17"
+    ],
+    [
+     "L0162",
+     "C05",
+     13,
+     7,
+     7,
+     "2026-02-28"
+    ],
+    [
+     "L0077",
+     "C02",
+     12,
+     6,
+     6,
+     "2026-02-05"
+    ],
+    [
+     "L0175",
+     "C04",
+     6,
+     5,
+     5,
+     "2026-01-29"
+    ],
+    [
+     "L0017",
+     "C02",
+     8,
+     6,
+     6,
+     "2026-02-26"
+    ],
+    [
+     "L0185",
+     "C01",
+     7,
+     6,
+     6,
+     "2026-02-14"
+    ],
+    [
+     "L0050",
+     "C03",
+     8,
+     6,
+     6,
+     "2026-02-22"
+    ],
+    [
+     "L0091",
+     "C04",
+     7,
+     5,
+     5,
+     "2026-02-22"
+    ],
+    [
+     "L0169",
+     "C02",
+     7,
+     6,
+     6,
+     "2026-02-25"
+    ],
+    [
+     "L0166",
+     "C02",
+     8,
+     6,
+     6,
+     "2026-02-25"
+    ],
+    [
+     "L0158",
+     "C03",
+     9,
+     6,
+     6,
+     "2026-02-25"
+    ],
+    [
+     "L0110",
+     "C02",
+     11,
+     6,
+     6,
+     "2026-04-02"
+    ]
+   ],
+   "row_count": 579
+  }
+ },
+ "hidden": [
+  "the full practice tables",
+  "lessons failed, passed and taken again after a pass",
+  "attempts at lessons the catalogue doesn't list",
+  "copies, attempts after the as-of date and one with no start time",
+  "empty tables"
+ ]
+}

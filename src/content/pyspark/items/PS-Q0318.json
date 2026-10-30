@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0318",
+  "slug": "the-catalogue-at-year-end",
+  "lesson": "PS-L064",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 20,
+  "title": "Change summary per product",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "The data steward wants one line for every product in the change feed: how many changes it has had, when it first appeared, and whether it exists today. Write `solve(product_cdc)`.",
+  "rules": [
+    "Return `product_id`, `changes`, `first_seen` and `exists_today`, one row per product in the feed.",
+    "`changes` counts different changes: a change delivered twice counts once. `first_seen` is the earliest `changed_at` of the product's changes.",
+    "`exists_today` is false when the product's newest change by `sequence` is a delete, and true otherwise, even if it was deleted and added again before.",
+    "Rows are in arrival order, which isn't always sequence order."
+  ],
+  "hints": [
+    "Remove repeated deliveries with `distinct()` before you count or rank anything.",
+    "Counting and the earliest time are a `groupBy(\"product_id\")` with `F.count` and `F.min`. The newest change is `row_number` 1 over a window ordered by `sequence` descending.",
+    "Build the two parts separately and join them on `product_id`; `exists_today` is `F.col(\"op\") != \"D\"` on the newest change."
+  ],
+  "explanation": "Start with `product_cdc.distinct()`: a repeated delivery is the same change, so it mustn't add to the count or give a product two newest rows. The count and the first time are a `groupBy(\"product_id\").agg(F.count(\"*\"), F.min(\"changed_at\"))`. Whether the product exists is a question about its newest change only, so rank by `sequence` descending with `row_number`, keep 1, and test `op != \"D\"`; then join the two on `product_id`. Arrival order doesn't matter, because the window orders by `sequence`. The usual slips are counting raw rows, treating any delete as gone (a product that came back exists), and ranking before removing repeats, which gives a product two rows when its newest change was delivered twice.",
+  "entry": "solve",
+  "inputs": [
+    "product_cdc"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(product_cdc):\n    # Return product_id, changes, first_seen and exists_today for every product in the feed.\n    return product_cdc\n",
+  "output": {
+    "columns": [
+      "product_id",
+      "changes",
+      "first_seen",
+      "exists_today"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

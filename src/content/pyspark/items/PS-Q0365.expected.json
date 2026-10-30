@@ -1,0 +1,272 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "patient_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "first_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "last_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "birth_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "sex",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "city",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "state",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "postal_code",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "insurance_plan",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "primary_pharmacy_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "_source_file",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "PAT00001",
+     "Felix",
+     "Ferro",
+     "1957-12-06",
+     "M",
+     "Pine Hollow",
+     "ID",
+     "83375",
+     "Summit Senior Advantage",
+     null,
+     "patients_2026-03-01.csv"
+    ],
+    [
+     "PAT00002",
+     "Arjun",
+     "Duarte",
+     "2020-02-27",
+     "M",
+     "Lakeview",
+     "WA",
+     "98893",
+     "Bluebird Health PPO",
+     "PH01",
+     "patients_2026-03-01.csv"
+    ],
+    [
+     "PAT00003",
+     "Elif",
+     "Grant",
+     "1976-11-07",
+     "F",
+     "Pine Hollow",
+     "ID",
+     "83305",
+     "Bluebird Health PPO",
+     "PH04",
+     "patients_2026-03-01.csv"
+    ],
+    [
+     "PAT00004",
+     "Anika",
+     "Iyer",
+     "1996-09-18",
+     "F",
+     "Riverton",
+     "OR",
+     "97054",
+     "Self-pay",
+     "PH03",
+     "patients_2026-03-01.csv"
+    ],
+    [
+     "PAT00005",
+     "Jonas",
+     "Costa",
+     "1969-08-28",
+     "M",
+     "Pine Hollow",
+     "ID",
+     "83347",
+     "Bluebird Health HMO",
+     "PH03",
+     "patients_2026-03-01.csv"
+    ],
+    [
+     "PAT00006",
+     "Kenji",
+     "Kowal",
+     "1966-07-30",
+     "M",
+     "Lakeview",
+     "WA",
+     "98671",
+     "Bluebird Health HMO",
+     "PH03",
+     "patients_2026-03-01.csv"
+    ],
+    [
+     "PAT00008",
+     "Owen",
+     "Marsh",
+     "1988-04-21",
+     "M",
+     "Burlington",
+     "VT",
+     "05401",
+     "Bluebird Health HMO",
+     null,
+     "patients_2026-03-01.csv"
+    ]
+   ],
+   "row_count": 7,
+   "inputs": {
+    "patients": [
+     [
+      "PAT00001",
+      "Felix",
+      "Ferro",
+      "1957-12-06",
+      "M",
+      "Pine Hollow",
+      "ID",
+      "83375",
+      "Summit Senior Advantage",
+      null
+     ],
+     [
+      "PAT00002",
+      "Arjun",
+      "Duarte",
+      "2020-02-27",
+      "M",
+      "Lakeview",
+      "WA",
+      "98893",
+      "Bluebird Health PPO",
+      "PH01"
+     ],
+     [
+      "PAT00003",
+      "Elif",
+      "Grant",
+      "1976-11-07",
+      "F",
+      "Pine Hollow",
+      "ID",
+      "83305",
+      "Bluebird Health PPO",
+      "PH04"
+     ],
+     [
+      "PAT00004",
+      "Anika",
+      "Iyer",
+      "1996-09-18",
+      "F",
+      "Riverton",
+      "OR",
+      "97054",
+      "Self-pay",
+      "PH03"
+     ],
+     [
+      "PAT00005",
+      "Jonas",
+      "Costa",
+      "1969-08-28",
+      "M",
+      "Pine Hollow",
+      "ID",
+      "83347",
+      "Bluebird Health HMO",
+      "PH03"
+     ],
+     [
+      "PAT00006",
+      "Kenji",
+      "Kowal",
+      "1966-07-30",
+      "M",
+      "Lakeview",
+      "WA",
+      "98671",
+      "Bluebird Health HMO",
+      "PH03"
+     ],
+     [
+      "PAT00007",
+      "Noor",
+      "Haddad",
+      null,
+      "F",
+      "Riverton",
+      "OR",
+      "97058",
+      "Bluebird Health PPO",
+      "PH01"
+     ],
+     [
+      "PAT00008",
+      "Owen",
+      "Marsh",
+      "1988-04-21",
+      "M",
+      "Burlington",
+      "VT",
+      "05401",
+      "Bluebird Health HMO",
+      null
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice patient register",
+  "postal codes that start with 0",
+  "a patient born on a leap day",
+  "birth dates whose day and month could be swapped",
+  "a patient with no birth date",
+  "a patient with no address or insurance",
+  "an export with no patients"
+ ]
+}

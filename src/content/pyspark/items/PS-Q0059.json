@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0059",
+  "slug": "fix-the-payroll-import",
+  "lesson": "PS-L012",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 6,
+  "title": "Fix the payroll import",
+  "dataset": {
+    "id": "PS-D03",
+    "version": "1.0.0"
+  },
+  "prompt": "Payroll's import expects the salary history with an `annual_salary`, a `reason` and a `currency` of `USD` on every row. The function below was written for it, but it fails. Fix `solve(salary_history)`.",
+  "rules": [
+    "Rename `salary` to `annual_salary` and `change_reason` to `reason`, each in its place.",
+    "Add `currency` at the end with the text `USD` on every row.",
+    "Keep every row and every value as it is, duplicates included."
+  ],
+  "hints": [
+    "Press Run and read the error: `withColumn` needs a column as its second argument, not a plain string.",
+    "`F.lit(\"USD\")` is a column with the same value on every row.",
+    "Once the error is gone, check the column names. Renaming a column that isn't there does nothing, with no error, so look closely at the spelling."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "salary_history"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(salary_history):\n    out = salary_history.withColumnsRenamed({\"salary\": \"annual_salary\", \"change_reson\": \"reason\"})\n    out = out.withColumn(\"currency\", \"USD\")\n    return out\n",
+  "output": {
+    "columns": [
+      "employee_id",
+      "effective_date",
+      "annual_salary",
+      "reason",
+      "currency"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "There are two bugs. `withColumn(\"currency\", \"USD\")` passes a plain string, and `withColumn` needs a column, so it raises an error; `F.lit(\"USD\")` makes the text a column. With that fixed the function runs, but `change_reson` is misspelled, and renaming a column that doesn't exist silently does nothing, so `change_reason` keeps its old name. The fixed version: `salary_history.withColumnsRenamed({\"salary\": \"annual_salary\", \"change_reason\": \"reason\"}).withColumn(\"currency\", F.lit(\"USD\"))`. Two `withColumnRenamed` calls work as well. `F.col(\"USD\")` is a different mistake: it looks for a column named USD."
+}

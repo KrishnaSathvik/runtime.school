@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0035",
+  "slug": "run-log-header",
+  "lesson": "PS-L007",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "A header for the run log",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "Every nightly run starts its log with one row about where it ran and what it read. Write `solve(orders)` so it returns that row, built with `spark.createDataFrame`.",
+  "rules": [
+    "Five columns, in this order: `spark_version` (text), `cores` (int), `shuffle_partitions` (int), `order_rows` (bigint) and `order_columns` (int).",
+    "`spark_version` is the session's Spark version, `cores` is how many tasks Spark can run at once here, and `shuffle_partitions` is the `spark.sql.shuffle.partitions` setting as a number.",
+    "`order_rows` counts every row of `orders`, duplicates included, and `order_columns` counts its columns."
+  ],
+  "hints": [
+    "The session knows its version, and `spark.sparkContext` knows how many cores it has. Both were in the lesson on the SparkSession.",
+    "`spark.conf.get(...)` always gives back text. An `INT` column won't take the text `\"4\"`, so turn it into a number with `int(...)`.",
+    "Put the five values in one tuple and give a schema string, so `cores` and the column count come out as `int` and the row count as `bigint`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "orders"
+  ],
+  "starter": "def solve(orders):\n    # Return one row: spark_version, cores, shuffle_partitions, order_rows, order_columns.\n    return orders\n",
+  "output": {
+    "columns": [
+      "spark_version",
+      "cores",
+      "shuffle_partitions",
+      "order_rows",
+      "order_columns"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Gather five Python values, then build one row: `spark.version`, `spark.sparkContext.defaultParallelism`, `int(spark.conf.get(\"spark.sql.shuffle.partitions\"))`, `orders.count()` and `len(orders.columns)`, with the schema `\"spark_version STRING, cores INT, shuffle_partitions INT, order_rows BIGINT, order_columns INT\"`. A setting always comes back as text, so without `int(...)` the `INT` column refuses `\"4\"`. `spark.default.parallelism` isn't set here, so reading it fails; `defaultParallelism` on the context gives the cores. Without a schema, every whole number would be guessed as `bigint`."
+}

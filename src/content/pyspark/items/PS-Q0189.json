@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0189",
+  "slug": "fix-vitals-pulse-rename",
+  "lesson": "PS-L038",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 6,
+  "title": "Fix the vitals rename",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "prompt": "This function renames `heart_rate` to `pulse` inside `vitals` and drops the temperature. But telehealth visits, which have no vitals, now come out with a struct of empty readings. Fix `solve(encounters)` so a missing `vitals` stays missing.",
+  "rules": [
+    "`vitals` has the fields `systolic`, `diastolic` and `pulse` (the old `heart_rate`), in that order. `heart_rate` and `temperature_c` are gone.",
+    "A visit with no vitals keeps a missing `vitals`. A single missing reading inside stays missing.",
+    "Return `encounter_id`, `encounter_class` and `vitals`."
+  ],
+  "hints": [
+    "`F.struct(...)` always builds a struct, even when every value going into it is missing.",
+    "Change the existing struct instead: methods on `F.col(\"vitals\")` leave a missing struct missing.",
+    "`withField(\"pulse\", ...)` adds the new field at the end, and `dropFields(\"heart_rate\", \"temperature_c\")` removes the old ones."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "encounters"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(encounters):\n    vitals = F.struct(\n        F.col(\"vitals.systolic\").alias(\"systolic\"),\n        F.col(\"vitals.diastolic\").alias(\"diastolic\"),\n        F.col(\"vitals.heart_rate\").alias(\"pulse\"),\n    )\n    return encounters.select(\"encounter_id\", \"encounter_class\", vitals.alias(\"vitals\"))\n",
+  "output": {
+    "columns": [
+      "encounter_id",
+      "encounter_class",
+      "vitals"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`F.struct` builds a new struct on every row, so for a visit with no `vitals` it makes one whose three fields are all missing. That isn't the same as a missing struct, and the rules want it missing. Change the existing struct instead: `F.col(\"vitals\").withField(\"pulse\", F.col(\"vitals.heart_rate\")).dropFields(\"heart_rate\", \"temperature_c\")`. `withField` adds `pulse` after the existing fields and `dropFields` removes the two old ones, which leaves `systolic`, `diastolic`, `pulse` in the order the rules ask. Both methods give a missing result when `vitals` is missing."
+}

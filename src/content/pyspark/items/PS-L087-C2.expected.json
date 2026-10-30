@@ -1,0 +1,150 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "device_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "alert_time",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "temperature_c",
+     "type": "double",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "DEV-003",
+     "2026-04-14T09:30:00",
+     31.4
+    ],
+    [
+     "DEV-004",
+     "2026-04-14T09:30:00",
+     35.0
+    ]
+   ],
+   "row_count": 2,
+   "inputs": {
+    "sensor_readings": [
+     [
+      "R0102",
+      "DEV-004",
+      "2026-04-14T09:00:00",
+      "2026-04-14T09:00:43",
+      "0",
+      "{\"temperature_c\":41.2,\"humidity_pct\":37.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"critical\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0103",
+      "DEV-002",
+      "2026-04-14T09:00:00",
+      "2026-04-14T09:00:44",
+      "0",
+      "{\"temperature_c\":25.0,\"humidity_pct\":41.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"hvac\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0101",
+      "DEV-003",
+      "2026-04-14T09:00:00",
+      "2026-04-14T09:00:46",
+      "0",
+      "{\"temperature_c\":28.7,\"humidity_pct\":80.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"outdoor\",\"greenhouse\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0105",
+      "DEV-003",
+      "2026-04-14T09:15:00",
+      "2026-04-14T09:15:07",
+      "1",
+      "{\"temperature_c\":31.0,\"humidity_pct\":80.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"outdoor\",\"greenhouse\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0106",
+      "DEV-004",
+      "2026-04-14T09:15:00",
+      "2026-04-14T09:15:49",
+      "1",
+      "{\"temperature_c\":999.0,\"humidity_pct\":37.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"critical\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0105",
+      "DEV-003",
+      "2026-04-14T09:15:00",
+      "2026-04-14T09:21:07",
+      "2",
+      "{\"temperature_c\":31.0,\"humidity_pct\":80.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"outdoor\",\"greenhouse\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0109",
+      "DEV-003",
+      "2026-04-14T09:30:00",
+      "2026-04-14T09:30:15",
+      "2",
+      "{\"temperature_c\":31.4,\"humidity_pct\":80.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"outdoor\",\"greenhouse\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0110",
+      "DEV-004",
+      "2026-04-14T09:30:00",
+      "2026-04-14T09:30:21",
+      "2",
+      "{\"temperature_c\":35.0,\"humidity_pct\":37.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"critical\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0111",
+      "DEV-002",
+      "2026-04-14T09:30:00",
+      "2026-04-14T09:30:25",
+      "2",
+      "{\"temperature_c\":32.0,\"humidity_pct\":41.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"hvac\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0112",
+      "DEV-004",
+      "2026-04-14T09:45:00",
+      "2026-04-14T09:45:12",
+      "3",
+      "{\"temperature_c\":36.0,\"humidity_pct\":37.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"critical\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0107",
+      "DEV-002",
+      "2026-04-14T09:15:00",
+      "2026-04-14T09:52:07",
+      "3",
+      "{\"temperature_c\":33.0,\"humidity_pct\":41.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\",\"hvac\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "two days of practice readings with copies, late readings and glitches, in five micro-batches",
+  "rows that arrive out of event-time order in one micro-batch, and a missing temperature inside a run",
+  "two runs on one sensor, three hot readings in a row, and readings of exactly 30.0"
+ ]
+}

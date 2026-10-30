@@ -1,0 +1,39 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D01",
+  "version": "1.1.0",
+  "edition": "lesson",
+  "tables": [
+   "products",
+   "order_items"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "+--------+------------------+\n|order_id|product_ids       |\n+--------+------------------+\n|O00001  |[P005, P005, P004]|\n|O00002  |[P001]            |\n|O00003  |[P001, P007, P003]|\n+--------+------------------+\n\n+--------+----------+\n|order_id|product_id|\n+--------+----------+\n|  O00001|      P005|\n|  O00001|      P005|\n|  O00001|      P004|\n|  O00002|      P001|\n|  O00003|      P001|\n|  O00003|      P007|\n|  O00003|      P003|\n+--------+----------+\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "+--------+----------+\n|order_id|product_id|\n+--------+----------+\n|  O00001|      P005|\n|  O00001|      P004|\n+--------+----------+\n\n+--------+----------+\n|order_id|product_id|\n+--------+----------+\n|  O00001|      P005|\n|  O00001|      P004|\n|  O00013|      NULL|\n|  O00014|      NULL|\n+--------+----------+\n\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "+--------+-------+------------------+\n|order_id|line_no|units             |\n+--------+-------+------------------+\n|O00001  |1      |[P005, P005, P005]|\n|O00001  |2      |[P005, P005, P005]|\n|O00001  |3      |[P004]            |\n+--------+-------+------------------+\nonly showing top 3 rows\n+--------+-------+---+----------+\n|order_id|line_no|pos|product_id|\n+--------+-------+---+----------+\n|  O00001|      1|  0|      P005|\n|  O00001|      1|  1|      P005|\n|  O00001|      1|  2|      P005|\n|  O00001|      2|  0|      P005|\n|  O00001|      2|  1|      P005|\n|  O00001|      2|  2|      P005|\n|  O00001|      3|  0|      P004|\n+--------+-------+---+----------+\nonly showing top 7 rows\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "root\n |-- product_id: string (nullable = true)\n |-- entry: struct (nullable = false)\n |    |-- field: string (nullable = false)\n |    |-- value: string (nullable = true)\n\n+----------+--------+----------------+\n|product_id|   field|           value|\n+----------+--------+----------------+\n|      P001|    name|      Chef Knife|\n|      P001|category|         kitchen|\n|      P002|    name|Pour-Over Kettle|\n|      P002|category|         kitchen|\n|      P003|    name|    Trail Bottle|\n|      P003|category|         outdoor|\n|      P004|    name|    Camp Lantern|\n|      P004|category|         outdoor|\n|      P005|    name|       Desk Lamp|\n|      P005|category|          office|\n|      P006|    name|    Notebook Set|\n|      P006|category|          office|\n|      P007|    name|     Linen Throw|\n|      P007|category|            home|\n|      P008|    name|      Wall Clock|\n|      P008|category|            home|\n+----------+--------+----------------+\n\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "+--------+--------+------------------+------------------+---------+\n|order_id|has_p004|distinct_ids      |sorted_ids        |different|\n+--------+--------+------------------+------------------+---------+\n|O00001  |true    |[P005, P004]      |[P004, P005, P005]|2        |\n|O00003  |false   |[P001, P007, P003]|[P001, P003, P007]|3        |\n|O00008  |true    |[P004, P002]      |[P002, P004, P004]|2        |\n+--------+--------+------------------+------------------+---------+\n\n",
+   "error": null
+  }
+ }
+}

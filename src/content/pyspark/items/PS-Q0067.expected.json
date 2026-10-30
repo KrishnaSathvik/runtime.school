@@ -1,0 +1,129 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "transaction_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "posted_on",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "amount_text",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "T000001",
+     "A00006",
+     "2026-01-05",
+     "800.00"
+    ],
+    [
+     "T000002",
+     null,
+     "2026-01-16",
+     "60.53"
+    ],
+    [
+     "T000003",
+     "A00001",
+     "2026-01-26",
+     "27.90"
+    ],
+    [
+     "T000004",
+     "A00008",
+     "2026-01-27",
+     "800.00"
+    ],
+    [
+     "T000005",
+     "A00008",
+     "2026-01-31",
+     "3100.00"
+    ],
+    [
+     "T000006",
+     "A00001",
+     "2026-02-08",
+     "21.91"
+    ],
+    [
+     "T000007",
+     "A00006",
+     "2026-02-18",
+     "10.01"
+    ],
+    [
+     "T000008",
+     "A00001",
+     "2026-02-19",
+     "15.99"
+    ],
+    [
+     "T000009",
+     "A00008",
+     "2026-02-20",
+     "43.95"
+    ],
+    [
+     "T000010",
+     "A00001",
+     "2026-02-21",
+     "19.23"
+    ],
+    [
+     "T000011",
+     "A00008",
+     "2026-02-24",
+     "7.60"
+    ],
+    [
+     "T000012",
+     "A00001",
+     "2026-02-25",
+     "500.00"
+    ],
+    [
+     "T000013",
+     "A99999",
+     "2026-02-27",
+     "800.00"
+    ],
+    [
+     "T000014",
+     "A00006",
+     "2026-02-28",
+     "60.53"
+    ]
+   ],
+   "row_count": 14
+  }
+ },
+ "hidden": [
+  "the full practice transactions table",
+  "whole and negative amounts",
+  "transactions just after midnight and just before",
+  "transactions with a missing time, amount or account",
+  "the same transaction delivered twice",
+  "an empty transactions table"
+ ]
+}

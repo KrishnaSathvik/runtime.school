@@ -1,0 +1,88 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "endpoint",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "salt",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "requests",
+     "type": "bigint",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "/v1/devices/{device_id}/telemetry",
+     3,
+     2
+    ],
+    [
+     "/v1/catalog/items",
+     1,
+     1
+    ],
+    [
+     "/v1/search",
+     0,
+     1
+    ],
+    [
+     "/v1/catalog/items",
+     0,
+     2
+    ],
+    [
+     "/v1/auth/token",
+     1,
+     1
+    ],
+    [
+     "/v1/checkout",
+     2,
+     1
+    ],
+    [
+     "/v1/search",
+     3,
+     1
+    ],
+    [
+     "/v1/catalog/items/{sku}",
+     2,
+     1
+    ],
+    [
+     "/v1/payments/authorize",
+     1,
+     1
+    ],
+    [
+     "/v1/catalog/items",
+     2,
+     1
+    ]
+   ],
+   "row_count": 10
+  }
+ },
+ "hidden": [
+  "the full practice requests, one endpoint far ahead of the rest",
+  "requests with no request id, and requests with no endpoint",
+  "ten requests, all on one endpoint",
+  "no requests at all"
+ ]
+}

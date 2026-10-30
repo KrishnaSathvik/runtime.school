@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0070",
+  "slug": "transfer-fees-to-the-cent",
+  "lesson": "PS-L014",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Transfer fees to the cent",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "Each transfer costs a fee of 1.5% of its amount, charged to the cent. Write `solve(transfers)` so it returns `transfer_id`, `requested_on`, `amount` and `fee`.",
+  "rules": [
+    "`requested_on` is the date part of `requested_at`, as a `date`.",
+    "`fee` is `amount` times 0.015, worked out as an exact decimal and then cast to `decimal(12,2)`. The cast rounds a half cent up: 15.00 gives 0.225, so the fee is 0.23.",
+    "A missing amount gives a missing fee. Keep `amount` unchanged and return the four columns, in that order, for every transfer, duplicates included."
+  ],
+  "hints": [
+    "`Decimal(\"0.015\")` from Python's `decimal` module, wrapped in `F.lit`, is an exact decimal value.",
+    "Multiplying two decimals stays exact; `.cast(\"decimal(12,2)\")` then brings the result back to cents.",
+    "A plain `0.015` in Python is a double, and doubles can land a hair below the half cent, which then rounds down."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "transfers"
+  ],
+  "starter": "from decimal import Decimal\nfrom pyspark.sql import functions as F\n\n\ndef solve(transfers):\n    # transfer_id, requested_on, amount, fee\n    return transfers\n",
+  "output": {
+    "columns": [
+      "transfer_id",
+      "requested_on",
+      "amount",
+      "fee"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Keep the money in decimals the whole way: `(F.col(\"amount\") * F.lit(Decimal(\"0.015\"))).cast(\"decimal(12,2)\").alias(\"fee\")`, next to `F.col(\"requested_at\").cast(\"date\").alias(\"requested_on\")`. A decimal times a decimal is exact (15.00 × 0.015 is exactly 0.22500), and the cast to two places rounds the half cent up to 0.23. Written with a plain `0.015`, the multiplication happens in doubles, 15.00 × 0.015 comes out as 0.22499999…, and the same cast gives 0.22. In SQL text, `selectExpr(\"CAST(amount * 0.015 AS DECIMAL(12,2)) AS fee\")` is exact too, because SQL reads `0.015` as a decimal."
+}

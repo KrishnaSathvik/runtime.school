@@ -1,0 +1,85 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "employee_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "salary",
+     "type": "decimal(10,2)",
+     "nullable": true
+    },
+    {
+     "name": "manager_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "manager_salary",
+     "type": "decimal(10,2)",
+     "nullable": true
+    },
+    {
+     "name": "gap",
+     "type": "decimal(11,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "E0006",
+     "62500.00",
+     "E0002",
+     "200000.00",
+     "137500.00"
+    ],
+    [
+     "E0004",
+     "70000.00",
+     "E0002",
+     "200000.00",
+     "130000.00"
+    ],
+    [
+     "E0005",
+     "70000.00",
+     "E0002",
+     "200000.00",
+     "130000.00"
+    ],
+    [
+     "E0003",
+     "75000.00",
+     "E0002",
+     "200000.00",
+     "125000.00"
+    ],
+    [
+     "E0007",
+     "150000.00",
+     "E0001",
+     "260000.00",
+     "110000.00"
+    ]
+   ],
+   "row_count": 5
+  }
+ },
+ "hidden": [
+  "the full practice employees",
+  "equal gaps around fifth place",
+  "employees and managers with no salary",
+  "fewer than five employees with a manager in the table",
+  "employees who earn more than their manager",
+  "an empty employees table"
+ ]
+}

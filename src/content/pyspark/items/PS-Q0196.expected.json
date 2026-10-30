@@ -1,0 +1,119 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "log_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "service",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "has_device",
+     "type": "boolean",
+     "nullable": true
+    },
+    {
+     "name": "device_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "firmware",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "LOG-000001",
+     "catalog-api",
+     false,
+     null,
+     null
+    ],
+    [
+     "LOG-000002",
+     "auth-service",
+     false,
+     null,
+     null
+    ],
+    [
+     "LOG-000003",
+     "checkout-api",
+     false,
+     null,
+     null
+    ],
+    [
+     "LOG-000004",
+     "search-api",
+     false,
+     null,
+     null
+    ],
+    [
+     "LOG-000005",
+     "iot-gateway",
+     true,
+     "DEV-0003",
+     "1.8.4"
+    ],
+    [
+     "LOG-000006",
+     "checkout-api",
+     false,
+     null,
+     null
+    ],
+    [
+     "LOG-000007",
+     "iot-gateway",
+     true,
+     "DEV-0002",
+     null
+    ],
+    [
+     "LOG-000008",
+     "iot-gateway",
+     true,
+     "DEV-0001",
+     "1.8.4"
+    ],
+    [
+     "LOG-000009",
+     "search-api",
+     false,
+     null,
+     null
+    ],
+    [
+     "LOG-000010",
+     "notification-worker",
+     false,
+     null,
+     null
+    ]
+   ],
+   "row_count": 10
+  }
+ },
+ "hidden": [
+  "the full practice log lines",
+  "a device key stored with no value",
+  "an empty map and no map at all",
+  "keys written in another case",
+  "an empty log table"
+ ]
+}

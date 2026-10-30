@@ -1,0 +1,154 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "encounter_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "patient_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "care",
+     "type": "struct<provider:string,class:string,diagnoses:struct<count:int,codes:array<string>>>",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "ENC000001",
+     "PAT00003",
+     {
+      "provider": "PRV0004",
+      "class": "emergency",
+      "diagnoses": {
+       "count": 3,
+       "codes": [
+        "J45.909",
+        "E78.5",
+        "J06.9"
+       ]
+      }
+     }
+    ],
+    [
+     "ENC000002",
+     "PAT00002",
+     {
+      "provider": "PRV0001",
+      "class": "wellness",
+      "diagnoses": {
+       "count": 2,
+       "codes": [
+        "Z00.00",
+        "E78.5"
+       ]
+      }
+     }
+    ],
+    [
+     "ENC000003",
+     "PAT00001",
+     {
+      "provider": "PRV0002",
+      "class": "ambulatory",
+      "diagnoses": {
+       "count": 1,
+       "codes": [
+        "K21.9"
+       ]
+      }
+     }
+    ],
+    [
+     "ENC000004",
+     "PAT00002",
+     {
+      "provider": "PRV0002",
+      "class": "ambulatory",
+      "diagnoses": {
+       "count": 1,
+       "codes": [
+        "K21.9"
+       ]
+      }
+     }
+    ],
+    [
+     "ENC000005",
+     "PAT00005",
+     {
+      "provider": "PRV0003",
+      "class": "ambulatory",
+      "diagnoses": {
+       "count": 2,
+       "codes": [
+        "N39.0",
+        "S93.401A"
+       ]
+      }
+     }
+    ],
+    [
+     "ENC000006",
+     "PAT00006",
+     {
+      "provider": "PRV0001",
+      "class": "inpatient",
+      "diagnoses": {
+       "count": 2,
+       "codes": [
+        "S93.401A",
+        "J06.9"
+       ]
+      }
+     }
+    ],
+    [
+     "ENC000007",
+     "PAT00001",
+     {
+      "provider": "PRV0005",
+      "class": "telehealth",
+      "diagnoses": {
+       "count": 1,
+       "codes": [
+        "N39.0"
+       ]
+      }
+     }
+    ],
+    [
+     "ENC000008",
+     "PAT00004",
+     {
+      "provider": "PRV0005",
+      "class": "telehealth",
+      "diagnoses": {
+       "count": 1,
+       "codes": [
+        "M54.5"
+       ]
+      }
+     }
+    ]
+   ],
+   "row_count": 8
+  }
+ },
+ "hidden": [
+  "the full practice encounters",
+  "an empty code list, a missing one, a repeated code and a missing provider",
+  "an empty encounters table"
+ ]
+}

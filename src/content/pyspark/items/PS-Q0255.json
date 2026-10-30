@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0255",
+  "slug": "warehouse-sku-codes",
+  "lesson": "PS-L051",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Warehouse SKU codes",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "The warehouse labels active products with a SKU such as `HOM-P0077`: a category prefix, the product id and a check digit. Write `solve(products)` so it returns `product_id`, `name` and `sku` for every active product.",
+  "rules": [
+    "Only products whose `active` is true; inactive products and those with a missing `active` are left out.",
+    "The SKU is the first three letters of `category` in capitals (all of it if it's shorter), a hyphen, the `product_id`, then the check digit.",
+    "The check digit is the sum of the digits in `product_id`, modulo 10: `P007` gives 7 and `P099` gives 8 (9 + 9 = 18).",
+    "If `category` or `product_id` is missing, `sku` is missing. Return `product_id`, `name` and `sku`, all text, in that order."
+  ],
+  "hints": [
+    "Keep the active products with `filter` first. Built-ins handle the prefix: `F.upper(F.substring(\"category\", 1, 3))`.",
+    "The check digit is plain Python: `sum(int(c) for c in product_id if c.isdigit()) % 10`. Wrap it in a UDF that returns text and handles `None`.",
+    "`F.concat` joins the pieces, `F.lit(\"-\")` included, and gives NULL when any piece is NULL."
+  ],
+  "explanation": "Filter on `F.col(\"active\") == True` (a missing flag isn't true, so it drops out), then build the SKU with `F.concat(F.upper(F.substring(\"category\", 1, 3)), F.lit(\"-\"), F.col(\"product_id\"), check_digit(\"product_id\"))`, where `check_digit` is a string UDF returning `None` for a missing id and the digit sum modulo 10 otherwise. Only the check digit needs Python; the rest are built-ins, which also make a missing category give a missing SKU. Forgetting `% 10` gives two digits for ids like `P099`.",
+  "entry": "solve",
+  "inputs": [
+    "products"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(products):\n    # Return product_id, name and sku for the active products.\n    return products\n",
+  "output": {
+    "columns": [
+      "product_id",
+      "name",
+      "sku"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

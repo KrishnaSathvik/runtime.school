@@ -1,0 +1,76 @@
+{
+ "id": "PS-P10-M1",
+ "slug": "parse-sensor-readings-as-a-stream",
+ "project": "PS-P10",
+ "milestone": "PS-P10.m1",
+ "difficulty": "medium",
+ "minutes": 35,
+ "title": "Parse the sensor readings as a stream",
+ "dataset": {
+  "id": "PS-D09",
+  "version": "1.0.0"
+ },
+ "prompt": "The platform receives sensor readings as a stream: each micro-batch is what arrived in a stretch of hours, so late readings and repeated deliveries come in among the others. The setup at the top of your file does the plumbing: `make_batches(df, folder)` writes a table as batch files, oldest arrivals first, and `run_stream(writer)` runs a query until it has read every file.\n\nWrite `parse_readings(sensor_readings)`, which flattens one delivered reading into plain columns, and `stream_parsed(sensor_readings)`, which runs it on a real stream and returns what the stream wrote. Later steps reuse `parse_readings` on their own streams.",
+ "rules": [
+  "`parse_readings` returns `reading_id`, `device_id`, `event_time`, `arrival_time`, `temperature_c`, `humidity_pct`, `battery_v`, `status`, `firmware`, `delay_s`, `late` and `glitch`, in that order. The four measurements come from `payload`; `firmware` is `firmware.version`.",
+  "`delay_s` is `arrival_time` minus `event_time` in whole seconds. `late` is true when `delay_s` is over 120.",
+  "`glitch` is true when `temperature_c` is below -40 or above 85, or `humidity_pct` is below 0 or above 100. A missing value is never a glitch: `glitch` is false then, not null.",
+  "`stream_parsed` writes the batch files, reads them with `spark.readStream` (the table's schema, `maxFilesPerTrigger` 1), applies `parse_readings` to the stream and returns the memory table the query wrote. Every delivery stays, copies included.",
+  "Clear the function's folders first, its checkpoint too: it must give the same result every time it runs."
+ ],
+ "hints": [
+  "`F.col(\"payload.temperature_c\").alias(\"temperature_c\")` reads one field of a struct. A missing `payload` or `firmware` gives nulls.",
+  "`.cast(\"long\")` turns a timestamp into seconds. Wrap the glitch test in `F.coalesce(..., F.lit(False))`.",
+  "`run_stream(parse_readings(stream).writeStream.format(\"memory\").queryName(\"parsed_readings\").option(\"checkpointLocation\", ck))`, then `spark.table(\"parsed_readings\")`. Call `shutil.rmtree` on the checkpoint before the query starts."
+ ],
+ "explanation": "`parse_readings` is written once and works on any DataFrame, a stream or a table, because `select` and column expressions behave the same on both. That's why later steps can reuse it inside their own queries. The delay compares the two clocks every reading carries: `event_time` (when the sensor measured) and `arrival_time` (when the platform got it). Late readings and copies stay in this step's output on purpose: the stream sees every delivery, and deciding what to do with them comes later. The memory sink keeps the query's output as a table you can return, and clearing the checkpoint first matters because a query that finds an old checkpoint skips every file it has already read.",
+ "entry": "stream_parsed",
+ "inputs": [
+  "sensor_readings"
+ ],
+ "file": "pipeline.py",
+ "starter": "import json, os, shutil\nimport pandas as pd\nfrom pyspark.sql import functions as F\nfrom pyspark.sql.streaming.state import GroupStateTimeout\n\n\ndef make_batches(df, folder, most=6):\n    \"\"\"Write df as JSON files a stream reads one per micro-batch, oldest `batch` first.\n    The arrival hours are spread over at most `most` files, so the stream runs at most `most` micro-batches.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    hours = sorted(files)\n    for i, hour in enumerate(hours):\n        k = i * most // len(hours)  # the file this arrival hour goes into\n        with open(f\"{folder}/part-{k}.json\", \"a\") as f:\n            f.write(\"\\n\".join(files[hour]) + \"\\n\")\n    for name in os.listdir(folder):\n        k = int(name[5:-5])\n        os.utime(f\"{folder}/{name}\", (1_700_000_000 + k, 1_700_000_000 + k))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    spark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\n\ndef parse_readings(sensor_readings):\n    # Step 1: one flat row per delivered reading, with its delay and the late and glitch flags.\n    return sensor_readings\n\n\ndef stream_parsed(sensor_readings):\n    # Step 1: write the batch files, stream them through parse_readings into a memory table, return that table.\n    return parse_readings(sensor_readings)\n",
+ "prerequisites": [
+  "PS-L018",
+  "PS-L042",
+  "PS-L067",
+  "PS-L068"
+ ],
+ "output": {
+  "columns": [
+   "reading_id",
+   "device_id",
+   "event_time",
+   "arrival_time",
+   "temperature_c",
+   "humidity_pct",
+   "battery_v",
+   "status",
+   "firmware",
+   "delay_s",
+   "late",
+   "glitch"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "example",
+   "sample": true
+  },
+  {
+   "id": "project",
+   "edition": "project"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

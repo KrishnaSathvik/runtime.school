@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0017",
+  "kind": "predict",
+  "slug": "value-of-shipped-orders",
+  "lesson": "PS-L004",
+  "role": "business",
+  "format": "concept_or_trace",
+  "difficulty": "easy",
+  "minutes": 4,
+  "title": "Value of shipped orders",
+  "prompt": "Finance wants the value of the orders that are on their way. This program brings the shipped orders back to Python and adds them up. What does it print? Type each line on its own line.",
+  "program": "from pyspark.sql import functions as F\n\nshipped = orders.filter(F.col(\"status\") == \"shipped\").select(\"order_id\", \"total\")\nrows = shipped.collect()\nprint(len(rows))\nprint(sum(r[\"total\"] for r in rows))\nprint(max(rows, key=lambda r: r[\"total\"])[\"order_id\"])\n",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "Find the orders whose `status` is `shipped`; `collect()` returns them as a Python list of rows.",
+    "`total` comes back as an exact `Decimal`, so the sum keeps exactly two decimal places.",
+    "`max(..., key=...)` returns the row with the biggest total; then `[\"order_id\"]` reads its id."
+  ],
+  "explanation": "Three orders are shipped: O00004 (418.96), O00005 (71.97) and O00009 (105.49). `collect()` brings them back as `Row`s, and adding the exact `Decimal` totals gives `596.42`. The biggest is O00004."
+}

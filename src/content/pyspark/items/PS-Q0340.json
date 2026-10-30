@@ -1,0 +1,24 @@
+{
+ "id": "PS-Q0340",
+ "kind": "predict",
+ "slug": "three-files-at-a-time",
+ "lesson": "PS-L068",
+ "role": "integration",
+ "format": "concept_or_trace",
+ "difficulty": "hard",
+ "minutes": 8,
+ "title": "Three files at a time",
+ "prompt": "`sensor_readings` is the lesson's 13 readings in four deliveries (batches 0 to 3). The program streams them with a cap of three files per micro-batch, keeps each reading's id and status in a memory table, and then runs the same query once more with the older trigger. What does it print? Type each line on its own line.",
+ "program": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\nmake_batches(sensor_readings, \"/tmp/readings\")\nstream = spark.readStream.schema(sensor_readings.schema).option(\"maxFilesPerTrigger\", 3).json(\"/tmp/readings\")\nflat = stream.select(\"reading_id\", F.col(\"payload.status\").alias(\"status\"))\n\nq = flat.writeStream.format(\"memory\").queryName(\"readings\").trigger(availableNow=True).start()\nq.awaitTermination()\nprint(len(q.recentProgress), [p[\"numInputRows\"] for p in q.recentProgress])\ntable = spark.table(\"readings\")\nprint(table.isStreaming, table.count(), table.filter(F.col(\"status\") != \"ok\").count())\n\nq = flat.writeStream.format(\"memory\").queryName(\"readings_once\").trigger(once=True).start()\nq.awaitTermination()\nprint(len(q.recentProgress), q.lastProgress[\"numInputRows\"])\n",
+ "dataset": {
+  "id": "PS-D09",
+  "version": "1.0.0"
+ },
+ "edition": "lesson",
+ "hints": [
+  "Count the readings in each delivery file. With a cap of three files, which files go into each micro-batch?",
+  "`numInputRows` counts the rows a micro-batch read, a repeated delivery included. The memory table is a batch table, so `count()` and `filter` work on it.",
+  "`once` ignores the file cap. Each query has its own memory table and its own temporary checkpoint, so the second one starts from the first file."
+ ],
+ "explanation": "The four delivery files hold 4, 3, 5 and 1 readings (R0011 is delivered twice, so it's in the third file twice). With at most three files per micro-batch, `availableNow` runs two micro-batches: files 0 to 2 (12 rows) and file 3 (1 row), so it prints `2 [12, 1]`. The memory table is a batch table, so `isStreaming` is `False`; it holds all 13 rows, and 3 of them aren't `ok` (the low-battery readings of DEV-001). The second query has its own memory table and its own temporary checkpoint, so it starts from the first file again. `once` ignores the file cap and reads everything in one micro-batch: `1 13`."
+}

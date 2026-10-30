@@ -1,0 +1,60 @@
+{
+ "id": "PS-Q0365",
+ "slug": "patient-register-from-a-text-export",
+ "lesson": "PS-L073",
+ "role": "integration",
+ "format": "dataframe_coding",
+ "difficulty": "hard",
+ "minutes": 14,
+ "title": "Patient register from a text export",
+ "dataset": {
+  "id": "PS-D04",
+  "version": "1.0.0"
+ },
+ "prompt": "The registration system exports its patients every night as a `;`-separated file, with birth dates as day/month/year. Write `land()` to put the file in bronze as text and `refine()` to build silver from bronze with real types.",
+ "rules": [
+  "Bronze is the file as it arrived: every column as text, plus `_source_file` with the file's name.",
+  "Silver has bronze's columns in the same order, with `birth_date` as a date. Every other column stays text exactly as in the file: a postal code such as `05401` keeps its leading zero.",
+  "The export writes an unknown birth date as `00/00/0000`. Those patients are left out of silver.",
+  "Don't change `export` or `solve`."
+ ],
+ "hints": [
+  "Read the folder with `spark.read.csv(INCOMING, header=True, sep=\";\")`. Without a schema or `inferSchema`, every column is text.",
+  "`F.try_to_timestamp(col, F.lit(\"dd/MM/yyyy\"))` gives NULL for text that isn't a real date, instead of stopping the job. `.cast(\"date\")` turns it into a date.",
+  "To change one column and keep the order, build the `select` list from `bronze.columns`, swapping in the new `birth_date`."
+ ],
+ "entry": "solve",
+ "inputs": [
+  "patients"
+ ],
+ "starter": "import os\nimport shutil\n\nfrom pyspark.sql import functions as F\n\nINCOMING = \"/tmp/registry/incoming\"\nBRONZE = \"/tmp/registry/bronze/patients\"\nSILVER = \"/tmp/registry/silver/patients\"\nFILE = \"patients_2026-03-01.csv\"\n\n\ndef export(patients):\n    # The registration system's nightly export, written as a file. Don't change this.\n    shutil.rmtree(\"/tmp/registry\", ignore_errors=True)  # start from empty folders on every run\n    os.makedirs(INCOMING)\n\n    def text(column, value):\n        if column == \"birth_date\":\n            return \"00/00/0000\" if value is None else value.strftime(\"%d/%m/%Y\")  # day/month/year\n        return \"\" if value is None else str(value)\n\n    lines = [\";\".join(patients.columns)]\n    for row in patients.collect():\n        lines.append(\";\".join(text(c, v) for c, v in zip(patients.columns, row)))\n    with open(f\"{INCOMING}/{FILE}\", \"w\") as f:\n        f.write(\"\\n\".join(lines) + \"\\n\")\n\n\ndef land():\n    # Bronze: the export as it arrived, every column as text, with _source_file.\n    pass\n\ndef refine():\n    # Silver: the patients with a real birth date, birth_date as a date. Built from bronze.\n    pass\n\ndef solve(patients):\n    export(patients)\n    land()\n    refine()\n    return spark.read.format(\"delta\").load(SILVER)\n",
+ "output": {
+  "columns": [
+   "patient_id",
+   "first_name",
+   "last_name",
+   "birth_date",
+   "sex",
+   "city",
+   "state",
+   "postal_code",
+   "insurance_plan",
+   "primary_pharmacy_id",
+   "_source_file"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 180,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "explanation": "Bronze reads the file with `header=True` and `sep=\";\"` and nothing else, so every column is text, and adds `F.lit(FILE).alias(\"_source_file\")`. Silver parses the date with `F.try_to_timestamp(F.col(\"birth_date\"), F.lit(\"dd/MM/yyyy\")).cast(\"date\")`, in a `select` that keeps the other columns as they are, and drops the rows where it's NULL. `00/00/0000` isn't a date: `try_to_timestamp` turns it into NULL, while `F.to_date` stops the job with an error. A `MM/dd` pattern turns 06/12/1957 into 12 June and gives nothing for 27/02. `inferSchema=True` reads postal codes as numbers, so `05401` becomes 5401 and can't be put back: keeping bronze as text is what keeps the file's values intact."
+}

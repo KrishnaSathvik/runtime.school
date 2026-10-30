@@ -1,0 +1,302 @@
+# runtime.school — PySpark Complete Curriculum & Dataset Mapping v3
+
+We should now fix the entire content blueprint before generating datasets or writing hundreds of questions.
+
+I'm keeping our agreed scope of 15 modules, 90 lessons, 450 practice questions, 10 projects, and 15 datasets. The important change is assigning permanent IDs and dataset ownership so that lessons, questions, and projects all use the same underlying data.
+
+# 90
+
+Lessons
+
+# 450
+
+Questions
+
+# 10
+
+Projects
+
+# 15
+
+Datasets
+
+# 15
+
+Modules
+
+# 3
+
+Grading modes
+
+## 1. Fixed dataset registry
+
+Each dataset gets a permanent ID. Every lesson, practice question, and project will reference these IDs, and every dataset will have versioned small, medium, hidden-test, and project-scale fixtures.
+
+| ID  | Dataset                  | Main data assets                                                                                   |
+| --- | ------------------------ | -------------------------------------------------------------------------------------------------- |
+| D01 | Retail Commerce          | customers, orders, order_items, products, payments, returns, sellers, reviews, inventory           |
+| D02 | Banking & Payments       | customers, accounts, transactions, transfers, merchants, disputes, ledger_entries                  |
+| D03 | Employee & HR            | employees, departments, salary_history, promotions, attendance, managers                           |
+| D04 | Healthcare Operations    | patients, encounters, providers, claims, medications, observations, pharmacies                     |
+| D05 | Movies & Streaming       | movies, ratings, users, tags, watch_sessions, subscriptions                                        |
+| D06 | E-commerce Clickstream   | page_views, searches, cart_events, checkout_events, sessions                                       |
+| D07 | Transportation & Taxi    | trips, taxi_zones, fare_rules, drivers, weather_enrichment                                         |
+| D08 | Logistics & Supply Chain | shipments, shipment_events, warehouses, inventory, purchase_orders, suppliers, deliveries          |
+| D09 | IoT & Sensors            | devices, sensor_readings, alerts, device_locations, maintenance_events                             |
+| D10 | Financial Markets        | securities, daily_prices, trades, corporate_actions, market_calendar                               |
+| D11 | Education & Learning     | learners, courses, lessons, attempts, completions, assessments                                     |
+| D12 | Advertising & Marketing  | campaigns, impressions, clicks, conversions, budgets, attribution_events                           |
+| D13 | Weather & Climate        | stations, observations, forecasts, weather_alerts                                                  |
+| D14 | Enterprise CRM & ERP     | accounts, contacts, invoices, invoice_lines, purchase_orders, suppliers, customer_cdc, product_cdc |
+| D15 | Application Logs         | api_requests, application_logs, traces, deployments, service_metrics, error_events                 |
+
+The real-source datasets will need license checks before redistribution. Synthetic extensions must retain consistent foreign keys and business rules.
+
+## 2. Complete lesson-to-dataset mapping
+
+The table below defines all 90 lessons. Each lesson has one primary dataset, with an optional secondary dataset only when it adds a useful contrast.
+
+### M01 — Spark Fundamentals
+
+| Lesson | Title                                        | Dataset |
+| ------ | -------------------------------------------- | ------- |
+| L001   | What Is Apache Spark and PySpark?            | D11     |
+| L002   | Driver, Executors, Clusters and Tasks        | D15     |
+| L003   | SparkSession and SparkContext                | D11     |
+| L004   | Transformations, Actions and Lazy Evaluation | D01     |
+| L005   | RDDs vs DataFrames                           | D15     |
+| L006   | Spark Execution Lifecycle                    | D07     |
+
+### M02 — DataFrame Foundations
+
+| Lesson | Title                                 | Dataset |
+| ------ | ------------------------------------- | ------- |
+| L007   | Creating DataFrames                   | D03     |
+| L008   | Exploring DataFrames and Schemas      | D01     |
+| L009   | Selecting and Aliasing Columns        | D11     |
+| L010   | Filtering with Conditions             | D01     |
+| L011   | Sorting, Distinct and Limits          | D05     |
+| L012   | Adding, Renaming and Dropping Columns | D03     |
+
+### M03 — Data Types and Expressions
+
+| Lesson | Title                              | Dataset |
+| ------ | ---------------------------------- | ------- |
+| L013   | Spark Data Types and StructType    | D04     |
+| L014   | Casting and Numeric Precision      | D02     |
+| L015   | String Functions and Regex         | D01     |
+| L016   | Numeric and Mathematical Functions | D07     |
+| L017   | Conditional Expressions            | D02     |
+| L018   | Dates, Timestamps and Time Zones   | D13     |
+
+### M04 — Data Cleaning and Quality
+
+| Lesson | Title                             | Dataset |
+| ------ | --------------------------------- | ------- |
+| L019   | Null, NaN and Missing Values      | D13     |
+| L020   | Exact and Key-Based Deduplication | D01     |
+| L021   | Standardization and Normalization | D03     |
+| L022   | Detecting Invalid Records         | D02     |
+| L023   | Data Quality Rules and Contracts  | D04     |
+| L024   | Quarantine and Reconciliation     | D08     |
+
+### M05 — Joins and Set Operations
+
+| Lesson | Title                               | Dataset |
+| ------ | ----------------------------------- | ------- |
+| L025   | Inner and Outer Joins               | D01     |
+| L026   | Left Semi and Left Anti Joins       | D02     |
+| L027   | Self Joins and Cross Joins          | D03     |
+| L028   | Composite and Conditional Joins     | D08     |
+| L029   | Union, Intersect and Except         | D14     |
+| L030   | Join Cardinality and Duplicate Rows | D01     |
+
+### M06 — Aggregations and Windows
+
+| Lesson | Title                                  | Dataset |
+| ------ | -------------------------------------- | ------- |
+| L031   | GroupBy and Aggregate Functions        | D01     |
+| L032   | Conditional Aggregations and Pivot     | D12     |
+| L033   | Ranking Window Functions               | D03     |
+| L034   | Lag, Lead and Change Analysis          | D10     |
+| L035   | Running Totals and Moving Windows      | D02     |
+| L036   | Session and Consecutive-Event Analysis | D05     |
+
+### M07 — Complex and Nested Data
+
+| Lesson | Title                             | Dataset |
+| ------ | --------------------------------- | ------- |
+| L037   | Reading and Parsing Nested JSON   | D06     |
+| L038   | Structs and Nested Fields         | D04     |
+| L039   | Arrays and Explode                | D01     |
+| L040   | Maps and Dynamic Attributes       | D15     |
+| L041   | Higher-Order Array Functions      | D06     |
+| L042   | Flattening Complex Event Payloads | D09     |
+
+### M08 — Ingestion and Storage
+
+| Lesson | Title                             | Dataset |
+| ------ | --------------------------------- | ------- |
+| L043   | CSV Ingestion and Read Options    | D03     |
+| L044   | JSON, JSONL and Malformed Records | D15     |
+| L045   | Parquet and ORC                   | D07     |
+| L046   | XML, Avro and Schema Handling     | D14     |
+| L047   | Partitioned Files and Write Modes | D13     |
+| L048   | JDBC and Multi-Source Ingestion   | D14     |
+
+### M09 — Advanced PySpark APIs
+
+| Lesson | Title                                 | Dataset |
+| ------ | ------------------------------------- | ------- |
+| L049   | RDD Map, Filter and FlatMap           | D15     |
+| L050   | Key-Value RDDs and ReduceByKey        | D15     |
+| L051   | Python UDFs and Built-In Alternatives | D01     |
+| L052   | Pandas UDFs and Arrow                 | D10     |
+| L053   | mapInPandas and Batch Processing      | D09     |
+| L054   | ML Feature Preparation                | D05     |
+
+### M10 — Spark Execution and Performance
+
+| Lesson | Title                               | Dataset |
+| ------ | ----------------------------------- | ------- |
+| L055   | Jobs, Stages, Tasks and DAGs        | D07     |
+| L056   | Explain Plans and Catalyst          | D01     |
+| L057   | Shuffles and Partitioning           | D07     |
+| L058   | Broadcast Joins and AQE             | D08     |
+| L059   | Data Skew and Salting               | D15     |
+| L060   | Cache, Persist and Memory Tradeoffs | D05     |
+
+### M11 — Delta Lake
+
+| Lesson | Title                             | Dataset |
+| ------ | --------------------------------- | ------- |
+| L061   | Delta Tables and Transaction Logs | D14     |
+| L062   | ACID Transactions and Time Travel | D02     |
+| L063   | Delta MERGE and Upserts           | D08     |
+| L064   | Change Data Capture               | D14     |
+| L065   | Schema Evolution and Enforcement  | D04     |
+| L066   | Compaction, Layout and Retention  | D07     |
+
+### M12 — Structured Streaming
+
+| Lesson | Title                                  | Dataset |
+| ------ | -------------------------------------- | ------- |
+| L067   | Streaming DataFrames and Micro-Batches | D06     |
+| L068   | Streaming Sources, Sinks and Triggers  | D09     |
+| L069   | Event-Time Windows                     | D12     |
+| L070   | Watermarks and Late Events             | D09     |
+| L071   | Stream-Static and Stream-Stream Joins  | D06     |
+| L072   | Checkpoints, State and Recovery        | D15     |
+
+### M13 — Data Engineering Pipelines
+
+| Lesson | Title                                   | Dataset |
+| ------ | --------------------------------------- | ------- |
+| L073   | Bronze, Silver and Gold Architecture    | D04     |
+| L074   | Incremental Batch Processing            | D08     |
+| L075   | Slowly Changing Dimensions              | D14     |
+| L076   | Data Contracts and Quality Gates        | D02     |
+| L077   | Pipeline Dependencies and Orchestration | D08     |
+| L078   | Pipeline Unit and Integration Testing   | D04     |
+
+### M14 — Production and Reliability
+
+| Lesson | Title                                     | Dataset |
+| ------ | ----------------------------------------- | ------- |
+| L079   | spark-submit and Deployment Modes         | D15     |
+| L080   | Executor, Driver and Memory Configuration | D07     |
+| L081   | Logging, Metrics and Spark UI             | D15     |
+| L082   | Failure Handling and Retries              | D08     |
+| L083   | Idempotency and Safe Backfills            | D02     |
+| L084   | Observability and SLA Monitoring          | D15     |
+
+### M15 — Advanced Engineering and MLlib
+
+| Lesson | Title                                   | Dataset   |
+| ------ | --------------------------------------- | --------- |
+| L085   | Benchmarking and Profiling              | D07       |
+| L086   | File Layout and Small-File Optimization | D14       |
+| L087   | Stateful Streaming Patterns             | D09       |
+| L088   | MLlib Pipelines and Estimators          | D05       |
+| L089   | Distributed Feature Engineering         | D10       |
+| L090   | Integrating a Production Data Platform  | D01 + D14 |
+
+This establishes a single primary dataset for 89 lessons and a two-dataset integration lesson at the end.
+
+## 3. Practice mapping — how the 450 questions are assigned
+
+To make this maintainable, we'll use five questions per lesson as the initial allocation. That creates exactly 90 × 5 = 450 questions.
+
+Each lesson gets five distinct challenge roles:
+
+| Question slot | Type          | Purpose                                                      |
+| ------------- | ------------- | ------------------------------------------------------------ |
+| A             | Foundation    | Apply the concept correctly                                  |
+| B             | Business task | Solve a realistic dataset problem                            |
+| C             | Edge case     | Handle nulls, ties, duplicates, schema issues, or boundaries |
+| D             | Debugging     | Correct a flawed implementation                              |
+| E             | Integration   | Combine the concept with earlier skills                      |
+
+For example, lesson L026 (Left Semi and Left Anti Joins) would use D02 Banking:
+
+| ID    | Question                                                                     |
+| ----- | ---------------------------------------------------------------------------- |
+| Q0126 | Find accounts with at least one posted transaction                           |
+| Q0127 | Identify accounts without any transaction activity                           |
+| Q0128 | Find transactions referencing nonexistent accounts, including null-key cases |
+| Q0129 | Fix an incorrect anti-join that loses unmatched records                      |
+| Q0130 | Reconcile unmatched transfers using anti joins and aggregations              |
+
+That is much more useful than writing five nearly identical `join()` exercises.
+
+We should preserve the category difficulty targets from v2 as guidance, but the five-per-lesson allocation is the exact ID scheme for this version. The individual difficulty assignments can be rebalanced during question authoring.
+
+## 4. Complete mapping files — all 90 lessons and 450 questions
+
+I've created a master workbook containing the full mapping, including the lesson titles above and individual IDs for every planned practice question.
+
+PySpark Master Curriculum Mapping v3
+
+Excel workbook · 5 worksheets
+
+Download complete master workbook
+
+Workbook contents
+
+| Lessons            | 90 rows  |
+| ------------------ | -------- |
+| Practice questions | 450 rows |
+| Dataset registry   | 15 rows  |
+| Projects           | 10 rows  |
+| Overview           | Summary  |
+
+Also available: 450-question mapping CSV
+
+Every practice question has a unique ID (`Q0001`–`Q0450`), associated lesson, dataset, question type, proposed difficulty, and an initial problem brief.
+
+Important distinction: These 450 entries are a complete planning and assignment inventory, not 450 finished, tested programming challenges. The briefs still need to become specific original problems with exact input tables, output schemas, sample results, reference solutions, and hidden tests.
+
+## 5. Projects — fixed dataset assignments
+
+| Project                            | Datasets              | Main learning outcome                  |
+| ---------------------------------- | --------------------- | -------------------------------------- |
+| P01 Retail Sales Analytics         | D01                   | Transformations, joins, aggregations   |
+| P02 Employee Workforce Analytics   | D03                   | HR analytics, windows                  |
+| P03 Movie Recommendation Data Prep | D05                   | Ratings, features, ML preparation      |
+| P04 Banking Reconciliation         | D02                   | Ledger correctness, deduplication      |
+| P05 NYC Taxi Performance           | D07 + D13             | Parquet, joins, optimization           |
+| P06 Healthcare Claims Lakehouse    | D04                   | Data quality, medallion architecture   |
+| P07 Logistics CDC                  | D08 + D14             | MERGE, incremental ETL, SCD2           |
+| P08 Real-Time Clickstream          | D06 + D12             | Streaming, sessionization, attribution |
+| P09 IoT Monitoring                 | D09 + D15             | Stateful processing, anomaly detection |
+| P10 Enterprise Platform            | D01 + D02 + D08 + D14 | Integrated production data platform    |
+
+## 6. What we should lock before development
+
+The mapping is now internally consistent: 90 lessons, five assigned question briefs per lesson, 15 dataset domains, and ten projects.
+
+However, I would not freeze every dataset schema or question wording yet. We should first complete one end-to-end reference implementation using D01 Retail Commerce, including its source license, table relationships, sample fixtures, five questions for L008, reference solutions, and automated grading.
+
+Once that passes, we can apply the same standard to the remaining datasets and question groups.
+
+This gives runtime.school a single traceable curriculum blueprint: every planned question belongs to a lesson, every lesson has assigned data, and every project reuses the same dataset library.

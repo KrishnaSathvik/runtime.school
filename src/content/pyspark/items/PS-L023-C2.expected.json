@@ -1,0 +1,47 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "rule",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "failed",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "dates_in_order",
+     1
+    ],
+    [
+     "allowed_within_billed",
+     0
+    ],
+    [
+     "paid_amount_matches_status",
+     0
+    ]
+   ],
+   "row_count": 3
+  }
+ },
+ "hidden": [
+  "the full practice claims table",
+  "claims submitted before, on and after the visit, and with missing dates",
+  "allowed amounts below, equal to and above the billed amount, and missing",
+  "every claim status, with and without a paid amount",
+  "claims that pass every rule",
+  "an empty claims table"
+ ]
+}

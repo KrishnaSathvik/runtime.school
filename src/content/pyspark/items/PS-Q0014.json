@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0014",
+  "kind": "predict",
+  "slug": "double-the-shuffle-partitions",
+  "lesson": "PS-L003",
+  "role": "debugging",
+  "format": "concept_or_trace",
+  "difficulty": "medium",
+  "minutes": 6,
+  "title": "Double the shuffle partitions",
+  "prompt": "A developer wants twice as many shuffle partitions as the current setting and wrote this. What does it actually print? Type each line on its own line.",
+  "program": "parts = spark.conf.get(\"spark.sql.shuffle.partitions\")\ndoubled = parts * 2\nprint(doubled)\nprint(type(doubled).__name__)\n",
+  "dataset": {
+    "id": "PS-D11",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "This environment sets `spark.sql.shuffle.partitions` to 4, not Spark's usual 200.",
+    "`spark.conf.get` always gives back text, even when the setting looks like a number.",
+    "In Python, multiplying text by 2 repeats it."
+  ],
+  "explanation": "`spark.conf.get` gave back the text `\"4\"`, and `\"4\" * 2` repeats it, giving the text `\"44\"`. The type is `str`, not a number. Convert first: `int(parts) * 2` is 8."
+}

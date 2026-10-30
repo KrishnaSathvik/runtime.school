@@ -1,0 +1,183 @@
+{
+  "dataset_id": "PS-D03",
+  "version": "1.0.0",
+  "title": "Employee & HR",
+  "source": "synthetic",
+  "licence": {
+    "status": "ours",
+    "note": "Runtime-owned deterministic synthetic data."
+  },
+  "seed": 2003,
+  "schemas": {
+    "departments": "department_id STRING, department_name STRING, cost_center STRING, location STRING, head_employee_id STRING",
+    "employees": "employee_id STRING, first_name STRING, last_name STRING, email STRING, phone STRING, job_title STRING, level INT, department_id STRING, manager_id STRING, hire_date DATE, employment_type STRING, salary DECIMAL(10,2), status STRING, termination_date DATE",
+    "salary_history": "employee_id STRING, effective_date DATE, salary DECIMAL(10,2), change_reason STRING",
+    "promotions": "promotion_id STRING, employee_id STRING, effective_date DATE, from_title STRING, to_title STRING, from_level INT, to_level INT, salary_increase DECIMAL(10,2)",
+    "attendance": "employee_id STRING, work_date DATE, status STRING, check_in TIMESTAMP, hours_worked DOUBLE",
+    "managers": "manager_id STRING, department_id STRING, role STRING, effective_from DATE, effective_to DATE",
+    "employees_raw": "value STRING"
+  },
+  "keys": {
+    "primary": {
+      "departments": [
+        "department_id"
+      ],
+      "employees": [
+        "employee_id"
+      ],
+      "salary_history": [
+        "employee_id",
+        "effective_date"
+      ],
+      "promotions": [
+        "promotion_id"
+      ],
+      "attendance": [
+        "employee_id",
+        "work_date"
+      ],
+      "managers": [
+        "manager_id",
+        "department_id",
+        "effective_from"
+      ]
+    },
+    "foreign": {
+      "departments.head_employee_id": "employees.employee_id",
+      "employees.department_id": "departments.department_id",
+      "employees.manager_id": "employees.employee_id",
+      "salary_history.employee_id": "employees.employee_id",
+      "promotions.employee_id": "employees.employee_id",
+      "attendance.employee_id": "employees.employee_id",
+      "managers.manager_id": "employees.employee_id",
+      "managers.department_id": "departments.department_id"
+    }
+  },
+  "rules": [
+    "employees.manager_id points at another employee (a self join). The chief executive is the only employee with a null manager_id; following manager_id upward from anyone reaches the chief executive.",
+    "level is 1 (individual contributor), 2 (senior), 3 (team manager), 4 (department head) or 5 (chief executive). Heads report to the chief executive, team managers to their head, everyone else to a team manager or the head.",
+    "Salaries are multiples of 2,500, so several people in a department often earn the same amount (ties for rank versus dense_rank).",
+    "employees.salary equals the salary on the employee's latest salary_history row. Every employee has a hire row on hire_date; raises are merit (2026-01-01), market_adjustment (2026-04-01) or promotion.",
+    "Each promotion has a matching salary_history row with change_reason promotion on the same date, and salary_increase is the difference.",
+    "status is active, on_leave or terminated; termination_date is set only for terminated employees, who have no attendance after it. On-leave employees have no attendance rows.",
+    "attendance: hours_worked and check_in are null for sick and vacation days; absent days have 0 hours and no check_in.",
+    "managers lists management appointments; effective_to is null for current ones. The chief executive was acting head of some departments until their head was hired.",
+    "employees_raw is the HR system's export: `;` between fields, a header line, job titles that contain `;` wrapped in double quotes, and exactly one malformed line (too few fields). Read it with spark.read.text, or as CSV with sep=';'.",
+    "The lesson edition is clean except one job title with stray spaces and lower case, and one email in mixed case. It has no merit or market raises, only hires and promotions, so the history fits on screen.",
+    "practice and project editions have messy text to standardise: job titles in the wrong case or with extra spaces, emails with capitals, and phone numbers in five formats (555-201-3344, (555) 201-3344, 555.201.3344, +1 555 201 3344, 5552013344).",
+    "The project edition (P02) has deliberate errors: one manager cycle (a team manager's manager_id was set to one of their own reports, so neither chain reaches the chief executive), 3 salary_history rows repeated exactly, and 2 salary_history rows dated before the employee's hire_date."
+  ],
+  "editions": {
+    "lesson": {
+      "departments": {
+        "file": "lesson/departments.csv",
+        "rows": 3,
+        "sha256": "c0268dbd9eaf0db6cf62a8af6e0d54827f2b27f1d6fc09f3cdd5ac9a8807d8f5"
+      },
+      "employees": {
+        "file": "lesson/employees.csv",
+        "rows": 9,
+        "sha256": "ee7e0af260ed7258e677eb13e76273a1ebd4e0598fb8a26cb57b8f10171b2c89"
+      },
+      "salary_history": {
+        "file": "lesson/salary_history.csv",
+        "rows": 14,
+        "sha256": "a359929c7dfa18e2adb85a21bcc0cc5e13c92daa27424866610d51a1f883efcb"
+      },
+      "promotions": {
+        "file": "lesson/promotions.csv",
+        "rows": 5,
+        "sha256": "5c06870ba6151a73c4ac7062d1b23d4bb1b9f2a4d51137d48e00690345f4c678"
+      },
+      "attendance": {
+        "file": "lesson/attendance.csv",
+        "rows": 10,
+        "sha256": "a3889e0ec9f7cf350f3c0c4deef064326cb43df2748455fd716949e8e94a8b0c"
+      },
+      "managers": {
+        "file": "lesson/managers.csv",
+        "rows": 4,
+        "sha256": "3772002a8bedd56dda3af7c19ed82b5139e3de047bbb1998641211c3d64ca03f"
+      },
+      "employees_raw": {
+        "file": "lesson/employees_raw.txt",
+        "rows": 10,
+        "sha256": "17c335de0ce087b419f55f05c6535bd6c40cac0a96f5846a50bdd45776786328"
+      }
+    },
+    "practice": {
+      "departments": {
+        "file": "practice/departments.csv",
+        "rows": 8,
+        "sha256": "ee2bc52251ddf6448f601f6232abcb0cde05a5f3a11ff916d2b56abc40bbb759"
+      },
+      "employees": {
+        "file": "practice/employees.csv",
+        "rows": 104,
+        "sha256": "c16fecc64bf94759cb83163d81c2c74cd8efd77092e4bddcfd81551d177cf97c"
+      },
+      "salary_history": {
+        "file": "practice/salary_history.csv",
+        "rows": 172,
+        "sha256": "3be7917368bb7f93866ffb50e9c3abbedeb6b68bcf52afc40752defd9c90bb3d"
+      },
+      "promotions": {
+        "file": "practice/promotions.csv",
+        "rows": 6,
+        "sha256": "d7e59e858b2813bfb256dce177116450fc270f710876ce0a92cd1dc3dc49d2a9"
+      },
+      "attendance": {
+        "file": "practice/attendance.csv",
+        "rows": 2002,
+        "sha256": "90d5a85e85799b60efcca250d4971f23fef1037f59258565482e4319d319441d"
+      },
+      "managers": {
+        "file": "practice/managers.csv",
+        "rows": 23,
+        "sha256": "a292b28dc21593f8fafcc318dd99ee1dcfe107efbc15d663e8698350af7e9039"
+      },
+      "employees_raw": {
+        "file": "practice/employees_raw.txt",
+        "rows": 105,
+        "sha256": "d7ddf254830494e5b33b06aecacebd8f36245be750851cb7493ed7a2740990aa"
+      }
+    },
+    "project": {
+      "departments": {
+        "file": "project/departments.csv",
+        "rows": 10,
+        "sha256": "26ddf2673231f164ab08899d7e441d194d6e63be11a08abbda37944e0ff5ac7a"
+      },
+      "employees": {
+        "file": "project/employees.csv",
+        "rows": 221,
+        "sha256": "72a79c3595a9c5d9912c68176533722462d593f8880c08d22b3e26f538452a71"
+      },
+      "salary_history": {
+        "file": "project/salary_history.csv",
+        "rows": 347,
+        "sha256": "bfdfbc91fb6c48b7a3503a6cd97e19f4bebc19786ca10a51c13e11ca39eed3af"
+      },
+      "promotions": {
+        "file": "project/promotions.csv",
+        "rows": 15,
+        "sha256": "157e19d83b4acb1ba0be34aa9f4a82a343c51ab90f1734334890e5fef2b8674c"
+      },
+      "attendance": {
+        "file": "project/attendance.csv",
+        "rows": 5243,
+        "sha256": "23d71fe5729061a47aadc2909d8c4f9f8a8b4423576b12c52b5d8229af8db95b"
+      },
+      "managers": {
+        "file": "project/managers.csv",
+        "rows": 38,
+        "sha256": "fc6e9b7d949ec84f069f1514fc67357935c3d3a9435d801d3576d46597f8f035"
+      },
+      "employees_raw": {
+        "file": "project/employees_raw.txt",
+        "rows": 222,
+        "sha256": "873c84804ae9650c02394f28f283832cd3105a506869d35aa20e9d2660f32584"
+      }
+    }
+  }
+}

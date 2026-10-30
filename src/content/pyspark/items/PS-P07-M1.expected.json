@@ -1,0 +1,853 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "example": {
+   "schema": [
+    {
+     "name": "claim_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "encounter_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "patient_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "provider_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "payer",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "service_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "submitted_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "billed_amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "allowed_amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "paid_amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "claim_status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "denial_reason",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "_source_file",
+     "type": "string",
+     "nullable": false
+    },
+    {
+     "name": "_load_month",
+     "type": "string",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "CLM900001",
+     "ENC900001",
+     "PAT90001",
+     "PRV0001",
+     "Bluebird Health",
+     "2025-11-03",
+     "2025-11-10",
+     "200.00",
+     "150.00",
+     "150.00",
+     "paid",
+     null,
+     "claims.csv",
+     "2025-11"
+    ],
+    [
+     "CLM900001",
+     "ENC900001",
+     "PAT90001",
+     "PRV0001",
+     "Bluebird Health",
+     "2025-11-03",
+     "2025-11-10",
+     "200.00",
+     "150.00",
+     "150.00",
+     "paid",
+     null,
+     "claims.csv",
+     "2025-11"
+    ],
+    [
+     "CLM900002",
+     "ENC900002",
+     "PAT90002",
+     "PRV0002",
+     "Summit Senior Advantage",
+     "2026-01-05",
+     "2026-01-20",
+     "480.00",
+     null,
+     null,
+     "submitted",
+     null,
+     "claims.csv",
+     "2026-01"
+    ],
+    [
+     "CLM900012",
+     "ENC900002",
+     "PAT90002",
+     "PRV0002",
+     "Summit Senior Advantage",
+     "2026-01-05",
+     "2026-02-15",
+     "480.00",
+     null,
+     null,
+     "submitted",
+     null,
+     "claims.csv",
+     "2026-02"
+    ],
+    [
+     "CLM900003",
+     "ENC900003",
+     "PAT90003",
+     null,
+     "Cedar State Medicaid",
+     "2026-02-01",
+     "2026-02-03",
+     "95.00",
+     "0.00",
+     "0.00",
+     "denied",
+     "not_covered",
+     "claims.csv",
+     "2026-02"
+    ],
+    [
+     "CLM900004",
+     "ENC900004",
+     "PAT90004",
+     "PRV9123",
+     "Bluebird Health",
+     "2026-02-11",
+     "2026-02-20",
+     "130.00",
+     null,
+     null,
+     "submitted",
+     null,
+     "claims.csv",
+     "2026-02"
+    ],
+    [
+     "CLM900005",
+     "ENC900005",
+     "PAT90005",
+     "PRV9001",
+     "Bluebird Health",
+     "2026-03-10",
+     "2026-03-02",
+     "75.00",
+     null,
+     null,
+     "submitted",
+     null,
+     "claims.csv",
+     "2026-03"
+    ],
+    [
+     "CLM900006",
+     "ENC900006",
+     null,
+     "PRV0001",
+     "Cedar State Medicaid",
+     "2026-03-12",
+     null,
+     "60.00",
+     null,
+     null,
+     "submitted",
+     null,
+     "claims.csv",
+     "unknown"
+    ],
+    [
+     "CLM900007",
+     "ENC900007",
+     "PAT90007",
+     "PRV0002",
+     "Summit Senior Advantage",
+     "2026-03-20",
+     "2026-03-28",
+     "100.00",
+     "120.00",
+     null,
+     "approved",
+     null,
+     "claims.csv",
+     "2026-03"
+    ],
+    [
+     "CLM900008",
+     "ENC900008",
+     "PAT90008",
+     "PRV0001",
+     "Bluebird Health",
+     "2026-04-02",
+     "2026-04-09",
+     "88.00",
+     null,
+     null,
+     "pending",
+     null,
+     "claims.csv",
+     "2026-04"
+    ],
+    [
+     "CLM900009",
+     "ENC900009",
+     "PAT90009",
+     "PRV0004",
+     "Bluebird Health",
+     "2026-04-15",
+     "2026-04-29",
+     "900.00",
+     "640.00",
+     null,
+     "approved",
+     null,
+     "claims.csv",
+     "2026-04"
+    ],
+    [
+     "CLM900010",
+     "ENC900010",
+     "PAT90010",
+     "PRV0002",
+     "Summit Senior Advantage",
+     "2026-05-06",
+     "2026-05-06",
+     "310.00",
+     "250.00",
+     "250.00",
+     "paid",
+     null,
+     "claims.csv",
+     "2026-05"
+    ]
+   ],
+   "row_count": 12,
+   "inputs": {
+    "claims": [
+     [
+      "CLM900001",
+      "ENC900001",
+      "PAT90001",
+      "PRV0001",
+      "Bluebird Health",
+      "2025-11-03",
+      "2025-11-10",
+      "200.00",
+      "150.00",
+      "150.00",
+      "paid",
+      null
+     ],
+     [
+      "CLM900001",
+      "ENC900001",
+      "PAT90001",
+      "PRV0001",
+      "Bluebird Health",
+      "2025-11-03",
+      "2025-11-10",
+      "200.00",
+      "150.00",
+      "150.00",
+      "paid",
+      null
+     ],
+     [
+      "CLM900002",
+      "ENC900002",
+      "PAT90002",
+      "PRV0002",
+      "Summit Senior Advantage",
+      "2026-01-05",
+      "2026-01-20",
+      "480.00",
+      null,
+      null,
+      "submitted",
+      null
+     ],
+     [
+      "CLM900012",
+      "ENC900002",
+      "PAT90002",
+      "PRV0002",
+      "Summit Senior Advantage",
+      "2026-01-05",
+      "2026-02-15",
+      "480.00",
+      null,
+      null,
+      "submitted",
+      null
+     ],
+     [
+      "CLM900003",
+      "ENC900003",
+      "PAT90003",
+      null,
+      "Cedar State Medicaid",
+      "2026-02-01",
+      "2026-02-03",
+      "95.00",
+      "0.00",
+      "0.00",
+      "denied",
+      "not_covered"
+     ],
+     [
+      "CLM900004",
+      "ENC900004",
+      "PAT90004",
+      "PRV9123",
+      "Bluebird Health",
+      "2026-02-11",
+      "2026-02-20",
+      "130.00",
+      null,
+      null,
+      "submitted",
+      null
+     ],
+     [
+      "CLM900005",
+      "ENC900005",
+      "PAT90005",
+      "PRV9001",
+      "Bluebird Health",
+      "2026-03-10",
+      "2026-03-02",
+      "75.00",
+      null,
+      null,
+      "submitted",
+      null
+     ],
+     [
+      "CLM900006",
+      "ENC900006",
+      null,
+      "PRV0001",
+      "Cedar State Medicaid",
+      "2026-03-12",
+      null,
+      "60.00",
+      null,
+      null,
+      "submitted",
+      null
+     ],
+     [
+      "CLM900007",
+      "ENC900007",
+      "PAT90007",
+      "PRV0002",
+      "Summit Senior Advantage",
+      "2026-03-20",
+      "2026-03-28",
+      "100.00",
+      "120.00",
+      null,
+      "approved",
+      null
+     ],
+     [
+      "CLM900008",
+      "ENC900008",
+      "PAT90008",
+      "PRV0001",
+      "Bluebird Health",
+      "2026-04-02",
+      "2026-04-09",
+      "88.00",
+      null,
+      null,
+      "pending",
+      null
+     ],
+     [
+      "CLM900009",
+      "ENC900009",
+      "PAT90009",
+      "PRV0004",
+      "Bluebird Health",
+      "2026-04-15",
+      "2026-04-29",
+      "900.00",
+      "640.00",
+      null,
+      "approved",
+      null
+     ],
+     [
+      "CLM900010",
+      "ENC900010",
+      "PAT90010",
+      "PRV0002",
+      "Summit Senior Advantage",
+      "2026-05-06",
+      "2026-05-06",
+      "310.00",
+      "250.00",
+      "250.00",
+      "paid",
+      null
+     ]
+    ]
+   }
+  },
+  "project": {
+   "schema": [
+    {
+     "name": "claim_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "encounter_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "patient_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "provider_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "payer",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "service_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "submitted_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "billed_amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "allowed_amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "paid_amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "claim_status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "denial_reason",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "_source_file",
+     "type": "string",
+     "nullable": false
+    },
+    {
+     "name": "_load_month",
+     "type": "string",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "CLM000001",
+     "ENC000001",
+     "PAT00136",
+     "PRV0020",
+     "Bluebird Health",
+     "2025-07-01",
+     "2025-07-27",
+     "18140.74",
+     "0.00",
+     "0.00",
+     "denied",
+     "not_covered",
+     "claims.csv",
+     "2025-07"
+    ],
+    [
+     "CLM000002",
+     "ENC000003",
+     "PAT00508",
+     "PRV0032",
+     "Bluebird Health",
+     "2025-07-01",
+     "2025-07-26",
+     "141.92",
+     "106.52",
+     null,
+     "appealed",
+     "missing_information",
+     "claims.csv",
+     "2025-07"
+    ],
+    [
+     "CLM000003",
+     "ENC000004",
+     "PAT00010",
+     "PRV0019",
+     "Bluebird Health",
+     "2025-07-01",
+     "2025-07-22",
+     "273.62",
+     "233.99",
+     "233.99",
+     "paid",
+     null,
+     "claims.csv",
+     "2025-07"
+    ],
+    [
+     "CLM000004",
+     "ENC000005",
+     "PAT00557",
+     "PRV0008",
+     "Cedar State Medicaid",
+     "2025-07-01",
+     "2025-07-24",
+     "177.01",
+     null,
+     null,
+     "submitted",
+     null,
+     "claims.csv",
+     "2025-07"
+    ],
+    [
+     "CLM000005",
+     "ENC000006",
+     "PAT00335",
+     "PRV0007",
+     "Cedar State Medicaid",
+     "2025-07-01",
+     "2025-07-22",
+     "156.46",
+     "117.21",
+     "117.21",
+     "paid",
+     null,
+     "claims.csv",
+     "2025-07"
+    ],
+    [
+     "CLM000006",
+     "ENC000007",
+     "PAT00154",
+     "PRV0027",
+     "Bluebird Health",
+     "2025-07-01",
+     "2025-07-23",
+     "230.16",
+     "103.89",
+     "103.89",
+     "paid",
+     null,
+     "claims.csv",
+     "2025-07"
+    ],
+    [
+     "CLM000007",
+     "ENC000008",
+     "PAT00560",
+     "PRV0011",
+     "Bluebird Health",
+     "2025-07-01",
+     "2025-07-07",
+     "22953.41",
+     "11194.51",
+     null,
+     "approved",
+     null,
+     "claims.csv",
+     "2025-07"
+    ],
+    [
+     "CLM000008",
+     "ENC000010",
+     "PAT00367",
+     "PRV0001",
+     "Cedar State Medicaid",
+     "2025-07-02",
+     "2025-07-03",
+     "417.93",
+     null,
+     null,
+     "submitted",
+     null,
+     "claims.csv",
+     "2025-07"
+    ],
+    [
+     "CLM000009",
+     "ENC000011",
+     "PAT00483",
+     "PRV0035",
+     "Bluebird Health",
+     "2025-07-02",
+     "2025-07-07",
+     "313.97",
+     "257.80",
+     null,
+     "approved",
+     null,
+     "claims.csv",
+     "2025-07"
+    ],
+    [
+     "CLM000010",
+     "ENC000013",
+     "PAT00653",
+     "PRV0010",
+     "Bluebird Health",
+     "2025-07-02",
+     "2025-06-12",
+     "266.26",
+     "162.09",
+     "162.09",
+     "paid",
+     null,
+     "claims.csv",
+     "2025-06"
+    ],
+    [
+     "CLM000011",
+     "ENC000014",
+     "PAT00638",
+     "PRV0012",
+     "Bluebird Health",
+     "2025-07-02",
+     "2025-07-04",
+     "155.12",
+     null,
+     null,
+     "submitted",
+     null,
+     "claims.csv",
+     "2025-07"
+    ],
+    [
+     "CLM000012",
+     "ENC000015",
+     "PAT00251",
+     "PRV0003",
+     "Bluebird Health",
+     "2025-07-02",
+     "2025-07-27",
+     "74.61",
+     "38.11",
+     "38.11",
+     "paid",
+     null,
+     "claims.csv",
+     "2025-07"
+    ],
+    [
+     "CLM000013",
+     "ENC000017",
+     "PAT00164",
+     "PRV0033",
+     "Bluebird Health",
+     "2025-07-02",
+     "2025-07-15",
+     "152.64",
+     "83.73",
+     "83.73",
+     "paid",
+     null,
+     "claims.csv",
+     "2025-07"
+    ],
+    [
+     "CLM000014",
+     "ENC000018",
+     "PAT00039",
+     "PRV0009",
+     "Cedar State Medicaid",
+     "2025-07-02",
+     "2025-07-27",
+     "276.07",
+     "195.24",
+     "195.24",
+     "paid",
+     null,
+     "claims.csv",
+     "2025-07"
+    ],
+    [
+     "CLM000015",
+     "ENC000019",
+     "PAT00644",
+     "PRV0004",
+     "Bluebird Health",
+     "2025-07-03",
+     "2025-07-05",
+     "3213.82",
+     "2303.39",
+     null,
+     "approved",
+     null,
+     "claims.csv",
+     "2025-07"
+    ],
+    [
+     "CLM000016",
+     "ENC000020",
+     "PAT00621",
+     "PRV0028",
+     "Bluebird Health",
+     "2025-07-03",
+     "2025-07-10",
+     "101.15",
+     "47.71",
+     "47.71",
+     "paid",
+     null,
+     "claims.csv",
+     "2025-07"
+    ],
+    [
+     "CLM000017",
+     "ENC000021",
+     "PAT00329",
+     "PRV0001",
+     "Summit Senior Advantage",
+     "2025-07-03",
+     "2025-07-25",
+     "86.31",
+     "0.00",
+     "0.00",
+     "denied",
+     "not_covered",
+     "claims.csv",
+     "2025-07"
+    ],
+    [
+     "CLM000018",
+     "ENC000022",
+     "PAT00363",
+     "PRV0024",
+     "Summit Senior Advantage",
+     "2025-07-03",
+     "2025-07-22",
+     "379.23",
+     "233.77",
+     "233.77",
+     "paid",
+     null,
+     "claims.csv",
+     "2025-07"
+    ],
+    [
+     "CLM000019",
+     "ENC000023",
+     "PAT00458",
+     "PRV0030",
+     "Cedar State Medicaid",
+     "2025-07-03",
+     "2025-08-02",
+     "242.77",
+     null,
+     null,
+     "submitted",
+     null,
+     "claims.csv",
+     "2025-08"
+    ],
+    [
+     "CLM000020",
+     "ENC000024",
+     "PAT00181",
+     "PRV0002",
+     "Cedar State Medicaid",
+     "2025-07-03",
+     "2025-07-31",
+     "163.49",
+     "0.00",
+     "0.00",
+     "denied",
+     "prior_auth_required",
+     "claims.csv",
+     "2025-07"
+    ]
+   ],
+   "row_count": 2425
+  }
+ },
+ "hidden": [
+  "the full practice claims table",
+  "claims on the edges of a month, a claim with no submitted date, a copy and an empty row",
+  "an empty claims table"
+ ]
+}

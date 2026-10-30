@@ -1,0 +1,44 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D02",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "merchants",
+   "transactions"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "+-----------+--------+----------+\n|merchant_id|mcc_code|mcc_number|\n+-----------+--------+----------+\n|       M001|    5411|      5411|\n|       M002|    0742|       742|\n|       M003|    5814|      5814|\n|       M004|    5541|      5541|\n|       M005|    5942|      5942|\n|       M006|    5812|      5812|\n+-----------+--------+----------+\n\nroot\n |-- merchant_id: string (nullable = true)\n |-- mcc_code: string (nullable = true)\n |-- mcc_number: integer (nullable = true)\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "",
+   "error": {
+    "type": "NumberFormatException",
+    "message": "[CAST_INVALID_INPUT] The value 'N/A' of the type \"STRING\" cannot be cast to \"INT\" because it is malformed. Correct the value as per the syntax, or change its target type. Use `try_cast` to tolerate malformed input and return NULL instead. SQLSTATE: 22018",
+    "line": 4,
+    "condition": "CAST_INVALID_INPUT"
+   }
+  },
+  "e3": {
+   "stdout": "+----+---------+\n|code|as_number|\n+----+---------+\n|5411|     5411|\n|0742|      742|\n| N/A|     NULL|\n|    |     NULL|\n|NULL|     NULL|\n+----+---------+\n\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "+-------------------+----------+\n|          as_double|as_decimal|\n+-------------------+----------+\n|0.30000000000000004|       0.3|\n+-------------------+----------+\n\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "+--------------+------+-----+-----+----------+\n|transaction_id|amount|cents|whole| posted_on|\n+--------------+------+-----+-----+----------+\n|       T000001|800.00|80000|  800|2026-01-05|\n|       T000002| 60.53| 6053|   60|2026-01-16|\n|       T000003| 27.90| 2790|   27|2026-01-26|\n|       T000004|800.00|80000|  800|2026-01-27|\n+--------------+------+-----+-----+----------+\nonly showing top 4 rows\nroot\n |-- transaction_id: string (nullable = true)\n |-- amount: decimal(12,2) (nullable = true)\n |-- cents: long (nullable = true)\n |-- whole: integer (nullable = true)\n |-- posted_on: date (nullable = true)\n\n",
+   "error": null
+  }
+ }
+}

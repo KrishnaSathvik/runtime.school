@@ -1,0 +1,146 @@
+{
+  "id": "PS-L058",
+  "minutes": 25,
+  "lede": "Most joins pair a big table with a small one. If every executor gets its own copy of the small table, the big one never has to be shuffled. That's a broadcast join, and adaptive execution can pick one for you while the query runs.",
+  "objectives": [
+    "Tell a broadcast hash join from a sort-merge join in a physical plan",
+    "Control broadcasting with `spark.sql.autoBroadcastJoinThreshold` and the `F.broadcast` hint",
+    "Explain how adaptive execution (AQE) can switch a join to a broadcast while the query runs",
+    "Show that the join strategy changes how Spark works, never which rows you get"
+  ],
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "shipments",
+      "warehouses",
+      "inventory"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`shipments` has one row per outbound shipment, and each one names its sending warehouse. `warehouses` is small: one row per warehouse. They're loaded as DataFrames, and `F` is `pyspark.sql.functions`.\n\nSpark has two main ways to run an equi-join like `shipments.join(warehouses, \"warehouse_id\")`:\n\n- **Sort-merge join.** Both sides are shuffled by the key, so matching rows land in the same partition, then each partition is sorted and merged. In a plan you see `SortMergeJoin`, with an `Exchange` under each side.\n- **Broadcast hash join.** The small side is collected and a copy is sent to every executor. Each task builds a lookup table from it and streams its part of the big side past it. The big side isn't shuffled at all. In a plan you see `BroadcastHashJoin` and a `BroadcastExchange` over the small side.\n\nSpark broadcasts automatically when its size estimate for one side is under `spark.sql.autoBroadcastJoinThreshold`, 10 MB by default."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Spark broadcasts the small table by itself",
+      "code": "print(spark.conf.get(\"spark.sql.autoBroadcastJoinThreshold\"))\nprint(spark.conf.get(\"spark.sql.adaptive.enabled\"))\n\njoined = shipments.join(warehouses, on=\"warehouse_id\", how=\"inner\")\nplan = joined._jdf.queryExecution().executedPlan().toString()\nprint(\"BroadcastHashJoin\" in plan, \"SortMergeJoin\" in plan)\n",
+      "note": "The threshold is 10485760 bytes, which is 10 MB, and adaptive execution is on. The `plan` line, from lessons 55 and 56, gets the physical plan as text, the same text `explain()` prints, so the last line checks which join Spark chose. `warehouses` is a tiny file, so it's a broadcast."
+    },
+    {
+      "kind": "text",
+      "md": "Settings made with `spark.conf.set` last for the rest of the session. Setting the threshold to `-1` turns automatic broadcasting off.\n\nThe next examples also set `spark.sql.adaptive.enabled` to `False`. Adaptive execution can rewrite a plan while it runs (you'll see that below), so switching it off keeps the plan you read the same as the plan that runs."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Automatic broadcast off: a sort-merge join",
+      "code": "spark.conf.set(\"spark.sql.adaptive.enabled\", False)\nspark.conf.set(\"spark.sql.autoBroadcastJoinThreshold\", -1)\n\njoined = shipments.join(warehouses, on=\"warehouse_id\", how=\"inner\")\nplan = joined._jdf.queryExecution().executedPlan().toString()\nprint(\"BroadcastHashJoin\" in plan, \"SortMergeJoin\" in plan)\nprint(plan.count(\"Exchange hashpartitioning\"), \"shuffles\")\n",
+      "note": "Now both sides are shuffled by `warehouse_id` (two `Exchange hashpartitioning` steps), then sorted and merged. That's fine for two big tables, and wasted work when one side has three rows."
+    },
+    {
+      "kind": "text",
+      "md": "You know your data better than Spark's estimate. Wrap the small side in `F.broadcast(...)` to ask for a broadcast whatever the threshold says. It's a **hint**: the DataFrame is the same, only marked.\n\nThe join strategy never changes the result. Whichever way Spark runs it, an inner join returns the same rows."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "The broadcast hint, and the same rows",
+      "code": "from pyspark.sql import functions as F\n\nspark.conf.set(\"spark.sql.adaptive.enabled\", False)\nspark.conf.set(\"spark.sql.autoBroadcastJoinThreshold\", -1)\n\nplain = shipments.join(warehouses, \"warehouse_id\")\nhinted = shipments.join(F.broadcast(warehouses), \"warehouse_id\")\nplan = hinted._jdf.queryExecution().executedPlan().toString()\nprint(\"BroadcastHashJoin\" in plan)\n\nprint(sorted(plain.collect()) == sorted(hinted.collect()))\nhinted.select(\"shipment_id\", \"warehouse_id\", \"name\", \"region\").orderBy(\"shipment_id\").show()\n",
+      "note": "The hint wins even with automatic broadcasting off. Sorting both lists of rows and comparing them shows the two strategies return exactly the same rows."
+    },
+    {
+      "kind": "text",
+      "md": "Spark's first plan relies on estimates made before any data is read. **Adaptive query execution** (AQE, on by default) re-plans while the query runs. Each shuffle is a natural pause: when the shuffled data is written, Spark knows its real size. If one side of a sort-merge join turns out to be small enough, AQE switches that join to a broadcast. Its own limit is `spark.sql.adaptive.autoBroadcastJoinThreshold`, which follows the main threshold unless you set it.\n\nTo see it here, the next example sets the main threshold to a silly 10 bytes, so the first plan has to be a sort-merge join, and gives AQE a normal 10 MB limit. Once the query has run, the plan text has two parts: the final plan, then the initial plan after `== Initial Plan ==`."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "AQE switches to a broadcast at run time",
+      "code": "spark.conf.set(\"spark.sql.adaptive.enabled\", True)\nspark.conf.set(\"spark.sql.autoBroadcastJoinThreshold\", 10)\nspark.conf.set(\"spark.sql.adaptive.autoBroadcastJoinThreshold\", \"10MB\")\n\njoined = shipments.join(warehouses, \"warehouse_id\")\nbefore = joined._jdf.queryExecution().executedPlan().toString()\nprint(\"before running:\", \"SortMergeJoin\" in before, \"BroadcastHashJoin\" in before)\n\nprint(len(joined.collect()), \"rows\")\nafter = joined._jdf.queryExecution().executedPlan().toString()\nfinal = after.split(\"== Initial Plan ==\")[0]\nprint(\"isFinalPlan=true\" in after)\nprint(\"final plan:\", \"BroadcastHashJoin\" in final, \"SortMergeJoin\" in final)\n",
+      "note": "Before it runs, the plan is a sort-merge join. `collect()` runs it, and the plan text now shows what actually ran: after the shuffle, AQE sees how small `warehouses` really is and swaps in a broadcast hash join. Both shuffles had already happened, so the gain is smaller than planning a broadcast from the start; on big data it still saves the sort and spreads the work better."
+    },
+    {
+      "kind": "text",
+      "md": "A broadcast can't go just anywhere. In an outer join, the side whose every row is kept has to be streamed past the lookup table, so only the **other** side can be broadcast. In `shipments.join(..., how=\"left\")` that's the right side. Spark quietly ignores a hint it can't use."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Which side can be broadcast",
+      "code": "from pyspark.sql import functions as F\n\nspark.conf.set(\"spark.sql.adaptive.enabled\", False)\nspark.conf.set(\"spark.sql.autoBroadcastJoinThreshold\", -1)\n\nwrong_side = F.broadcast(shipments).join(warehouses, \"warehouse_id\", \"left\")\nright_side = shipments.join(F.broadcast(warehouses), \"warehouse_id\", \"left\")\nfor name, df in [(\"hint on shipments\", wrong_side), (\"hint on warehouses\", right_side)]:\n    plan = df._jdf.queryExecution().executedPlan().toString()\n    print(name, \"BroadcastHashJoin\" in plan)\n",
+      "note": "With the hint on the kept side, Spark falls back to a sort-merge join. With the hint on `warehouses`, it broadcasts. Either way the rows are the same left join."
+    },
+    {
+      "kind": "text",
+      "md": "Broadcasting doesn't fix a wrong key. `inventory` has one row per **warehouse and SKU**: the same SKU is stocked in several warehouses. To pass more than one key column, give `on` a list: `on=[\"warehouse_id\", \"sku\"]` matches rows where both are equal, and keeps each key column once."
+    },
+    {
+      "kind": "example",
+      "id": "e6",
+      "title": "Broadcast inventory on both keys",
+      "code": "from pyspark.sql import functions as F\n\nby_sku = shipments.join(F.broadcast(inventory), on=\"sku\")\nby_both = shipments.join(F.broadcast(inventory), on=[\"warehouse_id\", \"sku\"])\nprint(by_sku.count(), \"rows joined on sku alone\")\nprint(by_both.count(), \"rows joined on warehouse and sku\")\n\nby_both.select(\"shipment_id\", \"warehouse_id\", \"sku\", \"quantity\", \"on_hand\").orderBy(\"shipment_id\").show()\n",
+      "note": "SKU-1003 is stocked in three warehouses, so joining on `sku` alone pairs those shipments with every warehouse's stock: 8 rows from 4 shipments. With both keys each shipment meets only its own warehouse's row."
+    }
+  ],
+  "challenges": [
+    "PS-L058-C1",
+    "PS-L058-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "`spark.sql.autoBroadcastJoinThreshold` is `-1` and you write `shipments.join(F.broadcast(warehouses), \"warehouse_id\")`. What does Spark do?",
+      "choices": [
+        "A sort-merge join, because automatic broadcasting is off",
+        "A broadcast hash join: the hint asks for it whatever the threshold says",
+        "It raises an error about the threshold",
+        "It broadcasts `shipments` instead"
+      ],
+      "answer": 1,
+      "why": "The threshold only controls automatic broadcasting. `F.broadcast` is a hint Spark follows when the join type allows it."
+    },
+    {
+      "id": "k2",
+      "prompt": "The same inner join runs once as a broadcast hash join and once as a sort-merge join. How do the results compare?",
+      "choices": [
+        "The broadcast join drops rows that don't fit in memory",
+        "The sort-merge join returns its rows sorted by the key, so the results differ",
+        "They hold exactly the same rows; only the way Spark does the work differs",
+        "The broadcast join can return duplicate rows"
+      ],
+      "answer": 2,
+      "why": "The join strategy is a physical choice. It changes shuffles and memory use, never which rows come back. Neither strategy promises a row order."
+    },
+    {
+      "id": "k3",
+      "prompt": "Why can adaptive execution switch a sort-merge join to a broadcast when the first plan couldn't?",
+      "choices": [
+        "It reads the whole table into the driver before planning",
+        "After a shuffle stage runs, it knows the real size of the data instead of an estimate",
+        "It always broadcasts the right side",
+        "It turns the threshold off"
+      ],
+      "answer": 1,
+      "why": "AQE re-plans at shuffle boundaries using the measured size of the shuffled data. If one side is small enough, it swaps in a broadcast hash join."
+    }
+  ],
+  "review": [
+    "A broadcast hash join copies the small side to every executor, so the big side isn't shuffled. A sort-merge join shuffles and sorts both sides.",
+    "Spark broadcasts automatically below `spark.sql.autoBroadcastJoinThreshold` (10 MB by default); `-1` turns that off.",
+    "`F.broadcast(df)` is a hint: it asks for a broadcast whatever the threshold. In an outer join only the side that isn't kept whole can be broadcast.",
+    "Adaptive execution re-plans after each shuffle with real sizes, and can switch a sort-merge join to a broadcast while the query runs.",
+    "Check the strategy with the plan text, for example `\"BroadcastHashJoin\" in plan`. Set adaptive execution explicitly when the plan matters.",
+    "The strategy never changes the rows. Get the keys right first: `on=[\"warehouse_id\", \"sku\"]` joins on both."
+  ],
+  "practice": [
+    "PS-Q0286",
+    "PS-Q0287",
+    "PS-Q0288",
+    "PS-Q0289",
+    "PS-Q0290"
+  ]
+}

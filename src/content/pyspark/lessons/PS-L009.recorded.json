@@ -1,0 +1,45 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D11",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "learners",
+   "lessons",
+   "attempts"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "+------------+-------+\n|display_name|country|\n+------------+-------+\n|     Aiko M.|     JP|\n|    Bruno S.|     BR|\n|    Chidi O.|     NG|\n|     Dana K.|     CA|\n|     Elif T.|     DE|\n+------------+-------+\n\n+----+----------+\n|plan|learner_id|\n+----+----------+\n|plus|      L001|\n|free|      L002|\n|free|      L003|\n|plus|      L004|\n|free|      L005|\n+----+----------+\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "+----------+----------+-----+\n|attempt_id|learner_id|score|\n+----------+----------+-----+\n|      A001|      L005| 66.0|\n|      A002|      L005| 72.5|\n|      A003|      L001| 92.0|\n|      A004|      L001| 85.5|\n|      A005|      L002| 74.5|\n|      A006|      L003| 70.0|\n|      A007|      L003| 58.5|\n|      A008|      L002| 81.0|\n|      A009|      L003| 76.0|\n|      A010|      L004| 95.0|\n|      A011|      L004| 89.5|\n|      A012|      L001| 88.0|\n|      A013|      L001| 79.0|\n+----------+----------+-----+\n\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "+-------------------+------------------------+\n|              title|(estimated_minutes / 60)|\n+-------------------+------------------------+\n|  Your first SELECT|      0.3333333333333333|\n|     Filtering rows|      0.4166666666666667|\n|Variables and types|      0.4166666666666667|\n+-------------------+------------------------+\nonly showing top 3 rows\n+-------------------+-----------------+------------------+\n|              title|estimated_minutes|             hours|\n+-------------------+-----------------+------------------+\n|  Your first SELECT|               20|0.3333333333333333|\n|     Filtering rows|               25|0.4166666666666667|\n|Variables and types|               25|0.4166666666666667|\n+-------------------+-----------------+------------------+\nonly showing top 3 rows\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "",
+   "error": {
+    "type": "AnalysisException",
+    "message": "[UNRESOLVED_COLUMN.WITH_SUGGESTION] A column, variable, or function parameter with name `score` cannot be resolved. Did you mean one of the following? [`score_pct`, `passed`, `lesson_id`, `started_at`, `learner_id`]. SQLSTATE: 42703",
+    "line": 1,
+    "condition": "UNRESOLVED_COLUMN.WITH_SUGGESTION"
+   }
+  },
+  "e5": {
+   "stdout": "+----------+-------------------+-----+\n|attempt_id|              hours|score|\n+----------+-------------------+-----+\n|      A001|               0.25| 0.66|\n|      A002|0.21666666666666667|0.725|\n|      A003|0.23333333333333334| 0.92|\n|      A004|0.31666666666666665|0.855|\n+----------+-------------------+-----+\nonly showing top 4 rows\n",
+   "error": null
+  }
+ }
+}

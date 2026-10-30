@@ -1,0 +1,141 @@
+{
+  "id": "PS-L086",
+  "minutes": 30,
+  "lede": "How a table is split into files decides how much every later read has to open. The number of files comes from how the data is partitioned when it's written, and you can set it on purpose instead of cleaning up afterwards.",
+  "objectives": [
+    "Predict how many files a write makes from its partitions, `partitionBy` and `maxRecordsPerFile`",
+    "Change the number of partitions with `repartition` and `coalesce`, and say how they differ",
+    "Explain how partition pruning and min/max statistics let a read skip files",
+    "Compact just the partitions that need it with `optimize().where(...)`"
+  ],
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "invoice_lines"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`invoice_lines` is the ERP's ten invoice lines: five invoices, two lines each, five products.\n\nA DataFrame is split into **partitions**, and a write runs one task per partition. Each task writes its own files, so a write makes at least one file per partition that has rows. `df.rdd.getNumPartitions()` says how many partitions `df` has. The examples count a Delta table's files with `numFiles` from `detail()` (lesson 66).\n\nTwo methods change the number of partitions:\n\n- `df.repartition(n)` shuffles the rows into `n` partitions of about the same size. It can make more partitions or fewer.\n- `df.coalesce(n)` merges partitions that are already there into `n`, without a shuffle. It can only make fewer."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "One file per partition",
+      "code": "from delta.tables import DeltaTable\n\n\ndef files(path):\n    return DeltaTable.forPath(spark, path).detail().first().numFiles\n\nprint(invoice_lines.rdd.getNumPartitions(), \"partition\")\n\ninvoice_lines.write.format(\"delta\").save(\"/tmp/erp/as_read\")\ninvoice_lines.repartition(4).write.format(\"delta\").save(\"/tmp/erp/four\")\ninvoice_lines.repartition(4).coalesce(1).write.format(\"delta\").save(\"/tmp/erp/one\")\n\nprint(files(\"/tmp/erp/as_read\"), files(\"/tmp/erp/four\"), files(\"/tmp/erp/one\"))\n",
+      "note": "A small file is read as one partition, so the first write makes one file. `repartition(4)` spreads the ten lines over four partitions: four files. `coalesce(1)` merges them back into one partition without moving rows around, and the write makes one file."
+    },
+    {
+      "kind": "text",
+      "md": "`partitionBy` multiplies files. Each task writes one file **for every partition value it holds**. With rows spread at random over 4 tasks and 5 products, a task may hold all five, so the write can make up to 4 × 5 = 20 files, most of them tiny.\n\nThe fix is to put each value's rows in one task before writing: `repartition(\"product_id\")` shuffles by the column, so all of a product's lines land in the same partition. Then each product gets one file."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "partitionBy after a random split",
+      "code": "from delta.tables import DeltaTable\n\n\ndef files(path):\n    return DeltaTable.forPath(spark, path).detail().first().numFiles\nimport os\n\ninvoice_lines.repartition(4).write.format(\"delta\").partitionBy(\"product_id\").save(\"/tmp/erp/spread\")\ninvoice_lines.repartition(\"product_id\").write.format(\"delta\").partitionBy(\"product_id\").save(\"/tmp/erp/grouped\")\n\nprint(sorted(d for d in os.listdir(\"/tmp/erp/grouped\") if \"=\" in d))\nprint(files(\"/tmp/erp/spread\"), \"files after repartition(4)\")\nprint(files(\"/tmp/erp/grouped\"), \"files after repartition(\\\"product_id\\\")\")\n",
+      "note": "Both tables have the same five product folders. Spread over four tasks, the products' lines went into nine files; grouped by product first, it's one file per product: five."
+    },
+    {
+      "kind": "text",
+      "md": "One file per value can be too big for a value with many rows. The write option `maxRecordsPerFile` caps the rows in one file: when a task reaches the cap, it starts a new file. (The session setting `spark.sql.files.maxRecordsPerFile` does the same for every write.) Together with `repartition` by the partition column, a value with `n` rows gets `n / cap` files, rounded up.\n\nChoose the partition column the same way as for Parquet (lesson 47): few distinct values that queries often pick out. Partitioning by a column such as `invoice_id` would make one folder, and at least one file, per invoice."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Cap the rows per file",
+      "code": "from delta.tables import DeltaTable\n\n\ndef files(path):\n    return DeltaTable.forPath(spark, path).detail().first().numFiles\nimport os\n\npath = \"/tmp/erp/capped\"\n(invoice_lines.repartition(\"product_id\")\n    .write.format(\"delta\")\n    .partitionBy(\"product_id\")\n    .option(\"maxRecordsPerFile\", 2)\n    .save(path))\n\nfor folder in sorted(d for d in os.listdir(path) if \"=\" in d):\n    print(folder, len([f for f in os.listdir(path + \"/\" + folder) if f.endswith(\".parquet\")]))\nprint(files(path), \"files\")\n",
+      "note": "`PRD-002` and `PRD-003` have three lines each, so they get two files: two lines and one. The other products have two lines or fewer and keep one file. Seven files in all."
+    },
+    {
+      "kind": "text",
+      "md": "The layout pays off when a query reads only part of the table. A read with a condition, `where(\"...\")`, which keeps the rows where the condition is true, skips files in two ways:\n\n- **Partition pruning.** A condition on the partition column picks folders, so the other folders aren't even listed.\n- **Data skipping.** For any other column, Delta compares the condition with each file's min and max values in the log and skips files that can't match.\n\n`inputFiles()` lists the files a read will open after both."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Reads skip files",
+      "code": "path = \"/tmp/erp/by_product\"\ninvoice_lines.repartition(\"product_id\").write.format(\"delta\").partitionBy(\"product_id\").save(path)\ntable = spark.read.format(\"delta\").load(path)\n\nprint(len(table.inputFiles()), \"files in the table\")\nprint(len(table.where(\"product_id = 'PRD-003'\").inputFiles()), \"for one product\")\nprint(len(table.where(\"quantity >= 12\").inputFiles()), \"for quantity of 12 or more\")\nprint(len(table.where(\"quantity > 100\").inputFiles()), \"for quantity over 100\")\n",
+      "note": "One product is one folder. For `quantity >= 12`, only the files whose largest quantity is at least 12 can match: `PRD-003` (up to 50) and `PRD-004` (12). No file has a quantity over 100, so that read opens nothing. Which files can be skipped depends on what's in each one, which is why Z-ordering (lesson 66) puts close values together."
+    },
+    {
+      "kind": "text",
+      "md": "Tables that are written to often still collect small files in the partitions being written. Compaction doesn't have to rewrite the whole table: `table.optimize().where(\"product_id = 'PRD-003'\")` compacts only the partitions that match. Old partitions that don't change any more are left alone, and the metrics' `partitionsOptimized` says how many were compacted.\n\nThe condition may only use partition columns, because OPTIMIZE picks whole partitions."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Compact one partition",
+      "code": "from delta.tables import DeltaTable\n\n\ndef files(path):\n    return DeltaTable.forPath(spark, path).detail().first().numFiles\npath = \"/tmp/erp/daily\"\nfor day in range(3):\n    invoice_lines.write.format(\"delta\").mode(\"append\").partitionBy(\"product_id\").save(path)\nprint(files(path), \"files after three loads\")\n\ntable = DeltaTable.forPath(spark, path)\nmetrics = table.optimize().where(\"product_id = 'PRD-003'\").executeCompaction().first().metrics\nprint(metrics.partitionsOptimized, \"partition,\", metrics.numFilesRemoved, \"files into\", metrics.numFilesAdded)\nprint(files(path), \"files now\")\n\nmetrics = table.optimize().executeCompaction().first().metrics\nprint(metrics.partitionsOptimized, \"partitions,\", metrics.numFilesRemoved, \"files into\", metrics.numFilesAdded)\nprint(files(path), \"files now\")\n",
+      "note": "Each of the three loads wrote one file per product: fifteen. Compacting `PRD-003` merged its three files into one. The second OPTIMIZE covered the other four products, three files each, and skipped `PRD-003`, which had nothing left to merge."
+    },
+    {
+      "kind": "error-example",
+      "id": "e6",
+      "title": "OPTIMIZE on a column that isn't a partition",
+      "code": "from delta.tables import DeltaTable\n\n\ndef files(path):\n    return DeltaTable.forPath(spark, path).detail().first().numFiles\npath = \"/tmp/erp/daily\"\nfor day in range(2):\n    invoice_lines.write.format(\"delta\").mode(\"append\").partitionBy(\"product_id\").save(path)\n\nDeltaTable.forPath(spark, path).optimize().where(\"quantity > 10\").executeCompaction()\n",
+      "note": "`quantity` isn't a partition column, so OPTIMIZE can't choose partitions with it. The message names the column and says only partition columns can be used.",
+      "error": "AnalysisException"
+    }
+  ],
+  "challenges": [
+    "PS-L086-C1",
+    "PS-L086-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "A DataFrame with 8 partitions, its rows spread at random, is written with `partitionBy(\"country\")`. There are 6 countries. At most how many files can the write make?",
+      "choices": [
+        "6",
+        "8",
+        "14",
+        "48"
+      ],
+      "answer": 3,
+      "why": "Each of the 8 tasks writes one file for every country it holds, so up to 8 × 6. Repartitioning by `country` first brings it down to one file per country."
+    },
+    {
+      "id": "k2",
+      "prompt": "You need fewer partitions and want to avoid a shuffle. Which call?",
+      "choices": [
+        "`repartition(n)`",
+        "`coalesce(n)`",
+        "`partitionBy(n)`",
+        "`maxRecordsPerFile`"
+      ],
+      "answer": 1,
+      "why": "`coalesce` merges existing partitions without moving rows between them. `repartition` always shuffles; `partitionBy` and `maxRecordsPerFile` shape the files a write makes, not the DataFrame."
+    },
+    {
+      "id": "k3",
+      "prompt": "A table is partitioned by `product_id`. A read filters on `quantity > 100`. How can Delta skip files?",
+      "choices": [
+        "It can't: only partition columns can skip files",
+        "By the min and max `quantity` stored for each file in the log",
+        "By reading every file's footer first",
+        "By sorting the table"
+      ],
+      "answer": 1,
+      "why": "Partition pruning works on partition columns; data skipping uses each file's min/max values from the log for other columns, without opening the files."
+    }
+  ],
+  "review": [
+    "A write runs one task per partition, and each task writes its own files.",
+    "`repartition(n)` shuffles into `n` partitions; `coalesce(n)` merges partitions into fewer without a shuffle.",
+    "With `partitionBy`, each task writes a file per value it holds; `repartition(column)` first gives one file per value.",
+    "`maxRecordsPerFile` caps the rows in one file, so a big partition is split into several files.",
+    "Reads skip folders by partition value and files by the min/max values in the log; `inputFiles()` shows what's left.",
+    "`optimize().where(...)` compacts only the partitions that match; the condition may use only partition columns."
+  ],
+  "practice": [
+    "PS-Q0426",
+    "PS-Q0427",
+    "PS-Q0428",
+    "PS-Q0429",
+    "PS-Q0430"
+  ]
+}

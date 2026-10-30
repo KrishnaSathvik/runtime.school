@@ -1,0 +1,223 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "employee_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "first_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "last_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "job_title",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "level",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "department_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "manager_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "hire_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "employment_type",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "salary",
+     "type": "decimal(11,2)",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "termination_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "review_cycle",
+     "type": "string",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "E0001",
+     "Tomas",
+     "Haddad",
+     "Chief Executive Officer",
+     5,
+     "D01",
+     null,
+     "2025-01-06",
+     "full_time",
+     "262500.00",
+     "active",
+     null,
+     "2026-H2"
+    ],
+    [
+     "E0002",
+     "Noor",
+     "Novak",
+     "Head of Engineering",
+     4,
+     "D02",
+     "E0001",
+     "2025-05-26",
+     "full_time",
+     "202500.00",
+     "active",
+     null,
+     "2026-H2"
+    ],
+    [
+     "E0003",
+     "Lena",
+     "Duarte",
+     "Software Engineer",
+     1,
+     "D02",
+     "E0002",
+     "2025-07-15",
+     "full_time",
+     "77500.00",
+     "active",
+     null,
+     "2026-H2"
+    ],
+    [
+     "E0004",
+     "Anika",
+     "Silva",
+     "  senior software engineer",
+     2,
+     "D02",
+     "E0002",
+     "2025-08-15",
+     "full_time",
+     "72500.00",
+     "active",
+     null,
+     "2026-H2"
+    ],
+    [
+     "E0005",
+     "Elif",
+     "Rao",
+     "Senior Software Engineer",
+     2,
+     "D02",
+     "E0002",
+     "2025-07-07",
+     "full_time",
+     "72500.00",
+     "active",
+     null,
+     "2026-H2"
+    ],
+    [
+     "E0006",
+     "Maya",
+     "Rao",
+     "Senior Software Engineer",
+     2,
+     "D02",
+     "E0002",
+     "2025-08-10",
+     "full_time",
+     "65000.00",
+     "active",
+     null,
+     "2026-H2"
+    ],
+    [
+     "E0007",
+     "Ines",
+     "Novak",
+     "Head of Finance",
+     4,
+     "D03",
+     "E0001",
+     "2025-01-06",
+     "full_time",
+     "152500.00",
+     "active",
+     null,
+     "2026-H2"
+    ],
+    [
+     "E0008",
+     "Elif",
+     "Weber",
+     "Senior Financial Analyst",
+     2,
+     "D03",
+     "E0007",
+     "2025-05-20",
+     "full_time",
+     "77500.00",
+     "active",
+     null,
+     "2026-H2"
+    ],
+    [
+     "E0009",
+     "Anika",
+     "Grant",
+     "Senior Financial Analyst",
+     2,
+     "D03",
+     "E0007",
+     "2025-05-08",
+     "full_time",
+     "92500.00",
+     "active",
+     null,
+     "2026-H2"
+    ]
+   ],
+   "row_count": 9
+  }
+ },
+ "hidden": [
+  "the full practice employees table",
+  "employees with a missing salary and other missing details",
+  "the same employee row delivered twice",
+  "an empty employees table"
+ ]
+}

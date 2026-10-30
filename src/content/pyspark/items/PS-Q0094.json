@@ -1,0 +1,58 @@
+{
+  "id": "PS-Q0094",
+  "slug": "fix-temperature-chart-feed",
+  "lesson": "PS-L019",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 6,
+  "title": "Fix the temperature chart feed",
+  "dataset": {
+    "id": "PS-D13",
+    "version": "1.0.0"
+  },
+  "prompt": "The temperature chart needs every reading with a usable temperature. The function below throws away readings the chart could use and still lets the -9999 code through. Fix `solve(observations)`.",
+  "rules": [
+    "A temperature is usable unless `temperature_c` is empty (null) or holds the station's `-9999` code.",
+    "Keep a reading even when other columns are empty, NaN or -9999: the chart plots only the temperature.",
+    "Return every column of `observations` with its values unchanged, duplicates included."
+  ],
+  "hints": [
+    "Run the starter and compare: a reading with a faulty rain gauge is missing. `dropna()` with no arguments drops a row when any column is empty or NaN.",
+    "`dropna(subset=[...])` looks only at the columns you list.",
+    "-9999 isn't null, so `dropna` keeps it. Add a `filter` that leaves out that code, without changing any value."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "observations"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(observations):\n    # Readings the temperature chart can plot.\n    return observations.dropna()\n",
+  "output": {
+    "columns": [
+      "observation_id",
+      "station_id",
+      "observed_at",
+      "observation_date",
+      "temperature_c",
+      "humidity_pct",
+      "precipitation_mm",
+      "wind_speed_kph",
+      "pressure_hpa",
+      "quality_flag"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`dropna()` with no arguments checks every column, and for decimal-point columns it treats NaN as missing too, so a reading with a good temperature but a faulty rain gauge, or no quality flag, disappears. Limiting it with `subset=[\"temperature_c\"]` fixes that. The -9999 code is a real number, so `dropna` never sees it; a `filter` removes it: `observations.dropna(subset=[\"temperature_c\"]).filter(F.col(\"temperature_c\") != -9999)`. In fact the filter alone is enough, because `!= -9999` isn't true for an empty temperature either. Don't replace -9999 in every column first: that would change the humidity, wind and pressure values of readings the chart keeps."
+}

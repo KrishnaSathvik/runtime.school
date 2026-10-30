@@ -1,0 +1,78 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "service",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "last_log",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "quiet_s",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "freshness",
+     "type": "string",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "catalog-api",
+     "2026-04-14T10:00:02.142000",
+     83,
+     "stale"
+    ],
+    [
+     "auth-service",
+     "2026-04-14T10:00:09.061000",
+     76,
+     "stale"
+    ],
+    [
+     "checkout-api",
+     "2026-04-14T10:01:00.140000",
+     25,
+     "fresh"
+    ],
+    [
+     "notification-worker",
+     null,
+     null,
+     "silent"
+    ],
+    [
+     "iot-gateway",
+     "2026-04-14T10:01:12.522000",
+     13,
+     "fresh"
+    ],
+    [
+     "search-api",
+     "2026-04-14T10:01:21.562000",
+     4,
+     "fresh"
+    ]
+   ],
+   "row_count": 6
+  }
+ },
+ "hidden": [
+  "the full practice logs, most of them after the check time",
+  "services silent for exactly the limit and just over it, a log at the check time and one just after it, and a service not on the list",
+  "no logs at all"
+ ]
+}

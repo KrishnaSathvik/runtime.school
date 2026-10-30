@@ -1,0 +1,57 @@
+{
+  "id": "PS-Q0126",
+  "slug": "accounts-with-transactions",
+  "lesson": "PS-L026",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Accounts with transactions",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "The bank wants the list of accounts that have been used at least once. Write `solve(accounts, transactions)` so it returns every account that has at least one transaction.",
+  "rules": [
+    "Any transaction counts, whatever its `status`: posted, pending or declined.",
+    "Return each account once, however many transactions it has.",
+    "Return every column of `accounts`, in the same order, with the same types.",
+    "Transactions whose `account_id` isn't in `accounts`, or is missing, match no account."
+  ],
+  "hints": [
+    "You only need to know whether an account has a match in `transactions`. Nothing from `transactions` goes into the result.",
+    "A left semi join keeps the left rows that have a match, and only the left columns: `accounts.join(transactions, on=\"account_id\", how=...)`.",
+    "An inner join returns one row per matching transaction, so a busy account would appear many times. With `how=\"left_semi\"` each account appears at most once."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "accounts",
+    "transactions"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(accounts, transactions):\n    # Return the accounts that have at least one transaction.\n    return accounts\n",
+  "output": {
+    "columns": [
+      "account_id",
+      "customer_id",
+      "account_type",
+      "currency",
+      "status",
+      "opened_date",
+      "overdraft_limit"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "This is a left semi join: `accounts.join(transactions, on=\"account_id\", how=\"left_semi\")`. It keeps each account that has at least one matching transaction and returns only the columns of `accounts`, so there's nothing to select or deduplicate. An inner join looks close, but it returns one row per transaction and adds the transaction columns, so an account with ten transactions would appear ten times. Orphan transactions and those with a missing `account_id` simply match nothing."
+}

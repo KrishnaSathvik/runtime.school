@@ -1,0 +1,57 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "customer_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "account_type",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "currency",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "opened_date",
+     "type": "date",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "A00003",
+     "C0002",
+     "savings",
+     "USD",
+     "2025-02-28"
+    ]
+   ],
+   "row_count": 1
+  }
+ },
+ "hidden": [
+  "the full practice accounts and transactions",
+  "closed and frozen accounts with no transactions",
+  "active accounts whose only transaction was pending or declined",
+  "transactions for accounts that don't exist",
+  "an empty transactions table",
+  "every active account has been used"
+ ]
+}

@@ -1,0 +1,261 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "transfer_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "from_account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "to_account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "currency",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "requested_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "reference",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "reversal_of",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "TR00001",
+     "A00001",
+     "A00008",
+     "650.50",
+     "USD",
+     "2026-01-11T13:09:57",
+     "failed",
+     "Rent 274",
+     null
+    ],
+    [
+     "TR00002",
+     "A00008",
+     "A00001",
+     "75.00",
+     "USD",
+     "2026-01-23T07:26:55",
+     "completed",
+     "Gift 901",
+     null
+    ],
+    [
+     "TR00003",
+     "A00008",
+     "A00001",
+     "1500.00",
+     "USD",
+     "2026-01-29T11:47:57",
+     "completed",
+     "Loan repayment 782",
+     null
+    ],
+    [
+     "TR00004",
+     "A00001",
+     "A00008",
+     "52.99",
+     "USD",
+     "2026-02-01T18:48:37",
+     "completed",
+     "Car repair 626",
+     null
+    ],
+    [
+     "TR00005",
+     "A00008",
+     "A00001",
+     "40.50",
+     "USD",
+     "2026-02-19T16:12:11",
+     "reversed",
+     "Gift 143",
+     null
+    ],
+    [
+     "TR00006",
+     "A00001",
+     "A00008",
+     "40.50",
+     "USD",
+     "2026-02-20T18:12:11",
+     "completed",
+     "Reversal: Gift 143",
+     "TR00005"
+    ]
+   ],
+   "row_count": 6,
+   "inputs": {
+    "transfers": [
+     [
+      "TR00001",
+      "A00001",
+      "A00008",
+      "650.50",
+      "USD",
+      "2026-01-11T13:09:57",
+      "failed",
+      "Rent 274",
+      null
+     ],
+     [
+      "TR00002",
+      "A00008",
+      "A00001",
+      "75.00",
+      "USD",
+      "2026-01-23T07:26:55",
+      "completed",
+      "Gift 901",
+      null
+     ],
+     [
+      "TR00003",
+      "A00008",
+      "A00001",
+      "1500.00",
+      "USD",
+      "2026-01-29T11:47:57",
+      "completed",
+      "Loan repayment 782",
+      null
+     ],
+     [
+      "TR00004",
+      "A00001",
+      "A00008",
+      "52.99",
+      "USD",
+      "2026-02-01T18:48:37",
+      "completed",
+      "Car repair 626",
+      null
+     ],
+     [
+      "TR00005",
+      "A00008",
+      "A00001",
+      "40.50",
+      "USD",
+      "2026-02-19T16:12:11",
+      "reversed",
+      "Gift 143",
+      null
+     ],
+     [
+      "TR00006",
+      "A00001",
+      "A00008",
+      "40.50",
+      "USD",
+      "2026-02-20T18:12:11",
+      "completed",
+      "Reversal: Gift 143",
+      "TR00005"
+     ],
+     [
+      "TR00007",
+      "A00001",
+      "A00008",
+      "0.00",
+      "USD",
+      "2026-02-22T09:15:02",
+      "completed",
+      "Test 001",
+      null
+     ],
+     [
+      "TR00008",
+      "A00008",
+      "A00008",
+      "120.00",
+      "USD",
+      "2026-02-23T12:40:44",
+      "completed",
+      "Savings 330",
+      null
+     ],
+     [
+      "TR00009",
+      "A00001",
+      "A00008",
+      "88.25",
+      null,
+      "2026-02-24T14:05:19",
+      "completed",
+      "Dinner 512",
+      null
+     ],
+     [
+      "TR00010",
+      "A00008",
+      "A00001",
+      "300.00",
+      "JPY",
+      "2026-02-25T08:22:37",
+      "completed",
+      "Travel 208",
+      null
+     ],
+     [
+      "TR00011",
+      "A00001",
+      null,
+      "45.00",
+      "EUR",
+      "2026-02-26T19:51:03",
+      "failed",
+      "Books 774",
+      null
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice transfers table",
+  "transfers with a missing account, or the same account on both sides",
+  "amounts of zero, a cent, negative and missing",
+  "unknown, lower-case and missing currencies",
+  "the same valid transfer delivered twice",
+  "an empty transfers table"
+ ]
+}

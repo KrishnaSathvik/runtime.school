@@ -1,0 +1,184 @@
+{
+  "dataset_id": "PS-D02",
+  "version": "1.0.0",
+  "title": "Banking & Payments",
+  "source": "synthetic",
+  "licence": {
+    "status": "ours",
+    "note": "Runtime-owned deterministic synthetic data."
+  },
+  "seed": 2002,
+  "schemas": {
+    "customers": "customer_id STRING, full_name STRING, email STRING, city STRING, country STRING, segment STRING, kyc_status STRING, joined_date DATE",
+    "accounts": "account_id STRING, customer_id STRING, account_type STRING, currency STRING, status STRING, opened_date DATE, overdraft_limit DECIMAL(12,2)",
+    "merchants": "merchant_id STRING, merchant_name STRING, mcc_code STRING, category STRING, country STRING",
+    "transactions": "transaction_id STRING, account_id STRING, merchant_id STRING, posted_at TIMESTAMP, txn_type STRING, channel STRING, direction STRING, amount DECIMAL(12,2), currency STRING, status STRING",
+    "transfers": "transfer_id STRING, from_account_id STRING, to_account_id STRING, amount DECIMAL(12,2), currency STRING, requested_at TIMESTAMP, status STRING, reference STRING, reversal_of STRING",
+    "ledger_entries": "entry_id STRING, transfer_id STRING, account_id STRING, entry_type STRING, amount DECIMAL(12,2), currency STRING, booked_at TIMESTAMP",
+    "disputes": "dispute_id STRING, transaction_id STRING, opened_date DATE, reason STRING, disputed_amount DECIMAL(12,2), status STRING, resolved_date DATE"
+  },
+  "keys": {
+    "primary": {
+      "customers": [
+        "customer_id"
+      ],
+      "accounts": [
+        "account_id"
+      ],
+      "merchants": [
+        "merchant_id"
+      ],
+      "transactions": [
+        "transaction_id"
+      ],
+      "transfers": [
+        "transfer_id"
+      ],
+      "ledger_entries": [
+        "entry_id"
+      ],
+      "disputes": [
+        "dispute_id"
+      ]
+    },
+    "foreign": {
+      "accounts.customer_id": "customers.customer_id",
+      "transactions.account_id": "accounts.account_id",
+      "transactions.merchant_id": "merchants.merchant_id",
+      "transfers.from_account_id": "accounts.account_id",
+      "transfers.to_account_id": "accounts.account_id",
+      "transfers.reversal_of": "transfers.transfer_id",
+      "ledger_entries.transfer_id": "transfers.transfer_id",
+      "ledger_entries.account_id": "accounts.account_id",
+      "disputes.transaction_id": "transactions.transaction_id"
+    }
+  },
+  "rules": [
+    "Every amount is DECIMAL(12,2) and positive; direction is debit (money leaves the account) or credit (money arrives). A signed amount is -amount for debits.",
+    "txn_type is one of purchase, refund, atm_withdrawal, deposit, fee, interest. purchase, atm_withdrawal and fee are debits; refund, deposit and interest are credits.",
+    "channel is one of card_present, online, mobile, atm, branch, system. merchant_id is set only for purchase and refund; it is null for the other types.",
+    "status is posted, pending or declined. A transaction's currency is its account's currency (USD, EUR or GBP).",
+    "merchants.mcc_code is a four-digit code stored as STRING; some codes start with 0 (0742 veterinary), so casting to INT loses the leading zero.",
+    "Some accounts have no transactions at all (new, dormant, frozen or closed accounts). Only active accounts transact or transfer.",
+    "Every edition, the lesson included, has transactions whose account_id is not in accounts (orphans, ids from A9xxxx) and a few with a null account_id: a feed that lost its account.",
+    "practice and project editions contain invalid transactions: a negative amount, an unknown currency (ZZZ, US$ or null), or no account. practice also has 5 exact duplicate rows, project 15.",
+    "A transfer moves amount from from_account_id to to_account_id in one currency. status is completed, pending, failed or reversed.",
+    "Each completed or reversed transfer has exactly two ledger entries: a debit on from_account_id and a credit on to_account_id for the same amount. pending and failed transfers have none. Debits equal credits for every transfer in the lesson and practice editions.",
+    "A reversed transfer is undone by a later completed transfer in the opposite direction whose reversal_of names it; the pair nets to zero.",
+    "The project edition (P04) is deliberately unbalanced: 15 duplicate transfers (same accounts, amount and reference, a few seconds after the original, both booked), 8 completed transfers missing their credit entry, 6 ledger entries whose transfer_id is not in transfers, and 4 credit entries whose amount differs from the debit by a few cents.",
+    "Disputes are raised only on posted purchases. resolved_date is null while a dispute is open."
+  ],
+  "editions": {
+    "lesson": {
+      "customers": {
+        "file": "lesson/customers.csv",
+        "rows": 5,
+        "sha256": "6232b96b9548bf54ac4080e2684688852a1363839adc8835af451a0835f77d4b"
+      },
+      "accounts": {
+        "file": "lesson/accounts.csv",
+        "rows": 8,
+        "sha256": "c57876d9e7fc628c6c271460444fab88c3ecdd4f98232b85b05ca7bee96201dd"
+      },
+      "merchants": {
+        "file": "lesson/merchants.csv",
+        "rows": 6,
+        "sha256": "f3246bf8ca097c1284729be593f9a139f286e4757919c5bf1d3ea9fda2d467e5"
+      },
+      "transactions": {
+        "file": "lesson/transactions.csv",
+        "rows": 14,
+        "sha256": "ab814d64409774cb14337c14b8454bf00aaf1d4a2306cf126605ac503179b942"
+      },
+      "transfers": {
+        "file": "lesson/transfers.csv",
+        "rows": 6,
+        "sha256": "e7ab0c07cb852a22da5fafec2fe609dc005a6ff231d2e535655f2ec9342b684e"
+      },
+      "ledger_entries": {
+        "file": "lesson/ledger_entries.csv",
+        "rows": 10,
+        "sha256": "23b25a9a21af0e41d7acf84ca543ab549cef3a4c5f7de23311577c3447df651e"
+      },
+      "disputes": {
+        "file": "lesson/disputes.csv",
+        "rows": 4,
+        "sha256": "3f92262f8f6842f50f43e38459d2a9530d117ccecc60b4b48943e8c5d260a967"
+      }
+    },
+    "practice": {
+      "customers": {
+        "file": "practice/customers.csv",
+        "rows": 220,
+        "sha256": "89709dea9bcf29015c20a6edd0eee1b0ff3dba8a7f959e36265cff9e728607f0"
+      },
+      "accounts": {
+        "file": "practice/accounts.csv",
+        "rows": 351,
+        "sha256": "9153d652b8506b64b361f70019894d213d8efc950d44f8a6ae30bebf6fb6427a"
+      },
+      "merchants": {
+        "file": "practice/merchants.csv",
+        "rows": 40,
+        "sha256": "1081194ea053ae072f7f4eea6d3b2f420fa9a5400ef96d597391b3e784569a5c"
+      },
+      "transactions": {
+        "file": "practice/transactions.csv",
+        "rows": 2417,
+        "sha256": "c1b785ae551a7ff194e7b8afd421c49ead1f35b709fed5a265585d130687af98"
+      },
+      "transfers": {
+        "file": "practice/transfers.csv",
+        "rows": 543,
+        "sha256": "50fad755f0e69fb285e1123bdc27be8987de7f6c82044af5fa9f51cae81b1bbd"
+      },
+      "ledger_entries": {
+        "file": "practice/ledger_entries.csv",
+        "rows": 1002,
+        "sha256": "40e842ed01d4456a8818c6275dfabfe47fbbca81bd617f7c92c50470ded7aa9a"
+      },
+      "disputes": {
+        "file": "practice/disputes.csv",
+        "rows": 35,
+        "sha256": "066986535866ad70ccc448aa32364c6c9ec3ddfb019751d45813b887d6a574ad"
+      }
+    },
+    "project": {
+      "customers": {
+        "file": "project/customers.csv",
+        "rows": 320,
+        "sha256": "c6865ea6c12807fe63756ba8728e6a957798f40cd0334d8eee6f4d697e32d009"
+      },
+      "accounts": {
+        "file": "project/accounts.csv",
+        "rows": 499,
+        "sha256": "bccb207814f9cb667e09f51857772efc14c8f9657dbc5b13a4d974fc6a77f4c1"
+      },
+      "merchants": {
+        "file": "project/merchants.csv",
+        "rows": 50,
+        "sha256": "b749d92b4be37b4cd09b343f9f375238150040407e4464fea4d6b7cca62dbe8a"
+      },
+      "transactions": {
+        "file": "project/transactions.csv",
+        "rows": 4637,
+        "sha256": "2b13e8640b9a19ce0b4c6a1b17a8fd0220523edec9e1265cfae15d044ccad0a4"
+      },
+      "transfers": {
+        "file": "project/transfers.csv",
+        "rows": 1467,
+        "sha256": "737751833409b2b7b932919264c1f8441419673b31b8a7a85c8a48ae53dc0e0e"
+      },
+      "ledger_entries": {
+        "file": "project/ledger_entries.csv",
+        "rows": 2668,
+        "sha256": "3f419e8ed3a390b40c2a50ee18655fa800fc8d56ad4f6e1812e91dd9d4402246"
+      },
+      "disputes": {
+        "file": "project/disputes.csv",
+        "rows": 60,
+        "sha256": "852bde4aaba80b85c3aea302e377c19e94d4b71fea944737cf64e8abe182d391"
+      }
+    }
+  }
+}

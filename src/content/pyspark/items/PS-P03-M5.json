@@ -1,0 +1,77 @@
+{
+  "id": "PS-P03-M5",
+  "slug": "report-inactive-learners",
+  "project": "PS-P03",
+  "milestone": "PS-P03.m5",
+  "difficulty": "hard",
+  "minutes": 45,
+  "title": "Report inactive learners and check the metrics add up",
+  "dataset": {
+    "id": "PS-D11",
+    "version": "1.0.0"
+  },
+  "prompt": "The team wants to contact learners who have gone quiet, and before the reports go out it wants proof that nothing was counted twice or lost.\n\nWrite `inactive_learners(attempts, learners)`: every learner with no clean attempt in the 30 days up to and including `AS_OF_DATE`. Then write `metric_checks(attempts, lessons, courses, learners)`. It returns one row that counts what cleaning removed and checks your three reports against each other.",
+  "rules": [
+    "`inactive_learners` returns `learner_id`, `plan`, `last_activity` (the day of their latest clean attempt) and `days_inactive` (days from `last_activity` to `AS_OF_DATE`).",
+    "A learner is inactive when `days_inactive` is 30 or more: last active on 2026-05-30 is active, on 2026-05-29 inactive. Learners who never made a clean attempt are inactive too, with `last_activity` and `days_inactive` missing.",
+    "Any clean attempt counts as activity, abandoned ones too. Attempts after the as-of date don't.",
+    "In `metric_checks`: `rows_in` is the rows in `attempts`; `duplicates` the copies removed; `bad_timestamps` the rows `clean_attempts` then dropped; `clean_attempts` the rows it keeps.",
+    "`enrolments` is the rows in `learner_progress`. `enrolled_total` and `completed_total` are the sums of `course_completion`'s `enrolled_learners` and `completed_learners`: `enrolled_total` must equal `enrolments`.",
+    "`learners` is the rows in `learners`; `inactive` the rows in `inactive_learners`, `never_active` those with no `last_activity`, `inactive_plus` those on the `plus` plan, and `inactive_days_total` the sum of their `days_inactive`.",
+    "Return one row with the columns of `CHECKS_SCHEMA`. A sum over no rows is missing, as `F.sum` gives."
+  ],
+  "hints": [
+    "Group `clean_attempts(attempts)` by `learner_id` for each learner's `F.max(\"activity_date\")`. Start from `learners` and `left` join it on, so learners with no attempts stay, with a missing date.",
+    "`F.datediff(F.to_date(F.lit(AS_OF_DATE)), F.col(\"last_activity\"))` gives the days. Keep the rows where it is `>= INACTIVE_DAYS` or where `last_activity` is missing.",
+    "In `metric_checks`, each count is one `.count()` or one `.agg(...).first()`: `F.count(F.when(cond, True))` counts rows meeting `cond`. Put the twelve numbers in one tuple, in the schema's order, and pass `[row]` to `spark.createDataFrame`."
+  ],
+  "explanation": "Inactivity is measured from the fixed `AS_OF_DATE`, never today's date, so the list doesn't change every time the pipeline runs. The window is 30 days up to and including that day, so 29 quiet days is still active and 30 is not. Starting from `learners` with a `left` join is what puts learners who never started on the list. Because the activity comes from `clean_attempts`, copies can't make anyone look busier and a row dated after the as-of date can't make anyone look active. `metric_checks` then shows the cleaning step's work, and checks two reports against each other: `course_completion`'s enrolled learners must add up to the rows of `learner_progress`. If they didn't, a learner was lost or counted twice between them.",
+  "entry": "metric_checks",
+  "inputs": [
+    "attempts",
+    "lessons",
+    "courses",
+    "learners"
+  ],
+  "file": "pipeline.py",
+  "append": "\n\nINACTIVE_DAYS = 30\n\n\ndef inactive_learners(attempts, learners):\n    # Step 5: learners with no clean attempt in the 30 days up to and including AS_OF_DATE.\n    return learners\n\n\nCHECKS_SCHEMA = (\n    \"rows_in BIGINT, duplicates BIGINT, bad_timestamps BIGINT, clean_attempts BIGINT, enrolments BIGINT, \"\n    \"enrolled_total BIGINT, completed_total BIGINT, learners BIGINT, inactive BIGINT, never_active BIGINT, \"\n    \"inactive_plus BIGINT, inactive_days_total BIGINT\"\n)\n\n\ndef metric_checks(attempts, lessons, courses, learners):\n    # Step 5: count what cleaning removed, and check the three reports against each other.\n    row = (0, 0, 0, 0, 0, None, None, 0, 0, 0, 0, None)\n    return spark.createDataFrame([row], CHECKS_SCHEMA)\n",
+  "prerequisites": [
+    "PS-L018",
+    "PS-L019",
+    "PS-L025",
+    "PS-L031"
+  ],
+  "output": {
+    "columns": [
+      "rows_in",
+      "duplicates",
+      "bad_timestamps",
+      "clean_attempts",
+      "enrolments",
+      "enrolled_total",
+      "completed_total",
+      "learners",
+      "inactive",
+      "never_active",
+      "inactive_plus",
+      "inactive_days_total"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "example",
+      "sample": true
+    },
+    {
+      "id": "project",
+      "edition": "project"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 75,
+    "check_timeout_s": 240,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

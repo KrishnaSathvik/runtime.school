@@ -1,0 +1,87 @@
+{
+ "id": "PS-P09-M5",
+ "slug": "attribute-orders-to-campaign-clicks",
+ "project": "PS-P09",
+ "milestone": "PS-P09.m5",
+ "difficulty": "hard",
+ "minutes": 55,
+ "title": "Join campaigns and attribute conversions",
+ "dataset": {
+  "id": "PS-D06",
+  "version": "1.1.0"
+ },
+ "also": [
+  {
+   "id": "PS-D12",
+   "version": "1.1.0",
+   "tables": [
+    "clicks",
+    "campaigns",
+    "conversions"
+   ]
+  }
+ ],
+ "prompt": "The ad platform's `clicks` bring visitors to the site, and each campaign takes credit for the orders placed within its attribution window. Write `landing_clicks(sessions, clicks)`: the click that started each signed-in campaign session. Then write `attributed_conversions(checkout_events, sessions, clicks, campaigns, conversions)`. It streams the checkout events and returns every order credited to its session's landing click, with the platform's matching conversion.",
+ "rules": [
+  "A click lands a session when `user_id` and `campaign_id` are equal and the session starts 0 to 30 minutes after the click, both ends included. Anonymous sessions and sessions without a campaign have no landing click. If several clicks qualify, the latest wins.",
+  "`landing_clicks` returns `session_id`, `user_id`, `campaign_id`, `started_at`, `click_id` and `clicked_at` (the click's `event_time`).",
+  "An order is a checkout event with step `complete`; one delivered twice is one order. It is credited when its session has a landing click and its `event_time` is at most the campaign's `attribution_window_days` days after the click. Exactly at the window's end still counts.",
+  "Return `order_id`, `session_id`, `campaign_id`, `click_id`, `clicked_at`, `ordered_at` (the order's `event_time`), `revenue` (`order_total` as DECIMAL(10,2)) and `conversion_id`: the `conversions` row with the same `click_id` and a `converted_at` equal to `ordered_at`, missing when there is none.",
+  "Stream the checkout events, one delivery file per micro-batch, and join the other tables to the stream as static tables. Late orders still count."
+ ],
+ "hints": [
+  "Join `sessions` to `clicks.dropDuplicates([\"click_id\"])` on user and campaign, keep the pairs where `F.unix_timestamp(started_at) - F.unix_timestamp(clicked_at)` is between 0 and 1800, then keep each session's latest click with `F.row_number()` over a window by `session_id`, ordered by `clicked_at` descending.",
+  "In the stream: filter `step == \"complete\"`, `dropDuplicates([\"event_id\"])`, then inner-join the landing clicks with their campaign's `attribution_window_days`. A window of d days is `d * 86400` seconds.",
+  "Join `conversions` last with a left join on both conditions, so an order the platform didn't record keeps a null `conversion_id`. Rename columns both sides have before joining. Write to a memory table in append mode, run it, and return `spark.table(name)`."
+ ],
+ "explanation": "The landing click is a static question (sessions and clicks are both complete tables), so it is answered once as a batch join: user, campaign and a 30-minute window, then the latest click per session with `row_number`. Deduplicating clicks first stops a click delivered twice from doubling its orders. The orders are the stream: a stream-static inner join gives each one its session's landing click and campaign window, and a left join to the platform's conversions shows which orders both sides recorded. Measuring the window in seconds makes 'exactly d days' an inclusive comparison. No watermark is needed here, because the static tables hold no state and attribution must never drop a late order.",
+ "entry": "attributed_conversions",
+ "inputs": [
+  "checkout_events",
+  "sessions",
+  "clicks",
+  "campaigns",
+  "conversions"
+ ],
+ "file": "pipeline.py",
+ "append": "\n\nfrom pyspark.sql import Window\n\n\ndef landing_clicks(sessions, clicks):\n    # Step 5: the ad click that started each signed-in campaign session.\n    return sessions\n\n\ndef attributed_conversions(checkout_events, sessions, clicks, campaigns, conversions):\n    # Step 5: stream the checkout events and credit each order to its session's landing click.\n    return checkout_events\n",
+ "prerequisites": [
+  "PS-L071",
+  "PS-L025",
+  "PS-L033",
+  "PS-L018"
+ ],
+ "output": {
+  "columns": [
+   "order_id",
+   "session_id",
+   "campaign_id",
+   "click_id",
+   "clicked_at",
+   "ordered_at",
+   "revenue",
+   "conversion_id"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "example",
+   "sample": true
+  },
+  {
+   "id": "project",
+   "edition": "project"
+  }
+ ],
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ },
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

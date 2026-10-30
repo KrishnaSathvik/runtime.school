@@ -1,0 +1,59 @@
+{
+ "id": "PS-Q0413",
+ "slug": "rows-with-no-key",
+ "lesson": "PS-L083",
+ "role": "edge",
+ "format": "dataframe_coding",
+ "difficulty": "hard",
+ "minutes": 14,
+ "title": "Rows with no key",
+ "dataset": {
+  "id": "PS-D02",
+  "version": "1.0.0"
+ },
+ "prompt": "The ledger is append-only: a transaction, once in it, is never changed. The feed re-sends transactions, and the job may be rerun. Write `add_new` so the Delta ledger gains each new transaction exactly once, however many times the job runs. `solve` runs it twice.",
+ "rules": [
+  "Add every feed transaction whose `transaction_id` isn't in the ledger yet, with all its columns.",
+  "Never change a row already in the ledger, even when the feed sends different values for it.",
+  "A feed row with no `transaction_id` is never added: nothing could tell, on a rerun, that it was loaded before.",
+  "The feed may send a new transaction more than once, as identical copies. Don't change `start_ledger` or `solve`."
+ ],
+ "hints": [
+  "Run a merge on `transaction_id` with only `whenNotMatchedInsertAll()` on the sample, twice. Which rows grow?",
+  "A comparison with NULL is never true, so a row with no id never matches, not even the copy loaded last time.",
+  "Filter out rows with no id, then remove repeats on the key, then merge."
+ ],
+ "explanation": "An insert-only merge on the natural key is the right shape: it adds what's missing and never touches what's there, so a rerun finds nothing to add. Its edges are the keys. A row with no `transaction_id` never matches anything, because `NULL = NULL` isn't true, so every run inserts it again; filter those rows out first (in a real job, to a quarantine table). The null-safe `<=>` doesn't fix it: it loads one keyless row on the first run and then treats every keyless row as that one. Repeats need `dropDuplicates([\"transaction_id\"])`, because a merge compares the feed with the table, not with itself, so both copies of a new transaction would be inserted. Adding `whenMatchedUpdateAll()` would break the append-only rule.",
+ "entry": "solve",
+ "inputs": [
+  "transactions"
+ ],
+ "starter": "import shutil\nfrom datetime import datetime\nfrom decimal import Decimal\n\nfrom delta.tables import DeltaTable\nfrom pyspark.sql import functions as F\n\n\ndef start_ledger(transactions, path):\n    # The ledger before this feed. Don't change this.\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty folder on every run\n    before = spark.createDataFrame(\n        [\n            (\"T000001\", \"A00006\", None, datetime(2026, 1, 5, 10, 51, 19), \"deposit\", \"branch\", \"credit\", Decimal(\"800.00\"), \"GBP\", \"posted\"),\n            (\"T000003\", \"A00001\", \"M003\", datetime(2026, 1, 26, 16, 39, 39), \"purchase\", \"card_present\", \"debit\", Decimal(\"27.90\"), \"USD\", \"posted\"),\n            (\"T000005\", \"A00008\", None, datetime(2026, 1, 31, 6, 31, 56), \"deposit\", \"branch\", \"credit\", Decimal(\"3100.00\"), \"USD\", \"posted\"),\n            (\"T900001\", \"A00003\", None, datetime(2026, 1, 2, 9, 0, 0), \"fee\", \"system\", \"debit\", Decimal(\"2.50\"), \"USD\", \"posted\"),\n        ],\n        transactions.schema,\n    )\n    before.write.format(\"delta\").save(path)\n\n\ndef add_new(feed, path):\n    # Add the feed's new transactions to the ledger.\n    pass\n\n\ndef solve(transactions):\n    path = \"/tmp/bank/ledger\"\n    start_ledger(transactions, path)\n    add_new(transactions, path)\n    add_new(transactions, path)  # the job is rerun\n    return spark.read.format(\"delta\").load(path)\n",
+ "output": {
+  "columns": [
+   "transaction_id",
+   "account_id",
+   "merchant_id",
+   "posted_at",
+   "txn_type",
+   "channel",
+   "direction",
+   "amount",
+   "currency",
+   "status"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 180,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

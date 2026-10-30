@@ -1,0 +1,70 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "summary",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "product_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "category",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "unit_price",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "count",
+     "8",
+     "8",
+     "8",
+     "8"
+    ],
+    [
+     "min",
+     "P001",
+     "Camp Lantern",
+     "home",
+     "4.50"
+    ],
+    [
+     "max",
+     "P008",
+     "Wall Clock",
+     "outdoor",
+     "89.00"
+    ]
+   ],
+   "row_count": 3
+  }
+ },
+ "hidden": [
+  "the full practice products table",
+  "products with missing names, categories and prices",
+  "prices where comparing as text and as numbers disagree, and the largest a price can be",
+  "the same product row delivered twice",
+  "an empty products table"
+ ]
+}

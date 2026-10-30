@@ -1,0 +1,133 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "user_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "movie_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "rating",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "partitions",
+     "type": "int",
+     "nullable": false
+    },
+    {
+     "name": "kept_before",
+     "type": "int",
+     "nullable": false
+    },
+    {
+     "name": "kept_after",
+     "type": "int",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "U03",
+     "M09",
+     4.5,
+     4,
+     0,
+     4
+    ],
+    [
+     "U05",
+     "M06",
+     4.0,
+     4,
+     0,
+     4
+    ],
+    [
+     "U04",
+     "M02",
+     4.0,
+     4,
+     0,
+     4
+    ],
+    [
+     "U02",
+     "M03",
+     4.0,
+     4,
+     0,
+     4
+    ],
+    [
+     "U03",
+     "M01",
+     4.0,
+     4,
+     0,
+     4
+    ],
+    [
+     "U01",
+     "M02",
+     4.5,
+     4,
+     0,
+     4
+    ],
+    [
+     "U02",
+     "M02",
+     5.0,
+     4,
+     0,
+     4
+    ],
+    [
+     "U04",
+     "M10",
+     5.0,
+     4,
+     0,
+     4
+    ],
+    [
+     "U01",
+     "M06",
+     4.0,
+     4,
+     0,
+     4
+    ],
+    [
+     "U01",
+     "M01",
+     4.0,
+     4,
+     0,
+     4
+    ]
+   ],
+   "row_count": 10
+  }
+ },
+ "hidden": [
+  "the full practice ratings",
+  "ratings of exactly 4.0, just below, and a missing value",
+  "two ratings, so most partitions hold no rows",
+  "no ratings at all"
+ ]
+}

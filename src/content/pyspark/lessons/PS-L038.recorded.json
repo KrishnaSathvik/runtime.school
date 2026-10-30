@@ -1,0 +1,43 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D04",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "encounters"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "+------------+---------------+--------+---------+--------------+\n|encounter_id|encounter_class|systolic|diastolic|pulse_pressure|\n+------------+---------------+--------+---------+--------------+\n|   ENC000001|      emergency|     115|       72|            43|\n|   ENC000002|       wellness|     107|       65|            42|\n|   ENC000003|     ambulatory|     144|       66|            78|\n|   ENC000004|     ambulatory|     100|       55|            45|\n|   ENC000005|     ambulatory|     131|       91|            40|\n|   ENC000006|      inpatient|     125|       64|            61|\n|   ENC000007|     telehealth|    NULL|     NULL|          NULL|\n|   ENC000008|     telehealth|    NULL|     NULL|          NULL|\n+------------+---------------+--------+---------+--------------+\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "root\n |-- encounter_id: string (nullable = true)\n |-- visit: struct (nullable = false)\n |    |-- class: string (nullable = true)\n |    |-- time: struct (nullable = false)\n |    |    |-- start: timestamp (nullable = true)\n |    |    |-- end: timestamp (nullable = true)\n |    |-- codes: integer (nullable = true)\n\n+------------+----------+-------------------+-----+\n|encounter_id|     class|              start|codes|\n+------------+----------+-------------------+-----+\n|   ENC000001| emergency|2025-12-03 03:00:00|    3|\n|   ENC000002|  wellness|2025-12-18 11:15:00|    2|\n|   ENC000003|ambulatory|2025-12-20 09:00:00|    1|\n+------------+----------+-------------------+-----+\nonly showing top 3 rows\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "root\n |-- encounter_id: string (nullable = true)\n |-- vitals: struct (nullable = true)\n |    |-- heart_rate: integer (nullable = true)\n |    |-- systolic: integer (nullable = true)\n |    |-- diastolic: integer (nullable = true)\n |    |-- pulse_pressure: integer (nullable = true)\n\n+------------+------------------+\n|encounter_id|vitals            |\n+------------+------------------+\n|ENC000001   |{96, 115, 72, 43} |\n|ENC000002   |{104, 107, 65, 42}|\n|ENC000003   |{92, 144, 66, 78} |\n|ENC000004   |{91, 100, 55, 45} |\n|ENC000005   |{102, 131, 91, 40}|\n|ENC000006   |{96, 125, 64, 61} |\n|ENC000007   |NULL              |\n|ENC000008   |NULL              |\n+------------+------------------+\n\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "+------------+---------------+-------------------------------+-------------------------------+\n|encounter_id|encounter_class|rebuilt                        |kept                           |\n+------------+---------------+-------------------------------+-------------------------------+\n|ENC000001   |emergency      |{\"systolic\":115,\"diastolic\":72}|{\"systolic\":115,\"diastolic\":72}|\n|ENC000002   |wellness       |{\"systolic\":107,\"diastolic\":65}|{\"systolic\":107,\"diastolic\":65}|\n|ENC000003   |ambulatory     |{\"systolic\":144,\"diastolic\":66}|{\"systolic\":144,\"diastolic\":66}|\n|ENC000004   |ambulatory     |{\"systolic\":100,\"diastolic\":55}|{\"systolic\":100,\"diastolic\":55}|\n|ENC000005   |ambulatory     |{\"systolic\":131,\"diastolic\":91}|{\"systolic\":131,\"diastolic\":91}|\n|ENC000006   |inpatient      |{\"systolic\":125,\"diastolic\":64}|{\"systolic\":125,\"diastolic\":64}|\n|ENC000007   |telehealth     |{}                             |NULL                           |\n|ENC000008   |telehealth     |{}                             |NULL                           |\n+------------+---------------+-------------------------------+-------------------------------+\n\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "",
+   "error": {
+    "type": "AnalysisException",
+    "message": "[DATATYPE_MISMATCH.UNEXPECTED_INPUT_TYPE] Cannot resolve \"update_fields(reason, WithField(x))\" due to data type mismatch: The first parameter requires the \"STRUCT\" type, however \"reason\" has the type \"STRING\". SQLSTATE: 42K09",
+    "line": 3,
+    "condition": "DATATYPE_MISMATCH.UNEXPECTED_INPUT_TYPE"
+   }
+  }
+ }
+}

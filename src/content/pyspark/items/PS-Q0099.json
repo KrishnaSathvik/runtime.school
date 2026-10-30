@@ -1,0 +1,50 @@
+{
+  "id": "PS-Q0099",
+  "slug": "fix-the-city-and-segment-list",
+  "lesson": "PS-L020",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 6,
+  "title": "Fix the city and segment list",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "Marketing plans a campaign for every city and segment that has customers. The function below loses combinations, and which one survives in a city changes from run to run. Fix `solve(customers)`.",
+  "rules": [
+    "Return one row for each combination of `city` and `segment` that at least one customer has.",
+    "Values are compared exactly: `leeds` and `Leeds` are different cities. Two missing values count as the same.",
+    "Return `city` and `segment`, in that order."
+  ],
+  "hints": [
+    "Look at Denver in the sample: it has consumer and business customers, but the starter returns one Denver row.",
+    "`dropDuplicates([\"city\"])` keeps one row per city, so a city's other segments are thrown away, and Spark doesn't promise which one stays.",
+    "Reduce the table to the two columns you need, then remove the copies."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "customers"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(customers):\n    return customers.dropDuplicates([\"city\"]).select(\"city\", \"segment\")\n",
+  "output": {
+    "columns": [
+      "city",
+      "segment"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`dropDuplicates([\"city\"])` keeps one row per city, so a city with consumer and business customers loses one of them, and which one stays is up to Spark. That's why the result changes. The combination is the key, and the simplest way to get each combination once is to select the two columns and remove the copies: `customers.select(\"city\", \"segment\").distinct()`. `customers.dropDuplicates([\"city\", \"segment\"]).select(\"city\", \"segment\")` also works. Removing exact copies before the `select`, as in `customers.distinct().select(...)`, leaves repeats in, because two customers always differ in `customer_id`."
+}

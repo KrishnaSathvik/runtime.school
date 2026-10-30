@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0329",
+  "slug": "the-audit-after-the-clean-up",
+  "lesson": "PS-L066",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "The audit after the clean-up",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "prompt": "Since the nightly clean-up was added, the trips audit fails with a file that doesn't exist. Fix `solve` so the audit compares the morning load with the table now, and the clean-up still deletes every file the current version doesn't use.",
+  "rules": [
+    "`first_trips` and `first_revenue`: the rows and the sum of `total` in the morning load, the table's version 0.",
+    "`trips_now` and `revenue_now`: the same for the table after the clean-up.",
+    "`files_left`: the Parquet files in the folder after the clean-up, as `files_on_disk` counts them.",
+    "Don't change `build_table`, `files_on_disk`, `audit` or `report`."
+  ],
+  "hints": [
+    "Run the starter on the sample and read the error: which version's files is Spark looking for?",
+    "OPTIMIZE marked version 0's files removed, and `vacuum(0)` deleted them. The log still lists them, but they're gone.",
+    "The audit needs version 0's rows while its files still exist. What has to happen first?"
+  ],
+  "explanation": "VACUUM deletes data files, not versions: the history still has version 0, but after OPTIMIZE marked its files removed, `vacuum(0)` deleted them, so collecting version 0 fails with `FILE_NOT_EXIST`. Read the morning load's rows and revenue before the clean-up, then compact and vacuum. `count()` on version 0 may still work after the VACUUM, because Delta can answer it from the row counts in the log without opening a file, but summing `total` needs the files. Dropping the VACUUM, or keeping the default retention, makes the audit pass but leaves five files in the folder. Reading version 1 instead counts the re-sent trips as part of the morning load.",
+  "entry": "solve",
+  "inputs": [
+    "trips"
+  ],
+  "starter": "import os\nimport shutil\nfrom decimal import Decimal\n\nfrom delta.tables import DeltaTable\n\n\ndef build_table(trips, path):\n    # The day's writes, replayed on a fresh table. Don't change this.\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty folder on every run\n    # repartition(3) splits the trips into three parts, so the write makes up to three files.\n    trips.repartition(3).write.format(\"delta\").save(path)  # the morning load: version 0\n    trips.limit(2).write.format(\"delta\").mode(\"append\").save(path)  # the dispatcher re-sent its first two trips\n\n\ndef files_on_disk(path):\n    # Every Parquet file in the table's folder (the log is a sub-folder, so it isn't counted).\n    return len([f for f in os.listdir(path) if f.endswith(\".parquet\")])\n\n\ndef audit(df):\n    # The number of rows and the sum of `total`, worked out in Python from one collect().\n    rows = df.collect()\n    return len(rows), sum((row.total for row in rows), Decimal(\"0.00\"))\n\n\ndef report(first_trips, first_revenue, trips_now, revenue_now, files_left):\n    return spark.createDataFrame(\n        [(first_trips, first_revenue, trips_now, revenue_now, files_left)],\n        \"first_trips BIGINT, first_revenue DECIMAL(12,2), trips_now BIGINT, revenue_now DECIMAL(12,2), files_left INT\",\n    )\n\n\ndef solve(trips):\n    path = \"/tmp/taxi/trips\"\n    build_table(trips, path)\n    # VACUUM lists the folder with parallel tasks; in this environment two are plenty.\n    spark.conf.set(\"spark.sql.sources.parallelPartitionDiscovery.parallelism\", \"2\")\n    table = DeltaTable.forPath(spark, path)\n\n    # The nightly clean-up: compact, then delete every file the current version doesn't use.\n    table.optimize().executeCompaction()\n    spark.conf.set(\"spark.databricks.delta.retentionDurationCheck.enabled\", \"false\")\n    table.vacuum(0)\n\n    # The audit: the morning load against the table now.\n    first = spark.read.format(\"delta\").option(\"versionAsOf\", 0).load(path)\n    now = spark.read.format(\"delta\").load(path)\n    return report(*audit(first), *audit(now), files_on_disk(path))\n",
+  "output": {
+    "columns": [
+      "first_trips",
+      "first_revenue",
+      "trips_now",
+      "revenue_now",
+      "files_left"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

@@ -1,0 +1,182 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "order_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "order_customer",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "customer_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "name",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "O00014",
+     null,
+     null,
+     null
+    ],
+    [
+     "O00001",
+     "C0001",
+     "C0001",
+     "Ines Okafor"
+    ],
+    [
+     "O00002",
+     "C0001",
+     "C0001",
+     "Ines Okafor"
+    ],
+    [
+     "O00003",
+     "C0002",
+     "C0002",
+     "Kofi Mori"
+    ],
+    [
+     "O00003",
+     "C0002",
+     "C0002",
+     "Kofi Mori"
+    ],
+    [
+     "O00007",
+     "C0003",
+     "C0003",
+     "Tomas Okafor"
+    ],
+    [
+     null,
+     null,
+     "C0007",
+     "Lena Park"
+    ],
+    [
+     "O00013",
+     "C0099",
+     null,
+     null
+    ]
+   ],
+   "row_count": 8,
+   "inputs": {
+    "orders": [
+     [
+      "O00001",
+      "C0001",
+      "2026-06-11",
+      "paid",
+      "store",
+      "117.99"
+     ],
+     [
+      "O00002",
+      "C0001",
+      "2026-03-11",
+      "delivered",
+      "app",
+      "79.96"
+     ],
+     [
+      "O00003",
+      "C0002",
+      "2026-08-28",
+      "paid",
+      "app",
+      "291.95"
+     ],
+     [
+      "O00007",
+      "C0003",
+      "2026-03-23",
+      "placed",
+      "web",
+      "227.48"
+     ],
+     [
+      "O00013",
+      "C0099",
+      "2026-05-02",
+      "paid",
+      "web",
+      "45.00"
+     ],
+     [
+      "O00014",
+      null,
+      "2026-05-09",
+      "paid",
+      "store",
+      "18.50"
+     ]
+    ],
+    "customers": [
+     [
+      "C0001",
+      "Ines Okafor",
+      "Leeds",
+      "consumer",
+      "2025-04-30"
+     ],
+     [
+      "C0002",
+      "Kofi Mori",
+      "Lisbon",
+      "consumer",
+      "2024-11-19"
+     ],
+     [
+      "C0002",
+      "Kofi Mori",
+      "Lisbon",
+      "consumer",
+      "2024-11-19"
+     ],
+     [
+      "C0003",
+      "Tomas Okafor",
+      "Denver",
+      "consumer",
+      "2024-05-08"
+     ],
+     [
+      "C0007",
+      "Lena Park",
+      "Perth",
+      "business",
+      "2025-09-02"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice orders and customers",
+  "orders with unknown customers and customers with no orders",
+  "an order and a customer that both have no id",
+  "a customer listed twice",
+  "an empty customers table",
+  "an empty orders table"
+ ]
+}

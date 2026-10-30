@@ -1,0 +1,49 @@
+{
+  "id": "PS-Q0032",
+  "slug": "sales-targets-from-the-planning-sheet",
+  "lesson": "PS-L007",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Sales targets from the planning sheet",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "The planning team sends each channel's monthly sales target as a Python dict, and the starter already holds them. Write `solve()` so it turns them into a DataFrame the report can use.",
+  "rules": [
+    "Three columns, in this order: `channel` (text), `target` (decimal(10,2)) and `starts_on` (date).",
+    "One row per dict, with each value in the column named by its key. The keys aren't always in the same order.",
+    "The store's target hasn't been agreed yet, so its dict has no `target` key: its target is missing, not 0."
+  ],
+  "hints": [
+    "`spark.createDataFrame` accepts a list of dicts as well as a list of tuples.",
+    "Without a schema, Spark guesses the types and puts dict columns in alphabetical order. A schema string fixes both.",
+    "With a schema, each dict value goes to the column of the same name, and a key that isn't there becomes a missing value."
+  ],
+  "entry": "solve",
+  "inputs": [],
+  "starter": "from datetime import date\nfrom decimal import Decimal\n\n\ndef solve():\n    targets = [\n        {\"starts_on\": date(2026, 10, 1), \"channel\": \"web\", \"target\": Decimal(\"12500.00\")},\n        {\"channel\": \"app\", \"target\": Decimal(\"9800.50\"), \"starts_on\": date(2026, 10, 1)},\n        {\"channel\": \"store\", \"starts_on\": date(2026, 11, 1)},\n    ]\n    # Turn the targets into a DataFrame with the columns the report needs.\n    return spark.createDataFrame(targets)\n",
+  "output": {
+    "columns": [
+      "channel",
+      "target",
+      "starts_on"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Pass the dicts straight to `spark.createDataFrame` with a schema string: `spark.createDataFrame(targets, \"channel STRING, target DECIMAL(10,2), starts_on DATE\")`. With a schema, Spark matches each dict's values to the columns by name, so the order of the keys doesn't matter, and the store's missing `target` key becomes a missing value. Without a schema, Spark puts the columns in alphabetical order (`channel`, `starts_on`, `target`) and guesses a wide decimal for `target`. Turning each dict into a tuple with `tuple(d.values())` goes wrong too, because the values come out in each dict's own key order."
+}

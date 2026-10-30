@@ -1,0 +1,55 @@
+{
+ "id": "PS-Q0357",
+ "slug": "server-errors-across-a-restart",
+ "lesson": "PS-L072",
+ "role": "business",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 12,
+ "title": "Server errors across a restart",
+ "dataset": {
+  "id": "PS-D15",
+  "version": "1.0.0"
+ },
+ "prompt": "On-call keeps a running count of server errors per service. The job is stopped by a deploy after three files and started again from its checkpoint when the rest arrive. Write the query and `writer` in `solve(api_requests)` so that after the second run it returns `service` and `errors`, counted over every request of both runs.",
+ "rules": [
+  "A server error is a `status_code` of 500 or more. 4xx codes, 499 included, are the caller's side and don't count. Services with no server error don't appear.",
+  "Keep the setup's two runs on the same checkpoint. The counts carry on from the first run, so errors from before the restart must be in the result.",
+  "Return `service` and `errors` (a long), one row per service.",
+  "The rows must come from a streaming query over the delivery files: working on `api_requests` itself doesn't count."
+ ],
+ "hints": [
+  "Filter the server errors and count them per service, as on a table: on a stream it's a running count kept in the state.",
+  "Which sink still holds every service after run 2? Update mode only sends the services that changed in that run.",
+  "A memory table in complete mode is rewritten with the whole result every micro-batch, and it can restart from its checkpoint."
+ ],
+ "explanation": "The running count lives in the query's state, which the checkpoint keeps across the restart: run 2 starts from the counts of run 1 and adds the new files. What you see depends on the sink. In complete mode each micro-batch rewrites the memory table with every service, so after run 2 it holds the full counts, auth-service's errors from before the deploy included. Update mode sends only the services that changed, and a memory table in update mode refuses to restart from a checkpoint at all. A server error is any 5xx: 502, 503 and 504 count, 404 and 499 don't.",
+ "entry": "solve",
+ "inputs": [
+  "api_requests"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\ndef solve(api_requests):\n    spark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\n    reqs = api_requests.withColumn(\"batch\", F.floor(F.minute(\"requested_at\") / 10))   # every 10 minutes is one file\n    for path in [\"/tmp/all\", \"/tmp/in\", \"/tmp/ck\"]:\n        shutil.rmtree(path, ignore_errors=True)\n    make_batches(reqs, \"/tmp/all\")\n    files = sorted(os.listdir(\"/tmp/all\"))\n    os.makedirs(\"/tmp/in\")\n\n    def deliver(names):\n        \"\"\"Copy files into the folder the stream reads, keeping their times.\"\"\"\n        for name in names:\n            shutil.copy2(f\"/tmp/all/{name}\", f\"/tmp/in/{name}\")\n\n    stream = spark.readStream.schema(reqs.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\n    # Count server errors per service, and build `writer` so the counts after run 2\n    # include everything from run 1.\n    writer = None\n\n    deliver(files[:3])\n    run_stream(writer)       # run 1: the first three files, then a deploy stops the job\n    deliver(files[3:])\n    run_stream(writer)       # run 2: the same checkpoint picks up the rest\n    return api_requests\n",
+ "output": {
+  "columns": [
+   "service",
+   "errors"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

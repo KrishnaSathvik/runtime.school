@@ -1,0 +1,82 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "user_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "first_day",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "days",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "days_off",
+     "type": "int",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "U01",
+     "2026-07-07",
+     3,
+     null
+    ],
+    [
+     "U02",
+     "2026-07-07",
+     1,
+     null
+    ],
+    [
+     "U02",
+     "2026-07-09",
+     2,
+     1
+    ],
+    [
+     "U03",
+     "2026-07-08",
+     1,
+     null
+    ],
+    [
+     "U04",
+     "2026-07-08",
+     1,
+     null
+    ],
+    [
+     "U05",
+     "2026-07-09",
+     1,
+     null
+    ]
+   ],
+   "row_count": 6
+  }
+ },
+ "hidden": [
+  "the full practice viewing history",
+  "several plays on one day",
+  "plays that start just before or at midnight, and one with no end time",
+  "streaks that cross the end of a month",
+  "members with a single streak",
+  "the same play delivered twice",
+  "an empty viewing history"
+ ]
+}

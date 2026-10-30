@@ -1,0 +1,78 @@
+{
+ "id": "PS-P08-M6",
+ "slug": "retry-a-batch-safely",
+ "project": "PS-P08",
+ "milestone": "PS-P08.m6",
+ "difficulty": "hard",
+ "minutes": 50,
+ "title": "Retry a batch without changing anything",
+ "dataset": {
+  "id": "PS-D08",
+  "version": "1.0.0"
+ },
+ "also": [
+  {
+   "id": "PS-D14",
+   "version": "1.0.0",
+   "tables": [
+    "accounts",
+    "customer_cdc"
+   ]
+  }
+ ],
+ "prompt": "Last night the scheduler lost track of batch 2 and ran it again on both tables. A retry has to be harmless: the same rows, and no new Delta version. Right now it isn't. Run `account_history` and then `apply_account_batch` on batch 2 again, and look at what happens to the accounts batch 2 changed.\n\nFix your batch code so a retry commits nothing, then write `commits(name, path)` and `cdc_audit(accounts, customer_cdc, shipment_events, shipments)`: the audit of every commit both tables have after the retry, read from their Delta history.",
+ "rules": [
+  "An account change applies only when it's newer than the account's current version (`changed_at` after its `valid_from`), or the account has no current version.",
+  "A retried batch commits nothing to either table: only rows that change something may reach a MERGE or an append. A MERGE whose source matches table rows commits a new version even when no value changes.",
+  "`cdc_audit` returns one row per commit of each table, with the columns of `AUDIT_SCHEMA`; `table_name` is `shipment_fact` or `account_history`.",
+  "For a `MERGE`, `rows_inserted` and `rows_updated` are its `numTargetRowsInserted` and `numTargetRowsUpdated`. For a `WRITE`, `rows_inserted` is `numOutputRows` and `rows_updated` is 0.",
+  "Don't change the retries in `cdc_audit`."
+ ],
+ "hints": [
+  "In `apply_account_batch`, read the history's current versions (`account_id` and `valid_from`), `left` join them to the batch's newest changes, and keep the newer ones. Use that filtered batch for both the MERGE and the append.",
+  "If `merge_into_fact` puts its rules in MERGE conditions, a retry still commits. Filter the batch against the fact before the MERGE, as in the step 4 hint.",
+  "`DeltaTable.forPath(spark, path).history()` has `version`, `operation` and `operationMetrics`, a map of text values: `int(m[\"numOutputRows\"])`."
+ ],
+ "explanation": "A retry is safe when the code checks the table before it writes. For the history, a change is new only if it's after the current version's `valid_from`; on the retry every change of batch 2 fails that test, so the MERGE's source is empty and the append has no rows, and Delta commits neither. The fact is the same idea: its batch is filtered against the table first. Filtering matters because a MERGE whose source matches rows rewrites the files that hold them and commits a new version even when every update condition fails. Delta's history then proves it: the audit lists the commits of batch 1 and batch 2 and nothing after them. The counts come from `operationMetrics`, never from timestamps, so the audit is the same on every run.",
+ "entry": "cdc_audit",
+ "inputs": [
+  "accounts",
+  "customer_cdc",
+  "shipment_events",
+  "shipments"
+ ],
+ "file": "pipeline.py",
+ "append": "\n\nAUDIT_SCHEMA = \"table_name STRING, version BIGINT, operation STRING, rows_inserted BIGINT, rows_updated BIGINT\"\n\n\ndef commits(name, path):\n    # Step 6: one (name, version, operation, rows_inserted, rows_updated) tuple per commit of the table.\n    return []\n\n\ndef cdc_audit(accounts, customer_cdc, shipment_events, shipments):\n    # Step 6: build both tables, retry batch 2 on each, then list every commit. Don't change the retries.\n    shipment_fact(shipment_events, shipments)\n    second = shipment_events.filter(F.col(\"load_date\") >= SECOND_LOAD)\n    merge_into_fact(latest_steps(event_log(second, shipments)))  # the scheduler retried batch 2\n    account_history(accounts, customer_cdc)\n    apply_account_batch(customer_cdc.filter(F.col(\"changed_at\") >= SECOND_BATCH))  # and here too\n    rows = commits(\"shipment_fact\", FACT_PATH) + commits(\"account_history\", HISTORY_PATH)\n    return spark.createDataFrame(rows, AUDIT_SCHEMA)\n",
+ "prerequisites": [
+  "PS-L063",
+  "PS-L075",
+  "PS-L082",
+  "PS-L083"
+ ],
+ "output": {
+  "columns": [
+   "table_name",
+   "version",
+   "operation",
+   "rows_inserted",
+   "rows_updated"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "example",
+   "sample": true
+  },
+  {
+   "id": "project",
+   "edition": "project"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 180,
+  "check_timeout_s": 420,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

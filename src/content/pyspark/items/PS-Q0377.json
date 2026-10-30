@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0377",
+  "slug": "what-the-gate-lets-through",
+  "lesson": "PS-L076",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 23,
+  "title": "What the gate lets through",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "The statements team reads only what passes the quality gate. Write `solve(transactions)` so it returns the transactions that load today: `transaction_id`, `account_id`, `amount`, `currency`, and the name of the first warn rule each one breaks in `warning` (NULL when none).",
+  "rules": [
+    "Quarantine rules, with the largest share of the load each may set aside: `has_account` (`account_id` present) 10%, `known_currency` (USD, EUR or GBP) 10%, `positive_amount` (present and more than 0) 5%.",
+    "`known_status` is a fail rule: `status` is posted, pending or declined. Warn rules, in this order: `within_review_limit` (`amount` at most 2500.00), then `merchant_on_card_types` (a purchase or refund breaks it when it has no `merchant_id`; other types never do).",
+    "A missing value breaks a rule. Each rule decides once over the whole feed: `pass` when no transaction breaks it; otherwise a warn rule decides `warn`, a fail rule `stop`, and a quarantine rule `quarantine` when the transactions breaking it are at most its share of all transactions (exactly at the share still quarantines) and `stop` when they are more.",
+    "If any rule decides `stop`, nothing loads: return no rows. Otherwise every transaction that breaks no quarantine rule loads, warned ones included."
+  ],
+  "hints": [
+    "Keep each rule as `(name, action, limit, condition)` and decide them in a loop first, with `failed * 100 <= limit * checked`.",
+    "`transactions.filter(F.lit(False))` keeps the columns and no rows. Build the warning expression first and select the same five columns, so an empty answer still has the right shape.",
+    "Build `keep` by combining `~F.coalesce(condition, F.lit(False))` of the quarantine rules, and the warning as a `F.when` chain over the warn rules."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "transactions"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(transactions):\n    # Decide each rule, then return the transactions that load, with their first warning.\n    return transactions.select(\"transaction_id\", \"account_id\", \"amount\", \"currency\")\n",
+  "output": {
+    "columns": [
+      "transaction_id",
+      "account_id",
+      "amount",
+      "currency",
+      "warning"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "The gate has two passes. First decide every rule from its counts, each with its own limit: `failed * 100 <= limit * checked` keeps exactly-at-the-limit in quarantine. If any decision is `stop`, the load is untrustworthy and nothing reaches the statements, so the answer is an empty DataFrame with the same columns. Otherwise filter out the rows that break a quarantine rule and label the rest with a `F.when` chain over the warn rules, so the first broken one wins. Warned rows are valid and load. Every condition goes through `F.coalesce(condition, F.lit(False))`, so a missing currency or status counts as broken instead of slipping through. With one limit for every rule, two bad amounts in thirty rows (6.7%) would be quarantined instead of stopping the load."
+}

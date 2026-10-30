@@ -1,0 +1,482 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "example": {
+   "schema": [
+    {
+     "name": "device_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "rule_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "reading_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "event_time",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "value",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "severity",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "DEV-101",
+     "HUM_HIGH",
+     "R9002",
+     "2026-05-12T00:30:00",
+     82.0,
+     "warning"
+    ],
+    [
+     "DEV-101",
+     "TEMP_HIGH",
+     "R9001",
+     "2026-05-12T00:00:00",
+     31.0,
+     "warning"
+    ],
+    [
+     "DEV-102",
+     "BATT_LOW",
+     "R9003",
+     "2026-05-12T00:15:00",
+     3.25,
+     "warning"
+    ],
+    [
+     "DEV-104",
+     "SENSOR_GLITCH",
+     "R9007",
+     "2026-05-12T02:00:00",
+     999.0,
+     "fault"
+    ],
+    [
+     "DEV-101",
+     "HUM_HIGH",
+     "R9008",
+     "2026-05-12T03:15:00",
+     85.0,
+     "warning"
+    ]
+   ],
+   "row_count": 5,
+   "inputs": {
+    "sensor_readings": [
+     [
+      "R9001",
+      "DEV-101",
+      "2026-05-12T00:00:00",
+      "2026-05-12T00:02:00",
+      "0",
+      "{\"temperature_c\":31.0,\"humidity_pct\":60.0,\"battery_v\":3.9,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9002",
+      "DEV-101",
+      "2026-05-12T00:30:00",
+      "2026-05-12T00:31:00",
+      "0",
+      "{\"temperature_c\":33.5,\"humidity_pct\":82.0,\"battery_v\":3.9,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9003",
+      "DEV-102",
+      "2026-05-12T00:15:00",
+      "2026-05-12T00:15:40",
+      "0",
+      "{\"temperature_c\":2.0,\"humidity_pct\":null,\"battery_v\":3.25,\"status\":\"low_battery\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9002",
+      "DEV-101",
+      "2026-05-12T00:30:00",
+      "2026-05-12T00:45:00",
+      "0",
+      "{\"temperature_c\":33.5,\"humidity_pct\":82.0,\"battery_v\":3.9,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9004",
+      "DEV-199",
+      "2026-05-12T01:00:00",
+      "2026-05-12T01:00:10",
+      "1",
+      "{\"temperature_c\":20.0,\"humidity_pct\":50.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9005",
+      "DEV-103",
+      "2026-05-12T01:00:00",
+      "2026-05-12T01:00:20",
+      "1",
+      "{\"temperature_c\":45.0,\"humidity_pct\":50.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9006",
+      "DEV-101",
+      "2026-05-12T01:20:00",
+      "2026-05-12T02:25:00",
+      "2",
+      "{\"temperature_c\":34.0,\"humidity_pct\":70.0,\"battery_v\":3.9,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9007",
+      "DEV-104",
+      "2026-05-12T02:00:00",
+      "2026-05-12T02:01:00",
+      "2",
+      "{\"temperature_c\":999.0,\"humidity_pct\":50.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9007",
+      "DEV-104",
+      "2026-05-12T02:00:00",
+      "2026-05-12T03:05:00",
+      "3",
+      "{\"temperature_c\":999.0,\"humidity_pct\":50.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9008",
+      "DEV-101",
+      "2026-05-12T03:15:00",
+      "2026-05-12T03:16:00",
+      "3",
+      "{\"temperature_c\":null,\"humidity_pct\":85.0,\"battery_v\":3.9,\"status\":null,\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9009",
+      "DEV-101",
+      "2026-05-12T00:45:00",
+      "2026-05-12T04:10:00",
+      "4",
+      "{\"temperature_c\":36.0,\"humidity_pct\":70.0,\"battery_v\":3.9,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9010",
+      "DEV-104",
+      "2026-05-12T06:30:00",
+      "2026-05-12T06:31:00",
+      "6",
+      "{\"temperature_c\":25.0,\"humidity_pct\":null,\"battery_v\":3.7,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      null
+     ]
+    ],
+    "devices": [
+     [
+      "DEV-101",
+      "climate",
+      "TH-210",
+      "2025-06-01",
+      "true"
+     ],
+     [
+      "DEV-102",
+      "temp",
+      "T-100",
+      "2025-06-01",
+      "true"
+     ],
+     [
+      "DEV-103",
+      "climate",
+      "TH-210",
+      "2025-06-01",
+      "false"
+     ],
+     [
+      "DEV-104",
+      "climate",
+      "TH-210",
+      "2025-06-01",
+      "true"
+     ]
+    ],
+    "device_locations": [
+     [
+      "DEV-101",
+      "greenhouse",
+      "B1",
+      "0",
+      "52.38",
+      "4.9",
+      "2025-06-01",
+      null
+     ],
+     [
+      "DEV-102",
+      "cold_store",
+      "B1",
+      "0",
+      "52.38",
+      "4.9",
+      "2025-06-01",
+      null
+     ],
+     [
+      "DEV-103",
+      "office_north",
+      "B1",
+      "0",
+      "52.38",
+      "4.9",
+      "2025-06-01",
+      null
+     ],
+     [
+      "DEV-104",
+      "server_room",
+      "B1",
+      "0",
+      "52.38",
+      "4.9",
+      "2025-01-01",
+      "2026-05-11"
+     ],
+     [
+      "DEV-104",
+      "office_north",
+      "B1",
+      "0",
+      "52.38",
+      "4.9",
+      "2026-05-12",
+      null
+     ]
+    ]
+   }
+  },
+  "project": {
+   "schema": [
+    {
+     "name": "device_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "rule_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "reading_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "event_time",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "value",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "severity",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "DEV-003",
+     "HUM_HIGH",
+     "R000586",
+     "2026-05-11T04:46:00",
+     80.9,
+     "warning"
+    ],
+    [
+     "DEV-003",
+     "SENSOR_GLITCH",
+     "R000570",
+     "2026-05-11T00:46:00",
+     999.0,
+     "fault"
+    ],
+    [
+     "DEV-003",
+     "TEMP_HIGH",
+     "R000604",
+     "2026-05-11T09:16:00",
+     32.9,
+     "warning"
+    ],
+    [
+     "DEV-003",
+     "TEMP_HIGH",
+     "R000622",
+     "2026-05-11T13:46:00",
+     30.9,
+     "warning"
+    ],
+    [
+     "DEV-004",
+     "TEMP_CRIT",
+     "R000863",
+     "2026-05-11T02:45:00",
+     40.3,
+     "critical"
+    ],
+    [
+     "DEV-004",
+     "TEMP_HIGH",
+     "R000863",
+     "2026-05-11T02:45:00",
+     40.3,
+     "warning"
+    ],
+    [
+     "DEV-007",
+     "HUM_HIGH",
+     "R001733",
+     "2026-05-11T05:02:00",
+     83.9,
+     "warning"
+    ],
+    [
+     "DEV-011",
+     "HUM_HIGH",
+     "R002873",
+     "2026-05-11T02:31:00",
+     80.4,
+     "warning"
+    ],
+    [
+     "DEV-011",
+     "HUM_HIGH",
+     "R002884",
+     "2026-05-11T05:16:00",
+     82.4,
+     "warning"
+    ],
+    [
+     "DEV-012",
+     "TEMP_HIGH",
+     "R003157",
+     "2026-05-11T02:00:00",
+     36.3,
+     "warning"
+    ],
+    [
+     "DEV-015",
+     "HUM_HIGH",
+     "R004016",
+     "2026-05-11T02:15:00",
+     82.8,
+     "warning"
+    ],
+    [
+     "DEV-015",
+     "HUM_HIGH",
+     "R004024",
+     "2026-05-11T04:15:00",
+     80.1,
+     "warning"
+    ],
+    [
+     "DEV-015",
+     "SENSOR_GLITCH",
+     "R004034",
+     "2026-05-11T06:45:00",
+     255.0,
+     "fault"
+    ],
+    [
+     "DEV-015",
+     "TEMP_HIGH",
+     "R004055",
+     "2026-05-11T12:00:00",
+     34.3,
+     "warning"
+    ],
+    [
+     "DEV-016",
+     "SENSOR_GLITCH",
+     "R004348",
+     "2026-05-11T13:16:00",
+     999.0,
+     "fault"
+    ],
+    [
+     "DEV-016",
+     "TEMP_CRIT",
+     "R004310",
+     "2026-05-11T03:46:00",
+     40.5,
+     "critical"
+    ],
+    [
+     "DEV-016",
+     "TEMP_HIGH",
+     "R004309",
+     "2026-05-11T03:31:00",
+     39.5,
+     "warning"
+    ],
+    [
+     "DEV-005",
+     "SENSOR_GLITCH",
+     "R001207",
+     "2026-05-11T17:02:00",
+     999.0,
+     "fault"
+    ],
+    [
+     "DEV-007",
+     "TEMP_HIGH",
+     "R001771",
+     "2026-05-11T14:32:00",
+     30.2,
+     "warning"
+    ],
+    [
+     "DEV-007",
+     "TEMP_HIGH",
+     "R001776",
+     "2026-05-11T15:47:00",
+     30.3,
+     "warning"
+    ]
+   ],
+   "row_count": 85
+  }
+ },
+ "hidden": [
+  "breaches exactly an hour apart, values on the thresholds, glitch copies, and late breaches older and newer than what was seen",
+  "no readings"
+ ]
+}

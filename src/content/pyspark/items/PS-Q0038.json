@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0038",
+  "slug": "first-three-orders",
+  "lesson": "PS-L008",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "The first three orders",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "A support dashboard previews the first three orders as they arrived in the file. Write `solve(orders)` so it returns them, numbered by their place in the file.",
+  "rules": [
+    "Four columns, in this order: `position` (int: 1, 2, 3), `order_id`, `status` and `total` (decimal(10,2)).",
+    "Take the first three rows exactly as they come, duplicates and rows with missing values included. Missing values stay missing.",
+    "A table with fewer than three rows gives as many rows as it has, and an empty table gives none."
+  ],
+  "hints": [
+    "`orders.head(3)` gives back a list of up to three `Row`s, and you read a value with `row[\"order_id\"]`.",
+    "`enumerate` counts from 0 unless you tell it otherwise, and the first position is 1.",
+    "Build the result with `spark.createDataFrame(rows, schema)`. A schema string also works when the list of rows is empty."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "orders"
+  ],
+  "starter": "def solve(orders):\n    # Return position, order_id, status and total for the first three orders.\n    return orders\n",
+  "output": {
+    "columns": [
+      "position",
+      "order_id",
+      "status",
+      "total"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`orders.head(3)` returns a list of at most three rows: fewer when the table is shorter, and an empty list when it's empty. Number them with `enumerate` and keep the three values: `[(i + 1, r[\"order_id\"], r[\"status\"], r[\"total\"]) for i, r in enumerate(orders.head(3))]`, then `spark.createDataFrame(rows, \"position INT, order_id STRING, status STRING, total DECIMAL(10,2)\")`. A total arrives as a `Decimal` and a missing one as `None`, and both fit the schema as they are. Because the schema is given, an empty list still makes a valid, empty DataFrame. Code that reads `rows[0]`, `rows[1]` and `rows[2]` by hand breaks on short tables, and `head()` with no number returns one `Row`, not a list."
+}

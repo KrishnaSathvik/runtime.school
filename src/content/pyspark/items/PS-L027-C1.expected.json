@@ -1,0 +1,112 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "employee_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "first_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "last_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "manager_first_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "manager_last_name",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "E0001",
+     "Tomas",
+     "Haddad",
+     null,
+     null
+    ],
+    [
+     "E0002",
+     "Noor",
+     "Novak",
+     "Tomas",
+     "Haddad"
+    ],
+    [
+     "E0003",
+     "Lena",
+     "Duarte",
+     "Noor",
+     "Novak"
+    ],
+    [
+     "E0004",
+     "Anika",
+     "Silva",
+     "Noor",
+     "Novak"
+    ],
+    [
+     "E0005",
+     "Elif",
+     "Rao",
+     "Noor",
+     "Novak"
+    ],
+    [
+     "E0006",
+     "Maya",
+     "Rao",
+     "Noor",
+     "Novak"
+    ],
+    [
+     "E0007",
+     "Ines",
+     "Novak",
+     "Tomas",
+     "Haddad"
+    ],
+    [
+     "E0008",
+     "Elif",
+     "Weber",
+     "Ines",
+     "Novak"
+    ],
+    [
+     "E0009",
+     "Anika",
+     "Grant",
+     "Ines",
+     "Novak"
+    ]
+   ],
+   "row_count": 9
+  }
+ },
+ "hidden": [
+  "the full practice employees table",
+  "the person at the top, who has no manager",
+  "an employee whose manager isn't in the table",
+  "a chain of four levels, with a manager who has several reports",
+  "an empty employees table"
+ ]
+}

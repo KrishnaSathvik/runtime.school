@@ -1,0 +1,48 @@
+{
+  "id": "PS-L049-C2",
+  "slug": "log-attribute-keys",
+  "lesson": "PS-L049",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "One row per log attribute",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "The logging team wants to know which attributes each record carries. Write `solve(application_logs_raw)` so it returns one row per attribute of each good record: `log_id` and `attribute` (the key's name).",
+  "rules": [
+    "Only lines that are JSON objects count; skip the rest.",
+    "Each key of a record's `attributes` gives one row. A record with no `attributes`, or an empty one, gives no rows.",
+    "Keep repeated records: a record shipped twice gives its rows twice.",
+    "Return `log_id` and `attribute`, both text, in that order."
+  ],
+  "hints": [
+    "First get the good records with a `parse` function and `flatMap`, as in the lesson.",
+    "A second `flatMap` can turn one record into a list of `(log_id, key)` pairs.",
+    "`rec.get(\"attributes\") or {}` gives an empty dict when the field is missing or null, so the record gives no pairs."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "application_logs_raw"
+  ],
+  "starter": "import json\n\n\ndef solve(application_logs_raw):\n    lines = application_logs_raw.rdd.map(lambda r: r[\"value\"])\n    # Return one (log_id, attribute) row per attribute key of each good record.\n    return application_logs_raw\n",
+  "output": {
+    "columns": [
+      "log_id",
+      "attribute"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

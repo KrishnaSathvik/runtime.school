@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0193",
+  "slug": "packing-sheet-every-line",
+  "lesson": "PS-L039",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Packing sheet that keeps every line",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "The packing sheet has one row for each unit to pack, and the audit wants lines with nothing to pack to stay on it too. Write `solve(order_items)` so every order line appears.",
+  "rules": [
+    "A line with `quantity` n above 0 gives n rows, each with the line's price in `unit_price`.",
+    "A line with a `quantity` of 0 or less, or a missing quantity, gives exactly one row, with a missing `unit_price`.",
+    "A line with units but no price gives one row per unit, each with a missing `unit_price`. A line that appears twice is packed twice.",
+    "Return `order_id`, `line_no`, `product_id` and `unit_price`."
+  ],
+  "hints": [
+    "`F.array_repeat(\"unit_price\", \"quantity\")` lists the price once per unit. For a quantity of 0 or less it is empty, and for a missing quantity it is missing.",
+    "`F.explode` gives no rows for an empty or missing array, so those lines disappear.",
+    "`F.explode_outer` keeps such a row once, with a missing element."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "order_items"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(order_items):\n    # One row per unit to pack; lines with nothing to pack appear once.\n    return order_items\n",
+  "output": {
+    "columns": [
+      "order_id",
+      "line_no",
+      "product_id",
+      "unit_price"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 12000
+  },
+  "explanation": "Repeat the price once per unit and explode it with the outer version: `order_items.select(\"order_id\", \"line_no\", \"product_id\", F.explode_outer(F.array_repeat(\"unit_price\", \"quantity\")).alias(\"unit_price\"))`. A quantity of 0 or less makes an empty array and a missing quantity a missing one; `explode` would drop both lines, while `explode_outer` keeps each once with a missing element, which is the missing `unit_price` the rules ask for. Repeating `product_id` and keeping the original `unit_price` column would leave a price on the lines with nothing to pack."
+}

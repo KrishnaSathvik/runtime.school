@@ -1,0 +1,102 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "encounter_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "encounter_class",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "vitals",
+     "type": "struct<systolic:int,diastolic:int,pulse:int>",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "ENC000001",
+     "emergency",
+     {
+      "systolic": 115,
+      "diastolic": 72,
+      "pulse": 96
+     }
+    ],
+    [
+     "ENC000002",
+     "wellness",
+     {
+      "systolic": 107,
+      "diastolic": 65,
+      "pulse": 104
+     }
+    ],
+    [
+     "ENC000003",
+     "ambulatory",
+     {
+      "systolic": 144,
+      "diastolic": 66,
+      "pulse": 92
+     }
+    ],
+    [
+     "ENC000004",
+     "ambulatory",
+     {
+      "systolic": 100,
+      "diastolic": 55,
+      "pulse": 91
+     }
+    ],
+    [
+     "ENC000005",
+     "ambulatory",
+     {
+      "systolic": 131,
+      "diastolic": 91,
+      "pulse": 102
+     }
+    ],
+    [
+     "ENC000006",
+     "inpatient",
+     {
+      "systolic": 125,
+      "diastolic": 64,
+      "pulse": 96
+     }
+    ],
+    [
+     "ENC000007",
+     "telehealth",
+     null
+    ],
+    [
+     "ENC000008",
+     "telehealth",
+     null
+    ]
+   ],
+   "row_count": 8
+  }
+ },
+ "hidden": [
+  "the full practice encounters",
+  "telehealth visits with no vitals",
+  "vitals with some readings missing, and with all of them missing",
+  "no encounters"
+ ]
+}

@@ -1,0 +1,51 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D05",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "movies"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "LinearRegression -> LinearRegressionModel\n-1.817 3782.8\n+--------+------------+-----------+----------+\n|movie_id|release_year|runtime_min|prediction|\n+--------+------------+-----------+----------+\n|     M01|        2019|        118|     113.6|\n|     M02|        2024|        104|     104.5|\n|     M03|        2021|         92|     110.0|\n|     M04|        2019|        131|     113.6|\n|     M05|        2024|        109|     104.5|\n|     M06|        2023|        126|     106.3|\n|     M07|        2021|         88|     110.0|\n|     M08|        2025|         97|     102.7|\n|     M09|        2024|        112|     104.5|\n|     M10|        2022|        101|     108.2|\n+--------+------------+-----------+----------+\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "",
+   "error": {
+    "type": "IllegalArgumentException",
+    "message": "requirement failed: Column release_year must be of type class org.apache.spark.ml.linalg.VectorUDT:struct<type:tinyint,size:int,indices:array<int>,values:array<double>> but was actually class org.apache.spark.sql.types.IntegerType$:int.",
+    "line": 3,
+    "condition": null
+   }
+  },
+  "e3": {
+   "stdout": "['VectorAssembler', 'LogisticRegression']\n['VectorAssembler', 'LogisticRegressionModel']\n1.99 -7.36\n['movie_id', 'avg_rating', 'label', 'features', 'rawPrediction', 'probability', 'prediction']\n+--------+----------+-----+------+----------+\n|movie_id|avg_rating|label|p_high|prediction|\n+--------+----------+-----+------+----------+\n|     M01|       4.5|  1.0|  0.83|       1.0|\n|     M02|       4.0|  1.0|  0.65|       1.0|\n|     M03|       3.5|  0.0|   0.4|       0.0|\n|     M04|       3.0|  0.0|   0.2|       0.0|\n|     M05|       2.5|  0.0|  0.08|       0.0|\n|     M06|       4.5|  0.0|  0.83|       1.0|\n|     M07|       3.5|  1.0|   0.4|       0.0|\n|     M08|       1.5|  0.0|  0.01|       0.0|\n|     M09|       4.0|  1.0|  0.65|       1.0|\n|     M10|       5.0|  1.0|  0.93|       1.0|\n+--------+----------+-----+------+----------+\n\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "['metadata', 'stages']\n['VectorAssembler', 'LogisticRegressionModel']\nTrue\n0.84\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "1 partitions: ['M03', 'M06', 'M08', 'M10']\n2 partitions: ['M03', 'M05', 'M09']\n3 partitions: ['M04', 'M06', 'M08']\n1 partitions: ['M01', 'M03', 'M06', 'M07', 'M08']\n2 partitions: ['M01', 'M03', 'M06', 'M07', 'M08']\n3 partitions: ['M01', 'M03', 'M06', 'M07', 'M08']\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "train rmse 6.97\ntest rmse 19.52\ntest mae 16.9\n",
+   "error": null
+  },
+  "e7": {
+   "stdout": "[13.95, 13.44]\n100.0\n",
+   "error": null
+  }
+ }
+}

@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0132",
+  "slug": "hiring-grid-by-employment-type",
+  "lesson": "PS-L027",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Hiring grid by employment type",
+  "dataset": {
+    "id": "PS-D03",
+    "version": "1.0.0"
+  },
+  "prompt": "Recruiting plans hires for every department and every kind of contract the company uses. Write `solve(departments, employees)` so it returns one row for each department and each employment type.",
+  "rules": [
+    "The employment types are the values of `employment_type` found in `employees`, each counted once however many people have it. It is never missing.",
+    "Every department gets every type, even a type nobody in that department has yet, and even a department with no employees.",
+    "Return only `department_id`, `department_name` and `employment_type`, in that order."
+  ],
+  "hints": [
+    "Two steps: get the list of types, then pair it with every department.",
+    "`employees.select(\"employment_type\").distinct()` gives each type once.",
+    "`crossJoin` pairs every department with every type. A join on `department_id` would only give each department the types it already has."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "departments",
+    "employees"
+  ],
+  "starter": "def solve(departments, employees):\n    # One row for each department and each employment type.\n    return departments\n",
+  "output": {
+    "columns": [
+      "department_id",
+      "department_name",
+      "employment_type"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Get each type once with `employees.select(\"employment_type\").distinct()`, then pair it with every department: `departments.select(\"department_id\", \"department_name\").crossJoin(types)`. The result has departments × types rows. Without `distinct`, every employee would add a copy of their type and the grid would repeat rows. Joining on `department_id` looks tempting but answers a different question: which types each department already has, so a department with no part-time staff would get no part-time row, and a department with no employees no rows at all."
+}

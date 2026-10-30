@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0278",
+  "kind": "predict",
+  "slug": "filters-that-can-never-match",
+  "lesson": "PS-L056",
+  "role": "edge",
+  "format": "concept_or_trace",
+  "difficulty": "medium",
+  "minutes": 6,
+  "title": "Filters that can never match",
+  "prompt": "What does this program print? `reads_file` says whether the optimized plan still reads the orders file (a `Relation [` step). None of the 12 lesson orders is cancelled, and none has a missing status. Type each printed line on its own line.",
+  "program": "from pyspark.sql import functions as F\n\n\ndef reads_file(df):\n    return \"Relation [\" in df._jdf.queryExecution().optimizedPlan().toString()\n\n\npaid_and_shipped = orders.filter(F.col(\"status\") == \"paid\").filter(F.col(\"status\") == \"shipped\")\nprint(reads_file(paid_and_shipped), paid_and_shipped.count())\n\nprint(reads_file(orders.limit(0)), reads_file(orders.limit(5)))\n\nnot_cancelled = orders.filter(F.col(\"status\") != \"cancelled\")\nplan = not_cancelled._jdf.queryExecution().optimizedPlan().toString()\nprint(\"isnotnull(status\" in plan, not_cancelled.count())\n",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "Catalyst merges the two filters into one condition. Can a status be `paid` and `shipped` at once?",
+    "When Catalyst can prove a step returns no rows, it replaces the whole plan with an empty `LocalRelation`, which reads no file.",
+    "A missing status isn't unequal to `cancelled`: the comparison is unknown, so the row is dropped. Catalyst writes that into the plan as a not-null check."
+  ],
+  "explanation": "Two filters on the same column merge into `status = paid AND status = shipped`. Catalyst sees that no value can be both, replaces the plan with an empty `LocalRelation`, and the count is 0 without reading the file. `limit(0)` gets the same treatment; `limit(5)` still reads. `status != cancelled` keeps every lesson order (12), and the optimized plan adds `isnotnull(status)`: an order with a missing status would be dropped too, because comparing a missing value is never true."
+}

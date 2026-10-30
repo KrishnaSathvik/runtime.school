@@ -1,0 +1,54 @@
+{
+  "id": "PS-L063-C1",
+  "slug": "apply-the-stock-count",
+  "lesson": "PS-L063",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Apply the stock count",
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0"
+  },
+  "prompt": "`inventory` is today's stock count. Fix `apply_count(count, path)` so it brings the Delta stock table up to date with the count. `solve` is written for you: it starts the table with yesterday's five rows, applies the count and reads the table back.",
+  "rules": [
+    "A row is one SKU in one warehouse: match on `warehouse_id` and `sku` together.",
+    "A counted row that's already in the table replaces it, every column. A counted row that isn't there is added.",
+    "Rows the count doesn't mention stay as they are. An empty count changes nothing.",
+    "The count has one row per warehouse and SKU. Don't change `start_table`."
+  ],
+  "hints": [
+    "Run the starter on the sample: which warehouse and SKU now appear twice?",
+    "A MERGE needs a condition that pairs a counted row with the table row it replaces. Is the SKU enough?",
+    "Use one clause for rows that matched and one for rows that didn't."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "inventory"
+  ],
+  "starter": "import shutil\nfrom datetime import date\n\nfrom delta.tables import DeltaTable\n\n\ndef start_table(inventory, path):\n    # Yesterday's stock table. Don't change this.\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty folder on every run\n    yesterday = spark.createDataFrame(\n        [\n            (\"WH01\", \"SKU-1003\", \"Packing tape 48mm\", 500, 80, 100, date(2026, 3, 9)),\n            (\"WH02\", \"SKU-1003\", \"Packing tape 48mm\", 300, 120, 200, date(2026, 3, 9)),\n            (\"WH01\", \"SKU-1012\", \"Bath mat\", 250, 20, 200, date(2026, 3, 9)),\n            (\"WH03\", \"SKU-1009\", \"Ceramic mug\", 120, 40, 50, date(2026, 3, 9)),\n            (\"WH04\", \"SKU-1050\", \"Cable ties\", 80, 5, 40, date(2026, 3, 9)),\n        ],\n        inventory.schema,\n    )\n    yesterday.write.format(\"delta\").save(path)\n\n\ndef apply_count(count, path):\n    # Apply today's count to the stock table.\n    count.write.format(\"delta\").mode(\"append\").save(path)\n\n\ndef solve(inventory):\n    path = \"/tmp/stock/inventory\"\n    start_table(inventory, path)\n    apply_count(inventory, path)\n    return spark.read.format(\"delta\").load(path)\n",
+  "output": {
+    "columns": [
+      "warehouse_id",
+      "sku",
+      "sku_name",
+      "on_hand",
+      "reserved",
+      "reorder_point",
+      "as_of_date"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

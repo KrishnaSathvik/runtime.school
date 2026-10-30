@@ -1,0 +1,166 @@
+{
+  "dataset_id": "PS-D05",
+  "version": "1.0.0",
+  "title": "Movies & Streaming",
+  "source": "synthetic",
+  "licence": {
+    "status": "ours",
+    "note": "Runtime-owned deterministic synthetic data."
+  },
+  "seed": 2005,
+  "schemas": {
+    "movies": "movie_id STRING, title STRING, release_year INT, primary_genre STRING, genres STRING, runtime_min INT, language STRING, maturity_rating STRING",
+    "users": "user_id STRING, signup_date DATE, country STRING, age_band STRING, preferred_device STRING",
+    "ratings": "user_id STRING, movie_id STRING, rating DOUBLE, rated_at TIMESTAMP",
+    "tags": "user_id STRING, movie_id STRING, tag STRING, tagged_at TIMESTAMP",
+    "watch_sessions": "watch_id STRING, user_id STRING, movie_id STRING, device STRING, started_at TIMESTAMP, ended_at TIMESTAMP, completed BOOLEAN",
+    "subscriptions": "subscription_id STRING, user_id STRING, plan STRING, monthly_price DECIMAL(6,2), start_date DATE, end_date DATE, status STRING"
+  },
+  "keys": {
+    "primary": {
+      "movies": [
+        "movie_id"
+      ],
+      "users": [
+        "user_id"
+      ],
+      "ratings": [
+        "user_id",
+        "movie_id"
+      ],
+      "tags": [
+        "user_id",
+        "movie_id",
+        "tag"
+      ],
+      "watch_sessions": [
+        "watch_id"
+      ],
+      "subscriptions": [
+        "subscription_id"
+      ]
+    },
+    "foreign": {
+      "ratings.user_id": "users.user_id",
+      "ratings.movie_id": "movies.movie_id",
+      "tags.user_id": "users.user_id",
+      "tags.movie_id": "movies.movie_id",
+      "watch_sessions.user_id": "users.user_id",
+      "watch_sessions.movie_id": "movies.movie_id",
+      "subscriptions.user_id": "users.user_id"
+    }
+  },
+  "rules": [
+    "rating is in half stars from 0.5 to 5.0; many ratings tie (3.5 and 4.0 are the most common values).",
+    "genres lists every genre of a film separated by '|', primary_genre first; primary_genre repeats across films, so distinct() on it gives the short genre list.",
+    "Several films share a release_year, so sorting by year alone leaves ties; sort by year then title (or movie_id) for a stable order.",
+    "Ratings are sparse: most members rate only a handful of films and a few popular films collect most ratings.",
+    "Cold-start members have an account but no ratings at all (U06 in the lesson edition; about 5% of members in practice and about 12% in project).",
+    "rated_at runs from January 2025 to September 2026, so ratings can be split by time: train on earlier ratings, test on later ones.",
+    "A viewing session is a run of plays by one member where each play starts no more than 30 minutes after the previous one ended; a longer gap starts a new session.",
+    "watch_sessions covers July to September 2026; members often watch on consecutive days, which the streak questions count.",
+    "ended_at is missing (null) for a few plays in practice and project where the player stopped reporting; completed is then false.",
+    "completed is true when the play lasted at least 90% of the film's runtime.",
+    "end_date is null and status is active for a subscription that is still running; a member who changed plan has one row per plan period.",
+    "The project edition repeats some interactions, as a raw event export does: exact duplicate rating rows, re-ratings (the same member and film rated again later with a new value; keep the latest), and exact duplicate tag rows.",
+    "The lesson and practice editions have one rating per member and film; referential integrity holds in every edition."
+  ],
+  "editions": {
+    "lesson": {
+      "movies": {
+        "file": "lesson/movies.csv",
+        "rows": 10,
+        "sha256": "62ae5a8d65ebbce3f4fb199f75ee368193b19bd26c8448265402291e041f2136"
+      },
+      "users": {
+        "file": "lesson/users.csv",
+        "rows": 6,
+        "sha256": "0f1cd70ef26a9834a8b9b2ebaa469ba105fa26fc43a4235050e0bfd4f9b31958"
+      },
+      "ratings": {
+        "file": "lesson/ratings.csv",
+        "rows": 15,
+        "sha256": "6d8d529c4963610b9f7dc2dba0206cf2bfe41830c0a528c3236d645d8169a4df"
+      },
+      "tags": {
+        "file": "lesson/tags.csv",
+        "rows": 8,
+        "sha256": "ee16a9f26b092b6118f828fe085c86836d21955aaf78f277807f5d27df41c02b"
+      },
+      "watch_sessions": {
+        "file": "lesson/watch_sessions.csv",
+        "rows": 12,
+        "sha256": "53315201b66b958c63321a7008217953bbf5ea9b079f2ea9a04faec031173063"
+      },
+      "subscriptions": {
+        "file": "lesson/subscriptions.csv",
+        "rows": 7,
+        "sha256": "f5377fb9f47b789ea8f28edafa4706a922a39c1574ea388d252801575104d880"
+      }
+    },
+    "practice": {
+      "movies": {
+        "file": "practice/movies.csv",
+        "rows": 220,
+        "sha256": "569b7aada9022b1469479fb30f66e379c4e40ff9d973a44942c5e9a4381854d9"
+      },
+      "users": {
+        "file": "practice/users.csv",
+        "rows": 450,
+        "sha256": "780ca60dc24b5b805b87b823ac66f3ef0afcf6ff7049a6fa429863937ad265d6"
+      },
+      "ratings": {
+        "file": "practice/ratings.csv",
+        "rows": 2477,
+        "sha256": "861195f246fb049bcb507826778fc8eb67aa5362bc80d4387c6b2d180a5045ec"
+      },
+      "tags": {
+        "file": "practice/tags.csv",
+        "rows": 290,
+        "sha256": "615269d9e08b97db18c992883a34f981993e4110bd64e59136d0471edd355283"
+      },
+      "watch_sessions": {
+        "file": "practice/watch_sessions.csv",
+        "rows": 2327,
+        "sha256": "8e1501766d5b3d864a083b0ddb8822267f66e1ad7b82054bd8f0ffc0b8cfcb36"
+      },
+      "subscriptions": {
+        "file": "practice/subscriptions.csv",
+        "rows": 499,
+        "sha256": "f1039de162c36dd5447fafa21eabb7ad4c491e83cf8b19596c74a770e8f6fdaa"
+      }
+    },
+    "project": {
+      "movies": {
+        "file": "project/movies.csv",
+        "rows": 320,
+        "sha256": "bb43dc6f1e3709dc75257d7afcde30bfc507e117a0e124e7e122f524fa1412fa"
+      },
+      "users": {
+        "file": "project/users.csv",
+        "rows": 900,
+        "sha256": "6e44d627f843b2efc4fa117177d7698390c7683ef44966321fd927783fb88f22"
+      },
+      "ratings": {
+        "file": "project/ratings.csv",
+        "rows": 4704,
+        "sha256": "83f2104563700e5a44d0bc2859d1e48a818fd0805a00e36e1e607b49defd1dd5"
+      },
+      "tags": {
+        "file": "project/tags.csv",
+        "rows": 571,
+        "sha256": "61e3db6afbf14ffe7f187eaec71f50a6b055f60db9882e8c9fb8cdee3143ff77"
+      },
+      "watch_sessions": {
+        "file": "project/watch_sessions.csv",
+        "rows": 4348,
+        "sha256": "f52b7bc44e2f030a88f22d9bc9a702d7f8c7d51e76de50eeb2b13a19381d3a92"
+      },
+      "subscriptions": {
+        "file": "project/subscriptions.csv",
+        "rows": 1031,
+        "sha256": "17479e55a141896bf1ebc01194444bcc61d679ca4509474387129dfc637ab606"
+      }
+    }
+  }
+}

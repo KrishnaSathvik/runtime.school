@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0018",
+  "kind": "predict",
+  "slug": "capitalised-status",
+  "lesson": "PS-L004",
+  "role": "edge",
+  "format": "concept_or_trace",
+  "difficulty": "medium",
+  "minutes": 6,
+  "title": "A capitalised status",
+  "prompt": "Statuses in `orders` are always lowercase. This program looks for `Paid` with a capital P. What does it print? Type each line on its own line.",
+  "program": "from pyspark.sql import functions as F\n\npaid = orders.filter(F.col(\"status\") == \"Paid\")\nprint(paid.count())\nprint(paid.first())\nprint(paid.take(2))\nprint(orders.limit(0).count())\n",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "Text comparison is exact: `\"Paid\"` and `\"paid\"` are different.",
+    "When no row matches, there is no first row. What does Python use for \"nothing\"?",
+    "`take` always returns a list, even when it has nothing to put in it."
+  ],
+  "explanation": "No status is exactly `Paid`, so the filter keeps no rows and `count()` is 0. With no rows, `first()` returns `None` and `take(2)` returns an empty list, `[]`; neither raises an error. `limit(0)` keeps no rows at all."
+}

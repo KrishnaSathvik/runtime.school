@@ -1,0 +1,149 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "symbol",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "trade_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "close",
+     "type": "decimal(10,2)",
+     "nullable": true
+    },
+    {
+     "name": "prev_trading_day",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "prev_close",
+     "type": "decimal(10,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "ALDR.SX",
+     "2026-01-15",
+     "191.95",
+     null,
+     null
+    ],
+    [
+     "ALDR.SX",
+     "2026-01-16",
+     "192.94",
+     "2026-01-15",
+     "191.95"
+    ],
+    [
+     "ALDR.SX",
+     "2026-01-20",
+     "197.36",
+     "2026-01-16",
+     "192.94"
+    ],
+    [
+     "ALDR.SX",
+     "2026-01-21",
+     "98.47",
+     "2026-01-20",
+     "197.36"
+    ],
+    [
+     "ALDR.SX",
+     "2026-01-22",
+     "101.22",
+     "2026-01-21",
+     "98.47"
+    ],
+    [
+     "BRVO.SX",
+     "2026-01-15",
+     "54.62",
+     null,
+     null
+    ],
+    [
+     "BRVO.SX",
+     "2026-01-16",
+     "55.34",
+     "2026-01-15",
+     "54.62"
+    ],
+    [
+     "BRVO.SX",
+     "2026-01-21",
+     "56.05",
+     "2026-01-20",
+     null
+    ],
+    [
+     "BRVO.SX",
+     "2026-01-22",
+     "56.40",
+     "2026-01-21",
+     "56.05"
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-15",
+     "122.58",
+     null,
+     null
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-16",
+     "121.62",
+     "2026-01-15",
+     "122.58"
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-20",
+     "124.71",
+     "2026-01-16",
+     "121.62"
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-21",
+     "125.51",
+     "2026-01-20",
+     "124.71"
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-22",
+     "126.25",
+     "2026-01-21",
+     "125.51"
+    ]
+   ],
+   "row_count": 14
+  }
+ },
+ "hidden": [
+  "the full practice prices and calendar",
+  "a symbol halted for several trading days",
+  "the day after a holiday Monday",
+  "a Monday after a weekend",
+  "a symbol's first day after it was listed",
+  "a price on the calendar's first day",
+  "no prices"
+ ]
+}

@@ -1,0 +1,44 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D02",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "accounts",
+   "transactions"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "8 accounts, 12 rows after an inner join, 3 after a semi join\n+----------+-----------+------------+--------+------+-----------+---------------+\n|account_id|customer_id|account_type|currency|status|opened_date|overdraft_limit|\n+----------+-----------+------------+--------+------+-----------+---------------+\n|    A00001|      C0001|    checking|     USD|active| 2025-08-24|           0.00|\n|    A00006|      C0003|    checking|     GBP|active| 2025-02-26|         500.00|\n|    A00008|      C0005|    checking|     USD|active| 2025-06-21|         250.00|\n+----------+-----------+------------+--------+------+-----------+---------------+\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "+----------+-----------+------------+------+\n|account_id|customer_id|account_type|status|\n+----------+-----------+------------+------+\n|    A00002|      C0001|    checking|closed|\n|    A00003|      C0002|     savings|active|\n|    A00004|      C0002|     savings|closed|\n|    A00005|      C0003| credit_card|frozen|\n|    A00007|      C0004|    checking|closed|\n+----------+-----------+------------+------+\n\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "+--------------+----------+--------+------+--------+\n|transaction_id|account_id|txn_type|amount|  status|\n+--------------+----------+--------+------+--------+\n|       T000002|      NULL|purchase| 60.53|  posted|\n|       T000013|    A99999| deposit|800.00|declined|\n+--------------+----------+--------+------+--------+\n\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "+----------+-----------+------------+\n|account_id|customer_id|account_type|\n+----------+-----------+------------+\n|    A00006|      C0003|    checking|\n+----------+-----------+------------+\n\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "",
+   "error": {
+    "type": "AnalysisException",
+    "message": "[UNRESOLVED_COLUMN.WITH_SUGGESTION] A column, variable, or function parameter with name `amount` cannot be resolved. Did you mean one of the following? [`account_id`, `status`, `account_type`, `currency`, `opened_date`]. SQLSTATE: 42703",
+    "line": 2,
+    "condition": "UNRESOLVED_COLUMN.WITH_SUGGESTION"
+   }
+  }
+ }
+}

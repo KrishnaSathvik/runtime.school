@@ -1,0 +1,63 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "merchant_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "merchant_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "mcc_code",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "category",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "country",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "M005",
+     "Lumen Books",
+     "5942",
+     "books",
+     "GB"
+    ],
+    [
+     "M006",
+     "Harbor Bistro",
+     "5812",
+     "restaurants",
+     "US"
+    ]
+   ],
+   "row_count": 2
+  }
+ },
+ "hidden": [
+  "the full practice merchants and transactions",
+  "a merchant whose only transaction was declined",
+  "a merchant with many transactions, next to merchants with none",
+  "a feed of deposits only, with no merchants at all",
+  "no merchants signed up"
+ ]
+}

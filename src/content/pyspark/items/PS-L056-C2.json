@@ -1,0 +1,21 @@
+{
+  "id": "PS-L056-C2",
+  "kind": "predict",
+  "slug": "where-the-filter-went",
+  "lesson": "PS-L056",
+  "difficulty": "medium",
+  "minutes": 6,
+  "title": "Where the filter went",
+  "prompt": "What does this program print? `ops` lists the steps of a plan from its top line down; the bottom lines run first. One lesson customer has the `business` segment, with 2 orders. Type each printed line on its own line.",
+  "program": "from pyspark.sql import functions as F\n\nbusiness = orders.join(customers, \"customer_id\").filter(F.col(\"segment\") == \"business\").select(\"order_id\", \"total\")\nqe = business._jdf.queryExecution()\n\n\ndef ops(plan):\n    return [line.strip(\" +-:\").split(\" \")[0] for line in plan.toString().splitlines()]\n\n\nanalyzed = ops(qe.analyzed())\noptimized = ops(qe.optimizedPlan())\nprint(analyzed.index(\"Filter\") < analyzed.index(\"Join\"))\nprint(optimized.index(\"Filter\") < optimized.index(\"Join\"))\nprint(optimized.count(\"Filter\"))\nprint(business.count())\n",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "Plans print top-down: a step printed above another runs after it. The analyzed plan keeps the order you wrote.",
+    "In the optimized plan, Catalyst moves the `segment` filter below the join, onto the customers side.",
+    "An inner join can't match a missing key, so Catalyst adds a not-null filter on the key to each side. The one on customers is merged with the segment filter."
+  ]
+}

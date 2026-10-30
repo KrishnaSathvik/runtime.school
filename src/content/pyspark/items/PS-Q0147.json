@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0147",
+  "slug": "who-bought-what",
+  "lesson": "PS-L030",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Who bought what",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "Marketing wants to thank customers for the products they bought. Write `solve(orders, order_items, products)` so it returns each customer and product pair once, with the product's name.",
+  "rules": [
+    "A customer bought a product if one of the customer's orders has a line with that `product_id`. Each pair appears once, however many lines or orders it comes from.",
+    "The product list sometimes repeats a product row; repeated rows are exact copies. A product that isn't in the list keeps a missing `name`.",
+    "A line whose order isn't in `orders` is left out. An order with a missing `customer_id` gives pairs with a missing `customer_id`.",
+    "Return `customer_id`, `product_id` and `name`."
+  ],
+  "hints": [
+    "Lines know the product, orders know the customer: join `order_items` to `orders` on `order_id`, then to `products` on `product_id`.",
+    "A customer who bought the same product on two lines now has two identical rows. Select the three columns and keep each row once.",
+    "Use a left join to `products` so a product missing from the list still counts. Join on `product_id` only: the line's `unit_price` is the price on the day, not today's."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "orders",
+    "order_items",
+    "products"
+  ],
+  "starter": "def solve(orders, order_items, products):\n    # Return each (customer_id, product_id, name) once.\n    return order_items.select(\"product_id\")\n",
+  "output": {
+    "columns": [
+      "customer_id",
+      "product_id",
+      "name"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Join lines to their orders for the customer, then to products for the name: `order_items.join(orders, on=\"order_id\").join(products, on=\"product_id\", how=\"left\")`. Every line gives a row, so a customer who bought a product twice has repeated rows, and a repeated product row doubles them again. Here the question really is about distinct pairs, so `select(\"customer_id\", \"product_id\", \"name\").distinct()` at the end is right; removing the product copies first with `products.dropDuplicates()` is good practice too. Joining on `[\"product_id\", \"unit_price\"]` looks tidy but loses the name whenever the price has changed since the order."
+}

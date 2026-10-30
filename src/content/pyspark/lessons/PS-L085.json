@@ -1,0 +1,145 @@
+{
+  "id": "PS-L085",
+  "minutes": 35,
+  "lede": "Before you say one version of a query is faster, check two things: that both give the same rows, and that they really do different work. Spark counts files, rows and shuffles exactly, so a profile answers the second question the same way every run; timings never do.",
+  "objectives": [
+    "Profile a query's input: files, partitions and Spark's size estimates",
+    "Count shuffles and joins from the plan, and rows, files and bytes per step after a run",
+    "Compare two versions of a query: same rows first, then their profiles",
+    "Plan an honest benchmark, and spot the reruns and caches that make timings lie"
+  ],
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "trips",
+      "taxi_zones"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`trips` has the 12 lesson trips and `taxi_zones` the 6 zones they start and end in; both are loaded, and `F` is `pyspark.sql.functions`.\n\nTwo questions sit behind every \"is this faster?\":\n\n- **Profiling** asks *how much work* a query does: how many files it opens, how many rows each step makes, how many shuffles it needs. Spark keeps these counts itself, and on the same data they're the same every run.\n- **Benchmarking** asks *how long* the work takes. A time depends on the machine, on whatever else is running, on what's already warm. It changes every run.\n\nProfile first. If two versions do the same work, there's nothing to time. If they don't, the profile tells you why one should be faster, and a benchmark on the real system tells you by how much.\n\nThis environment can't do the second part. It's local mode on two cores, it shares one machine with other jobs, and it has no benchmark mode, so a time printed here would mostly measure the neighbours. Every example in this lesson prints counts instead.\n\nStart with the input. `inputFiles()` lists the files a DataFrame reads, `rdd.getNumPartitions()` says how many partitions the read makes, and `explain(mode=\"cost\")` (lesson 56) adds Catalyst's size estimate, `sizeInBytes`, to each step of the optimized plan. The example captures what `explain` prints as a string so it can pick out just those estimates. It also writes `trips` back out as three CSV files under `/tmp` to read them again."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Profile the input",
+      "code": "import io, contextlib, re\n\ndef plan_text(df, mode):\n    \"\"\"What df.explain(mode=mode) prints, as a string.\"\"\"\n    buffer = io.StringIO()\n    with contextlib.redirect_stdout(buffer):\n        df.explain(mode=mode)\n    return buffer.getvalue()\n\n\ndef size_estimates(df):\n    return re.findall(r\"sizeInBytes=([^,)]+)\", plan_text(df, \"cost\"))\n\n\nprint(len(trips.inputFiles()), \"file,\", trips.rdd.getNumPartitions(), \"partition\")\nprint(\"shuffle partitions:\", spark.conf.get(\"spark.sql.shuffle.partitions\"))\nprint(\"estimate, all columns:\", size_estimates(trips))\nprint(\"estimate, two columns:\", size_estimates(trips.select(\"trip_id\", \"total\")))\n\ntrips.repartition(3).write.mode(\"overwrite\").option(\"header\", True).csv(\"/tmp/trips3\")\nthree = spark.read.schema(trips.schema).option(\"header\", True).csv(\"/tmp/trips3\")\nprint(len(three.inputFiles()), \"files,\", three.rdd.getNumPartitions(), \"partitions,\", three.count(), \"rows\")\n",
+      "note": "The lesson's `trips` is one 1,436-byte file, read as one partition; the first estimate is just that file size. Keep two columns and the estimate shrinks in proportion to the estimated row width. Estimates come from file sizes and column types, not from reading the data, but Spark uses them to choose plans. The three small files are read as only two partitions: Spark packs small files together, counting a fixed opening cost for each file, so many tiny files still cost one open each."
+    },
+    {
+      "kind": "text",
+      "md": "Next, the plan. The numbered outline at the top of `explain(mode=\"formatted\")` lists every step with no `#n` tags, so it reads the same every run. Two steps matter most for cost:\n\n- **`Exchange`** is a shuffle: rows are written out by key and read back by other tasks (lesson 55).\n- The join step's name says how it joins. **`BroadcastHashJoin`** copies the small side to every task, so the big side isn't shuffled.\n\nThe example adds up `total` per pickup zone with `groupBy(...).agg(F.sum(...))` (lesson 31), then joins the zone names."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Count the shuffles before running",
+      "code": "import io, contextlib\nfrom pyspark.sql import functions as F\n\ndef plan_text(df, mode):\n    \"\"\"What df.explain(mode=mode) prints, as a string.\"\"\"\n    buffer = io.StringIO()\n    with contextlib.redirect_stdout(buffer):\n        df.explain(mode=mode)\n    return buffer.getvalue()\n\n\nby_zone = trips.groupBy(\"pickup_zone_id\").agg(F.sum(\"total\").alias(\"revenue\"))\nnamed = by_zone.join(taxi_zones, by_zone.pickup_zone_id == taxi_zones.zone_id).select(\"zone_name\", \"revenue\")\n\noutline = plan_text(named, \"formatted\").split(\"\\n\\n\")[0]\nprint(outline)\nsteps = [line.split(\"- \")[-1].rsplit(\" (\", 1)[0].strip() for line in outline.splitlines()[1:]]\nprint(\"shuffles:\", steps.count(\"Exchange\"))\nprint(\"broadcast join:\", any(s.startswith(\"BroadcastHashJoin\") for s in steps))\n",
+      "note": "Read the outline from the bottom up. One `Exchange` for the grouping, and a broadcast join that sends the 6 zones to the tasks instead of shuffling both sides. Two `HashAggregate` steps: Spark adds up totals within each partition before the shuffle, and again after it. Nothing has run yet; this is the plan alone."
+    },
+    {
+      "kind": "text",
+      "md": "After an action, every step of the plan Spark ran holds **metrics**, the counts the Spark UI's SQL tab shows. The `profile` helper below runs a DataFrame once, walks that plan from the top and prints each step that counted something: `rows` it produced, `shuffled rows` an `Exchange` wrote, and the `files` and `bytes` a scan read. Children are indented under their parent. It reaches the plan through `_jdf`, which is internal: fine for looking, not something to build on.\n\nThe example turns adaptive execution off so the plan and the job count follow the outline exactly (lesson 55), and puts the run in a job group to count its jobs and stages."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Count the work after running",
+      "code": "from pyspark.sql import functions as F\n\nspark.conf.set(\"spark.sql.adaptive.enabled\", \"false\")\n\n\ndef profile(df):\n    \"\"\"Run df once, then list the plan steps Spark ran with the counts it kept.\"\"\"\n    df.collect()\n    labels = {\"numOutputRows\": \"rows\", \"shuffleRecordsWritten\": \"shuffled rows\", \"numFiles\": \"files\", \"filesSize\": \"bytes\"}\n    steps = []\n\n    def walk(node, depth):\n        name = node.nodeName().strip()\n        if name == \"AdaptiveSparkPlan\":\n            return walk(node.executedPlan(), depth)\n        if name.endswith(\"QueryStage\"):\n            return walk(node.plan(), depth)\n        metrics = node.metrics()\n        counts = {label: metrics.apply(key).value() for key, label in labels.items() if metrics.contains(key)}\n        if counts:\n            steps.append((\"  \" * depth + name, counts))\n            depth += 1\n        children = node.children()\n        for i in range(children.size()):\n            walk(children.apply(i), depth)\n\n    walk(df._jdf.queryExecution().executedPlan(), 0)\n    return steps\n\n\ncard = trips.filter(F.col(\"payment_type\") == \"card\")\nby_zone = card.groupBy(\"pickup_zone_id\").agg(F.sum(\"total\").alias(\"revenue\"))\nnamed = by_zone.join(taxi_zones, by_zone.pickup_zone_id == taxi_zones.zone_id).select(\"zone_name\", \"revenue\")\n\nsc = spark.sparkContext\nsc.setJobGroup(\"zones\", \"card revenue by zone\")\nfor step, counts in profile(named):\n    print(step, counts)\n\ntracker = sc.statusTracker()\njobs = tracker.getJobIdsForGroup(\"zones\")\nprint(len(jobs), \"jobs,\", sum(len(tracker.getJobInfo(j).stageIds) for j in jobs), \"stages\")\n",
+      "note": "Read from the bottom. The CSV reader opened 1 file and all 1,436 bytes, but handed on only the 8 card trips: the `payment_type` filter was pushed into the reader (lesson 56). The first `HashAggregate` cut 8 rows to 6, one per zone, so the shuffle moved 6 rows, not 8. The zones were read and broadcast, 6 rows, and the join made 6. The run was 2 jobs and 3 stages: the query's job has one stage each side of the `Exchange`, and the broadcast ran a small job of its own to collect the zones."
+    },
+    {
+      "kind": "text",
+      "md": "Now compare two versions of the same report. Always in this order:\n\n1. **Same rows?** A faster query that returns different rows isn't an improvement, it's a bug. Compare sorted results on the data you have.\n2. **Same work?** Compare the profiles. If they match, Spark is doing the same thing both ways, and any time difference is noise.\n\nHere the borough filter is written after the join in one version and before it in the other. Each version is a function that builds a new DataFrame, so the rows check and the profile each get a fresh run; a DataFrame that has already run can skip steps when it runs again, as a later example shows."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Same rows, same profile, nothing to time",
+      "code": "from pyspark.sql import functions as F\n\nspark.conf.set(\"spark.sql.adaptive.enabled\", \"false\")\n\n\ndef profile(df):\n    \"\"\"Run df once, then list the plan steps Spark ran with the counts it kept.\"\"\"\n    df.collect()\n    labels = {\"numOutputRows\": \"rows\", \"shuffleRecordsWritten\": \"shuffled rows\", \"numFiles\": \"files\", \"filesSize\": \"bytes\"}\n    steps = []\n\n    def walk(node, depth):\n        name = node.nodeName().strip()\n        if name == \"AdaptiveSparkPlan\":\n            return walk(node.executedPlan(), depth)\n        if name.endswith(\"QueryStage\"):\n            return walk(node.plan(), depth)\n        metrics = node.metrics()\n        counts = {label: metrics.apply(key).value() for key, label in labels.items() if metrics.contains(key)}\n        if counts:\n            steps.append((\"  \" * depth + name, counts))\n            depth += 1\n        children = node.children()\n        for i in range(children.size()):\n            walk(children.apply(i), depth)\n\n    walk(df._jdf.queryExecution().executedPlan(), 0)\n    return steps\n\n\ndef after():\n    joined = trips.join(taxi_zones, trips.pickup_zone_id == taxi_zones.zone_id)\n    return joined.filter(F.col(\"borough\") == \"Old Quarter\").select(\"trip_id\", \"zone_name\", \"total\")\n\n\ndef before():\n    old_quarter = taxi_zones.filter(F.col(\"borough\") == \"Old Quarter\")\n    joined = trips.join(old_quarter, trips.pickup_zone_id == old_quarter.zone_id)\n    return joined.select(\"trip_id\", \"zone_name\", \"total\")\n\n\nprint(\"same rows:\", sorted(after().collect()) == sorted(before().collect()))\nafter_steps, before_steps = profile(after()), profile(before())\nprint(\"same profile:\", after_steps == before_steps)\nfor step, counts in before_steps:\n    print(step, counts)\n",
+      "note": "Both checks say `True`. Catalyst moved the filter under the join in `after` too, so both versions read the same files, keep the same 2 Old Quarter zones and join the same 5 trips. Rewriting this by hand changes nothing; timing it would only time the machine."
+    },
+    {
+      "kind": "text",
+      "md": "When the profiles do differ, a benchmark measures by how much. It's only worth something if it's run carefully:\n\n- **Same data, same settings.** Same input files, same session settings, same cluster size for every version.\n- **Change one thing at a time.** Two changes at once can't tell you which one helped.\n- **Warm up first.** The first run of anything pays extra: the JVM compiles hot code, Python worker processes start, the operating system reads files into memory. Run each version once and throw that time away.\n- **Repeat, and report the spread.** Run each version 5 times or more and report the median with the fastest and slowest run. One number hides how noisy it was.\n- **Alternate.** Run A, B, A, B rather than all of A and then all of B, so a background job or a warm-up that drifts hits both.\n- **Mind the neighbours.** Other jobs on the same machine or cluster slow you down at random. Note what else was running.\n- **Local mode isn't a cluster.** On one machine a shuffle never crosses a network, and two cores can't show what 200 can. Benchmark where the job will really run.\n\nA timing loop for your own machine or cluster can be this small. It's shown, not run, because times from this environment can't be trusted:\n\n```python\nimport statistics, time\n\ndef compare(a, b, runs=5):\n    a(); b()  # warm up both, throw the times away\n    times_a, times_b = [], []\n    for _ in range(runs):  # alternate A, B, A, B\n        start = time.perf_counter(); a(); times_a.append(time.perf_counter() - start)\n        start = time.perf_counter(); b(); times_b.append(time.perf_counter() - start)\n    for name, times in ((\"A\", times_a), (\"B\", times_b)):\n        print(name, \"median\", statistics.median(times), \"range\", min(times), max(times))\n```\n\n`a` and `b` should each **build their DataFrame inside the function**, every call. The next example shows why."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "A rerun can skip work",
+      "code": "from pyspark.sql import functions as F\n\nspark.conf.set(\"spark.sql.adaptive.enabled\", \"false\")\nsc = spark.sparkContext\ntracker = sc.statusTracker()\n\n\ndef stages_run(group, action):\n    \"\"\"Run action in a job group; count the stages its jobs list and the ones that ran a task.\"\"\"\n    sc.setJobGroup(group, group)\n    action()\n    listed = ran = 0\n    for job in tracker.getJobIdsForGroup(group):\n        for stage in tracker.getJobInfo(job).stageIds:\n            listed += 1\n            ran += tracker.getStageInfo(stage).numCompletedTasks > 0\n    return listed, \"listed,\", ran, \"ran\"\n\n\ndef by_payment():\n    return trips.groupBy(\"payment_type\").agg(F.sum(\"total\").alias(\"revenue\"))\n\n\nreport = by_payment()\nprint(\"first run:          \", *stages_run(\"first\", report.collect))\nprint(\"same DataFrame again:\", *stages_run(\"again\", report.collect))\nprint(\"a new DataFrame:    \", *stages_run(\"new\", by_payment().collect))\n",
+      "note": "The second `collect()` on the same DataFrame lists both stages but runs only the last one: the shuffle files the first run wrote are still there, so Spark skips the stage that made them (lesson 55). Time that and you time half the work. A new DataFrame with the same steps runs both stages again. That's why the timing loop above builds the DataFrame inside each call."
+    },
+    {
+      "kind": "text",
+      "md": "Caching is the other trap. `df.cache()` marks `df` itself and returns it, so timing `df` and then `df.cache()` compares the cache with the cache. And Spark matches a cache by its plan (lesson 60): a fresh DataFrame with the same steps reads it too. The profile shows which: a step called `InMemoryTableScan` reads cached rows, and no file scan appears under it."
+    },
+    {
+      "kind": "example",
+      "id": "e6",
+      "title": "The profile shows a cache",
+      "code": "from pyspark.sql import functions as F\n\nspark.conf.set(\"spark.sql.adaptive.enabled\", \"false\")\n\n\ndef profile(df):\n    \"\"\"Run df once, then list the plan steps Spark ran with the counts it kept.\"\"\"\n    df.collect()\n    labels = {\"numOutputRows\": \"rows\", \"shuffleRecordsWritten\": \"shuffled rows\", \"numFiles\": \"files\", \"filesSize\": \"bytes\"}\n    steps = []\n\n    def walk(node, depth):\n        name = node.nodeName().strip()\n        if name == \"AdaptiveSparkPlan\":\n            return walk(node.executedPlan(), depth)\n        if name.endswith(\"QueryStage\"):\n            return walk(node.plan(), depth)\n        metrics = node.metrics()\n        counts = {label: metrics.apply(key).value() for key, label in labels.items() if metrics.contains(key)}\n        if counts:\n            steps.append((\"  \" * depth + name, counts))\n            depth += 1\n        children = node.children()\n        for i in range(children.size()):\n            walk(children.apply(i), depth)\n\n    walk(df._jdf.queryExecution().executedPlan(), 0)\n    return steps\n\n\ndef card_totals():\n    return trips.filter(F.col(\"payment_type\") == \"card\").select(\"trip_id\", \"total\")\n\n\ncard = trips.filter(F.col(\"payment_type\") == \"card\").cache()\nprint(card.count(), \"card trips cached\")\nfor step, counts in profile(card_totals()):\n    print(step, counts)\n\ncard.unpersist()\nfor step, counts in profile(card_totals()):\n    print(step, counts)\n",
+      "note": "`card_totals()` builds a DataFrame that was never cached, but its steps match `card`'s plus a `select`, so its first profile reads 8 cached rows and opens no file. After `unpersist()` a new one scans the CSV file again. To benchmark a cache honestly, time the uncached version with the cache dropped, and fill the cache before you time it, because the first action pays for filling it."
+    }
+  ],
+  "challenges": [
+    "PS-L085-C1",
+    "PS-L085-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "Two versions of a query return the same rows, and their profiles match step for step. In this environment, version B ran 20% faster. What should you conclude?",
+      "choices": [
+        "B is faster; keep it",
+        "Nothing about speed: both do the same work, so the gap is noise",
+        "A has a bug, because the times differ",
+        "Run B once more; if it's faster again, it's faster"
+      ],
+      "answer": 1,
+      "why": "Matching profiles mean Spark read the same files and moved the same rows both ways. A gap on a shared machine comes from the machine, not the query."
+    },
+    {
+      "id": "k2",
+      "prompt": "You call `report.collect()` twice in a row and time both. The second is much faster. What is the likely reason?",
+      "choices": [
+        "The JVM warmed up, so it's the true time",
+        "Spark cached the result automatically",
+        "The shuffle files from the first run still exist, so Spark skipped the stage that writes them",
+        "The second run read fewer files"
+      ],
+      "answer": 2,
+      "why": "Rerunning the same DataFrame can skip every stage whose shuffle output already exists. A benchmark should build a new DataFrame for every run."
+    },
+    {
+      "id": "k3",
+      "prompt": "Why run a benchmark as A, B, A, B instead of A, A, B, B?",
+      "choices": [
+        "Spark caches the result of whichever version runs twice in a row",
+        "So slow changes in the machine's load, or warm-up that drifts, affect both versions alike",
+        "Alternating halves the total time",
+        "It makes every run take exactly the same time"
+      ],
+      "answer": 1,
+      "why": "Load and warm-up change over time. If all of A runs first, a busy minute can land entirely on A or on B; alternating spreads it over both."
+    }
+  ],
+  "review": [
+    "Profile first: files, rows, shuffles and stages are exact counts and repeat run after run; times don't.",
+    "`inputFiles()`, `rdd.getNumPartitions()` and `explain(mode=\"cost\")` profile the input; estimates come from file sizes and column types.",
+    "The formatted plan's outline counts shuffles (`Exchange`) and names the join; after a run, each step's metrics give rows, shuffled rows, files and bytes.",
+    "Compare versions in order: same rows, then same profile. Matching profiles mean there's nothing to time.",
+    "An honest benchmark: same data, one change, warm-up, 5+ alternating runs, median and range, on the system the job will run on.",
+    "Rerunning one DataFrame can skip stages, and a cache serves any DataFrame with the same plan: build fresh DataFrames and drop caches before timing."
+  ],
+  "practice": [
+    "PS-Q0421",
+    "PS-Q0422",
+    "PS-Q0423",
+    "PS-Q0424",
+    "PS-Q0425"
+  ]
+}

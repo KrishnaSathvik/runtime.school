@@ -1,0 +1,51 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "encounter_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "vitals",
+     "type": "struct<heart_rate:int,temperature_c:double>",
+     "nullable": true
+    },
+    {
+     "name": "diagnosis_codes",
+     "type": "array<string>",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "T1",
+     {
+      "heart_rate": 88,
+      "temperature_c": 36.9
+     },
+     [
+      "J06.9"
+     ]
+    ],
+    [
+     "T2",
+     null,
+     [
+      "Z00.00",
+      "E78.5"
+     ]
+    ]
+   ],
+   "row_count": 2
+  }
+ },
+ "hidden": []
+}

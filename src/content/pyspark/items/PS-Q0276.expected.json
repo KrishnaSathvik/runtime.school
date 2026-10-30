@@ -1,0 +1,44 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "order_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "total",
+     "type": "decimal(10,2)",
+     "nullable": true
+    },
+    {
+     "name": "filter_steps",
+     "type": "int",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "O00006",
+     "39.98",
+     1
+    ]
+   ],
+   "row_count": 1
+  }
+ },
+ "hidden": [
+  "the full practice orders table",
+  "orders with no status or no channel",
+  "an order recorded twice",
+  "delivered orders from other channels and store orders with other statuses",
+  "an empty orders table"
+ ]
+}

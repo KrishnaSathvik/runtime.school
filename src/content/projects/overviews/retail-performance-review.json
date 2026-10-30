@@ -1,0 +1,59 @@
+{
+  "id": "retail-performance-review",
+  "task": "You support the commercial manager of a UK online gift wholesaler, and sales for 2011 look lower than 2010. Find out whether trading really weakened, which departments drove the change, how much value cancellations take back and how much of the business comes from known customers, then say what the commercial team should look at first.",
+  "produce": [
+    {
+      "name": "Control totals",
+      "about": "Sale and cancellation invoices, gross sales, cancelled value, net sales and the cancellation rate."
+    },
+    {
+      "name": "Monthly comparison",
+      "about": "Sales for each month from January to November in 2010 and 2011, and the change."
+    },
+    {
+      "name": "Department changes",
+      "about": "Sales by department in both years, largest fall first."
+    },
+    {
+      "name": "Customer split",
+      "about": "2011 customers, sales and share by region, plus anonymous invoices."
+    },
+    {
+      "name": "Commercial review",
+      "about": "Three connected findings, two follow-up actions and the limits of invoice data."
+    }
+  ],
+  "labels": {
+    "understand-data": "Explore invoices",
+    "baseline": "Control totals",
+    "months": "Months",
+    "departments": "Departments",
+    "customers": "Customers",
+    "synthesis": "Conclusions",
+    "report": "Report"
+  },
+  "summaries": {
+    "understand-data": "Follow one invoice to its lines and products, and spot cancellations and anonymous invoices.",
+    "baseline": "Total gross sales, cancelled value and net sales for the whole period.",
+    "months": "Compare each month from January to November in 2010 and 2011.",
+    "departments": "Find which departments gained or lost the most sales.",
+    "customers": "Split 2011 sales by customer region and measure the anonymous share.",
+    "synthesis": "Connect the totals, months, departments and customers into one explanation.",
+    "report": "Write three findings, two prioritized actions and the limits of the data."
+  },
+  "problems": [
+    "Cancellations are separate invoices whose lines carry negative quantities, so a plain sum of lines is already net of them.",
+    "Almost one invoice in five has no customer, so those sales can't be traced to anyone.",
+    "352 products have no category, so an inner join to categories quietly drops their lines.",
+    "Postage and manual adjustments sit in a non-merchandise department alongside real products.",
+    "The data starts in December 2009 and stops on 9 December 2011, so neither December is a full match."
+  ],
+  "preparation": [
+    "filter-with-where",
+    "group-into-summaries",
+    "conditional-aggregation",
+    "connect-tables-with-join",
+    "keep-unmatched-rows",
+    "dates-and-monthly-analysis"
+  ]
+}

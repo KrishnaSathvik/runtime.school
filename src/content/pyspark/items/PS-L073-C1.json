@@ -1,0 +1,55 @@
+{
+ "id": "PS-L073-C1",
+ "slug": "quarantine-the-visits",
+ "lesson": "PS-L073",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 12,
+ "title": "Quarantine the visits",
+ "dataset": {
+  "id": "PS-D04",
+  "version": "1.0.0"
+ },
+ "prompt": "Clinic visits from two files land in bronze, with `_source_file` and `_batch_id`. Complete `solve(encounters)` so it writes the quarantine table: every bronze visit that breaks a rule, with the rule in `problem`. Return it.",
+ "rules": [
+  "Check the rules in this order and name the first one broken: `unknown class` (`encounter_class` missing or not wellness, ambulatory, emergency, inpatient or telehealth), `times out of order` (`end_time` missing or not after `start_time`), `temperature out of range`.",
+  "`temperature_c` (in `vitals`) must be from 34.0 to 42.0, both included. A visit with no vitals or no temperature is fine.",
+  "Return `encounter_id`, `encounter_class`, `start_time`, `end_time`, `temperature_c`, the lineage columns from bronze, and `problem`, for the quarantined visits only.",
+  "Don't change `land`."
+ ],
+ "hints": [
+  "Lesson 22's `F.when` chain gives the first broken rule; a visit that breaks none gets NULL. Keep the rows where it isn't NULL.",
+  "Read the temperature as `F.col(\"vitals.temperature_c\")`. Compared with a number, a missing one gives NULL, so that `when` doesn't fire, which is what you want here.",
+  "For class and times, a missing value must break the rule: wrap the good-row condition in `F.coalesce(..., F.lit(False))` before negating it."
+ ],
+ "entry": "solve",
+ "inputs": [
+  "encounters"
+ ],
+ "starter": "import shutil\n\nfrom pyspark.sql import functions as F\n\nBRONZE = \"/tmp/clinic/bronze/encounters\"\nQUARANTINE = \"/tmp/clinic/quarantine/encounters\"\n\n\ndef land(encounters):\n    # Bronze: the visits as they arrived in two files, with lineage. Don't change this.\n    shutil.rmtree(\"/tmp/clinic\", ignore_errors=True)  # start from empty folders on every run\n    first_file = F.col(\"start_time\") < \"2026-01-01\"\n    (encounters.filter(F.col(\"start_time\").isNotNull())\n        .select(\"*\",\n                F.when(first_file, \"visits_2025.jsonl\").otherwise(\"visits_2026.jsonl\").alias(\"_source_file\"),\n                F.when(first_file, 1).otherwise(2).alias(\"_batch_id\"))\n        .write.format(\"delta\").save(BRONZE))\n\n\ndef solve(encounters):\n    land(encounters)\n    bronze = spark.read.format(\"delta\").load(BRONZE)\n\n    # Write the quarantine table to QUARANTINE: the bronze visits that break a rule.\n\n\n    return spark.read.format(\"delta\").load(QUARANTINE)\n",
+ "output": {
+  "columns": [
+   "encounter_id",
+   "encounter_class",
+   "start_time",
+   "end_time",
+   "temperature_c",
+   "_source_file",
+   "_batch_id",
+   "problem"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 240,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

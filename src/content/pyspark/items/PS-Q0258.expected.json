@@ -1,0 +1,169 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "symbol",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "trade_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "closed_at_high",
+     "type": "boolean",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "ALDR.SX",
+     "2026-01-15",
+     false
+    ],
+    [
+     "BRVO.SX",
+     "2026-01-15",
+     false
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-15",
+     false
+    ],
+    [
+     "ALDR.SX",
+     "2026-01-16",
+     false
+    ],
+    [
+     "KORA.SX",
+     "2026-02-13",
+     true
+    ],
+    [
+     "LUMA.SX",
+     "2026-02-13",
+     true
+    ],
+    [
+     "DUNE.SX",
+     "2026-02-13",
+     null
+    ],
+    [
+     "EMBR.SX",
+     "2026-02-13",
+     null
+    ],
+    [
+     "FERN.SX",
+     "2026-02-13",
+     false
+    ]
+   ],
+   "row_count": 9,
+   "inputs": {
+    "daily_prices": [
+     [
+      "ALDR.SX",
+      "2026-01-15",
+      "188.93",
+      "192.26",
+      "186.69",
+      "191.95",
+      "984700"
+     ],
+     [
+      "BRVO.SX",
+      "2026-01-15",
+      "54.17",
+      "55.29",
+      "54.08",
+      "54.62",
+      "3521500"
+     ],
+     [
+      "CYPH.SX",
+      "2026-01-15",
+      "119.23",
+      "124.15",
+      "115.85",
+      "122.58",
+      "1791600"
+     ],
+     [
+      "ALDR.SX",
+      "2026-01-16",
+      "193.08",
+      "196.84",
+      "191.81",
+      "192.94",
+      "4147700"
+     ],
+     [
+      "KORA.SX",
+      "2026-02-13",
+      "61.40",
+      "62.85",
+      "60.95",
+      "62.85",
+      "412300"
+     ],
+     [
+      "LUMA.SX",
+      "2026-02-13",
+      "24.50",
+      "24.50",
+      "24.50",
+      "24.50",
+      "15200"
+     ],
+     [
+      "DUNE.SX",
+      "2026-02-13",
+      "18.20",
+      null,
+      "17.90",
+      "19.10",
+      "602100"
+     ],
+     [
+      "EMBR.SX",
+      "2026-02-13",
+      "33.20",
+      "33.90",
+      "32.85",
+      null,
+      "1120400"
+     ],
+     [
+      "FERN.SX",
+      "2026-02-13",
+      "39.55",
+      "40.10",
+      "39.40",
+      "40.09",
+      "880500"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice prices",
+  "days with a missing high, low or close",
+  "flat days and days that closed at the high or the low",
+  "closes one cent below the high, on cheap and expensive stocks",
+  "an empty prices table"
+ ]
+}

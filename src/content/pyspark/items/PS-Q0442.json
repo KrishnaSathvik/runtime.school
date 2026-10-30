@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0442",
+  "slug": "volume-bands-learned-from-last-year",
+  "lesson": "PS-L089",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Volume bands learned from last year",
+  "dataset": {
+    "id": "PS-D10",
+    "version": "1.0.0"
+  },
+  "prompt": "The risk team describes each trading day as a quiet, normal or busy volume day, with thresholds learned from 2025 so that 2026 is judged by the past. Write `solve(daily_prices)` so every 2026 price row gets its volume band.",
+  "rules": [
+    "Learn two volume splits from the rows with a `trade_date` before 2026-01-01, all symbols together: sort their volumes and take the ones at positions ⌈n/3⌉ and ⌈2n/3⌉, counting from 1, where n is the number of those rows. If the two are equal, there's only one split.",
+    "Give every row from 2026-01-01 on its band: 0.0, plus 1.0 for each split at or below its volume. So a volume equal to a split goes in the upper band, and volumes outside the 2025 range go in the first or last band.",
+    "Any approach passes; `QuantileDiscretizer` with `numBuckets=3` and `relativeError=0.0` does exactly this.",
+    "Return `symbol`, `trade_date`, `volume` and `volume_band` (a double), in that order, one row per 2026 price row."
+  ],
+  "hints": [
+    "`QuantileDiscretizer` is an estimator: `fit` it on the 2025 rows, then `transform` the 2026 rows with the fitted `Bucketizer`.",
+    "`getSplits()` on the fitted model shows the thresholds it learned; the first and last are -inf and inf, so nothing falls outside.",
+    "Fitting on every row would let 2026 volumes move the thresholds, which is the leakage the bands are meant to avoid."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "daily_prices"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.ml.feature import QuantileDiscretizer\n\n\ndef solve(daily_prices):\n    # Learn volume terciles from 2025, then band the 2026 rows.\n    return daily_prices\n",
+  "output": {
+    "columns": [
+      "symbol",
+      "trade_date",
+      "volume",
+      "volume_band"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`QuantileDiscretizer(numBuckets=3, inputCol=\"volume\", outputCol=\"volume_band\", relativeError=0.0)` is an estimator: `fit` reads the 2025 volumes and returns a `Bucketizer` holding the splits it found, and `transform` applies those fixed splits to 2026. In the sample, the six 2025 volumes give splits at 1,200,000 and 2,600,000, so ALDR.SX's 2,600,000 on 2026-01-06 starts the busy band while 2,599,900 stays normal, and BRVO.SX's 5,200,000, more than any 2025 day, is simply busy. Fitting on every row, or on 2026, lets the period being judged set its own thresholds. The default `relativeError` gives approximate splits, close but not always the same values, which is why the rule asks for exact ones. When many volumes repeat, two splits can land on the same value and Spark merges them, leaving fewer bands."
+}

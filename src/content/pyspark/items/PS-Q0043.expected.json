@@ -1,0 +1,122 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "attempt_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "seconds",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "earlier_tries",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "score_fraction",
+     "type": "double",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "A001",
+     900,
+     0,
+     0.66
+    ],
+    [
+     "A002",
+     780,
+     1,
+     0.725
+    ],
+    [
+     "A003",
+     840,
+     0,
+     0.92
+    ],
+    [
+     "A004",
+     1140,
+     0,
+     0.855
+    ],
+    [
+     "A005",
+     1080,
+     0,
+     0.745
+    ],
+    [
+     "A006",
+     720,
+     0,
+     0.7
+    ],
+    [
+     "A007",
+     1440,
+     0,
+     0.585
+    ],
+    [
+     "A008",
+     1980,
+     0,
+     0.81
+    ],
+    [
+     "A009",
+     1320,
+     1,
+     0.76
+    ],
+    [
+     "A010",
+     960,
+     0,
+     0.95
+    ],
+    [
+     "A011",
+     1680,
+     0,
+     0.895
+    ],
+    [
+     "A012",
+     1260,
+     0,
+     0.88
+    ],
+    [
+     "A013",
+     1560,
+     0,
+     0.79
+    ]
+   ],
+   "row_count": 13
+  }
+ },
+ "hidden": [
+  "the full practice attempts table, with abandoned attempts",
+  "attempts with missing minutes, attempt numbers or scores",
+  "zero minutes, a first try, and scores of 0 and 100",
+  "the same attempt row delivered twice",
+  "an empty attempts table"
+ ]
+}

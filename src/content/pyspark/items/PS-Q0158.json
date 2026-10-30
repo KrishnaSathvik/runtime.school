@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0158",
+  "slug": "purchases-and-the-rest",
+  "lesson": "PS-L032",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Purchases and the rest",
+  "dataset": {
+    "id": "PS-D12",
+    "version": "1.0.0"
+  },
+  "prompt": "The finance dashboard splits each campaign's conversions into purchases and everything else, with the purchase revenue. Write `solve(conversions)` so it gets the awkward rows right.",
+  "rules": [
+    "A conversion is a purchase when `conversion_type` is exactly `purchase`. Every other conversion, including one with a missing or differently written type, counts in `other`.",
+    "`purchases` and `other` are counts and show 0 when there are none.",
+    "`purchase_revenue` adds up `revenue` over the purchases only. A purchase with a missing revenue adds nothing, and a campaign with no purchase revenue has a missing `purchase_revenue`.",
+    "Every campaign in `conversions` gets a row. Return `campaign_id`, `purchases`, `other` and `purchase_revenue`."
+  ],
+  "hints": [
+    "One `groupBy(\"campaign_id\").agg(...)` with a conditional aggregate per column.",
+    "A comparison with a missing type isn't true, so `!= \"purchase\"` misses those rows. Count what isn't a purchase with `otherwise`, or subtract the purchases from all rows.",
+    "`F.sum(F.when(is_purchase, F.col(\"revenue\")))` without `otherwise` is missing when nothing matches, which is what the rules ask for revenue."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "conversions"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(conversions):\n    # Return campaign_id, purchases, other and purchase_revenue.\n    return conversions\n",
+  "output": {
+    "columns": [
+      "campaign_id",
+      "purchases",
+      "other",
+      "purchase_revenue"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Name the condition once, `is_purchase = F.col(\"conversion_type\") == \"purchase\"`, and aggregate per campaign: `F.sum(F.when(is_purchase, 1).otherwise(0))` for `purchases`, `F.sum(F.when(is_purchase, 0).otherwise(1))` for `other`, and `F.sum(F.when(is_purchase, F.col(\"revenue\")))` for `purchase_revenue`. The trap is the missing type: `is_purchase` is missing there, not false, so it falls through to `otherwise` and counts as other, while `F.count(F.when(F.col(\"conversion_type\") != \"purchase\", True))` would skip it. `F.count(\"*\")` minus the purchases also works. Revenue without `otherwise` stays missing when no purchase has any, and summing all revenue would add leads that carry a value."
+}

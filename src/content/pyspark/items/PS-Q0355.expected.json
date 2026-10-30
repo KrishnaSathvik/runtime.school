@@ -1,0 +1,317 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "begin_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "country",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "order_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "payment_method",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "seconds_to_complete",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "CO-0001",
+     "US",
+     "ORD-0001",
+     "card",
+     220
+    ],
+    [
+     "CO-0005",
+     "CA",
+     "ORD-0002",
+     "paypal",
+     300
+    ],
+    [
+     "CO-0010",
+     "GB",
+     "ORD-0004",
+     "card",
+     240
+    ],
+    [
+     "CO-0004",
+     "DE",
+     null,
+     null,
+     null
+    ],
+    [
+     "CO-0008",
+     "US",
+     null,
+     null,
+     null
+    ]
+   ],
+   "row_count": 5,
+   "inputs": {
+    "checkout_events": [
+     [
+      "CO-0001",
+      "SES-0001",
+      "CU-001",
+      "2026-03-14T10:06:00",
+      "2026-03-14T10:06:02",
+      "1",
+      "begin",
+      null,
+      null,
+      "[{\"sku\":\"SKU-1001\",\"qty\":1,\"price\":89.0},{\"sku\":\"SKU-1013\",\"qty\":2,\"price\":11.99}]",
+      "112.98",
+      "{}"
+     ],
+     [
+      "CO-0002",
+      "SES-0001",
+      "CU-001",
+      "2026-03-14T10:08:30",
+      "2026-03-14T10:08:33",
+      "1",
+      "payment",
+      null,
+      "{\"method\":\"card\",\"provider\":\"paycore\"}",
+      "[{\"sku\":\"SKU-1001\",\"qty\":1,\"price\":89.0},{\"sku\":\"SKU-1013\",\"qty\":2,\"price\":11.99}]",
+      "112.98",
+      "{\"coupon\":\"SPRING10\"}"
+     ],
+     [
+      "CO-0003",
+      "SES-0001",
+      "CU-001",
+      "2026-03-14T10:09:40",
+      "2026-03-14T10:09:42",
+      "1",
+      "complete",
+      "ORD-0001",
+      "{\"method\":\"card\",\"provider\":\"paycore\"}",
+      "[{\"sku\":\"SKU-1001\",\"qty\":1,\"price\":89.0},{\"sku\":\"SKU-1013\",\"qty\":2,\"price\":11.99}]",
+      "112.98",
+      "{\"coupon\":\"SPRING10\"}"
+     ],
+     [
+      "CO-0004",
+      "SES-0003",
+      "CU-002",
+      "2026-03-14T10:19:55",
+      "2026-03-14T10:19:59",
+      "2",
+      "begin",
+      null,
+      null,
+      "[{\"sku\":\"SKU-1002\",\"qty\":1,\"price\":119.95}]",
+      "119.95",
+      "{\"gift_wrap\":\"true\"}"
+     ],
+     [
+      "CO-0005",
+      "SES-0004",
+      "CU-003",
+      "2026-03-14T10:26:00",
+      "2026-03-14T10:26:00",
+      "3",
+      "begin",
+      null,
+      null,
+      "[{\"sku\":\"SKU-1001\",\"qty\":1,\"price\":20.0}]",
+      "20.0",
+      "{}"
+     ],
+     [
+      "CO-0006",
+      "SES-0004",
+      "CU-003",
+      "2026-03-14T10:28:10",
+      "2026-03-14T10:28:10",
+      "3",
+      "payment",
+      null,
+      "{\"method\":\"paypal\",\"provider\":\"paycore\"}",
+      "[{\"sku\":\"SKU-1001\",\"qty\":1,\"price\":20.0}]",
+      "20.0",
+      "{}"
+     ],
+     [
+      "CO-0007",
+      "SES-0004",
+      "CU-003",
+      "2026-03-14T10:31:00",
+      "2026-03-14T10:31:00",
+      "3",
+      "complete",
+      "ORD-0002",
+      "{\"method\":\"paypal\",\"provider\":\"paycore\"}",
+      "[{\"sku\":\"SKU-1001\",\"qty\":1,\"price\":20.0}]",
+      "20.0",
+      "{}"
+     ],
+     [
+      "CO-0008",
+      "SES-0005",
+      null,
+      "2026-03-14T10:30:00",
+      "2026-03-14T10:30:00",
+      "4",
+      "begin",
+      null,
+      null,
+      "[{\"sku\":\"SKU-1001\",\"qty\":1,\"price\":20.0}]",
+      "20.0",
+      "{}"
+     ],
+     [
+      "CO-0009",
+      "SES-0005",
+      null,
+      "2026-03-14T11:02:00",
+      "2026-03-14T11:02:00",
+      "5",
+      "complete",
+      "ORD-0003",
+      "{\"method\":\"card\",\"provider\":\"paycore\"}",
+      "[{\"sku\":\"SKU-1001\",\"qty\":1,\"price\":20.0}]",
+      "20.0",
+      "{}"
+     ],
+     [
+      "CO-0010",
+      "SES-0002",
+      null,
+      "2026-03-14T11:20:00",
+      "2026-03-14T11:20:00",
+      "5",
+      "begin",
+      null,
+      null,
+      "[{\"sku\":\"SKU-1001\",\"qty\":1,\"price\":20.0}]",
+      "20.0",
+      "{}"
+     ],
+     [
+      "CO-0011",
+      "SES-0002",
+      null,
+      "2026-03-14T11:24:00",
+      "2026-03-14T11:24:00",
+      "5",
+      "complete",
+      "ORD-0004",
+      "{\"method\":\"card\",\"provider\":\"paycore\"}",
+      "[{\"sku\":\"SKU-1001\",\"qty\":1,\"price\":20.0}]",
+      "20.0",
+      "{}"
+     ],
+     [
+      "CO-0012",
+      "SES-0003",
+      "CU-002",
+      "2026-03-14T11:25:00",
+      "2026-03-14T11:25:00",
+      "5",
+      "begin",
+      null,
+      null,
+      "[{\"sku\":\"SKU-1001\",\"qty\":1,\"price\":20.0}]",
+      "20.0",
+      "{}"
+     ]
+    ],
+    "sessions": [
+     [
+      "SES-0001",
+      "CU-001",
+      "2026-03-14T10:01:05",
+      "2026-03-14T10:09:40",
+      "mobile",
+      "iOS",
+      "US",
+      "/",
+      "social",
+      "CMP-0007"
+     ],
+     [
+      "SES-0002",
+      null,
+      "2026-03-14T10:04:12",
+      "2026-03-14T10:05:22",
+      "desktop",
+      "Windows",
+      "GB",
+      "/c/tents",
+      "organic",
+      null
+     ],
+     [
+      "SES-0003",
+      "CU-002",
+      "2026-03-14T10:12:00",
+      "2026-03-14T10:19:55",
+      "desktop",
+      "macOS",
+      "DE",
+      "/c/jackets",
+      "email",
+      "CMP-0012"
+     ],
+     [
+      "SES-0004",
+      "CU-003",
+      "2026-03-14T10:23:30",
+      "2026-03-14T10:25:40",
+      "tablet",
+      "Android",
+      "CA",
+      "/",
+      "direct",
+      null
+     ],
+     [
+      "SES-0005",
+      null,
+      "2026-03-14T10:38:00",
+      "2026-03-14T10:41:50",
+      "mobile",
+      "Android",
+      "US",
+      "/p/SKU-1007",
+      "social",
+      "CMP-0007"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice checkout events and sessions, late events included",
+  "a session that begins twice, and a visit missing from sessions",
+  "begins with no completion, a payment step, and a completion logged before its begin",
+  "no checkout events at all"
+ ]
+}

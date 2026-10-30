@@ -1,0 +1,106 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "log_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "level",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "host",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "region",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "LOG-000001",
+     "INFO",
+     "catalog-api-7f9c2",
+     "us-east"
+    ],
+    [
+     "LOG-000002",
+     "INFO",
+     "auth-service-a41d8",
+     "us-east"
+    ],
+    [
+     "LOG-000003",
+     "INFO",
+     "checkout-api-7f9c2",
+     "us-west"
+    ],
+    [
+     "LOG-000004",
+     "INFO",
+     "search-api-c03be",
+     "eu-west"
+    ],
+    [
+     "LOG-000005",
+     "INFO",
+     "iot-gateway-a41d8",
+     "ap-south"
+    ],
+    [
+     "LOG-000006",
+     "ERROR",
+     "checkout-api-a41d8",
+     "us-east"
+    ],
+    [
+     "LOG-000007",
+     "WARN",
+     "iot-gateway-a41d8",
+     null
+    ],
+    [
+     "LOG-000008",
+     "INFO",
+     "iot-gateway-a41d8",
+     "ap-south"
+    ],
+    [
+     "LOG-000009",
+     "INFO",
+     "search-api-7f9c2",
+     "us-east"
+    ],
+    [
+     "LOG-000010",
+     "ERROR",
+     "notification-worker-7f9c2",
+     null
+    ]
+   ],
+   "row_count": 10
+  }
+ },
+ "hidden": [
+  "the full practice log file",
+  "records without a region, without a host, or without attributes",
+  "a file where no record has a region",
+  "a cut-off line, a missing brace and a plain-text line",
+  "records whose attributes carry many other keys",
+  "the same record shipped twice",
+  "an empty log file"
+ ]
+}

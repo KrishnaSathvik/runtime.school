@@ -1,0 +1,60 @@
+{
+  "id": "airline-reliability-review",
+  "task": "You support an airline network operations team after complaints about late and cancelled flights rose over the winter. Leadership wants to know where unreliability concentrates before choosing where to act: how reliable U.S. domestic flying was in January–March 2025, which airlines and airports were weakest, and what causes most delay.",
+  "produce": [
+    {
+      "name": "Network baseline",
+      "about": "Scheduled, cancelled and diverted flights, with the cancellation rate, on-time rate and average delay."
+    },
+    {
+      "name": "Airline comparison",
+      "about": "Flights, cancellation rate and on-time rate for each airline."
+    },
+    {
+      "name": "Delay causes",
+      "about": "Delay minutes and share for each of the five causes."
+    },
+    {
+      "name": "Airport list",
+      "about": "The ten busy origin airports with the highest cancellation rate."
+    },
+    {
+      "name": "Reliability assessment",
+      "about": "Three findings and one operational recommendation."
+    }
+  ],
+  "labels": {
+    "understand-data": "Explore flights",
+    "baseline": "Network",
+    "airlines": "Airlines",
+    "causes": "Delay causes",
+    "airports": "Airports",
+    "synthesis": "Conclusions",
+    "report": "Report"
+  },
+  "summaries": {
+    "understand-data": "Compare a cancelled and a delayed flight and see which columns are filled.",
+    "baseline": "Measure the network's cancellation rate, on-time rate and average delay.",
+    "airlines": "Compare airlines by cancellation and on-time rates.",
+    "causes": "Split the delay minutes of late flights across the five causes.",
+    "airports": "Rank busy origin airports by cancellation rate.",
+    "synthesis": "Decide where operations should act first, separating causes airlines control from those they don't.",
+    "report": "Write three findings and one operational recommendation."
+  },
+  "problems": [
+    "Cancelled and diverted flights have no arrival delay at all: it is missing, not zero.",
+    "The five delay-cause columns are filled only for flights that arrived 15 or more minutes late.",
+    "Early arrivals are stored as negative delays, and most flights arrive early.",
+    "Airlines fly very different volumes, from about 1,500 to over 24,000 flights, so raw counts mislead.",
+    "Most origin airports have fewer than 1,000 departures, where a few cancellations swing the rate."
+  ],
+  "preparation": [
+    "understand-null",
+    "group-into-summaries",
+    "filter-groups-with-having",
+    "conditional-aggregation",
+    "connect-tables-with-join",
+    "combine-sets-with-union",
+    "ratios-round-and-nullif"
+  ]
+}

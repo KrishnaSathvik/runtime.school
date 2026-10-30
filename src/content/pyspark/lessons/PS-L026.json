@@ -1,0 +1,131 @@
+{
+  "id": "PS-L026",
+  "minutes": 20,
+  "lede": "Many questions are about existence: which accounts have been used, which have never been used, which transactions point at nothing. A semi join keeps the rows that have a match and an anti join keeps the rows that don't, without adding a single column or duplicating a row.",
+  "objectives": [
+    "Keep the rows that have at least one match with a `left_semi` join",
+    "Keep the rows that have no match with a `left_anti` join",
+    "Explain why an inner join can repeat rows where a semi join can't",
+    "Find orphan rows, including rows whose key is NULL"
+  ],
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "accounts",
+      "transactions"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`accounts` has one row per bank account and `transactions` one row per payment, each with an `account_id`. Suppose you want the accounts that have been used. An inner join finds them, but it gives one row per **transaction**, and it brings every transaction column along.\n\n`how=\"left_semi\"` asks a simpler question: does this left row have at least one match? If yes, the row is kept once, exactly as it was."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Semi join: each matching row once",
+      "code": "inner = accounts.join(transactions, on=\"account_id\", how=\"inner\")\nsemi = accounts.join(transactions, on=\"account_id\", how=\"left_semi\")\n\nprint(accounts.count(), \"accounts,\", inner.count(), \"rows after an inner join,\", semi.count(), \"after a semi join\")\nsemi.orderBy(\"account_id\").show()\n",
+      "note": "Three accounts have transactions. The inner join repeats them once per transaction, 12 rows in all; the semi join keeps each once, with only the account columns."
+    },
+    {
+      "kind": "text",
+      "md": "`how=\"left_anti\"` is the opposite: keep the left rows that have **no** match on the right. It answers \"which accounts were never used?\" directly, without joining and then hunting for NULLs."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Anti join: rows with no match",
+      "code": "unused = accounts.join(transactions, on=\"account_id\", how=\"left_anti\")\nunused.select(\"account_id\", \"customer_id\", \"account_type\", \"status\").orderBy(\"account_id\").show()\n",
+      "note": "Five accounts have never had a transaction. Semi plus anti always gives back every left row: 3 + 5 = 8."
+    },
+    {
+      "kind": "text",
+      "md": "Turn the question around and the anti join becomes a data-quality check. Transactions whose `account_id` isn't in `accounts` are **orphans**: they point at nothing. A NULL key never matches anything, not even another NULL, so a transaction with no account is always an orphan too."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Orphan transactions",
+      "code": "orphans = transactions.join(accounts, on=\"account_id\", how=\"left_anti\")\norphans.select(\"transaction_id\", \"account_id\", \"txn_type\", \"amount\", \"status\").orderBy(\"transaction_id\").show()\n",
+      "note": "T000013 names an account the bank doesn't have, and T000002 lost its account on the way in. Both need attention before anyone totals the feed by account."
+    },
+    {
+      "kind": "text",
+      "md": "The right side can be any DataFrame, including a filtered one. To find accounts with a particular kind of activity, filter the transactions first, then semi join."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Match against a filtered table",
+      "code": "from pyspark.sql import functions as F\n\nonline = transactions.filter(F.col(\"channel\") == \"online\")\n\naccounts.join(online, on=\"account_id\", how=\"left_semi\").select(\"account_id\", \"customer_id\", \"account_type\").orderBy(\"account_id\").show()\n",
+      "note": "Two transactions were online, but one has no account, so only A00006 is kept."
+    },
+    {
+      "kind": "error-example",
+      "id": "e5",
+      "title": "The right side's columns aren't there",
+      "code": "semi = accounts.join(transactions, on=\"account_id\", how=\"left_semi\")\nsemi.select(\"account_id\", \"amount\").show()\n",
+      "error": "AnalysisException",
+      "note": "A semi join only filters the left side, so `amount` doesn't exist in the result. If you need columns from the right, you need an ordinary join and must think about repeated rows."
+    }
+  ],
+  "challenges": [
+    "PS-L026-C1",
+    "PS-L026-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "An account has 4 transactions. How many times does it appear in `accounts.join(transactions, on=\"account_id\", how=\"left_semi\")`?",
+      "choices": [
+        "0",
+        "1",
+        "4",
+        "5"
+      ],
+      "answer": 1,
+      "why": "A semi join keeps a left row once if it has at least one match, however many matches there are."
+    },
+    {
+      "id": "k2",
+      "prompt": "A transaction's `account_id` is NULL. Is it in `transactions.join(accounts, on=\"account_id\", how=\"left_anti\")`?",
+      "choices": [
+        "No, NULL rows are always dropped by joins",
+        "Only if accounts also has a NULL account_id",
+        "Yes, because a NULL key never matches anything",
+        "It raises an error"
+      ],
+      "answer": 2,
+      "why": "NULL is never equal to anything, so the row has no match and the anti join keeps it."
+    },
+    {
+      "id": "k3",
+      "prompt": "Which columns does `accounts.join(transactions, on=\"account_id\", how=\"left_anti\")` have?",
+      "choices": [
+        "Only the columns of accounts",
+        "The columns of both tables",
+        "Only account_id",
+        "Only the columns of transactions"
+      ],
+      "answer": 0,
+      "why": "Semi and anti joins filter the left side; they never add the right side's columns."
+    }
+  ],
+  "review": [
+    "`how=\"left_semi\"` keeps each left row that has at least one match, once, with only its own columns.",
+    "`how=\"left_anti\"` keeps each left row that has no match.",
+    "An inner join repeats a left row once per match; a semi join never does.",
+    "A NULL key never matches, so an anti join always keeps rows whose key is NULL.",
+    "Anti joins find orphans: rows that point at something that doesn't exist.",
+    "Filter the right side first to ask about a particular kind of match."
+  ],
+  "practice": [
+    "PS-Q0126",
+    "PS-Q0127",
+    "PS-Q0128",
+    "PS-Q0129",
+    "PS-Q0130"
+  ]
+}

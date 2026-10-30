@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0176",
+  "slug": "device-runs",
+  "lesson": "PS-L036",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Runs of plays on one device",
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0"
+  },
+  "prompt": "A device run is a stretch of plays a member watched on the same device. Write `solve(watch_sessions)` so every play gets the number of the member's device run it belongs to.",
+  "rules": [
+    "Go through each `user_id`'s plays in `started_at` order (`watch_id` settles a tie).",
+    "A member's first play starts run 1. A play on a different `device` from the previous play starts the next run; a play on the same device continues it.",
+    "Return `watch_id`, `user_id`, `device` and `run_no`."
+  ],
+  "hints": [
+    "Mark each play that starts a new run with 1 and the others with 0, then add the marks up as you go.",
+    "`F.lag(\"device\").over(w)` is the previous play's device. A member's first play has none, so give `lag` a default that never matches a real device.",
+    "Cast the \"device changed\" comparison to `int` to get the mark. A running `F.sum` of the marks over the same window then numbers the runs."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "watch_sessions"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(watch_sessions):\n    # Number each member's runs of plays on the same device.\n    return watch_sessions\n",
+  "output": {
+    "columns": [
+      "watch_id",
+      "user_id",
+      "device",
+      "run_no"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "It's the session trick with a different rule for what starts something new. With `w = Window.partitionBy(\"user_id\").orderBy(\"started_at\", \"watch_id\")`, mark a change with `(F.col(\"device\") != F.lag(\"device\", 1, \"\").over(w)).cast(\"int\")`; the empty-text default makes every member's first play a 1. Then `F.sum(\"new_run\").over(w)` on the marked rows numbers the runs. Without the default the first mark is missing, so the first play gets no run number and the rest start from 0. Without `watch_id` in the order, two plays that start at the same moment are added together by the running sum and share a number."
+}

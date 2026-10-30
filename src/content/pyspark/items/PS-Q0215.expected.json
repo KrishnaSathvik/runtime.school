@@ -1,0 +1,134 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "employee_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "full_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "job_title",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "department",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "salary",
+     "type": "decimal(10,2)",
+     "nullable": true
+    },
+    {
+     "name": "hire_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "salary_after_raise",
+     "type": "decimal(11,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "E0001",
+     "Tomas Haddad",
+     "Chief Executive Officer",
+     "Executive",
+     "260000.00",
+     "2025-01-06",
+     "262500.00"
+    ],
+    [
+     "E0002",
+     "Noor Novak",
+     "Head of Engineering",
+     "Engineering",
+     "200000.00",
+     "2025-05-26",
+     "202500.00"
+    ],
+    [
+     "E0003",
+     "Lena Duarte",
+     "Software Engineer",
+     "Engineering",
+     "75000.00",
+     "2025-07-15",
+     "77500.00"
+    ],
+    [
+     "E0004",
+     "Anika Silva",
+     "Senior Software Engineer",
+     "Engineering",
+     "70000.00",
+     "2025-08-15",
+     "72500.00"
+    ],
+    [
+     "E0006",
+     "Maya Rao",
+     "Senior Software Engineer",
+     "Engineering",
+     "62500.00",
+     "2025-08-10",
+     "65000.00"
+    ],
+    [
+     "E0007",
+     "Ines Novak",
+     "Head of Finance; Onboarding",
+     "Finance",
+     "150000.00",
+     "2025-01-06",
+     "152500.00"
+    ],
+    [
+     "E0008",
+     "Elif Weber",
+     "Senior Financial Analyst",
+     "Finance",
+     "75000.00",
+     "2025-05-20",
+     "77500.00"
+    ],
+    [
+     "E0009",
+     "Anika Grant",
+     "Senior Financial Analyst",
+     "Finance",
+     "90000.00",
+     "2025-05-08",
+     "92500.00"
+    ]
+   ],
+   "row_count": 8
+  }
+ },
+ "hidden": [
+  "the full practice export",
+  "a line whose only problem is its date",
+  "a line whose salary isn't a number",
+  "lines with too few and too many fields",
+  "lines with empty fields",
+  "job titles in quotes that contain the separator",
+  "the same line exported twice",
+  "an export with a header and no employees"
+ ]
+}

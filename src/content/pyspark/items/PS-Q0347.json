@@ -1,0 +1,57 @@
+{
+ "id": "PS-Q0347",
+ "slug": "hourly-battery-report",
+ "lesson": "PS-L070",
+ "role": "business",
+ "format": "dataframe_coding",
+ "difficulty": "hard",
+ "minutes": 14,
+ "title": "Hourly battery report",
+ "dataset": {
+  "id": "PS-D09",
+  "version": "1.0.0"
+ },
+ "prompt": "The field team plans battery swaps from an hourly report, and each hour should be sent once, when it's final. Write `solve(sensor_readings)` so it streams the readings and returns `hour_start`, `device_id`, `lowest_battery` and `last_reading` for every sensor and closed hour.",
+ "rules": [
+  "Hours are clock hours of `event_time` (09:00 to 10:00, and so on). A reading may be up to 30 minutes behind the newest reading seen so far; a reading whose hour is already closed is dropped.",
+  "`lowest_battery` is the smallest `payload.battery_v` in the hour; readings with no battery value are skipped, and an hour with none has no value. `last_reading` is the latest `event_time` in the hour.",
+  "Return each closed hour once, with its final values. Hours still open when the stream stops are left out.",
+  "The rows must come from a streaming query over the delivery files: working on `sensor_readings` itself doesn't count."
+ ],
+ "hints": [
+  "Add a 30-minute watermark on `event_time`, then group by `F.window(\"event_time\", \"1 hour\")` and `device_id`.",
+  "`agg` takes several aggregates at once: `F.min` on the battery and `F.max` on the event time. Both skip missing values.",
+  "Append mode writes an hour once, when the watermark closes it. Read the memory table back and pick `window.start` as `hour_start`."
+ ],
+ "explanation": "With a 30-minute watermark, an hour closes once a reading 30 minutes past its end has arrived, and append mode writes it then with its final minimum and maximum. In the sample, R0209 (09:55) arrived late but still in time and became DEV-002's lowest value, while R0211 (09:58) came after the 09:00 hour had closed and was dropped. A 10-minute watermark would have closed the hour too early and lost R0209; a one-hour watermark would keep R0211 and leave the 10:00 hour open. Update mode would write each hour every time it changed, open hours included. `F.min` skips missing battery values, so an hour where no reading had one gets no value. The 10:00 hour closes in one last micro-batch with no data: availableNow adds it because the last file moved the watermark to 11:10.",
+ "entry": "solve",
+ "inputs": [
+  "sensor_readings"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\ndef solve(sensor_readings):\n    spark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\n    make_batches(sensor_readings, \"/tmp/in\")         # one file per batch; clears the folder first\n    shutil.rmtree(\"/tmp/ck\", ignore_errors=True)     # a fresh checkpoint for every run\n    readings = spark.readStream.schema(sensor_readings.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\n    # Find each sensor's lowest battery and last reading per clock hour, write only closed hours\n    # to a memory table, run the stream, and return the four columns from that table.\n\n    return sensor_readings\n",
+ "output": {
+  "columns": [
+   "hour_start",
+   "device_id",
+   "lowest_battery",
+   "last_reading"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

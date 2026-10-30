@@ -1,0 +1,27 @@
+{
+  "id": "PS-L034-C2",
+  "slug": "volume-spikes",
+  "lesson": "PS-L034",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Volume spikes",
+  "dataset": { "id": "PS-D10", "version": "1.0.0" },
+  "prompt": "Surveillance flags days when a stock trades far more shares than on its previous trading row. Write `solve(daily_prices)` so it returns the days whose `volume` is more than twice the previous row's volume for the same symbol.",
+  "rules": [
+    "The previous row is the same `symbol`'s row with the latest earlier `trade_date`.",
+    "A spike is a `volume` of more than 2 × the previous volume. Exactly twice doesn't count.",
+    "A symbol's first row has nothing to compare with, so it is never a spike.",
+    "Return `symbol`, `trade_date`, `prev_volume` and `volume`."
+  ],
+  "hints": [
+    "First add the previous volume to every row with `F.lag` over a window per symbol in date order.",
+    "Then filter on the new column. A comparison with a missing value isn't true, so first rows drop out on their own.",
+    "Name the lagged value with `alias` so `filter` can compare against it. \"More than twice\" is a strict `>` against the previous volume times 2."
+  ],
+  "entry": "solve",
+  "inputs": ["daily_prices"],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(daily_prices):\n    # The days with more than twice the previous row's volume.\n    return daily_prices\n",
+  "output": { "columns": ["symbol", "trade_date", "prev_volume", "volume"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

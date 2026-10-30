@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0317",
+  "slug": "log-what-the-sync-did",
+  "lesson": "PS-L064",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 17,
+  "title": "Log what the sync did",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "Every night the account sync logs how many accounts it changed. Write `solve(accounts, customer_cdc)` so it merges the feed into a Delta copy of the snapshot and returns one row: how many accounts the merge updated, inserted and deleted.",
+  "rules": [
+    "Apply each account's newest change by `sequence`, counting a repeated delivery once: a delete removes the account, other changes update it or add it, and a delete for an account the table doesn't have changes nothing.",
+    "Return one row with the columns `updated`, `inserted` and `deleted`, as whole numbers, not text.",
+    "When the merge changes nothing (an empty feed, or only deletes of accounts the table doesn't have), report 0 for all three."
+  ],
+  "hints": [
+    "After the merge, `DeltaTable.forPath(spark, path).history(1)` is its commit. `operationMetrics` holds `numTargetRowsUpdated`, `numTargetRowsInserted` and `numTargetRowsDeleted`.",
+    "The metrics are text: turn them into numbers with `int(...)` before you build the one-row DataFrame with `spark.createDataFrame`.",
+    "A merge that changes nothing makes no commit, so the newest history entry is still the snapshot write. Check its `operation` before reading merge metrics."
+  ],
+  "explanation": "Reduce the feed as in the lesson (`distinct()`, then `row_number` 1 per account, newest `sequence` first) and run the MERGE that deletes on `D`, updates other matches and inserts unmatched rows that aren't deletes. The commit's `operationMetrics` then counts what it did; read `history(1).first()`, convert the three counts with `int`, and return `spark.createDataFrame([(updated, inserted, deleted)], [\"updated\", \"inserted\", \"deleted\"])`. Python whole numbers become `long` columns. A merge that changes nothing is the trap: an empty feed, or one that only deletes accounts the table doesn't have, gives the merge nothing to write, so it makes no commit, and the newest history entry is the snapshot's `WRITE`, which has no merge metrics. Check that its `operation` is `MERGE` (or that its `version` is 1) and report zeros otherwise. Counting the feed's `op` values is not the same: a `U` for an account the table doesn't have is an insert, and a `D` for one it doesn't have deletes nothing.",
+  "entry": "solve",
+  "inputs": [
+    "accounts",
+    "customer_cdc"
+  ],
+  "starter": "import shutil\nfrom pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\nfrom delta.tables import DeltaTable\n\n\ndef solve(accounts, customer_cdc):\n    path = \"/tmp/crm/accounts\"\n    shutil.rmtree(path, ignore_errors=True)  # every run starts from an empty folder\n    accounts.write.format(\"delta\").save(path)\n\n    # Merge the newest change per account into the table at `path`,\n    # then return one row: updated, inserted, deleted.\n    return spark.createDataFrame([(0, 0, 0)], [\"updated\", \"inserted\", \"deleted\"])\n",
+  "output": {
+    "columns": [
+      "updated",
+      "inserted",
+      "deleted"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

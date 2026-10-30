@@ -1,0 +1,55 @@
+{
+ "id": "PS-Q0333",
+ "slug": "every-delivery-even-the-quiet-ones",
+ "lesson": "PS-L067",
+ "role": "edge",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 12,
+ "title": "Every delivery, even the quiet ones",
+ "dataset": {
+  "id": "PS-D06",
+  "version": "1.0.0"
+ },
+ "prompt": "The homepage team watches how many home page views each delivery brings, and a delivery with none matters too. Write `solve(page_views)` so a streaming query reads one delivery file per micro-batch and returns one row per micro-batch: `micro_batch` and `home_views`.",
+ "rules": [
+  "Each delivery file is its own micro-batch, read in order; `micro_batch` is Spark's id for it, from 0.",
+  "`home_views` counts the views whose `page_type` is `home`. A micro-batch with none still gets a row, with 0.",
+  "No deliveries means no micro-batches, so no rows.",
+  "The counts must come from the streaming query's micro-batches, not from counting `page_views` itself."
+ ],
+ "hints": [
+  "`option(\"maxFilesPerTrigger\", 1)` makes each file its own micro-batch.",
+  "Filter the stream first, then count in `foreachBatch`: `batch_df.count()` is an ordinary action there.",
+  "Spark calls your function for a micro-batch even when the filter left nothing in it. Don't skip those calls."
+ ],
+ "explanation": "Filter the stream to home pages and count each micro-batch in `foreachBatch`, appending `(batch_id, batch_df.count())`. A file whose views are all filtered out is still a micro-batch, so the function is called with an empty `batch_df` and the count is 0: skipping empty batches, or building the counts from the rows' `batch` values, loses those rows. Without `maxFilesPerTrigger` every waiting file lands in micro-batch 0. Delivery numbers can skip, but micro-batch ids don't: they count the files in order from 0. An empty table writes no files, so the query has nothing to read and runs no micro-batch.",
+ "entry": "solve",
+ "inputs": [
+  "page_views"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef solve(page_views):\n    make_batches(page_views, \"/tmp/views\")\n    counts = []\n    # Stream /tmp/views one file per micro-batch, and add (micro_batch, home_views)\n    # to counts for every micro-batch.\n\n    return spark.createDataFrame(counts, \"micro_batch LONG, home_views LONG\")\n",
+ "output": {
+  "columns": [
+   "micro_batch",
+   "home_views"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

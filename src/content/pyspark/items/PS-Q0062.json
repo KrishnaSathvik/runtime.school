@@ -1,0 +1,55 @@
+{
+  "id": "PS-Q0062",
+  "slug": "vitals-for-the-research-extract",
+  "lesson": "PS-L013",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Vitals for the research extract",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "prompt": "The research team wants every visit's vitals as ordinary columns, without anything that points to the patient. Write `solve(encounters)` so it returns that flat table.",
+  "rules": [
+    "Return seven columns, in this order: `encounter_id`, `encounter_class`, `start_time`, then the four fields of `vitals` as their own columns: `heart_rate`, `systolic`, `diastolic`, `temperature_c`.",
+    "Leave out `patient_id`, `provider_id` and the `vitals` struct itself. Values and types stay as they are.",
+    "Keep every visit, duplicates included. A visit with no vitals has all four fields missing."
+  ],
+  "hints": [
+    "The four fields can be listed one by one with the dot form, `\"vitals.heart_rate\"` and so on.",
+    "`\"vitals.*\"` in a `select` turns every field of the struct into its own column, in the struct's order.",
+    "`printSchema()` shows the order of the fields inside `vitals`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "encounters"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(encounters):\n    # The visit, then every vitals field as its own column.\n    return encounters\n",
+  "output": {
+    "columns": [
+      "encounter_id",
+      "encounter_class",
+      "start_time",
+      "heart_rate",
+      "systolic",
+      "diastolic",
+      "temperature_c"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`encounters.select(\"encounter_id\", \"encounter_class\", \"start_time\", \"vitals.*\")` does it in one step: `vitals.*` expands the struct into its four fields, in the order the schema lists them, which is the order asked for. Listing `\"vitals.heart_rate\"`, `\"vitals.systolic\"`, `\"vitals.diastolic\"` and `\"vitals.temperature_c\"` gives the same table. Selecting `\"vitals\"` keeps one struct column instead of four. Video visits have no vitals, so all four fields are missing; a temperature that wasn't taken is missing on its own."
+}

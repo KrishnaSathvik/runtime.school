@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0403",
+  "kind": "predict",
+  "slug": "an-error-in-a-job-that-finished",
+  "lesson": "PS-L081",
+  "role": "edge",
+  "format": "concept_or_trace",
+  "difficulty": "hard",
+  "minutes": 8,
+  "title": "An error in a job that finished",
+  "prompt": "This job loads metrics in 2 partitions with `local[2,2]`, so each task may be tried twice, and logs at level `ERROR`. The first attempt at partition 1 loses its connection and throws; nothing else goes wrong. The program prints the exit code, the job's lines without their `app:` prefix (the count, then the job's status, its stage's task count and failed-task count), and then how many `Exception in task` lines and how many `aborting job` lines the driver log has. What does it print? Type each line on its own line.",
+  "program": "import os, subprocess\n\nopen(\"/tmp/metrics.py\", \"w\").write(\"\"\"\nfrom pyspark import TaskContext\nfrom pyspark.sql import SparkSession\n\nspark = SparkSession.builder.getOrCreate()\nsc = spark.sparkContext\ntracker = sc.statusTracker()\n\ndef load(rows):\n    ctx = TaskContext.get()\n    if ctx.partitionId() == 1 and ctx.attemptNumber() == 0:\n        raise ConnectionError(\"lost connection to the metrics store\")\n    return rows\n\nsc.setJobGroup(\"load\", \"load metrics\")\nn = spark.range(0, 8, 1, 2).rdd.mapPartitions(load).count()\ninfo = tracker.getJobInfo(tracker.getJobIdsForGroup(\"load\")[0])\nstage = tracker.getStageInfo(sorted(info.stageIds)[0])\nprint(\"app:\", n)\nprint(\"app:\", info.status, stage.numTasks, stage.numFailedTasks)\nspark.stop()\n\"\"\")\n\nenv = {**os.environ, \"SPARK_LOCAL_IP\": \"127.0.0.1\"}\nrun = subprocess.run([\"spark-submit\", \"--master\", \"local[2,2]\", \"--conf\", \"spark.log.level=ERROR\", \"/tmp/metrics.py\"],\n                     capture_output=True, text=True, env=env)\nprint(run.returncode)\nfor line in run.stdout.splitlines():\n    if line.startswith(\"app:\"):\n        print(line[5:])\nlog = run.stderr.splitlines()\nprint(sum(\"Exception in task\" in line for line in log),\n      sum(\"aborting job\" in line for line in log))\n",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "With `local[2,2]` a failed task is tried again. Does the second attempt at partition 1 throw?",
+    "`numFailedTasks` counts failed attempts, and `numTasks` counts tasks, however often each was tried.",
+    "The executor logs an `ERROR` line for every attempt that throws. Spark only writes \"aborting job\" when it gives up on a task."
+  ],
+  "explanation": "The first attempt at partition 1 throws, the executor logs one `ERROR Executor: Exception in task 1.0 in stage 0.0` line, and Spark tries the task again. The second attempt works, so the count is 8 and the job `SUCCEEDED`. Its one stage still had 2 tasks, and 1 failed attempt, which is what `numFailedTasks` counts. Spark never gave up on a task, so there's no \"aborting job\" line, and the script ends normally with exit code 0. An `ERROR` line in a driver log isn't proof that the job failed; on a cluster, where tasks get 4 tries, this is common (a lost executor, a slow network). Look for the give-up line, the job's status or the exit code."
+}

@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0162",
+  "slug": "top-three-earners",
+  "lesson": "PS-L033",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Top three earners per department",
+  "dataset": {
+    "id": "PS-D03",
+    "version": "1.0.0"
+  },
+  "prompt": "For the pay review, each department head wants to see their three best-paid people. Write `solve(employees)` to return them with their place.",
+  "rules": [
+    "Place people by `salary` within their `department_id`, highest first. Equal salaries share a place, and the next place skips ahead (1, 1, 3).",
+    "Keep everyone whose place is 3 or better. A tie can return more than three people, and a small department returns fewer.",
+    "Return `department_id`, `employee_id`, `first_name`, `last_name`, `salary` and `place`."
+  ],
+  "hints": [
+    "First give every employee their place in the department with a window, then keep the top places.",
+    "`F.rank().over(Window.partitionBy(\"department_id\").orderBy(F.col(\"salary\").desc()))` gives 1, 1, 3 on a tie at the top.",
+    "Add the place as a column, then `filter(F.col(\"place\") <= 3)`. `row_number` would cut a tie for third, and `dense_rank` would let in a fourth salary."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "employees"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(employees):\n    # Return each department's three best-paid people with their place.\n    return employees\n",
+  "output": {
+    "columns": [
+      "department_id",
+      "employee_id",
+      "first_name",
+      "last_name",
+      "salary",
+      "place"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Rank inside each department, then keep the top places: `w = Window.partitionBy(\"department_id\").orderBy(F.col(\"salary\").desc())`, `ranked = employees.withColumn(\"place\", F.rank().over(w))`, then `ranked.filter(F.col(\"place\") <= 3).select(...)`. You can't filter on a window function directly, so it has to become a column first. The choice of function decides who gets in: `rank` keeps everyone tied for third and stops there; `row_number` drops someone tied for third; `dense_rank` counts the tied salary once, so a fourth distinct salary sneaks in after a tie at the top. `orderBy(...).limit(3)` would give three people for the whole company, not per department."
+}

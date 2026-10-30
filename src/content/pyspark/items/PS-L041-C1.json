@@ -1,0 +1,50 @@
+{
+  "id": "PS-L041-C1",
+  "slug": "checkout-basket-summary",
+  "lesson": "PS-L041",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Checkout basket summary",
+  "dataset": {
+    "id": "PS-D06",
+    "version": "1.0.0"
+  },
+  "prompt": "The checkout dashboard needs a short summary of each basket. Write `solve(checkout_events)` so it returns `event_id`, `step`, `skus` (the sku of every item, in basket order) and `units` (the total `qty` of all items).",
+  "rules": [
+    "Keep one row per checkout event, in any order. Keep duplicate rows.",
+    "`skus` keeps the items' order and repeats. An empty basket gives an empty `skus` and `units` of 0.",
+    "If `items` is missing, `skus` and `units` are missing. If any item's `qty` is missing, `units` is missing.",
+    "Return only `event_id`, `step`, `skus` and `units`, in that order. `units` is a whole number."
+  ],
+  "hints": [
+    "`F.transform(\"items\", lambda x: ...)` gives one value per item; read the field with `x[\"sku\"]`.",
+    "`F.aggregate` folds the items into one number. What start value gives a whole number?",
+    "`F.aggregate(\"items\", F.lit(0), lambda acc, x: acc + ...)`, with `.alias(...)` on each new column."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "checkout_events"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(checkout_events):\n    # Return event_id, step, skus and units for each checkout event.\n    return checkout_events\n",
+  "output": {
+    "columns": [
+      "event_id",
+      "step",
+      "skus",
+      "units"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

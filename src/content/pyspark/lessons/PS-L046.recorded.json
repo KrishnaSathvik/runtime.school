@@ -1,0 +1,48 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D14",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "suppliers",
+   "invoices"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "+------------------------------------------------------------------------+\n|value                                                                   |\n+------------------------------------------------------------------------+\n|<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>                 |\n|<suppliers>                                                             |\n|    <supplier>                                                          |\n|        <source_system>erp</source_system>                              |\n|        <supplier_id>SUP-001</supplier_id>                              |\n|        <supplier_name>Pellacott Fasteners</supplier_name>              |\n|        <country>GB</country>                                           |\n|        <payment_terms_days>30</payment_terms_days>                     |\n|        <contact_email>orders@pellacottfasteners.example</contact_email>|\n|    </supplier>                                                         |\n+------------------------------------------------------------------------+\nonly showing top 10 rows\nroot\n |-- contact_email: string (nullable = true)\n |-- country: string (nullable = true)\n |-- payment_terms_days: long (nullable = true)\n |-- source_system: string (nullable = true)\n |-- supplier_id: string (nullable = true)\n |-- supplier_name: string (nullable = true)\n\n+-----------+--------------------+------------------+\n|supplier_id|       supplier_name|payment_terms_days|\n+-----------+--------------------+------------------+\n|    SUP-001| Pellacott Fasteners|                30|\n|    SUP-002|     Rindell Tooling|                45|\n|    SUP-003|Ostley Safety Supply|                30|\n+-----------+--------------------+------------------+\nonly showing top 3 rows\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "root\n |-- _active: boolean (nullable = true)\n |-- _id: string (nullable = true)\n |-- address: struct (nullable = true)\n |    |-- city: string (nullable = true)\n |    |-- country: string (nullable = true)\n |-- name: string (nullable = true)\n |-- phone: array (nullable = true)\n |    |-- element: string (containsNull = true)\n\n+-------+-------+------------+-------------------+--------------------+\n|_active|_id    |address     |name               |phone               |\n+-------+-------+------------+-------------------+--------------------+\n|true   |SUP-001|{Leeds, GB} |Pellacott Fasteners|[555-0101, 555-0102]|\n|NULL   |SUP-002|{Kassel, DE}|Rindell Tooling    |[555-0110]          |\n+-------+-------+------------+-------------------+--------------------+\n\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "root\n |-- _id: string (nullable = true)\n |-- name: string (nullable = true)\n |-- address: struct (nullable = true)\n |    |-- country: string (nullable = true)\n\n+-------+-------------------+-------+\n|    _id|               name|address|\n+-------+-------------------+-------+\n|SUP-001|Pellacott Fasteners|   {GB}|\n|SUP-002|    Rindell Tooling|   {DE}|\n+-------+-------------------+-------+\n\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "[('invoice_id', 'string'), ('account_id', 'string'), ('invoice_date', 'date'), ('due_date', 'date'), ('status', 'string'), ('total_amount', 'decimal(12,2)')]\n['.snappy.avro']\n+----------+----------+------------+----------+-------+------------+\n|invoice_id|account_id|invoice_date|  due_date| status|total_amount|\n+----------+----------+------------+----------+-------+------------+\n|INV-000001|  ACC-0001|  2025-10-14|2025-11-13|   paid|      244.00|\n|INV-000002|  ACC-0002|  2025-11-20|2025-12-20|   paid|      232.00|\n|INV-000003|  ACC-0003|  2025-12-09|2026-01-08|overdue|      469.50|\n|INV-000004|  ACC-0001|  2026-02-05|2026-03-07|   open|      283.50|\n|INV-000005|  ACC-0005|  2026-03-04|2026-04-03|  draft|      245.00|\n+----------+----------+------------+----------+-------+------------+\n\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "['invoice_id', 'status', 'total_amount'] 10\n+----------+------------+\n|invoice_id|total_amount|\n+----------+------------+\n|INV-000001|      244.00|\n|INV-000002|      232.00|\n|INV-000003|      469.50|\n|INV-000004|      283.50|\n|INV-000005|      245.00|\n|INV-000001|        NULL|\n|INV-000002|        NULL|\n|INV-000003|        NULL|\n|INV-000004|        NULL|\n|INV-000005|        NULL|\n+----------+------------+\n\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "",
+   "error": {
+    "type": "AnalysisException",
+    "message": "[XML_ROW_TAG_MISSING] `rowTag` option is required for reading/writing files in XML format. SQLSTATE: 42KDF",
+    "line": 18,
+    "condition": "XML_ROW_TAG_MISSING"
+   }
+  }
+ }
+}

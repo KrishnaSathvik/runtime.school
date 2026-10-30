@@ -23,6 +23,96 @@ html[data-theme="dark"] { --p2-signal: #9fd39a; --p2-signal-soft: #16241a; --p2-
 .p2-work { padding: 20px clamp(16px, 2.5vw, 28px) 32px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 @media (min-width: 900px) { .p2-work { position: sticky; top: 48px; align-self: start; max-height: calc(100dvh - 48px); overflow: auto; z-index: 1; } }
 
+/* Practice splits only: fill the viewport like SQL practice. Project overview/review stay normal page scroll. */
+@media (min-width: 1200px) {
+  .rx-main:has(> .p2:not(.workspace-bounded):has(.rx-task > .p2-split)) {
+    height: calc(100dvh - 48px);
+    max-height: calc(100dvh - 48px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .rx-main:has(> .p2:not(.workspace-bounded):has(.rx-task > .p2-split)) > .p2 {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .p2:not(.workspace-bounded) > .rx-task {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    max-width: none;
+    display: flex;
+    flex-direction: column;
+  }
+  .p2:not(.workspace-bounded) > .rx-task > .rx-task-bar { flex: none; }
+  .p2:not(.workspace-bounded) > .rx-task > .p2-split {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    align-items: stretch;
+  }
+  .p2:not(.workspace-bounded) .p2-read {
+    overflow: auto;
+    max-height: 100%;
+    min-height: 0;
+  }
+  .p2:not(.workspace-bounded) .p2-work {
+    position: static;
+    align-self: stretch;
+    height: 100%;
+    max-height: none;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .p2:not(.workspace-bounded) .p2-work > .py-filetabs { flex: none; margin-top: 0; }
+  .p2:not(.workspace-bounded) .p2-work > .rx-cell {
+    flex: 1 1 auto;
+    min-height: 220px;
+    margin: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .p2:not(.workspace-bounded) .p2-work > .rx-cell .py-editor {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .p2:not(.workspace-bounded) .p2-work > .rx-cell .py-editor > *,
+  .p2:not(.workspace-bounded) .p2-work > .rx-cell .py-editor .cm-editor.cm-editor,
+  .p2:not(.workspace-bounded) .p2-work > .rx-cell .py-editor .cm-scroller.cm-scroller {
+    flex: 1 1 auto;
+    height: 100%;
+    min-height: 0 !important;
+    max-height: none;
+    overflow: auto;
+  }
+  .p2:not(.workspace-bounded) .p2-work > .rx-cell .rx-cell-foot { flex: none; }
+  /* Same results bar as Learn: the tab strip only, until a run or a check has something to show. */
+  .p2:not(.workspace-bounded) .p2-work > .p2-results {
+    flex: none;
+    min-height: 0;
+    max-height: none;
+    overflow: visible;
+  }
+  .p2:not(.workspace-bounded) .p2-work > :is(.p2-help, .p2-note, .p2-empty, .p2-predict) { flex: none; }
+}
+@media (max-width: 1199px) {
+  .rx-main:has(> .p2:not(.workspace-bounded):has(.rx-task > .p2-split)),
+  .rx-main:has(> .p2:not(.workspace-bounded):has(.rx-task > .p2-split)) > .p2,
+  .p2:not(.workspace-bounded) > .rx-task {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+}
+
 .p2-eyebrow { font: 13px var(--rx-mono); }
 .p2-eyebrow b { color: var(--rx-amber-ink); font-weight: 500; }
 .p2 h1 { font: 700 clamp(26px, 3vw, 32px)/1.15 var(--rx-sans); letter-spacing: -0.035em; margin: 8px 0 10px; }
@@ -57,7 +147,8 @@ html[data-theme="dark"] { --p2-signal: #9fd39a; --p2-signal-soft: #16241a; --p2-
 
 /* tabs */
 .p2-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--rx-line); overflow-x: auto; }
-.p2-tabs button { display: inline-flex; align-items: center; gap: 7px; padding: 10px 12px 9px; font: 550 14px var(--rx-sans); border: 0; border-bottom: 2px solid transparent; background: none; color: inherit; cursor: pointer; white-space: nowrap; }
+.p2-tabs button, .p2-tabs > span[role="tab"] { display: inline-flex; align-items: center; gap: 7px; padding: 10px 12px 9px; font: 550 14px var(--rx-sans); border: 0; border-bottom: 2px solid transparent; background: none; color: inherit; white-space: nowrap; }
+.p2-tabs button { cursor: pointer; }
 .p2-work > .p2-tabs button { color: var(--ide-muted); border-bottom: 2px solid transparent; }
 .p2-work > .p2-tabs button:hover { color: var(--rx-ink); background: var(--rx-cell); }
 .p2-work > .p2-tabs button[aria-selected="true"] { color: var(--rx-ink); border-bottom-color: var(--rx-amber); background: var(--rx-amber-soft); font-weight: 650; }
@@ -84,6 +175,10 @@ html[data-theme="dark"] { --p2-signal: #9fd39a; --p2-signal-soft: #16241a; --p2-
 .p2-ro { font-size: 10.5px; border: 1px solid var(--rx-line-strong); border-radius: 4px; padding: 0 4px; }
 .p2-keys { display: flex; align-items: center; gap: 4px; padding: 0 12px; white-space: nowrap; }
 .p2-bench .py-editor .cm-editor { min-height: 180px; max-height: 52dvh; }
+/* Practice / Learn / Projects stack: Workbench uses the SQL rx-cell chrome. */
+.p2-work > .rx-cell { margin: 0; }
+.p2-work > .py-filetabs { margin-top: 0; }
+.p2-work .rx-cell-foot .rx-btn { height: auto; min-height: 32px; }
 .p2-readonly { margin: 0; padding: 10px 14px; font: 13px/1.6 var(--rx-mono); white-space: pre; overflow: auto; max-height: 52dvh; color: var(--ide-text); }
 .p2-actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 10px; background: var(--ide-chrome); border-top: 1px solid var(--ide-border); flex-wrap: wrap; }
 .p2-actions > div { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
@@ -94,9 +189,9 @@ html[data-theme="dark"] { --p2-signal: #9fd39a; --p2-signal-soft: #16241a; --p2-
 .p2-btn:focus-visible, .p2-small-btn:focus-visible, .p2-tabs button:focus-visible, .p2-files button:focus-visible { outline: 2px solid var(--rx-amber); outline-offset: 2px; }
 
 /* results */
-.p2-results { border: 1px solid var(--rx-line); border-radius: 8px; overflow: hidden; }
+.p2-results { border: 1px solid var(--rx-line); border-radius: 8px; overflow: visible; }
 .p2-results .p2-tabs { padding: 0 6px; background: var(--rx-cell); }
-.p2-console { font: 13px/1.6 var(--rx-mono); padding: 12px 14px; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 46dvh; overflow: auto; background: var(--ide-bg); color: var(--ide-fg); }
+.p2-console { font: 13px/1.6 var(--rx-mono); padding: 12px 14px; white-space: pre-wrap; overflow-wrap: anywhere; max-height: none; overflow: visible; background: var(--ide-bg); color: var(--ide-fg); }
 .p2-console .stderr, .p2-console .bad { color: var(--rx-bad); }
 /* A line input() read: shown where it was typed, marked as input, and not part of what the program printed. */
 .p2-console kbd.stdin { display: inline; min-width: 0; height: auto; font: inherit; color: var(--rx-amber-ink); background: var(--rx-amber-soft); border: 1px dashed var(--rx-amber); border-radius: 4px; padding: 0 4px; margin: 0 1px; }
@@ -147,13 +242,21 @@ html[data-theme="dark"] { --p2-signal: #9fd39a; --p2-signal-soft: #16241a; --p2-
 
 /* concept check */
 .p2-quiz { display: grid; gap: 16px; }
-.p2-q { border: 1px solid var(--rx-line); border-radius: 8px; padding: 14px 16px; }
+.p2-q { border: 1px solid var(--rx-line); border-left: 3px solid var(--rx-amber); border-radius: 8px; padding: 14px 16px; margin: 0; }
+.p2-q-prompt { margin: 0; font-size: 1.05rem; line-height: 1.45; font-weight: 500; }
+.p2-q-prompt b { font-weight: 650; margin-right: 4px; }
+.p2-quiz-prompt { margin: 8px 0 0; font-size: 14px; color: var(--rx-dim); }
 .p2-q .p2-code { border: 1px solid var(--ide-border); border-radius: 6px; margin: 8px 0; }
-.p2-choices { display: grid; gap: 6px; margin-top: 8px; border: 0; padding: 0; }
-.p2-choices label { display: grid; grid-template-columns: 20px 1fr; gap: 8px; align-items: start; padding: 7px 10px; border: 1px solid var(--rx-line); border-radius: 6px; cursor: pointer; }
+.p2-choices { display: flex; flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 8px; margin-top: 10px; border: 0; padding: 0; }
+.p2-choices label { display: flex; align-items: center; gap: 10px; width: 100%; box-sizing: border-box; margin: 0; padding: 10px 14px; border: 1px solid var(--rx-line-strong); border-radius: 8px; cursor: pointer; }
+.p2-choices label:has(.c:not(.prose)) { align-items: flex-start; }
+.p2-choices label:has(input:focus-visible) { outline: 2px solid var(--rx-ink); outline-offset: 2px; }
+.p2-choices label.on:not(.right):not(.wrong) { border-color: var(--rx-ink); }
 .p2-choices label.right { border-color: var(--rx-ok); background: var(--p2-ok-soft); }
 .p2-choices label.wrong { border-color: var(--rx-bad); background: var(--p2-bad-soft); }
-.p2-choices .c { font-family: var(--rx-mono); white-space: pre-wrap; font-size: 13px; }
+.p2-opt { display: inline-grid; place-items: center; flex: none; width: 22px; height: 22px; border: 1px solid var(--rx-line-strong); border-radius: 5px; font-family: var(--rx-mono); font-size: 12px; color: var(--rx-dim); }
+.p2-choices .c { font-family: var(--rx-mono); white-space: pre-wrap; font-size: 13px; min-width: 0; }
+.p2-choices .c.prose { font-family: var(--rx-sans); font-size: 15px; white-space: normal; }
 
 /* prediction */
 .p2-predict textarea { width: 100%; min-height: 140px; font: 13.5px/1.6 var(--rx-mono); padding: 10px 12px; border: 1px solid var(--ide-border); border-radius: 8px; background: var(--ide-bg); color: var(--ide-text); resize: vertical; font-variant-ligatures: none; }
@@ -339,7 +442,7 @@ html[data-theme="dark"] { --p2-signal: #9fd39a; --p2-signal-soft: #16241a; --p2-
 
 /* Phones: fit Challenge 1 / Challenge 2 / Concept check on one row instead of cutting the last tab off. */
 @media (max-width: 480px) {
-  .p2-tabs button { padding: 9px 8px 8px; gap: 5px; font-size: 13px; }
+  .p2-tabs button, .p2-tabs > span[role="tab"] { padding: 9px 8px 8px; gap: 5px; font-size: 13px; }
 }
 
 /* Shared bounded activity shell is in rt.css; never apply to tools/Playground. */
@@ -415,3 +518,141 @@ html[data-theme="dark"] { --p2-signal: #9fd39a; --p2-signal-soft: #16241a; --p2-
   .p2-files { flex-wrap: wrap; overflow-x: visible; }
   .p2-files button { border-bottom: 1px solid var(--ide-border); }
 }
+
+/* Shared project frame (src/features/rt/project-frame.tsx): one overview, step bar and review for SQL, Python and PySpark. */
+.pf-brief h2:not(:first-child) { margin-top: 28px; }
+.pf-brief .p2-complete + .p2-brief-grid h2:first-child { margin-top: 0; }
+.pf-text { margin: 0 0 12px; font-size: 15px; line-height: 1.55; max-width: 62ch; }
+.pf-text p { margin: 0 0 10px; }
+.pf-text > :last-child { margin-bottom: 0; }
+.pf-brief .pf-text + .rx-btn { margin: 4px 0 0; }
+.pf-steps .pf-summary { margin: 2px 0 0; font-size: 14px; color: var(--rx-dim); }
+.pf-done { font-size: 13px; color: var(--rx-ok); font-weight: 600; }
+.pf-problems li { padding-left: 14px; position: relative; font-size: 14px; }
+.pf-problems li::before { content: "–"; position: absolute; left: 0; color: var(--rx-faint); }
+.pf-rels { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 4px; font-size: 13px; }
+.pf-locked { color: var(--rx-faint); cursor: default; }
+/* In SQL's padded workspace the step bar runs edge to edge, as it does in Python and PySpark. */
+.project-contract { --pf-pad-x: clamp(16px, 3vw, 40px); --pf-pad-top: 24px; }
+@media (max-width: 899px) { .rx .workspace-bounded.project-contract { --pf-pad-x: 8px; --pf-pad-top: 12px; } }
+.project-contract > .pf-bar { margin: 0 calc(-1 * var(--pf-pad-x)) 16px; }
+.project-contract > .pf-bar .p2-rail { margin-top: 0; }
+/* SQL's workspace header sits in its padded container: cancel that padding so it lines up like Python's. */
+.project-contract > .pf-sql-head { margin: calc(-1 * var(--pf-pad-top)) calc(-1 * var(--pf-pad-x)) 0; }
+/* Section headings read like the data cards' labels (TABLES, RELATIONSHIPS): amber mono capitals. */
+.p2-brief.pf-brief h2 { font: 600 12px var(--rx-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--rx-amber-ink); margin: 0 0 12px; }
+.p2-brief.pf-brief h2:not(:first-child) { margin-top: 36px; }
+.p2-brief.pf-brief .p2-complete + .p2-brief-grid h2:first-child { margin-top: 0; }
+.pf-note { margin: -4px 0 12px; font-size: 13.5px; line-height: 1.5; color: var(--rx-dim); }
+/* Desktop overview: two equal columns. Sections stack inside each column; phones keep the single stack. */
+@media (min-width: 900px) {
+  .p2-brief.pf-brief .pf-overview {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 64px;
+    align-items: start;
+    background: linear-gradient(var(--rx-line), var(--rx-line)) center / 1px 100% no-repeat;
+  }
+  .p2-brief.pf-brief .pf-overview > div + div { border-left: 0; padding-left: 0; }
+}
+
+/* Helpful preparation: each lesson as a card. */
+.pf-prep { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.pf-prep a { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 14px; border: 1px solid var(--rx-line); border-radius: 8px; background: var(--rx-surface); color: var(--rx-ink); font-size: 14.5px; text-decoration: none; }
+.pf-prep a:hover { border-color: var(--rx-line-strong); }
+.pf-prep a:hover .pf-prep-go { color: var(--rx-amber-ink); }
+.pf-prep a:focus-visible { outline: 2px solid var(--rx-amber); outline-offset: 2px; }
+.pf-prep-go { flex: 0 0 auto; font: 600 12px var(--rx-mono); color: var(--rx-faint); white-space: nowrap; }
+/* Tablets and phones: SQL's project step reads like Python's (step line in mono, big title, same side padding). */
+@media (max-width: 899px) {
+  .project-contract .rx-brief .project-current-stage { font: 13px var(--rx-mono); margin: 0; }
+  .project-contract .rx-brief > h2 { font: 700 clamp(26px, 3vw, 32px)/1.15 var(--rx-sans); letter-spacing: -0.035em; margin: 8px 0 14px; }
+  .rx .workspace-bounded.project-contract .rx-task-split > :is(.rx-brief, .rx-work) { padding-inline: 4px; }
+  .rx .workspace-bounded.project-contract .rx-work .rx-editor { min-height: 0; }
+}
+/* Review page (ProjectReview). */
+.pf-status { margin: 0 0 28px; }
+.pf-status p { margin: 0; }
+.pf-meta { display: block; font-size: 13px; color: var(--rx-dim); line-height: 1.45; }
+.pf-work { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.pf-work li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 10px; align-items: start; font-size: 14.5px; }
+.pf-work-name { font-size: 13.5px; }
+.pf-refs { display: grid; gap: 6px; }
+.pf-ref { border: 1px solid var(--rx-line); border-radius: 8px; background: var(--rx-surface); }
+.pf-ref > summary { cursor: pointer; padding: 10px 14px; font-size: 14.5px; font-weight: 600; }
+.pf-ref[open] > summary { border-bottom: 1px solid var(--rx-line); }
+.pf-ref-body { padding: 10px 14px 12px; font-size: 14px; overflow-x: auto; }
+.pf-ref-body pre { margin: 6px 0; padding: 10px 12px; background: var(--rx-cell); border-radius: 6px; overflow-x: auto; font: 12.5px/1.5 var(--rx-mono); }
+.pf-work + .pf-note { margin-top: 14px; }
+.pf-actions { margin-top: 16px; }
+/* Project workspaces: the step editor fills its column. p2.css loads after rt.css, so this is the height that wins. */
+.rx .pf-project.workspace-bounded .p2-bench .py-editor { height: auto; flex: 1 1 auto; min-height: 220px; }
+.rx .pf-project.workspace-bounded .rx-work .rx-editor,
+.rx .pf-project.workspace-bounded .rx-work .rx-editor.rx-editor-auto {
+  flex: 1 1 auto !important;
+  height: auto !important;
+  min-height: 220px !important;
+  max-height: none !important;
+  overflow: hidden !important;
+}
+@media (min-width: 900px) and (min-height: 601px) {
+  .rx .pf-project.workspace-bounded .rx-work .rx-editor,
+  .rx .pf-project.workspace-bounded .rx-work .rx-editor.rx-editor-auto {
+    min-height: 0 !important;
+  }
+  /* Python project steps use the stack workbench, not .p2-bench. Grow that editor the same way. */
+  .rx .p2.pf-project.workspace-bounded .p2-work {
+    overflow: auto;
+    padding-bottom: 8px;
+    container-type: size;
+    container-name: project-step;
+  }
+  .rx .p2.pf-project.workspace-bounded .p2-work > .rx-cell {
+    flex: 1 0 auto;
+    min-height: calc(100cqh - 108px);
+    margin: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .rx .p2.pf-project.workspace-bounded .p2-work > .rx-cell .py-editor {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+  }
+  .rx .p2.pf-project.workspace-bounded .p2-work > .rx-cell .py-editor > *,
+  .rx .p2.pf-project.workspace-bounded .p2-work > .rx-cell .py-editor .cm-editor.cm-editor,
+  .rx .p2.pf-project.workspace-bounded .p2-work > .rx-cell .py-editor .cm-scroller.cm-scroller {
+    flex: 1 1 auto;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: auto;
+  }
+  .rx .p2.pf-project.workspace-bounded .p2-work > .rx-cell .rx-cell-foot,
+  .rx .p2.pf-project.workspace-bounded .p2-work > .p2-results,
+  .rx .p2.pf-project.workspace-bounded .p2-work > .py-filetabs { flex: none; }
+}
+@media (max-width: 899px), (max-height: 600px) {
+  .rx .pf-project.workspace-bounded .p2-bench .py-editor { height: clamp(280px, 50dvh, 520px); }
+}
+/* SQL's project workspace reads like Python's and PySpark's at every width: the step line and title, amber section
+   labels, a file tab on the editor, Hint on the left of the editor bar and Run / Check step on the right. */
+.project-contract.pf-project .rx-brief .project-current-stage { font: 13px var(--rx-mono); margin: 0; }
+.project-contract.pf-project .rx-brief > h2 { font: 700 clamp(26px, 3vw, 32px)/1.15 var(--rx-sans); letter-spacing: -0.035em; margin: 8px 0 14px; }
+.project-contract.pf-project .rx-brief h3,
+.project-contract.pf-project .rx-work h3 { font: 600 12px var(--rx-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--rx-amber-ink); margin: 28px 0 10px; }
+.project-contract.pf-project .rx-brief [role="tabpanel"] > .rx-lead:first-child { margin-top: 18px; }
+/* SQL's one file, drawn like Python's file tab sitting on the editor. */
+.project-contract.pf-project .rx-work > .pf-sql-files { display: flex; overflow-x: auto; margin: 0; background: var(--ide-chrome); border: 1px solid var(--rx-line); border-bottom: 0; border-radius: 8px 8px 0 0; font: 13px var(--rx-mono); }
+.project-contract.pf-project .rx-work > .pf-sql-files > [role="tab"] { padding: 8px 14px; color: var(--ide-fg); background: var(--ide-bg); border-right: 1px solid var(--ide-border); box-shadow: inset 0 2px 0 var(--rx-amber); }
+.project-contract.pf-project .rx-work > .pf-sql-files > .pf-sql-file-keys { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; color: var(--ide-muted); font: 12px var(--rx-sans); }
+.project-contract.pf-project .rx-work > .pf-sql-files + .rx-cell { margin-top: 0; border-top-left-radius: 0; border-top-right-radius: 0; }
+.pf-file-tab { display: inline-block; padding: 8px 14px; font: 13px var(--rx-mono); border-top: 2px solid var(--rx-amber); background: var(--rx-surface); }
+.project-contract.pf-project .rx-cell-foot.pf-sql-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pf-sql-foot > div { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+/* SQL's step pane: Python's text size and spacing; the data label replaces the table list's own. */
+.project-contract.pf-project .rx-brief .pf-step-text { margin: 0 0 14px; font-size: 16px; line-height: 1.65; max-width: 62ch; }
+.project-contract.pf-project .rx-brief .project-data-browser > .rx-label:first-child { display: none; }
+.project-contract.pf-project .rx-brief .p2-done { margin-bottom: 4px; }

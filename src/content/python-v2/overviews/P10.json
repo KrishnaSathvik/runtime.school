@@ -1,0 +1,24 @@
+{
+  "id": "P10",
+  "task": "An airline's flight feed has to ship only complete rows, and a failed step must not loop forever. Using three flights, build a pipeline that validates the rows, works out each delay, checkpoints the last flight kept, retries a step a limited number of times, and writes what shipped.",
+  "produce": [
+    { "name": "pipe.py", "about": "Validation, delays, the checkpoint, bounded retries, metrics and the ship file." },
+    { "name": "main.py", "about": "Runs each step on the flight file and prints its result." },
+    { "name": "checkpoint.txt", "about": "The id of the last flight kept." },
+    { "name": "ship.txt", "about": "How many flights were kept and how many were rejected." }
+  ],
+  "steps": {
+    "P10.m1": "Keep flights with a known status and recorded minutes.",
+    "P10.m2": "Turn each kept flight into its delay in minutes.",
+    "P10.m3": "Save the last kept flight to a checkpoint file.",
+    "P10.m4": "Retry a step, stopping at three attempts or a smaller limit.",
+    "P10.m5": "Count the kept and rejected flights.",
+    "P10.m6": "Write the kept and rejected counts to the ship file."
+  },
+  "problems": [
+    "One flight has no minutes, so it can't ship even though its status is ok.",
+    "One on-time flight still has 40 minutes recorded, so its delay must be 0, not 40.",
+    "Minutes are stored as text, so a late flight's delay has to become a number."
+  ],
+  "preparation": ["PY-L50-05", "PY-L46-02", "PY-L46-04", "PY-L48-04", "PY-L48-02", "PY-L46-05", "PY-L50-04"]
+}

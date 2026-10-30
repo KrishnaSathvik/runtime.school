@@ -1,0 +1,205 @@
+{
+  "dataset_id": "PS-D14",
+  "version": "1.0.0",
+  "title": "Enterprise CRM & ERP",
+  "source": "synthetic",
+  "licence": {
+    "status": "ours",
+    "note": "Runtime-owned deterministic synthetic data."
+  },
+  "seed": 2014,
+  "schemas": {
+    "accounts": "account_id STRING, account_name STRING, industry STRING, country STRING, segment STRING, account_owner STRING, credit_limit DECIMAL(12,2), created_on DATE, is_active BOOLEAN",
+    "contacts": "contact_id STRING, account_id STRING, first_name STRING, last_name STRING, job_title STRING, email STRING, phone STRING, is_primary BOOLEAN",
+    "invoices": "invoice_id STRING, account_id STRING, invoice_date DATE, due_date DATE, status STRING, total_amount DECIMAL(12,2)",
+    "invoice_lines": "invoice_id STRING, line_no INT, product_id STRING, quantity INT, unit_price DECIMAL(10,2), discount_pct DECIMAL(5,2), line_amount DECIMAL(12,2)",
+    "purchase_orders": "po_id STRING, supplier_id STRING, order_date DATE, expected_date DATE, status STRING, currency STRING, total_amount DECIMAL(12,2)",
+    "suppliers": "source_system STRING, supplier_id STRING, supplier_name STRING, country STRING, payment_terms_days INT, contact_email STRING",
+    "customer_cdc": "op STRING, sequence BIGINT, changed_at TIMESTAMP, account_id STRING, account_name STRING, industry STRING, country STRING, segment STRING, account_owner STRING, credit_limit DECIMAL(12,2), created_on DATE, is_active BOOLEAN",
+    "product_cdc": "op STRING, sequence BIGINT, changed_at TIMESTAMP, product_id STRING, product_name STRING, category STRING, list_price DECIMAL(10,2), unit_of_measure STRING, is_active BOOLEAN"
+  },
+  "keys": {
+    "primary": {
+      "accounts": [
+        "account_id"
+      ],
+      "contacts": [
+        "contact_id"
+      ],
+      "invoices": [
+        "invoice_id"
+      ],
+      "invoice_lines": [
+        "invoice_id",
+        "line_no"
+      ],
+      "purchase_orders": [
+        "po_id"
+      ],
+      "suppliers": [
+        "source_system",
+        "supplier_id"
+      ],
+      "customer_cdc": [
+        "account_id",
+        "sequence"
+      ],
+      "product_cdc": [
+        "product_id",
+        "sequence"
+      ]
+    },
+    "foreign": {
+      "contacts.account_id": "accounts.account_id",
+      "invoices.account_id": "accounts.account_id",
+      "invoice_lines.invoice_id": "invoices.invoice_id",
+      "invoice_lines.product_id": "product_cdc.product_id",
+      "purchase_orders.supplier_id": "suppliers.supplier_id"
+    }
+  },
+  "rules": [
+    "Every company, person, email domain (.example) and phone number (555-01xx) is invented.",
+    "accounts is the CRM snapshot taken at 2026-01-01 00:00 UTC. customer_cdc holds every change after it; applying the feed in sequence order to the snapshot gives today's accounts. Accounts inserted by the feed are not in the snapshot.",
+    "product_cdc is the full history of the catalogue from its first insert in 2025; there is no product snapshot table \u2014 today's products are the feed's latest row per product_id, unless that row is a delete.",
+    "op is I (insert), U (update) or D (delete). Every row carries the full row image: for I and U the row after the change, for D the last row before the delete.",
+    "sequence is the change's position in the source log: it increases strictly with every change, so per key it is strictly increasing and it decides the order of changes. changed_at (UTC) is when the change was committed and follows the same order.",
+    "A key can change many times; the lesson edition's ACC-0001 is updated three times, ACC-0003 is deleted and ACC-0006 is inserted and then updated.",
+    "suppliers comes from two systems: source_system erp and procurement. The same supplier has the same supplier_id in both. Most suppliers are in both lists, some only in one.",
+    "A few suppliers appear in both systems with a small difference (the name spelled with a legal suffix, or different payment terms), so comparing whole rows (intersect, exceptAll) does not match them while comparing supplier_id does. Lesson edition: SUP-003.",
+    "purchase_orders are raised in the ERP, so supplier_id always refers to a supplier in the erp list.",
+    "invoice_lines.unit_price is the product's list_price on the invoice date (from product_cdc history); line_amount = quantity \u00d7 unit_price \u00d7 (1 \u2212 discount_pct / 100), rounded to cents; an invoice's total_amount is the sum of its line_amount.",
+    "All invoice amounts are in USD. Invoice status is draft, open, paid, overdue or void; due_date is 30 days after invoice_date.",
+    "Each account has one primary contact (is_primary true); phone is empty (null) for some contacts.",
+    "Practice edition: the change feeds are clean \u2014 one row per change, in sequence order.",
+    "Project edition problem 1 (out-of-order arrivals): about 5% of feed rows arrived late, after rows with a higher sequence; the file is in arrival order, so the last row in the file for a key is not always its latest change. Order by sequence.",
+    "Project edition problem 2 (duplicate changes): a few changes were delivered twice \u2014 identical rows with the same key and sequence. Deduplicate on (key, sequence) before applying."
+  ],
+  "editions": {
+    "lesson": {
+      "accounts": {
+        "file": "lesson/accounts.csv",
+        "rows": 5,
+        "sha256": "c0b18f385fba75d36df0ff52cb375b9ed0017fbd911ff303eb7440fdd9f659cf"
+      },
+      "contacts": {
+        "file": "lesson/contacts.csv",
+        "rows": 6,
+        "sha256": "2fef0dfee39a56678571d0584c9986270cda975236ee4ecbcf544060e81a57f2"
+      },
+      "invoices": {
+        "file": "lesson/invoices.csv",
+        "rows": 5,
+        "sha256": "221613c10054007b2cf4355323ed1800f4bf638cc613e8b9ae21e276b46174a6"
+      },
+      "invoice_lines": {
+        "file": "lesson/invoice_lines.csv",
+        "rows": 10,
+        "sha256": "2ebd3f7690f7c321ccd36de11d0e491e7936aba2159d4dce8ae6014f65e24126"
+      },
+      "purchase_orders": {
+        "file": "lesson/purchase_orders.csv",
+        "rows": 5,
+        "sha256": "537c6a7f2f055827dc326e8d0df4e85ebf0acf63081b95290151709b29b129e3"
+      },
+      "suppliers": {
+        "file": "lesson/suppliers.csv",
+        "rows": 8,
+        "sha256": "10a9d82d6d261147932ed4f931ef4a8c781789365fa00cb6efc09e51c01e5aef"
+      },
+      "customer_cdc": {
+        "file": "lesson/customer_cdc.csv",
+        "rows": 10,
+        "sha256": "63050fd5e07c36c08e84d477b38cd64a722b59ab0c1772e46d6aa9d5bede9d05"
+      },
+      "product_cdc": {
+        "file": "lesson/product_cdc.csv",
+        "rows": 8,
+        "sha256": "71a0b71284bef8653b3ec1cd64037d75629431f6e11dfd15cf385f4aaa7665bc"
+      }
+    },
+    "practice": {
+      "accounts": {
+        "file": "practice/accounts.csv",
+        "rows": 150,
+        "sha256": "655cc81fc083f6d10b5b176a0bd741d0707e0ab36f5f267431a9cfa74f564f69"
+      },
+      "contacts": {
+        "file": "practice/contacts.csv",
+        "rows": 259,
+        "sha256": "1af9f84c5908032c7f1d957e7746040269a7cfccd00d729e28d5959d8ece6950"
+      },
+      "invoices": {
+        "file": "practice/invoices.csv",
+        "rows": 831,
+        "sha256": "8165f9b9a66e58ac0ad8aca093375d4fc668032b346ff4b2377abaebf9bf5fc2"
+      },
+      "invoice_lines": {
+        "file": "practice/invoice_lines.csv",
+        "rows": 1767,
+        "sha256": "0858b521fe738a093ae7443f780c3e846c1b4517404127b1a1c075f269870019"
+      },
+      "purchase_orders": {
+        "file": "practice/purchase_orders.csv",
+        "rows": 320,
+        "sha256": "cd6b53cd262ee274b8f1c0c42c6ded5f121f913e58b192c7d07010ee3473f776"
+      },
+      "suppliers": {
+        "file": "practice/suppliers.csv",
+        "rows": 103,
+        "sha256": "2f6592e6b8dca8fd5e1fb3d076ef8dc2d674a90b54d8a1832aa95dcb8dcb0abf"
+      },
+      "customer_cdc": {
+        "file": "practice/customer_cdc.csv",
+        "rows": 420,
+        "sha256": "55afd956c697ef4e15f272492dd0946ea7ca4ad7ed954ee367a25e969774910a"
+      },
+      "product_cdc": {
+        "file": "practice/product_cdc.csv",
+        "rows": 170,
+        "sha256": "c8c443741bdae93802beff69ff31a008cf77b268f0edac847b6b71374c9eb0f4"
+      }
+    },
+    "project": {
+      "accounts": {
+        "file": "project/accounts.csv",
+        "rows": 220,
+        "sha256": "8504eb5e3606b0b80d9d5b9ebe84b77445e83fa34150296419ca23adae979b02"
+      },
+      "contacts": {
+        "file": "project/contacts.csv",
+        "rows": 395,
+        "sha256": "b7846ee938501a118630a7d3b72b01995fe562d458dc37920bf56b1c2ece7dec"
+      },
+      "invoices": {
+        "file": "project/invoices.csv",
+        "rows": 1619,
+        "sha256": "a04e82a5fcc4718f01b385eb8b701fdbf8f607df619334b03c1d59b3fb1a584c"
+      },
+      "invoice_lines": {
+        "file": "project/invoice_lines.csv",
+        "rows": 3128,
+        "sha256": "637e73bb5832f91703ec4cdda50d11937e9e9756adb48b3dd67adfea640bd9b9"
+      },
+      "purchase_orders": {
+        "file": "project/purchase_orders.csv",
+        "rows": 600,
+        "sha256": "8c353a76473fd81c0a8ce48a75a64221beac0bdd77ebe87b11b39d751abe6411"
+      },
+      "suppliers": {
+        "file": "project/suppliers.csv",
+        "rows": 133,
+        "sha256": "586a0773d7ce98f0942da42295ab4ab161a32bc0f36ff764f9ee072bd299fd14"
+      },
+      "customer_cdc": {
+        "file": "project/customer_cdc.csv",
+        "rows": 1206,
+        "sha256": "3160fefada76a858298e256b7fec547adb77fe7539f8b650e3dd861939984df4"
+      },
+      "product_cdc": {
+        "file": "project/product_cdc.csv",
+        "rows": 313,
+        "sha256": "179f85e318ae198e1d3e3638983ed4ba509d48f560fa00c91f4e976392e1db19"
+      }
+    }
+  }
+}

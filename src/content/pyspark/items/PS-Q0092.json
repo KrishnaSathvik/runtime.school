@@ -1,0 +1,59 @@
+{
+  "id": "PS-Q0092",
+  "slug": "clear-the-station-codes",
+  "lesson": "PS-L019",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Clear the station codes",
+  "dataset": {
+    "id": "PS-D13",
+    "version": "1.0.0"
+  },
+  "prompt": "The weather dashboard plots every reading, and the stations' -9999 code for \"no value\" wrecks its charts. Write `solve(observations)` so it returns every reading with that code turned into an empty value (null) in `temperature_c`, `humidity_pct`, `wind_speed_kph` and `pressure_hpa`.",
+  "rules": [
+    "Keep every row and every column, in the same order, with the same types.",
+    "Only -9999 changes. Every other value stays as it is, including other negative numbers.",
+    "A reading with -9999 in several of the four columns gets null in each of them.",
+    "Leave NaN in `precipitation_mm` alone: gauge faults are reported separately."
+  ],
+  "hints": [
+    "Nothing is removed here, so this isn't a `filter` or a `dropna`: you replace values and keep the rows.",
+    "`df.na.replace(old, new, subset=[...])` swaps one value for another in the columns you list, and `new` can be `None`.",
+    "Replacing -9999 with `None` in the four columns gives nulls without changing any column's type. Replacing with 0 would invent readings."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "observations"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(observations):\n    # Return every reading with the -9999 code turned into null.\n    return observations\n",
+  "output": {
+    "columns": [
+      "observation_id",
+      "station_id",
+      "observed_at",
+      "observation_date",
+      "temperature_c",
+      "humidity_pct",
+      "precipitation_mm",
+      "wind_speed_kph",
+      "pressure_hpa",
+      "quality_flag"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "This is a replacement, not a filter: every reading stays, only the code changes. `observations.na.replace(-9999, None, subset=[\"temperature_c\", \"humidity_pct\", \"wind_speed_kph\", \"pressure_hpa\"])` swaps -9999 for null in those four columns and keeps every type, including the whole-number `humidity_pct`. NaN in `precipitation_mm` isn't -9999, so it stays. A `select` with `F.when(F.col(c) == -9999, None).otherwise(F.col(c))` for each of the four columns gives the same result but is much longer. Replacing with 0 instead of `None` would turn a missing reading into a real-looking one, and `dropna` or a `filter` would throw away readings the dashboard still needs."
+}

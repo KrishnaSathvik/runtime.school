@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0123",
+  "slug": "order-customer-audit",
+  "lesson": "PS-L025",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Order and customer audit",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "The data team audits orders against customers, and must see both sides of every mismatch. Write `solve(orders, customers)` so it returns every order and every customer, matched where they can be.",
+  "rules": [
+    "`order_customer` is the order's own `customer_id`; `customer_id` is the id from `customers`. An order matches a customer with the same id, and a missing id never matches anything, not even another missing id.",
+    "An order with no match has `customer_id` and `name` missing. A customer with no orders has `order_id` and `order_customer` missing.",
+    "If `customers` lists the same id twice, its orders appear once per listing, so the audit shows the duplicate. Return `order_id`, `order_customer`, `customer_id` and `name`, in that order."
+  ],
+  "hints": [
+    "Both sides must be kept whole, so this is a full join.",
+    "With `on=\"customer_id\"` there's only one key column, filled from whichever side has it, and you can't tell the sides apart. Join on a condition instead: `orders[\"customer_id\"] == customers[\"customer_id\"]`.",
+    "With a condition both key columns are kept. Pick each one with `orders[\"customer_id\"]` or `customers[\"customer_id\"]` and rename it with `.alias(...)`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "orders",
+    "customers"
+  ],
+  "starter": "def solve(orders, customers):\n    # Every order and every customer, both ids kept.\n    return orders\n",
+  "output": {
+    "columns": [
+      "order_id",
+      "order_customer",
+      "customer_id",
+      "name"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "This is a full join on a condition, so both key columns survive: `orders.join(customers, orders[\"customer_id\"] == customers[\"customer_id\"], \"full\")`, then `select(\"order_id\", orders[\"customer_id\"].alias(\"order_customer\"), customers[\"customer_id\"].alias(\"customer_id\"), \"name\")`. A NULL key compares as NULL, never true, so an order with no customer id and a customer with no id each appear on their own row. A customer listed twice matches each of its orders twice, which is what an audit should expose. Joining with `on=\"customer_id\"` gives one merged key column, so an orphan order and a customer with no orders look alike."
+}

@@ -1,0 +1,60 @@
+{
+  "id": "engineering-delivery-performance",
+  "task": "You support the VP of Engineering at a code-hosting platform, and leadership wants to know how healthy the delivery process is. Find out how quickly work gets merged, whether it is reviewed and how reliable production deployments are.",
+  "produce": [
+    {
+      "name": "Pull request outcomes",
+      "about": "Pull requests and share in each state."
+    },
+    {
+      "name": "Time to merge",
+      "about": "Merged pull requests and average hours to merge for each language."
+    },
+    {
+      "name": "Review coverage",
+      "about": "Merged pull requests with no review and with no approval."
+    },
+    {
+      "name": "Change failure",
+      "about": "Production deploys, failures and the change failure rate per month."
+    },
+    {
+      "name": "Delivery-health review",
+      "about": "Three findings and one recommendation."
+    }
+  ],
+  "labels": {
+    "understand-data": "Explore pull requests",
+    "pr-outcomes": "Outcomes",
+    "cycle-time": "Time to merge",
+    "review-coverage": "Reviews",
+    "change-failure": "Deploys",
+    "synthesis": "Conclusions",
+    "report": "Report"
+  },
+  "summaries": {
+    "understand-data": "List a merged pull request's reviews and look for one merged with none.",
+    "pr-outcomes": "Count pull requests that were merged, closed or are still open.",
+    "cycle-time": "Compare average time to merge across languages.",
+    "review-coverage": "Count merged pull requests with no review or no approval.",
+    "change-failure": "Track the share of production deploys that fail each month.",
+    "synthesis": "Choose the one process change that would most improve delivery.",
+    "report": "Write three findings and one recommendation."
+  },
+  "problems": [
+    "Merged pull requests also have a closed time, so only the merge time tells merged work from abandoned work.",
+    "185 pull requests are still open and have no outcome yet.",
+    "1,184 merged pull requests have no review at all.",
+    "Many pull requests have several reviews, up to six, so joining reviews repeats each pull request.",
+    "Deployments mix staging and production, and a failure is either failed or rolled back.",
+    "Time to merge is skewed: the average is about 22 hours, the median about 15, and the longest about four weeks."
+  ],
+  "preparation": [
+    "connect-tables-with-join",
+    "group-into-summaries",
+    "filter-groups-with-having",
+    "ask-whether-a-row-exists",
+    "subqueries",
+    "dates-and-monthly-analysis"
+  ]
+}

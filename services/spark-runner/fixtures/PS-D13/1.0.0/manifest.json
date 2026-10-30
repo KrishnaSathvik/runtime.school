@@ -1,0 +1,126 @@
+{
+  "dataset_id": "PS-D13",
+  "version": "1.0.0",
+  "title": "Weather & Climate",
+  "source": "synthetic",
+  "licence": {
+    "status": "ours",
+    "note": "Runtime-owned deterministic synthetic data."
+  },
+  "seed": 2013,
+  "schemas": {
+    "stations": "station_id STRING, station_name STRING, city STRING, country STRING, latitude DOUBLE, longitude DOUBLE, elevation_m INT, timezone STRING, active_since DATE",
+    "observations": "observation_id STRING, station_id STRING, observed_at TIMESTAMP, observation_date DATE, temperature_c DOUBLE, humidity_pct INT, precipitation_mm DOUBLE, wind_speed_kph DOUBLE, pressure_hpa DOUBLE, quality_flag STRING",
+    "forecasts": "forecast_id STRING, station_id STRING, issued_at TIMESTAMP, valid_for TIMESTAMP, forecast_temp_c DOUBLE, precip_probability_pct INT, forecast_precip_mm DOUBLE",
+    "weather_alerts": "alert_id STRING, station_id STRING, alert_type STRING, severity STRING, issued_at TIMESTAMP, starts_at TIMESTAMP, ends_at TIMESTAMP, headline STRING"
+  },
+  "keys": {
+    "primary": {
+      "stations": [
+        "station_id"
+      ],
+      "observations": [
+        "observation_id"
+      ],
+      "forecasts": [
+        "forecast_id"
+      ],
+      "weather_alerts": [
+        "alert_id"
+      ]
+    },
+    "foreign": {
+      "observations.station_id": "stations.station_id",
+      "forecasts.station_id": "stations.station_id",
+      "weather_alerts.station_id": "stations.station_id"
+    }
+  },
+  "rules": [
+    "Every station, its name and its readings are invented for teaching; nothing is copied from NOAA.",
+    "All TIMESTAMP columns are UTC. A station's local time is observed_at converted with from_utc_timestamp(observed_at, timezone).",
+    "observation_date is the UTC calendar date of observed_at (not the local date) and is the column to partition by.",
+    "US clocks moved forward at 02:00 local time on 2026-03-08 (07:00 UTC in New York): NYC-01 jumps from 01:00 EST to 03:00 EDT, so there is no 02:00 local reading that day. Lisbon and Berlin change on 2026-03-29; Kolkata and Perth have no daylight-saving time.",
+    "Lesson edition: several readings sit just before and after local midnight, so their local date differs from observation_date (e.g. PNQ-01 at 18:45 UTC is 00:15 the next day in Kolkata).",
+    "temperature_c is empty (null) when the sensor sent nothing. Lesson edition: NYC-01 at 2026-03-08 08:00 UTC.",
+    "precipitation_mm is NaN (not a number \u2014 a real DOUBLE value, not null) when the heated rain gauge reported a fault. NaN is not null: isNull() is false and it must be found with isnan(). Lesson edition: LIS-01 at 2026-03-08 00:30 UTC.",
+    "-9999 in any numeric reading (wind_speed_kph, pressure_hpa, temperature_c, humidity_pct) is the station firmware's code for 'missing' and must be treated as null, never averaged. Lesson edition: PER-01 pressure at 2026-03-07 16:10 UTC.",
+    "precipitation_mm is the rain in the hour (or three hours, for 3-hourly stations) ending at observed_at; 0.0 means it was dry.",
+    "quality_flag is ok, estimated (filled in by the station from neighbours) or suspect (failed the station's own checks).",
+    "NYC-01 reports every hour on the hour; the other stations report every three hours (00:00, 03:00, \u2026 UTC). Practice covers 2026-03-01 to 2026-03-14, project the whole of March 2026.",
+    "forecasts are issued at 00:00 UTC each day for 6, 12, 18 and 24 hours ahead; forecast_temp_c differs from what was later observed by a few degrees.",
+    "weather_alerts are raised from the readings: frost (temperature \u2264 -2 \u00b0C), heat (\u2265 32 \u00b0C), heavy_rain (\u2265 4 mm in a reading), high_wind (\u2265 55 km/h). ends_at is empty for an alert still in force at the end of the data.",
+    "Practice edition: about 1% of readings each have a null temperature, a NaN precipitation and a -9999 sentinel.",
+    "Project edition problem 1: missing values are more common (about 3% each of null temperature, NaN precipitation and -9999).",
+    "Project edition problem 2: about 1% of readings were delivered twice: same station, observed_at and values under a new observation_id.",
+    "Project edition problem 3: NYC-01 has gaps \u2014 a dozen hours with no reading at all \u2014 so an hourly join to taxi trips finds no weather for those hours.",
+    "Project edition problem 4: a few readings are physically impossible (temperature above 60 \u00b0C or humidity above 100%) and are still flagged ok."
+  ],
+  "editions": {
+    "lesson": {
+      "stations": {
+        "file": "lesson/stations.csv",
+        "rows": 4,
+        "sha256": "837715b987e3af15bcdc5176061ee9f7844247e1e3d58e1ae1a9e6a370cad44d"
+      },
+      "observations": {
+        "file": "lesson/observations.csv",
+        "rows": 12,
+        "sha256": "8e2b42618ed3dc76e699261e5a2c9ac996483f8f3f89b0527420b6c1f4d82fbe"
+      },
+      "forecasts": {
+        "file": "lesson/forecasts.csv",
+        "rows": 6,
+        "sha256": "4eb7397b928ea4e47f9e49a7af116243ad0b6ed195fcb0b03bacd5ad352b047c"
+      },
+      "weather_alerts": {
+        "file": "lesson/weather_alerts.csv",
+        "rows": 4,
+        "sha256": "165344c2dd9119b0cf43b32b9e10b79253a3ec83d3ec9137c1114916e4d4b7cc"
+      }
+    },
+    "practice": {
+      "stations": {
+        "file": "practice/stations.csv",
+        "rows": 8,
+        "sha256": "bdeb5b6ee6ff37abb8d6ddcca61243bad5384263479bdc8018444db7d426b5cb"
+      },
+      "observations": {
+        "file": "practice/observations.csv",
+        "rows": 1120,
+        "sha256": "9a99ea73162d850134452360e79534efc904bf69741a74a757d3dcd02bf75c0b"
+      },
+      "forecasts": {
+        "file": "practice/forecasts.csv",
+        "rows": 440,
+        "sha256": "fc52364ed783c93f9620b7f80d8b1fed4124a49e2539c17f3718145407a5f17a"
+      },
+      "weather_alerts": {
+        "file": "practice/weather_alerts.csv",
+        "rows": 64,
+        "sha256": "824ffb849c50ff1551530312347badfa6db4325091c8ef144c77fca44952dd91"
+      }
+    },
+    "project": {
+      "stations": {
+        "file": "project/stations.csv",
+        "rows": 8,
+        "sha256": "bdeb5b6ee6ff37abb8d6ddcca61243bad5384263479bdc8018444db7d426b5cb"
+      },
+      "observations": {
+        "file": "project/observations.csv",
+        "rows": 2499,
+        "sha256": "dd5b23e881696f9bd476de99174d15705e26fc02908df9364dc5d451e6c1b309"
+      },
+      "forecasts": {
+        "file": "project/forecasts.csv",
+        "rows": 984,
+        "sha256": "6f9a60dc1e17835317267cc2db802a31da7d7f88ba19ffdfb0505e372662299b"
+      },
+      "weather_alerts": {
+        "file": "project/weather_alerts.csv",
+        "rows": 125,
+        "sha256": "404c897d14deb98b7774bc0f8ece18ddda0d90809680199e915ca95196061864"
+      }
+    }
+  }
+}

@@ -1,0 +1,53 @@
+{
+ "id": "PS-Q0408",
+ "slug": "a-retry-that-loads-twice",
+ "lesson": "PS-L082",
+ "role": "edge",
+ "format": "dataframe_coding",
+ "difficulty": "hard",
+ "minutes": 14,
+ "title": "A retry that loads twice",
+ "dataset": {
+  "id": "PS-D08",
+  "version": "1.0.0"
+ },
+ "prompt": "Each day, `load_day` adds the day's events to the tracking table and then tells the dashboard. The dashboard is restarting, and the starter's run stops at its first timeout. Make `load_day` retry the timeouts, without changing what ends up in the table.",
+ "rules": [
+  "A publish that times out (`TimeoutError`) is tried again, up to 3 attempts in all. Every day must be published.",
+  "After the run, the table holds each day's events exactly as the feed sent them: a retry never adds a day's rows twice, and events the feed sent twice stay twice.",
+  "Don't change `Dashboard` or `solve`."
+ ],
+ "hints": [
+  "Put a retry loop around the whole body of `load_day` and run it on the sample. How many rows does 3 March have now?",
+  "A retry runs everything inside the loop again. Which part failed, and which part had already worked when it did?",
+  "Retry only the call that can time out. Or, if the whole step is retried, its write must replace the day instead of adding to it."
+ ],
+ "explanation": "The step has two parts, and only the second one fails. A retry loop around both repeats the write as well, so the first day, whose publish timed out twice, is appended three times; nothing fails and nothing warns. Write once and retry only `dashboard.publish`, or make the write safe to repeat: a dynamic partition overwrite (`partitionOverwriteMode` set to `dynamic`) replaces just the day it writes, so running it three times leaves one copy. A plain `overwrite` isn't that: it replaces the whole table, so only the last day survives. Either way, the feed's own repeats are kept, because they're what the carrier sent. Before you retry a step, ask what a failed attempt already did.",
+ "entry": "solve",
+ "inputs": [
+  "shipment_events"
+ ],
+ "starter": "import shutil\n\nfrom pyspark.sql import functions as F\n\n\nclass Dashboard:\n    # Stands in for the tracking dashboard. Don't change this.\n    # It is restarting: the first 2 calls of a run time out, and every call after that answers.\n    def __init__(self):\n        self.calls = 0\n        self.published = []\n\n    def publish(self, day, rows):\n        self.calls += 1\n        if self.calls <= 2:\n            raise TimeoutError(\"the dashboard did not answer\")\n        self.published.append(day)\n\n\ndef load_day(batch, day, path, dashboard):\n    # Adds one day's events to the tracking table, then tells the dashboard how many arrived.\n    batch.write.mode(\"append\").partitionBy(\"load_date\").parquet(path)\n    dashboard.publish(day, batch.count())\n\n\ndef solve(shipment_events):\n    path = \"/tmp/tracking/events\"\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty table on every run\n    dashboard = Dashboard()\n    days = sorted(row[\"load_date\"] for row in shipment_events.select(\"load_date\").distinct().collect())\n    for day in days:\n        load_day(shipment_events.filter(F.col(\"load_date\") == day), day, path, dashboard)\n    if not days:\n        return spark.createDataFrame([], \"event_id STRING, shipment_id STRING, event_type STRING, load_date DATE, published BOOLEAN\")\n    table = spark.read.parquet(path).select(\"event_id\", \"shipment_id\", \"event_type\", \"load_date\")\n    return table.withColumn(\"published\", F.col(\"load_date\").isin(dashboard.published))\n",
+ "output": {
+  "columns": [
+   "event_id",
+   "shipment_id",
+   "event_type",
+   "load_date",
+   "published"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 60,
+  "check_timeout_s": 180,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

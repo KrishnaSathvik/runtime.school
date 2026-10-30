@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0011",
+  "kind": "predict",
+  "slug": "count-the-ranges",
+  "lesson": "PS-L003",
+  "role": "foundation",
+  "format": "concept_or_trace",
+  "difficulty": "easy",
+  "minutes": 4,
+  "title": "Count the ranges",
+  "prompt": "This program makes a few DataFrames with `spark.range` and counts their rows. What does it print? Type each line on its own line.",
+  "program": "print(spark.range(10).count())\nprint(spark.range(3, 10).count())\nprint(spark.range(0, 10, 3).count())\nprint(spark.range(5).columns)\n",
+  "dataset": {
+    "id": "PS-D11",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "`spark.range` works like Python's `range`: it starts at 0 by default and leaves out the end.",
+    "`spark.range(0, 10, 3)` goes up in steps of 3 and stops before 10. List the numbers.",
+    "Every range has the same single column."
+  ],
+  "explanation": "`spark.range(10)` holds 0 to 9, which is 10 rows, and `spark.range(3, 10)` holds 3 to 9, which is 7. Stepping by 3 from 0 gives 0, 3, 6 and 9: 4 rows. The only column is `id`, so `columns` is `['id']`."
+}

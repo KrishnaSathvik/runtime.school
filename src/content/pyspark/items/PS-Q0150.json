@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0150",
+  "slug": "most-valuable-order-lines",
+  "lesson": "PS-L030",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Most valuable order lines",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "The sales team wants the five most valuable order lines, with product names. Write `solve(order_items, products)` so it returns them, largest first.",
+  "rules": [
+    "A line's `line_value` is its `quantity` × its own `unit_price` from `order_items`, the price on the day of the order.",
+    "The product list sometimes repeats a product row; repeated rows are exact copies, and no line may appear more often than it does in `order_items`. A product that isn't listed keeps a missing `name`.",
+    "Sort by `line_value` from largest to smallest, then `order_id` and `line_no` from smallest to largest. A missing value sorts last.",
+    "Return `order_id`, `line_no`, `name` and `line_value` for the first five lines."
+  ],
+  "hints": [
+    "Remove the product copies, then left join the lines to the products on `product_id`.",
+    "Both tables have a `unit_price`. Select just `product_id` and `name` from the products before joining, or pick the line's price with `order_items[\"unit_price\"]`.",
+    "Sort with `F.desc(\"line_value\")`, then `\"order_id\"` and `\"line_no\"`, and finish with `limit(5)`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "order_items",
+    "products"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(order_items, products):\n    # Return the five most valuable lines with their product names.\n    return order_items\n",
+  "output": {
+    "columns": [
+      "order_id",
+      "line_no",
+      "name",
+      "line_value"
+    ],
+    "order_sensitive": true
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Make the product side unique first, keeping only what's needed: `names = products.dropDuplicates().select(\"product_id\", \"name\")`. Then `order_items.join(names, on=\"product_id\", how=\"left\")`, compute `(F.col(\"quantity\") * F.col(\"unit_price\")).alias(\"line_value\")`, sort with `orderBy(F.desc(\"line_value\"), \"order_id\", \"line_no\")` and `limit(5)`. Selecting only the name avoids the clash between the two `unit_price` columns, and today's price from the product list would give the wrong value. Without removing the copies, a repeated product doubles its lines and the same line can take two of the five places."
+}

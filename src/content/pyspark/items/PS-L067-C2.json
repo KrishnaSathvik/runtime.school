@@ -1,0 +1,53 @@
+{
+ "id": "PS-L067-C2",
+ "slug": "which-micro-batch-brought-each-view",
+ "lesson": "PS-L067",
+ "format": "dataframe_coding",
+ "difficulty": "easy",
+ "minutes": 8,
+ "title": "Which micro-batch brought each view",
+ "dataset": {
+  "id": "PS-D06",
+  "version": "1.0.0"
+ },
+ "prompt": "The product team wants to know which micro-batch delivered each product page view. Write `solve(page_views)` so it streams the delivery files and returns `micro_batch`, `event_id` and `session_id` for every product page view.",
+ "rules": [
+  "Each delivery file is its own micro-batch, read in order.",
+  "`micro_batch` is the id Spark gives the micro-batch, starting at 0. It isn't the `batch` column: delivery numbers can skip.",
+  "Keep only rows whose `page_type` is `product`, and return these three columns."
+ ],
+ "hints": [
+  "Read the folder with `spark.readStream`, the table's schema and `option(\"maxFilesPerTrigger\", 1)`.",
+  "`foreachBatch(fn)` calls `fn(batch_df, batch_id)` once per micro-batch; `batch_df.collect()` gives that micro-batch's rows.",
+  "Start with `trigger(availableNow=True)` and wait with `awaitTermination()` before building the DataFrame from `rows`."
+ ],
+ "entry": "solve",
+ "inputs": [
+  "page_views"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef solve(page_views):\n    make_batches(page_views, \"/tmp/clicks\")\n    rows = []\n    # Stream /tmp/clicks one file per micro-batch, keep the product page views,\n    # and add (micro_batch, event_id, session_id) to rows from each micro-batch.\n\n    return spark.createDataFrame(rows, \"micro_batch LONG, event_id STRING, session_id STRING\")\n",
+ "output": {
+  "columns": [
+   "micro_batch",
+   "event_id",
+   "session_id"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

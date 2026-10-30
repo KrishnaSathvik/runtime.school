@@ -1,0 +1,279 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "employee_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "title_key",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "E0001",
+     "chief executive officer"
+    ],
+    [
+     "E0002",
+     "head of engineering"
+    ],
+    [
+     "E0003",
+     "software engineer"
+    ],
+    [
+     "E0004",
+     "senior software engineer"
+    ],
+    [
+     "E0005",
+     "senior software engineer"
+    ],
+    [
+     "E0006",
+     "senior software engineer"
+    ],
+    [
+     "E0007",
+     "head of finance"
+    ],
+    [
+     "E0008",
+     "senior financial analyst"
+    ],
+    [
+     "E0009",
+     "senior financial analyst"
+    ],
+    [
+     "E0010",
+     "sre engineer"
+    ],
+    [
+     "E0011",
+     "data analyst sr"
+    ],
+    [
+     "E0012",
+     null
+    ]
+   ],
+   "row_count": 12,
+   "inputs": {
+    "employees": [
+     [
+      "E0001",
+      "Tomas",
+      "Haddad",
+      "tomas.haddad@corp.example",
+      "555-490-5027",
+      "Chief Executive Officer",
+      "5",
+      "D01",
+      null,
+      "2025-01-06",
+      "full_time",
+      "260000.00",
+      "active",
+      null
+     ],
+     [
+      "E0002",
+      "Noor",
+      "Novak",
+      "noor.novak@corp.example",
+      "555-919-2731",
+      "Head of Engineering",
+      "4",
+      "D02",
+      "E0001",
+      "2025-05-26",
+      "full_time",
+      "200000.00",
+      "active",
+      null
+     ],
+     [
+      "E0003",
+      "Lena",
+      "Duarte",
+      "lena.duarte@corp.example",
+      "555-831-2628",
+      "Software Engineer",
+      "1",
+      "D02",
+      "E0002",
+      "2025-07-15",
+      "full_time",
+      "75000.00",
+      "active",
+      null
+     ],
+     [
+      "E0004",
+      "Anika",
+      "Silva",
+      "anika.silva@corp.example",
+      "555-574-7551",
+      "  senior software engineer",
+      "2",
+      "D02",
+      "E0002",
+      "2025-08-15",
+      "full_time",
+      "70000.00",
+      "active",
+      null
+     ],
+     [
+      "E0005",
+      "Elif",
+      "Rao",
+      "elif.rao@corp.example",
+      "555-717-5507",
+      "Sr.  Software Engineer",
+      "2",
+      "D02",
+      "E0002",
+      "2025-07-07",
+      "full_time",
+      "70000.00",
+      "active",
+      null
+     ],
+     [
+      "E0006",
+      "Maya",
+      "Rao",
+      "maya.rao@corp.example",
+      "555-528-4265",
+      "  Sr Software Engineer",
+      "2",
+      "D02",
+      "E0002",
+      "2025-08-10",
+      "full_time",
+      "62500.00",
+      "active",
+      null
+     ],
+     [
+      "E0007",
+      "Ines",
+      "Novak",
+      "Ines.novak@Corp.Example",
+      "555-507-4003",
+      "Head of Finance",
+      "4",
+      "D03",
+      "E0001",
+      "2025-01-06",
+      "full_time",
+      "150000.00",
+      "active",
+      null
+     ],
+     [
+      "E0008",
+      "Elif",
+      "Weber",
+      "elif.weber@corp.example",
+      "555-849-0611",
+      "Senior Financial Analyst",
+      "2",
+      "D03",
+      "E0007",
+      "2025-05-20",
+      "full_time",
+      "75000.00",
+      "active",
+      null
+     ],
+     [
+      "E0009",
+      "Anika",
+      "Grant",
+      "anika.grant@corp.example",
+      "555-993-9407",
+      "SR. Financial Analyst",
+      "2",
+      "D03",
+      "E0007",
+      "2025-05-08",
+      "full_time",
+      "90000.00",
+      "active",
+      null
+     ],
+     [
+      "E0010",
+      "Kofi",
+      "Mori",
+      "kofi.mori@corp.example",
+      "555-362-1180",
+      "SRE Engineer",
+      "1",
+      "D02",
+      "E0002",
+      "2025-07-15",
+      "full_time",
+      "75000.00",
+      "active",
+      null
+     ],
+     [
+      "E0011",
+      "Hana",
+      "Costa",
+      "hana.costa@corp.example",
+      "555-640-2297",
+      "Data Analyst Sr",
+      "1",
+      "D02",
+      "E0002",
+      "2025-07-15",
+      "full_time",
+      "75000.00",
+      "active",
+      null
+     ],
+     [
+      "E0012",
+      "Leo",
+      "Park",
+      "leo.park@corp.example",
+      "555-718-3305",
+      null,
+      "1",
+      "D02",
+      "E0002",
+      "2025-07-15",
+      "full_time",
+      "75000.00",
+      "active",
+      null
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice employees table",
+  "titles that start with Sr or Sr., in different case and spacing",
+  "titles where sr isn't the short form at the start",
+  "titles that are only the short form, with nothing after it",
+  "an employee with no job title",
+  "an empty employees table"
+ ]
+}

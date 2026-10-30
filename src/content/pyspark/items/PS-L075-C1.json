@@ -1,0 +1,60 @@
+{
+ "id": "PS-L075-C1",
+ "slug": "keep-the-account-history",
+ "lesson": "PS-L075",
+ "format": "dataframe_coding",
+ "difficulty": "hard",
+ "minutes": 17,
+ "title": "Keep the account history",
+ "dataset": {
+  "id": "PS-D14",
+  "version": "1.0.0"
+ },
+ "prompt": "The account history starts from the 1 January snapshot. Write `apply_batch(changes)` so it applies the change feed as type 2: every version stays, each with when it was valid.",
+ "rules": [
+  "Use each account's newest change in the batch, by `sequence`. The file isn't always in sequence order.",
+  "An account that changed gets its current version closed: `effective_to` is the change's `changed_at` and `is_current` false. Unless the change is a delete, it then gets a new version from `changed_at`, with `effective_to` NULL and `is_current` true.",
+  "An account the history doesn't have yet gets just the new version; a delete for such an account changes nothing. Accounts that didn't change stay as they are.",
+  "Don't change `start_history` or `solve`."
+ ],
+ "hints": [
+  "Number each account's changes with `row_number` over `account_id`, newest `sequence` first, and keep 1.",
+  "Close with a MERGE matched on the account and `t.is_current`, using `whenMatchedUpdate(set={...})` with SQL expressions such as `\"s.changed_at\"`.",
+  "Then append the changes that aren't deletes, with the account's columns and the three history columns in the table's order."
+ ],
+ "entry": "solve",
+ "inputs": [
+  "accounts",
+  "customer_cdc"
+ ],
+ "starter": "import shutil\n\nfrom pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\nfrom delta.tables import DeltaTable\n\nPATH = \"/tmp/crm/dim_accounts\"\n\n\ndef start_history(accounts):\n    # The history starts with each snapshot account, valid from the snapshot. Don't change this.\n    shutil.rmtree(PATH, ignore_errors=True)  # start from an empty folder on every run\n    (accounts\n        .withColumn(\"effective_from\", F.lit(\"2026-01-01 00:00:00\").cast(\"timestamp\"))\n        .withColumn(\"effective_to\", F.lit(None).cast(\"timestamp\"))\n        .withColumn(\"is_current\", F.lit(True))\n        .write.format(\"delta\").save(PATH))\n\n\ndef apply_batch(changes):\n    # Apply the changes to the history at PATH as type 2:\n    # close each changed account's current version, then add its new version.\n    pass\n\n\ndef solve(accounts, customer_cdc):\n    start_history(accounts)\n    apply_batch(customer_cdc)\n    return spark.read.format(\"delta\").load(PATH)\n",
+ "output": {
+  "columns": [
+   "account_id",
+   "account_name",
+   "industry",
+   "country",
+   "segment",
+   "account_owner",
+   "credit_limit",
+   "created_on",
+   "is_active",
+   "effective_from",
+   "effective_to",
+   "is_current"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 120,
+  "check_timeout_s": 300,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

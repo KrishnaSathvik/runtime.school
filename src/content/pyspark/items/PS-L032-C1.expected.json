@@ -1,0 +1,68 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "campaign_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "days",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "days_over",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "overspend",
+     "type": "decimal(22,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "CMP-0003",
+     2,
+     0,
+     "0.00"
+    ],
+    [
+     "CMP-0002",
+     2,
+     0,
+     "0.00"
+    ],
+    [
+     "CMP-0004",
+     2,
+     0,
+     "0.00"
+    ],
+    [
+     "CMP-0001",
+     2,
+     1,
+     "2.75"
+    ]
+   ],
+   "row_count": 4
+  }
+ },
+ "hidden": [
+  "the full practice budgets table",
+  "days just under, at and just over plan",
+  "a campaign that is never over plan next to one that always is",
+  "days with a missing actual spend",
+  "an empty budgets table"
+ ]
+}

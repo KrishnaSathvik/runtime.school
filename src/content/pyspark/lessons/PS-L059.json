@@ -1,0 +1,148 @@
+{
+  "id": "PS-L059",
+  "minutes": 25,
+  "lede": "A shuffle sends every row of a key to the same partition. When one key has far more rows than the rest, one task gets most of the work and the whole stage waits for it. That's skew, and salting is the classic way to split a hot key.",
+  "objectives": [
+    "Measure skew with counts per key and rows per partition, using `spark_partition_id`",
+    "Explain why every row of one key lands in one partition after a shuffle",
+    "Salt a hot key and aggregate in two steps, combining partial results correctly",
+    "Prove that a salted aggregation or join returns the same rows as the plain one"
+  ],
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "api_requests"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`api_requests` has one row per API call: which endpoint was called, its status and its latency. It's loaded as a DataFrame, and `F` is `pyspark.sql.functions`.\n\nThe first question about skew is simply: how many rows does each key have?"
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Rows per key",
+      "code": "from pyspark.sql import functions as F\n\nby_endpoint = api_requests.groupBy(\"endpoint\").count()\nby_endpoint.orderBy(F.col(\"count\").desc(), \"endpoint\").show(truncate=False)\n",
+      "note": "One endpoint, `/v1/catalog/items`, has 4 of the 12 calls. On 12 rows that's harmless, but this table is built to be skewed: in larger versions of this table more than half of all calls hit that one endpoint."
+    },
+    {
+      "kind": "text",
+      "md": "Grouping, joining or `repartition(n, \"key\")` by a key is a shuffle. As lesson 57 showed, Spark computes a hash of the key and takes the remainder by the number of partitions, so **every row with the same key goes to the same partition**, and one task processes that partition. A key with millions of rows means one task with millions of rows.\n\n`F.spark_partition_id()` (lesson 57) holds the partition each row is in, so grouping by it counts the rows per partition. The example turns adaptive execution off: it can merge small partitions after a shuffle, and here we want to see exactly the 4 partitions we asked for."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Rows per partition after a shuffle by key",
+      "code": "from pyspark.sql import functions as F\n\nspark.conf.set(\"spark.sql.adaptive.enabled\", False)\n\nby_key = api_requests.repartition(4, \"endpoint\")\nby_key.groupBy(F.spark_partition_id().alias(\"partition\")).count().orderBy(\"partition\").show()\n\nby_key.select(\"endpoint\", F.spark_partition_id().alias(\"partition\")).distinct().orderBy(\"partition\", \"endpoint\").show(truncate=False)\n",
+      "note": "Partition 0 gets 6 of the 12 rows: all 4 catalog calls plus both telemetry calls, whose endpoint happens to hash to the same partition. Partitions 1 and 3 get one row each. Adding partitions wouldn't help the hot key: its 4 rows always stay together."
+    },
+    {
+      "kind": "text",
+      "md": "**Salting** splits a hot key on purpose. Add a column, the *salt*, with a small number from 0 to n−1 that varies from row to row, and use `(key, salt)` as the key. The hot key's rows now spread over up to n groups.\n\nAny value that varies per row works. Here the salt comes from the request id: `F.hash(\"request_id\")` turns each id into a whole number (the same number every time for the same id), and `F.pmod(x, F.lit(4))` takes its remainder by 4, always 0 to 3. A fixed salt like this gives the same split on every run."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "A salt splits the hot key",
+      "code": "from pyspark.sql import functions as F\n\nsalted = api_requests.select(\"*\", F.pmod(F.hash(\"request_id\"), F.lit(4)).alias(\"salt\"))\nsalted.select(\"request_id\", \"endpoint\", \"salt\").orderBy(\"request_id\").show(truncate=False)\n\ngroups = salted.groupBy(\"endpoint\", \"salt\").count()\nprint(groups.count(), \"groups of (endpoint, salt)\")\ngroups.orderBy(F.col(\"count\").desc(), \"endpoint\", \"salt\").show(3, truncate=False)\n",
+      "note": "The four catalog calls get salts 0, 2, 1 and 0, so the biggest group now has 2 rows instead of 4, and the 7 endpoints become 10 groups that a shuffle can send to different partitions. Which partition each group lands in is still up to the hash: on 12 rows the partitions stay lumpy, while on a big table with many groups they even out."
+    },
+    {
+      "kind": "text",
+      "md": "The price of salting: a group is now `(endpoint, salt)`, not `endpoint`. To get one row per endpoint, aggregate **in two steps**. First per `(endpoint, salt)`, which is where the heavy work is spread out. Then per `endpoint`, combining the partial results, which are only a few rows per key.\n\nThe second step has to combine partials the right way. A count of rows becomes a **sum** of the partial counts. A sum becomes a sum of sums. A maximum becomes the maximum of the maximums."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Two-step aggregation equals the plain one",
+      "code": "from pyspark.sql import functions as F\n\nsalted = api_requests.select(\"*\", F.pmod(F.hash(\"request_id\"), F.lit(4)).alias(\"salt\"))\n\npartial = salted.groupBy(\"endpoint\", \"salt\").agg(\n    F.count(\"*\").alias(\"requests\"),\n    F.max(\"latency_ms\").alias(\"slowest_ms\"),\n)\ntwo_step = partial.groupBy(\"endpoint\").agg(\n    F.sum(\"requests\").alias(\"requests\"),\n    F.max(\"slowest_ms\").alias(\"slowest_ms\"),\n)\nplain = api_requests.groupBy(\"endpoint\").agg(\n    F.count(\"*\").alias(\"requests\"),\n    F.max(\"latency_ms\").alias(\"slowest_ms\"),\n)\n\nprint(sorted(two_step.collect()) == sorted(plain.collect()))\ntwo_step.orderBy(\"endpoint\").show(truncate=False)\n",
+      "note": "Comparing the sorted rows proves the salted version returns exactly what the plain `groupBy` does. That's the check to run whenever you salt: the result must not change."
+    },
+    {
+      "kind": "text",
+      "md": "Not every result combines that easily. An **average of averages** is wrong when the groups have different sizes. Carry a sum and a count through the first step instead, and divide at the end."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Averages don't combine",
+      "code": "from pyspark.sql import functions as F\n\nsalted = api_requests.select(\"*\", F.pmod(F.hash(\"request_id\"), F.lit(4)).alias(\"salt\"))\npartial = salted.groupBy(\"endpoint\", \"salt\").agg(\n    F.avg(\"latency_ms\").alias(\"avg_ms\"),\n    F.sum(\"latency_ms\").alias(\"total_ms\"),\n    F.count(\"latency_ms\").alias(\"timed\"),\n)\nresult = partial.groupBy(\"endpoint\").agg(\n    F.avg(\"avg_ms\").alias(\"average_of_averages\"),\n    (F.sum(\"total_ms\") / F.sum(\"timed\")).alias(\"true_average\"),\n)\nresult.orderBy(\"endpoint\").show(truncate=False)\n",
+      "note": "For `/v1/catalog/items` the two numbers differ: one salt group has two calls (42 and 40 ms) and the others one each, so averaging the averages gives that pair too little weight. The true average of 42, 38, 51 and 40 is 42.75. For endpoints whose rows all share one salt the two agree."
+    },
+    {
+      "kind": "text",
+      "md": "Joins can be salted too, when both sides are big and one key is hot. Salt the big, skewed side as before. The other side has to **match every salt**, so each of its rows is copied once per salt value: `crossJoin` with `spark.range(4)`, a DataFrame of the numbers 0 to 3, pairs every row with every number. Then join on the key and the salt.\n\nThe small owners table below is only there to show the mechanics. A table this small would simply be broadcast to every task (lesson 58); salting is for when that isn't possible."
+    },
+    {
+      "kind": "example",
+      "id": "e6",
+      "title": "A salted join returns the same rows",
+      "code": "from pyspark.sql import functions as F\n\nowners = spark.createDataFrame(\n    [(\"/v1/catalog/items\", \"catalog\"), (\"/v1/catalog/items/{sku}\", \"catalog\"), (\"/v1/search\", \"search\"),\n     (\"/v1/checkout\", \"payments\"), (\"/v1/payments/authorize\", \"payments\"), (\"/v1/auth/token\", \"identity\"),\n     (\"/v1/devices/{device_id}/telemetry\", \"devices\")],\n    \"endpoint string, team string\",\n)\nsalts = spark.range(4).select(F.col(\"id\").alias(\"salt\"))\nowners_salted = owners.crossJoin(salts)\nrequests_salted = api_requests.select(\"request_id\", \"endpoint\", F.pmod(F.hash(\"request_id\"), F.lit(4)).alias(\"salt\"))\n\nsalted = requests_salted.join(owners_salted, [\"endpoint\", \"salt\"]).select(\"request_id\", \"endpoint\", \"team\")\nplain = api_requests.join(owners, \"endpoint\").select(\"request_id\", \"endpoint\", \"team\")\n\nprint(owners.count(), \"owners,\", owners_salted.count(), \"after copying once per salt\")\nprint(sorted(salted.collect()) == sorted(plain.collect()))\n",
+      "note": "Each request meets exactly one copy of its owner row, the one with its salt, so the salted join returns the same 12 rows as the plain one. The cost is the copied side: 4 salts make it 4 times bigger, so use as few salts as split the hot key enough."
+    },
+    {
+      "kind": "text",
+      "md": "What salting buys is balance: the hot key's rows are processed by several tasks instead of one. It also adds work (an extra aggregation step, or a copied join side), so it pays off only when one key really dominates a large table. This environment is a single machine with two cores, so the tables here are too small to show a speed difference; what you can check on any size of data is the per-partition counts and that the result is unchanged.\n\nAdaptive execution also has a skew-join feature that splits oversized partitions of a sort-merge join on its own. Salting is the manual version, and it works for aggregations too."
+    }
+  ],
+  "challenges": [
+    "PS-L059-C1",
+    "PS-L059-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "One endpoint has 70% of all requests. You group by endpoint with 200 shuffle partitions instead of 4. What happens to that endpoint's rows?",
+      "choices": [
+        "They spread evenly over the 200 partitions",
+        "They all still land in one partition, so one task still does 70% of the work",
+        "Spark drops the extra rows",
+        "They go to the driver"
+      ],
+      "answer": 1,
+      "why": "A key's partition comes from its hash, so every row of one key goes to the same partition however many there are. Only changing the key, for example by salting, splits it."
+    },
+    {
+      "id": "k2",
+      "prompt": "After `groupBy(\"endpoint\", \"salt\").agg(F.count(\"*\").alias(\"requests\"))`, how do you get the number of requests per endpoint?",
+      "choices": [
+        "`groupBy(\"endpoint\").agg(F.count(\"*\"))`",
+        "`groupBy(\"endpoint\").agg(F.sum(\"requests\"))`",
+        "`groupBy(\"endpoint\").agg(F.avg(\"requests\"))`",
+        "`groupBy(\"endpoint\").agg(F.max(\"requests\"))`"
+      ],
+      "answer": 1,
+      "why": "Each partial row holds a count for one salt. The total is the sum of the partial counts. Counting the partial rows would give the number of salt groups."
+    },
+    {
+      "id": "k3",
+      "prompt": "To salt a join, why is the other side copied once per salt value?",
+      "choices": [
+        "So every salted row of the big side still finds its match",
+        "To make the join faster on small tables",
+        "Because `crossJoin` is required by every join",
+        "To remove duplicate keys"
+      ],
+      "answer": 0,
+      "why": "The join key is now (key, salt). A row salted 2 only matches a copy that also has salt 2, so the other side needs a copy for every salt."
+    }
+  ],
+  "review": [
+    "Skew means one key has far more rows than the others. Measure it with counts per key and with `groupBy(F.spark_partition_id())` after a shuffle.",
+    "A shuffle sends every row of a key to the same partition, so more partitions don't split a hot key.",
+    "A salt is a small number per row, such as `F.pmod(F.hash(\"request_id\"), F.lit(4))`; grouping by `(key, salt)` spreads the hot key.",
+    "Aggregate salted data in two steps and combine partials correctly: sum the counts and sums, take the max of maxes, and never average averages.",
+    "To salt a join, copy the other side once per salt with `crossJoin(spark.range(n))` and join on the key and the salt.",
+    "Always check that the salted result equals the plain one. Salting changes the balance of work, never the answer."
+  ],
+  "practice": [
+    "PS-Q0291",
+    "PS-Q0292",
+    "PS-Q0293",
+    "PS-Q0294",
+    "PS-Q0295"
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "id": "PS-L052-C1",
+  "slug": "daily-range-pandas-udf",
+  "lesson": "PS-L052",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Daily range in percent",
+  "dataset": {
+    "id": "PS-D10",
+    "version": "1.0.0"
+  },
+  "prompt": "Traders compare how much each stock moved within a day. Write `solve(daily_prices)` with a pandas UDF so it returns `symbol`, `trade_date` and `range_pct`: the day's range (`high` minus `low`) as a percent of the `open` price.",
+  "rules": [
+    "`range_pct` is (high − low) ÷ open × 100, rounded to 2 decimal places, as a double.",
+    "A day with a missing `open`, `high` or `low` has a missing `range_pct`.",
+    "Compute `range_pct` with a pandas UDF: the check looks for it in the plan Spark runs.",
+    "Return `symbol`, `trade_date` and `range_pct`, in that order. Keep every row."
+  ],
+  "hints": [
+    "A pandas UDF can take several columns: `def range_pct(high: pd.Series, low: pd.Series, open_: pd.Series) -> pd.Series`.",
+    "The prices arrive as `Decimal` objects. Convert each Series with `.astype(\"float64\")` before doing arithmetic.",
+    "pandas' `.round(2)` rounds a whole Series. A missing price turns into NaN, and NaN comes back as NULL."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "daily_prices"
+  ],
+  "starter": "import pandas as pd\nfrom pyspark.sql import functions as F\n\n\ndef solve(daily_prices):\n    # Return symbol, trade_date and range_pct, computed with a pandas UDF.\n    return daily_prices\n",
+  "output": {
+    "columns": [
+      "symbol",
+      "trade_date",
+      "range_pct"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "technique": {
+    "name": "a pandas UDF",
+    "plan": [
+      "ArrowEvalPython"
+    ]
+  }
+}

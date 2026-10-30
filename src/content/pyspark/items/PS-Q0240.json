@@ -1,0 +1,57 @@
+{
+  "id": "PS-Q0240",
+  "slug": "paid-lines-with-crm-accounts",
+  "lesson": "PS-L048",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Paid lines with CRM accounts",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "Revenue reporting wants every line of the paid invoices with the customer's name and country. Invoices and their lines are in the billing database; the accounts come from the CRM's nightly export, made by `crm_export`. Write `solve(invoices, invoice_lines, accounts)` so it returns `invoice_id`, `line_no`, `line_amount`, `account_name` and `country` for each of those lines.",
+  "rules": [
+    "The starter saves the invoices and lines to the database and the accounts to the export. Read them from there.",
+    "Return one row per line of an invoice whose status is `paid`.",
+    "Keep a line even when its account isn't in the export; its `account_name` and `country` are then NULL.",
+    "A name or country missing from the export is NULL in the result, not the text `n/a`.",
+    "Return `invoice_id`, `line_no` (integer), `line_amount` (decimal(12,2)), `account_name` and `country`, in that order."
+  ],
+  "hints": [
+    "Look at how `crm_export` writes the file. The read needs the same separator, header and missing-value marker.",
+    "The lines don't have an account: a subquery can join `invoice_lines` with `invoices` inside the database and keep only paid invoices.",
+    "Which join type keeps a line whose account isn't in the export?"
+  ],
+  "explanation": "Let the database do the first join and the filter: `spark.read.jdbc(url, \"(SELECT l.invoice_id, l.line_no, l.line_amount, i.account_id FROM invoice_lines l JOIN invoices i ON l.invoice_id = i.invoice_id WHERE i.status = 'paid') AS paid_lines\")`. Reading both tables and joining them in Spark works too. The export isn't a plain CSV file: `crm_export` writes `|` between values and `n/a` for a missing one, so read it with `spark.read.csv(crm_path, header=True, sep=\"|\", nullValue=\"n/a\", schema=accounts.schema)`. With the default comma each row is one long value, so no account matches; without `nullValue` a missing country comes back as the text `n/a`. Then `paid_lines.join(crm, on=\"account_id\", how=\"left\")` keeps a line whose account isn't in the export, which an inner join would drop.",
+  "entry": "solve",
+  "inputs": [
+    "invoices",
+    "invoice_lines",
+    "accounts"
+  ],
+  "starter": "def crm_export(accounts, path):\n    # The CRM's nightly export of its accounts. Don't change it.\n    accounts.write.mode(\"overwrite\").csv(path, header=True, sep=\"|\", nullValue=\"n/a\")\n\n\ndef solve(invoices, invoice_lines, accounts):\n    url = \"jdbc:sqlite:/tmp/billing.db\"\n    invoices.coalesce(1).write.jdbc(url, \"invoices\", mode=\"overwrite\")\n    invoice_lines.coalesce(1).write.jdbc(url, \"invoice_lines\", mode=\"overwrite\")\n    crm_path = \"/tmp/crm/accounts\"\n    crm_export(accounts, crm_path)\n    # Read the lines of paid invoices from the database at `url` and the accounts from the CRM export\n    # at `crm_path`, then return invoice_id, line_no, line_amount, account_name and country.\n    return invoice_lines\n",
+  "output": {
+    "columns": [
+      "invoice_id",
+      "line_no",
+      "line_amount",
+      "account_name",
+      "country"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

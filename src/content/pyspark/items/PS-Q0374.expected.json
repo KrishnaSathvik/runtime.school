@@ -1,0 +1,225 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "account_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "industry",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "country",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "segment",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "account_owner",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "credit_limit",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "created_on",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "is_active",
+     "type": "boolean",
+     "nullable": true
+    },
+    {
+     "name": "effective_from",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "effective_to",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "is_current",
+     "type": "boolean",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "ACC-0001",
+     "Quillfen Analytics Inc",
+     "technology",
+     "US",
+     "mid_market",
+     "Dana Whitlock",
+     "75000.00",
+     "2022-03-14",
+     true,
+     "2026-01-01T00:00:00",
+     "2026-03-10T15:45:00",
+     false
+    ],
+    [
+     "ACC-0002",
+     "Brackenmoor Foods Ltd",
+     "consumer goods",
+     "GB",
+     "smb",
+     "Jonas Ekberg",
+     "15000.00",
+     "2023-06-02",
+     true,
+     "2026-01-01T00:00:00",
+     "2026-01-12T14:02:00",
+     false
+    ],
+    [
+     "ACC-0003",
+     "Tamsley Logistics GmbH",
+     "transport",
+     "DE",
+     "enterprise",
+     "Mei Lindqvist",
+     "250000.00",
+     "2021-09-20",
+     true,
+     "2026-01-01T00:00:00",
+     "2026-02-03T11:30:00",
+     false
+    ],
+    [
+     "ACC-0004",
+     "Corvane Health Pty Ltd",
+     "healthcare",
+     "AU",
+     "mid_market",
+     "Rafael Ibarra",
+     "75000.00",
+     "2024-01-08",
+     true,
+     "2026-01-01T00:00:00",
+     "2026-03-02T10:00:00",
+     false
+    ],
+    [
+     "ACC-0005",
+     "Ellowby Energy Inc",
+     "energy",
+     "US",
+     "smb",
+     "Dana Whitlock",
+     "15000.00",
+     "2025-04-30",
+     true,
+     "2026-01-01T00:00:00",
+     null,
+     true
+    ],
+    [
+     "ACC-0001",
+     "Quillfen Analytics Inc",
+     "technology",
+     "US",
+     "enterprise",
+     "Mei Lindqvist",
+     "100000.00",
+     "2022-03-14",
+     true,
+     "2026-03-10T15:45:00",
+     null,
+     true
+    ],
+    [
+     "ACC-0002",
+     "Brackenmoor Foods Ltd",
+     "consumer goods",
+     "GB",
+     "smb",
+     "Priya Venkat",
+     "15000.00",
+     "2023-06-02",
+     true,
+     "2026-01-12T14:02:00",
+     null,
+     true
+    ],
+    [
+     "ACC-0004",
+     "Corvane Health Pty Ltd",
+     "healthcare",
+     "AU",
+     "mid_market",
+     "Rafael Ibarra",
+     "75000.00",
+     "2024-01-08",
+     false,
+     "2026-03-02T10:00:00",
+     null,
+     true
+    ],
+    [
+     "ACC-0006",
+     "Fennick Labs B.V.",
+     "technology",
+     "NL",
+     "smb",
+     "Priya Venkat",
+     "30000.00",
+     "2026-01-19",
+     true,
+     "2026-02-17T13:20:00",
+     null,
+     true
+    ],
+    [
+     "ACC-0007",
+     "Marrowind Retail Group Lda",
+     "consumer goods",
+     "PT",
+     "smb",
+     "Tobias Achterberg",
+     "15000.00",
+     "2026-02-09",
+     true,
+     "2026-03-18T09:10:00",
+     null,
+     true
+    ]
+   ],
+   "row_count": 10
+  }
+ },
+ "hidden": [
+  "the full practice accounts and change feed",
+  "two updates for one account, newest first in the file",
+  "an account deleted",
+  "an account added and deleted in the same batch",
+  "a new account",
+  "a batch with no changes"
+ ]
+}

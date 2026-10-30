@@ -1,0 +1,56 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "symbol",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "trade_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "prev_volume",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "volume",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "ALDR.SX",
+     "2026-01-16",
+     984700,
+     4147700
+    ],
+    [
+     "ALDR.SX",
+     "2026-01-21",
+     1781600,
+     11678200
+    ]
+   ],
+   "row_count": 2
+  }
+ },
+ "hidden": [
+  "the full practice price history",
+  "volumes exactly twice and just over twice the previous day",
+  "a symbol whose first day is its busiest",
+  "a quiet stock next to a busy one on the same days",
+  "an empty price table"
+ ]
+}

@@ -1,0 +1,50 @@
+{
+  "id": "PS-L042-C2",
+  "slug": "sensor-tag-rows",
+  "lesson": "PS-L042",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "One row per sensor tag",
+  "dataset": {
+    "id": "PS-D09",
+    "version": "1.0.0"
+  },
+  "prompt": "The placement team counts readings by tag, so they want the tags as rows. Write `solve(sensor_readings)` so it returns `reading_id`, `device_id`, `reading_date` (the day of `event_time`) and `tag`, with one row for each tag of each reading.",
+  "rules": [
+    "One row per item of `payload.tags`. A reading with three tags gives three rows.",
+    "`reading_date` is the date of `event_time` (when the sensor measured), not of `arrival_time`.",
+    "A reading with no tags, or no payload, gives no rows. Keep repeats: a reading delivered twice gives its rows twice.",
+    "Return only `reading_id`, `device_id`, `reading_date` and `tag`, in that order."
+  ],
+  "hints": [
+    "`F.explode` turns an array into one row per item, copying the other columns you select.",
+    "The array is inside the struct: `F.explode(\"payload.tags\")`. `F.to_date` gives the day of a timestamp.",
+    "`F.explode` can sit in the same `select` as ordinary columns and the date. Give both new columns their names with `alias`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "sensor_readings"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(sensor_readings):\n    # Return one row per tag of each reading.\n    return sensor_readings\n",
+  "output": {
+    "columns": [
+      "reading_id",
+      "device_id",
+      "reading_date",
+      "tag"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

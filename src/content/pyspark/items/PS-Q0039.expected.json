@@ -1,0 +1,51 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "orders",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "priced",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "lowest_total",
+     "type": "decimal(10,2)",
+     "nullable": true
+    },
+    {
+     "name": "highest_total",
+     "type": "decimal(10,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     12,
+     12,
+     "39.98",
+     "418.96"
+    ]
+   ],
+   "row_count": 1
+  }
+ },
+ "hidden": [
+  "the full practice orders table",
+  "orders where some totals are missing",
+  "orders where every total is missing",
+  "totals where comparing as text and as numbers disagree, and the largest a total can be",
+  "the same order row delivered twice",
+  "an empty orders table"
+ ]
+}

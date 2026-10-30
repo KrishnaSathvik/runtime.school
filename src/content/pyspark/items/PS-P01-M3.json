@@ -1,0 +1,67 @@
+{
+  "id": "PS-P01-M3",
+  "slug": "join-order-lines-and-products",
+  "project": "PS-P01",
+  "milestone": "PS-P01.m3",
+  "difficulty": "medium",
+  "minutes": 30,
+  "title": "Join order lines and products",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "An order row only has a total. The report needs what was sold: each order's lines from `order_items`, and each product's `category` from `products`.\n\nWrite `order_lines(orders, order_items, products)`. It starts from your `clean_orders(orders)` and returns one row per line of a clean order, with the product's category beside it.",
+  "rules": [
+    "Return `order_id`, `order_date`, `status`, `line_no`, `product_id`, `category`, `quantity` and `unit_price`, in that order.",
+    "Only lines of orders that `clean_orders` keeps. An order with no lines adds no row, and a line whose order isn't there is left out.",
+    "`unit_price` is the line's price, what the customer paid. The catalogue's price can be different today.",
+    "A line whose product isn't in `products` stays, with a missing `category`.",
+    "Duplicate orders are still in, so their lines appear twice. The last step removes them."
+  ],
+  "hints": [
+    "Two joins in a row: `clean_orders(orders)` with `order_items` on `order_id`, then the result with `products` on `product_id`.",
+    "The first join is `inner`. The second must keep lines with no matching product: that's a `left` join.",
+    "Both `order_items` and `products` have a `unit_price`. Join `products.select(\"product_id\", \"category\")` so only the line's price is left."
+  ],
+  "explanation": "`clean_orders(orders).join(order_items, on=\"order_id\", how=\"inner\")` keeps only lines of valid orders, and drops orders that have no lines. The product join is `left`, so a line whose product is missing from the catalogue keeps its row with a `NULL` category instead of quietly vanishing from the sales. Joining only `product_id` and `category` from `products` avoids two `unit_price` columns: the line's price is the one the customer paid.",
+  "entry": "order_lines",
+  "inputs": [
+    "orders",
+    "order_items",
+    "products"
+  ],
+  "file": "pipeline.py",
+  "append": "\n\ndef order_lines(orders, order_items, products):\n    # Step 3: clean_orders(orders) joined with its lines and each product's category.\n    return clean_orders(orders)\n",
+  "prerequisites": [
+    "PS-L025"
+  ],
+  "output": {
+    "columns": [
+      "order_id",
+      "order_date",
+      "status",
+      "line_no",
+      "product_id",
+      "category",
+      "quantity",
+      "unit_price"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "example",
+      "sample": true
+    },
+    {
+      "id": "project",
+      "edition": "project"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

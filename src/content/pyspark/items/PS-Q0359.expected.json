@@ -1,0 +1,150 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "service",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "lines",
+     "type": "bigint",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "checkout-api",
+     2
+    ],
+    [
+     "auth-service",
+     1
+    ],
+    [
+     "notification-worker",
+     1
+    ],
+    [
+     "catalog-api",
+     2
+    ],
+    [
+     "search-api",
+     2
+    ],
+    [
+     "iot-gateway",
+     2
+    ]
+   ],
+   "row_count": 6,
+   "inputs": {
+    "application_logs": [
+     [
+      "LOG-000101",
+      "2026-04-14T10:02:11",
+      "INFO",
+      "catalog-api",
+      "ok",
+      null,
+      "{\"host\":\"catalog-api-7f9c2\",\"region\":\"us-east\"}"
+     ],
+     [
+      "LOG-000102",
+      "2026-04-14T10:17:40",
+      "INFO",
+      "search-api",
+      "ok",
+      null,
+      "{\"host\":\"search-api-7f9c2\",\"region\":\"us-east\"}"
+     ],
+     [
+      "LOG-000103",
+      "2026-04-14T10:41:05",
+      "WARN",
+      "iot-gateway",
+      "ok",
+      null,
+      "{\"host\":\"iot-gateway-7f9c2\",\"region\":\"us-east\"}"
+     ],
+     [
+      "LOG-000104",
+      "2026-04-14T11:05:30",
+      "INFO",
+      "auth-service",
+      "ok",
+      null,
+      "{\"host\":\"auth-service-7f9c2\",\"region\":\"us-east\"}"
+     ],
+     [
+      "LOG-000105",
+      "2026-04-14T12:00:09",
+      "INFO",
+      "catalog-api",
+      "ok",
+      null,
+      "{\"host\":\"catalog-api-7f9c2\",\"region\":\"us-east\"}"
+     ],
+     [
+      "LOG-000106",
+      "2026-04-14T12:22:51",
+      "WARN",
+      "notification-worker",
+      "ok",
+      null,
+      "{\"host\":\"notification-worker-7f9c2\",\"region\":\"us-east\"}"
+     ],
+     [
+      "LOG-000107",
+      "2026-04-14T13:14:00",
+      "ERROR",
+      "checkout-api",
+      "ok",
+      null,
+      "{\"host\":\"checkout-api-7f9c2\",\"region\":\"us-east\"}"
+     ],
+     [
+      "LOG-000108",
+      "2026-04-14T13:30:12",
+      "INFO",
+      "search-api",
+      "ok",
+      null,
+      "{\"host\":\"search-api-7f9c2\",\"region\":\"us-east\"}"
+     ],
+     [
+      "LOG-000109",
+      "2026-04-14T14:03:33",
+      "ERROR",
+      "checkout-api",
+      "ok",
+      null,
+      "{\"host\":\"checkout-api-7f9c2\",\"region\":\"us-east\"}"
+     ],
+     [
+      "LOG-000110",
+      "2026-04-14T14:45:18",
+      "DEBUG",
+      "iot-gateway",
+      "ok",
+      null,
+      "{\"host\":\"iot-gateway-7f9c2\",\"region\":\"us-east\"}"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "six hours of practice logs",
+  "only one new file after yesterday's run",
+  "services whose names look like log levels"
+ ]
+}

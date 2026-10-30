@@ -1,0 +1,62 @@
+{
+ "id": "PS-Q0364",
+ "slug": "the-fixed-rule-that-changed-nothing",
+ "lesson": "PS-L073",
+ "role": "debugging",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 10,
+ "title": "The fixed rule that changed nothing",
+ "dataset": {
+  "id": "PS-D04",
+  "version": "1.0.0"
+ },
+ "prompt": "Silver's old rule also rejected claims still waiting for the payer, which have no `allowed_amount` yet. The rule is fixed and `rebuild()` runs it, but those claims are still missing from silver. Fix `rebuild()`.",
+ "rules": [
+  "After `rebuild()`, silver holds every bronze claim that passes the fixed rule, each once, with bronze's columns.",
+  "A claim passes when both dates are present and `service_date` is not after `submitted_date`, `allowed_amount` is missing or at most `billed_amount`, and `claim_status` is submitted, approved, paid, denied or appealed.",
+  "Don't change `first_build` or `solve`."
+ ],
+ "hints": [
+  "Run it and look for a claim with an empty `allowed_amount`: is it in bronze? Was it ever in the old silver?",
+  "A filter can only keep rows that are already in the table it reads.",
+  "Which layer still has every claim that arrived, whatever the old rule said?"
+ ],
+ "entry": "solve",
+ "inputs": [
+  "claims"
+ ],
+ "starter": "import shutil\n\nfrom pyspark.sql import functions as F\n\nBRONZE = \"/tmp/clinic/bronze/claims\"\nSILVER = \"/tmp/clinic/silver/claims\"\nSTATUSES = [\"submitted\", \"approved\", \"paid\", \"denied\", \"appealed\"]\n\n\ndef first_build(claims):\n    # Last week's run: bronze from two loads, and silver built with the old rule,\n    # which also rejected claims still waiting for the payer. Don't change this.\n    shutil.rmtree(\"/tmp/clinic\", ignore_errors=True)  # start from empty folders on every run\n    first_load = F.col(\"submitted_date\") < \"2026-01-20\"\n    (claims\n        .select(\"*\",\n                F.when(first_load, \"claims_2026-01-19.csv\").otherwise(\"claims_2026-02-28.csv\").alias(\"_source_file\"),\n                F.when(first_load, 1).otherwise(2).alias(\"_batch_id\"))\n        .write.format(\"delta\").save(BRONZE))\n    old_rule = (\n        F.coalesce(F.col(\"service_date\") <= F.col(\"submitted_date\"), F.lit(False))\n        & F.coalesce(F.col(\"allowed_amount\") <= F.col(\"billed_amount\"), F.lit(False))\n        & F.coalesce(F.col(\"claim_status\").isin(STATUSES), F.lit(False))\n    )\n    spark.read.format(\"delta\").load(BRONZE).filter(old_rule).write.format(\"delta\").save(SILVER)\n\n\ndef rebuild():\n    # The rule is fixed: a claim with no allowed_amount yet passes. Rebuild silver with it.\n    passes = (\n        F.coalesce(F.col(\"service_date\") <= F.col(\"submitted_date\"), F.lit(False))\n        & (F.col(\"allowed_amount\").isNull() | (F.col(\"allowed_amount\") <= F.col(\"billed_amount\")))\n        & F.coalesce(F.col(\"claim_status\").isin(STATUSES), F.lit(False))\n    )\n    silver = spark.read.format(\"delta\").load(SILVER)\n    silver.filter(passes).write.format(\"delta\").mode(\"overwrite\").save(SILVER)\n\n\ndef solve(claims):\n    first_build(claims)\n    rebuild()\n    return spark.read.format(\"delta\").load(SILVER)\n",
+ "output": {
+  "columns": [
+   "claim_id",
+   "encounter_id",
+   "patient_id",
+   "provider_id",
+   "payer",
+   "service_date",
+   "submitted_date",
+   "billed_amount",
+   "allowed_amount",
+   "paid_amount",
+   "claim_status",
+   "denial_reason",
+   "_source_file",
+   "_batch_id"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 180,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "explanation": "The rule is right, but `rebuild()` applies it to the old silver table. The old rule had already thrown out the waiting claims, and a filter can't bring rows back, so the fix never shows. Silver is rebuilt from bronze, the layer that keeps every claim as it arrived: read `BRONZE`, filter with the fixed rule and overwrite `SILVER`. Appending instead would keep the old silver rows and add them again. This is why bronze is never cleaned: when a rule changes, silver and then gold are rebuilt from it."
+}

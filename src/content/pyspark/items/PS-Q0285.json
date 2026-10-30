@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0285",
+  "slug": "shuffles-in-the-borough-export",
+  "lesson": "PS-L057",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Shuffles in the borough export",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "prompt": "The borough export receives trips spread by pickup zone, joins them to their zones, totals trips and revenue per borough, and writes one file. Write `solve(trips, taxi_zones)` to build it, and report how many shuffles its plan has.",
+  "rules": [
+    "Start with `trips.repartition(3, \"pickup_zone_id\")`, as the upstream step does, then join to `taxi_zones` on `pickup_zone_id` = `zone_id` (an inner join): trips with a missing or unknown zone are left out.",
+    "Per `borough`, return `trips` (number of trips) and `revenue` (sum of `total`), then `coalesce(1)` so the export writes one file.",
+    "Add `shuffles`: the number of `Exchange` steps in the physical plan of that result that move rows between partitions. Broadcasting the small zone table copies it whole, so a `BroadcastExchange` isn't one. `with_fact` in the starter adds the column.",
+    "Return the columns `borough`, `trips`, `revenue`, `shuffles`."
+  ],
+  "hints": [
+    "Join with `trips_by_zone.join(taxi_zones, trips_by_zone[\"pickup_zone_id\"] == taxi_zones[\"zone_id\"], \"inner\")`, then `groupBy(\"borough\").agg(...)`.",
+    "Which steps need rows with the same key together? The upstream split is by zone, but the totals are by borough.",
+    "In the plan text, a shuffle is a step named exactly `Exchange`; `BroadcastExchange` and `Coalesce` don't count."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "trips",
+    "taxi_zones"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef with_fact(df, name, value):\n    # Adds a column called name holding the same value on every row.\n    return df.withColumn(name, F.lit(value))\n\n\ndef solve(trips, taxi_zones):\n    trips_by_zone = trips.repartition(3, \"pickup_zone_id\")\n    # Join, total per borough, coalesce(1), then count the shuffles in the plan.\n    return with_fact(trips_by_zone, \"shuffles\", 0)\n",
+  "output": {
+    "columns": [
+      "borough",
+      "trips",
+      "revenue",
+      "shuffles"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "The plan has two shuffles: `repartition(3, \"pickup_zone_id\")` hash-partitions by zone, and the grouping hash-partitions again by `borough`, because rows of one borough come from several zones and so sit in different partitions. The join doesn't shuffle `trips`: the small `taxi_zones` table is broadcast, copied whole to every task, and that `BroadcastExchange` moves no trip rows. `coalesce(1)` merges the grouping's partitions without a shuffle. Counting every occurrence of the word `Exchange` gives 3, because it also matches `BroadcastExchange`. Use an inner join so trips with no known zone drop out, and sum `total`, not `fare`."
+}

@@ -1,0 +1,21 @@
+{
+  "id": "PS-L081-C1",
+  "kind": "predict",
+  "slug": "read-the-job-tracker",
+  "lesson": "PS-L081",
+  "difficulty": "medium",
+  "minutes": 6,
+  "title": "Read the job tracker",
+  "prompt": "This program runs three actions on 9 numbers in 3 partitions; the last one divides by zero on the row with id 7. It then prints each job's status and, for each of its stages, the number of tasks and failed tasks. What does it print? Type each line on its own line.",
+  "program": "spark.conf.set(\"spark.sql.adaptive.enabled\", \"false\")\nsc = spark.sparkContext\ntracker = sc.statusTracker()\nnums = spark.range(0, 9, 1, 3)\n\nsc.setJobGroup(\"rows\", \"collect\")\nprint(len(nums.collect()))\nsc.setJobGroup(\"count\", \"count\")\nprint(nums.count())\nsc.setJobGroup(\"ratio\", \"divide\")\ntry:\n    nums.selectExpr(\"90 div (id - 7) AS x\").collect()\nexcept Exception as e:\n    print(type(e).__name__)\n\nfor group in [\"rows\", \"count\", \"ratio\"]:\n    info = tracker.getJobInfo(tracker.getJobIdsForGroup(group)[0])\n    stages = sorted(info.stageIds)\n    print(info.status, [(tracker.getStageInfo(s).numTasks, tracker.getStageInfo(s).numFailedTasks) for s in stages])\n",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "`collect()` on a narrow DataFrame is one stage with one task per partition.",
+    "With adaptive execution off, `count()` adds a one-task stage that sums the partial counts.",
+    "Only the partition holding id 7 fails, and in local mode a failed task isn't retried."
+  ]
+}

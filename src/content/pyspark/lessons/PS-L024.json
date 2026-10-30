@@ -1,0 +1,121 @@
+{
+  "id": "PS-L024",
+  "minutes": 25,
+  "lede": "Dropping bad rows hides the problem; stopping the whole load for one bad row hurts everyone else. Quarantine sets bad rows aside with a reason, lets the good ones through, and reconciliation proves that no row went missing on the way.",
+  "objectives": [
+    "Tag each row with the reason it can't be loaded, keeping all of its columns",
+    "Split a feed into clean rows and a quarantine table",
+    "Reconcile the counts: received equals clean plus quarantined",
+    "Spot the NULL rule that makes rows vanish from both sides"
+  ],
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "shipment_events",
+      "shipments"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`shipment_events` is a carrier's tracking feed: one row each time a parcel is created, departs or is delivered. Before loading it, the logistics team checks every event:\n\n- the `shipment_id` must be in `shipments`, the shipping system's list of parcels;\n- the `event_type` must be one of the seven known steps;\n- the `event_time` must be present."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "The feed as it arrives",
+      "code": "shipment_events.select(\"event_id\", \"shipment_id\", \"event_type\", \"event_time\", \"sequence\", \"load_date\").show()\n",
+      "note": "Two things stand out: E0000007 arrived twice, and the last event is for SH9999, a shipment nobody created. This lesson deals with the second kind of problem. A repeated row isn't invalid on its own; removing copies is what deduplication is for."
+    },
+    {
+      "kind": "text",
+      "md": "Quarantine starts like the labels in the invalid-records lesson: a `F.when` chain that gives each row the first reason it fails, or NULL when it passes. The difference is what happens next. The bad rows aren't thrown away; they keep **every column** plus the reason, so someone can fix them and load them later.\n\nTwo small tools help:\n\n- `shipments` is small, so its ids can come back to Python as a list. `collect()` returns every row, like `head(n)` without a limit. Only use it on small tables: every row travels to your program.\n- `select(\"*\", reason.alias(\"reason\"))` keeps all columns and adds one. `\"*\"` means every column."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Tag, then split",
+      "code": "from pyspark.sql import functions as F\n\nknown_shipments = [row[\"shipment_id\"] for row in shipments.select(\"shipment_id\").collect()]\nevent_types = [\"created\", \"picked\", \"departed\", \"in_transit\", \"out_for_delivery\", \"delivered\", \"exception\"]\n\nreason = (\n    F.when(F.col(\"shipment_id\").isNull() | ~F.col(\"shipment_id\").isin(known_shipments), \"unknown shipment\")\n    .when(F.col(\"event_type\").isNull() | ~F.col(\"event_type\").isin(event_types), \"unknown event type\")\n    .when(F.col(\"event_time\").isNull(), \"missing event time\")\n)\n\ntagged = shipment_events.select(\"*\", reason.alias(\"reason\"))\nquarantine = tagged.filter(F.col(\"reason\").isNotNull())\nclean = tagged.filter(F.col(\"reason\").isNull()).select(shipment_events.columns)\n\nquarantine.select(\"event_id\", \"shipment_id\", \"event_type\", \"load_date\", \"reason\").show()\nprint(known_shipments)\nprint(clean.columns)\n",
+      "note": "`isin` also takes a Python list. `select(shipment_events.columns)` gives the clean rows exactly the feed's columns, without `reason`, so they load like any other day's data."
+    },
+    {
+      "kind": "text",
+      "md": "Now **reconcile**. Every row that came in must leave in exactly one place, so:\n\n`received = clean + quarantined`\n\nIf the sum is short, rows were lost; if it's over, some were counted twice. It's three counts and one comparison, and it belongs at the end of every load."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Received equals clean plus quarantined",
+      "code": "from pyspark.sql import functions as F\n\nknown_shipments = [row[\"shipment_id\"] for row in shipments.select(\"shipment_id\").collect()]\nevent_types = [\"created\", \"picked\", \"departed\", \"in_transit\", \"out_for_delivery\", \"delivered\", \"exception\"]\n\nreason = (\n    F.when(F.col(\"shipment_id\").isNull() | ~F.col(\"shipment_id\").isin(known_shipments), \"unknown shipment\")\n    .when(F.col(\"event_type\").isNull() | ~F.col(\"event_type\").isin(event_types), \"unknown event type\")\n    .when(F.col(\"event_time\").isNull(), \"missing event time\")\n)\ntagged = shipment_events.select(\"*\", reason.alias(\"reason\"))\n\nreceived = shipment_events.count()\nclean = tagged.filter(F.col(\"reason\").isNull()).count()\nquarantined = tagged.filter(F.col(\"reason\").isNotNull()).count()\n\nreport = spark.createDataFrame([(received, clean, quarantined)], \"received BIGINT, clean BIGINT, quarantined BIGINT\")\nreport.show()\nprint(\"balanced:\", received == clean + quarantined)\n",
+      "note": "14 in, 13 clean, 1 quarantined. Splitting on one `reason` column can't lose a row: each row's reason is either NULL or not."
+    },
+    {
+      "kind": "text",
+      "md": "Reconciliation earns its keep when the split is written another way: one filter for the clean rows and the opposite filter for the bad ones. If a rule can be NULL, a row passes **neither** filter and silently disappears. The small feed below has one event with no type."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "A NULL rule loses a row",
+      "code": "from pyspark.sql import functions as F\n\nfeed = spark.createDataFrame(\n    [(\"E1\", \"SH0001\", \"created\"), (\"E2\", \"SH0001\", \"Departed\"), (\"E3\", \"SH0002\", None)],\n    \"event_id STRING, shipment_id STRING, event_type STRING\",\n)\nevent_types = [\"created\", \"picked\", \"departed\", \"in_transit\", \"out_for_delivery\", \"delivered\", \"exception\"]\n\ntype_ok = F.col(\"event_type\").isin(event_types)\nclean = feed.filter(type_ok)\nquarantine = feed.filter(~type_ok)\nprint(\"received\", feed.count(), \"clean\", clean.count(), \"quarantined\", quarantine.count())\n\nsafe_ok = F.coalesce(type_ok, F.lit(False))\nprint(\"received\", feed.count(), \"clean\", feed.filter(safe_ok).count(), \"quarantined\", feed.filter(~safe_ok).count())\n",
+      "note": "With the plain rule, E3 is in neither table: 3 in, 2 out, and nothing failed. `coalesce` turns the NULL into false, E3 goes to quarantine, and the counts balance again."
+    },
+    {
+      "kind": "text",
+      "md": "When the counts don't balance, stop the load, as a contract gate does. A row that vanished can't be found later, but a load that stopped can be rerun once the rule is fixed."
+    }
+  ],
+  "challenges": [
+    "PS-L024-C1",
+    "PS-L024-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "Why keep every column on a quarantined row?",
+      "choices": [
+        "Spark requires the same columns on both sides of a split",
+        "So the row can be fixed and loaded later without asking the source again",
+        "Quarantine tables are faster with more columns",
+        "It isn't needed: the reason alone is enough"
+      ],
+      "answer": 1,
+      "why": "Quarantine sets rows aside rather than deleting them. With all of its columns, a row can be corrected and loaded like any other."
+    },
+    {
+      "id": "k2",
+      "prompt": "A feed has 3 rows. `clean = feed.filter(rule)` has 2 rows and `bad = feed.filter(~rule)` has 0. What happened to the third row?",
+      "choices": [
+        "It was counted in both",
+        "Spark skipped it because it was a duplicate",
+        "Its rule was NULL, so neither filter kept it",
+        "It's in clean; count() was wrong"
+      ],
+      "answer": 2,
+      "why": "`filter` keeps only true, and `~` of NULL is still NULL. Turning NULL into false with `F.coalesce(rule, F.lit(False))` sends the row to quarantine."
+    },
+    {
+      "id": "k3",
+      "prompt": "Which check proves that a split didn't lose or double any rows?",
+      "choices": [
+        "received == clean + quarantined",
+        "clean > quarantined",
+        "quarantined == 0",
+        "clean == received"
+      ],
+      "answer": 0,
+      "why": "Every row must land in exactly one place. If the sum doesn't match, rows were lost or counted twice."
+    }
+  ],
+  "review": [
+    "Quarantine sets bad rows aside with a reason instead of dropping them or stopping the load.",
+    "Tag rows with a `F.when` chain and `select(\"*\", reason.alias(\"reason\"))` so they keep every column. A small reference table can become a Python list with `collect()` for `isin`.",
+    "Split on the reason: NULL is clean, anything else goes to quarantine.",
+    "Reconcile every load: received must equal clean plus quarantined.",
+    "Two opposite filters lose rows whose rule is NULL; `F.coalesce(rule, F.lit(False))` sends them to quarantine.",
+    "If the counts don't balance, stop the load and fix the rule."
+  ],
+  "practice": ["PS-Q0116", "PS-Q0117", "PS-Q0118", "PS-Q0119", "PS-Q0120"]
+}

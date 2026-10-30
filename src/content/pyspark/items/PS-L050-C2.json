@@ -1,0 +1,64 @@
+{
+  "id": "PS-L050-C2",
+  "slug": "slowest-request-per-service",
+  "lesson": "PS-L050",
+  "difficulty": "hard",
+  "minutes": 17,
+  "title": "The slowest request per service",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "For each service, the performance team wants its slowest request. Write `solve(api_requests)` with pair RDD functions so it returns `service`, `request_id` and `latency_ms` of the request with the highest latency.",
+  "rules": [
+    "One row per service that has at least one request with a latency. Requests with a missing `latency_ms` are ignored.",
+    "If two requests of a service tie for the highest latency, pick the one with the smaller `request_id`.",
+    "Return `service`, `request_id` (text) and `latency_ms` (`int`), in that order."
+  ],
+  "hints": [
+    "Make pairs of `(service, (latency_ms, request_id))`, skipping requests with no latency.",
+    "Write a function `slower(a, b)` that returns whichever of two `(latency, id)` tuples should win, ties included.",
+    "A tie means equal latency: then the smaller id wins. Plain `max` on the tuples picks the larger id."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "api_requests"
+  ],
+  "starter": "def solve(api_requests):\n    # Return service, request_id and latency_ms of each service's slowest request.\n    return api_requests\n",
+  "output": {
+    "columns": [
+      "service",
+      "request_id",
+      "latency_ms"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "technique": {
+    "name": "pair RDD functions",
+    "plan": [
+      "Scan"
+    ],
+    "source": [
+      "reduceByKey",
+      "groupByKey",
+      "aggregateByKey",
+      "combineByKey",
+      "foldByKey",
+      "mapValues",
+      "flatMapValues",
+      "countByKey"
+    ]
+  }
+}

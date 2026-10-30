@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0200",
+  "slug": "log-record-struct",
+  "lesson": "PS-L040",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Log line as a fixed record",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "The log archive wants every line in one fixed shape, with where it ran pulled out of the map. Write `solve(application_logs)` so it returns `log_id` and that `record`.",
+  "rules": [
+    "`record` is a struct with the fields `service`, `level`, `origin` and `entries`, in that order.",
+    "`origin` is a struct of `host` and `region`, the values under those keys in `attributes`, each missing when its key isn't there. A line with no map still gets an `origin`, with both values missing.",
+    "`entries` is the number of keys in `attributes`: 0 for an empty map, missing when there is no map.",
+    "Return `log_id` and `record`."
+  ],
+  "hints": [
+    "Map lookups are columns like any other, so they can go straight into `F.struct`.",
+    "Build `origin` first: `F.struct(F.col(\"attributes\")[\"host\"].alias(\"host\"), ...)`.",
+    "Then put `service`, `level`, `origin` and `F.size(\"attributes\")` into the outer struct, naming each field with `alias`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "application_logs"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(application_logs):\n    # Return log_id and the fixed record struct.\n    return application_logs\n",
+  "output": {
+    "columns": [
+      "log_id",
+      "record"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Read the two keys into a struct, then nest it: `origin = F.struct(F.col(\"attributes\")[\"host\"].alias(\"host\"), F.col(\"attributes\")[\"region\"].alias(\"region\"))` and `F.struct(\"service\", \"level\", origin.alias(\"origin\"), F.size(\"attributes\").alias(\"entries\")).alias(\"record\")`. A key that isn't in the map reads as missing, so background jobs without a region get a missing `region`. `F.struct` always builds a struct, which is what the rules ask for when there is no map. A map's keys can change from row to row, but a struct's fields are fixed, which is why the archive asks for one."
+}

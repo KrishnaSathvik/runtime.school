@@ -1,0 +1,47 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D07",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "trips"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "driver memory setting: 2g\ndriver heap: 2048 MiB\nexecutor memory setting: not set\ncores for tasks: 2\ntrips partitions: 1\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "executors reporting memory: 1\nunified pool: 1048 MiB\nmatches (heap - 300 MiB) * 0.6: True\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "",
+   "error": {
+    "type": "AnalysisException",
+    "message": "[CANNOT_MODIFY_CONFIG] Cannot modify the value of the Spark config: \"spark.executor.memory\".",
+    "line": 1,
+    "condition": "CANNOT_MODIFY_CONFIG"
+   }
+  },
+  "e4": {
+   "stdout": "spark.driver.memory False\nspark.executor.memory False\nspark.executor.cores False\nspark.sql.shuffle.partitions True\n8\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "exit code: 0\napp: heap MiB 1024\napp: pool MiB 434\napp: executor memory not set\napp: cores 3\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "exit code: 0\napp: count 50000\napp: collect failed with Py4JJavaError\nlog names maxResultSize: True\n",
+   "error": null
+  }
+ }
+}

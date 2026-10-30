@@ -1,0 +1,59 @@
+{
+  "id": "PS-Q0233",
+  "slug": "read-any-flag-batch",
+  "lesson": "PS-L047",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Read back any batch of flags",
+  "dataset": {
+    "id": "PS-D13",
+    "version": "1.0.0"
+  },
+  "prompt": "The review job saves each batch of readings with one folder per `quality_flag`. Write `load(path)` so it reads a batch back with the same columns and types every time, whatever the batch holds. `solve` is written for you.",
+  "rules": [
+    "Return every reading, with the columns of `observations` in the same order: `quality_flag` is already last.",
+    "Every column keeps its type from `observations`; `quality_flag` is text, even when the flags in a batch look like numbers.",
+    "A reading with no flag reads back with a missing flag, even when no reading in the batch has one.",
+    "A batch with no readings at all gives an empty result with the same columns."
+  ],
+  "hints": [
+    "Run plain `spark.read.parquet(path)` in your head on each case. Where does Spark get the type of `quality_flag` from?",
+    "Partition values are guessed from the folder names, and an empty folder has no files to read a schema from.",
+    "Give the read a schema, the same one `observations` has: `spark.read.schema(\"observation_id STRING, ...\").parquet(path)`."
+  ],
+  "explanation": "Pass the schema: `spark.read.schema(\"observation_id STRING, station_id STRING, observed_at TIMESTAMP, observation_date DATE, temperature_c DOUBLE, humidity_pct INT, precipitation_mm DOUBLE, wind_speed_kph DOUBLE, pressure_hpa DOUBLE, quality_flag STRING\").parquet(path)`. Without it, Spark guesses the partition column's type from the folder names: flags `0` and `1` become an `int`, and a batch whose only folder is the default one for missing values gets a type that holds nothing but NULL. An empty batch has no files at all, so there's no schema to read and the plain read fails. With the schema, every batch reads back the same way.",
+  "entry": "solve",
+  "inputs": [
+    "observations"
+  ],
+  "starter": "def load(path):\n    # Read a batch saved at `path`, one folder per quality_flag.\n    return spark.read.parquet(path)\n\n\ndef solve(observations):\n    path = \"/tmp/weather/by_flag\"\n    # The review job, written for you: one folder per quality flag.\n    observations.write.mode(\"overwrite\").partitionBy(\"quality_flag\").parquet(path)\n    return load(path)\n",
+  "output": {
+    "columns": [
+      "observation_id",
+      "station_id",
+      "observed_at",
+      "observation_date",
+      "temperature_c",
+      "humidity_pct",
+      "precipitation_mm",
+      "wind_speed_kph",
+      "pressure_hpa",
+      "quality_flag"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

@@ -1,0 +1,179 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "hour_start",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "device_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "lowest_battery",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "last_reading",
+     "type": "timestamp",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "2026-04-14T09:00:00",
+     "DEV-002",
+     3.12,
+     "2026-04-14T09:55:00"
+    ],
+    [
+     "2026-04-14T09:00:00",
+     "DEV-001",
+     3.35,
+     "2026-04-14T09:50:00"
+    ],
+    [
+     "2026-04-14T10:00:00",
+     "DEV-002",
+     3.89,
+     "2026-04-14T10:40:00"
+    ],
+    [
+     "2026-04-14T10:00:00",
+     "DEV-001",
+     3.36,
+     "2026-04-14T10:15:00"
+    ]
+   ],
+   "row_count": 4,
+   "inputs": {
+    "sensor_readings": [
+     [
+      "R0201",
+      "DEV-001",
+      "2026-04-14T09:05:00",
+      "2026-04-14T09:05:20",
+      "0",
+      "{\"temperature_c\":3.3,\"humidity_pct\":null,\"battery_v\":3.42,\"status\":\"ok\",\"tags\":[\"indoor\",\"cold_chain\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0202",
+      "DEV-002",
+      "2026-04-14T09:10:00",
+      "2026-04-14T09:10:31",
+      "0",
+      "{\"temperature_c\":21.5,\"humidity_pct\":41.0,\"battery_v\":3.91,\"status\":\"ok\",\"tags\":[\"indoor\",\"hvac\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0203",
+      "DEV-001",
+      "2026-04-14T09:35:00",
+      "2026-04-14T09:35:12",
+      "1",
+      "{\"temperature_c\":3.3,\"humidity_pct\":null,\"battery_v\":3.38,\"status\":\"low_battery\",\"tags\":[\"indoor\",\"cold_chain\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0204",
+      "DEV-002",
+      "2026-04-14T09:45:00",
+      "2026-04-14T09:45:40",
+      "1",
+      "{\"temperature_c\":21.5,\"humidity_pct\":41.0,\"battery_v\":null,\"status\":\"ok\",\"tags\":[\"indoor\",\"hvac\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0205",
+      "DEV-001",
+      "2026-04-14T10:15:00",
+      "2026-04-14T10:15:18",
+      "2",
+      "{\"temperature_c\":3.3,\"humidity_pct\":null,\"battery_v\":3.36,\"status\":\"low_battery\",\"tags\":[\"indoor\",\"cold_chain\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0206",
+      "DEV-002",
+      "2026-04-14T10:20:00",
+      "2026-04-14T10:20:44",
+      "2",
+      "{\"temperature_c\":21.5,\"humidity_pct\":41.0,\"battery_v\":3.9,\"status\":\"ok\",\"tags\":[\"indoor\",\"hvac\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0207",
+      "DEV-001",
+      "2026-04-14T09:50:00",
+      "2026-04-14T10:21:09",
+      "3",
+      "{\"temperature_c\":3.3,\"humidity_pct\":null,\"battery_v\":3.35,\"status\":\"low_battery\",\"tags\":[\"indoor\",\"cold_chain\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0208",
+      "DEV-002",
+      "2026-04-14T10:40:00",
+      "2026-04-14T10:40:27",
+      "3",
+      "{\"temperature_c\":21.5,\"humidity_pct\":41.0,\"battery_v\":3.89,\"status\":\"ok\",\"tags\":[\"indoor\",\"hvac\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0209",
+      "DEV-002",
+      "2026-04-14T09:55:00",
+      "2026-04-14T10:41:15",
+      "4",
+      "{\"temperature_c\":21.5,\"humidity_pct\":41.0,\"battery_v\":3.12,\"status\":\"low_battery\",\"tags\":[\"indoor\",\"hvac\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ],
+     [
+      "R0210",
+      "DEV-001",
+      "2026-04-14T11:05:00",
+      "2026-04-14T11:05:15",
+      "4",
+      "{\"temperature_c\":3.3,\"humidity_pct\":null,\"battery_v\":3.33,\"status\":\"low_battery\",\"tags\":[\"indoor\",\"cold_chain\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0211",
+      "DEV-001",
+      "2026-04-14T09:58:00",
+      "2026-04-14T11:06:02",
+      "5",
+      "{\"temperature_c\":3.3,\"humidity_pct\":null,\"battery_v\":3.05,\"status\":\"low_battery\",\"tags\":[\"indoor\",\"cold_chain\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R0212",
+      "DEV-002",
+      "2026-04-14T11:40:00",
+      "2026-04-14T11:40:38",
+      "5",
+      "{\"temperature_c\":21.5,\"humidity_pct\":41.0,\"battery_v\":3.88,\"status\":\"ok\",\"tags\":[\"indoor\",\"hvac\"]}",
+      "{\"version\":\"2.4.0\",\"build\":240}"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "two days of practice readings, delivered in five micro-batches",
+  "hours where some or all readings have no battery value",
+  "readings on the hour, a second before it, and late ones near the watermark",
+  "no readings at all"
+ ]
+}

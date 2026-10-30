@@ -1,0 +1,44 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D08",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "inventory",
+   "purchase_orders"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "+------------+--------+-----------------+-------+--------+-------------+----------+\n|warehouse_id|     sku|         sku_name|on_hand|reserved|reorder_point|as_of_date|\n+------------+--------+-----------------+-------+--------+-------------+----------+\n|        WH01|SKU-1003|Packing tape 48mm|    540|      90|          100|2026-03-11|\n|        WH01|SKU-1012|         Bath mat|    279|      19|          200|2026-03-10|\n|        WH01|SKU-1019|      Notebook A5|    160|      72|          100|2026-03-10|\n|        WH01|SKU-1029|       Step stool|     40|       0|           20|2026-03-11|\n|        WH02|SKU-1003|Packing tape 48mm|    265|     117|          200|2026-03-10|\n|        WH02|SKU-1014|   Extension lead|    250|      80|           50|2026-03-11|\n|        WH02|SKU-1021|     Water bottle|    620|      32|           50|2026-03-10|\n|        WH03|SKU-1003|Packing tape 48mm|    388|      72|           50|2026-03-10|\n|        WH03|SKU-1009|      Ceramic mug|    131|      45|           50|2026-03-10|\n|        WH03|SKU-1029|       Step stool|    436|      71|           50|2026-03-10|\n+------------+--------+-----------------+-------+--------+-------------+----------+\n\n1 MERGE\n{'numSourceRows': '3', 'numTargetRowsUpdated': '2', 'numTargetRowsInserted': '1'}\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "+------------+--------+-------+--------+\n|warehouse_id|     sku|on_hand|reserved|\n+------------+--------+-------+--------+\n|        WH01|SKU-1003|    540|      90|\n|        WH01|SKU-1003|    540|      90|\n|        WH01|SKU-1003|    540|      90|\n|        WH01|SKU-1012|    279|      19|\n|        WH01|SKU-1019|    160|      72|\n|        WH02|SKU-1014|    266|      80|\n|        WH02|SKU-1021|    620|      32|\n|        WH03|SKU-1009|    131|      45|\n|        WH03|SKU-1029|    436|      71|\n+------------+--------+-------+--------+\n\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "",
+   "error": {
+    "type": "UnsupportedOperationException",
+    "message": "[DELTA_MULTIPLE_SOURCE_ROW_MATCHING_TARGET_ROW_IN_MERGE] Cannot perform Merge as multiple source rows matched and attempted to modify the same",
+    "line": 16,
+    "condition": "DELTA_MULTIPLE_SOURCE_ROW_MATCHING_TARGET_ROW_IN_MERGE"
+   }
+  },
+  "e4": {
+   "stdout": "+------------+--------+-----------------+-------+--------+-------------+----------+\n|warehouse_id|     sku|         sku_name|on_hand|reserved|reorder_point|as_of_date|\n+------------+--------+-----------------+-------+--------+-------------+----------+\n|        WH01|SKU-1003|Packing tape 48mm|    540|      90|          100|2026-03-11|\n|        WH01|SKU-1012|         Bath mat|    279|      19|          200|2026-03-10|\n|        WH01|SKU-1019|      Notebook A5|    160|      72|          100|2026-03-10|\n|        WH02|SKU-1003|Packing tape 48mm|    265|     117|          200|2026-03-10|\n|        WH02|SKU-1014|   Extension lead|    266|      80|           50|2026-03-10|\n|        WH02|SKU-1021|     Water bottle|    620|      32|           50|2026-03-10|\n|        WH03|SKU-1003|Packing tape 48mm|    388|      72|           50|2026-03-10|\n|        WH03|SKU-1029|       Step stool|    436|      71|           50|2026-03-10|\n+------------+--------+-----------------+-------+--------+-------------+----------+\n\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "+-------+-------+---------+-------------+\n|  po_id|version|   status|expected_date|\n+-------+-------+---------+-------------+\n|PO00001|      3|  shipped|   2026-03-18|\n|PO00002|      1|     open|   2026-03-10|\n|PO00003|      2|confirmed|   2026-03-08|\n|PO00004|      1|     open|   2026-03-10|\n|PO00005|      1|     open|   2026-03-09|\n+-------+-------+---------+-------------+\n\n",
+   "error": null
+  }
+ }
+}

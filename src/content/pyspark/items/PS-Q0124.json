@@ -1,0 +1,55 @@
+{
+  "id": "PS-Q0124",
+  "slug": "fix-price-check",
+  "lesson": "PS-L025",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 6,
+  "title": "Fix the price check",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "The pricing team compares what each order line paid with today's catalogue price, but this function stops with an error. Find the bug and fix `solve(order_items, products)`.",
+  "rules": [
+    "`paid_price` is the line's own `unit_price`, the price on the day of the order. `list_price` is the product's `unit_price` in `products`, today's price.",
+    "Every order line appears exactly once. A line whose product isn't in `products` still appears, with `name` and `list_price` missing.",
+    "Return `order_id`, `line_no`, `product_id`, `name`, `paid_price` and `list_price`, in that order."
+  ],
+  "hints": [
+    "Read the error: which column does Spark say is ambiguous, and which two columns could it mean?",
+    "Both tables have a `unit_price`, and the join keeps both. A bare `F.col(\"unit_price\")` doesn't say which one you want.",
+    "Name the side: `order_items[\"unit_price\"]` is the price paid, `products[\"unit_price\"]` is today's price."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "order_items",
+    "products"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(order_items, products):\n    lines = order_items.join(products, on=\"product_id\", how=\"left\")\n    return lines.select(\n        \"order_id\",\n        \"line_no\",\n        \"product_id\",\n        \"name\",\n        F.col(\"unit_price\").alias(\"paid_price\"),\n        F.col(\"unit_price\").alias(\"list_price\"),\n    )\n",
+  "output": {
+    "columns": [
+      "order_id",
+      "line_no",
+      "product_id",
+      "name",
+      "paid_price",
+      "list_price"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Both tables have a column called `unit_price`, and `on=\"product_id\"` only merges the key, so the joined DataFrame has two `unit_price` columns and `F.col(\"unit_price\")` raises an ambiguity error. Say which side each price comes from: `order_items[\"unit_price\"].alias(\"paid_price\")` and `products[\"unit_price\"].alias(\"list_price\")`. Keep the left join: a line for a product that's no longer in the catalogue must still appear, with an empty name and list price. Watch the direction too; the two prices differ on several lines, so swapping them shows up at once."
+}

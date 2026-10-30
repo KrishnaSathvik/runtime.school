@@ -1,0 +1,81 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "forecast_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "station_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "perth_valid_for",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "perth_label",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "FC-000001",
+     "NYC-01",
+     "2026-03-08T14:00:00",
+     "08/03 14:00"
+    ],
+    [
+     "FC-000002",
+     "NYC-01",
+     "2026-03-08T20:00:00",
+     "08/03 20:00"
+    ],
+    [
+     "FC-000003",
+     "LIS-01",
+     "2026-03-08T14:00:00",
+     "08/03 14:00"
+    ],
+    [
+     "FC-000004",
+     "PNQ-01",
+     "2026-03-08T14:00:00",
+     "08/03 14:00"
+    ],
+    [
+     "FC-000005",
+     "PER-01",
+     "2026-03-08T14:00:00",
+     "08/03 14:00"
+    ],
+    [
+     "FC-000006",
+     "PER-01",
+     "2026-03-08T20:00:00",
+     "08/03 20:00"
+    ]
+   ],
+   "row_count": 6
+  }
+ },
+ "hidden": [
+  "the full practice forecasts table",
+  "forecasts valid in the Perth afternoon and evening",
+  "forecasts valid around Perth midnight, and at the end of a month",
+  "forecasts on the dates other countries change their clocks",
+  "a forecast with no valid time",
+  "an empty forecasts table"
+ ]
+}

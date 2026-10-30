@@ -1,0 +1,21 @@
+{
+  "id": "PS-L057-C1",
+  "kind": "predict",
+  "slug": "partitions-after-each-step",
+  "lesson": "PS-L057",
+  "difficulty": "medium",
+  "minutes": 6,
+  "title": "Partitions after each step",
+  "prompt": "What does this program print in this environment? Adaptive execution is turned off first. Type each printed line on its own line.",
+  "program": "spark.conf.set(\"spark.sql.adaptive.enabled\", \"false\")\n\nspread = trips.repartition(6)\nprint(spread.rdd.getNumPartitions(), spread.coalesce(2).rdd.getNumPartitions(), spread.coalesce(10).rdd.getNumPartitions())\nprint(spread.repartition(10).rdd.getNumPartitions())\nprint(spread.groupBy(\"driver_id\").count().rdd.getNumPartitions())\n\nspark.conf.set(\"spark.sql.shuffle.partitions\", \"3\")\nprint(spread.groupBy(\"driver_id\").count().rdd.getNumPartitions(), spread.repartition(\"rate_code\").rdd.getNumPartitions())\n",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "`coalesce` can lower the number of partitions but never raise it; `repartition` can do both.",
+    "A grouping shuffle makes `spark.sql.shuffle.partitions` partitions, however many the input had. This environment starts with that setting at 4.",
+    "With adaptive execution off, nothing merges partitions afterwards. `repartition` with a column but no number uses the same setting."
+  ]
+}

@@ -1,0 +1,43 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D01",
+  "version": "1.1.0",
+  "edition": "lesson",
+  "tables": [
+   "orders"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "+--------+-----------+----------+------+-------+------+\n|order_id|customer_id|order_date|status|channel| total|\n+--------+-----------+----------+------+-------+------+\n|  O00001|      C0001|2026-06-11|  paid|  store|117.99|\n|  O00003|      C0002|2026-08-28|  paid|    app|291.95|\n|  O00008|      C0001|2026-04-03|  paid|    web| 59.50|\n|  O00010|      C0006|2026-01-11|  paid|    app|299.91|\n+--------+-----------+----------+------+-------+------+\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "+--------+---------+------+\n|order_id|   status| total|\n+--------+---------+------+\n|  O00003|     paid|291.95|\n|  O00004|  shipped|418.96|\n|  O00007|   placed|227.48|\n|  O00010|     paid|299.91|\n|  O00011|delivered|243.00|\n+--------+---------+------+\n\n+--------+----------+\n|order_id|order_date|\n+--------+----------+\n|  O00005|2026-01-18|\n|  O00010|2026-01-11|\n|  O00011|2026-01-23|\n+--------+----------+\n\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "+--------+------+-------+\n|order_id|status|channel|\n+--------+------+-------+\n|  O00003|  paid|    app|\n|  O00010|  paid|    app|\n+--------+------+-------+\n\n+--------+-------+------+\n|order_id|channel| total|\n+--------+-------+------+\n|  O00001|  store|117.99|\n|  O00003|    app|291.95|\n|  O00004|    app|418.96|\n|  O00006|  store| 39.98|\n|  O00009|  store|105.49|\n|  O00010|    app|299.91|\n+--------+-------+------+\n\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "",
+   "error": {
+    "type": "PySparkValueError",
+    "message": "[CANNOT_CONVERT_COLUMN_INTO_BOOL] Cannot convert column into bool: please use '&' for 'and', '|' for 'or', '~' for 'not' when building DataFrame boolean expressions.",
+    "line": 3,
+    "condition": "CANNOT_CONVERT_COLUMN_INTO_BOOL"
+   }
+  },
+  "e5": {
+   "stdout": "+--------+-------+\n|order_id| status|\n+--------+-------+\n|  O00001|   paid|\n|  O00003|   paid|\n|  O00004|shipped|\n|  O00005|shipped|\n|  O00008|   paid|\n|  O00009|shipped|\n|  O00010|   paid|\n+--------+-------+\n\n11 of 12 orders were not cancelled or refunded\n",
+   "error": null
+  }
+ }
+}

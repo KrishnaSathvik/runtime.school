@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0121",
+  "slug": "every-customer-and-their-orders",
+  "lesson": "PS-L025",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Every customer and their orders",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "Customer service wants a list of every customer next to each order they placed, so customers who never ordered stand out. Write `solve(customers, orders)` so it returns `customer_id`, `name`, `order_id` and `total`.",
+  "rules": [
+    "Match an order to the customer with the same `customer_id`. A customer with several orders appears once per order.",
+    "A customer with no orders appears once, with `order_id` and `total` missing.",
+    "Orders whose customer isn't in `customers`, or have no `customer_id`, are not listed. Return only these four columns, in this order. Keep duplicate orders."
+  ],
+  "hints": [
+    "Every customer must appear, matched or not, so `customers` is the side to keep whole.",
+    "`customers.join(orders, on=\"customer_id\", how=...)`: `left` keeps every row of the left side and fills the right side's columns with NULL when nothing matches.",
+    "An inner join loses customers who never ordered; a full join would add orders that have no customer."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "customers",
+    "orders"
+  ],
+  "starter": "def solve(customers, orders):\n    # Every customer, next to each of their orders.\n    return customers\n",
+  "output": {
+    "columns": [
+      "customer_id",
+      "name",
+      "order_id",
+      "total"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Every customer must appear, so `customers` goes on the left of a left join: `customers.join(orders, on=\"customer_id\", how=\"left\")`, then `select(\"customer_id\", \"name\", \"order_id\", \"total\")`. A customer with three orders gets three rows; one with none gets a single row whose order columns are NULL, meaning no match, not an order of 0. Orders with an unknown or missing customer have nothing to attach to on the left, so they drop out. An inner join would hide the customers who never ordered, and a full join would add those orphan orders with no name."
+}

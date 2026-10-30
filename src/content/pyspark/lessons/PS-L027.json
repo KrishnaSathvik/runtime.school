@@ -1,0 +1,125 @@
+{
+  "id": "PS-L027",
+  "minutes": 20,
+  "lede": "An employee's manager is another row of the same table. A self join matches a table with itself, and a cross join goes the other way: it pairs every row with every row, which is how you build a complete grid.",
+  "objectives": [
+    "Give two copies of one DataFrame different names with `alias`",
+    "Join a table to itself to look up a related row, such as a manager",
+    "Chain self joins to climb more than one level",
+    "Build every combination of two DataFrames with `crossJoin`, and predict its size"
+  ],
+  "dataset": {
+    "id": "PS-D03",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "employees",
+      "departments"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "In `employees`, `manager_id` holds the `employee_id` of the person's manager. To show each employee next to their manager's name, join `employees` with itself: one copy plays the employee, the other the manager.\n\nBoth copies have the same column names, so give each a name with `alias`. `employees.alias(\"e\")` is the same data, but now its columns can be written `F.col(\"e.first_name\")`, and the other copy's `F.col(\"m.first_name\")`."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Each employee and their manager",
+      "code": "from pyspark.sql import functions as F\n\ne = employees.alias(\"e\")\nm = employees.alias(\"m\")\n\npairs = e.join(m, F.col(\"e.manager_id\") == F.col(\"m.employee_id\"), \"left\")\n\npairs.select(\n    \"e.employee_id\",\n    \"e.first_name\",\n    \"e.job_title\",\n    F.col(\"m.first_name\").alias(\"manager\"),\n    F.col(\"m.job_title\").alias(\"manager_title\"),\n).orderBy(\"e.employee_id\").show(truncate=False)\n",
+      "note": "The chief executive has no manager. A left join keeps that row with NULLs; an inner join would drop it. The join condition decides which copy is which: `e.manager_id` matches `m.employee_id`."
+    },
+    {
+      "kind": "text",
+      "md": "After a self join every column name exists twice. Asking for a bare name doesn't say which copy you mean."
+    },
+    {
+      "kind": "error-example",
+      "id": "e2",
+      "title": "Which first_name?",
+      "code": "from pyspark.sql import functions as F\n\ne = employees.alias(\"e\")\nm = employees.alias(\"m\")\n\npairs = e.join(m, F.col(\"e.manager_id\") == F.col(\"m.employee_id\"), \"left\")\npairs.select(\"employee_id\", \"first_name\").show()\n",
+      "error": "AnalysisException",
+      "note": "The message lists both candidates, `e`.`employee_id` and `m`.`employee_id`. Prefix every column with its alias and rename the manager's columns with `.alias(...)` so the result has unique names."
+    },
+    {
+      "kind": "text",
+      "md": "Each self join climbs one level. To reach the manager's manager, add a third copy and join it on the second copy's `manager_id`. An inner join here keeps only people who have both levels above them."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Two levels up",
+      "code": "from pyspark.sql import functions as F\n\ne = employees.alias(\"e\")\nm = employees.alias(\"m\")\nmm = employees.alias(\"mm\")\n\nchain = (\n    e.join(m, F.col(\"e.manager_id\") == F.col(\"m.employee_id\"), \"inner\")\n    .join(mm, F.col(\"m.manager_id\") == F.col(\"mm.employee_id\"), \"inner\")\n)\n\nchain.select(\n    \"e.employee_id\",\n    \"e.first_name\",\n    F.col(\"m.first_name\").alias(\"manager\"),\n    F.col(\"mm.first_name\").alias(\"managers_manager\"),\n).orderBy(\"e.employee_id\").show()\n",
+      "note": "The two heads and the chief executive are gone: the heads' manager has no manager, and the chief executive has none at all. A fixed number of joins climbs a fixed number of levels."
+    },
+    {
+      "kind": "text",
+      "md": "A **cross join** has no condition at all: every row on the left is paired with every row on the right. `a.crossJoin(b)` has `a.count() × b.count()` rows.\n\nThat's exactly what a planning grid needs: one row for every department in every quarter, so a department with nothing planned still gets a row to fill in."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "A grid of departments and quarters",
+      "code": "quarters = spark.createDataFrame([(\"2026-Q1\",), (\"2026-Q2\",), (\"2026-Q3\",), (\"2026-Q4\",)], \"quarter STRING\")\n\ngrid = departments.select(\"department_id\", \"department_name\").crossJoin(quarters)\nprint(departments.count(), \"x\", quarters.count(), \"=\", grid.count())\n\ngrid.orderBy(\"department_id\", \"quarter\").show()\n",
+      "note": "3 departments times 4 quarters gives 12 rows. The result has the columns of both sides."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Cross joins grow fast",
+      "code": "print(employees.count(), \"employees\")\nprint(employees.crossJoin(employees).count(), \"pairs\")\n",
+      "note": "Every employee paired with every employee, including themselves: 9 × 9 = 81. With 10,000 employees it would be 100 million rows. Cross join small tables on purpose, never large ones by accident."
+    }
+  ],
+  "challenges": [
+    "PS-L027-C1",
+    "PS-L027-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "Why does a self join need `alias`?",
+      "choices": [
+        "Spark can't join a DataFrame with itself any other way",
+        "Both copies have the same column names, so each copy needs a name to tell them apart",
+        "`alias` makes a physical copy of the data",
+        "It makes the join faster"
+      ],
+      "answer": 1,
+      "why": "`alias` doesn't copy anything; it names each side so `F.col(\"e.first_name\")` and `F.col(\"m.first_name\")` mean different columns."
+    },
+    {
+      "id": "k2",
+      "prompt": "The chief executive's `manager_id` is NULL. Is the chief executive in an inner self join of employees to managers?",
+      "choices": [
+        "Yes, with a NULL manager",
+        "Yes, matched to themselves",
+        "No: a NULL key matches nothing, so an inner join drops the row",
+        "It raises an error"
+      ],
+      "answer": 2,
+      "why": "With no matching manager row the inner join drops it. Use a left join to keep everyone."
+    },
+    {
+      "id": "k3",
+      "prompt": "`a` has 6 rows and `b` has 5. How many rows does `a.crossJoin(b)` have?",
+      "choices": [
+        "11",
+        "6",
+        "5",
+        "30"
+      ],
+      "answer": 3,
+      "why": "A cross join pairs every row with every row: 6 × 5 = 30."
+    }
+  ],
+  "review": [
+    "A self join matches a table with itself; `df.alias(\"x\")` names each copy.",
+    "Refer to columns as `F.col(\"x.name\")`, and rename one side's columns so the result has unique names.",
+    "The join condition decides the roles: `e.manager_id == m.employee_id` makes `m` the manager.",
+    "Use a left self join to keep rows with no match, such as the person at the top.",
+    "Each extra self join climbs one more level.",
+    "`a.crossJoin(b)` pairs every row with every row: `a.count() × b.count()` rows. Use it for small grids only."
+  ],
+  "practice": ["PS-Q0131", "PS-Q0132", "PS-Q0133", "PS-Q0134", "PS-Q0135"]
+}

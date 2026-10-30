@@ -1,0 +1,92 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "encounter_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "provider_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "first_code",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "heart_rate",
+     "type": "int",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "ENC000001",
+     "PRV0004",
+     "J45.909",
+     96
+    ],
+    [
+     "ENC000002",
+     "PRV0001",
+     "Z00.00",
+     104
+    ],
+    [
+     "ENC000003",
+     "PRV0002",
+     "K21.9",
+     92
+    ],
+    [
+     "ENC000004",
+     "PRV0002",
+     "K21.9",
+     91
+    ],
+    [
+     "ENC000005",
+     "PRV0003",
+     "N39.0",
+     102
+    ],
+    [
+     "ENC000006",
+     "PRV0001",
+     "S93.401A",
+     96
+    ],
+    [
+     "ENC000007",
+     "PRV0005",
+     "N39.0",
+     null
+    ],
+    [
+     "ENC000008",
+     "PRV0005",
+     "M54.5",
+     null
+    ]
+   ],
+   "row_count": 8
+  }
+ },
+ "hidden": [
+  "the full practice visits table",
+  "visits with a single diagnosis code",
+  "a video visit with no vitals",
+  "the same visit delivered twice",
+  "an empty visits table"
+ ]
+}

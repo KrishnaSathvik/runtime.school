@@ -1,0 +1,104 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "log_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "service",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "bad_record",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "LOG-000001",
+     "catalog-api",
+     null
+    ],
+    [
+     "LOG-000002",
+     "auth-service",
+     null
+    ],
+    [
+     "LOG-000003",
+     "checkout-api",
+     null
+    ],
+    [
+     null,
+     null,
+     "{\"log_id\":\"LOG-000004\",\"logged_at\":\"2026-04-14T10:00:21.418000\",\"level\":\"INFO\",\"service\":\"search-api\",\"message\":\"GET /v1/search 200\",\"trace_id\":\"bae0b151a3d78dc9\",\"attributes\":{\"host\":\"s"
+    ],
+    [
+     "LOG-000004",
+     "search-api",
+     null
+    ],
+    [
+     "LOG-000005",
+     "iot-gateway",
+     null
+    ],
+    [
+     "LOG-000006",
+     "checkout-api",
+     null
+    ],
+    [
+     null,
+     null,
+     "{\"log_id\":\"LOG-000007\",\"logged_at\":\"2026-04-14T10:01:03\",\"level\":\"WARN\",\"service\":\"iot-gateway\",\"message\":\"no heartbeat for 10 minutes\",\"trace_id\":null,\"attributes\":{\"device_id\":\"DEV-0002\",\"error_type\":\"HeartbeatMissed\",\"host\":\"iot-gateway-a41d8\"}"
+    ],
+    [
+     "LOG-000007",
+     "iot-gateway",
+     null
+    ],
+    [
+     "LOG-000008",
+     "iot-gateway",
+     null
+    ],
+    [
+     "LOG-000009",
+     "search-api",
+     null
+    ],
+    [
+     null,
+     null,
+     "2026-04-14 10:01:28 ERROR notification-worker Traceback (most recent call last):"
+    ],
+    [
+     "LOG-000010",
+     "notification-worker",
+     null
+    ]
+   ],
+   "row_count": 13
+  }
+ },
+ "hidden": [
+  "the full practice log file",
+  "cut-off records, a missing closing brace, a plain-text line and a blank line",
+  "a file with no bad lines",
+  "the same broken line shipped twice",
+  "a file where no line parses"
+ ]
+}

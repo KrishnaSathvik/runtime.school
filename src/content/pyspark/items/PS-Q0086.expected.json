@@ -1,0 +1,145 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "alert_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "start_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "end_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "days_covered",
+     "type": "int",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "AL-0001",
+     "2026-03-09",
+     "2026-03-09",
+     1
+    ],
+    [
+     "AL-0002",
+     "2026-03-08",
+     "2026-03-08",
+     1
+    ],
+    [
+     "AL-0003",
+     "2026-03-08",
+     "2026-03-08",
+     1
+    ],
+    [
+     "AL-0004",
+     "2026-03-08",
+     null,
+     null
+    ],
+    [
+     "AL-0005",
+     "2026-03-09",
+     "2026-03-10",
+     2
+    ],
+    [
+     "AL-0006",
+     "2026-03-07",
+     "2026-03-09",
+     3
+    ]
+   ],
+   "row_count": 6,
+   "inputs": {
+    "weather_alerts": [
+     [
+      "AL-0001",
+      "NYC-01",
+      "frost",
+      "watch",
+      "2026-03-09T06:00:00",
+      "2026-03-09T08:00:00",
+      "2026-03-09T12:00:00",
+      "Frost expected; protect exposed pipes and plants."
+     ],
+     [
+      "AL-0002",
+      "PER-01",
+      "heat",
+      "warning",
+      "2026-03-08T01:00:00",
+      "2026-03-08T03:00:00",
+      "2026-03-08T10:00:00",
+      "High temperatures; limit outdoor work in the afternoon."
+     ],
+     [
+      "AL-0003",
+      "LIS-01",
+      "heavy_rain",
+      "advisory",
+      "2026-03-08T09:00:00",
+      "2026-03-08T11:00:00",
+      "2026-03-08T13:00:00",
+      "Heavy rain; localized flooding possible."
+     ],
+     [
+      "AL-0004",
+      "NYC-01",
+      "high_wind",
+      "advisory",
+      "2026-03-08T16:00:00",
+      "2026-03-08T18:00:00",
+      null,
+      "Strong winds; secure loose objects."
+     ],
+     [
+      "AL-0005",
+      "LIS-01",
+      "high_wind",
+      "warning",
+      "2026-03-09T20:00:00",
+      "2026-03-09T22:00:00",
+      "2026-03-10T03:00:00",
+      "Gusts overnight; avoid coastal paths."
+     ],
+     [
+      "AL-0006",
+      "PER-01",
+      "heat",
+      "watch",
+      "2026-03-06T20:00:00",
+      "2026-03-07T06:00:00",
+      "2026-03-09T09:00:00",
+      "Hot days ahead; keep water to hand."
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice alerts table",
+  "alerts that start and end on the same day",
+  "short alerts that run past midnight, and alerts that end exactly at midnight",
+  "alerts lasting several days, across a month and a year end",
+  "alerts still in force, and one with no start",
+  "an empty alerts table"
+ ]
+}

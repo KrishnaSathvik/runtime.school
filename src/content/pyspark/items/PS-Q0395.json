@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0395",
+  "kind": "predict",
+  "slug": "a-second-builder-in-the-job",
+  "lesson": "PS-L079",
+  "role": "integration",
+  "format": "concept_or_trace",
+  "difficulty": "medium",
+  "minutes": 7,
+  "title": "A second builder in the job",
+  "prompt": "A submitted job gets its session twice: first with a plain `getOrCreate()`, then again through a builder that sets a master and the shuffle partitions, as a helper module might. The program prints the exit code, then the job's lines without their `app:` prefix. What does it print? Type each line on its own line.",
+  "program": "import os, subprocess\n\nopen(\"/tmp/twice.py\", \"w\").write(\"\"\"\nfrom pyspark.sql import SparkSession\n\nspark = SparkSession.builder.getOrCreate()\nprint(\"app:\", spark.sparkContext.master, spark.conf.get(\"spark.sql.shuffle.partitions\"))\n\nagain = (SparkSession.builder\n         .master(\"local[1]\")\n         .config(\"spark.sql.shuffle.partitions\", \"4\")\n         .getOrCreate())\nprint(\"app:\", again is spark)\nprint(\"app:\", again.sparkContext.master, spark.conf.get(\"spark.sql.shuffle.partitions\"))\nspark.stop()\n\"\"\")\n\nenv = {**os.environ, \"SPARK_LOCAL_IP\": \"127.0.0.1\"}\nrun = subprocess.run(\n    [\"spark-submit\", \"--master\", \"local[2]\", \"--conf\", \"spark.sql.shuffle.partitions=6\", \"/tmp/twice.py\"],\n    capture_output=True, text=True, env=env)\nprint(run.returncode)\nfor line in run.stdout.splitlines():\n    if line.startswith(\"app:\"):\n        print(line[5:])\n",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "The first `getOrCreate()` sets nothing in code, so the session starts with what the command gave it.",
+    "Once a session is running, `getOrCreate()` hands back that same session; it doesn't start a new one.",
+    "A running application can't change its master. A query setting such as the shuffle partitions can change, and a builder's `.config(...)` sets it on the session it hands back."
+  ],
+  "explanation": "The first `getOrCreate()` starts the session, and the code sets nothing, so the command decides: `local[2]` and 6 shuffle partitions. The second builder finds that session running and returns it, so `again is spark` is `True`. Its `.master(\"local[1]\")` comes too late: the master was fixed when the application started, so it stays `local[2]`. Its `.config(\"spark.sql.shuffle.partitions\", \"4\")` is a query setting, and the builder sets it on the running session, so the job now sees 4. \"Code beats the command\" only holds for the builder that starts the session; a later builder can still change query settings behind your back, which is another reason to keep settings out of shared helper code."
+}

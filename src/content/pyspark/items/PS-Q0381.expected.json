@@ -1,0 +1,49 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "task",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "rows",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "known_events",
+     12
+    ],
+    [
+     "delivered",
+     4
+    ],
+    [
+     "in_flight",
+     0
+    ],
+    [
+     "late_scans",
+     1
+    ]
+   ],
+   "row_count": 4
+  }
+ },
+ "hidden": [
+  "the full practice tables",
+  "shipments with exception events, delivered or not",
+  "late, on-time and failed deliveries, with re-sent delivered scans",
+  "empty tables"
+ ]
+}

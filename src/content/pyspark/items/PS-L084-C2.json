@@ -1,0 +1,52 @@
+{
+  "id": "PS-L084-C2",
+  "slug": "raise-the-slo-alerts",
+  "lesson": "PS-L084",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Raise the SLO alerts",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "Every service has two targets for each 5-minute window in `service_metrics`: a p95 latency within 800 ms, and server errors on at most 5% of requests. Complete `solve(service_metrics)` so it returns one alert row for each window that misses a target.",
+  "rules": [
+    "Columns and types: `service STRING, window_start TIMESTAMP, p95_latency_ms INT, error_pct DOUBLE, alert STRING`.",
+    "`error_pct` is `error_count / request_count × 100`, rounded to 2 decimals. Compare the rounded value with the target.",
+    "A window misses the latency target when its p95 is above 800, and the error target when `error_pct` is above 5. Exactly 800 or exactly 5 is within the target.",
+    "`alert` is `latency`, `errors`, or `latency and errors` when both are missed. Windows that meet both targets have no row."
+  ],
+  "hints": [
+    "Write each target as its own condition first.",
+    "In a `F.when` chain the first true branch wins, so put the case where both are missed first.",
+    "Without `otherwise`, a window that passes gets NULL; filter those out."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "service_metrics"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\nMAX_P95_MS = 800\nMAX_ERROR_PCT = 5.0\n\n\ndef solve(service_metrics):\n    # One row per window that misses a target: service, window_start, p95_latency_ms, error_pct, alert.\n    return service_metrics.select(\"service\", \"window_start\", \"p95_latency_ms\")\n",
+  "output": {
+    "columns": [
+      "service",
+      "window_start",
+      "p95_latency_ms",
+      "error_pct",
+      "alert"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

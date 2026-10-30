@@ -1,0 +1,113 @@
+{
+  "id": "PS-L020",
+  "minutes": 20,
+  "lede": "Data feeds deliver the same row twice more often than you'd think, and every copy inflates a count or a revenue total. `distinct` removes rows that are exact copies; `dropDuplicates` can also keep one row per key, such as one row per order.",
+  "objectives": [
+    "Remove exact duplicate rows with `distinct()` or `dropDuplicates()`",
+    "Keep one row per key with `dropDuplicates([\"col\", ...])`",
+    "Predict which rows count as duplicates, including rows with missing values",
+    "Know that Spark doesn't promise which copy `dropDuplicates` keeps, and plan for it"
+  ],
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0",
+    "edition": "lesson",
+    "tables": [
+      "orders",
+      "order_items"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "The shop's `orders` and `order_items` are loaded as DataFrames with those names, and `F` is `pyspark.sql.functions`. The lesson tables are clean, so the first examples build a small feed with the kinds of repeats a real export has: an order sent twice, an order with no total sent twice, and an order whose status changed and was sent again.\n\n`df.distinct()` keeps one copy of each row and drops exact repeats. `df.dropDuplicates()` with no arguments does the same. Two rows are copies only when **every** column matches."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Exact copies",
+      "code": "from datetime import date\nfrom decimal import Decimal\n\nschema = \"order_id STRING, customer_id STRING, order_date DATE, status STRING, channel STRING, total DECIMAL(10,2)\"\nfeed = spark.createDataFrame([\n    (\"O00001\", \"C0001\", date(2026, 6, 11), \"paid\", \"store\", Decimal(\"117.99\")),\n    (\"O00002\", \"C0001\", date(2026, 3, 11), \"delivered\", \"app\", Decimal(\"79.96\")),\n    (\"O00001\", \"C0001\", date(2026, 6, 11), \"paid\", \"store\", Decimal(\"117.99\")),\n    (\"O00003\", \"C0002\", date(2026, 8, 28), \"paid\", \"app\", None),\n    (\"O00003\", \"C0002\", date(2026, 8, 28), \"paid\", \"app\", None),\n    (\"O00002\", \"C0001\", date(2026, 3, 11), \"refunded\", \"app\", Decimal(\"79.96\")),\n], schema)\n\nprint(feed.count(), \"rows in the feed\")\nprint(feed.distinct().count(), \"after distinct\")\nprint(feed.dropDuplicates().count(), \"after dropDuplicates\")\n",
+      "note": "The two copies of O00001 become one, and so do the two copies of O00003. Missing values count as matching here: two `NULL` totals are treated as the same. O00002 appears twice with different statuses, so both rows stay."
+    },
+    {
+      "kind": "text",
+      "md": "Often what you want is one row per **key**, such as one row per `order_id`, even when other columns differ. Pass the key columns as a list: `df.dropDuplicates([\"order_id\"])`. It keeps every column, but only one row for each key."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "One row per order",
+      "code": "from datetime import date\nfrom decimal import Decimal\n\nschema = \"order_id STRING, customer_id STRING, order_date DATE, status STRING, channel STRING, total DECIMAL(10,2)\"\nfeed = spark.createDataFrame([\n    (\"O00001\", \"C0001\", date(2026, 6, 11), \"paid\", \"store\", Decimal(\"117.99\")),\n    (\"O00002\", \"C0001\", date(2026, 3, 11), \"delivered\", \"app\", Decimal(\"79.96\")),\n    (\"O00002\", \"C0001\", date(2026, 3, 11), \"refunded\", \"app\", Decimal(\"79.96\")),\n], schema)\n\none_each = feed.dropDuplicates([\"order_id\"])\nprint(one_each.count(), \"rows\")\nprint(one_each.columns)\nprint(sorted(row[\"order_id\"] for row in one_each.head(10)))\n",
+      "note": "Two rows, one per order, with all six columns. But which O00002 survived, `delivered` or `refunded`? **Spark doesn't promise.** It can change with the data and the number of partitions."
+    },
+    {
+      "kind": "text",
+      "md": "That last point matters. Use `dropDuplicates` on a key when the copies agree on everything you're going to use, or when any copy will do. If you need a particular one, like the latest status, you have to say which; later lessons show how to rank rows within a key and keep the first.\n\nWhen you only need the key columns themselves, `select` them and call `distinct()`: the result can't depend on which copy was kept."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Which products are in each order?",
+      "code": "pairs = order_items.select(\"order_id\", \"product_id\")\n\nprint(order_items.count(), \"order lines\")\nprint(pairs.distinct().count(), \"different order and product pairs\")\nprint(order_items.dropDuplicates([\"order_id\", \"product_id\"]).count(), \"rows after dropDuplicates on the pair\")\n",
+      "note": "Some orders list the same product on two lines (O00001 has P005 at two prices), so 32 lines hold 27 pairs. Both ways count 27, but `dropDuplicates` also keeps `quantity` and `unit_price` from whichever line it picked."
+    },
+    {
+      "kind": "error-example",
+      "id": "e4",
+      "title": "A key that isn't in a list",
+      "code": "orders.dropDuplicates(\"customer_id\")\n",
+      "error": "PySparkTypeError",
+      "note": "`dropDuplicates` takes a list of column names, even for one column: `orders.dropDuplicates([\"customer_id\"])`."
+    }
+  ],
+  "challenges": [
+    "PS-L020-C1",
+    "PS-L020-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "Two rows have the same `order_id` but different `status`. What does `distinct()` do with them?",
+      "choices": [
+        "Keeps one of them",
+        "Keeps both, because not every column matches",
+        "Drops both",
+        "Stops with an error"
+      ],
+      "answer": 1,
+      "why": "`distinct` removes only exact copies, where every column matches. To keep one row per order, use `dropDuplicates([\"order_id\"])`."
+    },
+    {
+      "id": "k2",
+      "prompt": "Two rows are identical except that both have a missing `total`. Does `distinct()` treat them as copies?",
+      "choices": [
+        "Yes: for removing duplicates, two missing values count as the same",
+        "No: a comparison with a missing value is never true",
+        "Only if you call fillna first",
+        "It stops with an error"
+      ],
+      "answer": 0,
+      "why": "`distinct` and `dropDuplicates` treat missing values as equal to each other, so the two rows become one. This differs from `==` in a filter."
+    },
+    {
+      "id": "k3",
+      "prompt": "An order appears twice with statuses `delivered` and `refunded`. Which one does `dropDuplicates([\"order_id\"])` keep?",
+      "choices": [
+        "Always the first one in the file",
+        "Always the last one",
+        "Always refunded, the later status",
+        "Either: Spark doesn't promise which copy it keeps"
+      ],
+      "answer": 3,
+      "why": "`dropDuplicates` keeps one row per key but makes no promise about which. If you need a particular row, you have to choose it explicitly."
+    }
+  ],
+  "review": [
+    "`distinct()` and `dropDuplicates()` remove exact copies: every column must match.",
+    "When removing duplicates, two missing values count as the same.",
+    "`dropDuplicates([\"key\", ...])` keeps one row per key, with every column. The key is always a list.",
+    "Spark doesn't promise which copy `dropDuplicates` keeps; use it when the copies agree on what you need.",
+    "To get just the keys, `select` them and call `distinct()`."
+  ],
+  "practice": ["PS-Q0096", "PS-Q0097", "PS-Q0098", "PS-Q0099", "PS-Q0100"]
+}

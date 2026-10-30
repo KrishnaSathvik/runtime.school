@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0010",
+  "kind": "predict",
+  "slug": "more-partitions-than-errors",
+  "lesson": "PS-L002",
+  "role": "integration",
+  "format": "concept_or_trace",
+  "difficulty": "easy",
+  "minutes": 4,
+  "title": "More partitions than errors",
+  "prompt": "This program spreads the `error_events` table and compares the result with the original. What does it print? Type each line on its own line.",
+  "program": "spread = error_events.repartition(6)\nprint(spread.columns == error_events.columns)\nprint(len(spread.columns), spread.count())\nprint(spread.rdd.getNumPartitions() - spread.count(), \"partitions at least are empty\")\n",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "`repartition` moves rows between partitions. Does it touch the columns?",
+    "Count the columns and the rows of `error_events`.",
+    "With more partitions than rows, some partitions must be empty: at least partitions minus rows."
+  ],
+  "explanation": "`repartition` keeps the same columns in the same order, so the lists are equal (`True`). `error_events` has 8 columns and 4 rows, and spreading 4 rows over 6 partitions leaves at least 2 of them empty."
+}

@@ -1,0 +1,60 @@
+{
+  "id": "PS-Q0116",
+  "slug": "tag-every-tracking-event",
+  "lesson": "PS-L024",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Tag every tracking event",
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0"
+  },
+  "prompt": "Before the tracking feed is split, each event gets the reason it can't be loaded, or nothing if it's fine. Write `solve(shipment_events, shipments, warehouses)` so it returns every event with a `reason` column.",
+  "rules": [
+    "Check in this order and use the first reason that applies: `unknown shipment` (`shipment_id` missing or not in `shipments`), `unknown warehouse` (`warehouse_id` missing or not in `warehouses`), `missing location`.",
+    "An event that passes every check gets a missing `reason`.",
+    "Return every event, with every column of `shipment_events` unchanged plus `reason` at the end. Keep duplicate rows."
+  ],
+  "hints": [
+    "`shipments` and `warehouses` are small: turn their ids into Python lists with `collect()` so `isin` can use them.",
+    "A `F.when` chain with no `otherwise` gives NULL when no condition is true, which is exactly the missing reason a good event needs.",
+    "`isin` on a missing id is NULL, not true, so test `isNull()` as well. `select(\"*\", reason.alias(\"reason\"))` keeps every column and adds one."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "shipment_events",
+    "shipments",
+    "warehouses"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(shipment_events, shipments, warehouses):\n    # Every event, plus the reason it can't be loaded (missing when it's fine).\n    return shipment_events\n",
+  "output": {
+    "columns": [
+      "event_id",
+      "shipment_id",
+      "warehouse_id",
+      "event_type",
+      "event_time",
+      "location",
+      "sequence",
+      "load_date",
+      "is_correction",
+      "reason"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Collect the two lists of ids, then tag: `F.when(F.col(\"shipment_id\").isNull() | ~F.col(\"shipment_id\").isin(known_shipments), \"unknown shipment\").when(... warehouse ...).when(F.col(\"location\").isNull(), \"missing location\")`. Leaving out `otherwise` makes the reason NULL for a good event. `shipment_events.select(\"*\", reason.alias(\"reason\"))` keeps every column and every row, duplicates included; nothing is filtered yet. Without the `isNull()` tests, an event with no shipment id isn't caught by the first check: `~isin` on NULL is NULL, so the chain moves on and gives it a later reason, or none."
+}

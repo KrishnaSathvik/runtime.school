@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0211",
+  "slug": "names-and-departments-from-the-export",
+  "lesson": "PS-L043",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Names and departments from the export",
+  "dataset": {
+    "id": "PS-D03",
+    "version": "1.0.0"
+  },
+  "prompt": "HR wants a quick list of who works where, straight from its export. The starter saves the export as a file; finish `solve(employees_raw)` so it reads that file as CSV and returns each employee's id, name and department.",
+  "rules": [
+    "Fields are separated by `;` and the first line is a header with the column names. Values in double quotes can contain `;`.",
+    "Return `employee_id`, `full_name` and `department`, all text, in that order.",
+    "Keep every employee line. A field that's empty, or that a short line doesn't have, is NULL.",
+    "Keep duplicate lines."
+  ],
+  "hints": [
+    "`spark.read.csv(path)` assumes commas and no header. Two options change that.",
+    "With `header=True`, the columns are named after the first line, so you can select them by name.",
+    "No types are needed here: the three columns are text anyway."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "employees_raw"
+  ],
+  "starter": "def solve(employees_raw):\n    path = \"/tmp/hr/export\"\n    employees_raw.write.mode(\"overwrite\").text(path)\n    # Read the file at `path` as CSV and return employee_id, full_name and department.\n    return employees_raw\n",
+  "output": {
+    "columns": [
+      "employee_id",
+      "full_name",
+      "department"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Two options and a select: `spark.read.csv(path, sep=\";\", header=True).select(\"employee_id\", \"full_name\", \"department\")`. `sep` tells Spark where fields end and `header=True` turns the first line into column names instead of a row. The default `PERMISSIVE` mode keeps a short line and leaves the fields it doesn't have as NULL, and quoted titles that contain `;` stay in one piece, so departments don't shift. A schema with only three columns would be a mistake here: a schema matches fields by position, not by name, so its third column would get the job titles."
+}

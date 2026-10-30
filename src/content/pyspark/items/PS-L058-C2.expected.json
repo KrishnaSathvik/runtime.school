@@ -1,0 +1,191 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "region",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "stock_lines",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "on_hand",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "north",
+     6,
+     2150
+    ],
+    [
+     null,
+     1,
+     90
+    ],
+    [
+     "south",
+     4,
+     955
+    ]
+   ],
+   "row_count": 3,
+   "inputs": {
+    "inventory": [
+     [
+      "WH01",
+      "SKU-1003",
+      "Packing tape 48mm",
+      "560",
+      "100",
+      "100",
+      "2026-03-10"
+     ],
+     [
+      "WH01",
+      "SKU-1012",
+      "Bath mat",
+      "279",
+      "19",
+      "200",
+      "2026-03-10"
+     ],
+     [
+      "WH01",
+      "SKU-1019",
+      "Notebook A5",
+      "160",
+      "72",
+      "100",
+      "2026-03-10"
+     ],
+     [
+      "WH02",
+      "SKU-1003",
+      "Packing tape 48mm",
+      "265",
+      "117",
+      "200",
+      "2026-03-10"
+     ],
+     [
+      "WH02",
+      "SKU-1014",
+      "Extension lead",
+      "266",
+      "80",
+      "50",
+      "2026-03-10"
+     ],
+     [
+      "WH02",
+      "SKU-1021",
+      "Water bottle",
+      "620",
+      "32",
+      "50",
+      "2026-03-10"
+     ],
+     [
+      "WH03",
+      "SKU-1003",
+      "Packing tape 48mm",
+      "388",
+      "72",
+      "50",
+      "2026-03-10"
+     ],
+     [
+      "WH03",
+      "SKU-1009",
+      "Ceramic mug",
+      "131",
+      "45",
+      "50",
+      "2026-03-10"
+     ],
+     [
+      "WH03",
+      "SKU-1029",
+      "Step stool",
+      "436",
+      "71",
+      "50",
+      "2026-03-10"
+     ],
+     [
+      "WH03",
+      "SKU-1014",
+      "Extension lead",
+      null,
+      "0",
+      "50",
+      "2026-03-10"
+     ],
+     [
+      "WH07",
+      "SKU-1009",
+      "Ceramic mug",
+      "90",
+      "10",
+      "50",
+      "2026-03-10"
+     ]
+    ],
+    "warehouses": [
+     [
+      "WH01",
+      "Harbor Point DC",
+      "Rotterdam",
+      "north",
+      "6500",
+      "2025-10-11"
+     ],
+     [
+      "WH02",
+      "Ridgeway Fulfilment",
+      "Leeds",
+      "north",
+      "12000",
+      "2025-03-03"
+     ],
+     [
+      "WH03",
+      "Sunbelt Cross-Dock",
+      "Valencia",
+      "south",
+      "4000",
+      "2025-07-28"
+     ],
+     [
+      "WH04",
+      "Lakeside Depot",
+      "Lyon",
+      "central",
+      "8000",
+      "2025-03-04"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice inventory and warehouses",
+  "stock lines from warehouses that aren't listed, one with no warehouse at all",
+  "stock lines with on_hand missing",
+  "every stock line in one region, the same SKUs in two warehouses",
+  "no stock lines at all"
+ ]
+}

@@ -1,0 +1,128 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "transaction_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "txn_type",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "direction",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "category",
+     "type": "string",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "T000001",
+     "deposit",
+     "credit",
+     "income"
+    ],
+    [
+     "T000002",
+     "purchase",
+     "debit",
+     "spending"
+    ],
+    [
+     "T000003",
+     "purchase",
+     "debit",
+     "spending"
+    ],
+    [
+     "T000004",
+     "deposit",
+     "credit",
+     "income"
+    ],
+    [
+     "T000005",
+     "deposit",
+     "credit",
+     "income"
+    ],
+    [
+     "T000006",
+     "interest",
+     "credit",
+     "income"
+    ],
+    [
+     "T000007",
+     "interest",
+     "credit",
+     "income"
+    ],
+    [
+     "T000008",
+     "purchase",
+     "debit",
+     "spending"
+    ],
+    [
+     "T000009",
+     "refund",
+     "credit",
+     "refund"
+    ],
+    [
+     "T000010",
+     "purchase",
+     "debit",
+     "spending"
+    ],
+    [
+     "T000011",
+     "purchase",
+     "debit",
+     "spending"
+    ],
+    [
+     "T000012",
+     "deposit",
+     "credit",
+     "income"
+    ],
+    [
+     "T000013",
+     "deposit",
+     "credit",
+     "income"
+    ],
+    [
+     "T000014",
+     "purchase",
+     "debit",
+     "spending"
+    ]
+   ],
+   "row_count": 14
+  }
+ },
+ "hidden": [
+  "the full practice transactions table",
+  "one transaction of every type",
+  "fees, refunds and purchases with a missing or misspelled direction",
+  "the same refund delivered twice",
+  "an empty transactions table"
+ ]
+}

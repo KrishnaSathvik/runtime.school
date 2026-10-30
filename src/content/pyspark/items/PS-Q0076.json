@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0076",
+  "slug": "temperature-bands",
+  "lesson": "PS-L016",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Temperature bands",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "prompt": "The dispatch screen shows each hour's temperature as a band between two whole degrees, like 8 to 9 for 8.4. Write `solve(weather_enrichment)` so it returns `obs_date`, `obs_hour`, `temperature_c`, `temp_low` and `temp_high`.",
+  "rules": [
+    "`temp_low` is `temperature_c` rounded down to a whole number and `temp_high` is it rounded up. Below zero, down still means lower: -0.5 gives -1 and 0.",
+    "A whole temperature such as 5.0 gives 5 for both. A missing temperature gives missing bands.",
+    "Return the five columns, in that order, for every hour, duplicates included."
+  ],
+  "hints": [
+    "`F.floor` rounds down and `F.ceil` rounds up, each to a whole number.",
+    "Both give a `bigint`, which is what the screen wants.",
+    "Casting to a whole number isn't the same as rounding down: it cuts towards zero, so -0.5 would become 0."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "weather_enrichment"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(weather_enrichment):\n    # obs_date, obs_hour, temperature_c, temp_low, temp_high\n    return weather_enrichment\n",
+  "output": {
+    "columns": [
+      "obs_date",
+      "obs_hour",
+      "temperature_c",
+      "temp_low",
+      "temp_high"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`weather_enrichment.select(\"obs_date\", \"obs_hour\", \"temperature_c\", F.floor(\"temperature_c\").alias(\"temp_low\"), F.ceil(\"temperature_c\").alias(\"temp_high\"))`. `floor` always goes to the lower whole number and `ceil` to the higher one, also below zero, and both return a `bigint`. A whole temperature is its own floor and ceiling. Casting with `cast(\"bigint\")` looks the same for positive temperatures but cuts towards zero, so -2.7 would become -2 instead of -3. `temp_high - 1` for the low end breaks on whole temperatures."
+}

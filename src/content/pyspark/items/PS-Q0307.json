@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0307",
+  "slug": "table-size-at-every-version",
+  "lesson": "PS-L062",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Table size at every version",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "An auditor reviewing today's changes to the transactions table wants to see, for every version, what operation made it and how many transactions the table held right after. `build_table` replays the day's commits. Write `solve` to build that list.",
+  "rules": [
+    "One row per version in the table's history: `version`, `operation` and `transactions`, the table's row count at that version.",
+    "A clean-up that matched no rows made no version, so it has no row. Don't count versions by hand.",
+    "Don't change `build_table`."
+  ],
+  "hints": [
+    "`history()` gives every version and its operation. `collect()` it to loop over the versions.",
+    "`spark.read.format(\"delta\").option(\"versionAsOf\", n).load(path)` reads the table as it was at version `n`.",
+    "Build the result from a list of tuples with `spark.createDataFrame(rows, schema)`."
+  ],
+  "explanation": "Loop over the collected `history()` rows and, for each `row.version`, read that version with `option(\"versionAsOf\", row.version)` and count it; then build a DataFrame from the `(version, operation, count)` tuples. Taking the versions from the history matters: the delete of `reversed` transactions never changes anything, and on some days the declined clean-up or the hold doesn't either, so they leave no version. A list of four steps written by hand reads the wrong versions on those days. Time travel needs the Delta reader: `versionAsOf` on a Parquet read is ignored, and it counts every file in the folder.",
+  "entry": "solve",
+  "inputs": [
+    "transactions"
+  ],
+  "starter": "import shutil\nfrom datetime import datetime\nfrom decimal import Decimal\n\nfrom delta.tables import DeltaTable\n\n\ndef build_table(transactions, path):\n    # The day's commits, replayed on a fresh table. Don't change this.\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty folder on every run\n    transactions.write.format(\"delta\").save(path)  # the morning load\n    late = spark.createDataFrame(\n        [\n            (\"T000101\", \"A00008\", None, datetime(2026, 3, 1, 9, 15, 0), \"deposit\", \"branch\", \"credit\", Decimal(\"250.00\"), \"USD\", \"posted\"),\n            (\"T000102\", \"A00006\", \"M002\", datetime(2026, 3, 1, 11, 2, 30), \"purchase\", \"online\", \"debit\", Decimal(\"18.40\"), \"GBP\", \"pending\"),\n        ],\n        transactions.schema,\n    )\n    late.write.format(\"delta\").mode(\"append\").save(path)  # late arrivals\n    table = DeltaTable.forPath(spark, path)\n    table.delete(\"status = 'declined'\")  # clean-up 1\n    table.update(\"account_id IS NULL\", {\"status\": \"'held'\"})  # clean-up 2\n    table.delete(\"status = 'reversed'\")  # clean-up 3\n\n\ndef solve(transactions):\n    path = \"/tmp/bank/transactions\"\n    build_table(transactions, path)\n    # One row per version: version, operation, and how many transactions the table held.\n    return DeltaTable.forPath(spark, path).history().select(\"version\", \"operation\")\n",
+  "output": {
+    "columns": [
+      "version",
+      "operation",
+      "transactions"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 240,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

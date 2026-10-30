@@ -1,0 +1,146 @@
+{
+  "id": "PS-L037",
+  "minutes": 25,
+  "lede": "Web events, app logs and API responses usually arrive as JSON, with objects inside objects and lists of values. Spark reads them into nested columns. Knowing how to see that shape and reach into it is what turns a raw event into rows you can analyse.",
+  "objectives": [
+    "Read the shape of nested JSON data with `printSchema()`",
+    "Reach fields at any depth with dot paths, rename them with `alias`, and expand a whole struct with `.*`",
+    "Count array elements with `F.size`, and predict what it gives for an empty or missing array",
+    "Turn a struct, array or map into JSON text with `F.to_json`, and parse JSON text with `F.from_json` and a schema"
+  ],
+  "dataset": {
+    "id": "PS-D06",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "page_views",
+      "searches",
+      "checkout_events"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "The tables come from an online shop's clickstream. Each one was read from a JSON Lines file, one JSON object per line, with `spark.read.json(path, schema=...)`. `page_views` has one row per page opened, `searches` one row per search and `checkout_events` one row per checkout step. They're loaded as DataFrames with those names, and `F` is `pyspark.sql.functions`.\n\nA JSON object becomes a **struct**, a list becomes an **array**, and plain values become ordinary columns. `printSchema()` shows the whole tree, indented by level."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "The shape of a page view",
+      "code": "page_views.printSchema()\n",
+      "note": "`device` is a struct with two text fields. `context` is a struct holding `referrer` and another struct, `utm`, two levels down. Everything may be missing (`nullable = true`)."
+    },
+    {
+      "kind": "text",
+      "md": "A dot path reaches into a struct, as deep as you need: `\"device.type\"`, `\"context.utm.campaign\"`. The selected column keeps only the last name (`type`, `campaign`), so rename it with `alias` when that name isn't clear.\n\n`\"device.*\"` expands **every** field of a struct into its own column, keeping the field names.\n\nIf a struct is missing, every field read from it is missing too. No error is raised."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Reach into nested fields",
+      "code": "from pyspark.sql import functions as F\n\npage_views.select(\n    \"event_id\",\n    F.col(\"device.type\").alias(\"device_type\"),\n    \"context.referrer\",\n    F.col(\"context.utm.campaign\").alias(\"campaign\"),\n).show()\n\npage_views.select(\"event_id\", \"device.*\", \"context.utm.*\").show(4)\n",
+      "note": "Visits that didn't come from a campaign have no `utm` struct, so `campaign` is NULL for them. In the second table the struct fields keep their own names: `type`, `os`, `source`, `campaign`."
+    },
+    {
+      "kind": "text",
+      "md": "Arrays need different tools. `F.size(col)` counts the elements. A list with nothing in it, `[]`, has size 0. A list that is missing altogether is different: with Spark's default settings its size is missing too, not 0 and not an error."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Count what's in an array",
+      "code": "from pyspark.sql import functions as F\n\nsearches.select(\"query\", \"filters\", F.size(\"filters\").alias(\"filter_count\"), F.size(\"result_skus\").alias(\"result_count\")).show(truncate=False)\n\nlists = spark.createDataFrame([(\"a\", [\"x\", \"y\"]), (\"b\", []), (\"c\", None)], \"id STRING, tags ARRAY<STRING>\")\nlists.select(\"id\", \"tags\", F.size(\"tags\").alias(\"size\")).show()\n",
+      "note": "Searches with no filters ticked have an empty array and size 0. In the second table, `c` has no list at all, so its size is NULL."
+    },
+    {
+      "kind": "text",
+      "md": "Sometimes the next system wants JSON text back. `F.to_json(col)` writes a struct, an array or a map as one JSON string. A missing struct gives a missing string.\n\nA **map** is the third nested type: keys and values with no fixed list of keys, like `checkout_events.attributes`, which holds optional flags such as a coupon. `to_json` writes it as an object with whatever keys each row has."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Back to JSON text",
+      "code": "from pyspark.sql import functions as F\n\npage_views.select(\"event_id\", F.to_json(F.col(\"context.utm\")).alias(\"utm_json\")).show(5, truncate=False)\n\ncheckout_events.select(\"event_id\", \"step\", F.to_json(\"payment\").alias(\"payment_json\"), F.to_json(\"attributes\").alias(\"attributes_json\")).show(truncate=False)\nprint(dict(checkout_events.dtypes)[\"attributes\"])\n",
+      "note": "Field names become JSON keys, in schema order. The first checkout step has no payment yet, so its JSON is NULL; an empty map becomes `{}`. The type of `attributes` is a map from text to text."
+    },
+    {
+      "kind": "text",
+      "md": "The reverse is `F.from_json(col, schema)`: it parses JSON text into a struct, using a schema you give it. The schema can be a string like `\"method STRING, provider STRING\"` or a `StructType` from the data types lesson. Then read the fields with a dot path, or with `.getField(\"name\")` on the parsed column.\n\nKeys the schema doesn't name are ignored, and keys a row doesn't have come out missing. Text that isn't valid JSON doesn't stop the job: every field of that row is missing."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Parse JSON text with a schema",
+      "code": "from pyspark.sql import functions as F\n\nraw = spark.createDataFrame(\n    [(\"E1\", '{\"method\": \"card\", \"provider\": \"paycore\", \"last4\": \"4242\"}'),\n     (\"E2\", '{\"method\": \"wallet\"}'),\n     (\"E3\", 'not json')],\n    \"event_id STRING, payload STRING\",\n)\n\nparsed = raw.select(\"event_id\", F.from_json(\"payload\", \"method STRING, provider STRING\").alias(\"payment\"))\nparsed.printSchema()\nparsed.select(\"event_id\", \"payment.method\", F.col(\"payment\").getField(\"provider\").alias(\"provider\")).show()\n",
+      "note": "`last4` isn't in the schema, so it's dropped. E2 has no provider, so it's NULL, and E3 isn't JSON, so both fields are NULL."
+    },
+    {
+      "kind": "text",
+      "md": "Together, `to_json` and `from_json` can turn a map into a struct with the keys you care about: write the map as JSON, then parse it with a schema that names those keys. Each key becomes a field, missing where a row doesn't have it."
+    },
+    {
+      "kind": "example",
+      "id": "e6",
+      "title": "Chosen map keys as columns",
+      "code": "from pyspark.sql import functions as F\n\nflags = F.from_json(F.to_json(\"attributes\"), \"coupon STRING, gift_wrap STRING\")\n\ncheckout_events.select(\"event_id\", \"step\", flags.getField(\"coupon\").alias(\"coupon\"), flags.getField(\"gift_wrap\").alias(\"gift_wrap\")).show()\n",
+      "note": "Each checkout step gets two text columns. A step without that flag has NULL, including the first one, whose map is empty."
+    }
+  ],
+  "challenges": [
+    "PS-L037-C1",
+    "PS-L037-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "`context` is a struct with a struct `utm` inside it. What does `page_views.select(\"context.utm.campaign\")` give for a visit whose `utm` is missing?",
+      "choices": [
+        "An error",
+        "An empty string",
+        "NULL",
+        "The text \"null\""
+      ],
+      "answer": 2,
+      "why": "Reading a field from a missing struct gives a missing value. Nothing fails."
+    },
+    {
+      "id": "k2",
+      "prompt": "What does `F.size(\"filters\")` give when `filters` is an empty array, and when it is missing?",
+      "choices": [
+        "0 and 0",
+        "0 and NULL",
+        "NULL and NULL",
+        "0 and an error"
+      ],
+      "answer": 1,
+      "why": "An empty array has no elements, so 0. A missing array has no size at all, so the result is missing too."
+    },
+    {
+      "id": "k3",
+      "prompt": "`F.from_json(col, \"method STRING\")` reads a row whose text is `not json`. What happens?",
+      "choices": [
+        "The job stops with an error",
+        "The row is dropped",
+        "The parsed `method` is NULL for that row",
+        "`method` is the text `not json`"
+      ],
+      "answer": 2,
+      "why": "Text that doesn't parse gives missing fields for that row; the other rows are parsed as usual."
+    }
+  ],
+  "review": [
+    "JSON objects become structs, lists become arrays; `printSchema()` shows the nesting.",
+    "Dot paths reach any depth: `\"context.utm.campaign\"`. Rename with `alias`; `\"device.*\"` expands every field.",
+    "Fields of a missing struct are missing too.",
+    "`F.size` counts array elements: 0 for an empty array, NULL for a missing one.",
+    "`F.to_json` writes a struct, array or map as JSON text; a missing struct gives NULL.",
+    "`F.from_json(text, schema)` parses JSON text into a struct; unknown keys are ignored and bad text gives NULL fields."
+  ],
+  "practice": [
+    "PS-Q0181",
+    "PS-Q0182",
+    "PS-Q0183",
+    "PS-Q0184",
+    "PS-Q0185"
+  ]
+}

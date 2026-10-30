@@ -1,0 +1,578 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "example": {
+   "schema": [
+    {
+     "name": "transfer_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "from_account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "to_account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "debit_booked",
+     "type": "decimal(14,2)",
+     "nullable": true
+    },
+    {
+     "name": "credit_booked",
+     "type": "decimal(14,2)",
+     "nullable": true
+    },
+    {
+     "name": "match_status",
+     "type": "string",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "TR90001",
+     "A90001",
+     "A90002",
+     "100.00",
+     "100.00",
+     "100.00",
+     "matched"
+    ],
+    [
+     "TR90002",
+     "A90001",
+     "A90002",
+     "100.00",
+     null,
+     null,
+     "duplicate"
+    ],
+    [
+     "TR90007",
+     "A90001",
+     "A90003",
+     "25.00",
+     "25.00",
+     "25.00",
+     "matched"
+    ],
+    [
+     "TR90009",
+     "A90002",
+     "A90001",
+     "100.00",
+     "100.00",
+     null,
+     "bad_reversal"
+    ],
+    [
+     "TR90005",
+     "A90002",
+     "A90003",
+     "75.50",
+     "75.50",
+     null,
+     "missing_credit"
+    ],
+    [
+     "TR90008",
+     "A90003",
+     "A90001",
+     "25.00",
+     "25.00",
+     "25.00",
+     "matched"
+    ],
+    [
+     "TR90004",
+     "A90003",
+     "A90004",
+     "40.00",
+     "40.00",
+     "40.00",
+     "matched"
+    ],
+    [
+     "TR90006",
+     "A90004",
+     "A90001",
+     "250.00",
+     "250.00",
+     "249.99",
+     "amount_mismatch"
+    ]
+   ],
+   "row_count": 8,
+   "inputs": {
+    "transfers": [
+     [
+      "TR90001",
+      "A90001",
+      "A90002",
+      "100.00",
+      "USD",
+      "2026-02-01T09:00:00",
+      "completed",
+      "Rent 101",
+      null
+     ],
+     [
+      "TR90002",
+      "A90001",
+      "A90002",
+      "100.00",
+      "USD",
+      "2026-02-01T09:00:10",
+      "completed",
+      "Rent 101",
+      null
+     ],
+     [
+      "TR90003",
+      "A90003",
+      "A90004",
+      "40.00",
+      "USD",
+      "2026-02-02T10:00:00",
+      "failed",
+      "Gift 202",
+      null
+     ],
+     [
+      "TR90004",
+      "A90003",
+      "A90004",
+      "40.00",
+      "USD",
+      "2026-02-02T10:05:00",
+      "completed",
+      "Gift 202",
+      null
+     ],
+     [
+      "TR90005",
+      "A90002",
+      "A90003",
+      "75.50",
+      "USD",
+      "2026-02-03T11:00:00",
+      "completed",
+      "Invoice 303",
+      null
+     ],
+     [
+      "TR90006",
+      "A90004",
+      "A90001",
+      "250.00",
+      "USD",
+      "2026-02-04T12:00:00",
+      "completed",
+      "Car repair 404",
+      null
+     ],
+     [
+      "TR90007",
+      "A90001",
+      "A90003",
+      "25.00",
+      "USD",
+      "2026-02-05T13:00:00",
+      "reversed",
+      "Holiday fund 505",
+      null
+     ],
+     [
+      "TR90008",
+      "A90003",
+      "A90001",
+      "25.00",
+      "USD",
+      "2026-02-07T13:00:00",
+      "completed",
+      "Reversal: Holiday fund 505",
+      "TR90007"
+     ],
+     [
+      "TR90009",
+      "A90002",
+      "A90001",
+      "100.00",
+      "USD",
+      "2026-02-08T09:00:00",
+      "completed",
+      "Reversal: Rent 101",
+      "TR90001"
+     ],
+     [
+      "TR90010",
+      "A90004",
+      "A90002",
+      "900.00",
+      "USD",
+      "2026-02-09T09:00:00",
+      "pending",
+      "Loan repayment 606",
+      null
+     ]
+    ],
+    "ledger_entries": [
+     [
+      "LE90001",
+      "TR90001",
+      "A90001",
+      "debit",
+      "100.00",
+      "USD",
+      "2026-02-01T09:00:00"
+     ],
+     [
+      "LE90002",
+      "TR90001",
+      "A90002",
+      "credit",
+      "100.00",
+      "USD",
+      "2026-02-01T09:00:00"
+     ],
+     [
+      "LE90003",
+      "TR90004",
+      "A90003",
+      "debit",
+      "40.00",
+      "USD",
+      "2026-02-02T10:05:00"
+     ],
+     [
+      "LE90004",
+      "TR90004",
+      "A90004",
+      "credit",
+      "40.00",
+      "USD",
+      "2026-02-02T10:05:00"
+     ],
+     [
+      "LE90005",
+      "TR90005",
+      "A90002",
+      "debit",
+      "75.50",
+      "USD",
+      "2026-02-03T11:30:00"
+     ],
+     [
+      "LE90006",
+      "TR90006",
+      "A90004",
+      "debit",
+      "250.00",
+      "USD",
+      "2026-02-04T12:00:00"
+     ],
+     [
+      "LE90007",
+      "TR90006",
+      "A90001",
+      "credit",
+      "249.99",
+      "USD",
+      "2026-02-04T12:00:00"
+     ],
+     [
+      "LE90008",
+      "TR90007",
+      "A90001",
+      "debit",
+      "25.00",
+      "USD",
+      "2026-02-05T13:00:00"
+     ],
+     [
+      "LE90009",
+      "TR90007",
+      "A90003",
+      "credit",
+      "25.00",
+      "USD",
+      "2026-02-05T13:00:00"
+     ],
+     [
+      "LE90010",
+      "TR90008",
+      "A90003",
+      "debit",
+      "25.00",
+      "USD",
+      "2026-02-07T13:00:00"
+     ],
+     [
+      "LE90011",
+      "TR90008",
+      "A90001",
+      "credit",
+      "25.00",
+      "USD",
+      "2026-02-07T13:00:00"
+     ],
+     [
+      "LE90012",
+      "TR90009",
+      "A90002",
+      "debit",
+      "100.00",
+      "USD",
+      "2026-02-08T09:30:00"
+     ]
+    ]
+   }
+  },
+  "project": {
+   "schema": [
+    {
+     "name": "transfer_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "from_account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "to_account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "debit_booked",
+     "type": "decimal(14,2)",
+     "nullable": true
+    },
+    {
+     "name": "credit_booked",
+     "type": "decimal(14,2)",
+     "nullable": true
+    },
+    {
+     "name": "match_status",
+     "type": "string",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "TR01132",
+     "A00002",
+     "A00299",
+     "912.99",
+     "912.99",
+     "912.99",
+     "matched"
+    ],
+    [
+     "TR00458",
+     "A00003",
+     "A00048",
+     "1512.99",
+     "1512.99",
+     "1512.99",
+     "matched"
+    ],
+    [
+     "TR00880",
+     "A00003",
+     "A00205",
+     "1500.00",
+     "1500.00",
+     "1500.00",
+     "matched"
+    ],
+    [
+     "TR00449",
+     "A00003",
+     "A00247",
+     "1500.00",
+     "1500.00",
+     "1500.00",
+     "matched"
+    ],
+    [
+     "TR01124",
+     "A00003",
+     "A00295",
+     "400.00",
+     "400.00",
+     "400.00",
+     "matched"
+    ],
+    [
+     "TR00788",
+     "A00003",
+     "A00354",
+     "662.99",
+     "662.99",
+     "662.99",
+     "matched"
+    ],
+    [
+     "TR00894",
+     "A00004",
+     "A00155",
+     "25.00",
+     "25.00",
+     "25.00",
+     "matched"
+    ],
+    [
+     "TR00860",
+     "A00005",
+     "A00161",
+     "120.50",
+     "120.50",
+     "120.50",
+     "matched"
+    ],
+    [
+     "TR00601",
+     "A00005",
+     "A00170",
+     "40.50",
+     "40.50",
+     "40.50",
+     "matched"
+    ],
+    [
+     "TR00352",
+     "A00005",
+     "A00277",
+     "900.50",
+     "900.50",
+     "900.50",
+     "matched"
+    ],
+    [
+     "TR00353",
+     "A00005",
+     "A00277",
+     "900.50",
+     "900.50",
+     "900.50",
+     "duplicate"
+    ],
+    [
+     "TR00902",
+     "A00006",
+     "A00104",
+     "37.99",
+     "37.99",
+     "37.99",
+     "matched"
+    ],
+    [
+     "TR01370",
+     "A00006",
+     "A00236",
+     "87.99",
+     "87.99",
+     "87.99",
+     "matched"
+    ],
+    [
+     "TR00284",
+     "A00006",
+     "A00271",
+     "120.00",
+     "120.00",
+     "120.00",
+     "matched"
+    ],
+    [
+     "TR00518",
+     "A00006",
+     "A00455",
+     "40.50",
+     "40.50",
+     "40.50",
+     "matched"
+    ],
+    [
+     "TR00116",
+     "A00008",
+     "A00105",
+     "37.99",
+     "37.99",
+     "37.99",
+     "matched"
+    ],
+    [
+     "TR00809",
+     "A00008",
+     "A00119",
+     "40.00",
+     "40.00",
+     "40.00",
+     "matched"
+    ],
+    [
+     "TR00983",
+     "A00008",
+     "A00293",
+     "262.99",
+     "262.99",
+     "262.99",
+     "matched"
+    ],
+    [
+     "TR00551",
+     "A00009",
+     "A00015",
+     "75.00",
+     "75.00",
+     "75.00",
+     "matched"
+    ],
+    [
+     "TR00621",
+     "A00009",
+     "A00359",
+     "132.99",
+     "132.99",
+     "132.99",
+     "matched"
+    ]
+   ],
+   "row_count": 1335
+  }
+ },
+ "hidden": [
+  "the full practice tables",
+  "a transfer sent three times, copies at the same second, a failed attempt then a retry, and near-copies that differ in one field",
+  "missing sides, no entries at all, a side one cent off, a side booked twice, a side split in two, and both sides equal but wrong",
+  "good reversals, and reversals that name the wrong transfer, the wrong amount, the wrong direction or no known transfer",
+  "pending and failed transfers, one with a stray entry, and entries of a transfer that doesn't exist",
+  "empty tables"
+ ]
+}

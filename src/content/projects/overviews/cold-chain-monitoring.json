@@ -1,0 +1,59 @@
+{
+  "id": "cold-chain-monitoring",
+  "task": "You support the reliability team for eight facilities whose freezers, cold rooms and production lines report sensor readings every few minutes. Alerts are noisy and maintenance is expensive. Find out whether the telemetry can be trusted, which sensors and sites drive alerts, and where maintenance money goes.",
+  "produce": [
+    {
+      "name": "Telemetry quality check",
+      "about": "Readings received, unique readings, retransmissions, flagged readings and broken alerts."
+    },
+    {
+      "name": "Alerts by sensor type",
+      "about": "Valid alerts, critical alerts and average minutes open for each sensor type."
+    },
+    {
+      "name": "Alert hours by site",
+      "about": "Valid alerts and total hours in alert for each site."
+    },
+    {
+      "name": "Maintenance spend",
+      "about": "Work orders, total cost and average cost for each type of work."
+    },
+    {
+      "name": "Reliability review",
+      "about": "Three findings and one recommendation."
+    }
+  ],
+  "labels": {
+    "understand-data": "Explore readings",
+    "data-quality": "Data quality",
+    "alerts-by-sensor": "Sensors",
+    "alerts-by-site": "Sites",
+    "maintenance": "Maintenance",
+    "synthesis": "Conclusions",
+    "report": "Report"
+  },
+  "summaries": {
+    "understand-data": "Find a retransmitted reading and see which columns repeat.",
+    "data-quality": "Count retransmissions, flagged readings and alerts that close before they open.",
+    "alerts-by-sensor": "Compare sensor types by valid alerts, critical alerts and time open.",
+    "alerts-by-site": "Rank sites by total hours spent in alert.",
+    "maintenance": "Compare maintenance spending by type of work.",
+    "synthesis": "Choose where to focus first: data quality, a sensor type or a site.",
+    "report": "Write three findings and one recommendation."
+  },
+  "problems": [
+    "Gateways retransmit readings: 1,293 readings arrive more than once with a new reading id.",
+    "449 readings are flagged as faults and carry no value.",
+    "225 readings are flagged as out of range.",
+    "119 of the 483 alerts close before they open, so their durations are impossible.",
+    "3 maintenance work orders have no completion time but still carry a cost."
+  ],
+  "preparation": [
+    "group-into-summaries",
+    "connect-tables-with-join",
+    "conditional-aggregation",
+    "readable-queries-with-ctes",
+    "deduplicate-event-retries",
+    "dates-and-monthly-analysis"
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0216",
+  "slug": "host-and-region-per-log-record",
+  "lesson": "PS-L044",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Host and region per log record",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "The on-call team wants to know which host and region each log record came from. The starter saves the log file; finish `solve(application_logs_raw)` so it reads the file as JSON Lines and returns the host and region of every good record.",
+  "rules": [
+    "Read the file with a schema you give, so a key no record has still comes back as NULL: `log_id`, `level` and an `attributes` struct of `host` and `region` are enough.",
+    "Return `log_id`, `level`, `host` and `region`, all text, in that order.",
+    "Leave out lines that aren't valid JSON. A record without `attributes`, or without one of the two keys, is kept with NULL there.",
+    "Keep repeated records."
+  ],
+  "hints": [
+    "A schema string can describe a nested object: `attributes STRUCT<host: STRING, region: STRING>`. Keys you don't list aren't read.",
+    "The `mode` option decides what happens to broken lines. Which one leaves them out?",
+    "Reach the nested fields with dot paths, such as `F.col(\"attributes.host\")`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "application_logs_raw"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(application_logs_raw):\n    path = \"/tmp/logs/export\"\n    application_logs_raw.write.mode(\"overwrite\").text(path)\n    # Read the file at `path` as JSON Lines and return log_id, level, host and region.\n    return application_logs_raw\n",
+  "output": {
+    "columns": [
+      "log_id",
+      "level",
+      "host",
+      "region"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Describe only what you need and drop the rest: `spark.read.json(path, schema=\"log_id STRING, level STRING, attributes STRUCT<host: STRING, region: STRING>\", mode=\"DROPMALFORMED\")`, then select `log_id`, `level`, `F.col(\"attributes.host\").alias(\"host\")` and `F.col(\"attributes.region\").alias(\"region\")`. Keys such as `latency_ms` or `order_ref` aren't in the schema, so Spark doesn't read them. A missing key or a missing `attributes` is simply NULL; that isn't malformed. `DROPMALFORMED` leaves out the cut-off line, the one missing its brace and the plain-text traceback. In the default `PERMISSIVE` mode they would stay as rows of NULLs, and `FAILFAST` would stop the job."
+}

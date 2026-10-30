@@ -1,0 +1,43 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D15",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "application_logs",
+   "application_logs_raw"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "root\n |-- log_id: string (nullable = true)\n |-- logged_at: timestamp (nullable = true)\n |-- level: string (nullable = true)\n |-- service: string (nullable = true)\n |-- message: string (nullable = true)\n |-- trace_id: string (nullable = true)\n |-- attributes: map (nullable = true)\n |    |-- key: string\n |    |-- value: string (valueContainsNull = true)\n\n+----------+------------+-------------------------------------------------------------------------------------------------------------------------+\n|log_id    |service     |attributes                                                                                                               |\n+----------+------------+-------------------------------------------------------------------------------------------------------------------------+\n|LOG-000001|catalog-api |{cache -> hit, host -> catalog-api-7f9c2, latency_ms -> 42, region -> us-east}                                           |\n|LOG-000002|auth-service|{grant_type -> client_credentials, host -> auth-service-a41d8, latency_ms -> 61, region -> us-east}                      |\n|LOG-000003|checkout-api|{host -> checkout-api-7f9c2, latency_ms -> 236, order_ref -> ord-730917, payment_provider -> banklink, region -> us-west}|\n|LOG-000004|search-api  |{host -> search-api-c03be, latency_ms -> 118, query_terms -> 4, region -> eu-west, result_count -> 48}                   |\n|LOG-000005|iot-gateway |{device_id -> DEV-0003, firmware -> 1.8.4, host -> iot-gateway-a41d8, latency_ms -> 24, region -> ap-south}              |\n+----------+------------+-------------------------------------------------------------------------------------------------------------------------+\nonly showing top 5 rows\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "+----------+-------------------+--------+---------+----------+\n|    log_id|            service|  region|device_id|latency_ms|\n+----------+-------------------+--------+---------+----------+\n|LOG-000001|        catalog-api| us-east|     NULL|        42|\n|LOG-000002|       auth-service| us-east|     NULL|        61|\n|LOG-000003|       checkout-api| us-west|     NULL|       236|\n|LOG-000004|         search-api| eu-west|     NULL|       118|\n|LOG-000005|        iot-gateway|ap-south| DEV-0003|        24|\n|LOG-000006|       checkout-api| us-east|     NULL|      1240|\n|LOG-000007|        iot-gateway|    NULL| DEV-0002|      NULL|\n|LOG-000008|        iot-gateway|ap-south| DEV-0001|        22|\n|LOG-000009|         search-api| us-east|     NULL|       162|\n|LOG-000010|notification-worker|    NULL|     NULL|      NULL|\n+----------+-------------------+--------+---------+----------+\n\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "+----------+-------------------------------------------------------+-------+-------------+\n|log_id    |keys                                                   |entries|has_order_ref|\n+----------+-------------------------------------------------------+-------+-------------+\n|LOG-000001|[cache, host, latency_ms, region]                      |4      |false        |\n|LOG-000002|[grant_type, host, latency_ms, region]                 |4      |false        |\n|LOG-000003|[host, latency_ms, order_ref, payment_provider, region]|5      |true         |\n|LOG-000004|[host, latency_ms, query_terms, region, result_count]  |5      |false        |\n|LOG-000005|[device_id, firmware, host, latency_ms, region]        |5      |false        |\n|LOG-000006|[host, latency_ms, order_ref, payment_provider, region]|5      |true         |\n|LOG-000007|[device_id, error_type, host]                          |3      |false        |\n|LOG-000008|[device_id, firmware, host, latency_ms, region]        |5      |false        |\n|LOG-000009|[host, latency_ms, query_terms, region, result_count]  |5      |false        |\n|LOG-000010|[error_type, host]                                     |2      |false        |\n+----------+-------------------------------------------------------+-------+-------------+\n\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "+----------+----------------+------------------+\n|    log_id|             key|             value|\n+----------+----------------+------------------+\n|LOG-000001|           cache|               hit|\n|LOG-000001|            host| catalog-api-7f9c2|\n|LOG-000001|      latency_ms|                42|\n|LOG-000001|          region|           us-east|\n|LOG-000002|      grant_type|client_credentials|\n|LOG-000002|            host|auth-service-a41d8|\n|LOG-000002|      latency_ms|                61|\n|LOG-000002|          region|           us-east|\n|LOG-000003|            host|checkout-api-7f9c2|\n|LOG-000003|      latency_ms|               236|\n|LOG-000003|       order_ref|        ord-730917|\n|LOG-000003|payment_provider|          banklink|\n+----------+----------------+------------------+\nonly showing top 12 rows\n43 entries from 10 log lines\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "+----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------+\n|log_id    |all_attributes                                                                                                                                                   |\n+----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------+\n|LOG-000001|{cache -> hit, host -> catalog-api-7f9c2, latency_ms -> 42, region -> us-east, service -> catalog-api, level -> INFO}                                            |\n|LOG-000002|{grant_type -> client_credentials, host -> auth-service-a41d8, latency_ms -> 61, region -> us-east, service -> auth-service, level -> INFO}                      |\n|LOG-000003|{host -> checkout-api-7f9c2, latency_ms -> 236, order_ref -> ord-730917, payment_provider -> banklink, region -> us-west, service -> checkout-api, level -> INFO}|\n+----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------+\nonly showing top 3 rows\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "root\n |-- log: struct (nullable = true)\n |    |-- log_id: string (nullable = true)\n |    |-- attributes: map (nullable = true)\n |    |    |-- key: string\n |    |    |-- value: string (valueContainsNull = true)\n\n+----------+-------+--------------------+\n|    log_id|entries|                host|\n+----------+-------+--------------------+\n|LOG-000001|      4|   catalog-api-7f9c2|\n|LOG-000002|      4|  auth-service-a41d8|\n|LOG-000003|      5|  checkout-api-7f9c2|\n|      NULL|   NULL|                NULL|\n|LOG-000004|      5|    search-api-c03be|\n|LOG-000005|      5|   iot-gateway-a41d8|\n|LOG-000006|      5|  checkout-api-a41d8|\n|      NULL|   NULL|                NULL|\n|LOG-000007|      3|   iot-gateway-a41d8|\n|LOG-000008|      5|   iot-gateway-a41d8|\n|LOG-000009|      5|    search-api-7f9c2|\n|      NULL|   NULL|                NULL|\n|LOG-000010|      2|notification-work...|\n+----------+-------+--------------------+\n\n",
+   "error": null
+  }
+ }
+}

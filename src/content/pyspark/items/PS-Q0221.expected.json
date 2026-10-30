@@ -1,0 +1,150 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "trip_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "pickup_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "trip_distance",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "fare",
+     "type": "decimal(8,2)",
+     "nullable": true
+    },
+    {
+     "name": "total",
+     "type": "decimal(8,2)",
+     "nullable": true
+    },
+    {
+     "name": "payment_type",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "T001",
+     "2026-04-07T07:05:07",
+     2.25,
+     "15.63",
+     "18.94",
+     "card"
+    ],
+    [
+     "T002",
+     "2026-04-07T07:12:14",
+     2.35,
+     "16.38",
+     "20.16",
+     "card"
+    ],
+    [
+     "T003",
+     "2026-04-07T07:40:21",
+     0.95,
+     "8.63",
+     "9.13",
+     "cash"
+    ],
+    [
+     "T004",
+     "2026-04-07T08:02:28",
+     10.05,
+     "52.00",
+     "68.10",
+     "card"
+    ],
+    [
+     "T005",
+     "2026-04-07T08:25:35",
+     4.6,
+     "25.50",
+     "32.38",
+     "wallet"
+    ],
+    [
+     "T006",
+     "2026-04-07T08:51:42",
+     1.5,
+     "11.25",
+     "13.78",
+     "card"
+    ],
+    [
+     "T007",
+     "2026-04-07T09:30:49",
+     11.8,
+     "52.00",
+     "70.70",
+     "card"
+    ],
+    [
+     "T008",
+     "2026-04-07T09:44:56",
+     3.15,
+     "16.88",
+     "17.38",
+     "cash"
+    ],
+    [
+     "T009",
+     "2026-04-07T10:15:03",
+     2.25,
+     "14.13",
+     "16.75",
+     "card"
+    ],
+    [
+     "T010",
+     "2026-04-07T10:58:10",
+     3.85,
+     "21.63",
+     "22.13",
+     "dispute"
+    ],
+    [
+     "T011",
+     "2026-04-07T11:20:17",
+     1.25,
+     "10.13",
+     "13.16",
+     "card"
+    ],
+    [
+     "T012",
+     "2026-04-07T12:03:24",
+     3.4,
+     "19.50",
+     "23.51",
+     "card"
+    ]
+   ],
+   "row_count": 12
+  }
+ },
+ "hidden": [
+  "the full practice trips",
+  "trips with missing values",
+  "the same trip twice",
+  "midnight times, the shortest distance and the largest fare the column holds",
+  "no trips"
+ ]
+}

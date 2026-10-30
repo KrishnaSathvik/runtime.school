@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0107",
+  "slug": "dispute-quality-report",
+  "lesson": "PS-L022",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Dispute quality report",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "Before the monthly chargeback report, the disputes team checks every dispute record. Write `solve(disputes)` so it returns `dispute_id`, `status` and `quality` for every dispute.",
+  "rules": [
+    "Check in this order and use the first problem found: `bad amount` (`disputed_amount` missing or not more than 0), `bad status` (`status` missing or not `open`, `won`, `lost` or `withdrawn`), `open but resolved` (status `open` with a `resolved_date`), `missing resolution` (any other status with no `resolved_date`), `resolved too early` (`resolved_date` before `opened_date`).",
+    "A dispute with none of these problems gets `valid`.",
+    "Return the three columns, in that order, for every dispute."
+  ],
+  "hints": [
+    "Chain `F.when` in the rules' order and finish with `.otherwise(\"valid\")`.",
+    "Write each `when` as a problem, and test for missing values with `isNull()`: a comparison with a missing value isn't true, so the row would slip through to `valid`.",
+    "By the time the open and missing-resolution checks run, the status is known to be one of the four, so `status == \"open\"` and `status != \"open\"` are safe there."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "disputes"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(disputes):\n    # Return dispute_id, status and quality for every dispute.\n    return disputes\n",
+  "output": {
+    "columns": [
+      "dispute_id",
+      "status",
+      "quality"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "A `when` chain labels the first problem, and `otherwise` labels the rest: `F.when(F.col(\"disputed_amount\").isNull() | (F.col(\"disputed_amount\") <= 0), \"bad amount\").when(F.col(\"status\").isNull() | ~F.col(\"status\").isin(\"open\", \"won\", \"lost\", \"withdrawn\"), \"bad status\").when((F.col(\"status\") == \"open\") & F.col(\"resolved_date\").isNotNull(), \"open but resolved\").when((F.col(\"status\") != \"open\") & F.col(\"resolved_date\").isNull(), \"missing resolution\").when(F.col(\"resolved_date\") < F.col(\"opened_date\"), \"resolved too early\").otherwise(\"valid\")`. The `isNull()` tests matter because a rule on a missing value is NULL, which a `when` treats as not matched: without them a dispute with no amount or no status would be called `valid`. Checking the status second also makes the later tests safe, since by then it is one of the four known values. An open dispute has no `resolved_date`, so the last comparison is NULL for it and it stays `valid`."
+}

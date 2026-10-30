@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0075",
+  "slug": "receipt-lines",
+  "lesson": "PS-L015",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Receipt lines",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "Printed receipts list each order line as text, like `3 x P005 @ 19.99`, next to the line's total. Write `solve(order_items)` so it returns `line_key`, `receipt_text` and `line_total`.",
+  "rules": [
+    "`line_key` is the order id and the line number joined by `-`: order `O00001`, line 2 gives `O00001-2`.",
+    "`receipt_text` is the quantity, ` x `, the product id, ` @ ` and the unit price, exactly like `3 x P005 @ 19.99`. If any of the three values is missing, the whole text is missing.",
+    "`line_total` is `quantity` times `unit_price`, an exact decimal, missing if either is missing. Return the three columns, in that order, for every line, duplicates included."
+  ],
+  "hints": [
+    "String functions accept number columns too: `F.concat(\"quantity\", F.lit(\" x \"), ...)` turns the numbers into text for you.",
+    "A decimal becomes text with its two places, so 19.99 stays `19.99` and 24 stays `24.00`.",
+    "`F.concat` gives a missing result when any part is missing, which is what `receipt_text` needs. `line_total` is plain arithmetic, as in a `select` from earlier lessons."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "order_items"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(order_items):\n    # line_key, receipt_text, line_total\n    return order_items\n",
+  "output": {
+    "columns": [
+      "line_key",
+      "receipt_text",
+      "line_total"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Three expressions in one `select`. `F.concat_ws(\"-\", \"order_id\", \"line_no\")` (or `concat` with `F.lit(\"-\")`) builds the key; the line number becomes text on its own. `F.concat(\"quantity\", F.lit(\" x \"), \"product_id\", F.lit(\" @ \"), \"unit_price\")` builds the text, and because it's `concat`, a missing quantity, product or price makes it missing. A decimal turns into text with both places, so a price of 24 prints as `24.00`. `(F.col(\"quantity\") * F.col(\"unit_price\")).alias(\"line_total\")` stays an exact decimal. `concat_ws(\" \", ...)` for the text would quietly drop a missing part and print something like `3 x @ 19.99`."
+}

@@ -1,0 +1,57 @@
+{
+ "id": "PS-Q0449",
+ "slug": "the-quarantine-that-doubles-on-a-retry",
+ "lesson": "PS-L090",
+ "role": "debugging",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 12,
+ "title": "The quarantine that doubles on a retry",
+ "dataset": {
+  "id": "PS-D14",
+  "version": "1.0.0"
+ },
+ "prompt": "Each night, invoices that break a rule go into a Delta quarantine table, marked with the night's `_batch_id`. Tonight a later step failed and the night was retried, and now the morning report shows tonight's quarantined invoices twice. Fix `quarantine_night`.",
+ "rules": [
+  "The table holds one row per invoice per night. Tonight's file may hold an invoice more than once, as identical copies.",
+  "Running a night again must leave the same table as running it once.",
+  "Earlier nights' rows stay as they are, even for an invoice that is quarantined again tonight.",
+  "Keep the two rules and their reasons. Don't change `start_table` or `solve`."
+ ],
+ "hints": [
+  "Run the starter on the sample and count tonight's rows: which ones are there twice, and which four times?",
+  "An append adds every row again on each run. Lesson 83 replaces exactly the slice a run owns instead.",
+  "The slice a night owns is its `_batch_id`. Remove repeated invoices first, then write tonight's rows over that slice only."
+ ],
+ "explanation": "An append is never idempotent: the retry adds tonight's rows a second time, and INV-000006, sent twice in the file, ends up four times. Two changes fix it. `dropDuplicates()` keeps one row per invoice, since the copies are identical. Then `mode(\"overwrite\")` with `option(\"replaceWhere\", f\"_batch_id = {batch_id}\")` replaces only tonight's slice, so a retry swaps the rows for the same rows and night 1 isn't touched. A plain overwrite would wipe night 1. A MERGE on `invoice_id` alone would find INV-000003 from night 1 and leave tonight without it. A MERGE on `invoice_id` and `_batch_id` that only inserts missing rows is also correct, and so is deleting the batch and then appending it.",
+ "entry": "solve",
+ "inputs": [
+  "invoices",
+  "invoice_lines"
+ ],
+ "starter": "import shutil\nfrom datetime import date\nfrom decimal import Decimal\n\nfrom pyspark.sql import functions as F\n\nSTATUSES = [\"draft\", \"open\", \"paid\", \"overdue\", \"void\"]\nSCHEMA = \"invoice_id STRING, account_id STRING, invoice_date DATE, status STRING, total_amount DECIMAL(12,2), reason STRING, _batch_id INT\"\n\n\ndef start_table(path):\n    # The quarantine before tonight: what night 1 set aside. Don't change this.\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty folder on every run\n    before = spark.createDataFrame(\n        [\n            (\"INV-000003\", \"ACC-0003\", date(2025, 12, 9), \"overdue\", Decimal(\"470.50\"), \"total differs from its lines\", 1),\n            (\"INV-000077\", \"ACC-0002\", date(2026, 2, 27), \"sent\", Decimal(\"54.00\"), \"unknown status\", 1),\n        ],\n        SCHEMA,\n    )\n    before.write.format(\"delta\").save(path)\n\n\ndef quarantine_night(invoices, invoice_lines, path, batch_id):\n    # Put tonight's invoices that break a rule into the quarantine table, with the reason.\n    line_totals = invoice_lines.groupBy(\"invoice_id\").agg(F.sum(\"line_amount\").alias(\"lines_total\"))\n    reason = (\n        F.when(~F.coalesce(F.col(\"status\").isin(STATUSES), F.lit(False)), \"unknown status\")\n        .when(~F.coalesce(F.col(\"total_amount\") == F.col(\"lines_total\"), F.lit(False)), \"total differs from its lines\")\n    )\n    bad = (\n        invoices.join(line_totals, on=\"invoice_id\", how=\"left\")\n        .withColumn(\"reason\", reason)\n        .filter(F.col(\"reason\").isNotNull())\n        .select(\"invoice_id\", \"account_id\", \"invoice_date\", \"status\", \"total_amount\", \"reason\", F.lit(batch_id).alias(\"_batch_id\"))\n    )\n    bad.write.format(\"delta\").mode(\"append\").save(path)\n\n\ndef solve(invoices, invoice_lines):\n    path = \"/tmp/erp/quarantine\"\n    start_table(path)\n    quarantine_night(invoices, invoice_lines, path, 2)\n    quarantine_night(invoices, invoice_lines, path, 2)  # a later step failed, and the night was retried\n    return spark.read.format(\"delta\").load(path)\n",
+ "output": {
+  "columns": [
+   "invoice_id",
+   "account_id",
+   "invoice_date",
+   "status",
+   "total_amount",
+   "reason",
+   "_batch_id"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 180,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

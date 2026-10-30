@@ -1,0 +1,124 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "contact_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "first_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "last_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "job_title",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "email",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "phone",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "is_primary",
+     "type": "boolean",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "CON-00001",
+     "ACC-0001",
+     "Alina",
+     "Castellan",
+     "Procurement Manager",
+     "alina.castellan@quillfenanalytics.example",
+     "+1-202-555-0114",
+     true
+    ],
+    [
+     "CON-00002",
+     "ACC-0001",
+     "Hugo",
+     "Eklund",
+     "Finance Director",
+     "hugo.eklund@quillfenanalytics.example",
+     null,
+     false
+    ],
+    [
+     "CON-00003",
+     "ACC-0002",
+     "Rosa",
+     "Marchetti",
+     "Buyer",
+     "rosa.marchetti@brackenmoorfoods.example",
+     "+1-202-555-0162",
+     true
+    ],
+    [
+     "CON-00004",
+     "ACC-0003",
+     "Oskar",
+     "Rasmussen",
+     "Operations Lead",
+     "oskar.rasmussen@tamsleylogistics.example",
+     "+1-202-555-0127",
+     true
+    ],
+    [
+     "CON-00005",
+     "ACC-0004",
+     "Nadia",
+     "Goswami",
+     "IT Manager",
+     "nadia.goswami@corvanehealth.example",
+     "+1-202-555-0145",
+     true
+    ],
+    [
+     "CON-00006",
+     "ACC-0005",
+     "Wes",
+     "Okonjo",
+     "COO",
+     "wes.okonjo@ellowbyenergy.example",
+     null,
+     true
+    ]
+   ],
+   "row_count": 6
+  }
+ },
+ "hidden": [
+  "the full practice contacts",
+  "contacts with no phone, no job title or no primary flag",
+  "the same contact listed twice",
+  "names and titles with commas, accents and apostrophes",
+  "an empty contacts table"
+ ]
+}

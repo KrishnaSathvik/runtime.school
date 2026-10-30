@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0288",
+  "slug": "which-joins-can-broadcast",
+  "lesson": "PS-L058",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Which joins can broadcast",
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0"
+  },
+  "prompt": "Join `shipments` to `warehouses` on `warehouse_id` four ways: inner, left, right and full. Write `solve(shipments, warehouses)` so it returns one row per join type with `how`, `rows` and `broadcast`.",
+  "rules": [
+    "Keep `shipments` on the left and `warehouses` on the right in every join. Put `F.broadcast` on a side Spark can broadcast for that join type, whenever there is one.",
+    "`rows` is the number of rows the join returns. `broadcast` is whether its plan uses a broadcast hash join: use `uses_broadcast` from the starter.",
+    "The starter turns automatic broadcasting and adaptive execution off, so only your hints count. Return the columns `how`, `rows`, `broadcast`."
+  ],
+  "hints": [
+    "The side whose every row is kept has to be streamed past the lookup table, so it can't be the broadcast one.",
+    "Inner keeps neither side whole, left keeps the left side, right the right side. A full join keeps both.",
+    "Collect `(how, joined.count(), uses_broadcast(joined))` tuples in a list and pass it to the `spark.createDataFrame` line. A missing key never matches, so outer joins keep those rows unmatched."
+  ],
+  "explanation": "An inner join can broadcast either side. A left join keeps every shipment, so only `warehouses` can be broadcast; a right join keeps every warehouse, so the hint goes on `shipments`: `F.broadcast(shipments).join(warehouses, \"warehouse_id\", \"right\")`. A full join keeps both sides, so no hint can be used and Spark quietly runs a sort-merge join. That gives `True, True, True, False` on any data. The row counts are ordinary join semantics: missing warehouse ids never match, so they come back unmatched in the outer joins, and a warehouse listed twice doubles its shipments. The hints never change the counts. Swapping the tables to broadcast `warehouses` in the right join turns it into a different join, which keeps shipments instead of warehouses.",
+  "entry": "solve",
+  "inputs": [
+    "shipments",
+    "warehouses"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n# Automatic broadcasting and adaptive execution are off, so only your hints decide the plan.\nspark.conf.set(\"spark.sql.adaptive.enabled\", False)\nspark.conf.set(\"spark.sql.autoBroadcastJoinThreshold\", -1)\n\n\ndef uses_broadcast(df):\n    # True when the physical plan uses a broadcast hash join.\n    return \"BroadcastHashJoin\" in df._jdf.queryExecution().executedPlan().toString()\n\n\ndef solve(shipments, warehouses):\n    results = []\n    # For each join type, add a tuple (how, number of rows, uses_broadcast(joined)).\n    return spark.createDataFrame(results, \"how string, rows bigint, broadcast boolean\")\n",
+  "output": {
+    "columns": [
+      "how",
+      "rows",
+      "broadcast"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

@@ -1,0 +1,645 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "example": {
+   "schema": [
+    {
+     "name": "department_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "department_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "employee_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "full_name",
+     "type": "string",
+     "nullable": false
+    },
+    {
+     "name": "salary",
+     "type": "decimal(10,2)",
+     "nullable": true
+    },
+    {
+     "name": "salary_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "salary_rank",
+     "type": "int",
+     "nullable": false
+    },
+    {
+     "name": "position",
+     "type": "int",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "D01",
+     "Executive",
+     "E01",
+     "Priya Silva",
+     "260000.00",
+     "2025-01-06",
+     1,
+     1
+    ],
+    [
+     "D02",
+     "Engineering",
+     "E02",
+     "Ada Kowal",
+     "165000.00",
+     "2025-03-07",
+     1,
+     1
+    ],
+    [
+     "D02",
+     "Engineering",
+     "E03",
+     "Lena Duarte",
+     "120000.00",
+     "2025-05-13",
+     2,
+     2
+    ],
+    [
+     "D02",
+     "Engineering",
+     "E08",
+     "Ines Haddad",
+     "80000.00",
+     "2025-07-01",
+     3,
+     3
+    ],
+    [
+     "D02",
+     "Engineering",
+     "E06",
+     "Omar Weber",
+     "72500.00",
+     "2025-04-01",
+     4,
+     4
+    ],
+    [
+     "D02",
+     "Engineering",
+     "E04",
+     "Jonas Mori",
+     "72500.00",
+     "2026-01-01",
+     4,
+     5
+    ],
+    [
+     "D02",
+     "Engineering",
+     "E05",
+     "Maya Sato",
+     "72500.00",
+     "2025-06-05",
+     4,
+     6
+    ],
+    [
+     "D02",
+     "Engineering",
+     "E10",
+     "Lena Haddad",
+     "60000.00",
+     "2025-08-01",
+     7,
+     7
+    ]
+   ],
+   "row_count": 8,
+   "inputs": {
+    "employees": [
+     [
+      "E01",
+      "Priya",
+      "Silva",
+      "priya.silva@corp.example",
+      "555-278-7973",
+      "Chief Executive Officer",
+      "5",
+      "D01",
+      null,
+      "2025-01-06",
+      "full_time",
+      "260000.00",
+      "active",
+      null
+     ],
+     [
+      "E02",
+      "Ada",
+      "Kowal",
+      "ada.kowal@corp.example",
+      "555-299-3872",
+      "Head of Engineering",
+      "4",
+      "D02",
+      "E01",
+      "2025-03-07",
+      "full_time",
+      "170000.00",
+      "active",
+      null
+     ],
+     [
+      "E03",
+      "Lena",
+      "Duarte",
+      "lena.duarte@corp.example",
+      "555-317-4274",
+      "Engineering Manager",
+      "3",
+      "D02",
+      "E02",
+      "2025-05-13",
+      "full_time",
+      "120000.00",
+      "active",
+      null
+     ],
+     [
+      "E04",
+      "Jonas",
+      "Mori",
+      "jonas.mori@corp.example",
+      "555-972-7410",
+      "Software Engineer",
+      "1",
+      "D02",
+      "E03",
+      "2025-06-05",
+      "full_time",
+      "72500.00",
+      "active",
+      null
+     ],
+     [
+      "E05",
+      "Maya",
+      "Sato",
+      "maya.sato@corp.example",
+      "555-761-5743",
+      "Software Engineer",
+      "1",
+      "D02",
+      "E03",
+      "2025-06-05",
+      "full_time",
+      "72500.00",
+      "active",
+      null
+     ],
+     [
+      "E06",
+      "Omar",
+      "Weber",
+      "omar.weber@corp.example",
+      "555-850-2896",
+      "Software Engineer",
+      "1",
+      "D02",
+      "E03",
+      "2025-04-01",
+      "full_time",
+      "72500.00",
+      "on_leave",
+      null
+     ],
+     [
+      "E07",
+      "Tomas",
+      "Rao",
+      "tomas.rao@corp.example",
+      "555-334-7803",
+      "Software Engineer",
+      "1",
+      "D02",
+      "E03",
+      "2025-02-01",
+      "full_time",
+      "60000.00",
+      "terminated",
+      "2026-02-20"
+     ],
+     [
+      "E08",
+      "Ines",
+      "Haddad",
+      "ines.haddad@corp.example",
+      "555-973-7652",
+      "Senior Software Engineer",
+      "2",
+      "D02",
+      "E03",
+      "2025-07-01",
+      "full_time",
+      "80000.00",
+      "terminated",
+      "2026-05-01"
+     ],
+     [
+      "E09",
+      "Mateo",
+      "Mori",
+      "mateo.mori@corp.example",
+      "555-647-4533",
+      "Software Engineer",
+      "1",
+      "D02",
+      "E03",
+      "2026-03-20",
+      "full_time",
+      "65000.00",
+      "active",
+      null
+     ],
+     [
+      "E10",
+      "Lena",
+      "Haddad",
+      "lena.haddad@corp.example",
+      "555-230-2574",
+      "Software Engineer",
+      "1",
+      "D02",
+      "E03",
+      "2025-08-01",
+      "full_time",
+      "60000.00",
+      "active",
+      null
+     ]
+    ],
+    "departments": [
+     [
+      "D01",
+      "Executive",
+      "CC-100",
+      "Austin",
+      "E01"
+     ],
+     [
+      "D02",
+      "Engineering",
+      "CC-200",
+      "Austin",
+      "E02"
+     ]
+    ],
+    "salary_history": [
+     [
+      "E01",
+      "2025-01-06",
+      "260000.00",
+      "hire"
+     ],
+     [
+      "E02",
+      "2025-03-07",
+      "165000.00",
+      "hire"
+     ],
+     [
+      "E02",
+      "2026-04-01",
+      "170000.00",
+      "market_adjustment"
+     ],
+     [
+      "E03",
+      "2025-05-13",
+      "120000.00",
+      "hire"
+     ],
+     [
+      "E04",
+      "2025-06-05",
+      "70000.00",
+      "hire"
+     ],
+     [
+      "E04",
+      "2026-01-01",
+      "72500.00",
+      "merit"
+     ],
+     [
+      "E05",
+      "2025-06-05",
+      "72500.00",
+      "hire"
+     ],
+     [
+      "E06",
+      "2025-04-01",
+      "72500.00",
+      "hire"
+     ],
+     [
+      "E07",
+      "2025-02-01",
+      "60000.00",
+      "hire"
+     ],
+     [
+      "E08",
+      "2025-07-01",
+      "80000.00",
+      "hire"
+     ],
+     [
+      "E09",
+      "2026-03-01",
+      "65000.00",
+      "hire"
+     ],
+     [
+      "E10",
+      "2025-08-01",
+      "60000.00",
+      "hire"
+     ]
+    ]
+   }
+  },
+  "project": {
+   "schema": [
+    {
+     "name": "department_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "department_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "employee_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "full_name",
+     "type": "string",
+     "nullable": false
+    },
+    {
+     "name": "salary",
+     "type": "decimal(10,2)",
+     "nullable": true
+    },
+    {
+     "name": "salary_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "salary_rank",
+     "type": "int",
+     "nullable": false
+    },
+    {
+     "name": "position",
+     "type": "int",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "D01",
+     "Executive",
+     "E0001",
+     "Priya Silva",
+     "260000.00",
+     "2025-01-06",
+     1,
+     1
+    ],
+    [
+     "D02",
+     "Engineering",
+     "E0002",
+     "Ada Kowal",
+     "167500.00",
+     "2026-01-01",
+     1,
+     1
+    ],
+    [
+     "D02",
+     "Engineering",
+     "E0003",
+     "Lena Duarte",
+     "122500.00",
+     "2026-01-01",
+     2,
+     2
+    ],
+    [
+     "D02",
+     "Engineering",
+     "E0011",
+     "Tomas Sato",
+     "112500.00",
+     "2025-12-15",
+     3,
+     3
+    ],
+    [
+     "D02",
+     "Engineering",
+     "E0016",
+     "Leo Lind",
+     "107500.00",
+     "2025-10-31",
+     4,
+     4
+    ],
+    [
+     "D02",
+     "Engineering",
+     "E0013",
+     "Mateo Mori",
+     "95000.00",
+     "2026-01-17",
+     5,
+     5
+    ],
+    [
+     "D02",
+     "Engineering",
+     "E0004",
+     "Maya Lind",
+     "90000.00",
+     "2026-01-18",
+     6,
+     6
+    ],
+    [
+     "D02",
+     "Engineering",
+     "E0015",
+     "Anika Lind",
+     "90000.00",
+     "2025-05-12",
+     6,
+     7
+    ],
+    [
+     "D02",
+     "Engineering",
+     "E0017",
+     "Kenji Kowal",
+     "87500.00",
+     "2026-03-19",
+     8,
+     8
+    ],
+    [
+     "D02",
+     "Engineering",
+     "E0006",
+     "Maya Sato",
+     "82500.00",
+     "2026-01-01",
+     9,
+     9
+    ],
+    [
+     "D02",
+     "Engineering",
+     "E0012",
+     "Ines Haddad",
+     "77500.00",
+     "2025-06-12",
+     10,
+     10
+    ],
+    [
+     "D02",
+     "Engineering",
+     "E0008",
+     "Lena Haddad",
+     "75000.00",
+     "2026-01-16",
+     11,
+     11
+    ],
+    [
+     "D02",
+     "Engineering",
+     "E0005",
+     "Jonas Mori",
+     "67500.00",
+     "2026-01-01",
+     12,
+     12
+    ],
+    [
+     "D02",
+     "Engineering",
+     "E0009",
+     "Omar Weber",
+     "67500.00",
+     "2026-01-01",
+     12,
+     13
+    ],
+    [
+     "D02",
+     "Engineering",
+     "E0021",
+     "Maya Iyer",
+     "67500.00",
+     "2026-01-01",
+     12,
+     14
+    ],
+    [
+     "D02",
+     "Engineering",
+     "E0020",
+     "Mateo Silva",
+     "67500.00",
+     "2025-12-02",
+     12,
+     15
+    ],
+    [
+     "D02",
+     "Engineering",
+     "E0010",
+     "Tomas Rao",
+     "65000.00",
+     "2025-10-10",
+     16,
+     16
+    ],
+    [
+     "D02",
+     "Engineering",
+     "E0019",
+     "Kofi Rao",
+     "60000.00",
+     "2026-01-21",
+     17,
+     17
+    ],
+    [
+     "D02",
+     "Engineering",
+     "E0018",
+     "Felix Novak",
+     "57500.00",
+     "2025-06-11",
+     18,
+     18
+    ],
+    [
+     "D02",
+     "Engineering",
+     "E0007",
+     "Jonas Novak",
+     "57500.00",
+     "2025-10-19",
+     18,
+     19
+    ]
+   ],
+   "row_count": 214
+  }
+ },
+ "hidden": [
+  "the full practice tables",
+  "rows, hires and leaving dates exactly on the as-of date and the day after",
+  "equal salaries in two departments, with equal hire dates",
+  "a pay cut, repeated rows, a row before the hire date, and an unlisted department",
+  "empty tables"
+ ]
+}

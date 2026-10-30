@@ -1,0 +1,26 @@
+{
+  "id": "PS-L023-C1",
+  "slug": "lab-results-that-break-the-contract",
+  "lesson": "PS-L023",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Lab results that break the contract",
+  "dataset": { "id": "PS-D04", "version": "1.0.0" },
+  "prompt": "The lab-results feed has a contract with three rules. Write `solve(observations)` so it returns every observation that breaks at least one of them.",
+  "rules": [
+    "`value` must be present and a real number: missing or NaN breaks the rule.",
+    "`unit` must be the unit of its `code`: GLU mg/dL, HBA1C %, LDL mg/dL, HGB g/dL, BMI kg/m2. Any other code, or a missing unit, breaks the rule.",
+    "An HBA1C `value` must be between 3 and 20, both included. Return every column of `observations`, unchanged."
+  ],
+  "hints": [
+    "Write each rule as a condition that is true for a good row, then keep the rows where any rule is not true.",
+    "`F.isnan` catches NaN, which `isNull` doesn't. For the unit, a `F.when` chain can give the expected unit for each code.",
+    "Wrap each rule in `F.coalesce(rule, F.lit(False))` so a NULL counts as a failure instead of hiding the row."
+  ],
+  "entry": "solve",
+  "inputs": ["observations"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(observations):\n    # Return the observations that break at least one rule.\n    return observations\n",
+  "output": { "columns": ["observation_id", "encounter_id", "patient_id", "code", "description", "value", "unit", "observed_at"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "sample": true }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

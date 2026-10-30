@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0390",
+  "slug": "quarantine-before-the-band",
+  "lesson": "PS-L078",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Quarantine before the band",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "prompt": "The pipeline's integration test runs two steps on rows shaped like `observations`: step 1 checks each HbA1c result, step 2 gives a band. Finish the steps so `solve(observations)` returns `observation_id`, `value`, `band` and `reason` for every HbA1c result.",
+  "rules": [
+    "`reason` is the first check a result fails, in this order: `missing_value` (no value), `not_a_number` (NaN), `wrong_unit` (`unit` isn't `%`, or is missing), `implausible` (the value isn't more than 0 and at most 20). NULL when it passes all four.",
+    "Only a result with no reason gets a band: below 5.7 `normal`, below 6.5 `prediabetes`, otherwise `diabetes`. A quarantined result stays in the output with no band."
+  ],
+  "hints": [
+    "Step 1 is a quality gate's reason column: a list of `(reason, condition)` pairs and a `F.when` chain built in a loop, with `F.coalesce(condition, F.lit(False))`.",
+    "Order matters: NaN is larger than 20 in Spark, so without its own check first it would be called `implausible`.",
+    "Step 2 must agree with step 1: start its chain with `F.when(F.col(\"reason\").isNotNull(), None)`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "observations"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef check_results(observations):\n    # Step 1: one row per HbA1c result, with the first rule it breaks in `reason` (NULL when it is fine).\n    value = F.col(\"value\")\n    reason = F.when(value.isNull(), \"missing_value\")  # add the other checks, in order\n    return observations.filter(F.col(\"code\") == \"HBA1C\").select(\"observation_id\", \"value\", reason.alias(\"reason\"))\n\n\ndef hba1c_band(checked):\n    # Step 2: a band for every result that passed step 1.\n    value = F.col(\"value\")\n    band = (\n        F.when(F.isnan(value), None)\n        .when(value < 5.7, \"normal\")\n        .when(value < 6.5, \"prediabetes\")\n        .when(value >= 6.5, \"diabetes\")\n    )\n    return checked.select(\"observation_id\", \"value\", band.alias(\"band\"), \"reason\")\n\n\ndef solve(observations):\n    return hba1c_band(check_results(observations))\n",
+  "output": {
+    "columns": [
+      "observation_id",
+      "value",
+      "band",
+      "reason"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Step 1 is the quarantine split from data contracts: rules as `(reason, condition)` pairs, a `F.when` chain built in a loop so the first broken check wins, and `F.coalesce(condition, F.lit(False))` so a missing unit counts as wrong. The order is part of the contract: NaN must be caught before the range check, because Spark ranks NaN above every number, and a result of 52 in mmol/mol should be reported as a wrong unit, not as implausible. Step 2 has to honour step 1's verdict, which is what the integration test checks: banding every row would label the mislabelled 45 (really mmol/mol) as `diabetes`. Keeping the quarantined results, with their reason, lets the clinic see what wasn't banded and why."
+}

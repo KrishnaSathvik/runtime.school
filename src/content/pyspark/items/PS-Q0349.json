@@ -1,0 +1,56 @@
+{
+ "id": "PS-Q0349",
+ "slug": "peak-temperatures-written-once",
+ "lesson": "PS-L070",
+ "role": "debugging",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 12,
+ "title": "Peak temperatures, written once",
+ "dataset": {
+  "id": "PS-D09",
+  "version": "1.0.0"
+ },
+ "prompt": "This stream should send each sensor's peak temperature per 30-minute window once, when the window is final. Its table repeats windows with changing values and holds windows that aren't finished. Fix `solve(sensor_readings)` so it returns `window_start`, `device_id` and `peak_temperature` for every closed window, once.",
+ "rules": [
+  "Windows are 30 minutes of `event_time`. Use a 15-minute watermark on `event_time`; a reading whose window has already closed is dropped.",
+  "Only real temperatures count: 999.0 is a glitch, and a reading with no temperature has no value to give. The starter's filter already does this, so a window with neither has no row.",
+  "Return each closed window once, with its final peak.",
+  "The rows must come from a streaming query over the delivery files: working on `sensor_readings` itself doesn't count."
+ ],
+ "hints": [
+  "DataFrames don't change in place: `withWatermark` returns a new DataFrame. Is that result used anywhere?",
+  "Append mode refused to start because the aggregation had no watermark. Once it has one, append mode works.",
+  "Update mode writes a window every time its peak changes, open windows included, and a memory table keeps every write."
+ ],
+ "explanation": "`readings.withWatermark(...)` on a line of its own builds a new DataFrame and throws it away, so the aggregation had no watermark. Append mode then refuses to start, and switching to update mode only hid the problem: the memory table got a row every time a window's peak changed, plus windows that were never finished. Assign the result, `readings = readings.withWatermark(\"event_time\", \"15 minutes\")`, and write in append mode: each window comes out once, when the watermark passes its end, with its final peak. In the sample, R1010 arrived late but before its window closed, so DEV-002's 09:00 peak is 22.8.",
+ "entry": "solve",
+ "inputs": [
+  "sensor_readings"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\ndef solve(sensor_readings):\n    spark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\n    make_batches(sensor_readings, \"/tmp/in\")\n    shutil.rmtree(\"/tmp/ck\", ignore_errors=True)\n    readings = spark.readStream.schema(sensor_readings.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\n    readings.withWatermark(\"event_time\", \"15 minutes\")\n    real = readings.filter(F.col(\"payload.temperature_c\") < 999)      # 999.0 is a sensor glitch\n    peaks = (real.groupBy(F.window(\"event_time\", \"30 minutes\"), \"device_id\")\n             .agg(F.max(\"payload.temperature_c\").alias(\"peak_temperature\")))\n    # append mode refused to start, so this writes in update mode\n    run_stream(peaks.writeStream.outputMode(\"update\").format(\"memory\").queryName(\"peaks\")\n               .option(\"checkpointLocation\", \"/tmp/ck\"))\n    return spark.table(\"peaks\").select(F.col(\"window.start\").alias(\"window_start\"), \"device_id\", \"peak_temperature\")\n",
+ "output": {
+  "columns": [
+   "window_start",
+   "device_id",
+   "peak_temperature"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

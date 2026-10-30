@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0385",
+  "slug": "two-nights-of-an-incremental-job",
+  "lesson": "PS-L077",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 26,
+  "title": "Two nights of an incremental job",
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0"
+  },
+  "prompt": "The shipments job keeps every event it has seen in one Parquet folder and adds only new events each night. Finish `new_events` and write `solve(shipments, shipment_events)` so it runs the job for the feed's two latest load dates, oldest first, and returns `night`, `task` and `rows` for every task on each night.",
+  "rules": [
+    "On a night, the job sees the events loaded on or before that `load_date`. `new_events` is one row per event without `load_date`, leaving out every `event_id` already in the store: a re-sent copy is never stored twice.",
+    "The other tasks run as given, in dependency order: `all_events` appends to the store and reads it back. `rows` counts each task's output, a bigint; `night` is the load date, a date.",
+    "With one load date there is one night; with no events, no rows."
+  ],
+  "hints": [
+    "`sorted(...)[-2:]` gives the two latest load dates. Run the tasks once per night with `make_tasks(shipments, tonight)`.",
+    "Before the first night the store doesn't exist: check with `os.path.exists(STORE)`, then `collect()` the stored event ids and drop them with `isin`.",
+    "Remove `load_date` before `distinct()`, so copies loaded on different days become one row."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "shipments",
+    "shipment_events"
+  ],
+  "starter": "import os\nimport shutil\nfrom pyspark.sql import functions as F\n\nSTORE = \"/tmp/event_store/events\"\n\n\ndef run_order(deps):\n    order = []\n    while len(order) < len(deps):\n        ready = [t for t in deps if t not in order and all(d in order for d in deps[t])]\n        if not ready:\n            raise ValueError(\"these tasks wait on each other: \" + \", \".join(t for t in deps if t not in order))\n        order += ready\n    return order\n\n\ndef make_tasks(shipments, tonight):\n    def new_events():\n        # Tonight's events, one row per event, without the ones already stored.\n        return tonight.select([c for c in tonight.columns if c != \"load_date\"]).distinct()\n\n    def all_events(new_events):\n        new_events.write.mode(\"append\").parquet(STORE)\n        return spark.read.parquet(STORE)\n\n    def delivered(all_events):\n        ids = [r.shipment_id for r in shipments.select(\"shipment_id\").collect()]\n        known = F.coalesce(F.col(\"shipment_id\").isin(ids), F.lit(False))\n        return all_events.filter(known & (F.col(\"event_type\") == \"delivered\"))\n\n    def in_flight(delivered):\n        done = [r.shipment_id for r in delivered.select(\"shipment_id\").collect()]\n        return shipments.filter(~F.col(\"shipment_id\").isin(done))\n\n    return {\n        \"in_flight\": (in_flight, [\"delivered\"]),\n        \"delivered\": (delivered, [\"all_events\"]),\n        \"all_events\": (all_events, [\"new_events\"]),\n        \"new_events\": (new_events, []),\n    }\n\n\ndef solve(shipments, shipment_events):\n    shutil.rmtree(\"/tmp/event_store\", ignore_errors=True)\n    # Run the job for the two latest load dates, oldest first, and record each task's rows per night.\n    results = []\n    return spark.createDataFrame(results, \"night DATE, task STRING, rows BIGINT\")\n",
+  "output": {
+    "columns": [
+      "night",
+      "task",
+      "rows"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Each night builds the task dict for that night's events and runs it in dependency order, so `new_events` runs before `all_events` appends. What makes the job incremental is the store: the first night stores every distinct event, and the second keeps only events whose `event_id` isn't stored yet, collected as a list and removed with `isin`. A copy re-sent on the latest day is already stored and adds nothing. Dropping `load_date` before `distinct()` matters within a night too: two copies loaded on different days are otherwise two rows. Overwriting instead of appending would leave the store with only the newest events, and `in_flight` would count shipments as undelivered."
+}

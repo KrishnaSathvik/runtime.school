@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0273",
+  "kind": "predict",
+  "slug": "skipped-stages-and-empty-tasks",
+  "lesson": "PS-L055",
+  "role": "edge",
+  "format": "concept_or_trace",
+  "difficulty": "hard",
+  "minutes": 8,
+  "title": "Skipped stages and tasks with no rows",
+  "prompt": "What does this program print? `report` prints one line per job: a (tasks, tasks that ran) pair for each of its stages. No lesson trip is longer than 100 miles. Type each printed line on its own line.",
+  "program": "from pyspark.sql import functions as F\n\nspark.conf.set(\"spark.sql.adaptive.enabled\", \"false\")\nsc = spark.sparkContext\ntracker = sc.statusTracker()\n\n\ndef report(group):\n    for job in sorted(tracker.getJobIdsForGroup(group)):\n        stages = sorted(tracker.getJobInfo(job).stageIds)\n        print([(tracker.getStageInfo(s).numTasks, tracker.getStageInfo(s).numCompletedTasks) for s in stages])\n\n\nby_rate = trips.groupBy(\"rate_code\").count()\nsc.setJobGroup(\"same\", \"the same DataFrame twice\")\nby_rate.collect()\nby_rate.collect()\nreport(\"same\")\n\nsc.setJobGroup(\"fresh\", \"a new DataFrame\")\ntrips.groupBy(\"rate_code\").count().collect()\nreport(\"fresh\")\n\nsc.setJobGroup(\"none\", \"no rows at all\")\nrows = trips.filter(F.col(\"trip_distance\") > 100).groupBy(\"rate_code\").count().collect()\nreport(\"none\")\nprint(len(rows))\n",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "With adaptive execution off, each grouping job has two stages: 1 task to read the one-file table, then 4 tasks after the shuffle.",
+    "The second `collect()` on the same DataFrame reuses the shuffle output the first one wrote. A stage whose output already exists is listed but skipped.",
+    "A new DataFrame gets a new shuffle. And a task runs for every partition, even when its partition holds no rows."
+  ],
+  "explanation": "Each `collect()` is one job with two stages: a 1-task stage that reads and pre-counts, and a 4-task stage after the shuffle. The second `collect()` on the same `by_rate` finds the first stage's shuffle output already written, so that stage is skipped: (1, 0). Writing the same grouping again builds a new DataFrame with its own shuffle, so nothing is skipped. The filter keeps no rows, but Spark doesn't know that before running: all 4 tasks after the shuffle still run, each on an empty partition, and the result has 0 rows."
+}

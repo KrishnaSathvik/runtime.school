@@ -1,0 +1,58 @@
+{
+  "id": "PS-Q0256",
+  "slug": "typical-price-pandas-udf",
+  "lesson": "PS-L052",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Typical price of the day",
+  "dataset": {
+    "id": "PS-D10",
+    "version": "1.0.0"
+  },
+  "prompt": "Chart tools summarise a trading day with its typical price: the average of the high, the low and the close. Write `solve(daily_prices)` with a pandas UDF so it returns `symbol`, `trade_date` and `typical_price`.",
+  "rules": [
+    "`typical_price` is (high + low + close) ÷ 3, rounded to 2 decimal places, as a double.",
+    "A day with a missing `high`, `low` or `close` has a missing `typical_price`.",
+    "Compute `typical_price` with a pandas UDF: the check looks for it in the plan Spark runs.",
+    "Return `symbol`, `trade_date` and `typical_price`, in that order. Keep every row."
+  ],
+  "hints": [
+    "A pandas UDF can take three columns at once: `def typical(high: pd.Series, low: pd.Series, close: pd.Series) -> pd.Series`, declared with `@F.pandas_udf(\"double\")`.",
+    "The prices are `DECIMAL`, so they arrive as `Decimal` objects. Turn each Series into floats with `.astype(\"float64\")` first.",
+    "Add the three Series, divide by 3, then `.round(2)`. A missing price becomes NaN, and NaN comes back as NULL."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "daily_prices"
+  ],
+  "starter": "import pandas as pd\nfrom pyspark.sql import functions as F\n\n\ndef solve(daily_prices):\n    # Return symbol, trade_date and typical_price, computed with a pandas UDF.\n    return daily_prices\n",
+  "output": {
+    "columns": [
+      "symbol",
+      "trade_date",
+      "typical_price"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "One pandas UDF takes the three price columns, converts each from `Decimal` to float with `.astype(\"float64\")`, and returns `((h + l + c) / 3).round(2)`. The whole batch is added and divided in one step, with no loop. Without the conversion, the sum is a Series of `Decimal` objects and Arrow can't turn it into a double column, so the job stops. A missing price needs no extra code: it becomes NaN, NaN stays NaN through the arithmetic, and Spark gets it back as NULL. Filling the gaps with 0 would invent a price nobody traded at. Built-ins could give the same rows here (`F.round` on the decimal sum); this question checks for the pandas UDF because that's what it teaches.",
+  "technique": {
+    "name": "a pandas UDF",
+    "plan": [
+      "ArrowEvalPython"
+    ]
+  }
+}

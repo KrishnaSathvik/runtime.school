@@ -1,0 +1,55 @@
+{
+  "id": "PS-Q0153",
+  "slug": "order-lines-health-check",
+  "lesson": "PS-L031",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Order lines health check",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "Each night a job checks the order lines table before reports run. Write `solve(order_items)` so it returns a single row summarising the whole table, even when the table is empty.",
+  "rules": [
+    "`lines` counts every row, repeated rows included. `priced_lines` counts the rows whose `unit_price` isn't missing.",
+    "`orders` and `products` count the different `order_id` and `product_id` values; a missing id isn't counted.",
+    "`units` is the sum of `quantity` and `largest_quantity` its maximum. Missing quantities are skipped; with no quantities at all both are missing.",
+    "Return exactly one row with `lines`, `priced_lines`, `orders`, `products`, `units` and `largest_quantity`."
+  ],
+  "hints": [
+    "With no `groupBy`, `agg` treats the whole table as one group and returns one row, even for an empty table.",
+    "`F.count(\"*\")` and `F.count(\"unit_price\")` answer different questions; so do `F.count(\"order_id\")` and `F.countDistinct(\"order_id\")`.",
+    "Don't remove duplicates first: the check should report repeated rows in `lines`, not hide them."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "order_items"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(order_items):\n    # Return one summary row for the whole table.\n    return order_items\n",
+  "output": {
+    "columns": [
+      "lines",
+      "priced_lines",
+      "orders",
+      "products",
+      "units",
+      "largest_quantity"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`agg` without `groupBy` summarises the whole table as one group: `order_items.agg(F.count(\"*\").alias(\"lines\"), F.count(\"unit_price\").alias(\"priced_lines\"), F.countDistinct(\"order_id\").alias(\"orders\"), F.countDistinct(\"product_id\").alias(\"products\"), F.sum(\"quantity\").alias(\"units\"), F.max(\"quantity\").alias(\"largest_quantity\"))`. On an empty table it still returns one row: the counts are 0 and the sum and maximum are missing, because there is nothing to add or compare. Counting distinct values skips missing ids, and repeated rows count in `lines` and `units` but not in `orders` or `products`."
+}

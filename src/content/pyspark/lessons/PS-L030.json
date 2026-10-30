@@ -1,0 +1,130 @@
+{
+  "id": "PS-L030",
+  "minutes": 20,
+  "lede": "A join never warns you when it multiplies rows. If a key you thought was unique appears twice, every matching row doubles, and every count and total built on the result is wrong. Knowing how many rows to expect is the defence.",
+  "objectives": [
+    "Name the cardinality of a join: one-to-one, many-to-one, one-to-many or many-to-many",
+    "Predict a join's row count from how often each key appears on each side",
+    "Check whether a key is unique by comparing `count()` with `dropDuplicates([key]).count()`",
+    "Remove duplicates from the right side before joining, not from the result after"
+  ],
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0",
+    "edition": "lesson",
+    "tables": [
+      "orders",
+      "customers",
+      "order_items",
+      "products"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "For each key, a join gives (rows with that key on the left) × (rows with that key on the right). So the shape of the keys decides the size of the result:\n\n- **many-to-one**: many orders, one customer each. The result has one row per order.\n- **one-to-many**: the same join seen from the customer side; each customer row repeats once per order.\n- **many-to-many**: the key repeats on both sides, and rows multiply.\n\nThe quickest check is to count before and after."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Count before and after",
+      "code": "print(orders.count(), \"orders,\", customers.count(), \"customers,\", orders.join(customers, on=\"customer_id\").count(), \"joined\")\nprint(order_items.count(), \"lines,\", orders.count(), \"orders,\", order_items.join(orders, on=\"order_id\").count(), \"joined\")\n",
+      "note": "Both joins are many-to-one, so the result has as many rows as the \"many\" side: one row per order, then one row per line. Customers repeat (C0001 placed four orders), but no order does."
+    },
+    {
+      "kind": "text",
+      "md": "A many-to-one join only stays that way if the \"one\" side really has one row per key. Check it: if a key is unique, keeping one row per key changes nothing. `dropDuplicates([\"customer_id\"])` keeps one row per `customer_id`, so compare its count with the full count."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Is the key unique?",
+      "code": "print(customers.count(), \"rows,\", customers.dropDuplicates([\"customer_id\"]).count(), \"distinct customer_id in customers\")\nprint(orders.count(), \"rows,\", orders.dropDuplicates([\"customer_id\"]).count(), \"distinct customer_id in orders\")\n",
+      "note": "`customer_id` is unique in `customers` and repeats in `orders`, as expected: that's what makes the join many-to-one."
+    },
+    {
+      "kind": "text",
+      "md": "Now suppose the customer list comes from a feed that isn't so tidy: C0001 was delivered twice, and C0006 appears twice with two different cities. Nothing about the join changes, and nothing errors."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "A duplicated key multiplies rows",
+      "code": "feed = spark.createDataFrame(\n    [\n        (\"C0001\", \"Ines Okafor\", \"Leeds\"), (\"C0001\", \"Ines Okafor\", \"Leeds\"),\n        (\"C0002\", \"Kofi Mori\", \"Lisbon\"), (\"C0003\", \"Tomas Okafor\", \"Denver\"),\n        (\"C0004\", \"Ines Costa\", \"Denver\"), (\"C0005\", \"Maya Rao\", \"Perth\"),\n        (\"C0006\", \"Hana Rao\", \"Osaka\"), (\"C0006\", \"Hana Rao\", \"Kyoto\"),\n    ],\n    \"customer_id STRING, name STRING, city STRING\",\n)\n\njoined = orders.join(feed, on=\"customer_id\")\nprint(orders.count(), \"orders became\", joined.count(), \"rows\")\njoined.select(\"order_id\", \"customer_id\", \"city\", \"total\").orderBy(\"order_id\", \"city\").show()\n",
+      "note": "C0001's four orders each appear twice, and C0006's two orders each appear once per city: 12 + 4 + 2 = 18. Summing `total` here would overstate revenue."
+    },
+    {
+      "kind": "text",
+      "md": "Fix duplicates **on the side that has them, before the join**. Exact copies are safe to drop with `dropDuplicates()`. Rows that share a key but disagree, like C0006's two cities, are a real conflict: `dropDuplicates([\"customer_id\"])` would keep one of them, but not a particular one, so decide which row is right first.\n\nDon't drop duplicates from the joined result instead. It also removes rows that were genuinely repeated in the left table, and it can't tell the copies a join made from real ones."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Dedupe first, then join",
+      "code": "feed = spark.createDataFrame(\n    [\n        (\"C0001\", \"Ines Okafor\", \"Leeds\"), (\"C0001\", \"Ines Okafor\", \"Leeds\"),\n        (\"C0002\", \"Kofi Mori\", \"Lisbon\"), (\"C0003\", \"Tomas Okafor\", \"Denver\"),\n        (\"C0004\", \"Ines Costa\", \"Denver\"), (\"C0005\", \"Maya Rao\", \"Perth\"),\n        (\"C0006\", \"Hana Rao\", \"Osaka\"), (\"C0006\", \"Hana Rao\", \"Kyoto\"),\n    ],\n    \"customer_id STRING, name STRING, city STRING\",\n)\n\nexact = feed.dropDuplicates()\nprint(feed.count(), \"rows,\", exact.count(), \"after removing exact copies,\", exact.dropDuplicates([\"customer_id\"]).count(), \"customers\")\nprint(orders.join(exact, on=\"customer_id\").count(), \"rows after the join\")\n",
+      "note": "Removing exact copies fixes C0001. C0006 still has two rows, so the join gives 14, not 12: the uniqueness check is what tells you a conflict is left to resolve."
+    },
+    {
+      "kind": "text",
+      "md": "Sometimes many-to-many is what you want, as long as you expect it. Two promotions apply to kitchen products and one to office products. Joining products to promotions on `category` gives one row per product and promotion pair: 2 kitchen products × 2 promotions + 2 office products × 1 = 6."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Many-to-many on purpose",
+      "code": "promos = spark.createDataFrame(\n    [(\"kitchen\", \"SPRING10\"), (\"kitchen\", \"LOYAL5\"), (\"office\", \"BACK2WORK\")],\n    \"category STRING, promo STRING\",\n)\n\npairs = products.join(promos, on=\"category\")\nprint(products.count(), \"products,\", pairs.count(), \"product-promo pairs\")\npairs.select(\"product_id\", \"name\", \"category\", \"promo\").orderBy(\"product_id\", \"promo\").show()\n",
+      "note": "Products in other categories have no promotion, so the inner join drops them. Count what you expect before you run it; if the number surprises you, a key isn't what you thought."
+    }
+  ],
+  "challenges": [
+    "PS-L030-C1",
+    "PS-L030-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "A key appears 3 times on the left and 2 times on the right. How many rows does an inner join give for that key?",
+      "choices": [
+        "2",
+        "3",
+        "5",
+        "6"
+      ],
+      "answer": 3,
+      "why": "Every left row pairs with every right row that has the key: 3 × 2 = 6."
+    },
+    {
+      "id": "k2",
+      "prompt": "`customers.count()` is 300 and `customers.dropDuplicates([\"customer_id\"]).count()` is 296. What does that tell you?",
+      "choices": [
+        "Four customers have no orders",
+        "customer_id isn't unique, so joining orders to customers will repeat some orders",
+        "The join will drop four orders",
+        "Nothing: the counts always differ"
+      ],
+      "answer": 1,
+      "why": "If the key were unique both counts would match. Duplicated keys on the \"one\" side multiply the matching rows on the other side."
+    },
+    {
+      "id": "k3",
+      "prompt": "The right table of a join has exact duplicate rows. Where should you remove them?",
+      "choices": [
+        "From the right table, before the join",
+        "From the joined result, with dropDuplicates()",
+        "Nowhere: joins ignore duplicates",
+        "From the left table"
+      ],
+      "answer": 0,
+      "why": "Dedupe the side that has the problem. Dropping duplicates after the join also removes rows that were genuinely repeated on the left."
+    }
+  ],
+  "review": [
+    "For each key, a join gives left count × right count rows.",
+    "Many-to-one keeps one row per row of the \"many\" side, as long as the \"one\" side really is unique.",
+    "Check a key: `df.count()` equals `df.dropDuplicates([key]).count()` only if the key is unique.",
+    "Duplicates on the right silently multiply rows on the left, and every total built on them.",
+    "Remove duplicates from the side that has them, before the join; resolve conflicting rows on purpose.",
+    "Count before and after every join you don't fully trust."
+  ],
+  "practice": ["PS-Q0146", "PS-Q0147", "PS-Q0148", "PS-Q0149", "PS-Q0150"]
+}

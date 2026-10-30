@@ -1,0 +1,52 @@
+{
+  "id": "PS-L082-C2",
+  "slug": "retry-the-timeouts-not-the-bugs",
+  "lesson": "PS-L082",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Retry the timeouts, not the bugs",
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0"
+  },
+  "prompt": "The nightly job loads the carrier's events one `load_date` at a time, and returns a log with one row per day. The carrier's server sometimes times out, and the starter gives up the whole run when it does. Fix `load_day` so the run retries what can pass next time and records what can't.",
+  "rules": [
+    "A fetch that times out (`TimeoutError`) is retried, up to 3 attempts in all for that day. If the third times out too, the day fails with error `timeout`.",
+    "A Spark error is not retried: the day fails at that attempt, with the error's condition (from `getCondition()`) in `error`.",
+    "A failed day doesn't stop the run. `attempts` counts every try for the day, the last one included.",
+    "A loaded day has status `loaded`, its row count and NULL `error`; a failed day has status `failed` and NULL `rows`. Don't change `CarrierFeed`, `load` or `solve`."
+  ],
+  "hints": [
+    "Run the starter on the sample: where does it stop? Then read what `CarrierFeed` does on its first calls.",
+    "Loop over attempt numbers from 1 to 3, with `try` inside the loop, and return as soon as an attempt works.",
+    "Use two `except` clauses: one for `TimeoutError`, one for `PySparkException`, which comes from `pyspark.errors`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "shipment_events"
+  ],
+  "starter": "import shutil\n\nfrom pyspark.sql import functions as F\n\n\nclass CarrierFeed:\n    # Stands in for the carrier's server. Don't change this.\n    # It is still starting up: the first 4 calls of a run time out, and every call after that answers.\n    def __init__(self, events):\n        self.events = events\n        self.calls = 0\n\n    def fetch(self, day):\n        self.calls += 1\n        if self.calls <= 4:\n            raise TimeoutError(\"the carrier feed did not answer\")\n        return self.events.filter(F.col(\"load_date\") == day)\n\n\ndef load(batch, path):\n    # Appends one day's events to the tracking table and returns how many it loaded. Don't change this.\n    # Event numbers are stored as integers, so an id that can't be read fails the write.\n    digits = F.substring(\"event_id\", 2, 20)\n    batch.select(\"event_id\", \"shipment_id\", \"load_date\", digits.cast(\"int\").alias(\"event_no\")).write.mode(\"append\").parquet(path)\n    return batch.count()\n\n\ndef load_day(feed, day, path):\n    # Loads one day and returns its log row: (load_date, status, attempts, rows, error).\n    rows = load(feed.fetch(day), path)\n    return (day, \"loaded\", 1, rows, None)\n\n\ndef solve(shipment_events):\n    path = \"/tmp/tracking/events\"\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty table on every run\n    feed = CarrierFeed(shipment_events)\n    days = sorted(row[\"load_date\"] for row in shipment_events.select(\"load_date\").distinct().collect())\n    log = [load_day(feed, day, path) for day in days]\n    return spark.createDataFrame(log, \"load_date DATE, status STRING, attempts INT, rows BIGINT, error STRING\")\n",
+  "output": {
+    "columns": [
+      "load_date",
+      "status",
+      "attempts",
+      "rows",
+      "error"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

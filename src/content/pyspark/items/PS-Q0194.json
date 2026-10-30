@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0194",
+  "slug": "fix-order-facts",
+  "lesson": "PS-L039",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Fix the order facts",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "This function should turn each order's status and channel into rows of `field` and `value`. But every channel row shows the status, and the result has one struct column instead of two. Fix `solve(orders)`.",
+  "rules": [
+    "Each order gives two rows: `field` `status` with the order's `status` as `value`, and `field` `channel` with its `channel`.",
+    "A missing status or channel still gives its row, with a missing `value`.",
+    "Return `order_id`, `field` and `value`."
+  ],
+  "hints": [
+    "Run the starter and compare the `channel` rows with the orders' channels.",
+    "Each struct in the array has its own `value` expression. Check which column each one reads.",
+    "After exploding, `\"fact.*\"` spreads the struct's fields into their own columns."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "orders"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(orders):\n    facts = F.array(\n        F.struct(F.lit(\"status\").alias(\"field\"), F.col(\"status\").alias(\"value\")),\n        F.struct(F.lit(\"channel\").alias(\"field\"), F.col(\"status\").alias(\"value\")),\n    )\n    return orders.select(\"order_id\", F.explode(facts).alias(\"fact\")).select(\"order_id\", \"fact\")\n",
+  "output": {
+    "columns": [
+      "order_id",
+      "field",
+      "value"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Two bugs. The second struct was copied from the first and still reads `F.col(\"status\")`; it should read `F.col(\"channel\")`. And the last `select` keeps `fact` as one struct column; `select(\"order_id\", \"fact.*\")` spreads it into `field` and `value`. With both fixed, each order explodes into one status row and one channel row. A missing value doesn't drop a row, because the array always has two structs; only the `value` inside is missing."
+}

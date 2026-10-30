@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0061",
+  "slug": "blood-pressure-per-visit",
+  "lesson": "PS-L013",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Blood pressure per visit",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "prompt": "A nurse reviewing blood pressure wants the two readings as plain columns. Write `solve(encounters)` so it returns each visit's `encounter_id`, `patient_id`, `systolic` and `diastolic`.",
+  "rules": [
+    "Return four columns, in this order: `encounter_id`, `patient_id`, `systolic`, `diastolic`.",
+    "`systolic` and `diastolic` are the fields of the same names inside `vitals`, unchanged.",
+    "Keep every visit, duplicates included. A visit with no vitals has both readings missing."
+  ],
+  "hints": [
+    "`vitals` is a struct. A field inside it is written `\"vitals.systolic\"`.",
+    "The dot form names the result after the field, so no `alias` is needed.",
+    "With brackets, `F.col(\"vitals\")[\"systolic\"]` is named `vitals.systolic` until you add `.alias(\"systolic\")`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "encounters"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(encounters):\n    # encounter_id, patient_id, systolic, diastolic\n    return encounters\n",
+  "output": {
+    "columns": [
+      "encounter_id",
+      "patient_id",
+      "systolic",
+      "diastolic"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Name the fields with a dot: `encounters.select(\"encounter_id\", \"patient_id\", \"vitals.systolic\", \"vitals.diastolic\")`. The dot form names each result after its field. `F.col(\"vitals\")[\"systolic\"].alias(\"systolic\")` gives the same column; without the `alias` it is called `vitals.systolic`, which is the usual slip. A video visit has no vitals at all, and reading a field from a missing struct gives a missing value, so nothing special is needed for those rows."
+}

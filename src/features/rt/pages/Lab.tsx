@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { RotateCcw } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { CanonicalDatasetId } from "@/data/datasets/learning-map";
 import { CANONICAL_VERSION } from "@/data/datasets/learning";
@@ -115,9 +116,11 @@ export function Lab() {
                     : "The script ran. End it with a SELECT to see the effect."
               }
             />
-            <button type="button" className="rx-btn ghost" onClick={() => { slot.cancel(); slot.set(script.sql); }}>
-              Reset to the original script
-            </button>
+            <p className="py-row">
+              <button type="button" className="rx-btn line" onClick={() => { slot.cancel(); slot.set(script.sql); }}>
+                <RotateCcw size={14} aria-hidden="true" /> Reset to the original script
+              </button>
+            </p>
           </section>
         </div>
       </div>

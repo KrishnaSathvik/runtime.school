@@ -1,0 +1,150 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "load_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "attempts",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "rows",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "error",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "2026-03-03",
+     "failed",
+     3,
+     null,
+     "timeout"
+    ],
+    [
+     "2026-03-04",
+     "loaded",
+     2,
+     3,
+     null
+    ],
+    [
+     "2026-03-06",
+     "failed",
+     1,
+     null,
+     "CAST_INVALID_INPUT"
+    ]
+   ],
+   "row_count": 3,
+   "inputs": {
+    "shipment_events": [
+     [
+      "E0000001",
+      "SH0002",
+      "WH01",
+      "created",
+      "2026-03-03T08:03:00",
+      "WH01",
+      "100001",
+      "2026-03-03",
+      "false"
+     ],
+     [
+      "E0000002",
+      "SH0004",
+      "WH02",
+      "created",
+      "2026-03-03T09:30:00",
+      "WH02",
+      "100002",
+      "2026-03-03",
+      "false"
+     ],
+     [
+      "E0000003",
+      "SH0003",
+      "WH02",
+      "created",
+      "2026-03-03T12:17:00",
+      "WH02",
+      "100003",
+      "2026-03-04",
+      "false"
+     ],
+     [
+      "E0000005",
+      "SH0004",
+      "WH02",
+      "departed",
+      "2026-03-03T14:29:00",
+      "WH02",
+      "100005",
+      "2026-03-04",
+      "false"
+     ],
+     [
+      "E0000007",
+      "SH0001",
+      "WH03",
+      "departed",
+      "2026-03-03T16:06:00",
+      "WH03",
+      "100007",
+      "2026-03-04",
+      "false"
+     ],
+     [
+      "E00000O8",
+      "SH0003",
+      "WH02",
+      "departed",
+      "2026-03-03T18:00:00",
+      "WH02",
+      "100008",
+      "2026-03-06",
+      "false"
+     ],
+     [
+      "E0000009",
+      "SH0003",
+      "WH02",
+      "delivered",
+      "2026-03-06T08:53:00",
+      "Turin",
+      "100009",
+      "2026-03-06",
+      "false"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the lesson feed: five days, all good",
+  "a feed with a single day",
+  "a bad id on a day whose first fetch times out",
+  "an empty feed"
+ ]
+}

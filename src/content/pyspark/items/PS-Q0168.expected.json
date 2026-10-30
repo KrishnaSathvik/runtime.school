@@ -1,0 +1,167 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "symbol",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "trade_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "close",
+     "type": "decimal(10,2)",
+     "nullable": true
+    },
+    {
+     "name": "close_3_back",
+     "type": "decimal(10,2)",
+     "nullable": true
+    },
+    {
+     "name": "change_3",
+     "type": "decimal(11,2)",
+     "nullable": true
+    },
+    {
+     "name": "days_spanned",
+     "type": "int",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "ALDR.SX",
+     "2026-01-15",
+     "191.95",
+     null,
+     null,
+     null
+    ],
+    [
+     "ALDR.SX",
+     "2026-01-16",
+     "192.94",
+     null,
+     null,
+     null
+    ],
+    [
+     "ALDR.SX",
+     "2026-01-20",
+     "197.36",
+     null,
+     null,
+     null
+    ],
+    [
+     "ALDR.SX",
+     "2026-01-21",
+     "98.47",
+     "191.95",
+     "-93.48",
+     6
+    ],
+    [
+     "ALDR.SX",
+     "2026-01-22",
+     "101.22",
+     "192.94",
+     "-91.72",
+     6
+    ],
+    [
+     "BRVO.SX",
+     "2026-01-15",
+     "54.62",
+     null,
+     null,
+     null
+    ],
+    [
+     "BRVO.SX",
+     "2026-01-16",
+     "55.34",
+     null,
+     null,
+     null
+    ],
+    [
+     "BRVO.SX",
+     "2026-01-21",
+     "56.05",
+     null,
+     null,
+     null
+    ],
+    [
+     "BRVO.SX",
+     "2026-01-22",
+     "56.40",
+     "54.62",
+     "1.78",
+     7
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-15",
+     "122.58",
+     null,
+     null,
+     null
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-16",
+     "121.62",
+     null,
+     null,
+     null
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-20",
+     "124.71",
+     null,
+     null,
+     null
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-21",
+     "125.51",
+     "122.58",
+     "2.93",
+     6
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-22",
+     "126.25",
+     "121.62",
+     "4.63",
+     6
+    ]
+   ],
+   "row_count": 14
+  }
+ },
+ "hidden": [
+  "the full practice prices",
+  "stocks with three trading days or fewer",
+  "rows that arrive out of date order",
+  "a stock with missing trading days",
+  "a day with a missing close",
+  "no prices"
+ ]
+}

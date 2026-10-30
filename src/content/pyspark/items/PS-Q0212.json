@@ -1,0 +1,55 @@
+{
+  "id": "PS-Q0212",
+  "slug": "load-the-export-under-payrolls-names",
+  "lesson": "PS-L043",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Load the export under payroll's names",
+  "dataset": {
+    "id": "PS-D03",
+    "version": "1.0.0"
+  },
+  "prompt": "Payroll's system uses its own column names and needs real types. The starter saves the HR export as a file; finish `solve(employees_raw)` so it reads every employee line straight into payroll's columns.",
+  "rules": [
+    "Fields are separated by `;`, the first line is a header (not an employee), and quoted values can contain `;`. The fields always come in the export's order.",
+    "Payroll's columns, in order: `emp_id STRING, name STRING, title STRING, dept STRING, annual_salary DECIMAL(10,2), start_date DATE`.",
+    "Keep every employee line. A value that's missing, or can't be read as its column's type, is NULL; the rest of that line is still read.",
+    "Return only these six columns. Keep duplicate lines."
+  ],
+  "hints": [
+    "A schema string gives the columns both their types and their names.",
+    "Spark matches schema columns to fields by position, so the schema's names don't have to match the header's.",
+    "With a schema, `header=True` still matters: it tells Spark to skip the first line. Think about which `mode` keeps every line."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "employees_raw"
+  ],
+  "starter": "def solve(employees_raw):\n    path = \"/tmp/hr/export\"\n    employees_raw.write.mode(\"overwrite\").text(path)\n    # Read the file at `path` into payroll's columns and return them.\n    return employees_raw\n",
+  "output": {
+    "columns": [
+      "emp_id",
+      "name",
+      "title",
+      "dept",
+      "annual_salary",
+      "start_date"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "One read does it all: `spark.read.csv(path, sep=\";\", header=True, schema=\"emp_id STRING, name STRING, title STRING, dept STRING, annual_salary DECIMAL(10,2), start_date DATE\")`. A schema's names replace the header's, because columns are matched by position; `header=True` is still needed so the header line isn't read as an employee. The default `PERMISSIVE` mode keeps every line and sets what it can't read to NULL, so a salary of `n/a` becomes NULL while the name and date on that line are kept. Reading with `inferSchema=True` and renaming afterwards would give `annual_salary` as a double, which isn't exact for money, and `DROPMALFORMED` would lose employees payroll needs to see."
+}

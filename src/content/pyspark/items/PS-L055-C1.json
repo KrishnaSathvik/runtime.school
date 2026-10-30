@@ -1,0 +1,21 @@
+{
+  "id": "PS-L055-C1",
+  "kind": "predict",
+  "slug": "stages-and-tasks-of-one-job",
+  "lesson": "PS-L055",
+  "difficulty": "medium",
+  "minutes": 6,
+  "title": "Stages and tasks of one job",
+  "prompt": "What does this program print? The 12 lesson trips come from one small file and were driven by 3 drivers. Type each printed line on its own line.",
+  "program": "spark.conf.set(\"spark.sql.adaptive.enabled\", \"false\")\nsc = spark.sparkContext\ntracker = sc.statusTracker()\n\nsc.setJobGroup(\"drivers\", \"trips per driver\")\nper_driver = trips.repartition(2).groupBy(\"driver_id\").count()\nprint(len(tracker.getJobIdsForGroup(\"drivers\")))\n\nrows = per_driver.collect()\njobs = tracker.getJobIdsForGroup(\"drivers\")\nstages = sorted(tracker.getJobInfo(jobs[0]).stageIds)\nprint(len(jobs), len(stages), len(rows))\nprint([tracker.getStageInfo(s).numTasks for s in stages])\n",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "`repartition`, `groupBy` and `count()` on grouped data are all transformations. Which line is the action?",
+    "There are two shuffles: `repartition(2)` and the grouping. Each one starts a new stage.",
+    "Tasks per stage: one for the one-file read, then one per partition each shuffle makes. This environment's shuffle partitions setting is 4."
+  ]
+}

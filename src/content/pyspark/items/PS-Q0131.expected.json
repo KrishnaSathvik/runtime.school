@@ -1,0 +1,129 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "employee_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "first_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "report_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "report_first_name",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "E0001",
+     "Tomas",
+     "E0007",
+     "Ines"
+    ],
+    [
+     "E0001",
+     "Tomas",
+     "E0002",
+     "Noor"
+    ],
+    [
+     "E0002",
+     "Noor",
+     "E0006",
+     "Maya"
+    ],
+    [
+     "E0002",
+     "Noor",
+     "E0005",
+     "Elif"
+    ],
+    [
+     "E0002",
+     "Noor",
+     "E0004",
+     "Anika"
+    ],
+    [
+     "E0002",
+     "Noor",
+     "E0003",
+     "Lena"
+    ],
+    [
+     "E0003",
+     "Lena",
+     null,
+     null
+    ],
+    [
+     "E0004",
+     "Anika",
+     null,
+     null
+    ],
+    [
+     "E0005",
+     "Elif",
+     null,
+     null
+    ],
+    [
+     "E0006",
+     "Maya",
+     null,
+     null
+    ],
+    [
+     "E0007",
+     "Ines",
+     "E0009",
+     "Anika"
+    ],
+    [
+     "E0007",
+     "Ines",
+     "E0008",
+     "Elif"
+    ],
+    [
+     "E0008",
+     "Elif",
+     null,
+     null
+    ],
+    [
+     "E0009",
+     "Anika",
+     null,
+     null
+    ]
+   ],
+   "row_count": 14
+  }
+ },
+ "hidden": [
+  "the full practice employees",
+  "a team where most people have no reports",
+  "an employee whose manager isn't in the table",
+  "employees with a missing id or missing manager",
+  "an employee recorded as their own manager",
+  "an empty employees table"
+ ]
+}

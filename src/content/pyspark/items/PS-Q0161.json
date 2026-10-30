@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0161",
+  "slug": "salary-rank-by-department",
+  "lesson": "PS-L033",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 6,
+  "title": "Salary rank in each department",
+  "dataset": {
+    "id": "PS-D03",
+    "version": "1.0.0"
+  },
+  "prompt": "HR wants to see where each person's pay sits inside their department. Write `solve(employees)` to give every employee a salary rank, with 1 for the highest salary in their department.",
+  "rules": [
+    "Rank within each `department_id`, highest `salary` first.",
+    "People with the same salary share a rank, and the next rank skips ahead: two people at rank 1 are followed by rank 3.",
+    "Return `department_id`, `employee_id`, `salary` and `salary_rank`, one row per employee.",
+    "Include everyone in the table, whatever their status."
+  ],
+  "hints": [
+    "A window function gives each row a value computed from its group without collapsing the rows the way `groupBy` does.",
+    "Describe the group and the order once: `Window.partitionBy(\"department_id\").orderBy(F.col(\"salary\").desc())`.",
+    "`F.rank().over(w)` shares a rank on ties and skips the next one. `dense_rank` doesn't skip, and `row_number` never ties."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "employees"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(employees):\n    # Give every employee a salary rank within their department.\n    return employees\n",
+  "output": {
+    "columns": [
+      "department_id",
+      "employee_id",
+      "salary",
+      "salary_rank"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Define the window and apply `rank` over it: `w = Window.partitionBy(\"department_id\").orderBy(F.col(\"salary\").desc())`, then `employees.select(\"department_id\", \"employee_id\", \"salary\", F.rank().over(w).alias(\"salary_rank\"))`. `partitionBy` restarts the ranking in each department and `desc()` puts the highest salary at 1. `rank` gives equal salaries the same number and leaves a gap after them, as the rules ask; `dense_rank` would close the gap and `row_number` would split the tie. Without `partitionBy` the whole company would be ranked as one group."
+}

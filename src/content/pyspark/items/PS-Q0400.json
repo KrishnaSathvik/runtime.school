@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0400",
+  "kind": "predict",
+  "slug": "cores-memory-and-tasks",
+  "lesson": "PS-L080",
+  "role": "integration",
+  "format": "concept_or_trace",
+  "difficulty": "hard",
+  "minutes": 8,
+  "title": "Cores, memory and tasks",
+  "prompt": "This program submits a job with 3 cores, 1g of driver memory (on the G1 collector, so the JVM reports the whole 1g heap), adaptive execution off and 5 shuffle partitions. The job prints its cores and the partitions of `spark.range(0, 30)`, its unified memory pool in MiB, and the task count of each stage of one `groupBy` count. The program prints the exit code, then the job's lines without their `app:` prefix. What does it print? Type each line on its own line.",
+  "program": "import os, subprocess\n\nopen(\"/tmp/sizing.py\", \"w\").write(\"\"\"\nfrom pyspark.sql import SparkSession\n\nspark = SparkSession.builder.getOrCreate()\nsc = spark.sparkContext\ntracker = sc.statusTracker()\npool = sc._jsc.sc().getExecutorMemoryStatus().values().head()._1()\nnums = spark.range(0, 30)\nprint(\"app:\", sc.defaultParallelism, nums.rdd.getNumPartitions())\nprint(\"app:\", pool // 1024**2)\n\nsc.setJobGroup(\"buckets\", \"count per bucket\")\nnums.selectExpr(\"id % 4 AS bucket\").groupBy(\"bucket\").count().collect()\ninfo = tracker.getJobInfo(tracker.getJobIdsForGroup(\"buckets\")[0])\nprint(\"app:\", [tracker.getStageInfo(s).numTasks for s in sorted(info.stageIds)])\nspark.stop()\n\"\"\")\n\nenv = {**os.environ, \"SPARK_LOCAL_IP\": \"127.0.0.1\"}\nrun = subprocess.run(\n    [\"spark-submit\", \"--master\", \"local[3]\", \"--driver-memory\", \"1g\", \"--driver-java-options\", \"-XX:+UseG1GC\",\n     \"--conf\", \"spark.sql.adaptive.enabled=false\", \"--conf\", \"spark.sql.shuffle.partitions=5\",\n     \"/tmp/sizing.py\"],\n    capture_output=True, text=True, env=env)\nprint(run.returncode)\nfor line in run.stdout.splitlines():\n    if line.startswith(\"app:\"):\n        print(line[5:])\n",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "In local mode the master sets the cores, and `spark.range` without a partition count makes one partition per core.",
+    "The pool is (heap - 300 MiB) × 0.6. `--driver-memory 1g` gives a 1024 MiB heap, and G1 reports all of it. Round down.",
+    "A `groupBy` count is two stages: one task per input partition, then one task per shuffle partition."
+  ],
+  "explanation": "`local[3]` gives 3 cores, so `defaultParallelism` is 3 and `spark.range(0, 30)` is split into 3 partitions. `--driver-memory 1g` sizes the one JVM: (1024 - 300) × 0.6 = 434.4, so the pool is 434 MiB. The `groupBy` count runs as two stages (lesson 55): 3 tasks over the input partitions, then 5 tasks, one per shuffle partition, because adaptive execution is off and can't merge them. With 3 cores the second stage runs 3 tasks at once, then the last 2: cores limit how many tasks run together, not how many there are."
+}

@@ -1,0 +1,99 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "order_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "customer_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "reference",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "O00001",
+     "C0001",
+     "ORD-00001"
+    ],
+    [
+     "O00002",
+     "C0001",
+     "ORD-00002"
+    ],
+    [
+     "O00003",
+     "C0002",
+     "ORD-00003"
+    ],
+    [
+     "O00004",
+     "C0004",
+     "ORD-00004"
+    ],
+    [
+     "O00005",
+     "C0006",
+     "ORD-00005"
+    ],
+    [
+     "O00006",
+     "C0004",
+     "ORD-00006"
+    ],
+    [
+     "O00007",
+     "C0003",
+     "ORD-00007"
+    ],
+    [
+     "O00008",
+     "C0001",
+     "ORD-00008"
+    ],
+    [
+     "O00009",
+     "C0001",
+     "ORD-00009"
+    ],
+    [
+     "O00010",
+     "C0006",
+     "ORD-00010"
+    ],
+    [
+     "O00011",
+     "C0005",
+     "ORD-00011"
+    ],
+    [
+     "O00012",
+     "C0005",
+     "ORD-00012"
+    ]
+   ],
+   "row_count": 12
+  }
+ },
+ "hidden": [
+  "the full practice orders table",
+  "order ids with more than five digits",
+  "an order with a missing id or customer",
+  "the same order delivered twice",
+  "an empty orders table"
+ ]
+}

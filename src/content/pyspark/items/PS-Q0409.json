@@ -1,0 +1,53 @@
+{
+ "id": "PS-Q0409",
+ "slug": "the-check-that-never-casts",
+ "lesson": "PS-L082",
+ "role": "debugging",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 12,
+ "title": "The check that never casts",
+ "dataset": {
+  "id": "PS-D08",
+  "version": "1.0.0"
+ },
+ "prompt": "The nightly load holds back any day with an event id it can't read, so the carrier can send that day again. `can_load` is meant to catch those days before they're written, but the run still crashes on the sample. Fix it.",
+ "rules": [
+  "A day loads whole or not at all: a day with an event id that can't be read as a number (after its first letter) is held back, and the run goes on with the next day.",
+  "Every other day is loaded with all its rows, repeats included, and `event_no` as the starter computes it.",
+  "A missing id isn't a read error: its event loads with a NULL `event_no`.",
+  "Columns and types: `event_id STRING, shipment_id STRING, load_date DATE, event_no INT`."
+ ],
+ "hints": [
+  "Run the starter on the sample. Which line raises the error, and which day was it writing?",
+  "`can_load` calls `count()`. Does counting a day's rows need `event_no`?",
+  "Spark only casts when an action needs the value. Check with an action that reads every value, or catch the error where the write raises it."
+ ],
+ "explanation": "`count()` only needs the number of rows, so Spark drops `event_no` from the work and never runs the cast. Every day passes the check, and the bad one fails later, in the write. A check has to make Spark compute what the write will: `batch.collect()` reads every value, so the cast runs and `CAST_INVALID_INPUT` is caught; a filter on `event_no` works too. Or skip the check and wrap the write itself in `try`: a failed write commits no files, so the day is simply missing. Detecting bad ids with `try_cast(...).isNull()` is close, but it also holds back a day with a missing id, which casts to NULL without an error. Removing only the bad rows breaks the rule that a day loads whole.",
+ "entry": "solve",
+ "inputs": [
+  "shipment_events"
+ ],
+ "starter": "import os\nimport shutil\n\nfrom pyspark.errors import PySparkException\nfrom pyspark.sql import functions as F\n\n\ndef can_load(batch):\n    # Checks that a day's batch can be written, before the load writes it.\n    try:\n        batch.count()\n        return True\n    except PySparkException:\n        return False\n\n\ndef solve(shipment_events):\n    path = \"/tmp/tracking/events\"\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty table on every run\n    digits = F.substring(\"event_id\", 2, 20)  # the id without its first letter: \"E0000009\" -> \"0000009\"\n    typed = shipment_events.select(\"event_id\", \"shipment_id\", \"load_date\", digits.cast(\"int\").alias(\"event_no\"))\n    days = sorted(row[\"load_date\"] for row in shipment_events.select(\"load_date\").distinct().collect())\n    for day in days:\n        batch = typed.filter(F.col(\"load_date\") == day)\n        if can_load(batch):\n            batch.write.mode(\"append\").parquet(path)\n        # A day that can't be loaded is held back whole, for the carrier to send again.\n    written = os.path.isdir(path) and any(name.endswith(\".parquet\") for name in os.listdir(path))\n    if not written:  # no day was loaded\n        return spark.createDataFrame([], typed.schema)\n    return spark.read.parquet(path)\n",
+ "output": {
+  "columns": [
+   "event_id",
+   "shipment_id",
+   "load_date",
+   "event_no"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 60,
+  "check_timeout_s": 180,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

@@ -1,0 +1,261 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "transaction_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "currency",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "reason",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "T000002",
+     null,
+     "60.53",
+     "GBP",
+     "missing_account"
+    ],
+    [
+     "T000003",
+     null,
+     null,
+     "USD",
+     "missing_account"
+    ],
+    [
+     "T000004",
+     "A00001",
+     "-19.23",
+     "USD",
+     "bad_amount"
+    ],
+    [
+     "T000005",
+     "A00001",
+     null,
+     "EUR",
+     "bad_amount"
+    ],
+    [
+     "T000006",
+     "A00001",
+     "25.00",
+     "ZZZ",
+     "unknown_currency"
+    ],
+    [
+     "T000007",
+     "A00001",
+     "25.00",
+     null,
+     "unknown_currency"
+    ],
+    [
+     "T000008",
+     "A00001",
+     "25.00",
+     "US$",
+     "unknown_currency"
+    ],
+    [
+     "T000009",
+     "A00001",
+     "25.00",
+     "USD",
+     "unknown_status"
+    ],
+    [
+     "T000012",
+     "A00001",
+     "0.00",
+     null,
+     "bad_amount"
+    ]
+   ],
+   "row_count": 9,
+   "inputs": {
+    "transactions": [
+     [
+      "T000001",
+      "A00001",
+      null,
+      "2026-03-02T10:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "800.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000002",
+      null,
+      null,
+      "2026-03-03T10:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "60.53",
+      "GBP",
+      "posted"
+     ],
+     [
+      "T000003",
+      null,
+      null,
+      "2026-03-04T10:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      null,
+      "USD",
+      "posted"
+     ],
+     [
+      "T000004",
+      "A00001",
+      null,
+      "2026-03-05T10:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "-19.23",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000005",
+      "A00001",
+      null,
+      "2026-03-06T10:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      null,
+      "EUR",
+      "posted"
+     ],
+     [
+      "T000006",
+      "A00001",
+      null,
+      "2026-03-07T10:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "25.00",
+      "ZZZ",
+      "posted"
+     ],
+     [
+      "T000007",
+      "A00001",
+      null,
+      "2026-03-08T10:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "25.00",
+      null,
+      "posted"
+     ],
+     [
+      "T000008",
+      "A00001",
+      null,
+      "2026-03-09T10:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "25.00",
+      "US$",
+      "reversed"
+     ],
+     [
+      "T000009",
+      "A00001",
+      null,
+      "2026-03-10T10:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "25.00",
+      "USD",
+      null
+     ],
+     [
+      "T000010",
+      "A00008",
+      null,
+      "2026-03-11T10:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "43.95",
+      "USD",
+      "pending"
+     ],
+     [
+      "T000011",
+      "A00006",
+      null,
+      "2026-03-12T10:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "10.01",
+      "GBP",
+      "declined"
+     ],
+     [
+      "T000012",
+      "A00001",
+      null,
+      "2026-03-13T10:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "0.00",
+      null,
+      "posted"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice transactions feed",
+  "the lesson transactions",
+  "missing accounts, amounts, currencies and statuses",
+  "transactions that break two or more rules",
+  "a feed where every transaction is good",
+  "an empty feed"
+ ]
+}

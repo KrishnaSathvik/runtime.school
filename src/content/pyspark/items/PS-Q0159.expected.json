@@ -1,0 +1,59 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "campaign_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "first_touches",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "last_touches",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "CMP-0003",
+     0,
+     1
+    ],
+    [
+     "CMP-0002",
+     1,
+     1
+    ],
+    [
+     "CMP-0004",
+     1,
+     0
+    ],
+    [
+     "CMP-0001",
+     2,
+     2
+    ]
+   ],
+   "row_count": 4
+  }
+ },
+ "hidden": [
+  "the full practice touches",
+  "paths with a single touch",
+  "a campaign whose touches are all in the middle of paths",
+  "touches with a missing position or path length",
+  "no touches"
+ ]
+}

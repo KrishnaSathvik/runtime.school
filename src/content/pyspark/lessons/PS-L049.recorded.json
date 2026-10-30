@@ -1,0 +1,47 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D15",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "application_logs_raw"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "13 lines\n{\"log_id\":\"LOG-000001\",\"logged_at\":\"2026-04-14T10:00:02.1420\nstr\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "10 good, 3 bad\n[('LOG-000001', 'INFO'), ('LOG-000002', 'INFO'), ('LOG-000003', 'INFO')]\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "[['cache', 'host', 'latency_ms', 'region'], ['grant_type', 'host', 'latency_ms', 'region']]\n['cache', 'host', 'latency_ms', 'region', 'grant_type', 'host']\n10 lists, 43 keys\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "10 records\n['auth-service', 'catalog-api', 'checkout-api', 'checkout-api', 'iot-gateway', 'iot-gateway', 'iot-gateway', 'notification-worker', 'search-api', 'search-api']\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "+----------+-----+-------------------+\n|    log_id|level|            service|\n+----------+-----+-------------------+\n|LOG-000001| INFO|        catalog-api|\n|LOG-000002| INFO|       auth-service|\n|LOG-000003| INFO|       checkout-api|\n|LOG-000004| INFO|         search-api|\n|LOG-000005| INFO|        iot-gateway|\n|LOG-000006|ERROR|       checkout-api|\n|LOG-000007| WARN|        iot-gateway|\n|LOG-000008| INFO|        iot-gateway|\n|LOG-000009| INFO|         search-api|\n|LOG-000010|ERROR|notification-worker|\n+----------+-----+-------------------+\n\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "map defined, nothing has run yet\n",
+   "error": {
+    "type": "Py4JJavaError",
+    "message": "org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 0.0 failed 1 times, most recent failure: Lost task 0.0 in stage 0.0 (TID 0) (localhost executor driver): org.apache.spark.api.python.PythonException: Traceback (most recent call last):",
+    "line": 6,
+    "condition": null
+   }
+  }
+ }
+}

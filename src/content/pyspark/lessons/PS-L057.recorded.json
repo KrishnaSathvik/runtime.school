@@ -1,0 +1,38 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D07",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "trips"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "4 after repartition(4)\n2 after coalesce(2)\n4 after coalesce(8)\n8 after repartition(8)\nTrue 1 Exchange\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "+---------+-----+\n|partition|count|\n+---------+-----+\n|        0|    4|\n|        1|    4|\n|        2|    4|\n+---------+-----+\n\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "+--------------+---------+-----+\n|pickup_zone_id|partition|count|\n+--------------+---------+-----+\n|             1|        1|    1|\n|             4|        0|    3|\n|             5|        0|    2|\n|            10|        0|    2|\n|            16|        2|    2|\n|            22|        0|    2|\n+--------------+---------+-----+\n\n+---------+-----+\n|partition|count|\n+---------+-----+\n|        0|    9|\n|        1|    1|\n|        2|    2|\n+---------+-----+\n\n0 rows where the partition isn't pmod(hash, 3)\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "4 shuffle partitions\n4 partitions after groupBy\nTrue\n6 partitions with the setting at 6\n6 partitions for repartition by a column, no number\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "4 shuffle partitions\n1 after groupBy\n1 after repartition by a column\n3 after repartition(3, column)\n4 after groupBy, adaptive off\n",
+   "error": null
+  }
+ }
+}

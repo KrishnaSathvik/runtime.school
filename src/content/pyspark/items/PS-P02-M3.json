@@ -1,0 +1,68 @@
+{
+ "id": "PS-P02-M3",
+ "slug": "join-managers-and-departments",
+ "project": "PS-P02",
+ "milestone": "PS-P02.m3",
+ "difficulty": "medium",
+ "minutes": 35,
+ "title": "Join employees to their managers and departments",
+ "dataset": {
+  "id": "PS-D03",
+  "version": "1.0.0"
+ },
+ "prompt": "Each row of `employees` names a manager by `manager_id`, which is another employee. The people team needs every reporting line spelled out, and wants the broken ones marked rather than hidden. Look at `departments` too: it gives each `department_id` a name.\n\nWrite `reporting_lines(employees, departments)`. It starts from your `employee_clean(employees)`, joins it to itself to find each manager, and to `departments` for the name, and says whether each line is sound.",
+ "rules": [
+  "Return `employee_id`, `full_name`, `level`, `department_id`, `department_name`, `manager_id`, `manager_name` and `line_status`, in that order, one row per employee.",
+  "`manager_name` is the manager's `full_name`. It's missing when the manager can't be found.",
+  "`department_name` comes from `departments`. An employee whose department isn't listed keeps their row with a missing name.",
+  "`line_status` is `top` when there is no `manager_id` (the chief executive), `missing` when the `manager_id` matches no employee, `invalid` when the manager's `level` is the same as or lower than the employee's, and `ok` otherwise. Check them in that order.",
+  "A manager must be more senior. In a loop, where following managers goes round in a circle, at least one line has to point down or sideways, so every loop shows up as an `invalid` line."
+ ],
+ "hints": [
+  "Two copies of the cleaned table: `e = employee_clean(employees).alias(\"e\")` and `m = ...alias(\"m\")`, joined on `F.col(\"e.manager_id\") == F.col(\"m.employee_id\")`.",
+  "Both joins must keep every employee, so both are `left` joins. Then pick columns with their alias, `\"e.full_name\"`, and rename the manager's with `.alias(\"manager_name\")`.",
+  "`F.when(...).when(...).when(...).otherwise(\"ok\")` checks the conditions in order. A manager that wasn't found has a `NULL` `m.employee_id`."
+ ],
+ "explanation": "A left self join keeps the chief executive, who has no manager, and anyone whose manager id points at nobody; an inner join would quietly drop them. A second left join adds the department name without losing people in unlisted departments. The level check is what finds the loop in this export: a team manager's `manager_id` was set to one of their own reports, so that line points from level 3 down to level 1. Any loop has to step down or sideways somewhere, so checking every line's direction catches loops of any length with one self join, without following chains. The order of the `when` checks matters: the top person has no manager row either, so `top` must be tested before `missing`.",
+ "entry": "reporting_lines",
+ "inputs": [
+  "employees",
+  "departments"
+ ],
+ "file": "pipeline.py",
+ "append": "\n\ndef reporting_lines(employees, departments):\n    # Step 3: each employee with their department name, their manager's name and a line_status.\n    return employee_clean(employees)\n",
+ "prerequisites": [
+  "PS-L025",
+  "PS-L027",
+  "PS-L017"
+ ],
+ "output": {
+  "columns": [
+   "employee_id",
+   "full_name",
+   "level",
+   "department_id",
+   "department_name",
+   "manager_id",
+   "manager_name",
+   "line_status"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "example",
+   "sample": true
+  },
+  {
+   "id": "project",
+   "edition": "project"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 45,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

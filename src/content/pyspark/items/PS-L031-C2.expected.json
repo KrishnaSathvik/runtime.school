@@ -1,0 +1,92 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "product_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "orders",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "units",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "revenue",
+     "type": "decimal(31,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "P006",
+     2,
+     5,
+     "60.00"
+    ],
+    [
+     "P004",
+     5,
+     15,
+     "67.05"
+    ],
+    [
+     "P002",
+     2,
+     3,
+     "97.50"
+    ],
+    [
+     "P003",
+     3,
+     9,
+     "216.00"
+    ],
+    [
+     "P005",
+     4,
+     15,
+     "289.85"
+    ],
+    [
+     "P007",
+     2,
+     6,
+     "359.94"
+    ],
+    [
+     "P001",
+     6,
+     15,
+     "299.85"
+    ],
+    [
+     "P008",
+     3,
+     7,
+     "623.00"
+    ]
+   ],
+   "row_count": 8
+  }
+ },
+ "hidden": [
+  "the full practice order lines",
+  "a product on several lines of the same order",
+  "lines with a missing quantity or price",
+  "a single order line",
+  "an empty order lines table"
+ ]
+}

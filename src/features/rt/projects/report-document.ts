@@ -10,7 +10,8 @@ export function projectReportDocument(project: Project, drafts: Record<string, s
     complete: projectIsComplete(project, drafts),
     learner: drafts[reportSectionKey(project, "certificate-name")]?.trim() ?? "",
     completedAt: drafts[reportSectionKey(project, "completed-at")] ?? "",
-    sections: project.reportTemplate.sections.map(s => ({ title: s.title, text: drafts[reportSectionKey(project, s.id)]?.trim() || "Not written yet." })),
+    // The report is built from the saved findings; written sections from before the Review change still print.
+    sections: project.reportTemplate.sections.map(s => ({ title: s.title, text: drafts[reportSectionKey(project, s.id)]?.trim() ?? "" })).filter(s => s.text),
     synthesis: project.stages.filter(s => s.type === "synthesis").flatMap(s => [
       { title: s.title, text: drafts[`${draftPrefix(project, s.id)}-finding`] ?? "" },
       { title: "Priorities", text: drafts[`${draftPrefix(project, s.id)}-priority`] ?? "" },

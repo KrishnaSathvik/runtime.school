@@ -1,0 +1,251 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "search_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "view_id",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "SR-0101",
+     "PV-0102"
+    ],
+    [
+     "SR-0104",
+     "PV-0106"
+    ],
+    [
+     "SR-0104",
+     "PV-0107"
+    ],
+    [
+     "SR-0105",
+     "PV-0108"
+    ],
+    [
+     "SR-0102",
+     null
+    ],
+    [
+     "SR-0103",
+     null
+    ]
+   ],
+   "row_count": 6,
+   "inputs": {
+    "searches": [
+     [
+      "SR-0101",
+      "SES-0101",
+      "CU-101",
+      "2026-03-14T10:00:00",
+      "2026-03-14T10:00:00",
+      "1",
+      "trail runner",
+      "[]",
+      "[\"SKU-1001\"]",
+      "1"
+     ],
+     [
+      "SR-0102",
+      "SES-0102",
+      null,
+      "2026-03-14T10:01:00",
+      "2026-03-14T10:01:00",
+      "1",
+      "2 person tent",
+      "[]",
+      "[\"SKU-1001\"]",
+      "1"
+     ],
+     [
+      "SR-0103",
+      "SES-0103",
+      "CU-103",
+      "2026-03-14T10:10:00",
+      "2026-03-14T10:10:00",
+      "2",
+      "rain jacket",
+      "[]",
+      "[\"SKU-1001\"]",
+      "1"
+     ],
+     [
+      "SR-0104",
+      "SES-0104",
+      null,
+      "2026-03-14T10:20:00",
+      "2026-03-14T10:20:00",
+      "3",
+      "headlamp",
+      "[]",
+      "[\"SKU-1001\"]",
+      "1"
+     ],
+     [
+      "SR-0105",
+      "SES-0105",
+      "CU-105",
+      "2026-03-14T10:30:00",
+      "2026-03-14T10:30:00",
+      "4",
+      "camp stove",
+      "[]",
+      "[\"SKU-1001\"]",
+      "1"
+     ],
+     [
+      "SR-0106",
+      "SES-0106",
+      null,
+      "2026-03-14T10:45:00",
+      "2026-03-14T10:45:00",
+      "5",
+      "solar kettle",
+      "[]",
+      "[\"SKU-1001\"]",
+      "1"
+     ]
+    ],
+    "page_views": [
+     [
+      "PV-0101",
+      "SES-0101",
+      "CU-101",
+      "2026-03-14T10:00:30",
+      "2026-03-14T10:00:30",
+      "1",
+      "/c/shoes",
+      "category",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":null,\"utm\":null}",
+      "30"
+     ],
+     [
+      "PV-0102",
+      "SES-0101",
+      "CU-101",
+      "2026-03-14T10:02:00",
+      "2026-03-14T10:02:00",
+      "1",
+      "/p/SKU-1001",
+      "product",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":null,\"utm\":null}",
+      "30"
+     ],
+     [
+      "PV-0103",
+      "SES-0102",
+      null,
+      "2026-03-14T10:03:00",
+      "2026-03-14T10:03:00",
+      "1",
+      "/c/tents",
+      "category",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":null,\"utm\":null}",
+      "30"
+     ],
+     [
+      "PV-0104",
+      "SES-0103",
+      "CU-103",
+      "2026-03-14T10:16:00",
+      "2026-03-14T10:16:00",
+      "2",
+      "/p/SKU-1002",
+      "product",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":null,\"utm\":null}",
+      "30"
+     ],
+     [
+      "PV-0105",
+      "SES-0101",
+      "CU-101",
+      "2026-03-14T10:12:00",
+      "2026-03-14T10:12:00",
+      "2",
+      "/p/SKU-1013",
+      "product",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":null,\"utm\":null}",
+      "30"
+     ],
+     [
+      "PV-0106",
+      "SES-0104",
+      null,
+      "2026-03-14T10:24:59",
+      "2026-03-14T10:24:59",
+      "3",
+      "/p/SKU-1005",
+      "product",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":null,\"utm\":null}",
+      "30"
+     ],
+     [
+      "PV-0107",
+      "SES-0104",
+      null,
+      "2026-03-14T10:22:00",
+      "2026-03-14T10:22:00",
+      "3",
+      "/p/SKU-1006",
+      "product",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":null,\"utm\":null}",
+      "30"
+     ],
+     [
+      "PV-0108",
+      "SES-0105",
+      "CU-105",
+      "2026-03-14T10:33:00",
+      "2026-03-14T10:33:00",
+      "4",
+      "/p/SKU-1009",
+      "product",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":null,\"utm\":null}",
+      "30"
+     ],
+     [
+      "PV-0109",
+      "SES-0106",
+      null,
+      "2026-03-14T10:55:00",
+      "2026-03-14T10:55:00",
+      "5",
+      "/",
+      "home",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":null,\"utm\":null}",
+      "30"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice searches and page views, late events included",
+  "product views exactly 5 minutes after, a second too late, at the same moment and before",
+  "searches followed only by category, search, cart or home pages"
+ ]
+}

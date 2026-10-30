@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0422",
+  "slug": "same-day-four-filters",
+  "lesson": "PS-L085",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Same day, four filters",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "prompt": "Finance's daily takings report picks the trips that started on 7 April 2026. Four drafts pick that day in different ways. Before anyone times them, write `solve(trips)` so it reports, for each draft, whether it returns the same rows as `as_text`, how many rows it returns and how many rows its file scan handed on.",
+  "rules": [
+    "One row per draft in `VERSIONS`: `version` (its name), `same_rows`, `rows`, `scan_rows`. Don't change the drafts.",
+    "`same_rows` is true when the draft returns exactly the rows `as_text` returns, duplicates included; `as_text` matches itself.",
+    "`rows` counts the rows the draft returns; `scan_rows` is what the `Scan csv` step handed on in one run."
+  ],
+  "hints": [
+    "Two drafts can return the same number of rows and still differ. Compare the sorted rows from `collect()`.",
+    "Build each draft fresh for its profile, then pick the step whose name is `Scan csv` (names in `profile` are indented).",
+    "A condition the CSV reader understands is applied as it reads, so its scan hands on fewer rows. Text built from the timestamp isn't one of them."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "trips"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\nspark.conf.set(\"spark.sql.adaptive.enabled\", \"false\")\n\nDAY, NEXT_DAY = \"2026-04-07\", \"2026-04-08\"\n\n\ndef as_text(trips):\n    day = F.col(\"pickup_at\").cast(\"string\").startswith(DAY)\n    return trips.filter(day).select(\"trip_id\", \"pickup_at\", \"total\")\n\n\ndef as_date(trips):\n    day = F.col(\"pickup_at\").cast(\"date\") == F.lit(DAY).cast(\"date\")\n    return trips.filter(day).select(\"trip_id\", \"pickup_at\", \"total\")\n\n\ndef time_range(trips):\n    day = (F.col(\"pickup_at\") >= DAY) & (F.col(\"pickup_at\") < NEXT_DAY)\n    return trips.filter(day).select(\"trip_id\", \"pickup_at\", \"total\")\n\n\ndef after_midnight(trips):\n    day = (F.col(\"pickup_at\") > DAY) & (F.col(\"pickup_at\") <= NEXT_DAY)\n    return trips.filter(day).select(\"trip_id\", \"pickup_at\", \"total\")\n\n\nVERSIONS = {\"as_text\": as_text, \"as_date\": as_date, \"time_range\": time_range, \"after_midnight\": after_midnight}\n\n\ndef profile(df):\n    \"\"\"Run df once, then list the plan steps Spark ran with the counts it kept.\"\"\"\n    df.collect()\n    labels = {\"numOutputRows\": \"rows\", \"shuffleRecordsWritten\": \"shuffled rows\", \"numFiles\": \"files\", \"filesSize\": \"bytes\"}\n    steps = []\n\n    def walk(node, depth):\n        name = node.nodeName().strip()\n        if name == \"AdaptiveSparkPlan\":\n            return walk(node.executedPlan(), depth)\n        if name.endswith(\"QueryStage\"):\n            return walk(node.plan(), depth)\n        metrics = node.metrics()\n        counts = {label: metrics.apply(key).value() for key, label in labels.items() if metrics.contains(key)}\n        if counts:\n            steps.append((\"  \" * depth + name, counts))\n            depth += 1\n        children = node.children()\n        for i in range(children.size()):\n            walk(children.apply(i), depth)\n\n    walk(df._jdf.queryExecution().executedPlan(), 0)\n    return steps\n\n\ndef solve(trips):\n    # One row per version: version, same_rows, rows, scan_rows.\n    rows = []\n    return spark.createDataFrame(rows, \"version STRING, same_rows BOOLEAN, rows LONG, scan_rows LONG\")\n",
+  "output": {
+    "columns": [
+      "version",
+      "same_rows",
+      "rows",
+      "scan_rows"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Check the rows first: for each draft, compare `sorted(build(trips).collect())` with the same for `as_text`. `as_date` and `time_range` return the same trips. `after_midnight` returns as many rows on the sample but not the same ones: it drops the trip at exactly midnight on the 7th and adds the one at midnight on the 8th, so it's a bug, however fast it is. Then profile a fresh copy of each draft and read the `Scan csv` step. `as_text` turns the timestamp into text, which the CSV reader can't test while reading, so its scan hands on every trip and the `Filter` step does the work. The others are pushed into the reader, and so is `as_date`: Catalyst rewrites a cast to date into a time range. All four read the whole file either way; the profile says which ones hand fewer rows to the next step, not how long that takes."
+}

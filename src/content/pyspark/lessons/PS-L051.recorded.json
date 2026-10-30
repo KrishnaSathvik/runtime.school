@@ -1,0 +1,44 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D01",
+  "version": "1.1.0",
+  "edition": "lesson",
+  "tables": [
+   "customers",
+   "products"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "+-----------+------------+--------+\n|customer_id|        name|initials|\n+-----------+------------+--------+\n|      C0001| Ines Okafor|      IO|\n|      C0002|   Kofi Mori|      KM|\n|      C0003|Tomas Okafor|      TO|\n|      C0004|  Ines Costa|      IC|\n|      C0005|    Maya Rao|      MR|\n|      C0006|    Hana Rao|      HR|\n+-----------+------------+--------+\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "+------------+------+----+\n|        name|length|half|\n+------------+------+----+\n| Ines Okafor|    11|NULL|\n|   Kofi Mori|     9|NULL|\n|Tomas Okafor|    12|NULL|\n+------------+------+----+\nonly showing top 3 rows\n+----------------+----------+----------+\n|            name|unit_price|half_price|\n+----------------+----------+----------+\n|      Chef Knife|     19.99|      NULL|\n|Pour-Over Kettle|     32.50|      NULL|\n|    Trail Bottle|     24.00|      NULL|\n+----------------+----------+----------+\nonly showing top 3 rows\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "",
+   "error": {
+    "type": "PythonException",
+    "message": "An exception was thrown from the Python worker. Please see the stack trace below.",
+    "line": 9,
+    "condition": null
+   }
+  },
+  "e4": {
+   "stdout": "+-----------+--------+\n|customer_id|initials|\n+-----------+--------+\n|      C9001|      AR|\n|      C9002|    NULL|\n+-----------+--------+\n\n+-----------+--------+\n|customer_id|initials|\n+-----------+--------+\n|      C0001|      IO|\n|      C0002|      KM|\n|      C0003|      TO|\n+-----------+--------+\nonly showing top 3 rows\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "+------------+--------+\n|        name|initials|\n+------------+--------+\n| Ines Okafor|      IO|\n|   Kofi Mori|      KM|\n|Tomas Okafor|      TO|\n+------------+--------+\nonly showing top 3 rows\n+----------------+----------+--------+--------+\n|            name|unit_price|with_udf|built_in|\n+----------------+----------+--------+--------+\n|      Chef Knife|     19.99|standard|standard|\n|Pour-Over Kettle|     32.50|standard|standard|\n|    Trail Bottle|     24.00|standard|standard|\n|    Camp Lantern|      4.50|  budget|  budget|\n|       Desk Lamp|     19.99|standard|standard|\n|    Notebook Set|     12.00|  budget|  budget|\n|     Linen Throw|     59.99| premium| premium|\n|      Wall Clock|     89.00| premium| premium|\n+----------------+----------+--------+--------+\n\n",
+   "error": null
+  }
+ }
+}

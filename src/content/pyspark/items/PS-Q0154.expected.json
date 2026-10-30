@@ -1,0 +1,65 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "orders",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "customers",
+     "type": "bigint",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "shipped",
+     3,
+     3
+    ],
+    [
+     "paid",
+     4,
+     3
+    ],
+    [
+     "refunded",
+     1,
+     1
+    ],
+    [
+     "delivered",
+     3,
+     3
+    ],
+    [
+     "placed",
+     1,
+     1
+    ]
+   ],
+   "row_count": 5
+  }
+ },
+ "hidden": [
+  "the full practice orders",
+  "a customer with several orders in the same status",
+  "orders with a missing customer id",
+  "orders with a missing status",
+  "the same order row delivered twice",
+  "an empty orders table"
+ ]
+}

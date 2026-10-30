@@ -1,0 +1,127 @@
+{
+  "id": "PS-L028",
+  "minutes": 25,
+  "lede": "Some rows are only identified by two columns together: a SKU is stocked in several warehouses, so the stock level for a shipment needs both. And some matches aren't equalities at all, like a quantity that falls inside a band.",
+  "objectives": [
+    "Join on a key made of several columns with `on=[...]`",
+    "See how joining on part of a key multiplies rows",
+    "Write join conditions with `&` and ranges with `between`",
+    "Choose between a condition in the join and a filter after an outer join"
+  ],
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "shipments",
+      "inventory"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`shipments` lists parcels leaving a warehouse, each with a `warehouse_id` and a `sku`. `inventory` has one row per **warehouse and SKU**: the same packing tape, `SKU-1003`, is stocked in three warehouses. To see the stock a shipment draws on, the match has to use both columns. Watch what happens with only one."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Half a key multiplies rows",
+      "code": "by_sku = shipments.join(inventory, on=\"sku\", how=\"inner\")\nprint(shipments.count(), \"shipments,\", by_sku.count(), \"rows when joined on sku alone\")\n\nby_sku.select(\n    \"shipment_id\",\n    shipments[\"warehouse_id\"].alias(\"ship_from\"),\n    inventory[\"warehouse_id\"].alias(\"stock_in\"),\n    \"sku\",\n    \"on_hand\",\n).orderBy(\"shipment_id\", \"stock_in\").show()\n",
+      "note": "Each tape shipment matched all three warehouses that stock tape. Nothing errors: the result is just wrong, and any total built on it is three times too big."
+    },
+    {
+      "kind": "text",
+      "md": "Pass a list to `on` to match on several columns at once: a row pairs only when **every** listed column is equal. As with a single key, each listed column appears once in the result."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Join on the whole key",
+      "code": "both = shipments.join(inventory, on=[\"warehouse_id\", \"sku\"], how=\"inner\")\n\nboth.select(\"shipment_id\", \"warehouse_id\", \"sku\", \"quantity\", \"on_hand\", \"reserved\").orderBy(\"shipment_id\").show()\n",
+      "note": "Four shipments, four rows, and each shows the stock of its own warehouse."
+    },
+    {
+      "kind": "text",
+      "md": "`on=[...]` only works when the columns have the same names on both sides. The general form is a condition: equalities joined with `&`, each in its own parentheses, the same way you combine filter conditions. Aliases keep the two sides apart."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "The same join as a condition",
+      "code": "from pyspark.sql import functions as F\n\ns = shipments.alias(\"s\")\ni = inventory.alias(\"i\")\n\nsame_place = (F.col(\"s.warehouse_id\") == F.col(\"i.warehouse_id\")) & (F.col(\"s.sku\") == F.col(\"i.sku\"))\n\ns.join(i, same_place, \"inner\").select(\"s.shipment_id\", \"s.warehouse_id\", \"s.sku\", \"i.on_hand\").orderBy(\"shipment_id\").show()\n",
+      "note": "Same rows as before. With a condition, both copies of the key columns are kept, so name the side you want."
+    },
+    {
+      "kind": "text",
+      "md": "A join condition doesn't have to be an equality. To give each shipment a size band from a small band table, match on a range: `F.col(\"quantity\").between(low, high)` is true when the quantity is at least `low` and at most `high`, both ends included."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Match on a range",
+      "code": "from pyspark.sql import functions as F\n\nbands = spark.createDataFrame(\n    [(\"single\", 1, 1), (\"small\", 2, 9), (\"bulk\", 10, 999)],\n    \"band STRING, min_qty INT, max_qty INT\",\n)\n\nwith_band = shipments.join(bands, F.col(\"quantity\").between(F.col(\"min_qty\"), F.col(\"max_qty\")), \"left\")\nwith_band.select(\"shipment_id\", \"quantity\", \"band\").orderBy(\"shipment_id\").show()\n",
+      "note": "Bands must not overlap: a quantity inside two bands would match both and the shipment would appear twice. A left join keeps a shipment whose quantity fits no band, with a NULL band."
+    },
+    {
+      "kind": "text",
+      "md": "With an outer join, **where** a condition goes changes the answer. Put it in the join condition and it only decides which right-side rows match; every left row stays. Put it in a `filter` after the join and it removes left rows too, including those whose right side is NULL."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "In the join or after it",
+      "code": "from pyspark.sql import functions as F\n\ns = shipments.alias(\"s\")\ni = inventory.alias(\"i\")\nsame_place = (F.col(\"s.warehouse_id\") == F.col(\"i.warehouse_id\")) & (F.col(\"s.sku\") == F.col(\"i.sku\"))\n\nlow_stock = same_place & (F.col(\"i.on_hand\") < 300)\ns.join(i, low_stock, \"left\").select(\"s.shipment_id\", \"s.sku\", \"i.on_hand\").orderBy(\"shipment_id\").show()\n\ns.join(i, same_place, \"left\").filter(F.col(\"i.on_hand\") < 300).select(\"s.shipment_id\", \"s.sku\", \"i.on_hand\").orderBy(\"shipment_id\").show()\n",
+      "note": "In the join, all four shipments stay and only the low-stock ones get a value: a report of every shipment with a warning column. As a filter, only the two low-stock shipments are left."
+    }
+  ],
+  "challenges": [
+    "PS-L028-C1",
+    "PS-L028-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "Inventory has one row per warehouse and SKU. A SKU is stocked in 4 warehouses. How many rows does one shipment of that SKU give in `shipments.join(inventory, on=\"sku\")`?",
+      "choices": [
+        "1",
+        "4",
+        "0",
+        "It raises an error"
+      ],
+      "answer": 1,
+      "why": "Joining on part of the key matches every inventory row with that SKU, one per warehouse. Join on `[\"warehouse_id\", \"sku\"]` to get one."
+    },
+    {
+      "id": "k2",
+      "prompt": "Which is true of `F.col(\"quantity\").between(2, 9)`?",
+      "choices": [
+        "It is true for 2 and 9 as well as everything in between",
+        "It excludes 2 and 9",
+        "It excludes 9 only",
+        "It only works in filter, not in a join condition"
+      ],
+      "answer": 0,
+      "why": "`between` includes both ends, and like any condition it works in a filter or a join."
+    },
+    {
+      "id": "k3",
+      "prompt": "A left join puts `on_hand < 300` in the join condition. What happens to a shipment whose stock is 560?",
+      "choices": [
+        "It is removed from the result",
+        "It stays, with `on_hand` NULL",
+        "It stays, with `on_hand` 560",
+        "It appears twice"
+      ],
+      "answer": 1,
+      "why": "In a left join every left row stays. The extra condition only stops that inventory row from matching, so the right-side columns are NULL."
+    }
+  ],
+  "review": [
+    "When a key is several columns, join on all of them: `on=[\"warehouse_id\", \"sku\"]`.",
+    "Joining on part of a key quietly multiplies rows; check counts before and after a join.",
+    "A join condition can combine equalities with `&`, each in its own parentheses.",
+    "Conditions can be ranges: `F.col(\"x\").between(low, high)` includes both ends. Ranges must not overlap.",
+    "In an outer join, a condition in the join keeps every left row; a filter afterwards removes rows."
+  ],
+  "practice": ["PS-Q0136", "PS-Q0137", "PS-Q0138", "PS-Q0139", "PS-Q0140"]
+}

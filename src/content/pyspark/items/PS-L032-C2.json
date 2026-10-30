@@ -1,0 +1,26 @@
+{
+  "id": "PS-L032-C2",
+  "slug": "impressions-by-device",
+  "lesson": "PS-L032",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Impressions by device",
+  "dataset": { "id": "PS-D12", "version": "1.0.0" },
+  "prompt": "The media planner wants a grid: one row per campaign and one column per device, holding the number of impressions. Write `solve(impressions)` to build it.",
+  "rules": [
+    "Return `campaign_id`, `mobile`, `desktop` and `tablet`, in that order, whatever devices the data happens to contain.",
+    "Each device column counts that campaign's impressions on that device. A campaign with none on a device has a missing value there, not 0.",
+    "Other devices, and impressions with a missing device, aren't counted in any column."
+  ],
+  "hints": [
+    "This is a pivot: the values of `device` become columns.",
+    "Without a list of values, the columns depend on the data. Pass the three devices to `pivot` in the order asked.",
+    "Group by the campaign first, then `pivot` on `device` with the devices in the order asked, and finish with an aggregate that counts the rows in each cell."
+  ],
+  "entry": "solve",
+  "inputs": ["impressions"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(impressions):\n    # One row per campaign, one column per device.\n    return impressions\n",
+  "output": { "columns": ["campaign_id", "mobile", "desktop", "tablet"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

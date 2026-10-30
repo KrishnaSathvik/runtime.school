@@ -1,0 +1,21 @@
+{
+ "id": "PS-L048-C2",
+ "kind": "predict",
+ "slug": "jdbc-write-modes-and-bounds",
+ "lesson": "PS-L048",
+ "difficulty": "medium",
+ "minutes": 6,
+ "title": "Write modes and read bounds",
+ "prompt": "This program writes the 5 lesson invoices, 2 of them paid, to a database table several times and reads it back. Their totals are 244, 232, 469.50, 283.50 and 245. What does it print? Type each line on its own line.",
+ "program": "url = \"jdbc:sqlite:/tmp/sales.db\"\ninvoices.coalesce(1).write.jdbc(url, \"invoices\", mode=\"overwrite\")\ninvoices.coalesce(1).write.jdbc(url, \"invoices\", mode=\"append\")\nprint(spark.read.jdbc(url, \"invoices\").count())\n\ninvoices.coalesce(1).write.jdbc(url, \"invoices\", mode=\"ignore\")\npaid = spark.read.jdbc(url, \"(SELECT invoice_id FROM invoices WHERE status = 'paid') AS paid\")\nprint(paid.count())\n\ninvoices.coalesce(1).write.jdbc(url, \"invoices\", mode=\"overwrite\")\nparts = spark.read.jdbc(url, \"invoices\", column=\"total_amount\", lowerBound=240, upperBound=250, numPartitions=2)\nprint(parts.count())\n",
+ "dataset": {
+  "id": "PS-D14",
+  "version": "1.0.0"
+ },
+ "edition": "lesson",
+ "hints": [
+  "`append` adds the rows again without checking for repeats.",
+  "`ignore` does nothing when the table already exists, and the subquery runs on whatever the table holds.",
+  "The bounds of a partitioned read only decide where the slices are cut. Do they remove any rows?"
+ ]
+}

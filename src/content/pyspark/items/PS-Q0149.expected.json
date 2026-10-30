@@ -1,0 +1,281 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "customer_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "order_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "total",
+     "type": "decimal(10,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "C0004",
+     "Ines Costa",
+     "O00006",
+     "39.98"
+    ],
+    [
+     "C0004",
+     "Ines Costa",
+     "O00004",
+     "418.96"
+    ],
+    [
+     "C0002",
+     "Kofi Mori",
+     "O00003",
+     "291.95"
+    ],
+    [
+     "C0005",
+     "Maya Rao",
+     "O00012",
+     "57.00"
+    ],
+    [
+     "C0005",
+     "Maya Rao",
+     "O00011",
+     "243.00"
+    ],
+    [
+     "C0007",
+     "Lena Novak",
+     null,
+     null
+    ],
+    [
+     "C0003",
+     "Tomas Okafor",
+     "O00007",
+     "227.48"
+    ],
+    [
+     "C0003",
+     "Tomas Okafor",
+     "O00007",
+     "227.48"
+    ],
+    [
+     "C0001",
+     "Ines Okafor",
+     "O00008",
+     "59.50"
+    ],
+    [
+     "C0001",
+     "Ines Okafor",
+     "O00002",
+     "79.96"
+    ],
+    [
+     "C0001",
+     "Ines Okafor",
+     "O00001",
+     "117.99"
+    ],
+    [
+     "C0006",
+     "Hana Rao",
+     "O00010",
+     "299.91"
+    ],
+    [
+     "C0006",
+     "Hana Rao",
+     "O00005",
+     "71.97"
+    ]
+   ],
+   "row_count": 13,
+   "inputs": {
+    "customers": [
+     [
+      "C0001",
+      "Ines Okafor",
+      "Leeds",
+      "consumer",
+      "2025-04-30"
+     ],
+     [
+      "C0002",
+      "Kofi Mori",
+      "Lisbon",
+      "consumer",
+      "2024-11-19"
+     ],
+     [
+      "C0003",
+      "Tomas Okafor",
+      "Denver",
+      "consumer",
+      "2024-05-08"
+     ],
+     [
+      "C0004",
+      "Ines Costa",
+      "Denver",
+      "business",
+      "2024-11-15"
+     ],
+     [
+      "C0005",
+      "Maya Rao",
+      "Perth",
+      "consumer",
+      "2024-05-01"
+     ],
+     [
+      "C0006",
+      "Hana Rao",
+      "Osaka",
+      "consumer",
+      "2025-11-07"
+     ],
+     [
+      "C0003",
+      "Tomas Okafor",
+      "Denver",
+      "consumer",
+      "2024-05-08"
+     ],
+     [
+      "C0007",
+      "Lena Novak",
+      "Leeds",
+      "consumer",
+      "2025-01-01"
+     ]
+    ],
+    "orders": [
+     [
+      "O00001",
+      "C0001",
+      "2026-06-11",
+      "paid",
+      "store",
+      "117.99"
+     ],
+     [
+      "O00002",
+      "C0001",
+      "2026-03-11",
+      "delivered",
+      "app",
+      "79.96"
+     ],
+     [
+      "O00003",
+      "C0002",
+      "2026-08-28",
+      "paid",
+      "app",
+      "291.95"
+     ],
+     [
+      "O00004",
+      "C0004",
+      "2026-03-24",
+      "shipped",
+      "app",
+      "418.96"
+     ],
+     [
+      "O00005",
+      "C0006",
+      "2026-01-18",
+      "shipped",
+      "app",
+      "71.97"
+     ],
+     [
+      "O00006",
+      "C0004",
+      "2026-06-18",
+      "delivered",
+      "store",
+      "39.98"
+     ],
+     [
+      "O00007",
+      "C0003",
+      "2026-03-23",
+      "placed",
+      "web",
+      "227.48"
+     ],
+     [
+      "O00008",
+      "C0001",
+      "2026-04-03",
+      "paid",
+      "web",
+      "59.50"
+     ],
+     [
+      "O00010",
+      "C0006",
+      "2026-01-11",
+      "paid",
+      "app",
+      "299.91"
+     ],
+     [
+      "O00011",
+      "C0005",
+      "2026-01-23",
+      "delivered",
+      "web",
+      "243.00"
+     ],
+     [
+      "O00012",
+      "C0005",
+      "2026-03-03",
+      "refunded",
+      "app",
+      "57.00"
+     ],
+     [
+      "O00007",
+      "C0003",
+      "2026-03-23",
+      "placed",
+      "web",
+      "227.48"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice customers and orders",
+  "a customer with several orders listed three times",
+  "customers with no orders",
+  "an order row that appears twice",
+  "orders with a missing total and a customer with a missing id",
+  "no orders at all"
+ ]
+}

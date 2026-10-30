@@ -1,0 +1,155 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "transaction_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "merchant_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "posted_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "txn_type",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "channel",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "direction",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "currency",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "posted_date",
+     "type": "date",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "T000011",
+     "A00008",
+     "M003",
+     "2026-02-24T12:49:59",
+     "purchase",
+     "card_present",
+     "debit",
+     "7.60",
+     "USD",
+     "posted",
+     "2026-02-24"
+    ],
+    [
+     "T000008",
+     "A00001",
+     "M002",
+     "2026-02-19T10:23:22",
+     "purchase",
+     "card_present",
+     "debit",
+     "15.99",
+     "USD",
+     "posted",
+     "2026-02-19"
+    ],
+    [
+     "T000010",
+     "A00001",
+     "M004",
+     "2026-02-21T13:36:29",
+     "purchase",
+     "card_present",
+     "debit",
+     "19.23",
+     "USD",
+     "posted",
+     "2026-02-21"
+    ],
+    [
+     "T000009",
+     "A00008",
+     "M001",
+     "2026-02-20T12:56:02",
+     "refund",
+     "card_present",
+     "credit",
+     "43.95",
+     "USD",
+     "posted",
+     "2026-02-20"
+    ],
+    [
+     "T000014",
+     "A00006",
+     "M004",
+     "2026-02-28T18:17:37",
+     "purchase",
+     "online",
+     "debit",
+     "60.53",
+     "GBP",
+     "pending",
+     "2026-02-28"
+    ],
+    [
+     "T000001",
+     "A00006",
+     null,
+     "2026-01-05T10:51:19",
+     "deposit",
+     "branch",
+     "credit",
+     "800.00",
+     "GBP",
+     "posted",
+     "2026-01-05"
+    ]
+   ],
+   "row_count": 6
+  }
+ },
+ "hidden": [
+  "the full practice transactions",
+  "transactions at midnight and one second before it, at both ends of the range, and one with no time",
+  "an empty source"
+ ]
+}

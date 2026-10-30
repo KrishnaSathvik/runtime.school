@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0378",
+  "slug": "rules-that-apply-to-some-rows",
+  "lesson": "PS-L076",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Rules that apply to some rows",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "Each rule in the starter checks only some transactions, such as purchases and refunds. Write `solve(transactions)` so it returns one row per rule: `rule`, the number of transactions it applies to in `checked`, the number that break it in `failed`, and the gate's `decision`.",
+  "rules": [
+    "A rule applies to the transactions its scope is true for. A transaction with no `txn_type` is in no rule's scope.",
+    "A transaction in scope breaks the rule when the condition is false or missing, for example a refund with no `direction`.",
+    "`decision`: `pass` when nothing fails, even when the rule checks nothing. Otherwise `warn` for a warn rule, `quarantine` while at most 20% of the checked transactions fail, and `stop` above that.",
+    "Return all four rules. `checked` and `failed` are bigints."
+  ],
+  "hints": [
+    "Filter to the rule's scope first, then count that DataFrame and the rows in it that break the rule.",
+    "A share of what the rule checked can be large even when it's small for the whole load: one bad purchase among five is 20%.",
+    "Decide `pass` before doing any arithmetic, and compare `failed * 100 <= 20 * checked` instead of dividing."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "transactions"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n# (name, action, which transactions the rule applies to, condition true for a good one)\nrules = [\n    (\"merchant_on_card_types\", \"quarantine\", F.col(\"txn_type\").isin(\"purchase\", \"refund\"), F.col(\"merchant_id\").isNotNull()),\n    (\"debit_types_are_debits\", \"quarantine\", F.col(\"txn_type\").isin(\"purchase\", \"atm_withdrawal\", \"fee\"), F.col(\"direction\") == \"debit\"),\n    (\"credit_types_are_credits\", \"quarantine\", F.col(\"txn_type\").isin(\"refund\", \"deposit\", \"interest\"), F.col(\"direction\") == \"credit\"),\n    (\"interest_from_system\", \"warn\", F.col(\"txn_type\") == \"interest\", F.col(\"channel\") == \"system\"),\n]\n\n\ndef solve(transactions):\n    # One row per rule: how many transactions it checks, how many break it, and the decision.\n    results = []\n    return spark.createDataFrame(results, \"rule STRING, checked BIGINT, failed BIGINT, decision STRING\")\n",
+  "output": {
+    "columns": [
+      "rule",
+      "checked",
+      "failed",
+      "decision"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Filter each rule's scope first: `in_scope = transactions.filter(scope)`. Its count is `checked`, and the rows in it where `~F.coalesce(condition, F.lit(False))` holds are `failed`, so a refund with no direction is broken. A transaction with no `txn_type` drops out of every scope because a NULL scope isn't true. The limit is a share of `checked`: one purchase without a merchant among five card transactions is 20%, while among the whole load it would look like 8%. Writing the rule as `~scope | condition` over the whole load gives the wrong count and turns a NULL type into a failure. A rule whose scope is empty passes, and deciding that before any division keeps `0 / 0` out of the gate."
+}

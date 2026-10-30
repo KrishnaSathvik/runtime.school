@@ -1,0 +1,233 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "claim_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "claim_status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "balance",
+     "type": "decimal(13,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "CLM000001",
+     "submitted",
+     null
+    ],
+    [
+     "CLM000002",
+     "denied",
+     "217.82"
+    ],
+    [
+     "CLM000003",
+     "paid",
+     "34.34"
+    ],
+    [
+     "CLM000004",
+     "approved",
+     null
+    ],
+    [
+     "CLM000005",
+     "paid",
+     "118.26"
+    ],
+    [
+     "CLM000006",
+     "paid",
+     "12547.14"
+    ],
+    [
+     "CLM000007",
+     "paid",
+     "20.26"
+    ],
+    [
+     "CLM000008",
+     "denied",
+     "640.00"
+    ],
+    [
+     "CLM000009",
+     "paid",
+     "0.00"
+    ],
+    [
+     "CLM000010",
+     "appealed",
+     null
+    ]
+   ],
+   "row_count": 10,
+   "inputs": {
+    "claims": [
+     [
+      "CLM000001",
+      "ENC000001",
+      "PAT00003",
+      "PRV0004",
+      "Bluebird Health",
+      "2025-12-03",
+      "2025-12-18",
+      "2724.83",
+      null,
+      null,
+      "submitted",
+      null
+     ],
+     [
+      "CLM000002",
+      "ENC000002",
+      "PAT00002",
+      "PRV0001",
+      "Bluebird Health",
+      "2025-12-18",
+      "2026-01-01",
+      "217.82",
+      "0.00",
+      "0.00",
+      "denied",
+      "out_of_network"
+     ],
+     [
+      "CLM000003",
+      "ENC000003",
+      "PAT00001",
+      "PRV0002",
+      "Summit Senior Advantage",
+      "2025-12-20",
+      "2025-12-17",
+      "200.80",
+      "166.46",
+      "166.46",
+      "paid",
+      null
+     ],
+     [
+      "CLM000004",
+      "ENC000004",
+      "PAT00002",
+      "PRV0002",
+      "Bluebird Health",
+      "2026-01-13",
+      "2026-01-26",
+      "332.53",
+      "185.17",
+      null,
+      "approved",
+      null
+     ],
+     [
+      "CLM000005",
+      "ENC000005",
+      "PAT00005",
+      "PRV0003",
+      "Bluebird Health",
+      "2026-01-16",
+      "2026-01-19",
+      "458.05",
+      "339.79",
+      "339.79",
+      "paid",
+      null
+     ],
+     [
+      "CLM000006",
+      "ENC000006",
+      "PAT00006",
+      "PRV0001",
+      "Bluebird Health",
+      "2026-01-17",
+      "2026-02-13",
+      "23227.37",
+      "10680.23",
+      "10680.23",
+      "paid",
+      null
+     ],
+     [
+      "CLM000007",
+      "ENC000007",
+      "PAT00001",
+      "PRV0005",
+      "Summit Senior Advantage",
+      "2026-01-30",
+      "2026-02-27",
+      "154.34",
+      "134.08",
+      "134.08",
+      "paid",
+      null
+     ],
+     [
+      "CLM000008",
+      "ENC000008",
+      "PAT00003",
+      "PRV0004",
+      "Bluebird Health",
+      "2026-02-02",
+      "2026-02-10",
+      "640.00",
+      "0.00",
+      null,
+      "denied",
+      "not_covered"
+     ],
+     [
+      "CLM000009",
+      "ENC000009",
+      "PAT00005",
+      "PRV0003",
+      "Bluebird Health",
+      "2026-02-04",
+      "2026-02-12",
+      "120.00",
+      "130.00",
+      "130.00",
+      "paid",
+      null
+     ],
+     [
+      "CLM000010",
+      "ENC000010",
+      "PAT00002",
+      "PRV0001",
+      "Summit Senior Advantage",
+      "2026-02-06",
+      "2026-02-20",
+      "912.40",
+      "0.00",
+      null,
+      "appealed",
+      "out_of_network"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice claims table",
+  "denied claims with a zero, a missing and a non-zero paid amount",
+  "submitted, approved, appealed and status-less claims",
+  "paid claims paid less than, exactly and more than billed",
+  "an empty claims table"
+ ]
+}

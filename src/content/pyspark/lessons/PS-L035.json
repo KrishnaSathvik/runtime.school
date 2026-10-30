@@ -1,0 +1,116 @@
+{
+  "id": "PS-L035",
+  "minutes": 25,
+  "lede": "Spend so far this month, the average of the last three payments, the largest transfer to date: each is an aggregate over a slice of rows that moves with the current row. A window **frame** says which slice, so `sum`, `avg` and `max` can run along the rows instead of collapsing them.",
+  "objectives": [
+    "Compute running totals, counts and maximums with an aggregate `.over(w)`",
+    "Choose a frame with `rowsBetween`, from the first row to the current one or a fixed number of rows back",
+    "Explain why the default frame adds tied rows together, and avoid it with a tie-breaker",
+    "Put a whole-group total on every row with a window that has no `orderBy`"
+  ],
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "transactions"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`transactions` has one row per movement on a bank account: `account_id`, when it was `posted_at`, its `direction` (`debit` when money leaves, `credit` when it arrives), a positive `amount` and a `status`. It's loaded as a DataFrame, and `F` is `pyspark.sql.functions`.\n\nThe examples look at **spending**: posted debits. Any aggregate you know from `groupBy` can also run over a window: `F.sum(\"amount\").over(w)`. Instead of one total per group, every row gets the total of its **frame**, the rows of its window that the frame picks out.\n\nFor a running total, the frame runs from the first row of the partition to the current row: `rowsBetween(Window.unboundedPreceding, Window.currentRow)`."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Running spend per account",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\nspend = transactions.filter((F.col(\"direction\") == \"debit\") & (F.col(\"status\") == \"posted\"))\n\nw = (Window.partitionBy(\"account_id\").orderBy(\"posted_at\", \"transaction_id\")\n     .rowsBetween(Window.unboundedPreceding, Window.currentRow))\n\nspend.select(\n    \"account_id\", \"posted_at\", \"amount\",\n    F.sum(\"amount\").over(w).alias(\"spend_so_far\"),\n    F.count(\"*\").over(w).alias(\"payments_so_far\"),\n    F.max(\"amount\").over(w).alias(\"largest_so_far\"),\n).orderBy(\"account_id\", \"posted_at\").show()\n",
+      "note": "A00001's spend grows 27.90, 43.89, 63.12 as each payment is added. One transaction lost its account, so it forms a group of its own with a NULL `account_id`."
+    },
+    {
+      "kind": "text",
+      "md": "The frame counts rows relative to the current one. `rowsBetween(-2, Window.currentRow)` is the current row and the two before it: a **moving** window of up to three rows. At the start of a partition there are fewer rows to take, so the first frames are shorter.\n\n`Window.currentRow` is 0, so `rowsBetween(-2, 0)` means the same."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "The last three transactions",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\nposted = transactions.filter((F.col(\"status\") == \"posted\") & (F.col(\"account_id\") == \"A00001\"))\n\nlast3 = Window.partitionBy(\"account_id\").orderBy(\"posted_at\", \"transaction_id\").rowsBetween(-2, 0)\n\nposted.select(\n    \"posted_at\", \"direction\", \"amount\",\n    F.sum(\"amount\").over(last3).alias(\"last3_total\"),\n    F.avg(\"amount\").over(last3).alias(\"last3_avg\"),\n    F.count(\"*\").over(last3).alias(\"rows_in_frame\"),\n).orderBy(\"posted_at\").show()\n",
+      "note": "The first row averages one amount, the second two, and from the third on always three. `rows_in_frame` shows it. The average of decimals is a decimal with extra places."
+    },
+    {
+      "kind": "text",
+      "md": "What if you give the window an `orderBy` and no frame? Spark then uses a default frame: from the first row up to the current row **and every row tied with it** on the order columns. For a running total that's a trap: two rows with the same timestamp get the same total, both including each other.\n\nThe fix is the same as for `row_number`: order by enough columns that no two rows tie, or say `rowsBetween` explicitly. Doing both is safest."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Ties and the default frame",
+      "code": "from decimal import Decimal\nfrom pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\npays = spark.createDataFrame(\n    [(\"P1\", \"A1\", 1, Decimal(\"10.00\")), (\"P2\", \"A1\", 2, Decimal(\"5.00\")), (\"P3\", \"A1\", 2, Decimal(\"7.00\")), (\"P4\", \"A1\", 3, Decimal(\"1.00\"))],\n    \"pay_id STRING, account_id STRING, day INT, amount DECIMAL(12,2)\",\n)\n\ndefault_frame = Window.partitionBy(\"account_id\").orderBy(\"day\")\nby_rows = Window.partitionBy(\"account_id\").orderBy(\"day\", \"pay_id\").rowsBetween(Window.unboundedPreceding, 0)\n\npays.select(\n    \"pay_id\", \"day\", \"amount\",\n    F.sum(\"amount\").over(default_frame).alias(\"default_frame\"),\n    F.sum(\"amount\").over(by_rows).alias(\"rows_frame\"),\n).orderBy(\"day\", \"pay_id\").show()\n",
+      "note": "P2 and P3 share day 2, so the default frame gives both 22.00: everything up to and including day 2. With a tie-breaker and `rowsBetween`, the total grows one row at a time: 15.00, then 22.00."
+    },
+    {
+      "kind": "text",
+      "md": "Leave out `orderBy` and the frame is the whole partition, so every row gets the group's total. That puts a group figure next to each row without a `groupBy`: here, each payment next to the account's total spend and what was still to come."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "The whole group's total on every row",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\nspend = transactions.filter((F.col(\"direction\") == \"debit\") & (F.col(\"status\") == \"posted\") & (F.col(\"account_id\") == \"A00001\"))\n\nwhole = Window.partitionBy(\"account_id\")\nso_far = Window.partitionBy(\"account_id\").orderBy(\"posted_at\", \"transaction_id\").rowsBetween(Window.unboundedPreceding, 0)\n\nspend.select(\n    \"posted_at\", \"amount\",\n    F.sum(\"amount\").over(whole).alias(\"account_total\"),\n    (F.sum(\"amount\").over(whole) - F.sum(\"amount\").over(so_far)).alias(\"still_to_come\"),\n).orderBy(\"posted_at\").show()\n",
+      "note": "Every row shows the same total, 63.12. Subtracting the running total leaves the spend after each payment, 0.00 on the last."
+    }
+  ],
+  "challenges": [
+    "PS-L035-C1",
+    "PS-L035-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "Amounts in order are 10, 20, 30, 40. What does `F.sum(\"amount\")` over `rowsBetween(-1, 0)` give on the row with 30?",
+      "choices": [
+        "30",
+        "50",
+        "60",
+        "100"
+      ],
+      "answer": 1,
+      "why": "The frame is the previous row and the current one: 20 + 30 = 50."
+    },
+    {
+      "id": "k2",
+      "prompt": "A window has `orderBy(\"posted_at\")` and no frame. Two payments share a timestamp. What happens to a running sum on those rows?",
+      "choices": [
+        "Spark raises an error",
+        "Both rows get the same total, which includes both payments",
+        "The second row is skipped",
+        "Each row adds only its own payment"
+      ],
+      "answer": 1,
+      "why": "The default frame runs to the current row and every row tied with it. Add a tie-breaker and `rowsBetween` to grow one row at a time."
+    },
+    {
+      "id": "k3",
+      "prompt": "What does `F.sum(\"amount\").over(Window.partitionBy(\"account_id\"))` give?",
+      "choices": [
+        "A running total per account",
+        "The account's total on every one of its rows",
+        "One row per account",
+        "An error, because the window has no order"
+      ],
+      "answer": 1,
+      "why": "Without `orderBy`, the frame is the whole partition. Unlike ranking functions, aggregates don't need an order."
+    }
+  ],
+  "review": [
+    "Any aggregate can run over a window: `F.sum(\"amount\").over(w)` keeps every row.",
+    "A running total uses `rowsBetween(Window.unboundedPreceding, Window.currentRow)`.",
+    "`rowsBetween(-2, 0)` is a moving frame of the current row and the two before it; early frames are shorter.",
+    "With `orderBy` and no frame, tied rows are added together. Break ties and say `rowsBetween`.",
+    "Without `orderBy`, the frame is the whole partition: every row gets the group total.",
+    "Order windows fully so running figures don't change between runs."
+  ],
+  "practice": ["PS-Q0171", "PS-Q0172", "PS-Q0173", "PS-Q0174", "PS-Q0175"]
+}

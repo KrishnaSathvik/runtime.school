@@ -1,0 +1,162 @@
+{
+  "dataset_id": "PS-D11",
+  "version": "1.0.0",
+  "title": "Education & Learning",
+  "source": "synthetic",
+  "licence": {
+    "status": "ours",
+    "note": "Runtime-owned deterministic synthetic data."
+  },
+  "seed": 2011,
+  "schemas": {
+    "learners": "learner_id STRING, display_name STRING, country STRING, signup_date DATE, plan STRING",
+    "courses": "course_id STRING, title STRING, track STRING, level STRING, lesson_count INT, published_date DATE",
+    "lessons": "lesson_id STRING, course_id STRING, position INT, title STRING, estimated_minutes INT",
+    "attempts": "attempt_id STRING, learner_id STRING, lesson_id STRING, attempt_no INT, started_at TIMESTAMP, minutes_spent INT, score_pct DOUBLE, passed BOOLEAN",
+    "completions": "learner_id STRING, course_id STRING, as_of_date DATE, lessons_completed INT, lessons_total INT, completed_date DATE",
+    "assessments": "assessment_id STRING, learner_id STRING, course_id STRING, taken_at TIMESTAMP, points INT, max_points INT, score_pct DOUBLE, passed BOOLEAN"
+  },
+  "keys": {
+    "primary": {
+      "learners": [
+        "learner_id"
+      ],
+      "courses": [
+        "course_id"
+      ],
+      "lessons": [
+        "lesson_id"
+      ],
+      "attempts": [
+        "attempt_id"
+      ],
+      "completions": [
+        "learner_id",
+        "course_id",
+        "as_of_date"
+      ],
+      "assessments": [
+        "assessment_id"
+      ]
+    },
+    "foreign": {
+      "lessons.course_id": "courses.course_id",
+      "attempts.learner_id": "learners.learner_id",
+      "attempts.lesson_id": "lessons.lesson_id",
+      "completions.learner_id": "learners.learner_id",
+      "completions.course_id": "courses.course_id",
+      "assessments.learner_id": "learners.learner_id",
+      "assessments.course_id": "courses.course_id"
+    }
+  },
+  "rules": [
+    "Every learner, name and score is invented; nothing comes from a real platform's users.",
+    "score_pct is a percentage from 0 to 100 with one decimal; an attempt passes when score_pct is 70 or more. minutes_spent is whole minutes.",
+    "A learner may attempt the same lesson several times: attempt_no counts the tries (1, 2, 3 \u2026) and a learner stops retrying once they pass.",
+    "completions is a snapshot: each row says how many lessons of the course the learner had passed by as_of_date. completed_date is the day they passed the course's last lesson, empty while the course is unfinished. Use the latest as_of_date for the current picture.",
+    "An assessment is the course's final test, sat after passing every lesson; it passes at score_pct 70 or more (points out of max_points).",
+    "The data ends on the last as_of_date. A learner is inactive when they have no attempt in the 30 days up to and including that date; some learners signed up and never attempted anything.",
+    "plan is free or plus; track is sql, python or data_engineering; level is beginner or intermediate.",
+    "Lesson edition: five learners and four two-lesson courses, all clean. Learners L003 and L005 each needed two attempts at one lesson, and learner L005 is inactive (last attempt on 2026-04-09). completions has one as-of date, 2026-06-28.",
+    "Practice edition: half a year of activity with completions snapshots at the end of each month (the last one on 2026-06-28). A few attempts were abandoned: score_pct is empty and passed is false.",
+    "Project edition (P03): like practice but bigger, and about 2% of attempt rows are exact duplicates (the same attempt_id twice, from a re-run export); count attempts after removing them."
+  ],
+  "editions": {
+    "lesson": {
+      "learners": {
+        "file": "lesson/learners.csv",
+        "rows": 5,
+        "sha256": "7e03a3ab432897532833ffb33a8d00d8420348c02b3ca4ea8d76556a76a13c43"
+      },
+      "courses": {
+        "file": "lesson/courses.csv",
+        "rows": 4,
+        "sha256": "22c626579c5aad19fd89d0ffbe930056c0c8adb929ea03e99671f9b943caea9d"
+      },
+      "lessons": {
+        "file": "lesson/lessons.csv",
+        "rows": 8,
+        "sha256": "94307684b89bf2730f90d1dac41c41b475253c7cd473ca5cab2cc4be252e4ddf"
+      },
+      "attempts": {
+        "file": "lesson/attempts.csv",
+        "rows": 13,
+        "sha256": "701054f128f9fef0762fd23bb57eb9ada4113ddde332d3d2b66337bc3548793f"
+      },
+      "completions": {
+        "file": "lesson/completions.csv",
+        "rows": 6,
+        "sha256": "66291ce6838d65671d90af491b333d8dfedd54a052b104630b3e623cd4ffdf51"
+      },
+      "assessments": {
+        "file": "lesson/assessments.csv",
+        "rows": 5,
+        "sha256": "a5d09bec7c35c075d3818e7cb1fd52572104b8ed22cd15f6a433809203fa473b"
+      }
+    },
+    "practice": {
+      "learners": {
+        "file": "practice/learners.csv",
+        "rows": 110,
+        "sha256": "86d279aa8e8a2eb163ea9d24bd86f07cff43dc2b422f1c3e3b2acc8779316b68"
+      },
+      "courses": {
+        "file": "practice/courses.csv",
+        "rows": 4,
+        "sha256": "09a341ae2f48479cb601bacad5d26409c027a534486e7cdedb91c3c0923f34be"
+      },
+      "lessons": {
+        "file": "practice/lessons.csv",
+        "rows": 23,
+        "sha256": "47ecf7ca189b3ea97a025781fa7b6dce7eb0aca3805e42212aff2b373854713d"
+      },
+      "attempts": {
+        "file": "practice/attempts.csv",
+        "rows": 2347,
+        "sha256": "9015dbea76d0f94e8280c83472901a91212dec028cdc721758e84ccce0d1d579"
+      },
+      "completions": {
+        "file": "practice/completions.csv",
+        "rows": 958,
+        "sha256": "c70ca9f2d12ea6870b3f9784b40414e02e036ace425a00d639a7a50e1180b60d"
+      },
+      "assessments": {
+        "file": "practice/assessments.csv",
+        "rows": 259,
+        "sha256": "9efdbafe46ae00b60b337fe36deab785bedbb417518d9e54264a41443ce78ccf"
+      }
+    },
+    "project": {
+      "learners": {
+        "file": "project/learners.csv",
+        "rows": 200,
+        "sha256": "a8e5b5d29c3df4b52be4191305b79e4fbd55b2f14c8c2fa56647ee850c23e4d7"
+      },
+      "courses": {
+        "file": "project/courses.csv",
+        "rows": 5,
+        "sha256": "bcb8411cab3d63b495168974d668cd91495bcb29a05c4f79fc7dd104a2af1b47"
+      },
+      "lessons": {
+        "file": "project/lessons.csv",
+        "rows": 30,
+        "sha256": "a6f7c26f8bf2fe2b1ac78244542ca540f1eae48f064d64e378250002553d12f2"
+      },
+      "attempts": {
+        "file": "project/attempts.csv",
+        "rows": 5063,
+        "sha256": "0231731db3ae5b551f79c113c3bcf4ec0dd6f5841f31dc93ee1fffeffb948132"
+      },
+      "completions": {
+        "file": "project/completions.csv",
+        "rows": 1919,
+        "sha256": "8231ee1ef0c8a504da7cb9828964299b86d6ae0e9d2a62cd7ea4c2e7f1d9b3b1"
+      },
+      "assessments": {
+        "file": "project/assessments.csv",
+        "rows": 544,
+        "sha256": "de581d179edd6eae3a8f21acc9f5f5ef072f33ee1e303bc874c4a2eaeb056c42"
+      }
+    }
+  }
+}

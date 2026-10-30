@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0164",
+  "slug": "fix-pay-steps",
+  "lesson": "PS-L033",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 6,
+  "title": "Fix the pay steps",
+  "dataset": {
+    "id": "PS-D03",
+    "version": "1.0.0"
+  },
+  "prompt": "This function should number each department's pay steps from the top, but the best-paid people come out with the largest number. Find the bug and fix `solve(employees)`.",
+  "rules": [
+    "`pay_step` 1 is the highest `salary` in the `department_id`; the next lower salary is step 2, and so on.",
+    "Equal salaries share a step, and steps never skip: 1, 1, 2.",
+    "Return `department_id`, `employee_id`, `salary` and `pay_step`."
+  ],
+  "hints": [
+    "The function, `dense_rank`, already matches the rules. Look at how the window is ordered.",
+    "`orderBy(\"salary\")` sorts ascending, so the lowest salary gets step 1.",
+    "Make the window's order descending, and keep `partitionBy` as it is."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "employees"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(employees):\n    by_pay = Window.partitionBy(\"department_id\").orderBy(\"salary\")\n    return employees.select(\n        \"department_id\",\n        \"employee_id\",\n        \"salary\",\n        F.dense_rank().over(by_pay).alias(\"pay_step\"),\n    )\n",
+  "output": {
+    "columns": [
+      "department_id",
+      "employee_id",
+      "salary",
+      "pay_step"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "The window sorts the wrong way. `orderBy(\"salary\")` is ascending, so `dense_rank` gives step 1 to the lowest salary. Change it to `Window.partitionBy(\"department_id\").orderBy(F.col(\"salary\").desc())` and keep `dense_rank`, which shares a step on equal salaries and doesn't skip. Switching to `rank` would leave gaps after a tie, and `row_number` would split it; dropping `partitionBy` would number the whole company as one ladder."
+}

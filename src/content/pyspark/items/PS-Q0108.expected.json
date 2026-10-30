@@ -1,0 +1,228 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "account_type",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "overdraft_limit",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "is_valid",
+     "type": "boolean",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "A00001",
+     "checking",
+     "0.00",
+     true
+    ],
+    [
+     "A00002",
+     "checking",
+     "250.00",
+     true
+    ],
+    [
+     "A00003",
+     "savings",
+     null,
+     true
+    ],
+    [
+     "A00004",
+     "savings",
+     null,
+     true
+    ],
+    [
+     "A00005",
+     "credit_card",
+     null,
+     true
+    ],
+    [
+     "A00006",
+     "checking",
+     "500.00",
+     true
+    ],
+    [
+     "A00007",
+     "checking",
+     "0.00",
+     true
+    ],
+    [
+     "A00008",
+     "checking",
+     "250.00",
+     true
+    ],
+    [
+     "A00009",
+     "savings",
+     "250.00",
+     false
+    ],
+    [
+     "A00010",
+     "checking",
+     null,
+     false
+    ],
+    [
+     "A00011",
+     "checking",
+     "0.00",
+     false
+    ],
+    [
+     "A00012",
+     "savings",
+     null,
+     false
+    ]
+   ],
+   "row_count": 12,
+   "inputs": {
+    "accounts": [
+     [
+      "A00001",
+      "C0001",
+      "checking",
+      "USD",
+      "active",
+      "2025-08-24",
+      "0.00"
+     ],
+     [
+      "A00002",
+      "C0001",
+      "checking",
+      "USD",
+      "closed",
+      "2025-06-26",
+      "250.00"
+     ],
+     [
+      "A00003",
+      "C0002",
+      "savings",
+      "USD",
+      "active",
+      "2025-02-28",
+      null
+     ],
+     [
+      "A00004",
+      "C0002",
+      "savings",
+      "USD",
+      "closed",
+      "2025-04-11",
+      null
+     ],
+     [
+      "A00005",
+      "C0003",
+      "credit_card",
+      "GBP",
+      "frozen",
+      "2025-03-06",
+      null
+     ],
+     [
+      "A00006",
+      "C0003",
+      "checking",
+      "GBP",
+      "active",
+      "2025-02-26",
+      "500.00"
+     ],
+     [
+      "A00007",
+      "C0004",
+      "checking",
+      "USD",
+      "closed",
+      "2025-03-12",
+      "0.00"
+     ],
+     [
+      "A00008",
+      "C0005",
+      "checking",
+      "USD",
+      "active",
+      "2025-06-21",
+      "250.00"
+     ],
+     [
+      "A00009",
+      "C0005",
+      "savings",
+      "USD",
+      "active",
+      "2025-06-21",
+      "250.00"
+     ],
+     [
+      "A00010",
+      "C0006",
+      "checking",
+      "EUR",
+      "active",
+      "2025-07-02",
+      null
+     ],
+     [
+      "A00011",
+      "C0006",
+      "checking",
+      null,
+      "active",
+      "2025-07-02",
+      "0.00"
+     ],
+     [
+      "A00012",
+      null,
+      "savings",
+      "USD",
+      "active",
+      "2025-07-02",
+      null
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice accounts table",
+  "overdraft limits that are zero, negative, missing or present on each account type",
+  "accounts with a missing customer, type, currency or status",
+  "account types, currencies and statuses outside the lists",
+  "an empty accounts table"
+ ]
+}

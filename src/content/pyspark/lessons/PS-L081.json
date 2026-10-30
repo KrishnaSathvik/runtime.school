@@ -1,0 +1,149 @@
+{
+  "id": "PS-L081",
+  "minutes": 25,
+  "lede": "When a job fails at 3 a.m. or runs twice as long as yesterday, nobody watched it happen. Logs, metrics and the Spark UI are how you find out afterwards which job, which stage and which task went wrong.",
+  "objectives": [
+    "Describe what the Spark UI's Jobs, Stages, Storage, Executors and SQL pages show, and where they come from after an application ends",
+    "Set Spark's log level and write your own driver logs with Python's `logging`",
+    "Read a job's status and its stages' task and failure counts from `statusTracker()`",
+    "Find the failed stage and task in an event log and in a driver log"
+  ],
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "api_requests"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "While an application runs, its driver serves a web page, the **Spark UI**, usually at port 4040 of the driver's machine. On your own computer or a cluster it has these pages:\n\n- **Jobs**: every job, with its status (running, succeeded, failed), its duration and its stages.\n- **Stages**: every stage, with its task count and, for each task, its duration, input size, shuffle read and write, spill and garbage-collection time. The summary row (minimum, median, maximum) is where skew shows: one task far slower than the median.\n- **Storage**: cached DataFrames and how much of each is in memory or on disk.\n- **Environment**: every setting the application started with.\n- **Executors**: each executor's memory, cores, task counts, failures and logs.\n- **SQL / DataFrame**: each query's plan as a graph, with row counts and sizes on each step.\n\nWhen the application ends, the page goes with it. If **event logging** is on (`spark.eventLog.enabled`), the driver also writes every event to a file in `spark.eventLog.dir`, and the **History Server** rebuilds the same pages from those files later. That's how you look at last night's job."
+    },
+    {
+      "kind": "text",
+      "md": "This environment can't show you that page: there's no browser connection into it, so the UI is switched off. Everything the UI shows comes from the same events and counters you can reach from code, and that's what the rest of this lesson uses."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Is there a Spark UI here?",
+      "code": "sc = spark.sparkContext\nprint(spark.conf.get(\"spark.ui.enabled\"))\nprint(sc.uiWebUrl)\nprint(spark.conf.get(\"spark.eventLog.enabled\", \"false\"))\n",
+      "note": "`spark.ui.enabled` is `false`, so `uiWebUrl`, the address the UI would be at, is `None`. On your own machine it would print something like a `http://...:4040` address. Event logging was never set, so the fallback `false` is printed."
+    },
+    {
+      "kind": "text",
+      "md": "Spark writes its own **log** through log4j: the driver to its output, and each executor to its own log file, which on a cluster you open from the Executors page or the cluster manager (`yarn logs` on YARN, `kubectl logs` on Kubernetes). Each line has a level, from most to least detailed: `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR`, `FATAL`. `sc.setLogLevel(\"WARN\")` hides the chatty `INFO` lines; notebooks often start with it. This environment keeps only `ERROR` lines and doesn't show them, so you see your own output."
+    },
+    {
+      "kind": "error-example",
+      "id": "e2",
+      "title": "A log level Spark doesn't know",
+      "code": "spark.sparkContext.setLogLevel(\"VERBOSE\")\n",
+      "error": "IllegalArgumentException",
+      "note": "The message lists the levels `setLogLevel` accepts: `ALL`, `DEBUG`, `ERROR`, `WARN`, `INFO`, `OFF`, `FATAL` and `TRACE`. `ALL` and `OFF` show everything and nothing."
+    },
+    {
+      "kind": "text",
+      "md": "Your job should log too, so the morning after you can read what it did. Python's `logging` module works in the driver like in any Python program. Log **facts about the run**: row counts, partition counts, the dates processed, which step started. Don't log the rows themselves: they can be huge and may hold personal data.\n\nCode in the driver logs to the driver's output. A function that runs inside tasks (a UDF, lesson 51) logs on the executors, so on a cluster those lines end up in executor logs, not in your terminal."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Driver logs with Python's logging",
+      "code": "import logging, sys\n\nlogging.basicConfig(stream=sys.stdout, level=logging.INFO,\n                    format=\"%(levelname)s %(name)s: %(message)s\", force=True)\nlog = logging.getLogger(\"requests_report\")\n\ncores = spark.sparkContext.defaultParallelism\nparts = api_requests.rdd.getNumPartitions()\nlog.info(\"read %d requests in %d partition(s)\", api_requests.count(), parts)\nlog.debug(\"first request id: %s\", api_requests.first()[\"request_id\"])\nif parts < cores:\n    log.warning(\"%d partition(s) for %d cores: some cores will sit idle\", parts, cores)\n",
+      "note": "The logger is set to `INFO`, so the `DEBUG` line prints nothing. Its arguments were still computed, though: `first()` ran a Spark job for a line nobody sees, so keep expensive calls out of debug lines. The warning is a real finding from lesson 2: one partition means one task, so one of the two cores has nothing to do."
+    },
+    {
+      "kind": "text",
+      "md": "The numbers on the Jobs and Stages pages are also in the SparkContext's `statusTracker()`, which you used in lesson 55. Besides the counts, a job's `status` says whether it `SUCCEEDED` or `FAILED`, and a stage's `numFailedTasks` says how many of its task attempts failed. The ids change from run to run, so print statuses and counts only."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "A failed job, as the Stages page shows it",
+      "code": "spark.conf.set(\"spark.sql.adaptive.enabled\", \"false\")\nsc = spark.sparkContext\ntracker = sc.statusTracker()\nnums = spark.range(0, 4, 1, 2)\n\nsc.setJobGroup(\"good\", \"count the numbers\")\nprint(nums.count())\n\nsc.setJobGroup(\"bad\", \"divide by id - 3\")\ntry:\n    nums.selectExpr(\"100 div (id - 3) AS x\").collect()\nexcept Exception as e:\n    print(\"failed with\", type(e).__name__)\n\nfor group in [\"good\", \"bad\"]:\n    for job in sorted(tracker.getJobIdsForGroup(group)):\n        info = tracker.getJobInfo(job)\n        stages = sorted(info.stageIds)\n        print(group, info.status,\n              [(tracker.getStageInfo(s).numTasks, tracker.getStageInfo(s).numFailedTasks) for s in stages])\n",
+      "note": "With adaptive execution off, `count()` is two stages (lesson 55): 2 tasks, then 1. The second job divides by zero on the row with id 3, which is in the second of the 2 partitions. That task fails, and in local mode Spark doesn't retry a task, so the whole job fails with one failed task."
+    },
+    {
+      "kind": "text",
+      "md": "An event log is one JSON object per line: `SparkListenerJobStart`, `SparkListenerTaskEnd`, `SparkListenerJobEnd` and so on, each with an `Event` field naming it. It's ordinary data, so Spark can read it. The next example makes a folder for the log, submits a small script (lesson 79) with event logging on, then reads the log back with `spark.read.json`, picks events with `filter` and fields with `select`. Nested fields are reached with a dot, as in `\"Job Result.Result\"`.\n\nTwo settings keep the file simple for this example: `rolling.enabled=false` writes one file instead of a folder of parts, and `compress=false` writes plain text."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Read an event log with Spark",
+      "code": "import os, subprocess\n\ndef submit(*args):\n    env = {**os.environ, \"SPARK_LOCAL_IP\": \"127.0.0.1\"}\n    run = subprocess.run([\"spark-submit\", *args], capture_output=True, text=True, env=env)\n    print(\"exit code:\", run.returncode)\n    for line in run.stdout.splitlines():\n        if line.startswith(\"app:\"):\n            print(line)\n    return run\n\nopen(\"/tmp/nightly.py\", \"w\").write(\"\"\"\nfrom pyspark.sql import SparkSession\n\nspark = SparkSession.builder.getOrCreate()\nprint(\"app: rows\", len(spark.range(0, 8, 1, 4).collect()))\ntry:\n    spark.range(0, 4, 1, 1).selectExpr(\"10 div (id - 3) AS x\").collect()\nexcept Exception as e:\n    print(\"app: failed with\", type(e).__name__)\nspark.stop()\n\"\"\")\n\nos.makedirs(\"/tmp/events\", exist_ok=True)\nsubmit(\"--master\", \"local[2]\",\n       \"--conf\", \"spark.eventLog.enabled=true\", \"--conf\", \"spark.eventLog.dir=/tmp/events\",\n       \"--conf\", \"spark.eventLog.rolling.enabled=false\", \"--conf\", \"spark.eventLog.compress=false\",\n       \"/tmp/nightly.py\")\n\nfrom pyspark.sql import functions as F\n\nevents = spark.read.json(\"/tmp/events\")\njob_ends = events.filter(F.col(\"Event\") == \"SparkListenerJobEnd\")\nfor row in job_ends.orderBy(\"Job ID\").select(\"Job ID\", \"Job Result.Result\").collect():\n    print(\"job\", row[0], row[1])\ntask_ends = events.filter(F.col(\"Event\") == \"SparkListenerTaskEnd\")\nprint(task_ends.count(), \"tasks ended\")\nprint(task_ends.filter(F.col(\"Task End Reason.Reason\") == \"Success\").count(), \"succeeded\")\n",
+      "note": "Job 0 read 4 partitions; job 1 read 1 partition and failed on the row with id 3. That's 5 task-end events, 4 of them successes. The History Server builds its Jobs and Stages pages from exactly these events."
+    },
+    {
+      "kind": "text",
+      "md": "Without a UI or an event log, the driver log is often all you have. When a job fails, Spark's task scheduler writes one `ERROR` line that names the stage and the task:\n\n```\nERROR TaskSetManager: Task 2 in stage 7.0 failed 4 times; aborting job\n```\n\n\"Task 2\" is the task for partition 2. \"stage 7.0\" is stage 7, first attempt. \"failed 4 times\" is the number of attempts: on a cluster Spark tries a task 4 times by default (`spark.task.maxFailures`) before it gives up. Lines just above it, from the executor, carry the actual exception."
+    },
+    {
+      "kind": "example",
+      "id": "e6",
+      "title": "Find the failed stage in the driver log",
+      "code": "import os, subprocess\n\ndef submit(*args):\n    env = {**os.environ, \"SPARK_LOCAL_IP\": \"127.0.0.1\"}\n    run = subprocess.run([\"spark-submit\", *args], capture_output=True, text=True, env=env)\n    print(\"exit code:\", run.returncode)\n    for line in run.stdout.splitlines():\n        if line.startswith(\"app:\"):\n            print(line)\n    return run\n\nopen(\"/tmp/nightly.py\", \"w\").write(\"\"\"\nfrom pyspark.sql import SparkSession\n\nspark = SparkSession.builder.getOrCreate()\nnums = spark.range(0, 8, 1, 4)\nprint(\"app: rows\", len(nums.collect()))\ntry:\n    nums.selectExpr(\"10 div (id - 5) AS x\").collect()\nexcept Exception as e:\n    print(\"app: failed with\", type(e).__name__)\nspark.stop()\n\"\"\")\n\nrun = submit(\"--master\", \"local[2]\", \"/tmp/nightly.py\")\nfor line in run.stderr.splitlines():\n    if \" ERROR TaskSetManager: \" in line:\n        print(line.split(\" \", 1)[1])\n",
+      "note": "The first `collect()` was stage 0. The failing one is stage 1, and the row with id 5 sits in partition 2 of 4, so task 2 failed. Local mode allows one attempt, hence \"failed 1 times\". The time at the start of the line was cut off because it changes on every run."
+    }
+  ],
+  "challenges": [
+    "PS-L081-C1",
+    "PS-L081-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "A stage's tasks have a median duration of 4 seconds and a maximum of 6 minutes. Where in the Spark UI do you see that, and what does it suggest?",
+      "choices": [
+        "On the Environment page; the executors have too little memory",
+        "In the Stages page's task summary; one partition is much bigger than the rest (skew)",
+        "On the Storage page; the data isn't cached",
+        "On the Jobs page; the job has too many stages"
+      ],
+      "answer": 1,
+      "why": "The Stages page summarises task metrics with minimum, median and maximum. One task far slower than the median usually means one partition holds far more rows than the others."
+    },
+    {
+      "id": "k2",
+      "prompt": "Last night's application has finished. How can you still look at its jobs and stages?",
+      "choices": [
+        "Open port 4040 on the driver's machine",
+        "Run `sc.setLogLevel(\"INFO\")` and run the job again",
+        "Open the History Server, which rebuilds the UI from the event log, if event logging was on",
+        "You can't: Spark keeps nothing after an application ends"
+      ],
+      "answer": 2,
+      "why": "The live UI ends with the application. With `spark.eventLog.enabled`, the events are written to `spark.eventLog.dir`, and the History Server reads them back."
+    },
+    {
+      "id": "k3",
+      "prompt": "A driver log says `ERROR TaskSetManager: Task 3 in stage 12.0 failed 4 times; aborting job`. What does it tell you?",
+      "choices": [
+        "Stage 12's task for partition 3 failed on every one of its 4 attempts, so the job was stopped",
+        "Stage 3 ran 12 tasks and 4 of them failed",
+        "Four executors failed in stage 12",
+        "The job will be retried 4 more times"
+      ],
+      "answer": 0,
+      "why": "The line names the task (partition 3), the stage (12, attempt 0) and how many attempts failed. After `spark.task.maxFailures` attempts, 4 by default on a cluster, Spark aborts the job."
+    }
+  ],
+  "review": [
+    "The Spark UI (port 4040) shows Jobs, Stages, Storage, Environment, Executors and SQL; it ends with the application.",
+    "With `spark.eventLog.enabled`, the History Server rebuilds the UI later from the event log, one JSON event per line.",
+    "`sc.setLogLevel` takes `ALL`, `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR`, `FATAL` or `OFF`; anything else raises.",
+    "Log facts about the run with Python's `logging` in the driver, not the rows; code inside tasks logs on the executors.",
+    "`statusTracker()` gives each job's status and each stage's task and failure counts: what the Jobs and Stages pages show.",
+    "\"Task N in stage S.0 failed K times\" names the failed partition and stage; local mode tries once, clusters 4 times by default."
+  ],
+  "practice": [
+    "PS-Q0401",
+    "PS-Q0402",
+    "PS-Q0403",
+    "PS-Q0404",
+    "PS-Q0405"
+  ]
+}

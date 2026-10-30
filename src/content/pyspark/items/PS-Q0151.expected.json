@@ -1,0 +1,74 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "city",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "customers",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "first_signup",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "last_signup",
+     "type": "date",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "Leeds",
+     1,
+     "2025-04-30",
+     "2025-04-30"
+    ],
+    [
+     "Perth",
+     1,
+     "2024-05-01",
+     "2024-05-01"
+    ],
+    [
+     "Osaka",
+     1,
+     "2025-11-07",
+     "2025-11-07"
+    ],
+    [
+     "Lisbon",
+     1,
+     "2024-11-19",
+     "2024-11-19"
+    ],
+    [
+     "Denver",
+     2,
+     "2024-05-08",
+     "2024-11-15"
+    ]
+   ],
+   "row_count": 5
+  }
+ },
+ "hidden": [
+  "the full practice customers",
+  "customers with a missing city",
+  "customers with a missing signup date",
+  "everyone in one city",
+  "an empty customers table"
+ ]
+}

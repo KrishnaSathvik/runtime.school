@@ -1,0 +1,55 @@
+{
+ "id": "PS-L068-C1",
+ "slug": "readings-that-need-a-visit",
+ "lesson": "PS-L068",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 10,
+ "title": "Readings that need a visit",
+ "dataset": {
+  "id": "PS-D09",
+  "version": "1.0.0"
+ },
+ "prompt": "Maintenance wants the readings that call for a visit. Write `solve(sensor_readings)` so a streaming query reads the delivery files into a memory table, and return `reading_id`, `device_id`, `event_time`, `status` and `battery_v` for every reading whose status is `low_battery` or `degraded`.",
+ "rules": [
+  "`status` and `battery_v` come from the nested `payload` struct.",
+  "Keep every delivery: a reading delivered twice appears twice.",
+  "The rows must come from a streaming query: write it to a memory table and read that back with `spark.table`. Filtering `sensor_readings` itself, or returning the stream, doesn't count."
+ ],
+ "hints": [
+  "Reach nested fields with a dot path such as `\"payload.status\"`, and name them with `.alias`.",
+  "`isin` keeps rows whose value is in a list.",
+  "`writeStream.format(\"memory\").queryName(\"visits\")`, then `trigger(availableNow=True).start()` and `awaitTermination()` before `spark.table(\"visits\")`."
+ ],
+ "entry": "solve",
+ "inputs": [
+  "sensor_readings"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef solve(sensor_readings):\n    make_batches(sensor_readings, \"/tmp/readings\")\n    stream = spark.readStream.schema(sensor_readings.schema).json(\"/tmp/readings\")\n    # Keep the readings that need a visit, write them to a memory table,\n    # wait for the stream to finish, and return the table.\n    return sensor_readings\n",
+ "output": {
+  "columns": [
+   "reading_id",
+   "device_id",
+   "event_time",
+   "status",
+   "battery_v"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

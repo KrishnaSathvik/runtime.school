@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0030",
+  "kind": "predict",
+  "slug": "two-actions-one-plan",
+  "lesson": "PS-L006",
+  "role": "integration",
+  "format": "concept_or_trace",
+  "difficulty": "hard",
+  "minutes": 8,
+  "title": "Two actions, one plan",
+  "prompt": "Six of the lesson's 12 trips are longer than 3 miles: `T004`, `T005`, `T007`, `T008`, `T010` and `T012`, in that order in the file. `T004` was driven by `DRV-003`. What does this program print?",
+  "program": "from pyspark.sql import functions as F\n\nsc = spark.sparkContext\ntracker = sc.statusTracker()\n\nsc.setJobGroup(\"build\", \"build the plan\")\nlong = trips.filter(F.col(\"trip_distance\") > 3).select(\"trip_id\", \"driver_id\", \"total\")\ntop = long.limit(3)\nprint(len(tracker.getJobIdsForGroup(\"build\")))\n\nsc.setJobGroup(\"run\", \"run two actions\")\nids = [r[\"trip_id\"] for r in top.collect()]\nlead = long.first()\nprint(len(tracker.getJobIdsForGroup(\"run\")), ids, lead[\"driver_id\"])\nprint(long.count(), long.rdd.getNumPartitions())\n",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "`filter`, `select` and `limit` are transformations. How many jobs does building them start?",
+    "Every action starts its own job, even when two actions use the same plan: Spark doesn't keep the rows between them.",
+    "The table isn't sorted, so \"first\" means the first matching rows in the file. One small file is one partition, and narrow steps keep it."
+  ],
+  "explanation": "Building `long` and `top` only adds steps to the plan, so the first group has 0 jobs. In the second group, `collect()` and `first()` are two actions, and each starts its own job, reading the file again: `2`. With one partition and no sorting, the first matching rows are the first ones in the file, so `limit(3)` keeps `T004`, `T005` and `T007`, and `first()` returns `T004`, driven by `DRV-003`. Finally `count()` counts all 6 long trips, and since `filter` and `select` are narrow, `long` still has the file's 1 partition."
+}

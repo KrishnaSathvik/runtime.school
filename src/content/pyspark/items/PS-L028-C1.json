@@ -1,0 +1,26 @@
+{
+  "id": "PS-L028-C1",
+  "slug": "stock-behind-each-shipment",
+  "lesson": "PS-L028",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Stock behind each shipment",
+  "dataset": { "id": "PS-D08", "version": "1.0.0" },
+  "prompt": "Dispatchers want to see, for each shipment, how much of the item its warehouse has on hand and reserved. Write `solve(shipments, inventory)` so it returns `shipment_id`, `warehouse_id`, `sku`, `quantity`, `on_hand` and `reserved`.",
+  "rules": [
+    "Inventory has one row per warehouse and SKU. A shipment draws on the row with the same `warehouse_id` and the same `sku`.",
+    "Every shipment appears exactly once. If its warehouse has no inventory row for the SKU, `on_hand` and `reserved` are missing.",
+    "Return only these six columns, in this order."
+  ],
+  "hints": [
+    "The same SKU is stocked in several warehouses, so `sku` alone matches too many rows.",
+    "Pass both columns to `on` as a list: `on=[\"warehouse_id\", \"sku\"]`.",
+    "Which join type keeps a shipment that has no matching inventory row?"
+  ],
+  "entry": "solve",
+  "inputs": ["shipments", "inventory"],
+  "starter": "def solve(shipments, inventory):\n    # Return each shipment with on_hand and reserved from its own warehouse.\n    return shipments.select(\"shipment_id\", \"warehouse_id\", \"sku\", \"quantity\")\n",
+  "output": { "columns": ["shipment_id", "warehouse_id", "sku", "quantity", "on_hand", "reserved"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0078",
+  "slug": "cars-for-group-bookings",
+  "lesson": "PS-L016",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Cars for group bookings",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "prompt": "For group bookings the company sends cars that seat four passengers each. Write `solve(trips)` so it returns `trip_id`, `passenger_count`, how many cars the group would need, and how many seats would be left empty.",
+  "rules": [
+    "`cars_needed` is the smallest number of four-seat cars that fits everyone, as a `bigint`: 4 passengers need 1 car, 5 need 2, and 0 need 0.",
+    "`seats_left` is how many seats stay empty in those cars, as an `int`: 5 passengers leave 3, a full car leaves 0.",
+    "A missing passenger count gives missing results. Return the four columns, in that order, for every trip, duplicates included."
+  ],
+  "hints": [
+    "Dividing by 4 and rounding up gives the cars: `F.ceil(F.col(\"passenger_count\") / 4)`.",
+    "`%` gives the remainder: `passenger_count % 4` is how many people sit in the last, partly full car.",
+    "Check the exact multiples of four: `4 - passenger_count % 4` says 4 seats are left when the last car is full. Another `% 4` fixes that."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "trips"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(trips):\n    # trip_id, passenger_count, cars_needed, seats_left\n    return trips\n",
+  "output": {
+    "columns": [
+      "trip_id",
+      "passenger_count",
+      "cars_needed",
+      "seats_left"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Cars: `F.ceil(F.col(\"passenger_count\") / 4)`, a `bigint`. `/` gives a double such as 1.25, and `ceil` turns any fraction into one more car while leaving 1.0 as 1. Seats: `(4 - F.col(\"passenger_count\") % 4) % 4`. The remainder is how many people are in the last car; four minus that is the empty seats, and the outer `% 4` turns the 4 that a full car would give back into 0. `selectExpr` with `ceil(passenger_count / 4)` gives the same cars. `floor(... / 4) + 1` is the classic slip: it orders an extra car for every exact multiple of four, and one car for nobody."
+}

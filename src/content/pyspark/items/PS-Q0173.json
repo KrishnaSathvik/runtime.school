@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0173",
+  "slug": "turnover-by-booking-moment",
+  "lesson": "PS-L035",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Turnover by booking moment",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "The statement shows how much money has moved through each account so far, and entries booked at the same moment appear as one step. Write `solve(ledger_entries)` so every entry shows the account's running turnover.",
+  "rules": [
+    "Work per `account_id`, in `booked_at` order. Entries with a missing `account_id` form one group of their own.",
+    "`turnover_so_far` is the sum of `amount` over the account's entries booked up to and including this entry's moment, debits and credits alike.",
+    "Entries booked at exactly the same moment are one step: each of them shows the total after all of them.",
+    "Return `account_id`, `entry_id`, `booked_at`, `amount` and `turnover_so_far`."
+  ],
+  "hints": [
+    "Usually you add a tie-breaker so a running total grows one row at a time. Here the rules want the opposite for rows that tie.",
+    "With `orderBy` and no frame, the default frame runs up to the current row and every row tied with it on the order columns.",
+    "So don't add a tie-breaker or a `rowsBetween`: the default frame already gives entries booked at the same moment the same total."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "ledger_entries"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(ledger_entries):\n    # Add each account's running turnover; entries booked at the same moment share it.\n    return ledger_entries\n",
+  "output": {
+    "columns": [
+      "account_id",
+      "entry_id",
+      "booked_at",
+      "amount",
+      "turnover_so_far"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "This is the one case where the default frame is what you want. `w = Window.partitionBy(\"account_id\").orderBy(\"booked_at\")` with no `rowsBetween` takes every row up to the current one plus every row booked at the same moment, so tied entries all show the total after the whole step: `F.sum(\"amount\").over(w)`. `rangeBetween(Window.unboundedPreceding, Window.currentRow)` says the same thing explicitly. Adding `entry_id` and `rowsBetween` would make tied entries show different totals, ordering by `entry_id` follows the ids instead of time, and no `orderBy` at all gives every entry the account's full turnover."
+}

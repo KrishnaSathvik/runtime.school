@@ -1,0 +1,55 @@
+{
+ "id": "PS-Q0362",
+ "slug": "hba1c-follow-up-list",
+ "lesson": "PS-L073",
+ "role": "business",
+ "format": "dataframe_coding",
+ "difficulty": "hard",
+ "minutes": 14,
+ "title": "HbA1c follow-up list",
+ "dataset": {
+  "id": "PS-D04",
+  "version": "1.0.0"
+ },
+ "prompt": "Lab results from two files are in bronze. The care team wants a gold table of HbA1c results in the diabetes range, so they can call those patients. Write `build_silver()` and `build_gold()`.",
+ "rules": [
+  "Silver keeps the bronze results that pass the rule, with bronze's columns. An `HBA1C` result above 20 fails it: the lab sent it in mmol/mol, not in %.",
+  "Gold holds every `HBA1C` result in silver of 6.5 or more, with `band`: `diabetes` below 8.0, `poor control` at 8.0 or more.",
+  "Gold's columns are `observation_id`, `patient_id`, `observed_at`, `value`, `band` and `_source_file`.",
+  "Don't change `land` or `solve`."
+ ],
+ "hints": [
+  "A rule names the rows that fail it. Wrap it in `F.coalesce(..., F.lit(False))` before `~`, so a result with no value isn't lost from silver.",
+  "Gold reads the silver table, not bronze: that's where the mmol/mol results have already been left out.",
+  "\"6.5 or more\" is `>=`. `F.when(cond, \"poor control\").otherwise(\"diabetes\")` gives the band."
+ ],
+ "entry": "solve",
+ "inputs": [
+  "observations"
+ ],
+ "starter": "import shutil\n\nfrom pyspark.sql import functions as F\n\nBRONZE = \"/tmp/lab/bronze/observations\"\nSILVER = \"/tmp/lab/silver/observations\"\nGOLD = \"/tmp/lab/gold/hba1c_follow_up\"\n\n\ndef land(observations):\n    # Bronze: the lab results as they arrived in two files, with lineage. Don't change this.\n    shutil.rmtree(\"/tmp/lab\", ignore_errors=True)  # start from empty folders on every run\n    first_file = F.col(\"observed_at\") < \"2026-01-01\"\n    (observations\n        .select(\"*\",\n                F.when(first_file, \"labs_2025.csv\").otherwise(\"labs_2026.csv\").alias(\"_source_file\"),\n                F.when(first_file, 1).otherwise(2).alias(\"_batch_id\"))\n        .write.format(\"delta\").save(BRONZE))\n\n\ndef build_silver():\n    # Silver: the bronze results that pass the rule, with bronze's columns.\n    pass\n\ndef build_gold():\n    # Gold: the HbA1c follow-up list, built from silver.\n    pass\n\ndef solve(observations):\n    land(observations)\n    build_silver()\n    build_gold()\n    return spark.read.format(\"delta\").load(GOLD)\n",
+ "output": {
+  "columns": [
+   "observation_id",
+   "patient_id",
+   "observed_at",
+   "value",
+   "band",
+   "_source_file"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 180,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "explanation": "Silver drops the results that break the rule and keeps everything else: `bronze.filter(~F.coalesce((F.col(\"code\") == \"HBA1C\") & (F.col(\"value\") > 20), F.lit(False)))`, overwritten each time it's built. Gold then reads silver, keeps `code == \"HBA1C\"` and `value >= 6.5`, and adds `band` with `F.when(F.col(\"value\") >= 8.0, \"poor control\").otherwise(\"diabetes\")`. Built from bronze, gold would list the results sent in mmol/mol (40 to 80) as poor control: that's the mistake the silver layer is there to stop. Watch the edges: 6.5 belongs on the list, and 8.0 is poor control. A `filter(code == \"HBA1C\")` in silver gives the same gold, but silver would no longer hold the other lab results, which other gold tables need."
+}

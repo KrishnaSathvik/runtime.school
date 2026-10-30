@@ -1,0 +1,57 @@
+{
+ "id": "PS-Q0352",
+ "slug": "adds-to-cart-by-traffic-source",
+ "lesson": "PS-L071",
+ "role": "business",
+ "format": "dataframe_coding",
+ "difficulty": "hard",
+ "minutes": 23,
+ "title": "Adds to cart by traffic source",
+ "dataset": {
+  "id": "PS-D06",
+  "version": "1.0.0"
+ },
+ "prompt": "The growth team compares channels by how many adds to cart they bring every half hour, and wants each half hour once it's final. Write `solve(cart_events, sessions)` so it streams `cart_events`, takes each visit's `traffic_source` from `sessions`, and returns `window_start`, `traffic_source` and `adds` for every closed window.",
+ "rules": [
+  "Only cart events with `action` `add` count. An add whose visit isn't in `sessions` is left out.",
+  "Windows are 30 minutes of `event_time`. An add may be up to 30 minutes behind the newest add seen so far; an add whose window has already closed is dropped.",
+  "Return each closed window once, with its final count. Windows still open when the stream stops are left out.",
+  "The rows must come from a streaming query over the delivery files: working on `cart_events` itself doesn't count."
+ ],
+ "hints": [
+  "Put a 30-minute watermark on `event_time`, keep the adds, join `sessions` as a static table, then group by `F.window(\"event_time\", \"30 minutes\")` and `traffic_source`.",
+  "A stream-static join keeps the watermark, so the windowed count after it can still use append mode.",
+  "Write in append mode to a memory table, read it back and pick `window.start`."
+ ],
+ "explanation": "The 30-minute watermark follows the newest add, and an add from a visit `sessions` doesn't know still moves it, because the join comes after the watermark. The join with the static `sessions` table adds `traffic_source` to each micro-batch and keeps no state; an inner join drops adds from unknown visits. The windowed count in append mode writes each half hour once, when the watermark passes its end, so in the sample the 10:30 window closes only when the 11:35 add moves the watermark to 11:05. That happens in one last micro-batch with no data, which availableNow adds because the last file moved the watermark. Update mode would also write open windows, every time they change.",
+ "entry": "solve",
+ "inputs": [
+  "cart_events",
+  "sessions"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\ndef solve(cart_events, sessions):\n    spark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\n    make_batches(cart_events, \"/tmp/carts\")          # one file per batch; clears the folder first\n    shutil.rmtree(\"/tmp/ck\", ignore_errors=True)     # a fresh checkpoint for every run\n    carts = spark.readStream.schema(cart_events.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/carts\")\n    # Watermark, keep the adds, join each visit's traffic source, count per 30-minute window,\n    # write only closed windows to a memory table, run the stream, and return the three columns.\n\n    return cart_events\n",
+ "output": {
+  "columns": [
+   "window_start",
+   "traffic_source",
+   "adds"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

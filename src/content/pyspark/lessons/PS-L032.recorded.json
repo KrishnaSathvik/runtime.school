@@ -1,0 +1,40 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D12",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "impressions",
+   "conversions",
+   "budgets"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "+-----------+-----------+------+-------+\n|campaign_id|impressions|mobile|desktop|\n+-----------+-----------+------+-------+\n|   CMP-0001|          4|     3|      1|\n|   CMP-0002|          3|     2|      0|\n|   CMP-0003|          3|     0|      2|\n|   CMP-0004|          2|     1|      1|\n+-----------+-----------+------+-------+\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "+-----------+-----+\n|campaign_id|count|\n+-----------+-----+\n|   CMP-0002|    1|\n|   CMP-0003|    1|\n+-----------+-----+\n\n+-----------+------+\n|campaign_id|tablet|\n+-----------+------+\n|   CMP-0001|     0|\n|   CMP-0002|     1|\n|   CMP-0003|     1|\n|   CMP-0004|     0|\n+-----------+------+\n\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "+-----------+-----------+---------+----------------+\n|campaign_id|conversions|purchases|purchase_revenue|\n+-----------+-----------+---------+----------------+\n|   CMP-0001|          2|        2|          190.00|\n|   CMP-0002|          1|        1|           49.99|\n|   CMP-0003|          1|        0|            NULL|\n+-----------+-----------+---------+----------------+\n\n+-----------+----+---------+\n|campaign_id|days|days_over|\n+-----------+----+---------+\n|   CMP-0001|   2|        1|\n|   CMP-0002|   2|        0|\n|   CMP-0003|   2|        0|\n|   CMP-0004|   2|        0|\n+-----------+----+---------+\n\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "+-----------+-------+------+------+\n|campaign_id|desktop|mobile|tablet|\n+-----------+-------+------+------+\n|   CMP-0001|      1|     3|  NULL|\n|   CMP-0002|   NULL|     2|     1|\n|   CMP-0003|      2|  NULL|     1|\n|   CMP-0004|      1|     1|  NULL|\n+-----------+-------+------+------+\n\n['campaign_id', 'desktop', 'mobile', 'tablet']\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "+-----------+------+-------+------+----+\n|campaign_id|mobile|desktop|tablet|  tv|\n+-----------+------+-------+------+----+\n|   CMP-0001|0.0660| 0.0250|  NULL|NULL|\n|   CMP-0002|0.0250|   NULL|0.0110|NULL|\n|   CMP-0003|  NULL| 0.0090|0.0040|NULL|\n|   CMP-0004|0.0180| 0.0170|  NULL|NULL|\n+-----------+------+-------+------+----+\n\n",
+   "error": null
+  }
+ }
+}

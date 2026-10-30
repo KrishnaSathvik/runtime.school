@@ -1,0 +1,504 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "example": {
+   "schema": [
+    {
+     "name": "feed",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "measure",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "value",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "shipment_events",
+     "rows",
+     12
+    ],
+    [
+     "shipment_events",
+     "repeated",
+     2
+    ],
+    [
+     "shipment_events",
+     "corrections",
+     2
+    ],
+    [
+     "shipment_events",
+     "unknown_shipment",
+     2
+    ],
+    [
+     "shipment_events",
+     "load_days",
+     5
+    ],
+    [
+     "customer_cdc",
+     "rows",
+     10
+    ],
+    [
+     "customer_cdc",
+     "exact_copies",
+     1
+    ],
+    [
+     "customer_cdc",
+     "accounts",
+     5
+    ],
+    [
+     "customer_cdc",
+     "inserts",
+     2
+    ],
+    [
+     "customer_cdc",
+     "updates",
+     5
+    ],
+    [
+     "customer_cdc",
+     "deletes",
+     3
+    ]
+   ],
+   "row_count": 11,
+   "inputs": {
+    "shipment_events": [
+     [
+      "E0000003",
+      "SH0001",
+      "WH01",
+      "departed",
+      "2026-05-16T11:05:00",
+      "WH01",
+      "100003",
+      "2026-05-16",
+      "false"
+     ],
+     [
+      "E0000002",
+      "SH0001",
+      "WH01",
+      "picked",
+      "2026-05-16T09:40:00",
+      "WH01",
+      "100002",
+      "2026-05-17",
+      "false"
+     ],
+     [
+      "E0000003",
+      "SH0001",
+      "WH01",
+      "departed",
+      "2026-05-16T11:05:00",
+      "WH01",
+      "100003",
+      "2026-05-18",
+      "false"
+     ],
+     [
+      "E0000004",
+      "SH0002",
+      "WH02",
+      "picked",
+      "2026-05-16T13:10:00",
+      "WH02",
+      "100004",
+      "2026-05-16",
+      "false"
+     ],
+     [
+      "E0000005",
+      "SH0002",
+      "WH02",
+      "departed",
+      "2026-05-16T17:45:00",
+      "WH02",
+      "100005",
+      "2026-05-16",
+      "false"
+     ],
+     [
+      "E0000011",
+      "SH0002",
+      "WH02",
+      "departed",
+      "2026-05-16T17:15:00",
+      "WH02",
+      "100005",
+      "2026-05-19",
+      "true"
+     ],
+     [
+      "E0000006",
+      "SH0003",
+      "WH01",
+      "picked",
+      "2026-05-17T08:20:00",
+      "WH01",
+      "100006",
+      "2026-05-17",
+      "false"
+     ],
+     [
+      "E0000006",
+      "SH0003",
+      "WH01",
+      "picked",
+      "2026-05-17T08:20:00",
+      "WH01",
+      "100006",
+      "2026-05-17",
+      "false"
+     ],
+     [
+      "E0000012",
+      "SH0003",
+      "WH01",
+      "picked",
+      "2026-05-17T08:05:00",
+      "WH01",
+      "100006",
+      "2026-05-20",
+      "true"
+     ],
+     [
+      "E0000007",
+      "SH0003",
+      "WH01",
+      "departed",
+      "2026-05-17T12:00:00",
+      "WH01",
+      "100007",
+      "2026-05-17",
+      "false"
+     ],
+     [
+      "E0000013",
+      "SH9999",
+      "WH03",
+      "created",
+      "2026-05-17T10:00:00",
+      "WH03",
+      "100013",
+      "2026-05-17",
+      "false"
+     ],
+     [
+      "E0000014",
+      "SH9999",
+      "WH03",
+      "picked",
+      "2026-05-17T13:00:00",
+      "WH03",
+      "100014",
+      "2026-05-18",
+      "false"
+     ]
+    ],
+    "shipments": [
+     [
+      "SH0001",
+      "WH01",
+      "SKU-1003",
+      "12",
+      "Parcelway",
+      "standard",
+      "Bremen",
+      "2026-05-16T08:10:00",
+      "2026-05-20"
+     ],
+     [
+      "SH0002",
+      "WH02",
+      "SKU-1010",
+      "4",
+      "SwiftFreight",
+      "express",
+      "Utrecht",
+      "2026-05-16T12:30:00",
+      "2026-05-18"
+     ],
+     [
+      "SH0003",
+      "WH01",
+      "SKU-1018",
+      "6",
+      "SwiftFreight",
+      "standard",
+      "Turin",
+      "2026-05-17T07:45:00",
+      "2026-05-21"
+     ],
+     [
+      "SH0004",
+      "WH02",
+      "SKU-1005",
+      "20",
+      "Parcelway",
+      "standard",
+      "Graz",
+      "2026-05-17T15:20:00",
+      "2026-05-22"
+     ],
+     [
+      "SH0005",
+      "WH03",
+      "SKU-1029",
+      "2",
+      "Parcelway",
+      "express",
+      "Lyon",
+      "2026-05-18T09:50:00",
+      "2026-05-20"
+     ]
+    ],
+    "customer_cdc": [
+     [
+      "U",
+      "200003",
+      "2026-01-12T10:00:00",
+      "ACC-0001",
+      "Kelderby Energy Inc",
+      "energy",
+      "CA",
+      "mid_market",
+      "Mei Lindqvist",
+      "30000.00",
+      "2022-09-18",
+      "true"
+     ],
+     [
+      "U",
+      "200001",
+      "2026-01-05T09:00:00",
+      "ACC-0001",
+      "Kelderby Energy Inc",
+      "energy",
+      "CA",
+      "smb",
+      "Priya Venkat",
+      "20000.00",
+      "2022-09-18",
+      "true"
+     ],
+     [
+      "I",
+      "200002",
+      "2026-01-08T14:00:00",
+      "ACC-0005",
+      "Ellowby Textiles Inc",
+      "consumer goods",
+      "US",
+      "smb",
+      "Jonas Ekberg",
+      "3750.00",
+      "2026-01-08",
+      "true"
+     ],
+     [
+      "D",
+      "200004",
+      "2026-01-20T16:00:00",
+      "ACC-0003",
+      "Hesketh Vale Labs GmbH",
+      "technology",
+      "DE",
+      "enterprise",
+      "Rafael Ibarra",
+      "250000.00",
+      "2022-01-12",
+      "true"
+     ],
+     [
+      "U",
+      "200006",
+      "2026-02-10T11:00:00",
+      "ACC-0001",
+      "Kelderby Energy Inc",
+      "energy",
+      "CA",
+      "enterprise",
+      "Mei Lindqvist",
+      "120000.00",
+      "2022-09-18",
+      "true"
+     ],
+     [
+      "U",
+      "200006",
+      "2026-02-10T11:00:00",
+      "ACC-0001",
+      "Kelderby Energy Inc",
+      "energy",
+      "CA",
+      "enterprise",
+      "Mei Lindqvist",
+      "120000.00",
+      "2022-09-18",
+      "true"
+     ],
+     [
+      "U",
+      "200007",
+      "2026-02-14T09:30:00",
+      "ACC-0005",
+      "Ellowby Textiles Inc",
+      "consumer goods",
+      "US",
+      "smb",
+      "Jonas Ekberg",
+      "7500.00",
+      "2026-01-08",
+      "true"
+     ],
+     [
+      "I",
+      "200008",
+      "2026-03-02T08:00:00",
+      "ACC-0006",
+      "Amberloch Logistics Pvt Ltd",
+      "transport",
+      "IN",
+      "mid_market",
+      "Rafael Ibarra",
+      "120000.00",
+      "2026-03-02",
+      "true"
+     ],
+     [
+      "D",
+      "200009",
+      "2026-03-09T12:00:00",
+      "ACC-0006",
+      "Amberloch Logistics Pvt Ltd",
+      "transport",
+      "IN",
+      "mid_market",
+      "Rafael Ibarra",
+      "120000.00",
+      "2026-03-02",
+      "true"
+     ],
+     [
+      "D",
+      "200010",
+      "2026-03-15T15:00:00",
+      "ACC-0002",
+      "Nettlecombe Manufacturing Inc",
+      "manufacturing",
+      "US",
+      "smb",
+      "Jonas Ekberg",
+      "15000.00",
+      "2025-08-24",
+      "true"
+     ]
+    ]
+   }
+  },
+  "project": {
+   "schema": [
+    {
+     "name": "feed",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "measure",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "value",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "shipment_events",
+     "rows",
+     5125
+    ],
+    [
+     "shipment_events",
+     "repeated",
+     140
+    ],
+    [
+     "shipment_events",
+     "corrections",
+     113
+    ],
+    [
+     "shipment_events",
+     "unknown_shipment",
+     44
+    ],
+    [
+     "shipment_events",
+     "load_days",
+     31
+    ],
+    [
+     "customer_cdc",
+     "rows",
+     1206
+    ],
+    [
+     "customer_cdc",
+     "exact_copies",
+     6
+    ],
+    [
+     "customer_cdc",
+     "accounts",
+     429
+    ],
+    [
+     "customer_cdc",
+     "inserts",
+     213
+    ],
+    [
+     "customer_cdc",
+     "updates",
+     849
+    ],
+    [
+     "customer_cdc",
+     "deletes",
+     144
+    ]
+   ],
+   "row_count": 11
+  }
+ },
+ "hidden": [
+  "the full practice feeds",
+  "scans delivered two and three times, a correction, two scans of one unknown shipment, and repeated changes",
+  "empty feeds"
+ ]
+}

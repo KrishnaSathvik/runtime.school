@@ -1,0 +1,3610 @@
+{
+ "id": "PS-D02",
+ "version": "1.0.0",
+ "title": "Banking & Payments",
+ "generated_by": "services/spark-runner/datasets/d02_banking.py",
+ "rules": [
+  "Every amount is DECIMAL(12,2) and positive; direction is debit (money leaves the account) or credit (money arrives). A signed amount is -amount for debits.",
+  "txn_type is one of purchase, refund, atm_withdrawal, deposit, fee, interest. purchase, atm_withdrawal and fee are debits; refund, deposit and interest are credits.",
+  "channel is one of card_present, online, mobile, atm, branch, system. merchant_id is set only for purchase and refund; it is null for the other types.",
+  "status is posted, pending or declined. A transaction's currency is its account's currency (USD, EUR or GBP).",
+  "merchants.mcc_code is a four-digit code stored as STRING; some codes start with 0 (0742 veterinary), so casting to INT loses the leading zero.",
+  "Some accounts have no transactions at all (new, dormant, frozen or closed accounts). Only active accounts transact or transfer.",
+  "Every edition, the lesson included, has transactions whose account_id is not in accounts (orphans, ids from A9xxxx) and a few with a null account_id: a feed that lost its account.",
+  "practice and project editions contain invalid transactions: a negative amount, an unknown currency (ZZZ, US$ or null), or no account. practice also has 5 exact duplicate rows, project 15.",
+  "A transfer moves amount from from_account_id to to_account_id in one currency. status is completed, pending, failed or reversed.",
+  "Each completed or reversed transfer has exactly two ledger entries: a debit on from_account_id and a credit on to_account_id for the same amount. pending and failed transfers have none. Debits equal credits for every transfer in the lesson and practice editions.",
+  "A reversed transfer is undone by a later completed transfer in the opposite direction whose reversal_of names it; the pair nets to zero.",
+  "The project edition (P04) is deliberately unbalanced: 15 duplicate transfers (same accounts, amount and reference, a few seconds after the original, both booked), 8 completed transfers missing their credit entry, 6 ledger entries whose transfer_id is not in transfers, and 4 credit entries whose amount differs from the debit by a few cents.",
+  "Disputes are raised only on posted purchases. resolved_date is null while a dispute is open."
+ ],
+ "relationships": [
+  {
+   "from": "accounts.customer_id",
+   "to": "customers.customer_id"
+  },
+  {
+   "from": "transactions.account_id",
+   "to": "accounts.account_id"
+  },
+  {
+   "from": "transactions.merchant_id",
+   "to": "merchants.merchant_id"
+  },
+  {
+   "from": "transfers.from_account_id",
+   "to": "accounts.account_id"
+  },
+  {
+   "from": "transfers.to_account_id",
+   "to": "accounts.account_id"
+  },
+  {
+   "from": "transfers.reversal_of",
+   "to": "transfers.transfer_id"
+  },
+  {
+   "from": "ledger_entries.transfer_id",
+   "to": "transfers.transfer_id"
+  },
+  {
+   "from": "ledger_entries.account_id",
+   "to": "accounts.account_id"
+  },
+  {
+   "from": "disputes.transaction_id",
+   "to": "transactions.transaction_id"
+  }
+ ],
+ "tables": {
+  "customers": {
+   "note": "One row per bank customer: where they live, their segment and whether their identity checks are done.",
+   "columns": [
+    {
+     "name": "customer_id",
+     "type": "string"
+    },
+    {
+     "name": "full_name",
+     "type": "string"
+    },
+    {
+     "name": "email",
+     "type": "string"
+    },
+    {
+     "name": "city",
+     "type": "string"
+    },
+    {
+     "name": "country",
+     "type": "string"
+    },
+    {
+     "name": "segment",
+     "type": "string"
+    },
+    {
+     "name": "kyc_status",
+     "type": "string"
+    },
+    {
+     "name": "joined_date",
+     "type": "date"
+    }
+   ],
+   "key": [
+    "customer_id"
+   ],
+   "rows": {
+    "lesson": 5,
+    "practice": 220,
+    "project": 320
+   },
+   "lesson": [
+    [
+     "C0001",
+     "Maya Lind",
+     "maya.lind1@mail.example",
+     "Denver",
+     "US",
+     "premier",
+     "verified",
+     "2025-05-25"
+    ],
+    [
+     "C0002",
+     "Tomas Okafor",
+     "tomas.okafor2@mail.example",
+     "Denver",
+     "US",
+     "retail",
+     "verified",
+     "2025-01-01"
+    ],
+    [
+     "C0003",
+     "Tomas Okafor",
+     "tomas.okafor3@mail.example",
+     "Leeds",
+     "GB",
+     "retail",
+     "verified",
+     "2025-01-20"
+    ],
+    [
+     "C0004",
+     "Leo Mori",
+     "leo.mori4@mail.example",
+     "Denver",
+     "US",
+     "premier",
+     "verified",
+     "2025-01-07"
+    ],
+    [
+     "C0005",
+     "Jonas Silva",
+     "jonas.silva5@mail.example",
+     "Austin",
+     "US",
+     "retail",
+     "verified",
+     "2025-04-04"
+    ]
+   ],
+   "practice_head": [
+    [
+     "C0001",
+     "Tomas Iyer",
+     "tomas.iyer1@mail.example",
+     "Lyon",
+     "FR",
+     "retail",
+     "verified",
+     "2025-06-20"
+    ],
+    [
+     "C0002",
+     "Noor Iyer",
+     "noor.iyer2@mail.example",
+     "Porto",
+     "PT",
+     "premier",
+     "verified",
+     "2025-03-28"
+    ],
+    [
+     "C0003",
+     "Kofi Grant",
+     "kofi.grant3@mail.example",
+     "Leeds",
+     "GB",
+     "retail",
+     "verified",
+     "2025-04-13"
+    ],
+    [
+     "C0004",
+     "Priya Mori",
+     "priya.mori4@mail.example",
+     "Austin",
+     "US",
+     "retail",
+     "verified",
+     "2025-05-27"
+    ],
+    [
+     "C0005",
+     "Lena Okafor",
+     "lena.okafor5@mail.example",
+     "Bristol",
+     "GB",
+     "retail",
+     "verified",
+     "2025-03-28"
+    ],
+    [
+     "C0006",
+     "Felix Lind",
+     "felix.lind6@mail.example",
+     "Lyon",
+     "FR",
+     "retail",
+     "verified",
+     "2025-03-24"
+    ],
+    [
+     "C0007",
+     "Zoe Haddad",
+     "zoe.haddad7@mail.example",
+     "Austin",
+     "US",
+     "retail",
+     "verified",
+     "2025-01-31"
+    ],
+    [
+     "C0008",
+     "Kofi Novak",
+     "kofi.novak8@mail.example",
+     "Bristol",
+     "GB",
+     "retail",
+     "verified",
+     "2025-02-22"
+    ],
+    [
+     "C0009",
+     "Leo Byrne",
+     "leo.byrne9@mail.example",
+     "Leeds",
+     "GB",
+     "retail",
+     "verified",
+     "2025-01-10"
+    ],
+    [
+     "C0010",
+     "Jonas Weber",
+     "jonas.weber10@mail.example",
+     "Porto",
+     "PT",
+     "retail",
+     "failed",
+     "2025-05-18"
+    ],
+    [
+     "C0011",
+     "Tomas Grant",
+     "tomas.grant11@mail.example",
+     "Bristol",
+     "GB",
+     "retail",
+     "verified",
+     "2025-06-11"
+    ],
+    [
+     "C0012",
+     "Felix Grant",
+     "felix.grant12@mail.example",
+     "Leeds",
+     "GB",
+     "retail",
+     "verified",
+     "2025-01-23"
+    ],
+    [
+     "C0013",
+     "Maya Byrne",
+     "maya.byrne13@mail.example",
+     "Bristol",
+     "GB",
+     "retail",
+     "verified",
+     "2025-02-26"
+    ],
+    [
+     "C0014",
+     "Arjun Costa",
+     "arjun.costa14@mail.example",
+     "Porto",
+     "PT",
+     "retail",
+     "verified",
+     "2025-06-15"
+    ],
+    [
+     "C0015",
+     "Hana Rao",
+     "hana.rao15@mail.example",
+     "Porto",
+     "PT",
+     "retail",
+     "verified",
+     "2025-02-23"
+    ],
+    [
+     "C0016",
+     "Tomas Silva",
+     "tomas.silva16@mail.example",
+     "Porto",
+     "PT",
+     "retail",
+     "verified",
+     "2025-05-12"
+    ],
+    [
+     "C0017",
+     "Zoe Weber",
+     "zoe.weber17@mail.example",
+     "Bristol",
+     "GB",
+     "retail",
+     "pending",
+     "2025-05-19"
+    ],
+    [
+     "C0018",
+     "Hana Haddad",
+     "hana.haddad18@mail.example",
+     "Austin",
+     "US",
+     "retail",
+     "verified",
+     "2025-02-08"
+    ],
+    [
+     "C0019",
+     "Noor Lind",
+     "noor.lind19@mail.example",
+     "Bristol",
+     "GB",
+     "retail",
+     "pending",
+     "2025-03-12"
+    ],
+    [
+     "C0020",
+     "Priya Iyer",
+     "priya.iyer20@mail.example",
+     "Denver",
+     "US",
+     "retail",
+     "verified",
+     "2025-06-03"
+    ]
+   ],
+   "project_head": [
+    [
+     "C0001",
+     "Maya Costa",
+     "maya.costa1@mail.example",
+     "Denver",
+     "US",
+     "business",
+     "verified",
+     "2025-06-06"
+    ],
+    [
+     "C0002",
+     "Ines Haddad",
+     "ines.haddad2@mail.example",
+     "Denver",
+     "US",
+     "retail",
+     "verified",
+     "2025-04-11"
+    ],
+    [
+     "C0003",
+     "Arjun Weber",
+     "arjun.weber3@mail.example",
+     "Denver",
+     "US",
+     "retail",
+     "verified",
+     "2025-06-10"
+    ],
+    [
+     "C0004",
+     "Priya Costa",
+     "priya.costa4@mail.example",
+     "Austin",
+     "US",
+     "retail",
+     "verified",
+     "2025-01-29"
+    ],
+    [
+     "C0005",
+     "Anika Novak",
+     "anika.novak5@mail.example",
+     "Austin",
+     "US",
+     "retail",
+     "verified",
+     "2025-01-16"
+    ],
+    [
+     "C0006",
+     "Zoe Costa",
+     "zoe.costa6@mail.example",
+     "Porto",
+     "PT",
+     "retail",
+     "verified",
+     "2025-06-05"
+    ],
+    [
+     "C0007",
+     "Kofi Iyer",
+     "kofi.iyer7@mail.example",
+     "Lyon",
+     "FR",
+     "premier",
+     "verified",
+     "2025-02-21"
+    ],
+    [
+     "C0008",
+     "Kofi Costa",
+     "kofi.costa8@mail.example",
+     "Austin",
+     "US",
+     "retail",
+     "verified",
+     "2025-04-05"
+    ],
+    [
+     "C0009",
+     "Leo Haddad",
+     "leo.haddad9@mail.example",
+     "Austin",
+     "US",
+     "premier",
+     "verified",
+     "2025-04-29"
+    ],
+    [
+     "C0010",
+     "Hana Haddad",
+     "hana.haddad10@mail.example",
+     "Porto",
+     "PT",
+     "retail",
+     "verified",
+     "2025-04-30"
+    ],
+    [
+     "C0011",
+     "Lena Grant",
+     "lena.grant11@mail.example",
+     "Bristol",
+     "GB",
+     "retail",
+     "verified",
+     "2025-02-21"
+    ],
+    [
+     "C0012",
+     "Noor Costa",
+     "noor.costa12@mail.example",
+     "Lyon",
+     "FR",
+     "retail",
+     "verified",
+     "2025-06-04"
+    ],
+    [
+     "C0013",
+     "Felix Weber",
+     "felix.weber13@mail.example",
+     "Porto",
+     "PT",
+     "retail",
+     "verified",
+     "2025-06-15"
+    ],
+    [
+     "C0014",
+     "Arjun Grant",
+     "arjun.grant14@mail.example",
+     "Denver",
+     "US",
+     "retail",
+     "verified",
+     "2025-02-02"
+    ],
+    [
+     "C0015",
+     "Ines Weber",
+     "ines.weber15@mail.example",
+     "Denver",
+     "US",
+     "business",
+     "verified",
+     "2025-03-03"
+    ],
+    [
+     "C0016",
+     "Hana Lind",
+     "hana.lind16@mail.example",
+     "Lyon",
+     "FR",
+     "retail",
+     "verified",
+     "2025-01-29"
+    ],
+    [
+     "C0017",
+     "Kofi Haddad",
+     "kofi.haddad17@mail.example",
+     "Bristol",
+     "GB",
+     "retail",
+     "verified",
+     "2025-04-12"
+    ],
+    [
+     "C0018",
+     "Ravi Okafor",
+     "ravi.okafor18@mail.example",
+     "Austin",
+     "US",
+     "retail",
+     "verified",
+     "2025-02-13"
+    ],
+    [
+     "C0019",
+     "Omar Costa",
+     "omar.costa19@mail.example",
+     "Porto",
+     "PT",
+     "retail",
+     "verified",
+     "2025-01-28"
+    ],
+    [
+     "C0020",
+     "Zoe Novak",
+     "zoe.novak20@mail.example",
+     "Lyon",
+     "FR",
+     "premier",
+     "verified",
+     "2025-03-28"
+    ]
+   ]
+  },
+  "accounts": {
+   "note": "One row per account a customer holds, with its type, currency and status.",
+   "columns": [
+    {
+     "name": "account_id",
+     "type": "string"
+    },
+    {
+     "name": "customer_id",
+     "type": "string"
+    },
+    {
+     "name": "account_type",
+     "type": "string"
+    },
+    {
+     "name": "currency",
+     "type": "string"
+    },
+    {
+     "name": "status",
+     "type": "string"
+    },
+    {
+     "name": "opened_date",
+     "type": "date"
+    },
+    {
+     "name": "overdraft_limit",
+     "type": "decimal(12,2)"
+    }
+   ],
+   "key": [
+    "account_id"
+   ],
+   "rows": {
+    "lesson": 8,
+    "practice": 351,
+    "project": 499
+   },
+   "lesson": [
+    [
+     "A00001",
+     "C0001",
+     "checking",
+     "USD",
+     "active",
+     "2025-08-24",
+     "0.00"
+    ],
+    [
+     "A00002",
+     "C0001",
+     "checking",
+     "USD",
+     "closed",
+     "2025-06-26",
+     "250.00"
+    ],
+    [
+     "A00003",
+     "C0002",
+     "savings",
+     "USD",
+     "active",
+     "2025-02-28",
+     null
+    ],
+    [
+     "A00004",
+     "C0002",
+     "savings",
+     "USD",
+     "closed",
+     "2025-04-11",
+     null
+    ],
+    [
+     "A00005",
+     "C0003",
+     "credit_card",
+     "GBP",
+     "frozen",
+     "2025-03-06",
+     null
+    ],
+    [
+     "A00006",
+     "C0003",
+     "checking",
+     "GBP",
+     "active",
+     "2025-02-26",
+     "500.00"
+    ],
+    [
+     "A00007",
+     "C0004",
+     "checking",
+     "USD",
+     "closed",
+     "2025-03-12",
+     "0.00"
+    ],
+    [
+     "A00008",
+     "C0005",
+     "checking",
+     "USD",
+     "active",
+     "2025-06-21",
+     "250.00"
+    ]
+   ],
+   "practice_head": [
+    [
+     "A00001",
+     "C0001",
+     "checking",
+     "EUR",
+     "active",
+     "2025-08-29",
+     "0.00"
+    ],
+    [
+     "A00002",
+     "C0002",
+     "savings",
+     "EUR",
+     "active",
+     "2025-06-05",
+     null
+    ],
+    [
+     "A00003",
+     "C0003",
+     "savings",
+     "GBP",
+     "active",
+     "2025-05-01",
+     null
+    ],
+    [
+     "A00004",
+     "C0003",
+     "checking",
+     "GBP",
+     "active",
+     "2025-05-09",
+     "0.00"
+    ],
+    [
+     "A00005",
+     "C0004",
+     "checking",
+     "USD",
+     "frozen",
+     "2025-08-06",
+     "1000.00"
+    ],
+    [
+     "A00006",
+     "C0005",
+     "checking",
+     "GBP",
+     "active",
+     "2025-05-08",
+     "0.00"
+    ],
+    [
+     "A00007",
+     "C0005",
+     "credit_card",
+     "GBP",
+     "active",
+     "2025-06-01",
+     null
+    ],
+    [
+     "A00008",
+     "C0005",
+     "checking",
+     "GBP",
+     "active",
+     "2025-07-18",
+     "1000.00"
+    ],
+    [
+     "A00009",
+     "C0006",
+     "checking",
+     "EUR",
+     "active",
+     "2025-06-20",
+     "0.00"
+    ],
+    [
+     "A00010",
+     "C0006",
+     "savings",
+     "EUR",
+     "active",
+     "2025-03-30",
+     null
+    ],
+    [
+     "A00011",
+     "C0007",
+     "checking",
+     "USD",
+     "active",
+     "2025-04-01",
+     "0.00"
+    ],
+    [
+     "A00012",
+     "C0008",
+     "checking",
+     "GBP",
+     "active",
+     "2025-05-05",
+     "0.00"
+    ],
+    [
+     "A00013",
+     "C0008",
+     "savings",
+     "GBP",
+     "active",
+     "2025-05-10",
+     null
+    ],
+    [
+     "A00014",
+     "C0009",
+     "checking",
+     "GBP",
+     "active",
+     "2025-03-18",
+     "0.00"
+    ],
+    [
+     "A00015",
+     "C0009",
+     "checking",
+     "GBP",
+     "active",
+     "2025-03-12",
+     "500.00"
+    ],
+    [
+     "A00016",
+     "C0009",
+     "savings",
+     "GBP",
+     "closed",
+     "2025-04-04",
+     null
+    ],
+    [
+     "A00017",
+     "C0010",
+     "checking",
+     "EUR",
+     "active",
+     "2025-08-14",
+     "0.00"
+    ],
+    [
+     "A00018",
+     "C0011",
+     "checking",
+     "GBP",
+     "active",
+     "2025-08-30",
+     "500.00"
+    ],
+    [
+     "A00019",
+     "C0011",
+     "savings",
+     "GBP",
+     "active",
+     "2025-08-14",
+     null
+    ],
+    [
+     "A00020",
+     "C0011",
+     "checking",
+     "GBP",
+     "active",
+     "2025-07-03",
+     "0.00"
+    ]
+   ],
+   "project_head": [
+    [
+     "A00001",
+     "C0001",
+     "checking",
+     "USD",
+     "active",
+     "2025-06-23",
+     "500.00"
+    ],
+    [
+     "A00002",
+     "C0001",
+     "checking",
+     "USD",
+     "active",
+     "2025-07-24",
+     "0.00"
+    ],
+    [
+     "A00003",
+     "C0002",
+     "credit_card",
+     "USD",
+     "active",
+     "2025-07-18",
+     null
+    ],
+    [
+     "A00004",
+     "C0003",
+     "savings",
+     "USD",
+     "active",
+     "2025-07-04",
+     null
+    ],
+    [
+     "A00005",
+     "C0004",
+     "checking",
+     "USD",
+     "active",
+     "2025-05-14",
+     "250.00"
+    ],
+    [
+     "A00006",
+     "C0004",
+     "checking",
+     "USD",
+     "active",
+     "2025-05-13",
+     "0.00"
+    ],
+    [
+     "A00007",
+     "C0005",
+     "savings",
+     "USD",
+     "frozen",
+     "2025-01-22",
+     null
+    ],
+    [
+     "A00008",
+     "C0005",
+     "checking",
+     "USD",
+     "active",
+     "2025-04-14",
+     "250.00"
+    ],
+    [
+     "A00009",
+     "C0006",
+     "checking",
+     "EUR",
+     "active",
+     "2025-06-15",
+     "0.00"
+    ],
+    [
+     "A00010",
+     "C0006",
+     "credit_card",
+     "EUR",
+     "active",
+     "2025-06-21",
+     null
+    ],
+    [
+     "A00011",
+     "C0007",
+     "checking",
+     "EUR",
+     "active",
+     "2025-06-01",
+     "500.00"
+    ],
+    [
+     "A00012",
+     "C0008",
+     "checking",
+     "USD",
+     "active",
+     "2025-06-30",
+     "500.00"
+    ],
+    [
+     "A00013",
+     "C0008",
+     "savings",
+     "USD",
+     "active",
+     "2025-04-05",
+     null
+    ],
+    [
+     "A00014",
+     "C0009",
+     "checking",
+     "USD",
+     "active",
+     "2025-08-15",
+     "1000.00"
+    ],
+    [
+     "A00015",
+     "C0010",
+     "checking",
+     "EUR",
+     "active",
+     "2025-07-23",
+     "0.00"
+    ],
+    [
+     "A00016",
+     "C0010",
+     "credit_card",
+     "EUR",
+     "active",
+     "2025-06-05",
+     null
+    ],
+    [
+     "A00017",
+     "C0011",
+     "checking",
+     "GBP",
+     "active",
+     "2025-05-25",
+     "500.00"
+    ],
+    [
+     "A00018",
+     "C0011",
+     "checking",
+     "GBP",
+     "active",
+     "2025-04-22",
+     "0.00"
+    ],
+    [
+     "A00019",
+     "C0012",
+     "checking",
+     "EUR",
+     "active",
+     "2025-06-13",
+     "250.00"
+    ],
+    [
+     "A00020",
+     "C0012",
+     "checking",
+     "EUR",
+     "active",
+     "2025-08-13",
+     "250.00"
+    ]
+   ]
+  },
+  "merchants": {
+   "note": "One row per card merchant, with its four-digit category code (mcc_code, stored as text).",
+   "columns": [
+    {
+     "name": "merchant_id",
+     "type": "string"
+    },
+    {
+     "name": "merchant_name",
+     "type": "string"
+    },
+    {
+     "name": "mcc_code",
+     "type": "string"
+    },
+    {
+     "name": "category",
+     "type": "string"
+    },
+    {
+     "name": "country",
+     "type": "string"
+    }
+   ],
+   "key": [
+    "merchant_id"
+   ],
+   "rows": {
+    "lesson": 6,
+    "practice": 40,
+    "project": 50
+   },
+   "lesson": [
+    [
+     "M001",
+     "Green Basket Grocers",
+     "5411",
+     "groceries",
+     "GB"
+    ],
+    [
+     "M002",
+     "Paws & Claws Vet",
+     "0742",
+     "veterinary",
+     "FR"
+    ],
+    [
+     "M003",
+     "Corner Bean Cafe",
+     "5814",
+     "fast_food",
+     "FR"
+    ],
+    [
+     "M004",
+     "Metro Fuel Stop",
+     "5541",
+     "fuel",
+     "US"
+    ],
+    [
+     "M005",
+     "Lumen Books",
+     "5942",
+     "books",
+     "GB"
+    ],
+    [
+     "M006",
+     "Harbor Bistro",
+     "5812",
+     "restaurants",
+     "US"
+    ]
+   ],
+   "practice_head": [
+    [
+     "M001",
+     "Green Basket Grocers",
+     "5411",
+     "groceries",
+     "US"
+    ],
+    [
+     "M002",
+     "Paws & Claws Vet",
+     "0742",
+     "veterinary",
+     "FR"
+    ],
+    [
+     "M003",
+     "Corner Bean Cafe",
+     "5814",
+     "fast_food",
+     "GB"
+    ],
+    [
+     "M004",
+     "Metro Fuel Stop",
+     "5541",
+     "fuel",
+     "GB"
+    ],
+    [
+     "M005",
+     "Lumen Books",
+     "5942",
+     "books",
+     "PT"
+    ],
+    [
+     "M006",
+     "Harbor Bistro",
+     "5812",
+     "restaurants",
+     "GB"
+    ],
+    [
+     "M007",
+     "Swift Rail Tickets",
+     "4112",
+     "transport",
+     "PT"
+    ],
+    [
+     "M008",
+     "Pixel Stream",
+     "4899",
+     "subscriptions",
+     "GB"
+    ],
+    [
+     "M009",
+     "Northgate Pharmacy",
+     "5912",
+     "pharmacy",
+     "GB"
+    ],
+    [
+     "M010",
+     "Tidy Home Supplies",
+     "5200",
+     "home",
+     "FR"
+    ],
+    [
+     "M011",
+     "Orchard Florist",
+     "5992",
+     "gifts",
+     "PT"
+    ],
+    [
+     "M012",
+     "Cloud Nine Travel",
+     "4722",
+     "travel",
+     "US"
+    ],
+    [
+     "M013",
+     "Urban Vet",
+     "0742",
+     "veterinary",
+     "US"
+    ],
+    [
+     "M014",
+     "Urban Cafe",
+     "5814",
+     "fast_food",
+     "PT"
+    ],
+    [
+     "M015",
+     "Urban Stop",
+     "5541",
+     "fuel",
+     "FR"
+    ],
+    [
+     "M016",
+     "Urban Books",
+     "5942",
+     "books",
+     "GB"
+    ],
+    [
+     "M017",
+     "Urban Bistro",
+     "5812",
+     "restaurants",
+     "GB"
+    ],
+    [
+     "M018",
+     "Urban Tickets",
+     "4112",
+     "transport",
+     "FR"
+    ],
+    [
+     "M019",
+     "Urban Stream",
+     "4899",
+     "subscriptions",
+     "PT"
+    ],
+    [
+     "M020",
+     "Urban Pharmacy",
+     "5912",
+     "pharmacy",
+     "GB"
+    ]
+   ],
+   "project_head": [
+    [
+     "M001",
+     "Green Basket Grocers",
+     "5411",
+     "groceries",
+     "GB"
+    ],
+    [
+     "M002",
+     "Paws & Claws Vet",
+     "0742",
+     "veterinary",
+     "FR"
+    ],
+    [
+     "M003",
+     "Corner Bean Cafe",
+     "5814",
+     "fast_food",
+     "GB"
+    ],
+    [
+     "M004",
+     "Metro Fuel Stop",
+     "5541",
+     "fuel",
+     "GB"
+    ],
+    [
+     "M005",
+     "Lumen Books",
+     "5942",
+     "books",
+     "GB"
+    ],
+    [
+     "M006",
+     "Harbor Bistro",
+     "5812",
+     "restaurants",
+     "US"
+    ],
+    [
+     "M007",
+     "Swift Rail Tickets",
+     "4112",
+     "transport",
+     "US"
+    ],
+    [
+     "M008",
+     "Pixel Stream",
+     "4899",
+     "subscriptions",
+     "PT"
+    ],
+    [
+     "M009",
+     "Northgate Pharmacy",
+     "5912",
+     "pharmacy",
+     "GB"
+    ],
+    [
+     "M010",
+     "Tidy Home Supplies",
+     "5200",
+     "home",
+     "US"
+    ],
+    [
+     "M011",
+     "Orchard Florist",
+     "5992",
+     "gifts",
+     "FR"
+    ],
+    [
+     "M012",
+     "Cloud Nine Travel",
+     "4722",
+     "travel",
+     "FR"
+    ],
+    [
+     "M013",
+     "Urban Vet",
+     "0742",
+     "veterinary",
+     "GB"
+    ],
+    [
+     "M014",
+     "Urban Cafe",
+     "5814",
+     "fast_food",
+     "US"
+    ],
+    [
+     "M015",
+     "Urban Stop",
+     "5541",
+     "fuel",
+     "PT"
+    ],
+    [
+     "M016",
+     "Urban Books",
+     "5942",
+     "books",
+     "GB"
+    ],
+    [
+     "M017",
+     "Urban Bistro",
+     "5812",
+     "restaurants",
+     "GB"
+    ],
+    [
+     "M018",
+     "Urban Tickets",
+     "4112",
+     "transport",
+     "FR"
+    ],
+    [
+     "M019",
+     "Urban Stream",
+     "4899",
+     "subscriptions",
+     "US"
+    ],
+    [
+     "M020",
+     "Urban Pharmacy",
+     "5912",
+     "pharmacy",
+     "GB"
+    ]
+   ]
+  },
+  "transactions": {
+   "note": "One row per card, cash or account movement posted to an account: when, what kind, which way and how much.",
+   "columns": [
+    {
+     "name": "transaction_id",
+     "type": "string"
+    },
+    {
+     "name": "account_id",
+     "type": "string"
+    },
+    {
+     "name": "merchant_id",
+     "type": "string"
+    },
+    {
+     "name": "posted_at",
+     "type": "timestamp"
+    },
+    {
+     "name": "txn_type",
+     "type": "string"
+    },
+    {
+     "name": "channel",
+     "type": "string"
+    },
+    {
+     "name": "direction",
+     "type": "string"
+    },
+    {
+     "name": "amount",
+     "type": "decimal(12,2)"
+    },
+    {
+     "name": "currency",
+     "type": "string"
+    },
+    {
+     "name": "status",
+     "type": "string"
+    }
+   ],
+   "key": [
+    "transaction_id"
+   ],
+   "rows": {
+    "lesson": 14,
+    "practice": 2417,
+    "project": 4637
+   },
+   "lesson": [
+    [
+     "T000001",
+     "A00006",
+     null,
+     "2026-01-05T10:51:19",
+     "deposit",
+     "branch",
+     "credit",
+     "800.00",
+     "GBP",
+     "posted"
+    ],
+    [
+     "T000002",
+     null,
+     "M004",
+     "2026-01-16T07:14:10",
+     "purchase",
+     "online",
+     "debit",
+     "60.53",
+     "GBP",
+     "posted"
+    ],
+    [
+     "T000003",
+     "A00001",
+     "M003",
+     "2026-01-26T16:39:39",
+     "purchase",
+     "card_present",
+     "debit",
+     "27.90",
+     "USD",
+     "posted"
+    ],
+    [
+     "T000004",
+     "A00008",
+     null,
+     "2026-01-27T08:46:16",
+     "deposit",
+     "branch",
+     "credit",
+     "800.00",
+     "USD",
+     "declined"
+    ],
+    [
+     "T000005",
+     "A00008",
+     null,
+     "2026-01-31T06:31:56",
+     "deposit",
+     "branch",
+     "credit",
+     "3100.00",
+     "USD",
+     "posted"
+    ],
+    [
+     "T000006",
+     "A00001",
+     null,
+     "2026-02-08T14:02:36",
+     "interest",
+     "system",
+     "credit",
+     "21.91",
+     "USD",
+     "posted"
+    ],
+    [
+     "T000007",
+     "A00006",
+     null,
+     "2026-02-18T17:19:13",
+     "interest",
+     "system",
+     "credit",
+     "10.01",
+     "GBP",
+     "posted"
+    ],
+    [
+     "T000008",
+     "A00001",
+     "M002",
+     "2026-02-19T10:23:22",
+     "purchase",
+     "card_present",
+     "debit",
+     "15.99",
+     "USD",
+     "posted"
+    ],
+    [
+     "T000009",
+     "A00008",
+     "M001",
+     "2026-02-20T12:56:02",
+     "refund",
+     "card_present",
+     "credit",
+     "43.95",
+     "USD",
+     "posted"
+    ],
+    [
+     "T000010",
+     "A00001",
+     "M004",
+     "2026-02-21T13:36:29",
+     "purchase",
+     "card_present",
+     "debit",
+     "19.23",
+     "USD",
+     "posted"
+    ],
+    [
+     "T000011",
+     "A00008",
+     "M003",
+     "2026-02-24T12:49:59",
+     "purchase",
+     "card_present",
+     "debit",
+     "7.60",
+     "USD",
+     "posted"
+    ],
+    [
+     "T000012",
+     "A00001",
+     null,
+     "2026-02-25T22:51:19",
+     "deposit",
+     "branch",
+     "credit",
+     "500.00",
+     "USD",
+     "posted"
+    ],
+    [
+     "T000013",
+     "A99999",
+     null,
+     "2026-02-27T07:45:58",
+     "deposit",
+     "branch",
+     "credit",
+     "800.00",
+     "USD",
+     "declined"
+    ],
+    [
+     "T000014",
+     "A00006",
+     "M004",
+     "2026-02-28T18:17:37",
+     "purchase",
+     "online",
+     "debit",
+     "60.53",
+     "GBP",
+     "posted"
+    ]
+   ],
+   "practice_head": [
+    [
+     "T000001",
+     "A00158",
+     null,
+     "2025-07-01T07:29:25",
+     "deposit",
+     "branch",
+     "credit",
+     "500.00",
+     "USD",
+     "pending"
+    ],
+    [
+     "T000002",
+     "A00166",
+     null,
+     "2025-07-01T07:37:09",
+     "deposit",
+     "branch",
+     "credit",
+     "537.50",
+     "GBP",
+     "posted"
+    ],
+    [
+     "T000003",
+     "A00239",
+     "M028",
+     "2025-07-01T12:06:05",
+     "purchase",
+     "card_present",
+     "debit",
+     "18.87",
+     "GBP",
+     "posted"
+    ],
+    [
+     "T000004",
+     "A00196",
+     null,
+     "2025-07-01T13:59:25",
+     "atm_withdrawal",
+     "atm",
+     "debit",
+     "140.00",
+     "EUR",
+     "posted"
+    ],
+    [
+     "T000005",
+     "A00267",
+     null,
+     "2025-07-01T16:06:10",
+     "atm_withdrawal",
+     "atm",
+     "debit",
+     "240.00",
+     "GBP",
+     "posted"
+    ],
+    [
+     "T000006",
+     "A00166",
+     "M017",
+     "2025-07-01T20:04:16",
+     "purchase",
+     "mobile",
+     "debit",
+     "51.53",
+     "GBP",
+     "posted"
+    ],
+    [
+     "T000007",
+     "A00200",
+     null,
+     "2025-07-01T21:54:32",
+     "atm_withdrawal",
+     "atm",
+     "debit",
+     "60.00",
+     "USD",
+     "posted"
+    ],
+    [
+     "T000008",
+     "A00217",
+     null,
+     "2025-07-02T07:29:27",
+     "deposit",
+     "mobile",
+     "credit",
+     "3212.25",
+     "USD",
+     "posted"
+    ],
+    [
+     "T000009",
+     "A00052",
+     "M029",
+     "2025-07-02T09:08:49",
+     "purchase",
+     "card_present",
+     "debit",
+     "14.76",
+     "USD",
+     "posted"
+    ],
+    [
+     "T000010",
+     "A00183",
+     null,
+     "2025-07-02T10:49:24",
+     "atm_withdrawal",
+     "atm",
+     "debit",
+     "60.00",
+     "USD",
+     "posted"
+    ],
+    [
+     "T000011",
+     "A00314",
+     null,
+     "2025-07-02T13:37:08",
+     "deposit",
+     "branch",
+     "credit",
+     "362.25",
+     "USD",
+     "posted"
+    ],
+    [
+     "T000012",
+     "A00289",
+     null,
+     "2025-07-02T19:24:02",
+     "atm_withdrawal",
+     "atm",
+     "debit",
+     "300.00",
+     "EUR",
+     "posted"
+    ],
+    [
+     "T000013",
+     "A00084",
+     "M018",
+     "2025-07-02T21:02:48",
+     "purchase",
+     "mobile",
+     "debit",
+     "54.01",
+     "USD",
+     "pending"
+    ],
+    [
+     "T000014",
+     "A00266",
+     "M015",
+     "2025-07-02T21:27:12",
+     "purchase",
+     "online",
+     "debit",
+     "70.99",
+     "GBP",
+     "posted"
+    ],
+    [
+     "T000015",
+     "A00196",
+     "M011",
+     "2025-07-03T06:57:57",
+     "purchase",
+     "card_present",
+     "debit",
+     "2.75",
+     "EUR",
+     "posted"
+    ],
+    [
+     "T000016",
+     "A00052",
+     null,
+     "2025-07-03T09:53:32",
+     "interest",
+     "system",
+     "credit",
+     "11.24",
+     "USD",
+     "declined"
+    ],
+    [
+     "T000017",
+     "A00293",
+     "M018",
+     "2025-07-03T10:07:34",
+     "purchase",
+     "online",
+     "debit",
+     "35.63",
+     "GBP",
+     "posted"
+    ],
+    [
+     "T000018",
+     "A00023",
+     null,
+     "2025-07-03T14:41:33",
+     "deposit",
+     "mobile",
+     "credit",
+     "800.00",
+     "EUR",
+     "posted"
+    ],
+    [
+     "T000019",
+     "A00139",
+     "M028",
+     "2025-07-03T15:59:56",
+     "purchase",
+     "mobile",
+     "debit",
+     "116.66",
+     "EUR",
+     "posted"
+    ],
+    [
+     "T000020",
+     "A00032",
+     null,
+     "2025-07-03T16:49:07",
+     "atm_withdrawal",
+     "atm",
+     "debit",
+     "80.00",
+     "GBP",
+     "posted"
+    ]
+   ],
+   "project_head": [
+    [
+     "T000001",
+     "A00219",
+     null,
+     "2025-07-01T06:54:48",
+     "deposit",
+     "branch",
+     "credit",
+     "3137.50",
+     "EUR",
+     "posted"
+    ],
+    [
+     "T000002",
+     "A00008",
+     "M013",
+     "2025-07-01T08:23:28",
+     "purchase",
+     "card_present",
+     "debit",
+     "19.99",
+     "USD",
+     "posted"
+    ],
+    [
+     "T000003",
+     "A00398",
+     "M008",
+     "2025-07-01T08:30:58",
+     "purchase",
+     "card_present",
+     "debit",
+     "13.47",
+     "GBP",
+     "posted"
+    ],
+    [
+     "T000004",
+     "A00060",
+     "M020",
+     "2025-07-01T08:58:57",
+     "purchase",
+     "mobile",
+     "debit",
+     "8.66",
+     "USD",
+     "posted"
+    ],
+    [
+     "T000005",
+     "A00186",
+     "M049",
+     "2025-07-01T12:10:05",
+     "purchase",
+     "card_present",
+     "debit",
+     "154.22",
+     "EUR",
+     "posted"
+    ],
+    [
+     "T000006",
+     "A00197",
+     "M003",
+     "2025-07-01T12:29:19",
+     "purchase",
+     "online",
+     "debit",
+     "12.57",
+     "EUR",
+     "posted"
+    ],
+    [
+     "T000007",
+     "A00489",
+     null,
+     "2025-07-01T13:07:41",
+     "fee",
+     "system",
+     "debit",
+     "35.00",
+     "GBP",
+     "pending"
+    ],
+    [
+     "T000008",
+     "A00157",
+     null,
+     "2025-07-01T13:23:51",
+     "fee",
+     "system",
+     "debit",
+     "35.00",
+     "EUR",
+     "posted"
+    ],
+    [
+     "T000009",
+     "A00287",
+     null,
+     "2025-07-01T14:27:49",
+     "deposit",
+     "mobile",
+     "credit",
+     "500.00",
+     "EUR",
+     "posted"
+    ],
+    [
+     "T000010",
+     "A00104",
+     "M014",
+     "2025-07-01T15:21:56",
+     "purchase",
+     "card_present",
+     "debit",
+     "30.39",
+     "USD",
+     "posted"
+    ],
+    [
+     "T000011",
+     "A00081",
+     null,
+     "2025-07-01T16:14:08",
+     "deposit",
+     "branch",
+     "credit",
+     "1200.00",
+     "EUR",
+     "posted"
+    ],
+    [
+     "T000012",
+     "A00103",
+     null,
+     "2025-07-01T16:37:14",
+     "atm_withdrawal",
+     "atm",
+     "debit",
+     "160.00",
+     "EUR",
+     "posted"
+    ],
+    [
+     "T000013",
+     "A00357",
+     "M037",
+     "2025-07-01T18:09:51",
+     "purchase",
+     "mobile",
+     "debit",
+     "65.22",
+     "GBP",
+     "posted"
+    ],
+    [
+     "T000014",
+     "A00107",
+     "M048",
+     "2025-07-01T18:13:15",
+     "purchase",
+     "card_present",
+     "debit",
+     "57.11",
+     "GBP",
+     "pending"
+    ],
+    [
+     "T000015",
+     "A00412",
+     "M029",
+     "2025-07-01T20:14:06",
+     "purchase",
+     "card_present",
+     "debit",
+     "5.35",
+     "USD",
+     "posted"
+    ],
+    [
+     "T000016",
+     "A00414",
+     "M002",
+     "2025-07-02T06:34:37",
+     "purchase",
+     "online",
+     "debit",
+     "23.60",
+     "USD",
+     "posted"
+    ],
+    [
+     "T000017",
+     "A00234",
+     "M012",
+     "2025-07-02T07:53:21",
+     "purchase",
+     "online",
+     "debit",
+     "15.52",
+     "GBP",
+     "posted"
+    ],
+    [
+     "T000018",
+     "A00432",
+     null,
+     "2025-07-02T09:00:25",
+     "deposit",
+     "mobile",
+     "credit",
+     "612.25",
+     "USD",
+     "posted"
+    ],
+    [
+     "T000019",
+     "A00016",
+     null,
+     "2025-07-02T15:58:30",
+     "fee",
+     "system",
+     "debit",
+     "2.50",
+     "EUR",
+     "posted"
+    ],
+    [
+     "T000020",
+     "A00346",
+     "M046",
+     "2025-07-02T17:04:12",
+     "purchase",
+     "card_present",
+     "debit",
+     "8.14",
+     "GBP",
+     "posted"
+    ]
+   ]
+  },
+  "transfers": {
+   "note": "One row per request to move money from one account to another, including reversals of earlier transfers.",
+   "columns": [
+    {
+     "name": "transfer_id",
+     "type": "string"
+    },
+    {
+     "name": "from_account_id",
+     "type": "string"
+    },
+    {
+     "name": "to_account_id",
+     "type": "string"
+    },
+    {
+     "name": "amount",
+     "type": "decimal(12,2)"
+    },
+    {
+     "name": "currency",
+     "type": "string"
+    },
+    {
+     "name": "requested_at",
+     "type": "timestamp"
+    },
+    {
+     "name": "status",
+     "type": "string"
+    },
+    {
+     "name": "reference",
+     "type": "string"
+    },
+    {
+     "name": "reversal_of",
+     "type": "string"
+    }
+   ],
+   "key": [
+    "transfer_id"
+   ],
+   "rows": {
+    "lesson": 6,
+    "practice": 543,
+    "project": 1467
+   },
+   "lesson": [
+    [
+     "TR00001",
+     "A00001",
+     "A00008",
+     "650.50",
+     "USD",
+     "2026-01-11T13:09:57",
+     "failed",
+     "Rent 274",
+     null
+    ],
+    [
+     "TR00002",
+     "A00008",
+     "A00001",
+     "75.00",
+     "USD",
+     "2026-01-23T07:26:55",
+     "completed",
+     "Gift 901",
+     null
+    ],
+    [
+     "TR00003",
+     "A00008",
+     "A00001",
+     "1500.00",
+     "USD",
+     "2026-01-29T11:47:57",
+     "completed",
+     "Loan repayment 782",
+     null
+    ],
+    [
+     "TR00004",
+     "A00001",
+     "A00008",
+     "52.99",
+     "USD",
+     "2026-02-01T18:48:37",
+     "completed",
+     "Car repair 626",
+     null
+    ],
+    [
+     "TR00005",
+     "A00008",
+     "A00001",
+     "40.50",
+     "USD",
+     "2026-02-19T16:12:11",
+     "reversed",
+     "Gift 143",
+     null
+    ],
+    [
+     "TR00006",
+     "A00001",
+     "A00008",
+     "40.50",
+     "USD",
+     "2026-02-20T18:12:11",
+     "completed",
+     "Reversal: Gift 143",
+     "TR00005"
+    ]
+   ],
+   "practice_head": [
+    [
+     "TR00001",
+     "A00186",
+     "A00240",
+     "52.99",
+     "EUR",
+     "2025-07-01T06:22:22",
+     "completed",
+     "Savings top-up 473",
+     null
+    ],
+    [
+     "TR00002",
+     "A00247",
+     "A00226",
+     "912.99",
+     "GBP",
+     "2025-07-01T18:53:02",
+     "completed",
+     "Rent 119",
+     null
+    ],
+    [
+     "TR00003",
+     "A00141",
+     "A00092",
+     "900.00",
+     "USD",
+     "2025-07-03T12:35:27",
+     "completed",
+     "Loan repayment 783",
+     null
+    ],
+    [
+     "TR00004",
+     "A00311",
+     "A00178",
+     "1500.00",
+     "EUR",
+     "2025-07-03T17:41:58",
+     "completed",
+     "Loan repayment 369",
+     null
+    ],
+    [
+     "TR00005",
+     "A00138",
+     "A00212",
+     "75.00",
+     "GBP",
+     "2025-07-04T06:48:15",
+     "completed",
+     "Invoice 861",
+     null
+    ],
+    [
+     "TR00006",
+     "A00276",
+     "A00215",
+     "1500.00",
+     "EUR",
+     "2025-07-06T19:49:20",
+     "completed",
+     "Shared dinner 922",
+     null
+    ],
+    [
+     "TR00007",
+     "A00183",
+     "A00097",
+     "900.50",
+     "USD",
+     "2025-07-07T19:10:19",
+     "completed",
+     "Car repair 245",
+     null
+    ],
+    [
+     "TR00008",
+     "A00248",
+     "A00182",
+     "262.99",
+     "EUR",
+     "2025-07-08T08:54:58",
+     "completed",
+     "Invoice 774",
+     null
+    ],
+    [
+     "TR00009",
+     "A00032",
+     "A00122",
+     "120.50",
+     "GBP",
+     "2025-07-08T12:58:13",
+     "completed",
+     "Gift 746",
+     null
+    ],
+    [
+     "TR00010",
+     "A00152",
+     "A00309",
+     "1500.00",
+     "EUR",
+     "2025-07-08T17:31:19",
+     "completed",
+     "Loan repayment 568",
+     null
+    ],
+    [
+     "TR00011",
+     "A00014",
+     "A00103",
+     "25.50",
+     "GBP",
+     "2025-07-09T07:55:35",
+     "completed",
+     "Gift 108",
+     null
+    ],
+    [
+     "TR00012",
+     "A00238",
+     "A00216",
+     "120.00",
+     "GBP",
+     "2025-07-09T08:19:19",
+     "completed",
+     "Savings top-up 259",
+     null
+    ],
+    [
+     "TR00013",
+     "A00267",
+     "A00090",
+     "25.00",
+     "GBP",
+     "2025-07-09T14:20:34",
+     "completed",
+     "Invoice 342",
+     null
+    ],
+    [
+     "TR00014",
+     "A00164",
+     "A00335",
+     "650.00",
+     "EUR",
+     "2025-07-11T11:51:44",
+     "completed",
+     "Loan repayment 298",
+     null
+    ],
+    [
+     "TR00015",
+     "A00048",
+     "A00288",
+     "662.99",
+     "EUR",
+     "2025-07-11T12:22:26",
+     "completed",
+     "Loan repayment 797",
+     null
+    ],
+    [
+     "TR00016",
+     "A00216",
+     "A00264",
+     "1500.00",
+     "GBP",
+     "2025-07-13T12:05:16",
+     "completed",
+     "Savings top-up 305",
+     null
+    ],
+    [
+     "TR00017",
+     "A00166",
+     "A00245",
+     "412.99",
+     "GBP",
+     "2025-07-13T13:26:16",
+     "completed",
+     "Invoice 790",
+     null
+    ],
+    [
+     "TR00018",
+     "A00059",
+     "A00103",
+     "40.00",
+     "GBP",
+     "2025-07-14T06:36:19",
+     "completed",
+     "Loan repayment 865",
+     null
+    ],
+    [
+     "TR00019",
+     "A00090",
+     "A00073",
+     "650.50",
+     "GBP",
+     "2025-07-15T12:39:21",
+     "completed",
+     "Shared dinner 208",
+     null
+    ],
+    [
+     "TR00020",
+     "A00223",
+     "A00320",
+     "25.00",
+     "USD",
+     "2025-07-15T18:59:59",
+     "completed",
+     "Holiday fund 156",
+     null
+    ]
+   ],
+   "project_head": [
+    [
+     "TR00001",
+     "A00081",
+     "A00391",
+     "75.50",
+     "EUR",
+     "2025-07-01T07:35:16",
+     "completed",
+     "Car repair 877",
+     null
+    ],
+    [
+     "TR00002",
+     "A00224",
+     "A00175",
+     "250.50",
+     "GBP",
+     "2025-07-01T08:13:49",
+     "completed",
+     "Savings top-up 162",
+     null
+    ],
+    [
+     "TR00003",
+     "A00133",
+     "A00415",
+     "900.00",
+     "EUR",
+     "2025-07-01T09:22:21",
+     "completed",
+     "Car repair 335",
+     null
+    ],
+    [
+     "TR00004",
+     "A00492",
+     "A00223",
+     "75.00",
+     "GBP",
+     "2025-07-01T09:56:38",
+     "completed",
+     "Savings top-up 930",
+     null
+    ],
+    [
+     "TR00005",
+     "A00166",
+     "A00302",
+     "1500.00",
+     "EUR",
+     "2025-07-01T12:42:49",
+     "completed",
+     "Utilities split 542",
+     null
+    ],
+    [
+     "TR00006",
+     "A00056",
+     "A00261",
+     "40.50",
+     "GBP",
+     "2025-07-01T16:16:12",
+     "completed",
+     "Holiday fund 704",
+     null
+    ],
+    [
+     "TR00007",
+     "A00324",
+     "A00004",
+     "412.99",
+     "USD",
+     "2025-07-01T19:47:13",
+     "completed",
+     "Utilities split 874",
+     null
+    ],
+    [
+     "TR00008",
+     "A00161",
+     "A00004",
+     "400.50",
+     "USD",
+     "2025-07-02T15:07:26",
+     "completed",
+     "Car repair 911",
+     null
+    ],
+    [
+     "TR00009",
+     "A00370",
+     "A00405",
+     "75.00",
+     "GBP",
+     "2025-07-02T18:29:53",
+     "completed",
+     "Utilities split 619",
+     null
+    ],
+    [
+     "TR00010",
+     "A00313",
+     "A00375",
+     "900.00",
+     "GBP",
+     "2025-07-02T18:43:43",
+     "pending",
+     "Utilities split 622",
+     null
+    ],
+    [
+     "TR00011",
+     "A00219",
+     "A00015",
+     "1500.00",
+     "EUR",
+     "2025-07-02T19:15:25",
+     "pending",
+     "Utilities split 663",
+     null
+    ],
+    [
+     "TR00012",
+     "A00010",
+     "A00070",
+     "87.99",
+     "EUR",
+     "2025-07-03T09:57:57",
+     "completed",
+     "Car repair 151",
+     null
+    ],
+    [
+     "TR00013",
+     "A00454",
+     "A00278",
+     "650.00",
+     "USD",
+     "2025-07-03T12:24:04",
+     "completed",
+     "Loan repayment 125",
+     null
+    ],
+    [
+     "TR00014",
+     "A00177",
+     "A00208",
+     "1500.00",
+     "GBP",
+     "2025-07-03T21:20:00",
+     "completed",
+     "Rent 669",
+     null
+    ],
+    [
+     "TR00015",
+     "A00338",
+     "A00422",
+     "400.00",
+     "USD",
+     "2025-07-05T10:32:31",
+     "completed",
+     "Invoice 473",
+     null
+    ],
+    [
+     "TR00016",
+     "A00114",
+     "A00028",
+     "87.99",
+     "GBP",
+     "2025-07-05T10:58:17",
+     "reversed",
+     "Shared dinner 312",
+     null
+    ],
+    [
+     "TR00017",
+     "A00071",
+     "A00092",
+     "650.00",
+     "EUR",
+     "2025-07-05T20:59:56",
+     "completed",
+     "Rent 601",
+     null
+    ],
+    [
+     "TR00018",
+     "A00044",
+     "A00405",
+     "900.00",
+     "GBP",
+     "2025-07-06T07:15:50",
+     "completed",
+     "Savings top-up 968",
+     null
+    ],
+    [
+     "TR00019",
+     "A00217",
+     "A00212",
+     "25.00",
+     "EUR",
+     "2025-07-06T10:06:43",
+     "completed",
+     "Loan repayment 653",
+     null
+    ],
+    [
+     "TR00020",
+     "A00427",
+     "A00139",
+     "52.99",
+     "EUR",
+     "2025-07-06T13:50:07",
+     "completed",
+     "Gift 338",
+     null
+    ]
+   ]
+  },
+  "ledger_entries": {
+   "note": "One row per side of a booked transfer: a debit on the sending account or a credit on the receiving one.",
+   "columns": [
+    {
+     "name": "entry_id",
+     "type": "string"
+    },
+    {
+     "name": "transfer_id",
+     "type": "string"
+    },
+    {
+     "name": "account_id",
+     "type": "string"
+    },
+    {
+     "name": "entry_type",
+     "type": "string"
+    },
+    {
+     "name": "amount",
+     "type": "decimal(12,2)"
+    },
+    {
+     "name": "currency",
+     "type": "string"
+    },
+    {
+     "name": "booked_at",
+     "type": "timestamp"
+    }
+   ],
+   "key": [
+    "entry_id"
+   ],
+   "rows": {
+    "lesson": 10,
+    "practice": 1002,
+    "project": 2668
+   },
+   "lesson": [
+    [
+     "LE000001",
+     "TR00002",
+     "A00008",
+     "debit",
+     "75.00",
+     "USD",
+     "2026-01-23T07:33:55"
+    ],
+    [
+     "LE000002",
+     "TR00002",
+     "A00001",
+     "credit",
+     "75.00",
+     "USD",
+     "2026-01-23T07:33:55"
+    ],
+    [
+     "LE000003",
+     "TR00003",
+     "A00008",
+     "debit",
+     "1500.00",
+     "USD",
+     "2026-01-29T11:55:57"
+    ],
+    [
+     "LE000004",
+     "TR00003",
+     "A00001",
+     "credit",
+     "1500.00",
+     "USD",
+     "2026-01-29T11:55:57"
+    ],
+    [
+     "LE000005",
+     "TR00004",
+     "A00001",
+     "debit",
+     "52.99",
+     "USD",
+     "2026-02-01T19:48:37"
+    ],
+    [
+     "LE000006",
+     "TR00004",
+     "A00008",
+     "credit",
+     "52.99",
+     "USD",
+     "2026-02-01T19:48:37"
+    ],
+    [
+     "LE000007",
+     "TR00005",
+     "A00008",
+     "debit",
+     "40.50",
+     "USD",
+     "2026-02-19T16:56:11"
+    ],
+    [
+     "LE000008",
+     "TR00005",
+     "A00001",
+     "credit",
+     "40.50",
+     "USD",
+     "2026-02-19T16:56:11"
+    ],
+    [
+     "LE000009",
+     "TR00006",
+     "A00001",
+     "debit",
+     "40.50",
+     "USD",
+     "2026-02-20T19:18:11"
+    ],
+    [
+     "LE000010",
+     "TR00006",
+     "A00008",
+     "credit",
+     "40.50",
+     "USD",
+     "2026-02-20T19:18:11"
+    ]
+   ],
+   "practice_head": [
+    [
+     "LE000001",
+     "TR00001",
+     "A00186",
+     "debit",
+     "52.99",
+     "EUR",
+     "2025-07-01T07:01:22"
+    ],
+    [
+     "LE000002",
+     "TR00001",
+     "A00240",
+     "credit",
+     "52.99",
+     "EUR",
+     "2025-07-01T07:01:22"
+    ],
+    [
+     "LE000003",
+     "TR00002",
+     "A00247",
+     "debit",
+     "912.99",
+     "GBP",
+     "2025-07-01T19:07:02"
+    ],
+    [
+     "LE000004",
+     "TR00002",
+     "A00226",
+     "credit",
+     "912.99",
+     "GBP",
+     "2025-07-01T19:07:02"
+    ],
+    [
+     "LE000005",
+     "TR00003",
+     "A00141",
+     "debit",
+     "900.00",
+     "USD",
+     "2025-07-03T13:27:27"
+    ],
+    [
+     "LE000006",
+     "TR00003",
+     "A00092",
+     "credit",
+     "900.00",
+     "USD",
+     "2025-07-03T13:27:27"
+    ],
+    [
+     "LE000007",
+     "TR00004",
+     "A00311",
+     "debit",
+     "1500.00",
+     "EUR",
+     "2025-07-03T18:43:58"
+    ],
+    [
+     "LE000008",
+     "TR00004",
+     "A00178",
+     "credit",
+     "1500.00",
+     "EUR",
+     "2025-07-03T18:43:58"
+    ],
+    [
+     "LE000009",
+     "TR00005",
+     "A00138",
+     "debit",
+     "75.00",
+     "GBP",
+     "2025-07-04T07:20:15"
+    ],
+    [
+     "LE000010",
+     "TR00005",
+     "A00212",
+     "credit",
+     "75.00",
+     "GBP",
+     "2025-07-04T07:20:15"
+    ],
+    [
+     "LE000011",
+     "TR00006",
+     "A00276",
+     "debit",
+     "1500.00",
+     "EUR",
+     "2025-07-06T20:10:20"
+    ],
+    [
+     "LE000012",
+     "TR00006",
+     "A00215",
+     "credit",
+     "1500.00",
+     "EUR",
+     "2025-07-06T20:10:20"
+    ],
+    [
+     "LE000013",
+     "TR00007",
+     "A00183",
+     "debit",
+     "900.50",
+     "USD",
+     "2025-07-07T20:08:19"
+    ],
+    [
+     "LE000014",
+     "TR00007",
+     "A00097",
+     "credit",
+     "900.50",
+     "USD",
+     "2025-07-07T20:08:19"
+    ],
+    [
+     "LE000015",
+     "TR00008",
+     "A00248",
+     "debit",
+     "262.99",
+     "EUR",
+     "2025-07-08T09:59:58"
+    ],
+    [
+     "LE000016",
+     "TR00008",
+     "A00182",
+     "credit",
+     "262.99",
+     "EUR",
+     "2025-07-08T09:59:58"
+    ],
+    [
+     "LE000017",
+     "TR00009",
+     "A00032",
+     "debit",
+     "120.50",
+     "GBP",
+     "2025-07-08T13:16:13"
+    ],
+    [
+     "LE000018",
+     "TR00009",
+     "A00122",
+     "credit",
+     "120.50",
+     "GBP",
+     "2025-07-08T13:16:13"
+    ],
+    [
+     "LE000019",
+     "TR00010",
+     "A00152",
+     "debit",
+     "1500.00",
+     "EUR",
+     "2025-07-08T18:20:19"
+    ],
+    [
+     "LE000020",
+     "TR00010",
+     "A00309",
+     "credit",
+     "1500.00",
+     "EUR",
+     "2025-07-08T18:20:19"
+    ]
+   ],
+   "project_head": [
+    [
+     "LE000001",
+     "TR00001",
+     "A00081",
+     "debit",
+     "75.50",
+     "EUR",
+     "2025-07-01T08:06:16"
+    ],
+    [
+     "LE000002",
+     "TR00001",
+     "A00391",
+     "credit",
+     "75.50",
+     "EUR",
+     "2025-07-01T08:06:16"
+    ],
+    [
+     "LE000003",
+     "TR00002",
+     "A00224",
+     "debit",
+     "250.50",
+     "GBP",
+     "2025-07-01T08:56:49"
+    ],
+    [
+     "LE000004",
+     "TR00002",
+     "A00175",
+     "credit",
+     "250.50",
+     "GBP",
+     "2025-07-01T08:56:49"
+    ],
+    [
+     "LE000005",
+     "TR00003",
+     "A00133",
+     "debit",
+     "900.00",
+     "EUR",
+     "2025-07-01T09:56:21"
+    ],
+    [
+     "LE000006",
+     "TR00003",
+     "A00415",
+     "credit",
+     "900.00",
+     "EUR",
+     "2025-07-01T09:56:21"
+    ],
+    [
+     "LE000007",
+     "TR00004",
+     "A00492",
+     "debit",
+     "75.00",
+     "GBP",
+     "2025-07-01T10:06:38"
+    ],
+    [
+     "LE000008",
+     "TR00004",
+     "A00223",
+     "credit",
+     "75.00",
+     "GBP",
+     "2025-07-01T10:06:38"
+    ],
+    [
+     "LE000009",
+     "TR00005",
+     "A00166",
+     "debit",
+     "1500.00",
+     "EUR",
+     "2025-07-01T12:47:49"
+    ],
+    [
+     "LE000010",
+     "TR00005",
+     "A00302",
+     "credit",
+     "1500.00",
+     "EUR",
+     "2025-07-01T12:47:49"
+    ],
+    [
+     "LE000011",
+     "TR00006",
+     "A00056",
+     "debit",
+     "40.50",
+     "GBP",
+     "2025-07-01T17:18:12"
+    ],
+    [
+     "LE000012",
+     "TR00006",
+     "A00261",
+     "credit",
+     "40.50",
+     "GBP",
+     "2025-07-01T17:18:12"
+    ],
+    [
+     "LE000013",
+     "TR00007",
+     "A00324",
+     "debit",
+     "412.99",
+     "USD",
+     "2025-07-01T20:57:13"
+    ],
+    [
+     "LE000014",
+     "TR00007",
+     "A00004",
+     "credit",
+     "412.99",
+     "USD",
+     "2025-07-01T20:57:13"
+    ],
+    [
+     "LE000015",
+     "TR00008",
+     "A00161",
+     "debit",
+     "400.50",
+     "USD",
+     "2025-07-02T15:09:26"
+    ],
+    [
+     "LE000016",
+     "TR00008",
+     "A00004",
+     "credit",
+     "400.50",
+     "USD",
+     "2025-07-02T15:09:26"
+    ],
+    [
+     "LE000017",
+     "TR00009",
+     "A00370",
+     "debit",
+     "75.00",
+     "GBP",
+     "2025-07-02T19:10:53"
+    ],
+    [
+     "LE000018",
+     "TR00009",
+     "A00405",
+     "credit",
+     "75.00",
+     "GBP",
+     "2025-07-02T19:10:53"
+    ],
+    [
+     "LE000019",
+     "TR00012",
+     "A00010",
+     "debit",
+     "87.99",
+     "EUR",
+     "2025-07-03T11:14:57"
+    ],
+    [
+     "LE000020",
+     "TR00012",
+     "A00070",
+     "credit",
+     "87.99",
+     "EUR",
+     "2025-07-03T11:14:57"
+    ]
+   ]
+  },
+  "disputes": {
+   "note": "One row per customer dispute raised against a card transaction, and how it ended.",
+   "columns": [
+    {
+     "name": "dispute_id",
+     "type": "string"
+    },
+    {
+     "name": "transaction_id",
+     "type": "string"
+    },
+    {
+     "name": "opened_date",
+     "type": "date"
+    },
+    {
+     "name": "reason",
+     "type": "string"
+    },
+    {
+     "name": "disputed_amount",
+     "type": "decimal(12,2)"
+    },
+    {
+     "name": "status",
+     "type": "string"
+    },
+    {
+     "name": "resolved_date",
+     "type": "date"
+    }
+   ],
+   "key": [
+    "dispute_id"
+   ],
+   "rows": {
+    "lesson": 4,
+    "practice": 35,
+    "project": 60
+   },
+   "lesson": [
+    [
+     "D0001",
+     "T000003",
+     "2026-02-11",
+     "cancelled_subscription",
+     "6.97",
+     "open",
+     null
+    ],
+    [
+     "D0002",
+     "T000008",
+     "2026-02-21",
+     "wrong_amount",
+     "15.99",
+     "open",
+     null
+    ],
+    [
+     "D0003",
+     "T000010",
+     "2026-03-03",
+     "fraud",
+     "19.23",
+     "won",
+     "2026-03-15"
+    ],
+    [
+     "D0004",
+     "T000014",
+     "2026-03-17",
+     "fraud",
+     "60.53",
+     "won",
+     "2026-04-14"
+    ]
+   ],
+   "practice_head": [
+    [
+     "D0001",
+     "T000075",
+     "2025-08-06",
+     "wrong_amount",
+     "45.70",
+     "withdrawn",
+     "2025-09-14"
+    ],
+    [
+     "D0002",
+     "T000151",
+     "2025-08-02",
+     "wrong_amount",
+     "7.13",
+     "open",
+     null
+    ],
+    [
+     "D0003",
+     "T000245",
+     "2025-09-12",
+     "wrong_amount",
+     "13.55",
+     "won",
+     "2025-09-19"
+    ],
+    [
+     "D0004",
+     "T000248",
+     "2025-08-17",
+     "duplicate_charge",
+     "49.02",
+     "won",
+     "2025-09-21"
+    ],
+    [
+     "D0005",
+     "T000301",
+     "2025-09-12",
+     "cancelled_subscription",
+     "11.54",
+     "won",
+     "2025-10-12"
+    ],
+    [
+     "D0006",
+     "T000303",
+     "2025-09-07",
+     "duplicate_charge",
+     "31.63",
+     "won",
+     "2025-10-06"
+    ],
+    [
+     "D0007",
+     "T000461",
+     "2025-09-25",
+     "wrong_amount",
+     "29.75",
+     "open",
+     null
+    ],
+    [
+     "D0008",
+     "T000533",
+     "2025-10-08",
+     "not_received",
+     "23.08",
+     "lost",
+     "2025-11-16"
+    ],
+    [
+     "D0009",
+     "T000661",
+     "2025-11-10",
+     "wrong_amount",
+     "32.27",
+     "lost",
+     "2025-12-15"
+    ],
+    [
+     "D0010",
+     "T000888",
+     "2025-11-16",
+     "fraud",
+     "21.49",
+     "lost",
+     "2025-12-11"
+    ],
+    [
+     "D0011",
+     "T000954",
+     "2025-11-30",
+     "duplicate_charge",
+     "20.95",
+     "open",
+     null
+    ],
+    [
+     "D0012",
+     "T001073",
+     "2025-12-17",
+     "cancelled_subscription",
+     "10.42",
+     "open",
+     null
+    ],
+    [
+     "D0013",
+     "T001188",
+     "2026-01-18",
+     "fraud",
+     "73.88",
+     "won",
+     "2026-02-04"
+    ],
+    [
+     "D0014",
+     "T001203",
+     "2026-01-16",
+     "cancelled_subscription",
+     "28.65",
+     "won",
+     "2026-02-16"
+    ],
+    [
+     "D0015",
+     "T001276",
+     "2026-01-29",
+     "wrong_amount",
+     "6.69",
+     "won",
+     "2026-02-02"
+    ],
+    [
+     "D0016",
+     "T001389",
+     "2026-03-03",
+     "not_received",
+     "15.77",
+     "withdrawn",
+     "2026-04-01"
+    ],
+    [
+     "D0017",
+     "T001390",
+     "2026-02-17",
+     "not_received",
+     "55.59",
+     "open",
+     null
+    ],
+    [
+     "D0018",
+     "T001409",
+     "2026-02-28",
+     "cancelled_subscription",
+     "51.38",
+     "withdrawn",
+     "2026-03-29"
+    ],
+    [
+     "D0019",
+     "T001469",
+     "2026-03-16",
+     "fraud",
+     "10.22",
+     "lost",
+     "2026-04-21"
+    ],
+    [
+     "D0020",
+     "T001494",
+     "2026-03-12",
+     "not_received",
+     "23.18",
+     "open",
+     null
+    ]
+   ],
+   "project_head": [
+    [
+     "D0001",
+     "T000030",
+     "2025-07-31",
+     "wrong_amount",
+     "45.63",
+     "lost",
+     "2025-09-02"
+    ],
+    [
+     "D0002",
+     "T000052",
+     "2025-08-08",
+     "wrong_amount",
+     "8.34",
+     "won",
+     "2025-09-05"
+    ],
+    [
+     "D0003",
+     "T000171",
+     "2025-07-25",
+     "cancelled_subscription",
+     "2.88",
+     "withdrawn",
+     "2025-09-08"
+    ],
+    [
+     "D0004",
+     "T000249",
+     "2025-07-29",
+     "wrong_amount",
+     "4.70",
+     "won",
+     "2025-08-19"
+    ],
+    [
+     "D0005",
+     "T000270",
+     "2025-08-28",
+     "cancelled_subscription",
+     "25.02",
+     "open",
+     null
+    ],
+    [
+     "D0006",
+     "T000345",
+     "2025-08-04",
+     "fraud",
+     "4.59",
+     "won",
+     "2025-09-06"
+    ],
+    [
+     "D0007",
+     "T000357",
+     "2025-08-06",
+     "wrong_amount",
+     "27.04",
+     "open",
+     null
+    ],
+    [
+     "D0008",
+     "T000589",
+     "2025-09-21",
+     "fraud",
+     "6.90",
+     "won",
+     "2025-10-17"
+    ],
+    [
+     "D0009",
+     "T000710",
+     "2025-09-08",
+     "fraud",
+     "15.75",
+     "won",
+     "2025-09-26"
+    ],
+    [
+     "D0010",
+     "T000798",
+     "2025-09-13",
+     "cancelled_subscription",
+     "39.80",
+     "won",
+     "2025-09-24"
+    ],
+    [
+     "D0011",
+     "T000826",
+     "2025-10-07",
+     "wrong_amount",
+     "44.29",
+     "withdrawn",
+     "2025-10-29"
+    ],
+    [
+     "D0012",
+     "T000948",
+     "2025-10-13",
+     "duplicate_charge",
+     "11.90",
+     "open",
+     null
+    ],
+    [
+     "D0013",
+     "T001203",
+     "2025-10-02",
+     "fraud",
+     "45.99",
+     "withdrawn",
+     "2025-10-19"
+    ],
+    [
+     "D0014",
+     "T001297",
+     "2025-10-20",
+     "wrong_amount",
+     "78.67",
+     "withdrawn",
+     "2025-11-05"
+    ],
+    [
+     "D0015",
+     "T001498",
+     "2025-11-01",
+     "wrong_amount",
+     "31.20",
+     "withdrawn",
+     "2025-11-21"
+    ],
+    [
+     "D0016",
+     "T001533",
+     "2025-11-07",
+     "wrong_amount",
+     "10.51",
+     "won",
+     "2025-11-12"
+    ],
+    [
+     "D0017",
+     "T001628",
+     "2025-12-05",
+     "not_received",
+     "25.57",
+     "won",
+     "2026-01-16"
+    ],
+    [
+     "D0018",
+     "T001721",
+     "2025-11-29",
+     "duplicate_charge",
+     "73.37",
+     "open",
+     null
+    ],
+    [
+     "D0019",
+     "T001766",
+     "2025-12-12",
+     "fraud",
+     "34.16",
+     "lost",
+     "2026-01-19"
+    ],
+    [
+     "D0020",
+     "T001782",
+     "2025-12-11",
+     "duplicate_charge",
+     "74.43",
+     "lost",
+     "2025-12-31"
+    ]
+   ]
+  }
+ }
+}

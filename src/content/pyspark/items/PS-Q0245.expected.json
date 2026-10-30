@@ -1,0 +1,56 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "span_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "service",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "started_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "ended_at",
+     "type": "timestamp",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "1e6248070b1913dc",
+     "checkout-api",
+     "2026-04-14T10:00:58.900000",
+     "2026-04-14T10:01:00.140000"
+    ],
+    [
+     "111b3025829dbeed",
+     "payments-gateway",
+     "2026-04-14T10:00:59.677000",
+     "2026-04-14T10:00:59.774000"
+    ]
+   ],
+   "row_count": 2
+  }
+ },
+ "hidden": [
+  "the full practice spans",
+  "spans that end in the next second, minute or day",
+  "failed spans with a missing duration or start",
+  "statuses written in other cases, such as ERROR",
+  "a batch with no failed spans"
+ ]
+}

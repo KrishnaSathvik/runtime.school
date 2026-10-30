@@ -1,0 +1,64 @@
+{
+  "id": "payment-reconciliation",
+  "task": "A retail bank's card authorizations, settlements and account ledger come from three systems. Finance needs assurance that approved payments settle, that settlements reach customers' ledgers, and that network retries did not cause duplicate charges, plus a view of where refunds concentrate. Find out whether the three systems agree, whether retries charged anyone twice, and where declines and refunds concentrate.",
+  "produce": [
+    {
+      "name": "Requests and approvals",
+      "about": "Payment requests, attempts, retries and the approval rate per request."
+    },
+    {
+      "name": "Duplicate-charge check",
+      "about": "Requests approved twice, requests settled twice, and any extra money settled."
+    },
+    {
+      "name": "Settlement match",
+      "about": "Approved attempts split into settled as authorized, settled differently, and not settled."
+    },
+    {
+      "name": "Ledger reconciliation",
+      "about": "Settlements matched to a posted ledger entry, missing one, or differing in amount."
+    },
+    {
+      "name": "Reconciliation report",
+      "about": "Refund share by merchant category, three findings and two priority fixes."
+    }
+  ],
+  "labels": {
+    "understand-data": "Follow a payment",
+    "authorizations": "Approvals",
+    "duplicates": "Duplicates",
+    "settlement": "Settlements",
+    "ledger": "Ledger",
+    "refunds": "Refunds",
+    "synthesis": "Conclusions",
+    "report": "Report"
+  },
+  "summaries": {
+    "understand-data": "Follow one payment request from authorization to settlement to the ledger.",
+    "authorizations": "Count requests, attempts and retries, and the approval rate per request.",
+    "duplicates": "Check whether any retried request was approved or settled more than once.",
+    "settlement": "Split approved attempts by whether and how they settled.",
+    "ledger": "Match each settlement to a posted card purchase in the customer's ledger.",
+    "refunds": "Rank merchant categories by the share of settled value they refund.",
+    "synthesis": "Separate expected gaps from those that need a fix.",
+    "report": "Write three findings and two priority fixes with owners."
+  },
+  "problems": [
+    "Network retries repeat a payment request, so authorization rows are not requests; every retried request was approved twice.",
+    "Authorizations are in dollars, settlements in cents, and the ledger stores purchases as negative cents.",
+    "Many approved payments settled for a different amount than was authorized.",
+    "Some approved payments never settled, and almost half of those are from the last month.",
+    "A few settlements have no posted card purchase in the ledger; some ledger purchases are only pending or reversed.",
+    "Some settlements have more than one refund, so joining refunds straight to settlements counts their value twice."
+  ],
+  "preparation": [
+    "keep-unmatched-rows",
+    "ask-whether-a-row-exists",
+    "readable-queries-with-ctes",
+    "make-decisions-with-case",
+    "group-into-summaries",
+    "conditional-aggregation",
+    "multi-grain-joins-without-fan-out",
+    "revenue-and-payment-reconciliation"
+  ]
+}

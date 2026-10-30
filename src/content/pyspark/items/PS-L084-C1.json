@@ -1,0 +1,52 @@
+{
+  "id": "PS-L084-C1",
+  "slug": "latency-and-errors-per-service",
+  "lesson": "PS-L084",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Latency and errors per service",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "The on-call team wants one health row per service from `api_requests`: how many requests it got, how many failed on the server, and its median and p95 latency. Complete `solve(api_requests)`.",
+  "rules": [
+    "Columns and types: `service STRING, requests BIGINT, server_errors BIGINT, p50_latency_ms INT, p95_latency_ms INT`.",
+    "`requests` counts every request. `server_errors` counts status codes from 500 to 599; 4xx codes aren't server errors.",
+    "Percentiles by nearest rank: sort the service's latencies and take the one at position `ceil(p × n)`, so p50 is a latency a request really had.",
+    "A request the client abandoned has no latency: it counts as a request but not in the percentiles. A service with no latency at all gets NULL percentiles."
+  ],
+  "hints": [
+    "Group by `service` and compute all four columns in one `agg`.",
+    "`F.count(F.when(condition, 1))` counts the rows where the condition holds, and `between` includes both ends.",
+    "`F.percentile_approx` returns a value from the column, by nearest rank, and skips NULLs."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "api_requests"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(api_requests):\n    # One row per service: requests, server_errors, p50_latency_ms, p95_latency_ms.\n    return api_requests.groupBy(\"service\").agg(\n        F.count(\"*\").alias(\"requests\"),\n    )\n",
+  "output": {
+    "columns": [
+      "service",
+      "requests",
+      "server_errors",
+      "p50_latency_ms",
+      "p95_latency_ms"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

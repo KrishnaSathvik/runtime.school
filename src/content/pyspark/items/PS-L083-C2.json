@@ -1,0 +1,57 @@
+{
+  "id": "PS-L083-C2",
+  "slug": "a-feed-that-is-safe-to-retry",
+  "lesson": "PS-L083",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "A feed that is safe to retry",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "`transactions` is one delivery of the bank's feed: new transactions and new states of ones already in the table. Deliveries are retried, so `solve` applies this one twice. Fix `apply_feed` so the Delta table ends up right however many times a delivery is applied.",
+  "rules": [
+    "The table has one row per `transaction_id`.",
+    "A feed row for a transaction already in the table replaces it, every column. A new transaction is added. Transactions the feed doesn't mention stay as they are.",
+    "The feed may send a transaction more than once, always as an identical copy. An empty feed changes nothing.",
+    "Applying the same delivery twice must give the same table as applying it once. Don't change `start_table` or `solve`."
+  ],
+  "hints": [
+    "Run the starter on the sample: which transactions appear more than once, and why?",
+    "A MERGE on the key updates rows that match and inserts the rest, so a second run finds everything already there.",
+    "A merge compares the feed with the table, not with itself. Remove repeated deliveries from the feed first."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "transactions"
+  ],
+  "starter": "import shutil\nfrom datetime import datetime\nfrom decimal import Decimal\n\nfrom delta.tables import DeltaTable\nfrom pyspark.sql import functions as F\n\n\ndef start_table(transactions, path):\n    # Yesterday's table. Don't change this.\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty folder on every run\n    yesterday = spark.createDataFrame(\n        [\n            (\"T000003\", \"A00001\", \"M003\", datetime(2026, 1, 26, 16, 39, 39), \"purchase\", \"card_present\", \"debit\", Decimal(\"27.90\"), \"USD\", \"pending\"),\n            (\"T000005\", \"A00008\", None, datetime(2026, 1, 31, 6, 31, 56), \"deposit\", \"branch\", \"credit\", Decimal(\"3100.00\"), \"USD\", \"posted\"),\n            (\"T000050\", \"A00003\", None, datetime(2026, 1, 2, 9, 0, 0), \"deposit\", \"branch\", \"credit\", Decimal(\"120.00\"), \"USD\", \"posted\"),\n        ],\n        transactions.schema,\n    )\n    yesterday.write.format(\"delta\").save(path)\n\n\ndef apply_feed(feed, path):\n    # Apply one delivery of the bank's feed to the table.\n    feed.write.format(\"delta\").mode(\"append\").save(path)\n\n\ndef solve(transactions):\n    path = \"/tmp/bank/transactions\"\n    start_table(transactions, path)\n    apply_feed(transactions, path)\n    apply_feed(transactions, path)  # the delivery is retried\n    return spark.read.format(\"delta\").load(path)\n",
+  "output": {
+    "columns": [
+      "transaction_id",
+      "account_id",
+      "merchant_id",
+      "posted_at",
+      "txn_type",
+      "channel",
+      "direction",
+      "amount",
+      "currency",
+      "status"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 240,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

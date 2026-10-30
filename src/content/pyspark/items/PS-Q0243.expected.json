@@ -1,0 +1,80 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "log_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "service",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "latency_ms",
+     "type": "int",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "LOG-000001",
+     "catalog-api",
+     42
+    ],
+    [
+     "LOG-000002",
+     "auth-service",
+     61
+    ],
+    [
+     "LOG-000003",
+     "checkout-api",
+     236
+    ],
+    [
+     "LOG-000004",
+     "search-api",
+     118
+    ],
+    [
+     "LOG-000005",
+     "iot-gateway",
+     24
+    ],
+    [
+     "LOG-000006",
+     "checkout-api",
+     1240
+    ],
+    [
+     "LOG-000008",
+     "iot-gateway",
+     22
+    ],
+    [
+     "LOG-000009",
+     "search-api",
+     162
+    ]
+   ],
+   "row_count": 8
+  }
+ },
+ "hidden": [
+  "the full practice log file",
+  "latencies written as decimals, negatives, words, empty text and with leading zeros",
+  "records with no attributes, null attributes, a list instead, or no latency key",
+  "cut-off records, plain text and JSON that isn't an object",
+  "the same record shipped twice",
+  "an empty log file"
+ ]
+}

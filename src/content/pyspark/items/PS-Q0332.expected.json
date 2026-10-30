@@ -1,0 +1,198 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "order_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "user_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "payment_method",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "lines",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "order_total",
+     "type": "double",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "ORD-0001",
+     "CU-001",
+     "card",
+     2,
+     112.98
+    ],
+    [
+     "ORD-0002",
+     "CU-002",
+     "wallet",
+     1,
+     119.95
+    ],
+    [
+     "ORD-0003",
+     null,
+     "bnpl",
+     3,
+     101.99
+    ]
+   ],
+   "row_count": 3,
+   "inputs": {
+    "checkout_events": [
+     [
+      "CO-0001",
+      "SES-0001",
+      "CU-001",
+      "2026-03-14T10:06:00",
+      "2026-03-14T10:06:02",
+      "1",
+      "begin",
+      null,
+      null,
+      "[{\"sku\":\"SKU-1001\",\"qty\":1,\"price\":89.0},{\"sku\":\"SKU-1013\",\"qty\":2,\"price\":11.99}]",
+      "112.98",
+      "{}"
+     ],
+     [
+      "CO-0002",
+      "SES-0001",
+      "CU-001",
+      "2026-03-14T10:08:30",
+      "2026-03-14T10:08:33",
+      "1",
+      "payment",
+      null,
+      "{\"method\":\"card\",\"provider\":\"paycore\"}",
+      "[{\"sku\":\"SKU-1001\",\"qty\":1,\"price\":89.0},{\"sku\":\"SKU-1013\",\"qty\":2,\"price\":11.99}]",
+      "112.98",
+      "{\"coupon\":\"SPRING10\"}"
+     ],
+     [
+      "CO-0003",
+      "SES-0001",
+      "CU-001",
+      "2026-03-14T10:09:40",
+      "2026-03-14T10:09:42",
+      "1",
+      "complete",
+      "ORD-0001",
+      "{\"method\":\"card\",\"provider\":\"paycore\"}",
+      "[{\"sku\":\"SKU-1001\",\"qty\":1,\"price\":89.0},{\"sku\":\"SKU-1013\",\"qty\":2,\"price\":11.99}]",
+      "112.98",
+      "{\"coupon\":\"SPRING10\"}"
+     ],
+     [
+      "CO-0004",
+      "SES-0003",
+      "CU-002",
+      "2026-03-14T10:19:55",
+      "2026-03-14T10:19:59",
+      "2",
+      "begin",
+      null,
+      null,
+      "[{\"sku\":\"SKU-1002\",\"qty\":1,\"price\":119.95}]",
+      "119.95",
+      "{\"gift_wrap\":\"true\"}"
+     ],
+     [
+      "CO-0005",
+      "SES-0003",
+      "CU-002",
+      "2026-03-14T10:17:00",
+      "2026-03-14T10:17:20",
+      "2",
+      "payment",
+      null,
+      "{\"method\":\"wallet\",\"provider\":\"quickpay\"}",
+      "[{\"sku\":\"SKU-1002\",\"qty\":1,\"price\":119.95}]",
+      "119.95",
+      "{\"gift_wrap\":\"true\"}"
+     ],
+     [
+      "CO-0006",
+      "SES-0003",
+      "CU-002",
+      "2026-03-14T10:18:00",
+      "2026-03-14T10:18:20",
+      "2",
+      "complete",
+      "ORD-0002",
+      "{\"method\":\"wallet\",\"provider\":\"quickpay\"}",
+      "[{\"sku\":\"SKU-1002\",\"qty\":1,\"price\":119.95}]",
+      "119.95",
+      "{\"gift_wrap\":\"true\"}"
+     ],
+     [
+      "CO-0007",
+      "SES-0006",
+      null,
+      "2026-03-14T10:31:00",
+      "2026-03-14T10:31:20",
+      "4",
+      "begin",
+      null,
+      null,
+      "[{\"sku\":\"SKU-1003\",\"qty\":1,\"price\":59.0},{\"sku\":\"SKU-1009\",\"qty\":2,\"price\":15.5},{\"sku\":\"SKU-1013\",\"qty\":1,\"price\":11.99}]",
+      "101.99",
+      "{}"
+     ],
+     [
+      "CO-0008",
+      "SES-0006",
+      null,
+      "2026-03-14T10:33:00",
+      "2026-03-14T10:33:20",
+      "4",
+      "payment",
+      null,
+      "{\"method\":\"bnpl\",\"provider\":\"laterly\"}",
+      "[{\"sku\":\"SKU-1003\",\"qty\":1,\"price\":59.0},{\"sku\":\"SKU-1009\",\"qty\":2,\"price\":15.5},{\"sku\":\"SKU-1013\",\"qty\":1,\"price\":11.99}]",
+      "101.99",
+      "{}"
+     ],
+     [
+      "CO-0009",
+      "SES-0006",
+      null,
+      "2026-03-14T10:34:00",
+      "2026-03-14T10:34:20",
+      "4",
+      "complete",
+      "ORD-0003",
+      "{\"method\":\"bnpl\",\"provider\":\"laterly\"}",
+      "[{\"sku\":\"SKU-1003\",\"qty\":1,\"price\":59.0},{\"sku\":\"SKU-1009\",\"qty\":2,\"price\":15.5},{\"sku\":\"SKU-1013\",\"qty\":1,\"price\":11.99}]",
+      "101.99",
+      "{}"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice checkout events",
+  "checkouts that never got past payment",
+  "several orders in one delivery, one of them anonymous"
+ ]
+}

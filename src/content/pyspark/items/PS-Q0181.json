@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0181",
+  "slug": "page-view-device-and-campaign",
+  "lesson": "PS-L037",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Device and campaign per page view",
+  "dataset": {
+    "id": "PS-D06",
+    "version": "1.0.0"
+  },
+  "prompt": "Each page view stores the device and the campaign tag inside nested fields. Write `solve(page_views)` so it returns one flat row per page view with its device type, operating system and campaign.",
+  "rules": [
+    "Return `event_id`, `device_type` (from `device.type`), `os` (from `device.os`) and `campaign` (from `context.utm.campaign`), in that order.",
+    "A page view whose nested value is missing at any level gets a missing value in that column.",
+    "Keep every page view, one row each."
+  ],
+  "hints": [
+    "Run `page_views.printSchema()` to see the fields inside `device` and `context`.",
+    "A dot path reaches into a struct: `F.col(\"device.type\")`. It works through several levels too.",
+    "A selected nested field keeps only its last name, so give each one the name asked for with `.alias(...)`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "page_views"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(page_views):\n    # Return event_id, device_type, os and campaign for every page view.\n    return page_views\n",
+  "output": {
+    "columns": [
+      "event_id",
+      "device_type",
+      "os",
+      "campaign"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "A dot path reads a field inside a struct, at any depth: `page_views.select(\"event_id\", F.col(\"device.type\").alias(\"device_type\"), F.col(\"device.os\").alias(\"os\"), F.col(\"context.utm.campaign\").alias(\"campaign\"))`. `F.col(\"device\").getField(\"type\")` reads the same value. A selected field is named after its last part (`type`, `os`, `campaign`), so the aliases matter. When `utm`, `context` or `device` is missing, Spark returns a missing value for the fields below it instead of failing, so there's nothing extra to handle. The usual slips are reading `utm.source` or `referrer` instead of the campaign, and selecting the whole `device` struct."
+}

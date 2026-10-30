@@ -1,0 +1,23 @@
+{
+  "id": "P01",
+  "task": "You've joined an online shop's checkout team, and the cart needs code behind it. Build it from the real product file: search the catalogue, manage a cart, price it the way the order system does, write a receipt file, and refuse the awkward cases.",
+  "produce": [
+    { "name": "catalogue.py", "about": "The catalogue, the cart, the pricing rules, the receipt writer and the safe way to add a sale." },
+    { "name": "main.py", "about": "Runs each step on the product file and prints its result." },
+    { "name": "receipt.txt", "about": "One line per product, then subtotal, shipping, tax and total in dollars." }
+  ],
+  "steps": {
+    "P01.m1": "Index the products by id and search names still on sale, ignoring case.",
+    "P01.m2": "Add products to a cart, change quantities, and count the units.",
+    "P01.m3": "Price the cart in cents, with shipping and tax.",
+    "P01.m4": "Write the receipt file, one line per product and then the totals.",
+    "P01.m5": "Refuse unknown products, discontinued products and quantities below 1."
+  },
+  "problems": [
+    "23 of the 328 products are discontinued and must not be found or sold.",
+    "Product names mix capitals, so a search has to ignore case.",
+    "Prices are decimals: 39 of them come out a cent short if you multiply by 100 and drop the fraction instead of rounding.",
+    "Some products have no weight."
+  ],
+  "preparation": ["PY-L09-05", "PY-L08-02", "PY-L08-03", "PY-L06-03", "PY-L07-04", "PY-L06-04", "PY-L19-02"]
+}

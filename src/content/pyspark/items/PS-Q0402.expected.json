@@ -1,0 +1,93 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "stage",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "task",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "attempts",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "error",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     1,
+     0,
+     2,
+     "org.apache.spark.SparkArithmeticException"
+    ],
+    [
+     2,
+     0,
+     2,
+     "org.apache.spark.SparkNumberFormatException"
+    ]
+   ],
+   "row_count": 2,
+   "inputs": {
+    "application_logs_raw": [
+     [
+      "WARNING: Using incubator modules: jdk.incubator.vector"
+     ],
+     [
+      "ERROR Executor: Exception in task 0.0 in stage 1.0 (TID 4)"
+     ],
+     [
+      "org.apache.spark.SparkArithmeticException: [DIVIDE_BY_ZERO] Division by zero. Use `try_divide` to tolerate divisor being 0 and return NULL instead. If necessary set \"spark.sql.ansi.enabled\" to \"false\" to bypass this error. SQLSTATE: 22012"
+     ],
+     [
+      "ERROR Executor: Exception in task 0.1 in stage 1.0 (TID 5)"
+     ],
+     [
+      "org.apache.spark.SparkArithmeticException: [DIVIDE_BY_ZERO] Division by zero. Use `try_divide` to tolerate divisor being 0 and return NULL instead. If necessary set \"spark.sql.ansi.enabled\" to \"false\" to bypass this error. SQLSTATE: 22012"
+     ],
+     [
+      "ERROR TaskSetManager: Task 0 in stage 1.0 failed 2 times; aborting job"
+     ],
+     [
+      "ERROR Executor: Exception in task 0.0 in stage 2.0 (TID 6)"
+     ],
+     [
+      "org.apache.spark.SparkNumberFormatException: [CAST_INVALID_INPUT] The value 'n0' of the type \"STRING\" cannot be cast to \"INT\" because it is malformed. Correct the value as per the syntax, or change its target type. Use `try_cast` to tolerate malformed input and return NULL instead. SQLSTATE: 22018"
+     ],
+     [
+      "ERROR Executor: Exception in task 0.1 in stage 2.0 (TID 7)"
+     ],
+     [
+      "org.apache.spark.SparkNumberFormatException: [CAST_INVALID_INPUT] The value 'n0' of the type \"STRING\" cannot be cast to \"INT\" because it is malformed. Correct the value as per the syntax, or change its target type. Use `try_cast` to tolerate malformed input and return NULL instead. SQLSTATE: 22018"
+     ],
+     [
+      "ERROR TaskSetManager: Task 0 in stage 2.0 failed 2 times; aborting job"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "a long log: three failed stages, a Python error, and two tasks failing in one stage",
+  "a task that failed once and then succeeded, next to one that was given up on",
+  "a run where each task is tried only once",
+  "the log of a run with no failures",
+  "an empty log"
+ ]
+}

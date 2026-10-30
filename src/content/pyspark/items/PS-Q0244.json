@@ -1,0 +1,61 @@
+{
+  "id": "PS-Q0244",
+  "slug": "fix-device-errors-rdd",
+  "lesson": "PS-L049",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Fix the device errors list",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "The IoT team asked for the errors that came from a device. This RDD code returns errors with no device too, and on a quiet day it fails. Fix `solve(error_events)` so it returns `error_id`, `service` and `device_id` for every error with a device.",
+  "rules": [
+    "An error comes from a device when its `device_id` is present. Errors without one are left out.",
+    "Return `error_id`, `service` and `device_id`, all text, in that order. Keep repeated errors.",
+    "It must also work when no error has a device, and on an empty table: then the result is empty."
+  ],
+  "hints": [
+    "Run it on the sample. What value does a missing `device_id` have in Python, and is that equal to `\"\"`?",
+    "A missing value arrives as `None`. Test for it with `is not None`.",
+    "`toDF` with only column names has to guess the types from the rows, and an empty RDD has none. Give it a schema string."
+  ],
+  "explanation": "Two bugs. A missing `device_id` reaches Python as `None`, not as an empty string, so `!= \"\"` keeps those errors; test `r[\"device_id\"] is not None`. And `toDF([names])` guesses each column's type from the data, which fails when the filter leaves nothing; `toDF(\"error_id string, service string, device_id string\")` works on any input. A plain truth test such as `filter(lambda r: r[\"device_id\"])` is fine too.",
+  "entry": "solve",
+  "inputs": [
+    "error_events"
+  ],
+  "starter": "def solve(error_events):\n    with_device = error_events.rdd.filter(lambda r: r[\"device_id\"] != \"\")\n    rows = with_device.map(lambda r: (r[\"error_id\"], r[\"service\"], r[\"device_id\"]))\n    return rows.toDF([\"error_id\", \"service\", \"device_id\"])\n",
+  "output": {
+    "columns": [
+      "error_id",
+      "service",
+      "device_id"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "technique": {
+    "name": "RDD functions",
+    "plan": [
+      "Scan"
+    ],
+    "source": [
+      "rdd",
+      "parallelize"
+    ]
+  }
+}

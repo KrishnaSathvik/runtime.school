@@ -1,0 +1,43 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D07",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "trips",
+   "taxi_zones"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "1 file, 1 partition\nshuffle partitions: 4\nestimate, all columns: ['1436.0 B']\nestimate, two columns: ['315.0 B', '1436.0 B']\n3 files, 2 partitions, 12 rows\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "== Physical Plan ==\nAdaptiveSparkPlan (11)\n+- Project (10)\n   +- BroadcastHashJoin Inner BuildRight (9)\n      :- HashAggregate (5)\n      :  +- Exchange (4)\n      :     +- HashAggregate (3)\n      :        +- Filter (2)\n      :           +- Scan csv  (1)\n      +- BroadcastExchange (8)\n         +- Filter (7)\n            +- Scan csv  (6)\nshuffles: 1\nbroadcast join: True\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "BroadcastHashJoin {'rows': 6}\n  HashAggregate {'rows': 6}\n    Exchange {'shuffled rows': 6}\n      HashAggregate {'rows': 6}\n        Filter {'rows': 8}\n          Scan csv {'rows': 8, 'files': 1, 'bytes': 1436}\n  BroadcastExchange {'rows': 6}\n    Filter {'rows': 6}\n      Scan csv {'rows': 6, 'files': 1, 'bytes': 247}\n2 jobs, 3 stages\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "same rows: True\nsame profile: True\nBroadcastHashJoin {'rows': 5}\n  Filter {'rows': 12}\n    Scan csv {'rows': 12, 'files': 1, 'bytes': 1436}\n  BroadcastExchange {'rows': 2}\n    Filter {'rows': 2}\n      Scan csv {'rows': 2, 'files': 1, 'bytes': 247}\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "first run:           2 listed, 2 ran\nsame DataFrame again: 2 listed, 1 ran\na new DataFrame:     2 listed, 2 ran\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "8 card trips cached\nInMemoryTableScan {'rows': 8}\nFilter {'rows': 8}\n  Scan csv {'rows': 8, 'files': 1, 'bytes': 1436}\n",
+   "error": null
+  }
+ }
+}

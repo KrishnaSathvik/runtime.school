@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0290",
+  "slug": "late-deliveries-by-region-and-carrier",
+  "lesson": "PS-L058",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Late deliveries by region and carrier",
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0"
+  },
+  "prompt": "Operations reviews late deliveries by the sending warehouse's region and the shipment's carrier. Write `solve(deliveries, shipments, warehouses)` so it returns `region`, `carrier`, `late_deliveries` and `late_units`.",
+  "rules": [
+    "Count only deliveries whose `status` is `late`. `late_units` is the total `quantity` of their shipments.",
+    "A late delivery whose shipment isn't in `shipments` is left out. One whose warehouse isn't in `warehouses` counts in a group with `region` missing.",
+    "One row per region and carrier that has late deliveries. Return only these four columns, in this order."
+  ],
+  "hints": [
+    "Filter the late deliveries first, then join `shipments` on `shipment_id` to get the carrier, quantity and warehouse.",
+    "Which join type drops deliveries with no shipment? Which keeps shipments whose warehouse isn't listed? `warehouses` is the small side to broadcast.",
+    "Group by both columns and use `F.count(\"*\")` and `F.sum(\"quantity\")` in one `agg`."
+  ],
+  "explanation": "Filter first so the joins only carry late deliveries. An inner join with `shipments` drops deliveries whose shipment is unknown, because there's no carrier to report. A left join with `F.broadcast(warehouses)` keeps every late shipment and leaves `region` missing when its warehouse isn't listed, and `groupBy(\"region\", \"carrier\")` then puts those in a group of their own. The broadcast only spares the big side a shuffle: a sort-merge join for the same query returns the same groups, so the grading checks the rows. Counting `status != \"on_time\"` would also count failed deliveries, which aren't late.",
+  "entry": "solve",
+  "inputs": [
+    "deliveries",
+    "shipments",
+    "warehouses"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(deliveries, shipments, warehouses):\n    # Return region, carrier, late_deliveries and late_units.\n    return deliveries\n",
+  "output": {
+    "columns": [
+      "region",
+      "carrier",
+      "late_deliveries",
+      "late_units"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

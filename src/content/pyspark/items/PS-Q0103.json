@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0103",
+  "slug": "title-keys-with-senior-spelled-out",
+  "lesson": "PS-L021",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Title keys with senior spelled out",
+  "dataset": {
+    "id": "PS-D03",
+    "version": "1.0.0"
+  },
+  "prompt": "Some job titles start with the short form `Sr` or `Sr.`, so senior roles are counted twice in HR's report. Write `solve(employees)` so it returns `employee_id` and a `title_key` for each employee.",
+  "rules": [
+    "`title_key` is `job_title` with no spaces at the start or end, a single space between words, and all lower case.",
+    "Then, when the first word is exactly `sr` or `sr.`, it becomes `senior`: `  Sr.  Data Analyst` gives `senior data analyst`.",
+    "A title that is only the short form has no role after it and isn't expanded: `Sr` gives `sr`, ` Sr. ` gives `sr.`.",
+    "`sr` anywhere else, or as part of a longer word, stays as it is: `sre engineer` and `data analyst sr` don't change.",
+    "A missing title stays missing. Return one row per employee, with only these two columns."
+  ],
+  "hints": [
+    "Tidy first, then expand: `F.lower(F.regexp_replace(F.trim(\"job_title\"), \"\\\\s+\", \" \"))` gives one standard form to match against.",
+    "`^` anchors a pattern to the start, and `\\.?` allows an optional dot. A dot on its own matches any character, so escape it.",
+    "Require the space after the short form, as in `^sr\\.? `, and put it back in the replacement. Otherwise `sre engineer` turns into `seniore engineer`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "employees"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(employees):\n    # Return employee_id and title_key.\n    return employees\n",
+  "output": {
+    "columns": [
+      "employee_id",
+      "title_key"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Standardize, then rewrite. `key = F.lower(F.regexp_replace(F.trim(\"job_title\"), \"\\\\s+\", \" \"))` gives one form to match against, and `F.regexp_replace(key, \"^sr\\\\.? \", \"senior \")` expands the short form. Each piece of the pattern has a job: `^` keeps it to the first word, so `data analyst sr` is left alone; `\\\\.?` makes the dot optional; and the space after it stops `sre` from matching. The order matters too: before `trim` and `lower`, `  SR Data Analyst` doesn't start with `sr`, so it would never match. A `replace` dict can't do this, because it only swaps whole values and would need one entry per title."
+}

@@ -1,0 +1,67 @@
+{
+  "id": "PS-P07-M5",
+  "slug": "publish-gold-payer-summary",
+  "project": "PS-P07",
+  "milestone": "PS-P07.m5",
+  "difficulty": "medium",
+  "minutes": 30,
+  "title": "Publish the Gold payer summary as a Delta table",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "prompt": "Finance reads Gold: one row per payer and visit type, with the claims and the money. Gold is published as a Delta table, so every rebuild is one commit and readers never see half a table.\n\nComplete `publish(df, path)` and write `gold_payer_summary(claims, encounters, providers)`, built from `enriched_claims`, published at `GOLD_PATH` and returned as read back from there.",
+  "rules": [
+    "`publish` clears the folder at `path`, writes `df` there as a Delta table with mode `overwrite`, and returns the table read back from `path`.",
+    "`gold_payer_summary` returns `payer`, `encounter_class`, `claims` (the claims in the group), `billed_amount`, `allowed_amount`, `paid_amount` (sums) and `denied_claims` (claims with status `denied`, 0 when none).",
+    "The three sums are `decimal(14,2)`. A group whose claims all lack `allowed_amount` has it missing, as `F.sum` gives.",
+    "A claim whose visit is missing has no `encounter_class`; it still counts, in a group with a missing class."
+  ],
+  "hints": [
+    "`shutil.rmtree(path, ignore_errors=True)` clears the folder; then `df.write.format(\"delta\").mode(\"overwrite\").save(path)` and `spark.read.format(\"delta\").load(path)`.",
+    "`groupBy(\"payer\", \"encounter_class\").agg(...)` with `F.count(\"*\")` and `F.sum(...).cast(\"decimal(14,2)\")`.",
+    "`F.count(F.when(F.col(\"claim_status\") == \"denied\", 1))` counts only the denied rows and gives 0, not a missing value, when there are none."
+  ],
+  "explanation": "Gold is shaped for one reader, so it's built from the enriched Silver claims and nothing else: every number in it can be traced back through Silver to Bronze. Publishing to Delta makes the rebuild a transaction. The write adds one commit that lists the new files, and until that commit exists readers still see the previous table. Clearing the folder first makes each run start at version 0, so a rerun gives the same table and the same history. Reading the result back from the path proves the table really is there. `F.count(F.when(...))` counts denied claims without turning an empty group into NULL, which `F.sum` of ones would.",
+  "entry": "gold_payer_summary",
+  "inputs": [
+    "claims",
+    "encounters",
+    "providers"
+  ],
+  "file": "pipeline.py",
+  "append": "\n\nGOLD_PATH = \"/tmp/claims_lakehouse/gold/payer_summary\"\n\n\ndef publish(df, path):\n    # Step 5: replace the Delta table at `path` with df, then return the table read back from there.\n    return df\n\n\ndef gold_payer_summary(claims, encounters, providers):\n    # Step 5: claims and money per payer and visit type, published with publish(...).\n    return enriched_claims(claims, encounters, providers)\n",
+  "prerequisites": [
+    "PS-L031",
+    "PS-L061",
+    "PS-L073"
+  ],
+  "output": {
+    "columns": [
+      "payer",
+      "encounter_class",
+      "claims",
+      "billed_amount",
+      "allowed_amount",
+      "paid_amount",
+      "denied_claims"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "example",
+      "sample": true
+    },
+    {
+      "id": "project",
+      "edition": "project"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 240,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

@@ -1,0 +1,58 @@
+{
+ "id": "PS-Q0433",
+ "slug": "new-highest-temperatures",
+ "lesson": "PS-L087",
+ "role": "edge",
+ "format": "dataframe_coding",
+ "difficulty": "hard",
+ "minutes": 14,
+ "title": "New highest temperatures",
+ "dataset": {
+  "id": "PS-D09",
+  "version": "1.0.0"
+ },
+ "prompt": "Facilities logs every time a sensor beats its own highest temperature. Write `solve(sensor_readings)` so it streams the readings and returns `reading_id`, `device_id`, `event_time` and `temperature_c` for every reading that sets a new high for its sensor.",
+ "rules": [
+  "A reading sets a new high when its `payload.temperature_c` is above every temperature taken from that sensor before it; a sensor's first temperature is its first high. A reading equal to the high isn't a new one.",
+  "Glitches (999.0) and readings with no temperature are skipped: they never set or change a high.",
+  "Take readings in delivery order: micro-batch by micro-batch, and in `event_time` order within a micro-batch. A late reading still counts if it beats the high so far.",
+  "`event_time` is a timestamp and `temperature_c` a double.",
+  "The rows must come from a streaming query over the delivery files: working on `sensor_readings` itself doesn't count."
+ ],
+ "hints": [
+  "The state needs only one number per sensor: its highest temperature so far.",
+  "A missing temperature is NaN in pandas, and every comparison with NaN is false. Test it with `pd.isna(x)` before you compare, or NaN can become a high that nothing beats.",
+  "Sort each pandas DataFrame by `event_time`, use `applyInPandasWithState` with output mode `\"append\"` and `GroupStateTimeout.NoTimeout`, and read the memory table back."
+ ],
+ "explanation": "Each sensor keeps its high in the state. Within a micro-batch the rows are sorted by event time, so two readings delivered out of order in one file are both compared in the order they were measured. A strict `>` keeps a reading equal to the high, and a copy, from counting twice. Missing temperatures must be skipped before the comparison: a NaN saved as the high is never beaten. Late readings aren't skipped here, because a high is a high whenever it arrives.",
+ "entry": "solve",
+ "inputs": [
+  "sensor_readings"
+ ],
+ "output": {
+  "columns": [
+   "reading_id",
+   "device_id",
+   "event_time",
+   "temperature_c"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "starter": "import json, os, shutil\nimport pandas as pd\nfrom pyspark.sql import functions as F\nfrom pyspark.sql.streaming.state import GroupStateTimeout\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\ndef solve(sensor_readings):\n    spark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\n    make_batches(sensor_readings, \"/tmp/in\")         # one file per batch; clears the folder first\n    shutil.rmtree(\"/tmp/ck\", ignore_errors=True)     # a fresh checkpoint for every run\n    readings = spark.readStream.schema(sensor_readings.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\n    flat = readings.select(\"reading_id\", \"device_id\", \"event_time\", F.col(\"payload.temperature_c\").alias(\"temperature_c\"))\n\n    # Keep each sensor's highest temperature so far in its state.\n    # Return one row per new high from a memory table: reading_id, device_id, event_time, temperature_c.\n\n    return sensor_readings\n",
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

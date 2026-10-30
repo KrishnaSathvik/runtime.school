@@ -130,7 +130,8 @@ export function PracticeTask({ slug }: { slug: string }) {
       section="practice"
       status={["SQL", `question ${index + 1}/${bankQuestions.length}`, `sqlite · ${practiceDatasets[q.datasetId]?.name ?? q.datasetId}`, ready ? (status === "solved" ? "✓ solved" : status === "guided" ? "solved with help" : "draft saves as you type") : "…"]}
     >
-      <div className="rx-task rx-canonical-learning rx-lesson workspace-bounded">
+      {/* Same desktop editor chrome as Playground: sticky split + tool-work cell (no workspace-bounded). */}
+      <div className="rx-task rx-canonical-learning rx-lesson rx-learn-tables">
         <div className="rx-task-bar">
           <button ref={listTrigger} type="button" className="rx-btn ghost" onClick={() => setListOpen((o) => !o)} aria-expanded={listOpen}>
             <List size={14} /> All questions
@@ -185,7 +186,7 @@ export function PracticeTask({ slug }: { slug: string }) {
               return [t, { ...schema, ...sample, columns }];
             }))} />
           </section>
-          <section className="rx-work rx-lesson-work" aria-label="Your solution" tabIndex={0} onFocusCapture={focusWorkspaceEditor}>
+          <section className="rx-work rx-lesson-work rx-tool-work" aria-label="Your solution" tabIndex={0} onFocusCapture={focusWorkspaceEditor}>
             {supported ? (
               <TaskCell
                 name="solution.sql"
@@ -227,14 +228,28 @@ export function PracticeTask({ slug }: { slug: string }) {
             ) : (
               <>
                 <div className="rx-cell"><div className="rx-cell-head"><span className="name">predict.sql</span></div><div className="rx-cell-in"><SqlCode source={prettySql(q.solution)} label="Query to predict" /></div></div>
-                <PredictionWorkspace q={q} nextAction={next ? <Link className="rx-btn" href={`/sql/practice/${next.slug}`}>Next question</Link> : null} />
+                <PredictionWorkspace
+                  q={q}
+                  nextAction={next ? <Link className="rx-btn primary" href={`/sql/practice/${next.slug}`}>Next question: {String(index + 2).padStart(2, "0")} {next.title} <ArrowRight size={14} aria-hidden="true" /></Link> : <button type="button" className="rx-btn" onClick={() => setListOpen(true)}>All questions</button>}
+                  footer={
+                    <>
+                      {hints < q.hints.length && (
+                        <button type="button" className="rx-btn ghost" onClick={() => { pendingHelp.current = "hint"; s.questionHint(q.id); }}><Lightbulb size={13} /> {hints === 0 ? "Hint" : `Next hint (${hints + 1} of ${q.hints.length})`}</button>
+                      )}
+                      {!revealed && <button type="button" className="rx-btn ghost" onClick={() => setConfirmAnswer(true)}><Eye size={13} /> Answer</button>}
+                      {(hints > 0 || revealed) && (
+                        <button type="button" className="rx-btn ghost" onClick={() => s.freshQuestionAttempt(q.id, dKey, starter)}><RotateCcw size={13} /> Try without help</button>
+                      )}
+                    </>
+                  }
+                />
               </>
             )}
             <HelpDialog open={confirmAnswer} onClose={() => setConfirmAnswer(false)} onConfirm={() => { pendingHelp.current = "answer"; s.revealQuestion(q.id); }} />
             {hints > 0 && (
               <ul ref={hintsRef} tabIndex={-1} aria-label="Requested hints" className="rx-hints">{q.hints.slice(0, hints).map((h, i) => <li key={h}><span className="mono">hint {i + 1} of {q.hints.length} ›</span> {h}</li>)}</ul>
             )}
-            {revealed && (
+            {revealed && supported && (
               <div ref={answerRef} tabIndex={-1} role="region" aria-label="Revealed answer" className="rx-cell">
                 <div className="rx-cell-head"><span className="name">one correct answer</span>
                   <span className="acts"><button type="button" className="rx-btn ghost" onClick={() => s.setDraft(dKey, prettySql(q.solution))}>Put in editor</button></span>
@@ -242,7 +257,14 @@ export function PracticeTask({ slug }: { slug: string }) {
                 <div className="rx-cell-in"><span className="p">sql›</span><SqlCode source={prettySql(q.solution)} label="One correct answer" /></div>
               </div>
             )}
-            {(revealed || (ready && (progress?.solved || progress?.guidedSolved))) && (
+            {revealed && !supported && (
+              <div ref={answerRef} tabIndex={-1} role="region" aria-label="Revealed answer" className="rx-why">
+                <p className="rx-label">why it works</p>
+                <p>{q.explanation}</p>
+                <p className="rx-small">Use Show result above to see the actual rows (already counted as help).</p>
+              </div>
+            )}
+            {supported && (revealed || (ready && (progress?.solved || progress?.guidedSolved))) && (
               <div className="rx-why">
                 <p className="rx-label">why it works</p>
                 <p>{q.explanation}</p>

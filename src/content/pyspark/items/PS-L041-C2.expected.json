@@ -1,0 +1,79 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "event_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "action",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "pricey_skus",
+     "type": "array<string>",
+     "nullable": true
+    },
+    {
+     "name": "any_bulk",
+     "type": "boolean",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "CA-0001",
+     "add",
+     [
+      "SKU-1001"
+     ],
+     false
+    ],
+    [
+     "CA-0002",
+     "add",
+     [],
+     true
+    ],
+    [
+     "CA-0003",
+     "add",
+     [
+      "SKU-1002"
+     ],
+     false
+    ],
+    [
+     "CA-0004",
+     "remove",
+     [],
+     false
+    ],
+    [
+     "CA-0005",
+     "add",
+     [],
+     true
+    ]
+   ],
+   "row_count": 5
+  }
+ },
+ "hidden": [
+  "the full practice cart events",
+  "items priced just below, at and above 50.00",
+  "baskets that mix single and bulk items, and cheap items bought in bulk",
+  "an event with no items and an item with a missing price",
+  "the same event delivered twice",
+  "an empty cart table"
+ ]
+}

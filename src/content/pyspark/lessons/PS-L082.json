@@ -1,0 +1,156 @@
+{
+  "id": "PS-L082",
+  "minutes": 30,
+  "lede": "Every pipeline fails sometimes. The ones you can run at night are the ones that know which failures to retry, which to set aside, and which must stop the run.",
+  "objectives": [
+    "Catch Spark errors by type and tell them apart with `getCondition()`",
+    "Explain why some errors appear when a DataFrame is built and others only at the action",
+    "Keep one bad value from failing a load with `try_cast` and a dead-letter output",
+    "Write a retry loop with a fixed number of attempts that retries only failures that can pass next time"
+  ],
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "shipment_events"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "A step in a pipeline can fail in two very different ways:\n\n- **The code or the data is wrong.** A column name is misspelled, or a value can't be read as a number. Run it again and it fails again, the same way.\n- **Something outside had a bad moment.** The file hasn't landed yet, a server timed out, a machine went away. The next try may well work.\n\nThe first kind needs a fix, or the bad rows set aside. Only the second kind is worth retrying.\n\nIn PySpark, Spark's errors are Python exceptions, so you handle them with `try` and `except`. They live in `pyspark.errors`. Every one is a `PySparkException`, and more specific types sit under it, such as `AnalysisException`. Each also has a **condition**, a fixed name like `UNRESOLVED_COLUMN.WITH_SUGGESTION`. `getCondition()` returns it. Check conditions in code, not message text: the text can change between versions."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Catch an analysis error",
+      "code": "from pyspark.errors import AnalysisException, PySparkException\n\ntry:\n    picked = shipment_events.select(\"event_id\", \"shipment_ref\")\n    print(\"built\")\nexcept AnalysisException as e:\n    print(type(e).__name__)\n    print(e.getCondition())\n    print(e.getMessageParameters()[\"objectName\"])\n    print(isinstance(e, PySparkException))\n",
+      "note": "There's no `shipment_ref` column. The error came from `select` itself, before any action: Spark checks names and types as soon as you build a DataFrame. `\"built\"` was never printed. `getMessageParameters()` gives the details as a dictionary."
+    },
+    {
+      "kind": "text",
+      "md": "Errors about the **values** are different. Spark only sees the values when an action runs, so a bad one fails the action, not the line that described the work.\n\nSpark 4 runs in ANSI mode, so a cast that can't work is an error instead of a quiet NULL. Here a new carrier sends its events, and one id was typed with the letter `O` instead of a zero. The tracking system keeps event numbers as integers, the digits after the `E`. `F.substring(\"event_id\", 2, 20)` takes the id from its second character on."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "A bad value fails the action",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.errors import PySparkException\n\nfeed = spark.createDataFrame(\n    [(\"E0000101\", \"SH0002\", \"picked\"), (\"E00001O2\", \"SH0003\", \"picked\"), (\"E0000103\", \"SH0004\", \"picked\")],\n    \"event_id STRING, shipment_id STRING, event_type STRING\",\n)\n\nnumbered = feed.select(\"event_id\", F.substring(\"event_id\", 2, 20).cast(\"int\").alias(\"event_no\"))\nprint(\"built\")\nprint(numbered.count(), \"rows\")\n\ntry:\n    numbered.show()\nexcept PySparkException as e:\n    print(type(e).__name__, e.getCondition())\n",
+      "note": "Building `numbered` worked, and so did `count()`: counting rows doesn't need `event_no`, so Spark never ran the cast. `show()` needs the value, and the cast of `00001O2` failed with `CAST_INVALID_INPUT`. A check that only counts rows can miss a problem."
+    },
+    {
+      "kind": "text",
+      "md": "One mistyped id shouldn't stop the whole load. The `try_` functions return NULL where the plain version would fail: `try_cast` for casts, `F.try_to_timestamp` for text times. A NULL from a value that was there marks the row that couldn't be read.\n\nThose rows go to a **dead-letter** output: a separate place that keeps every bad row as it came in, plus why it was set aside, so someone can fix it and load it again. The good rows carry on. As when you split valid and invalid rows, check that every row went to exactly one of the two."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Good rows on, bad rows to the dead letter",
+      "code": "from pyspark.sql import functions as F\n\nfeed = spark.createDataFrame(\n    [(\"E0000101\", \"SH0002\", \"picked\"), (\"E00001O2\", \"SH0003\", \"picked\"), (\"E0000103\", \"SH0004\", \"picked\"), (None, \"SH0001\", \"picked\")],\n    \"event_id STRING, shipment_id STRING, event_type STRING\",\n)\n\nevent_no = F.substring(\"event_id\", 2, 20).try_cast(\"int\")\ntagged = feed.select(\"*\", event_no.alias(\"event_no\"), F.when(event_no.isNull(), \"bad event id\").alias(\"error\"))\n\ngood = tagged.filter(F.col(\"error\").isNull()).select(\"event_id\", \"event_no\", \"shipment_id\", \"event_type\")\ndead = tagged.filter(F.col(\"error\").isNotNull()).select(*feed.columns, \"error\")\n\ngood.write.mode(\"overwrite\").parquet(\"/tmp/tracking/events\")\ndead.write.mode(\"overwrite\").json(\"/tmp/tracking/dead_letter\")\n\ngood.show()\nspark.read.json(\"/tmp/tracking/dead_letter\").show()\nprint(\"received\", feed.count(), \"loaded\", good.count(), \"dead letter\", dead.count())\n",
+      "note": "The two good ids loaded with their numbers. The mistyped id and the missing one went to the dead-letter folder unchanged, with a reason. A missing id gives NULL too, so the one test catches both. The counts add up: 4 in, 2 + 2 out."
+    },
+    {
+      "kind": "text",
+      "md": "Bad **lines** in a file are handled when you read it, with the `mode` option you know from reading CSV. `PERMISSIVE` with a corrupt-record column keeps each bad line as text, which is exactly what a dead-letter output needs. `DROPMALFORMED` loses them without a trace, and `FAILFAST` stops at the first one.\n\nSome platforms add a `badRecordsPath` option that writes bad lines to a folder for you. Open-source Spark doesn't have it, and it doesn't complain when you set it: the option is simply ignored. Here you write the dead letters yourself."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Bad lines in a file",
+      "code": "import os\nfrom pyspark.sql import functions as F\n\nos.makedirs(\"/tmp/landing\", exist_ok=True)\nwith open(\"/tmp/landing/events.csv\", \"w\") as f:\n    f.write(\"event_id,shipment_id,quantity\\nE0000201,SH0002,4\\nE0000202,SH0003,four\\nE0000203,SH0004\\nE0000204,SH0001,2\\n\")\n\nschema = \"event_id STRING, shipment_id STRING, quantity INT\"\nread = spark.read.option(\"badRecordsPath\", \"/tmp/landing/bad\").csv(\n    \"/tmp/landing/events.csv\", header=True, schema=schema + \", raw_line STRING\", columnNameOfCorruptRecord=\"raw_line\"\n)\n\ngood = read.filter(F.col(\"raw_line\").isNull()).select(\"event_id\", \"shipment_id\", \"quantity\")\ndead = read.filter(F.col(\"raw_line\").isNotNull())\ndead.write.mode(\"overwrite\").json(\"/tmp/landing/dead_letter\")\n\ngood.show()\nspark.read.json(\"/tmp/landing/dead_letter\").select(\"raw_line\").show(truncate=False)\nprint(\"bad records folder made:\", os.path.exists(\"/tmp/landing/bad\"))\n",
+      "note": "`four` isn't a number and the third line is one field short, so both lines were kept as raw text and written to the dead-letter folder. `badRecordsPath` did nothing: no folder appeared."
+    },
+    {
+      "kind": "text",
+      "md": "Now the failures that can pass next time. A **retry loop** runs a step again when it fails, with three things settled in advance:\n\n- **Which errors to retry.** Only ones that can change. Decide by type, and by condition where one type covers both kinds: `PATH_NOT_FOUND` can mean the file hasn't landed yet, while `UNRESOLVED_COLUMN` never fixes itself.\n- **How many attempts.** A fixed number, never \"until it works\". After the last one, raise the error so the run fails loudly or records the failure.\n- **How long to wait.** In production you wait between attempts, longer each time. The examples skip the wait so they finish at once.\n\nTo show a failure that goes away, the example simulates the upload: a counter makes the carrier's file appear just before the third look."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Retry a file that lands late",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.errors import AnalysisException\n\npath = \"/tmp/landing/2026-03-08\"\nlooks = {\"n\": 0}\n\n\ndef read_day():\n    looks[\"n\"] += 1\n    if looks[\"n\"] == 3:  # the carrier's upload finishes just before the third look\n        shipment_events.filter(F.col(\"load_date\") == \"2026-03-08\").write.mode(\"overwrite\").parquet(path)\n    return spark.read.parquet(path)\n\n\ndef not_landed_yet(e):\n    return isinstance(e, AnalysisException) and e.getCondition() == \"PATH_NOT_FOUND\"\n\n\ndef with_retries(step, attempts, retry_if):\n    for attempt in range(1, attempts + 1):\n        try:\n            result = step()\n            print(\"attempt\", attempt, \"worked\")\n            return result\n        except Exception as e:\n            if not retry_if(e) or attempt == attempts:\n                print(\"attempt\", attempt, \"failed, giving up\")\n                raise\n            print(\"attempt\", attempt, \"failed:\", e.getCondition())\n\n\nday = with_retries(read_day, attempts=4, retry_if=not_landed_yet)\nday.select(\"event_id\", \"shipment_id\", \"event_type\").show()\n",
+      "note": "The first two reads found no folder and were retried. The third worked, so the loop returned at once. The bare `raise` inside `except` re-raises the error being handled, unchanged, so the caller still sees exactly what went wrong."
+    },
+    {
+      "kind": "text",
+      "md": "The same loop with a bug in the step. The condition says it can't fix itself, so there's one attempt, and the error goes straight to the caller. Retrying it would only make the run slower and the logs longer."
+    },
+    {
+      "kind": "example",
+      "id": "e6",
+      "title": "Don't retry a bug",
+      "code": "from pyspark.errors import AnalysisException\n\n\ndef not_landed_yet(e):\n    return isinstance(e, AnalysisException) and e.getCondition() == \"PATH_NOT_FOUND\"\n\n\ndef with_retries(step, attempts, retry_if):\n    for attempt in range(1, attempts + 1):\n        try:\n            return step()\n        except Exception as e:\n            if not retry_if(e) or attempt == attempts:\n                print(\"attempt\", attempt, \"failed, giving up\")\n                raise\n            print(\"attempt\", attempt, \"failed, retrying\")\n\n\ndef pick_columns():\n    return shipment_events.select(\"event_id\", \"shipment_ref\")\n\n\ntry:\n    with_retries(pick_columns, attempts=4, retry_if=not_landed_yet)\nexcept AnalysisException as e:\n    print(\"run failed:\", e.getCondition())\n",
+      "note": "One attempt, then the error reached the caller with its condition. A run that stops here can be fixed and run again."
+    },
+    {
+      "kind": "text",
+      "md": "Spark retries on its own too, one level down. On a cluster, a task that fails is tried again, up to 4 attempts by default (`spark.task.maxFailures`), before the job fails. That covers a lost machine. It can't help a bad value, which fails every time. In local mode, as here, Spark doesn't retry tasks at all.\n\nOne last thing to check before you retry a whole step: what did the failed attempt leave behind? A Delta write that fails commits nothing. An `append` that worked before a later part of the step failed will append again on the retry. The next lesson is about making steps safe to run twice."
+    },
+    {
+      "kind": "error-example",
+      "id": "e7",
+      "title": "Stop at the first bad line",
+      "code": "import os\n\nos.makedirs(\"/tmp/landing\", exist_ok=True)\nwith open(\"/tmp/landing/events.csv\", \"w\") as f:\n    f.write(\"event_id,shipment_id,quantity\\nE0000201,SH0002,4\\nE0000202,SH0003,four\\n\")\n\nschema = \"event_id STRING, shipment_id STRING, quantity INT\"\nspark.read.csv(\"/tmp/landing/events.csv\", header=True, schema=schema, mode=\"FAILFAST\").show()\n",
+      "error": "Py4JJavaError",
+      "note": "`FAILFAST` stopped at `four`. This one arrives as a `Py4JJavaError`, the raw Java error, not a `PySparkException`, so `except PySparkException` wouldn't catch it. To handle it, catch `Py4JJavaError` from `py4j.protocol`. Most of the time, `PERMISSIVE` and a dead-letter output are the better choice."
+    }
+  ],
+  "challenges": [
+    "PS-L082-C1",
+    "PS-L082-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "`events.select(\"evnt_id\")` names a column that doesn't exist. When do you get the error?",
+      "choices": [
+        "When `select` is called",
+        "At the first action",
+        "Only when the result is written",
+        "Never: the column is NULL"
+      ],
+      "answer": 0,
+      "why": "Spark checks names and types as soon as a DataFrame is built, so `select` raises an `AnalysisException` right away. Errors about values wait for an action."
+    },
+    {
+      "id": "k2",
+      "prompt": "A nightly step can fail with a timeout from the carrier's server or with `CAST_INVALID_INPUT`. Which should the retry loop retry?",
+      "choices": [
+        "Both, three times each",
+        "Only the cast error",
+        "Only the timeout",
+        "Neither"
+      ],
+      "answer": 2,
+      "why": "A timeout may pass on the next try. A value that can't be cast fails the same way every time, so retrying it only delays the failure. Set the bad row aside instead."
+    },
+    {
+      "id": "k3",
+      "prompt": "`numbered` casts ids to `int`, and one id can't be cast. What does `numbered.count()` do?",
+      "choices": [
+        "Raises `CAST_INVALID_INPUT`",
+        "Counts every row, with no error",
+        "Counts only the rows that cast",
+        "Returns NULL"
+      ],
+      "answer": 1,
+      "why": "Counting doesn't need the cast column, so Spark skips the cast and nothing fails. An action that reads the value, such as `show()` or a write, raises the error."
+    }
+  ],
+  "review": [
+    "Retry failures that can pass next time (a timeout, a file that hasn't landed); fix or set aside the ones that can't.",
+    "Spark errors are `PySparkException`s; `AnalysisException` comes when a DataFrame is built, value errors come at the action.",
+    "Decide with `getCondition()`, a fixed name such as `PATH_NOT_FOUND`, not with the message text.",
+    "`try_cast` and the other `try_` functions return NULL instead of failing; send those rows to a dead-letter output with a reason.",
+    "A retry loop has a fixed number of attempts, retries only chosen errors, and raises the last error when it gives up.",
+    "Open-source Spark ignores `badRecordsPath`: keep bad lines with a corrupt-record column and write them yourself."
+  ],
+  "practice": [
+    "PS-Q0406",
+    "PS-Q0407",
+    "PS-Q0408",
+    "PS-Q0409",
+    "PS-Q0410"
+  ]
+}

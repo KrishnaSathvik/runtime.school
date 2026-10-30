@@ -1,0 +1,74 @@
+{
+ "id": "PS-P08-M1",
+ "slug": "inspect-the-change-feeds",
+ "project": "PS-P08",
+ "milestone": "PS-P08.m1",
+ "difficulty": "medium",
+ "minutes": 25,
+ "title": "Inspect the two change feeds",
+ "dataset": {
+  "id": "PS-D08",
+  "version": "1.0.0"
+ },
+ "also": [
+  {
+   "id": "PS-D14",
+   "version": "1.0.0",
+   "tables": [
+    "accounts",
+    "customer_cdc"
+   ]
+  }
+ ],
+ "prompt": "The warehouse platform gets two change feeds. `shipment_events` is every tracking scan from the shipment system, loaded day by day (`load_date`). `customer_cdc` is every change to customer accounts in the CRM since the `accounts` snapshot: `op` is `I`, `U` or `D`, and `sequence` orders the changes. Look at both first: add `shipment_events.printSchema()` and `customer_cdc.orderBy(\"sequence\").show()` to your file and press Run.\n\nThen write `feed_profile(shipment_events, shipments, customer_cdc)`. It counts what's in each feed, one `(feed, measure, value)` row per measure, so the problems the next steps fix have numbers.",
+ "rules": [
+  "For `shipment_events`: `rows` (every row), `repeated` (rows minus distinct `event_id`s), `corrections` (rows with `is_correction` true), `unknown_shipment` (rows whose `shipment_id` isn't in `shipments`) and `load_days` (distinct `load_date`s).",
+  "For `customer_cdc`: `rows`, `exact_copies` (rows minus distinct rows, every column compared), `accounts` (distinct `account_id`s), and `inserts`, `updates` and `deletes` (rows whose `op` is `I`, `U` or `D`).",
+  "`feed` is the table's name and `measure` the name above. Return the eleven rows with the columns of `PROFILE_SCHEMA`."
+ ],
+ "hints": [
+  "One `agg` per feed gets several numbers in one job: `F.count(\"*\")`, `F.countDistinct(\"event_id\")`, and `F.count(F.when(condition, 1))` for rows that match.",
+  "A `left_anti` join of `shipment_events` with `shipments` on `shipment_id` keeps exactly the scans whose shipment is missing.",
+  "`.first()` turns an `agg` into a row of plain values. Put the eleven tuples in a list and pass it to `spark.createDataFrame(rows, PROFILE_SCHEMA)`."
+ ],
+ "explanation": "A profile turns \"the feed is messy\" into numbers you can check later. `repeated` compares rows with distinct `event_id`s, not with distinct rows: a scan delivered again on a later day differs in `load_date`, so it isn't an exact copy, yet it's the same event. In `customer_cdc` the opposite holds: every change has its own `sequence`, so a row that matches another in every column is a repeated delivery. `left_anti` finds scans for shipments the shipment system doesn't know, and it counts each such row, not each missing shipment. Doing the counts with one `agg` per feed keeps the number of Spark jobs small, which matters in a project that will also run many Delta commits.",
+ "entry": "feed_profile",
+ "inputs": [
+  "shipment_events",
+  "shipments",
+  "customer_cdc"
+ ],
+ "file": "pipeline.py",
+ "starter": "import shutil\n\nfrom pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\nfrom delta.tables import DeltaTable\n\n# This project makes many small Delta commits in one Spark session. These two settings stop Spark from\n# starting extra threads for every query (the lesson on broadcast joins and AQE covers both). Keep them.\nspark.conf.set(\"spark.sql.adaptive.enabled\", \"false\")\nspark.conf.set(\"spark.sql.autoBroadcastJoinThreshold\", \"-1\")\n\n\nPROFILE_SCHEMA = \"feed STRING, measure STRING, value BIGINT\"\n\n\ndef feed_profile(shipment_events, shipments, customer_cdc):\n    # Step 1: one (feed, measure, value) row for each measure of the two feeds.\n    rows = [(\"shipment_events\", \"rows\", 0)]\n    return spark.createDataFrame(rows, PROFILE_SCHEMA)\n",
+ "prerequisites": [
+  "PS-L008",
+  "PS-L017",
+  "PS-L020",
+  "PS-L026",
+  "PS-L031"
+ ],
+ "output": {
+  "columns": [
+   "feed",
+   "measure",
+   "value"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "example",
+   "sample": true
+  },
+  {
+   "id": "project",
+   "edition": "project"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 60,
+  "check_timeout_s": 180,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

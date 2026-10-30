@@ -1,12 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { projects, projectsByLevel, type ProjectLevel } from "@/content/projects";
+import { projectsByLevel, type ProjectLevel } from "@/content/projects";
 import { sqlProjectHref } from "@/content/projects/paths";
-import { datasetName } from "@/content/tools/datasets";
 import { useLearning } from "@/lib/learning-state";
 import { Shell } from "../Shell";
-import { completedStageCount, draftPrefix, stageIsComplete } from "./evidence";
+import { completedStageCount, projectIsComplete, workStages } from "./evidence";
 
 const LEVELS: { id: ProjectLevel; label: string }[] = [
   { id: "beginner", label: "Beginner" },
@@ -21,30 +20,24 @@ export function ProjectLibrary() {
       <div className="rx-page rx-project-library">
         <h1 className="rx-title">Projects</h1>
         <p className="rx-lead">
-          Investigate a business problem with SQL, save your findings, and deliver a report.
+          Answer a business question with SQL one step at a time. Each step is checked on the data.
         </p>
         {LEVELS.map(({ id, label }) => (
           <section key={id} className="rx-project-level">
-            <h2 className="rx-project-level-title">{label}</h2>
+            <h2 className={`rx-project-level-title ${id}`}>{label}</h2>
             <ul className="rx-project-list">
               {projectsByLevel(id).map((project) => {
                 const done = completedStageCount(project, drafts);
-                const complete = done === project.stages.length;
+                const complete = projectIsComplete(project, drafts);
                 const started = done > 0 || Object.keys(drafts).some(k => k.startsWith(`sql-project-${project.id}-`));
-                const firstOpen = Math.max(0, project.stages.findIndex(s => !stageIsComplete(s, drafts, draftPrefix(project, s.id), project)));
-                // Continue opens the stage the learner was last on (as the workspace saves it), else the first unfinished one.
-                const saved = Number(drafts[draftPrefix(project, "current-stage")]);
-                const next = Number.isInteger(saved) && saved >= 0 && saved < project.stages.length ? saved : firstOpen;
-                const href = complete ? `${sqlProjectHref(project.id)}?stage=${project.stages[project.stages.length - 1].id}` : started ? `${sqlProjectHref(project.id)}?stage=${project.stages[next].id}` : sqlProjectHref(project.id);
+                // Every project opens on its overview, as in Python and PySpark; Continue there resumes.
+                const href = sqlProjectHref(project.id);
                 return (
                   <li key={project.id}>
                     <Link className="rx-project-card" href={href}>
                       <span className="rx-project-card-title">{project.title}</span>
-                      <span className="rx-project-card-meta">
-                        {label} · {datasetName(project.datasetId)}
-                        
-                      </span>
-                      <span className="rx-project-card-ask">{complete ? "Completed" : started ? `Stage ${next + 1} of ${project.stages.length} · ${project.stages[next].title}` : project.brief.ask}</span>
+                      <span className="rx-project-card-ask">{project.brief.ask}</span>
+                      <span className="rx-project-card-meta mono">{workStages(project).length} steps</span>
                       <span className="rx-project-card-cta">{complete ? "View project →" : started ? "Continue →" : "Start →"}</span>
                     </Link>
                   </li>
@@ -53,7 +46,6 @@ export function ProjectLibrary() {
             </ul>
           </section>
         ))}
-        <p className="rx-small">{projects.length} projects across all twelve Runtime datasets.</p>
       </div>
     </Shell>
   );

@@ -1,0 +1,127 @@
+{
+  "id": "PS-L017",
+  "minutes": 20,
+  "lede": "Many columns depend on a rule: a debit is negative, a big payment is \"large\", an unknown type is flagged. `F.when` writes those rules as a column, checked row by row, the way `if` and `elif` work in Python.",
+  "objectives": [
+    "Build a column from a rule with `F.when(condition, value).otherwise(other)`",
+    "Chain several `when`s and know that the first true condition wins",
+    "Predict what a row gets when no condition is true, or when a value is missing",
+    "Write the same rule as SQL with `CASE WHEN` in `selectExpr`"
+  ],
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "transactions"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "The `transactions` table above is loaded as a DataFrame called `transactions`, and `F` is `pyspark.sql.functions`. Every `amount` is positive; `direction` says whether money left the account (`debit`) or arrived (`credit`).\n\n`F.when(condition, value)` gives `value` on rows where the condition is true. `.otherwise(other)` gives `other` on every other row. The conditions are the ones you write for `filter` (lesson 10), and the result is a column you `select` and name with `alias`."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Debits become negative",
+      "code": "from pyspark.sql import functions as F\n\nsigned = F.when(F.col(\"direction\") == \"debit\", -F.col(\"amount\")).otherwise(F.col(\"amount\"))\ntransactions.select(\"transaction_id\", \"direction\", \"amount\", signed.alias(\"signed_amount\")).show(5)\n",
+      "note": "`-F.col(\"amount\")` flips the sign and keeps the type, `decimal(12,2)`. Credits keep their amount through `otherwise`."
+    },
+    {
+      "kind": "text",
+      "md": "Leave out `otherwise` and the rows where no condition is true get `NULL`. That's sometimes what you want (\"only fill this in for fuel\"), and sometimes a forgotten case."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "No otherwise means NULL",
+      "code": "from pyspark.sql import functions as F\n\ntransactions.select(\n    \"transaction_id\",\n    \"txn_type\",\n    F.when(F.col(\"txn_type\") == \"purchase\", \"spend\").alias(\"kind\"),\n).show(5)\n",
+      "note": "Only the purchases get `spend`. The deposits match no condition, so they get `NULL`."
+    },
+    {
+      "kind": "text",
+      "md": "Chain more `.when(...)` calls for more cases, like `elif`. Spark checks them **in order** and the first true one wins, so put the narrowest condition first. Here `amount >= 1000` must come before `amount >= 100`, or every large amount would stop at the first test and be called medium."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Several cases, in order",
+      "code": "from pyspark.sql import functions as F\n\nband = (\n    F.when(F.col(\"amount\") >= 1000, \"large\")\n    .when(F.col(\"amount\") >= 100, \"medium\")\n    .otherwise(\"small\")\n)\ntransactions.select(\"transaction_id\", \"amount\", band.alias(\"band\")).show(6)\n",
+      "note": "3100.00 passes the first test and is `large`. 800.00 fails it, passes the second and is `medium`. The rest are `small`."
+    },
+    {
+      "kind": "text",
+      "md": "A condition on a missing value isn't true, just as in `filter`. So a row with a missing value skips every `when` that tests it and lands in `otherwise`. If missing values deserve their own answer, test for the real values explicitly and let `otherwise` catch the rest."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "A missing value falls through",
+      "code": "from pyspark.sql import functions as F\n\nfuel = F.when(F.col(\"merchant_id\") == \"M004\", \"fuel\").otherwise(\"other\")\ntransactions.select(\"transaction_id\", \"merchant_id\", fuel.alias(\"spend_type\")).show(4)\n",
+      "note": "Deposits have no merchant. `NULL == \"M004\"` isn't true, so they get `other`, the same as a coffee shop."
+    },
+    {
+      "kind": "text",
+      "md": "In SQL the same rule is `CASE WHEN ... THEN ... ELSE ... END`, which works inside `selectExpr`. And the column you build is an ordinary column, so you can `filter` on it too."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "CASE WHEN, then filter on it",
+      "code": "banded = transactions.selectExpr(\n    \"transaction_id\",\n    \"amount\",\n    \"CASE WHEN amount >= 1000 THEN 'large' WHEN amount >= 100 THEN 'medium' ELSE 'small' END AS band\",\n)\nbanded.filter(banded.band != \"small\").show()\n",
+      "note": "The SQL version gives the same bands as the previous example. `banded.band` is another way to write `F.col(\"band\")` for a column of `banded`."
+    }
+  ],
+  "challenges": [
+    "PS-L017-C1",
+    "PS-L017-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "What does `F.when(F.col(\"amount\") >= 100, \"medium\").when(F.col(\"amount\") >= 1000, \"large\").otherwise(\"small\")` give for an amount of 3100?",
+      "choices": [
+        "large",
+        "medium",
+        "small",
+        "NULL"
+      ],
+      "answer": 1,
+      "why": "The first true condition wins. 3100 is at least 100, so it never reaches the `large` test. Put the narrower condition first."
+    },
+    {
+      "id": "k2",
+      "prompt": "What does `F.when(F.col(\"txn_type\") == \"purchase\", \"spend\")` give for a deposit?",
+      "choices": [
+        "spend",
+        "deposit",
+        "NULL",
+        "An error, because there's no otherwise"
+      ],
+      "answer": 2,
+      "why": "Without `otherwise`, rows where no condition is true get `NULL`. No error is raised."
+    },
+    {
+      "id": "k3",
+      "prompt": "`merchant_id` is missing on a row. What does `F.when(F.col(\"merchant_id\") == \"M004\", \"fuel\").otherwise(\"other\")` give?",
+      "choices": [
+        "fuel",
+        "other",
+        "NULL",
+        "An error"
+      ],
+      "answer": 1,
+      "why": "A comparison with a missing value isn't true, so the row skips the `when` and gets the `otherwise` value."
+    }
+  ],
+  "review": [
+    "`F.when(condition, value).otherwise(other)` builds a column from a rule, row by row.",
+    "Chain `.when(...)` for more cases. The first true condition wins, so order them narrowest first.",
+    "Without `otherwise`, rows that match nothing get `NULL`.",
+    "A condition on a missing value isn't true, so that row falls through to `otherwise`.",
+    "Conditions are the same as in `filter`: comparisons, `isin`, `&`, `|` and `~`.",
+    "In SQL text, write `CASE WHEN ... THEN ... ELSE ... END` inside `selectExpr`."
+  ],
+  "practice": ["PS-Q0081", "PS-Q0082", "PS-Q0083", "PS-Q0084", "PS-Q0085"]
+}

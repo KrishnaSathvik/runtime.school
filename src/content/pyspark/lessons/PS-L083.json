@@ -1,0 +1,145 @@
+{
+  "id": "PS-L083",
+  "minutes": 30,
+  "lede": "Retries, reruns and backfills all run a step again. When running it twice leaves the table exactly as running it once, none of them can hurt you, and that is something you design for, not something you get by default.",
+  "objectives": [
+    "Explain what makes a write idempotent, and show that a plain append isn't",
+    "Rerun a load safely by replacing exactly the slice it covers with `replaceWhere`",
+    "Backfill a date range twice and get the same table, including days that are now empty",
+    "Make a MERGE safe to rerun by matching on the natural key and removing duplicate deliveries first"
+  ],
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "transactions"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "A step is **idempotent** when running it twice leaves the table the same as running it once. That's what makes the last lesson's retries safe, and it's what you need for a **backfill**: loading a past range of dates again, after a bug fix or a late correction from the source.\n\nThe bank loads `transactions` into a Delta table with one extra column, `posted_date`, the day each one was posted: `F.to_date(\"posted_at\")`.\n\nStart with the obvious way to load a range of days: filter it and append. Then run it again, as a retry would."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Append twice, count twice",
+      "code": "from pyspark.sql import functions as F\n\npath = \"/tmp/bank/transactions\"\nposted = transactions.select(\"*\", F.to_date(\"posted_at\").alias(\"posted_date\"))\n\n\ndef load_range(start, end):\n    batch = posted.filter((F.col(\"posted_date\") >= start) & (F.col(\"posted_date\") <= end))\n    batch.write.format(\"delta\").mode(\"append\").save(path)\n\n\nload_range(\"2026-02-19\", \"2026-02-25\")\nprint(spark.read.format(\"delta\").load(path).count(), \"rows after one run\")\n\nload_range(\"2026-02-19\", \"2026-02-25\")\ntable = spark.read.format(\"delta\").load(path)\nprint(table.count(), \"rows after two runs\")\ntable.filter(F.col(\"transaction_id\") == \"T000010\").select(\"transaction_id\", \"posted_date\", \"amount\").show()\n",
+      "note": "Five transactions, loaded twice: ten rows, and every one of them counted twice in any total. Nothing failed and nothing warned. An append adds what you give it, every time."
+    },
+    {
+      "kind": "text",
+      "md": "The fix is to make the write say **which slice of the table it owns**, and replace that slice whole. Delta's `replaceWhere` option does that: with `mode(\"overwrite\")`, it deletes the rows that match the condition and writes the new ones, in one commit. Rows outside the condition aren't touched.\n\nThe source must be filtered to the same condition. Delta checks that every row you write falls inside it, and refuses the write otherwise (the error example at the end shows it)."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Replace the slice you load",
+      "code": "from pyspark.sql import functions as F\n\npath = \"/tmp/bank/transactions\"\nposted = transactions.select(\"*\", F.to_date(\"posted_at\").alias(\"posted_date\"))\nposted.write.format(\"delta\").save(path)\n\n\ndef load_range(start, end):\n    in_range = (F.col(\"posted_date\") >= start) & (F.col(\"posted_date\") <= end)\n    (\n        posted.filter(in_range)\n        .write.format(\"delta\")\n        .mode(\"overwrite\")\n        .option(\"replaceWhere\", f\"posted_date >= '{start}' AND posted_date <= '{end}'\")\n        .save(path)\n    )\n\n\nload_range(\"2026-02-19\", \"2026-02-25\")\nonce = sorted(spark.read.format(\"delta\").load(path).collect())\nload_range(\"2026-02-19\", \"2026-02-25\")\ntwice = sorted(spark.read.format(\"delta\").load(path).collect())\n\nprint(len(once), len(twice), once == twice)\nfor row in spark.sql(f\"DESCRIBE HISTORY delta.`{path}`\").select(\"version\", \"operation\").collect():\n    print(row.version, row.operation)\n",
+      "note": "Fourteen rows after each run, and the same fourteen: `sorted(...collect())` puts both versions in one order, so `==` compares every value. Each run is still a new version in the history. Idempotent means the same **content**, not no commit."
+    },
+    {
+      "kind": "text",
+      "md": "Backfills bring a case that's easy to miss: a day that **used to have rows and now has none**. Say the source system removes a test transaction posted on 24 February, and you backfill the week to pick that up.\n\nIf the table is partitioned by `posted_date`, you might reach for what the partitioned files lesson used to replace partitions: `partitionOverwriteMode` set to `dynamic`. It replaces only the days that appear in the new data. A day with no new rows isn't in the new data, so its old rows stay. `replaceWhere` replaces the whole range you name, whatever the new data holds."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "A day that is now empty",
+      "code": "from pyspark.sql import functions as F\n\nposted = transactions.select(\"*\", F.to_date(\"posted_at\").alias(\"posted_date\"))\nfixed = posted.filter(F.col(\"transaction_id\") != \"T000011\")  # the source removed this one\nweek = (F.col(\"posted_date\") >= \"2026-02-19\") & (F.col(\"posted_date\") <= \"2026-02-25\")\n\nfor how in (\"dynamic\", \"replaceWhere\"):\n    path = f\"/tmp/bank/{how}\"\n    posted.write.format(\"delta\").partitionBy(\"posted_date\").save(path)\n    writer = fixed.filter(week).write.format(\"delta\").mode(\"overwrite\")\n    if how == \"dynamic\":\n        writer = writer.option(\"partitionOverwriteMode\", \"dynamic\")\n    else:\n        writer = writer.option(\"replaceWhere\", \"posted_date >= '2026-02-19' AND posted_date <= '2026-02-25'\")\n    writer.save(path)\n    left = spark.read.format(\"delta\").load(path).filter(F.col(\"transaction_id\") == \"T000011\").count()\n    print(how, \"- T000011 rows left:\", left)\n",
+      "note": "With dynamic overwrite the removed transaction is still there: no row in the new data was dated 24 February, so that day was never replaced. Running it again changes nothing either, so it's idempotent and still wrong. `replaceWhere` emptied the day."
+    },
+    {
+      "kind": "text",
+      "md": "`replaceWhere` fits when the new data is **the whole truth** for a range. A feed that only sends what changed is different: a row it doesn't mention must stay. That's a MERGE, and a MERGE is idempotent when it matches on the **natural key**, the column that names one real thing. Here that's `transaction_id`. A merge that only inserts missing transactions inserts nothing the second time. A merge that changes no rows doesn't even write a new version."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Insert what's missing, by key",
+      "code": "from delta.tables import DeltaTable\nfrom pyspark.sql import functions as F\n\npath = \"/tmp/bank/transactions\"\ntransactions.filter(F.col(\"posted_at\") < \"2026-02-20\").write.format(\"delta\").save(path)\ntable = DeltaTable.forPath(spark, path)\n\n\ndef add_new(feed):\n    (\n        table.alias(\"t\")\n        .merge(feed.alias(\"s\"), \"t.transaction_id = s.transaction_id\")\n        .whenNotMatchedInsertAll()\n        .execute()\n    )\n\n\nfeed = transactions.filter(F.col(\"posted_at\") >= \"2026-02-15\")\nadd_new(feed)\nprint(spark.read.format(\"delta\").load(path).count(), \"rows\")\nadd_new(feed)\nprint(spark.read.format(\"delta\").load(path).count(), \"rows\")\nprint([row.version for row in table.history().collect()])\n",
+      "note": "The feed overlaps the table: two of its transactions were already loaded. The first merge added only the six new ones, and the second found nothing to add, so there are still two versions: the first write and one merge."
+    },
+    {
+      "kind": "text",
+      "md": "There's one catch. A merge matches the **source** against the table, not the source against itself. If a feed delivers the same transaction twice and it's new, both copies are inserted. On the next run, both table rows match, and a merge that updates refuses to run.\n\nSo remove duplicate deliveries before merging. `dropDuplicates([\"transaction_id\"])` keeps one row per `transaction_id`. Which copy it keeps isn't defined, so use it when the copies are identical, as a re-sent row is. When copies differ, decide which one wins first, for example the latest version."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "A feed that sends a row twice",
+      "code": "from delta.tables import DeltaTable\nfrom pyspark.sql import functions as F\n\nfeed = transactions.filter(F.col(\"posted_at\") >= \"2026-02-24\")\nresent = feed.filter(F.col(\"transaction_id\") == \"T000012\")\ndoubled = feed.union(resent)  # the bank's feed sent T000012 twice\n\nfor name, source in ((\"as delivered\", doubled), (\"deduplicated\", doubled.dropDuplicates([\"transaction_id\"]))):\n    path = f\"/tmp/bank/{name.replace(' ', '_')}\"\n    transactions.filter(F.col(\"posted_at\") < \"2026-02-24\").write.format(\"delta\").save(path)\n    table = DeltaTable.forPath(spark, path)\n    table.alias(\"t\").merge(source.alias(\"s\"), \"t.transaction_id = s.transaction_id\").whenNotMatchedInsertAll().execute()\n    copies = spark.read.format(\"delta\").load(path).filter(F.col(\"transaction_id\") == \"T000012\").count()\n    print(name, \"- rows for T000012:\", copies)\n",
+      "note": "`union` stacks two DataFrames with the same columns; here it stages the re-sent row. Merged as delivered, the table now holds T000012 twice. Deduplicated on the key first, it holds it once."
+    },
+    {
+      "kind": "text",
+      "md": "A few more habits keep a step rerunnable:\n\n- Take the dates a step covers as **parameters**, so a retry or a backfill reruns exactly the same range. A step that reads today's date loads a different range when it's rerun tomorrow.\n- Don't stamp rows with the time of the run, such as `F.current_timestamp()`, if you compare runs: two runs then never give the same table. Put the run time in a log instead.\n- Pick the write by what the source is: the whole truth for a range (`replaceWhere`), or changes to some keys (MERGE on the natural key, deduplicated first). Use `append` only for data that's new every time, such as a run log."
+    },
+    {
+      "kind": "error-example",
+      "id": "e6",
+      "title": "Writing outside the slice",
+      "code": "from pyspark.sql import functions as F\n\npath = \"/tmp/bank/transactions\"\nposted = transactions.select(\"*\", F.to_date(\"posted_at\").alias(\"posted_date\"))\nposted.write.format(\"delta\").save(path)\n\nposted.write.format(\"delta\").mode(\"overwrite\").option(\"replaceWhere\", \"posted_date >= '2026-02-19' AND posted_date <= '2026-02-25'\").save(path)\n",
+      "error": "AnalysisException",
+      "note": "The source wasn't filtered, so it held rows from January too. Delta refuses the write and commits nothing, with the condition `DELTA_REPLACE_WHERE_MISMATCH`. Filter the source with the same condition you give `replaceWhere`."
+    }
+  ],
+  "challenges": [
+    "PS-L083-C1",
+    "PS-L083-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "A daily load appends the day's transactions to a Delta table. It fails after writing, and the retry runs the whole step again. What does the table hold for that day?",
+      "choices": [
+        "The day once: Delta removes the repeat",
+        "The day twice",
+        "Nothing: the retry fails",
+        "The day once, because the first write is rolled back"
+      ],
+      "answer": 1,
+      "why": "The first append committed before the failure, and the retry appends the same rows again. Delta keeps whatever each committed write added."
+    },
+    {
+      "id": "k2",
+      "prompt": "You backfill 19–25 February into a table partitioned by `posted_date`. After a fix, the source has no rows for 24 February. Which write removes that day's old rows?",
+      "choices": [
+        "Overwrite with `partitionOverwriteMode` set to `dynamic`",
+        "Overwrite with `replaceWhere` on the range",
+        "Append",
+        "A MERGE that inserts missing rows"
+      ],
+      "answer": 1,
+      "why": "`replaceWhere` replaces the whole range. Dynamic overwrite replaces only the days in the new data, and 24 February isn't in it."
+    },
+    {
+      "id": "k3",
+      "prompt": "A feed sends a new transaction twice, identical both times. A merge on `transaction_id` with `whenNotMatchedInsertAll()` applies it to a table that doesn't have it. What happens?",
+      "choices": [
+        "The merge fails",
+        "One row is inserted",
+        "Both rows are inserted",
+        "Nothing is inserted"
+      ],
+      "answer": 2,
+      "why": "Neither copy matches a table row, so both are inserted. A merge only fails when several source rows match the same table row. Deduplicate the source on the key first."
+    }
+  ],
+  "review": [
+    "Idempotent: running a step twice leaves the same table as running it once. Retries and backfills depend on it.",
+    "`append` is never idempotent: a rerun adds every row again, silently.",
+    "`mode(\"overwrite\")` with `replaceWhere` replaces exactly the slice you name; filter the source to the same condition.",
+    "Dynamic partition overwrite skips days that are missing from the new data, so their old rows stay.",
+    "A MERGE on the natural key is safe to rerun, once duplicate deliveries are removed with `dropDuplicates([key])`.",
+    "Pass the dates a step covers as parameters, and keep run times out of the rows you compare."
+  ],
+  "practice": [
+    "PS-Q0411",
+    "PS-Q0412",
+    "PS-Q0413",
+    "PS-Q0414",
+    "PS-Q0415"
+  ]
+}

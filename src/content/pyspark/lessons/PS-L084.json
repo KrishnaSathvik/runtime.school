@@ -1,0 +1,147 @@
+{
+  "id": "PS-L084",
+  "minutes": 30,
+  "lede": "A dashboard that says \"everything is fine\" is only worth something if the numbers behind it are right. Request logs and metrics are data like any other, and the checks that raise alerts are queries you can write and test.",
+  "objectives": [
+    "Compute request counts, server errors and error rates per service from request logs",
+    "Compute latency percentiles with `percentile_approx`, and explain when it is exact",
+    "Check service-level objectives window by window and turn breaches into alert rows",
+    "Check freshness: how long since each source last sent data, against a fixed check time"
+  ],
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "api_requests",
+      "service_metrics",
+      "application_logs"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "The Spark UI and the job's own logs tell you how a **Spark job** ran. This lesson is about the system the data describes: is each service fast enough, is it working, and is its data still arriving? Three numbers answer most of that:\n\n- **Traffic and errors**: how many requests, and how many failed on the server's side.\n- **Latency**: how long requests took, as percentiles.\n- **Freshness**: how long since data last arrived.\n\nA **service-level objective** (SLO) is a target for one of them, such as \"95% of checkout requests finish within 800 ms\". An SLA is a promise to customers built on such targets. A **breach** is a time window where the target was missed.\n\n`api_requests` has one row per request. A status code from 500 to 599 is a server error. A 4xx code, such as 404 for an item that doesn't exist, is the caller's mistake: it doesn't count against the service."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Requests, server errors and error rate",
+      "code": "from pyspark.sql import functions as F\n\nserver_error = F.col(\"status_code\").between(500, 599)\n\nreport = api_requests.groupBy(\"service\").agg(\n    F.count(\"*\").alias(\"requests\"),\n    F.count(F.when(server_error, 1)).alias(\"server_errors\"),\n)\nreport.select(\"*\", F.round(F.col(\"server_errors\") / F.col(\"requests\") * 100, 1).alias(\"error_pct\")).orderBy(\"service\").show()\n",
+      "note": "`F.count` counts values that aren't NULL, and `F.when` without `otherwise` is NULL when the condition is false, so `F.count(F.when(...))` counts the rows that match. The 404 on `catalog-api` isn't an error. `checkout-api` had one 500 out of two requests: 50%."
+    },
+    {
+      "kind": "text",
+      "md": "An average hides the slow requests that users notice. Percentiles don't: the **p95 latency** is the latency that 95% of requests are at or below. The usual definition is **nearest rank**: sort the latencies and take the one at position `ceil(0.95 × n)`.\n\n`F.percentile_approx(col, 0.95)` computes it. It's built for huge data: instead of sorting every value, it keeps a compact summary of each partition and merges them. Its `accuracy` argument, 10 000 by default, bounds the error: the answer is always a value from the column, at most about `n / 10 000` positions from the exact one. So on groups smaller than that, like every group here, it is exact. On a billion rows it can be a little off.\n\n`F.percentile` gives an exact answer a different way: it sorts all the values and interpolates between neighbours, so its result can be a latency no request had. Both are correct; they're different definitions. Pick one and use it everywhere, or the same window gets two p95s."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Two ways to get a p95",
+      "code": "from pyspark.sql import functions as F\n\ncatalog = api_requests.filter(F.col(\"service\") == \"catalog-api\")\nprint(sorted(row.latency_ms for row in catalog.select(\"latency_ms\").collect()))\n\ncatalog.agg(\n    F.percentile_approx(\"latency_ms\", 0.5).alias(\"p50_rank\"),\n    F.percentile_approx(\"latency_ms\", 0.95).alias(\"p95_rank\"),\n    F.percentile(\"latency_ms\", 0.5).alias(\"p50_interpolated\"),\n    F.percentile(\"latency_ms\", 0.95).alias(\"p95_interpolated\"),\n).show()\n\nservice_metrics.filter(F.col(\"service\") == \"catalog-api\").select(\"p50_latency_ms\", \"p95_latency_ms\").show()\n",
+      "note": "Five requests, so the p95 by nearest rank is the 5th value, 51, and the median is the 3rd, 40. `percentile_approx` agrees, and so does `service_metrics`, which uses nearest rank. `F.percentile` interpolates: its p95 lies between 42 and 51."
+    },
+    {
+      "kind": "text",
+      "md": "`service_metrics` already has these numbers per service for each 5-minute window. Checking an SLO is now a filter. Each check gives a reason when its target is missed, and the windows with a reason become **alert rows**: what broke, where, when, and the value that broke it. An alert row is ordinary data. You can store it, count it, and test the check that made it.\n\nWrite the targets down as values, not buried in the condition, so the alert can show them too."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Windows that breach an SLO",
+      "code": "from pyspark.sql import functions as F\n\nmax_p95_ms = 800\nmax_error_pct = 5.0\n\nerror_pct = F.round(F.col(\"error_count\") / F.col(\"request_count\") * 100, 2)\nslow = F.col(\"p95_latency_ms\") > max_p95_ms\nfailing = error_pct > max_error_pct\n\nreason = (\n    F.when(slow & failing, \"latency and errors\")\n    .when(slow, \"latency\")\n    .when(failing, \"errors\")\n)\n\nalerts = service_metrics.select(\n    \"service\", \"window_start\", \"p95_latency_ms\", error_pct.alias(\"error_pct\"), reason.alias(\"alert\")\n).filter(F.col(\"alert\").isNotNull())\nalerts.show(truncate=False)\n",
+      "note": "Only `checkout-api` breached in the 10:00 window: its p95 was 1240 ms, and one of its two requests failed. Testing both conditions first keeps a window that breaks both targets from showing only the first. A window right on a target, 800 ms exactly, isn't a breach: the SLO says \"within\"."
+    },
+    {
+      "kind": "text",
+      "md": "A service can look perfectly healthy because it has gone **quiet**: no requests, no errors, no slow windows. A freshness check catches that. Take the latest timestamp per source and compare it with the time of the check.\n\nUse a **fixed** check time, passed in, not `F.current_timestamp()`. A check that reads the clock gives a different answer every run, so you can't test it or rerun it for yesterday. A scheduled job passes the time it was scheduled for. `F.unix_timestamp` turns a timestamp into whole seconds, so the difference of two is a number of seconds."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Who has gone quiet?",
+      "code": "from pyspark.sql import functions as F\n\ncheck_time = F.lit(\"2026-04-14 10:02:00\").cast(\"timestamp\")\nmax_silence_s = 90\n\nlast_seen = application_logs.groupBy(\"service\").agg(F.max(\"logged_at\").alias(\"last_log\"))\nquiet_s = F.unix_timestamp(check_time) - F.unix_timestamp(\"last_log\")\n\nlast_seen.select(\n    \"service\",\n    \"last_log\",\n    quiet_s.alias(\"quiet_s\"),\n    F.when(quiet_s > max_silence_s, \"stale\").otherwise(\"fresh\").alias(\"freshness\"),\n).orderBy(\"service\").show(truncate=False)\n",
+      "note": "At 10:02 the catalog and auth services had been silent for almost two minutes, longer than the 90 seconds allowed. A service that never logged at all has no row here: to catch it, compare against the list of services you expect."
+    },
+    {
+      "kind": "text",
+      "md": "Different checks give different alerts, but one alert table is easier to route and count. Give every check the same columns: the service, the time it refers to, what's wrong, and the value. `unionByName` stacks DataFrames by column name, so the order in which each check lists its columns doesn't matter."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "One table of alerts",
+      "code": "from pyspark.sql import functions as F\n\ncheck_time = F.lit(\"2026-04-14 10:02:00\").cast(\"timestamp\")\n\nslow = service_metrics.filter(F.col(\"p95_latency_ms\") > 800).select(\n    \"service\",\n    F.col(\"window_start\").alias(\"at\"),\n    F.lit(\"latency\").alias(\"alert\"),\n    F.col(\"p95_latency_ms\").cast(\"long\").alias(\"value\"),\n)\n\nquiet = (\n    application_logs.groupBy(\"service\")\n    .agg(F.max(\"logged_at\").alias(\"at\"))\n    .select(\"service\", \"at\", (F.unix_timestamp(check_time) - F.unix_timestamp(\"at\")).alias(\"value\"))\n    .filter(F.col(\"value\") > 90)\n    .select(\"service\", \"at\", F.lit(\"stale\").alias(\"alert\"), \"value\")\n)\n\nslow.unionByName(quiet).orderBy(\"service\", \"alert\").show(truncate=False)\n",
+      "note": "Three alerts from two checks, in one shape. `value` means milliseconds for a latency alert and seconds for a stale one; in a real alert table you'd add a unit or the target next to it."
+    },
+    {
+      "kind": "text",
+      "md": "All of this ran here as a batch, over a fixed slice of data, in local mode. In production the same queries run every few minutes on a schedule, or on a stream, and the alert rows go to whatever pages the on-call engineer. The logic, and the way you test it, stay the same."
+    },
+    {
+      "kind": "error-example",
+      "id": "e6",
+      "title": "95 is not 0.95",
+      "code": "from pyspark.sql import functions as F\n\napi_requests.groupBy(\"service\").agg(F.percentile_approx(\"latency_ms\", 95)).show()\n",
+      "error": "AnalysisException",
+      "note": "The percentage is a fraction between 0 and 1. Spark checks it when the query is built and fails with `DATATYPE_MISMATCH.VALUE_OUT_OF_RANGE`."
+    }
+  ],
+  "challenges": [
+    "PS-L084-C1",
+    "PS-L084-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "A service answered 200 requests: 6 with status 404, 2 with 503, the rest 200. What is its server error rate?",
+      "choices": [
+        "4%",
+        "3%",
+        "1%",
+        "0%"
+      ],
+      "answer": 2,
+      "why": "Only 5xx codes are server errors: 2 out of 200 is 1%. A 404 is the caller asking for something that isn't there."
+    },
+    {
+      "id": "k2",
+      "prompt": "A group has 4 000 latencies. Is `F.percentile_approx(\"latency_ms\", 0.95)` exact?",
+      "choices": [
+        "Yes: with the default accuracy of 10 000, it is exact for fewer than 10 000 values",
+        "No: it always samples the data",
+        "No: it interpolates between values",
+        "Only if the data fits in one partition"
+      ],
+      "answer": 0,
+      "why": "Its error is at most about n / accuracy positions, under one position here, so it returns the exact nearest-rank value. On much bigger groups it can be a few positions off."
+    },
+    {
+      "id": "k3",
+      "prompt": "A freshness check compares each source's last timestamp with `F.current_timestamp()`. What's the problem?",
+      "choices": [
+        "`current_timestamp` isn't allowed in a filter",
+        "It is always in UTC",
+        "Every run gives a different answer, so it can't be tested or rerun for a past time",
+        "It makes the query slower"
+      ],
+      "answer": 2,
+      "why": "Pass the check time in. A scheduled job uses the time it was scheduled for, and a test or a rerun gets the same answer every time."
+    }
+  ],
+  "review": [
+    "Traffic, server errors (5xx only), latency percentiles and freshness answer most \"is it healthy?\" questions.",
+    "`F.count(F.when(cond, 1))` counts the rows where a condition holds.",
+    "`percentile_approx` returns a value from the column and is exact below about 10 000 values per group; `F.percentile` interpolates. Use one definition everywhere.",
+    "An SLO check is a condition per window; breaches become alert rows with what, where, when and the value.",
+    "Freshness compares the last timestamp with a fixed check time that you pass in, never the clock.",
+    "Give every check the same columns and stack them with `unionByName` into one alert table."
+  ],
+  "practice": [
+    "PS-Q0416",
+    "PS-Q0417",
+    "PS-Q0418",
+    "PS-Q0419",
+    "PS-Q0420"
+  ]
+}

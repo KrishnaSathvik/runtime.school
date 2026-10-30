@@ -1,0 +1,60 @@
+{
+  "id": "PS-L058-C1",
+  "slug": "sending-warehouse-for-each-shipment",
+  "lesson": "PS-L058",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Sending warehouse for each shipment",
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0"
+  },
+  "prompt": "The dispatch board shows each shipment with the name and region of the warehouse sending it. `warehouses` is tiny, so broadcast it. Write `solve(shipments, warehouses)` so it returns `shipment_id`, `warehouse_id`, `warehouse_name` and `region`.",
+  "rules": [
+    "Every shipment appears exactly once. If its warehouse isn't in `warehouses`, `warehouse_name` and `region` are missing.",
+    "A warehouse with no shipments doesn't appear.",
+    "`warehouse_name` is the warehouse's `name`. Return only these four columns, in this order."
+  ],
+  "hints": [
+    "Every shipment must stay, matched or not. Which join type keeps every row of the left side?",
+    "Broadcast the side that isn't kept whole: `shipments.join(F.broadcast(warehouses), ...)`.",
+    "Rename in the `select` with `F.col(\"name\").alias(\"warehouse_name\")`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "shipments",
+    "warehouses"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(shipments, warehouses):\n    # Return shipment_id, warehouse_id, warehouse_name and region for every shipment.\n    return shipments\n",
+  "output": {
+    "columns": [
+      "shipment_id",
+      "warehouse_id",
+      "warehouse_name",
+      "region"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "technique": {
+    "name": "a broadcast join",
+    "plan": [
+      "BroadcastHashJoin"
+    ],
+    "source": [
+      "broadcast",
+      "hint"
+    ]
+  }
+}

@@ -1,0 +1,52 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D04",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "observations"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "+--------------+-----+--------+\n|observation_id|value|    band|\n+--------------+-----+--------+\n|     OBS000001|  8.7|diabetes|\n|     OBS000005|  8.0|diabetes|\n|     OBS000006|  8.0|diabetes|\n|     OBS000010|  5.1|  normal|\n+--------------+-----+--------+\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "test_boundaries passed\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "",
+   "error": {
+    "type": "AssertionError",
+    "message": "got [('O6', 'diabetes'), ('O7', 'diabetes')]",
+    "line": 17,
+    "condition": null
+   }
+  },
+  "e4": {
+   "stdout": "same rows, in any order\nPySparkAssertionError DIFFERENT_SCHEMA\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "an empty input gives an empty result with the right columns\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "test_clean passed\n",
+   "error": {
+    "type": "AssertionError",
+    "message": "got [('OBS1', 'diabetes'), ('OBS2', 'normal')]",
+    "line": 34,
+    "condition": null
+   }
+  }
+ }
+}

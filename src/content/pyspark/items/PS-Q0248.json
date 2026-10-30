@@ -1,0 +1,69 @@
+{
+  "id": "PS-Q0248",
+  "slug": "average-latency-abandoned-requests",
+  "lesson": "PS-L050",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Average latency with abandoned requests",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "Some callers give up before the API answers; those requests have no `latency_ms`. Write `solve(api_requests)` with pair RDD functions so it returns, per `endpoint`, how many requests it had, how many have a latency, and their average latency.",
+  "rules": [
+    "One row per `endpoint`; requests with no endpoint are grouped together under a missing endpoint.",
+    "`requests` counts every request; `timed` counts those with a `latency_ms`.",
+    "`avg_latency_ms` is the average of the latencies that are there, not rounded. A missing latency is left out, never treated as 0; an endpoint with no latency at all has a missing average.",
+    "Return `endpoint` (text), `requests`, `timed` (both `bigint`) and `avg_latency_ms` (`double`), in that order."
+  ],
+  "hints": [
+    "Carry three numbers per request: `(1, 1 if it has a latency else 0, latency or 0)`.",
+    "`reduceByKey` adds the three parts; the average is the total divided by `timed`, computed once at the end.",
+    "Dividing by a `timed` of 0 raises. Return `None` for those endpoints, and use `/`, not `//`."
+  ],
+  "explanation": "Map each request to `(endpoint, (1, has_latency, latency or 0))`, add the three parts with `reduceByKey`, then divide the total by `timed` at the end, giving `None` when `timed` is 0. Counting a missing latency as 0 drags the average down, dropping the untimed requests up front loses them from `requests` (and loses an endpoint whose callers all gave up), and `//` cuts the fraction off, so 42.75 becomes 42.",
+  "entry": "solve",
+  "inputs": [
+    "api_requests"
+  ],
+  "starter": "def solve(api_requests):\n    # Requests, timed requests and average latency per endpoint, with pair RDD functions.\n    return api_requests\n",
+  "output": {
+    "columns": [
+      "endpoint",
+      "requests",
+      "timed",
+      "avg_latency_ms"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "technique": {
+    "name": "pair RDD functions",
+    "plan": [
+      "Scan"
+    ],
+    "source": [
+      "reduceByKey",
+      "groupByKey",
+      "aggregateByKey",
+      "combineByKey",
+      "foldByKey",
+      "mapValues",
+      "flatMapValues",
+      "countByKey"
+    ]
+  }
+}

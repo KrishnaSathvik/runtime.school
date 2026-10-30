@@ -1,0 +1,245 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "event_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "action",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "country",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "device_type",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "CA-0001",
+     "add",
+     "US",
+     "mobile"
+    ],
+    [
+     "CA-0003",
+     "add",
+     "DE",
+     "desktop"
+    ],
+    [
+     "CA-0004",
+     "remove",
+     "DE",
+     "desktop"
+    ],
+    [
+     "CA-0002",
+     "add",
+     "US",
+     "mobile"
+    ],
+    [
+     "CA-0005",
+     "add",
+     "CA",
+     "tablet"
+    ],
+    [
+     "CA-0006",
+     "add",
+     null,
+     null
+    ],
+    [
+     "CA-0007",
+     "add",
+     null,
+     null
+    ]
+   ],
+   "row_count": 7,
+   "inputs": {
+    "cart_events": [
+     [
+      "CA-0001",
+      "SES-0001",
+      "CU-001",
+      "2026-03-14T10:04:10",
+      "2026-03-14T10:04:12",
+      "1",
+      "add",
+      "[{\"sku\":\"SKU-1001\",\"qty\":1,\"price\":89.0}]"
+     ],
+     [
+      "CA-0002",
+      "SES-0001",
+      "CU-001",
+      "2026-03-14T10:05:00",
+      "2026-03-14T10:24:55",
+      "3",
+      "add",
+      "[{\"sku\":\"SKU-1013\",\"qty\":2,\"price\":11.99}]"
+     ],
+     [
+      "CA-0003",
+      "SES-0003",
+      "CU-002",
+      "2026-03-14T10:14:05",
+      "2026-03-14T10:14:08",
+      "2",
+      "add",
+      "[{\"sku\":\"SKU-1002\",\"qty\":1,\"price\":119.95},{\"sku\":\"SKU-1008\",\"qty\":1,\"price\":34.99}]"
+     ],
+     [
+      "CA-0004",
+      "SES-0003",
+      "CU-002",
+      "2026-03-14T10:15:10",
+      "2026-03-14T10:15:12",
+      "2",
+      "remove",
+      "[{\"sku\":\"SKU-1008\",\"qty\":1,\"price\":34.99}]"
+     ],
+     [
+      "CA-0005",
+      "SES-0004",
+      "CU-003",
+      "2026-03-14T10:25:40",
+      "2026-03-14T10:25:43",
+      "3",
+      "add",
+      "[{\"sku\":\"SKU-1005\",\"qty\":3,\"price\":24.0}]"
+     ],
+     [
+      "CA-0006",
+      null,
+      null,
+      "2026-03-14T10:39:00",
+      "2026-03-14T10:39:00",
+      "4",
+      "add",
+      "[{\"sku\":\"SKU-1007\",\"qty\":1,\"price\":20.0}]"
+     ],
+     [
+      "CA-0007",
+      "SES-0099",
+      "CU-099",
+      "2026-03-14T10:44:00",
+      "2026-03-14T10:44:00",
+      "5",
+      "add",
+      "[{\"sku\":\"SKU-1003\",\"qty\":1,\"price\":20.0}]"
+     ]
+    ],
+    "sessions": [
+     [
+      "SES-0001",
+      "CU-001",
+      "2026-03-14T10:01:05",
+      "2026-03-14T10:09:40",
+      "mobile",
+      "iOS",
+      "US",
+      "/",
+      "social",
+      "CMP-0007"
+     ],
+     [
+      "SES-0002",
+      null,
+      "2026-03-14T10:04:12",
+      "2026-03-14T10:05:22",
+      "desktop",
+      "Windows",
+      "GB",
+      "/c/tents",
+      "organic",
+      null
+     ],
+     [
+      "SES-0003",
+      "CU-002",
+      "2026-03-14T10:12:00",
+      "2026-03-14T10:19:55",
+      "desktop",
+      "macOS",
+      "DE",
+      "/c/jackets",
+      "email",
+      "CMP-0012"
+     ],
+     [
+      "SES-0004",
+      "CU-003",
+      "2026-03-14T10:23:30",
+      "2026-03-14T10:25:40",
+      "tablet",
+      "Android",
+      "CA",
+      "/",
+      "direct",
+      null
+     ],
+     [
+      "SES-0005",
+      null,
+      "2026-03-14T10:38:00",
+      "2026-03-14T10:41:50",
+      "mobile",
+      "Android",
+      "US",
+      "/p/SKU-1007",
+      "social",
+      "CMP-0007"
+     ],
+     [
+      "SES-0003",
+      "CU-002",
+      "2026-03-14T10:12:00",
+      "2026-03-14T10:19:55",
+      "desktop",
+      "macOS",
+      "DE",
+      "/c/jackets",
+      "email",
+      "CMP-0012"
+     ],
+     [
+      null,
+      null,
+      "2026-03-14T10:00:00",
+      "2026-03-14T10:30:00",
+      "desktop",
+      "iOS",
+      "FR",
+      "/",
+      "direct",
+      null
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice cart events and sessions",
+  "visits listed two and three times",
+  "events with no visit id next to visit rows with no id",
+  "no cart events at all"
+ ]
+}

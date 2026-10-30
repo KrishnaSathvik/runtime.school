@@ -1,0 +1,1769 @@
+{
+ "id": "PS-D01",
+ "version": "1.1.0",
+ "title": "Retail Commerce",
+ "generated_by": "services/spark-runner/datasets/d01_retail.py",
+ "rules": [
+  "status is one of placed, paid, shipped, delivered, cancelled, refunded, always lowercase.",
+  "total is the sum of quantity \u00d7 unit_price over the order's lines, in exact decimals.",
+  "total is missing (null) for some placed orders whose basket wasn't priced yet.",
+  "unit_price on an order line is the price at the time of the order, which may differ from today's product price.",
+  "The practice edition contains a few rows delivered twice by the ingestion job (exact duplicates); removing them is taught in the deduplication lesson.",
+  "The project edition is a raw export with problems to clean: statuses outside the six (wrong case, unknown words, missing), negative or missing totals, missing order dates, and dates outside 2026."
+ ],
+ "relationships": [
+  {
+   "from": "orders.customer_id",
+   "to": "customers.customer_id"
+  },
+  {
+   "from": "order_items.order_id",
+   "to": "orders.order_id"
+  },
+  {
+   "from": "order_items.product_id",
+   "to": "products.product_id"
+  }
+ ],
+ "tables": {
+  "customers": {
+   "note": "One row per customer: where they live, whether they buy for a business, when they signed up.",
+   "columns": [
+    {
+     "name": "customer_id",
+     "type": "string"
+    },
+    {
+     "name": "name",
+     "type": "string"
+    },
+    {
+     "name": "city",
+     "type": "string"
+    },
+    {
+     "name": "segment",
+     "type": "string"
+    },
+    {
+     "name": "signup_date",
+     "type": "date"
+    }
+   ],
+   "key": [
+    "customer_id"
+   ],
+   "rows": {
+    "lesson": 6,
+    "practice": 300,
+    "project": 400
+   },
+   "lesson": [
+    [
+     "C0001",
+     "Ines Okafor",
+     "Leeds",
+     "consumer",
+     "2025-04-30"
+    ],
+    [
+     "C0002",
+     "Kofi Mori",
+     "Lisbon",
+     "consumer",
+     "2024-11-19"
+    ],
+    [
+     "C0003",
+     "Tomas Okafor",
+     "Denver",
+     "consumer",
+     "2024-05-08"
+    ],
+    [
+     "C0004",
+     "Ines Costa",
+     "Denver",
+     "business",
+     "2024-11-15"
+    ],
+    [
+     "C0005",
+     "Maya Rao",
+     "Perth",
+     "consumer",
+     "2024-05-01"
+    ],
+    [
+     "C0006",
+     "Hana Rao",
+     "Osaka",
+     "consumer",
+     "2025-11-07"
+    ]
+   ],
+   "practice_head": [
+    [
+     "C0001",
+     "Kofi Rao",
+     "Austin",
+     "consumer",
+     "2025-12-13"
+    ],
+    [
+     "C0002",
+     "Tomas Lind",
+     "Lisbon",
+     "consumer",
+     "2024-06-08"
+    ],
+    [
+     "C0003",
+     "Leo Mori",
+     "Denver",
+     "consumer",
+     "2025-07-22"
+    ],
+    [
+     "C0004",
+     "Anika Haddad",
+     "Lyon",
+     "consumer",
+     "2024-05-14"
+    ],
+    [
+     "C0005",
+     "Ines Okafor",
+     "Denver",
+     "consumer",
+     "2025-10-15"
+    ],
+    [
+     "C0006",
+     "Maya Weber",
+     "Lisbon",
+     "business",
+     "2025-02-18"
+    ],
+    [
+     "C0007",
+     "Arjun Lind",
+     "Pune",
+     "business",
+     "2025-10-04"
+    ],
+    [
+     "C0008",
+     "Ravi Novak",
+     "Lisbon",
+     "consumer",
+     "2025-02-17"
+    ],
+    [
+     "C0009",
+     "Ravi Haddad",
+     "Lisbon",
+     "consumer",
+     "2025-11-25"
+    ],
+    [
+     "C0010",
+     "Hana Novak",
+     "Austin",
+     "consumer",
+     "2024-03-27"
+    ],
+    [
+     "C0011",
+     "Zoe Grant",
+     "Lisbon",
+     "consumer",
+     "2025-06-25"
+    ],
+    [
+     "C0012",
+     "Ravi Novak",
+     "Lisbon",
+     "business",
+     "2025-12-30"
+    ],
+    [
+     "C0013",
+     "Hana Grant",
+     "Osaka",
+     "consumer",
+     "2024-07-15"
+    ],
+    [
+     "C0014",
+     "Anika Rao",
+     "Lisbon",
+     "consumer",
+     "2024-07-15"
+    ],
+    [
+     "C0015",
+     "Anika Costa",
+     "Osaka",
+     "consumer",
+     "2024-06-05"
+    ],
+    [
+     "C0016",
+     "Leo Novak",
+     "Osaka",
+     "consumer",
+     "2024-02-23"
+    ],
+    [
+     "C0017",
+     "Tomas Silva",
+     "Pune",
+     "consumer",
+     "2024-02-02"
+    ],
+    [
+     "C0018",
+     "Omar Weber",
+     "Osaka",
+     "consumer",
+     "2025-08-26"
+    ],
+    [
+     "C0019",
+     "Tomas Rao",
+     "Lyon",
+     "consumer",
+     "2025-07-04"
+    ],
+    [
+     "C0020",
+     "Zoe Haddad",
+     "Leeds",
+     "consumer",
+     "2024-07-09"
+    ]
+   ],
+   "project_head": [
+    [
+     "C0001",
+     "Hana Weber",
+     "Leeds",
+     "business",
+     "2024-05-26"
+    ],
+    [
+     "C0002",
+     "Omar Grant",
+     "Lyon",
+     "consumer",
+     "2025-08-07"
+    ],
+    [
+     "C0003",
+     "Arjun Rao",
+     "Lisbon",
+     "consumer",
+     "2024-11-29"
+    ],
+    [
+     "C0004",
+     "Lena Grant",
+     "Denver",
+     "consumer",
+     "2025-10-09"
+    ],
+    [
+     "C0005",
+     "Arjun Haddad",
+     "Lisbon",
+     "consumer",
+     "2025-10-31"
+    ],
+    [
+     "C0006",
+     "Leo Silva",
+     "Osaka",
+     "consumer",
+     "2025-05-23"
+    ],
+    [
+     "C0007",
+     "Omar Silva",
+     "Lisbon",
+     "consumer",
+     "2025-05-13"
+    ],
+    [
+     "C0008",
+     "Hana Lind",
+     "Perth",
+     "consumer",
+     "2025-02-04"
+    ],
+    [
+     "C0009",
+     "Tomas Rao",
+     "Perth",
+     "consumer",
+     "2025-11-10"
+    ],
+    [
+     "C0010",
+     "Ravi Okafor",
+     "Leeds",
+     "consumer",
+     "2025-09-01"
+    ],
+    [
+     "C0011",
+     "Ravi Rao",
+     "Denver",
+     "consumer",
+     "2025-02-25"
+    ],
+    [
+     "C0012",
+     "Hana Mori",
+     "Osaka",
+     "consumer",
+     "2024-11-21"
+    ],
+    [
+     "C0013",
+     "Maya Silva",
+     "Austin",
+     "business",
+     "2024-12-09"
+    ],
+    [
+     "C0014",
+     "Kofi Silva",
+     "Osaka",
+     "consumer",
+     "2024-11-28"
+    ],
+    [
+     "C0015",
+     "Tomas Rao",
+     "Osaka",
+     "consumer",
+     "2025-10-12"
+    ],
+    [
+     "C0016",
+     "Anika Silva",
+     "Leeds",
+     "consumer",
+     "2024-10-16"
+    ],
+    [
+     "C0017",
+     "Lena Weber",
+     "Denver",
+     "consumer",
+     "2024-03-21"
+    ],
+    [
+     "C0018",
+     "Omar Novak",
+     "Lisbon",
+     "consumer",
+     "2025-08-31"
+    ],
+    [
+     "C0019",
+     "Omar Mori",
+     "Leeds",
+     "consumer",
+     "2024-09-22"
+    ],
+    [
+     "C0020",
+     "Zoe Novak",
+     "Leeds",
+     "consumer",
+     "2024-04-08"
+    ]
+   ]
+  },
+  "products": {
+   "note": "One row per product in the catalogue, with today's price.",
+   "columns": [
+    {
+     "name": "product_id",
+     "type": "string"
+    },
+    {
+     "name": "name",
+     "type": "string"
+    },
+    {
+     "name": "category",
+     "type": "string"
+    },
+    {
+     "name": "unit_price",
+     "type": "decimal(10,2)"
+    },
+    {
+     "name": "active",
+     "type": "boolean"
+    }
+   ],
+   "key": [
+    "product_id"
+   ],
+   "rows": {
+    "lesson": 8,
+    "practice": 20,
+    "project": 20
+   },
+   "lesson": [
+    [
+     "P001",
+     "Chef Knife",
+     "kitchen",
+     "19.99",
+     "true"
+    ],
+    [
+     "P002",
+     "Pour-Over Kettle",
+     "kitchen",
+     "32.50",
+     "true"
+    ],
+    [
+     "P003",
+     "Trail Bottle",
+     "outdoor",
+     "24.00",
+     "true"
+    ],
+    [
+     "P004",
+     "Camp Lantern",
+     "outdoor",
+     "4.50",
+     "true"
+    ],
+    [
+     "P005",
+     "Desk Lamp",
+     "office",
+     "19.99",
+     "true"
+    ],
+    [
+     "P006",
+     "Notebook Set",
+     "office",
+     "12.00",
+     "true"
+    ],
+    [
+     "P007",
+     "Linen Throw",
+     "home",
+     "59.99",
+     "true"
+    ],
+    [
+     "P008",
+     "Wall Clock",
+     "home",
+     "89.00",
+     "true"
+    ]
+   ],
+   "practice_head": [
+    [
+     "P001",
+     "Chef Knife",
+     "kitchen",
+     "15.50",
+     "true"
+    ],
+    [
+     "P002",
+     "Pour-Over Kettle",
+     "kitchen",
+     "32.50",
+     "true"
+    ],
+    [
+     "P003",
+     "Cast Iron Pan",
+     "kitchen",
+     "7.99",
+     "true"
+    ],
+    [
+     "P004",
+     "Spice Rack",
+     "kitchen",
+     "24.00",
+     "false"
+    ],
+    [
+     "P005",
+     "Bread Tin",
+     "kitchen",
+     "4.50",
+     "true"
+    ],
+    [
+     "P006",
+     "Trail Bottle",
+     "outdoor",
+     "4.50",
+     "true"
+    ],
+    [
+     "P007",
+     "Camp Lantern",
+     "outdoor",
+     "24.00",
+     "true"
+    ],
+    [
+     "P008",
+     "Dry Bag",
+     "outdoor",
+     "19.99",
+     "true"
+    ],
+    [
+     "P009",
+     "Folding Stool",
+     "outdoor",
+     "24.00",
+     "true"
+    ],
+    [
+     "P010",
+     "Rain Shell",
+     "outdoor",
+     "15.50",
+     "true"
+    ],
+    [
+     "P011",
+     "Desk Lamp",
+     "office",
+     "24.00",
+     "true"
+    ],
+    [
+     "P012",
+     "Notebook Set",
+     "office",
+     "19.99",
+     "true"
+    ],
+    [
+     "P013",
+     "Monitor Stand",
+     "office",
+     "45.00",
+     "true"
+    ],
+    [
+     "P014",
+     "Cable Tray",
+     "office",
+     "7.99",
+     "true"
+    ],
+    [
+     "P015",
+     "Pen Case",
+     "office",
+     "89.00",
+     "true"
+    ],
+    [
+     "P016",
+     "Linen Throw",
+     "home",
+     "24.00",
+     "true"
+    ],
+    [
+     "P017",
+     "Wall Clock",
+     "home",
+     "45.00",
+     "true"
+    ],
+    [
+     "P018",
+     "Plant Pot",
+     "home",
+     "32.50",
+     "true"
+    ],
+    [
+     "P019",
+     "Door Mat",
+     "home",
+     "45.00",
+     "true"
+    ],
+    [
+     "P020",
+     "Candle Duo",
+     "home",
+     "32.50",
+     "true"
+    ]
+   ],
+   "project_head": [
+    [
+     "P001",
+     "Chef Knife",
+     "kitchen",
+     "59.99",
+     "true"
+    ],
+    [
+     "P002",
+     "Pour-Over Kettle",
+     "kitchen",
+     "15.50",
+     "true"
+    ],
+    [
+     "P003",
+     "Cast Iron Pan",
+     "kitchen",
+     "59.99",
+     "true"
+    ],
+    [
+     "P004",
+     "Spice Rack",
+     "kitchen",
+     "89.00",
+     "true"
+    ],
+    [
+     "P005",
+     "Bread Tin",
+     "kitchen",
+     "12.00",
+     "true"
+    ],
+    [
+     "P006",
+     "Trail Bottle",
+     "outdoor",
+     "15.50",
+     "true"
+    ],
+    [
+     "P007",
+     "Camp Lantern",
+     "outdoor",
+     "89.00",
+     "true"
+    ],
+    [
+     "P008",
+     "Dry Bag",
+     "outdoor",
+     "15.50",
+     "true"
+    ],
+    [
+     "P009",
+     "Folding Stool",
+     "outdoor",
+     "7.99",
+     "true"
+    ],
+    [
+     "P010",
+     "Rain Shell",
+     "outdoor",
+     "19.99",
+     "true"
+    ],
+    [
+     "P011",
+     "Desk Lamp",
+     "office",
+     "59.99",
+     "true"
+    ],
+    [
+     "P012",
+     "Notebook Set",
+     "office",
+     "45.00",
+     "false"
+    ],
+    [
+     "P013",
+     "Monitor Stand",
+     "office",
+     "59.99",
+     "true"
+    ],
+    [
+     "P014",
+     "Cable Tray",
+     "office",
+     "59.99",
+     "true"
+    ],
+    [
+     "P015",
+     "Pen Case",
+     "office",
+     "32.50",
+     "true"
+    ],
+    [
+     "P016",
+     "Linen Throw",
+     "home",
+     "7.99",
+     "false"
+    ],
+    [
+     "P017",
+     "Wall Clock",
+     "home",
+     "12.00",
+     "true"
+    ],
+    [
+     "P018",
+     "Plant Pot",
+     "home",
+     "7.99",
+     "true"
+    ],
+    [
+     "P019",
+     "Door Mat",
+     "home",
+     "15.50",
+     "false"
+    ],
+    [
+     "P020",
+     "Candle Duo",
+     "home",
+     "7.99",
+     "true"
+    ]
+   ]
+  },
+  "orders": {
+   "note": "One row per order: who placed it, when, its status and its total.",
+   "columns": [
+    {
+     "name": "order_id",
+     "type": "string"
+    },
+    {
+     "name": "customer_id",
+     "type": "string"
+    },
+    {
+     "name": "order_date",
+     "type": "date"
+    },
+    {
+     "name": "status",
+     "type": "string"
+    },
+    {
+     "name": "channel",
+     "type": "string"
+    },
+    {
+     "name": "total",
+     "type": "decimal(10,2)"
+    }
+   ],
+   "key": [
+    "order_id"
+   ],
+   "rows": {
+    "lesson": 12,
+    "practice": 2006,
+    "project": 3012
+   },
+   "lesson": [
+    [
+     "O00001",
+     "C0001",
+     "2026-06-11",
+     "paid",
+     "store",
+     "117.99"
+    ],
+    [
+     "O00002",
+     "C0001",
+     "2026-03-11",
+     "delivered",
+     "app",
+     "79.96"
+    ],
+    [
+     "O00003",
+     "C0002",
+     "2026-08-28",
+     "paid",
+     "app",
+     "291.95"
+    ],
+    [
+     "O00004",
+     "C0004",
+     "2026-03-24",
+     "shipped",
+     "app",
+     "418.96"
+    ],
+    [
+     "O00005",
+     "C0006",
+     "2026-01-18",
+     "shipped",
+     "app",
+     "71.97"
+    ],
+    [
+     "O00006",
+     "C0004",
+     "2026-06-18",
+     "delivered",
+     "store",
+     "39.98"
+    ],
+    [
+     "O00007",
+     "C0003",
+     "2026-03-23",
+     "placed",
+     "web",
+     "227.48"
+    ],
+    [
+     "O00008",
+     "C0001",
+     "2026-04-03",
+     "paid",
+     "web",
+     "59.50"
+    ],
+    [
+     "O00009",
+     "C0001",
+     "2026-06-27",
+     "shipped",
+     "store",
+     "105.49"
+    ],
+    [
+     "O00010",
+     "C0006",
+     "2026-01-11",
+     "paid",
+     "app",
+     "299.91"
+    ],
+    [
+     "O00011",
+     "C0005",
+     "2026-01-23",
+     "delivered",
+     "web",
+     "243.00"
+    ],
+    [
+     "O00012",
+     "C0005",
+     "2026-03-03",
+     "refunded",
+     "app",
+     "57.00"
+    ]
+   ],
+   "practice_head": [
+    [
+     "O00001",
+     "C0280",
+     "2026-03-30",
+     "shipped",
+     "web",
+     "89.00"
+    ],
+    [
+     "O00002",
+     "C0098",
+     "2026-08-15",
+     "delivered",
+     "web",
+     "81.00"
+    ],
+    [
+     "O00003",
+     "C0016",
+     "2026-08-22",
+     "paid",
+     "app",
+     "32.50"
+    ],
+    [
+     "O00004",
+     "C0082",
+     "2026-03-27",
+     "shipped",
+     "app",
+     "253.99"
+    ],
+    [
+     "O00005",
+     "C0006",
+     "2026-07-27",
+     "cancelled",
+     "store",
+     "168.85"
+    ],
+    [
+     "O00006",
+     "C0296",
+     "2026-01-04",
+     "placed",
+     "store",
+     null
+    ],
+    [
+     "O00007",
+     "C0105",
+     "2026-01-14",
+     "delivered",
+     "web",
+     "39.47"
+    ],
+    [
+     "O00008",
+     "C0280",
+     "2026-03-24",
+     "delivered",
+     "web",
+     "15.50"
+    ],
+    [
+     "O00009",
+     "C0167",
+     "2026-04-07",
+     "paid",
+     "store",
+     "152.98"
+    ],
+    [
+     "O00010",
+     "C0107",
+     "2026-06-14",
+     "paid",
+     "app",
+     "7.99"
+    ],
+    [
+     "O00011",
+     "C0298",
+     "2026-05-15",
+     "shipped",
+     "store",
+     "104.63"
+    ],
+    [
+     "O00012",
+     "C0105",
+     "2026-03-05",
+     "shipped",
+     "web",
+     "160.20"
+    ],
+    [
+     "O00013",
+     "C0271",
+     "2026-02-10",
+     "placed",
+     "app",
+     "71.50"
+    ],
+    [
+     "O00014",
+     "C0279",
+     "2026-04-15",
+     "shipped",
+     "store",
+     "217.99"
+    ],
+    [
+     "O00015",
+     "C0100",
+     "2026-02-16",
+     "shipped",
+     "app",
+     "291.80"
+    ],
+    [
+     "O00016",
+     "C0142",
+     "2026-03-01",
+     "paid",
+     "app",
+     "263.10"
+    ],
+    [
+     "O00017",
+     "C0036",
+     "2026-08-03",
+     "paid",
+     "store",
+     "143.15"
+    ],
+    [
+     "O00018",
+     "C0077",
+     "2026-03-19",
+     "placed",
+     "store",
+     "259.97"
+    ],
+    [
+     "O00019",
+     "C0091",
+     "2026-06-10",
+     "shipped",
+     "web",
+     "255.00"
+    ],
+    [
+     "O00020",
+     "C0285",
+     "2026-08-11",
+     "placed",
+     "app",
+     "319.20"
+    ]
+   ],
+   "project_head": [
+    [
+     "O00001",
+     "C0327",
+     "2026-02-16",
+     "delivered",
+     "app",
+     "404.47"
+    ],
+    [
+     "O00002",
+     "C0029",
+     "2026-07-20",
+     "paid",
+     "app",
+     "23.49"
+    ],
+    [
+     "O00003",
+     "C0074",
+     "2026-01-28",
+     "delivered",
+     "store",
+     "59.99"
+    ],
+    [
+     "O00004",
+     "C0384",
+     "2026-07-10",
+     "paid",
+     "store",
+     "179.97"
+    ],
+    [
+     "O00005",
+     "C0013",
+     "2026-05-18",
+     "delivered",
+     "store",
+     "233.93"
+    ],
+    [
+     "O00006",
+     "C0210",
+     null,
+     "paid",
+     "web",
+     "179.97"
+    ],
+    [
+     "O00007",
+     "C0221",
+     "2026-02-12",
+     "shipped",
+     "app",
+     "240.47"
+    ],
+    [
+     "O00008",
+     "C0148",
+     "2026-05-12",
+     "cancelled",
+     "web",
+     "195.47"
+    ],
+    [
+     "O00009",
+     "C0255",
+     "2026-09-02",
+     "shipped",
+     "store",
+     "78.89"
+    ],
+    [
+     "O00010",
+     "C0288",
+     "2026-02-23",
+     "paid",
+     "app",
+     "270.96"
+    ],
+    [
+     "O00011",
+     "C0400",
+     "2026-07-30",
+     "cancelled",
+     "store",
+     "54.97"
+    ],
+    [
+     "O00012",
+     "C0139",
+     "2026-04-21",
+     "delivered",
+     "web",
+     "112.97"
+    ],
+    [
+     "O00013",
+     "C0070",
+     "2026-08-07",
+     "delivered",
+     "app",
+     "149.23"
+    ],
+    [
+     "O00014",
+     "C0061",
+     "2026-01-08",
+     "delivered",
+     "app",
+     "199.57"
+    ],
+    [
+     "O00015",
+     "C0197",
+     "2026-02-19",
+     "delivered",
+     "web",
+     "119.98"
+    ],
+    [
+     "O00016",
+     "C0075",
+     "2026-03-20",
+     "paid",
+     "app",
+     "119.98"
+    ],
+    [
+     "O00017",
+     "C0223",
+     "2026-02-10",
+     "paid",
+     "store",
+     "7.99"
+    ],
+    [
+     "O00018",
+     "C0356",
+     "2026-02-03",
+     "delivered",
+     "app",
+     "82.50"
+    ],
+    [
+     "O00019",
+     "C0069",
+     "2026-09-06",
+     "delivered",
+     "app",
+     "414.93"
+    ],
+    [
+     "O00020",
+     "C0309",
+     "2026-05-24",
+     "refunded",
+     "app",
+     "311.97"
+    ]
+   ]
+  },
+  "order_items": {
+   "note": "One row per line of an order: which product, how many, and the price paid.",
+   "columns": [
+    {
+     "name": "order_id",
+     "type": "string"
+    },
+    {
+     "name": "line_no",
+     "type": "int"
+    },
+    {
+     "name": "product_id",
+     "type": "string"
+    },
+    {
+     "name": "quantity",
+     "type": "int"
+    },
+    {
+     "name": "unit_price",
+     "type": "decimal(10,2)"
+    }
+   ],
+   "key": [
+    "order_id",
+    "line_no"
+   ],
+   "rows": {
+    "lesson": 32,
+    "practice": 4961,
+    "project": 7477
+   },
+   "lesson": [
+    [
+     "O00001",
+     "1",
+     "P005",
+     "3",
+     "19.99"
+    ],
+    [
+     "O00001",
+     "2",
+     "P005",
+     "3",
+     "17.99"
+    ],
+    [
+     "O00001",
+     "3",
+     "P004",
+     "1",
+     "4.05"
+    ],
+    [
+     "O00002",
+     "1",
+     "P001",
+     "3",
+     "19.99"
+    ],
+    [
+     "O00002",
+     "2",
+     "P001",
+     "1",
+     "19.99"
+    ],
+    [
+     "O00003",
+     "1",
+     "P001",
+     "2",
+     "19.99"
+    ],
+    [
+     "O00003",
+     "2",
+     "P007",
+     "3",
+     "59.99"
+    ],
+    [
+     "O00003",
+     "3",
+     "P003",
+     "3",
+     "24.00"
+    ],
+    [
+     "O00004",
+     "1",
+     "P001",
+     "3",
+     "19.99"
+    ],
+    [
+     "O00004",
+     "2",
+     "P008",
+     "3",
+     "89.00"
+    ],
+    [
+     "O00004",
+     "3",
+     "P005",
+     "1",
+     "19.99"
+    ],
+    [
+     "O00004",
+     "4",
+     "P003",
+     "3",
+     "24.00"
+    ],
+    [
+     "O00005",
+     "1",
+     "P006",
+     "1",
+     "12.00"
+    ],
+    [
+     "O00005",
+     "2",
+     "P001",
+     "3",
+     "19.99"
+    ],
+    [
+     "O00006",
+     "1",
+     "P001",
+     "2",
+     "19.99"
+    ],
+    [
+     "O00007",
+     "1",
+     "P004",
+     "3",
+     "4.50"
+    ],
+    [
+     "O00007",
+     "2",
+     "P008",
+     "2",
+     "89.00"
+    ],
+    [
+     "O00007",
+     "3",
+     "P005",
+     "2",
+     "17.99"
+    ],
+    [
+     "O00008",
+     "1",
+     "P004",
+     "3",
+     "4.50"
+    ],
+    [
+     "O00008",
+     "2",
+     "P002",
+     "1",
+     "32.50"
+    ],
+    [
+     "O00008",
+     "3",
+     "P004",
+     "3",
+     "4.50"
+    ],
+    [
+     "O00009",
+     "1",
+     "P001",
+     "1",
+     "19.99"
+    ],
+    [
+     "O00009",
+     "2",
+     "P003",
+     "3",
+     "24.00"
+    ],
+    [
+     "O00009",
+     "3",
+     "P004",
+     "3",
+     "4.50"
+    ],
+    [
+     "O00010",
+     "1",
+     "P007",
+     "3",
+     "59.99"
+    ],
+    [
+     "O00010",
+     "2",
+     "P005",
+     "3",
+     "19.99"
+    ],
+    [
+     "O00010",
+     "3",
+     "P005",
+     "3",
+     "19.99"
+    ],
+    [
+     "O00011",
+     "1",
+     "P002",
+     "2",
+     "32.50"
+    ],
+    [
+     "O00011",
+     "2",
+     "P008",
+     "2",
+     "89.00"
+    ],
+    [
+     "O00012",
+     "1",
+     "P004",
+     "2",
+     "4.50"
+    ],
+    [
+     "O00012",
+     "2",
+     "P006",
+     "1",
+     "12.00"
+    ],
+    [
+     "O00012",
+     "3",
+     "P006",
+     "3",
+     "12.00"
+    ]
+   ],
+   "practice_head": [
+    [
+     "O00001",
+     "1",
+     "P015",
+     "1",
+     "89.00"
+    ],
+    [
+     "O00002",
+     "1",
+     "P019",
+     "2",
+     "40.50"
+    ],
+    [
+     "O00003",
+     "1",
+     "P002",
+     "1",
+     "32.50"
+    ],
+    [
+     "O00004",
+     "1",
+     "P019",
+     "2",
+     "45.00"
+    ],
+    [
+     "O00004",
+     "2",
+     "P002",
+     "2",
+     "29.25"
+    ],
+    [
+     "O00004",
+     "3",
+     "P003",
+     "1",
+     "7.99"
+    ],
+    [
+     "O00004",
+     "4",
+     "P002",
+     "3",
+     "32.50"
+    ],
+    [
+     "O00005",
+     "1",
+     "P009",
+     "3",
+     "24.00"
+    ],
+    [
+     "O00005",
+     "2",
+     "P004",
+     "1",
+     "24.00"
+    ],
+    [
+     "O00005",
+     "3",
+     "P010",
+     "2",
+     "15.50"
+    ],
+    [
+     "O00005",
+     "4",
+     "P001",
+     "3",
+     "13.95"
+    ],
+    [
+     "O00006",
+     "1",
+     "P014",
+     "2",
+     "7.99"
+    ],
+    [
+     "O00006",
+     "2",
+     "P017",
+     "2",
+     "45.00"
+    ],
+    [
+     "O00007",
+     "1",
+     "P010",
+     "1",
+     "15.50"
+    ],
+    [
+     "O00007",
+     "2",
+     "P014",
+     "3",
+     "7.99"
+    ],
+    [
+     "O00008",
+     "1",
+     "P010",
+     "1",
+     "15.50"
+    ],
+    [
+     "O00009",
+     "1",
+     "P009",
+     "2",
+     "24.00"
+    ],
+    [
+     "O00009",
+     "2",
+     "P002",
+     "2",
+     "32.50"
+    ],
+    [
+     "O00009",
+     "3",
+     "P008",
+     "2",
+     "19.99"
+    ],
+    [
+     "O00010",
+     "1",
+     "P003",
+     "1",
+     "7.99"
+    ]
+   ],
+   "project_head": [
+    [
+     "O00001",
+     "1",
+     "P004",
+     "2",
+     "89.00"
+    ],
+    [
+     "O00001",
+     "2",
+     "P019",
+     "3",
+     "15.50"
+    ],
+    [
+     "O00001",
+     "3",
+     "P003",
+     "2",
+     "59.99"
+    ],
+    [
+     "O00001",
+     "4",
+     "P013",
+     "1",
+     "59.99"
+    ],
+    [
+     "O00002",
+     "1",
+     "P019",
+     "1",
+     "15.50"
+    ],
+    [
+     "O00002",
+     "2",
+     "P009",
+     "1",
+     "7.99"
+    ],
+    [
+     "O00003",
+     "1",
+     "P014",
+     "1",
+     "59.99"
+    ],
+    [
+     "O00004",
+     "1",
+     "P014",
+     "3",
+     "59.99"
+    ],
+    [
+     "O00005",
+     "1",
+     "P016",
+     "3",
+     "7.99"
+    ],
+    [
+     "O00005",
+     "2",
+     "P016",
+     "1",
+     "7.99"
+    ],
+    [
+     "O00005",
+     "3",
+     "P020",
+     "3",
+     "7.99"
+    ],
+    [
+     "O00005",
+     "4",
+     "P004",
+     "2",
+     "89.00"
+    ],
+    [
+     "O00006",
+     "1",
+     "P013",
+     "3",
+     "59.99"
+    ],
+    [
+     "O00007",
+     "1",
+     "P013",
+     "2",
+     "59.99"
+    ],
+    [
+     "O00007",
+     "2",
+     "P012",
+     "1",
+     "45.00"
+    ],
+    [
+     "O00007",
+     "3",
+     "P002",
+     "1",
+     "15.50"
+    ],
+    [
+     "O00007",
+     "4",
+     "P013",
+     "1",
+     "59.99"
+    ],
+    [
+     "O00008",
+     "1",
+     "P013",
+     "2",
+     "59.99"
+    ],
+    [
+     "O00008",
+     "2",
+     "P008",
+     "1",
+     "15.50"
+    ],
+    [
+     "O00008",
+     "3",
+     "P013",
+     "1",
+     "59.99"
+    ]
+   ]
+  }
+ }
+}

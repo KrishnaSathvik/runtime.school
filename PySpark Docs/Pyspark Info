@@ -1,0 +1,277 @@
+Exactly. This should be one of the core design rules for runtime.school, especially for PySpark.
+
+We shouldn't build 90 lessons, 450 questions, 10 projects, and a collection of tools as separate features. They must work together as one continuous learning experience.
+
+# runtime.school — Unified PySpark Learning System
+
+15 Realistic Dataset Domains
+
+Shared schemas, business rules, records, and engineering scenarios
+
+Learn
+
+## 90
+
+Concepts + guided coding
+
+Practice
+
+## 450
+
+Independent challenges
+
+Projects
+
+## 10
+
+Complete workflows
+
+Shared PySpark Tools & Execution Engine
+
+Explore · Code · Compare · Debug · Optimize · Build pipelines
+
+These are our planning targets. The important measure of success isn't achieving exactly 450 questions; it's whether those questions teach genuinely different skills and can be solved and graded correctly.
+
+## 1. How the learner experiences it
+
+Imagine a beginner opening a lesson on PySpark joins.
+
+MODULE 05 · JOINS
+
+## L025 — Inner and Outer Joins
+
+Beginner
+
+Dataset D01 · Retail Commerce
+
+A retail company stores its customers and orders in separate tables. We need to combine them to understand which customers placed orders.
+
+Your data
+
+2 of 9 available tables
+
+customers
+
+| customer_id | name  |
+| ----------- | ----- |
+| C01         | Maya  |
+| C02         | Leo   |
+| C03         | Anika |
+
+orders
+
+| order_id | customer_id |
+| -------- | ----------- |
+| O101     | C01         |
+| O102     | C01         |
+| O103     | C03         |
+
+Guided lesson: Learn how an inner join matches `customer_id` across both DataFrames.
+
+```
+result = customers.join(    orders,    on="customer_id",    how="inner")result.show()  
+```
+
+Next practice: Find customers who have never ordered
+
+Later project: Build Retail Sales Analytics
+
+Illustrative lesson layout; code execution would be provided by the actual PySpark runtime.
+
+The sequence matters:
+
+Learn: The learner sees how joins work, using three customers and three orders.
+
+Practice: They independently solve problems using a larger retail dataset with duplicates, missing relationships, and different join requirements.
+
+Project: They combine joins with cleaning, aggregations, dates, and file processing to build retail reporting tables.
+
+Tools: They can open the same dataset in the Playground, inspect its schema, compare a DataFrame join with Spark SQL, or examine its physical execution plan.
+
+Nothing feels disconnected, and the learner doesn't have to relearn a new dataset for every small exercise.
+
+## 2. Final proposed PySpark tools
+
+We should preserve the familiar runtime.school tool philosophy from SQL and Python, but specialize the capabilities for real Spark execution.
+
+| Tool                             | What learners do                                                                    | Where it fits             |
+| -------------------------------- | ----------------------------------------------------------------------------------- | ------------------------- |
+| 1. PySpark Playground            | Run PySpark code with sample datasets, view DataFrames, schemas, errors and results | All stages                |
+| 2. Datasets Explorer             | Browse the 15 datasets, inspect tables, relationships, file formats and sample rows | Learn, Practice, Projects |
+| 3. Spark SQL Lab                 | Query the same data using Spark SQL and PySpark DataFrame APIs                      | Beginner → Advanced       |
+| 4. Query Plans & Performance Lab | Inspect plans, shuffles, partitions, joins, caching and benchmark performance       | Intermediate → Advanced   |
+| 5. Compare Approaches            | Compare two correct solutions, their output, execution plans and tradeoffs          | Practice, optimization    |
+| 6. Pipeline & Streaming Lab      | Build multi-stage ETL, Delta, CDC and streaming workflows, including event replay   | Intermediate → Advanced   |
+
+These should not become six separate copies of the code editor. They need to share dataset loading, runtime configuration, execution results, and saved learner work.
+
+For example, the Playground is the general-purpose coding environment. Compare Approaches uses two code panes and the same execution backend. The Performance Lab adds a controlled benchmark and execution metrics. The Pipeline Lab adds persistent intermediate artifacts and state-aware tests.
+
+Spark's official documentation supports DataFrame testing utilities, execution through Spark Connect, and the streaming and Delta workflows underlying these tools. However, Spark Connect does not support RDD or SparkContext APIs, so those lessons require a classic Spark execution path.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://spark.apache.org\&sz=32)
+
+PySpark 4.2.0 documentation
+
++2
+
+
+
+## 3. How all 15 datasets connect to the learning platform
+
+Here is how I would assign the main purpose of every dataset, rather than forcing equal usage.
+
+| Dataset            | Learn & Practice focus                     | Project           | Most useful tools            |
+| ------------------ | ------------------------------------------ | ----------------- | ---------------------------- |
+| D01 Retail         | Filters, joins, aggregations, windows      | P01               | Playground, SQL Lab, Compare |
+| D02 Banking        | Decimals, anti joins, reconciliation, CDC  | P04               | Playground, Pipeline Lab     |
+| D03 HR             | Schemas, self joins, salary rankings       | P02               | Playground, SQL Lab          |
+| D04 Healthcare     | Nested records, data quality, Delta        | P07               | Datasets, Pipeline Lab       |
+| D05 Movies         | Aggregations, windows, ML features         | P05               | Playground, Compare          |
+| D06 Clickstream    | JSON, arrays, event time, sessions         | P09               | Playground, Streaming Lab    |
+| D07 Taxi           | Parquet, shuffles, joins, file layout      | P06               | Query Plans & Performance    |
+| D08 Logistics      | Incremental loads, event ordering, CDC     | P08               | Pipeline Lab                 |
+| D09 IoT            | Sensor events, watermarks, streaming state | P10               | Streaming Lab                |
+| D10 Markets        | Time series, rolling metrics, ML features  | Advanced practice | Playground, Compare          |
+| D11 Education      | Fundamentals, grouping, learner progress   | P03               | Playground, SQL Lab          |
+| D12 Advertising    | Conditional aggregation, attribution       | P09               | SQL Lab, Streaming Lab       |
+| D13 Weather        | Dates, nulls, time-series enrichment       | P06               | Playground, Performance      |
+| D14 Enterprise ERP | Multi-table joins, Delta, SCD2             | P08               | Pipeline Lab                 |
+| D15 Logs           | RDDs, parsing, skew, monitoring            | P10               | Query Plans & Performance    |
+
+D10 Financial Markets doesn't need to be artificially inserted into an unrelated project just to achieve coverage. It can be a strong advanced practice dataset with an optional mini-project later.
+
+Every dataset still needs its own identity, clear business rules, reusable relationships, and properly graded examples.
+
+## 4. One dataset should grow with the learner
+
+Take D09 IoT & Sensors, which we will use for both intermediate and advanced learning.
+
+D09 — IoT & Sensor Telemetry
+
+devices · sensor_readings · device_locations · alerts · maintenance_events
+
+Learn — L042: Flatten Complex Event Payloads
+
+Read a small nested JSON sensor event. Extract device ID, temperature and event timestamp.
+
+Practice — Intermediate
+
+Parse sensor events with missing fields, malformed timestamps, and repeated device readings. Return a validated DataFrame.
+
+Tools — Streaming & Performance
+
+Replay sensor batches, inspect event-time windows, examine late arrivals and evaluate a stateful query.
+
+Project P10 — IoT Monitoring & Failure Recovery
+
+Build an end-to-end sensor monitoring pipeline with anomaly rules, incident outputs, checkpoints, and restart validation.
+
+We should do this for each dataset. The beginner version is intentionally small, while the project version is realistic enough to reveal engineering problems.
+
+And this should happen without presenting 10 million rows to someone learning `select()` for the first time.
+
+## 5. The common content contract
+
+Before creating more content, we should define a shared structure that connects everything.
+
+A lesson should know which dataset it uses, which concepts it teaches, which questions reinforce those concepts, and which projects require them.
+
+For example:
+
+```
+lesson:
+  id: L025
+  title: Inner and Outer Joins
+  dataset: D01
+  dataset_version: "1.0"
+  tables: [customers, orders]
+  concepts: [inner_join, left_join, full_join]
+  tools: [playground, spark_sql_lab]
+  practice: [Q0121, Q0122, Q0123, Q0124, Q0125]
+  related_projects: [P01]
+```
+
+We would create equivalent references for practice questions, project milestones, and tools. One shared registry becomes the source of truth, instead of manually duplicating relationships in several parts of the application.
+
+The 450 questions also need meaningful variation. We should avoid forcing five artificial questions onto a narrow concept merely because the mapping assigns five slots. We can preserve the overall target while redistributing questions to concepts that deserve more coverage.
+
+## 6. How the learner navigates runtime.school
+
+The platform should preserve its familiar Learn, Practice, Projects, and Tools navigation.
+
+| Learner opens | What they should immediately understand                                                  |
+| ------------- | ---------------------------------------------------------------------------------------- |
+| Learn         | What am I learning, why does it matter, and what data am I using?                        |
+| Practice      | What problem do I need to solve, what tables are available, and what output is expected? |
+| Projects      | What am I building, what do I already need to know, and what will I deliver?             |
+| Tools         | What can I experiment with, and how does it relate to the concepts I've learned?         |
+| Datasets      | What does this dataset represent, which tables relate, and where is it used?             |
+
+I would also put contextual navigation inside each lesson and project. If a learner is struggling with a join question, they should be able to reopen the relevant lesson. If they are working on a project, they should see the prerequisite lessons and practice problems without searching through the entire curriculum.
+
+Returning learners should have a prominent Continue action, while Learn, Practice, and Projects remain independently browsable.
+
+## 7. What we need to validate before building all the content
+
+A real PySpark environment introduces infrastructure requirements that our existing SQL and Python tracks may not have.
+
+We should run actual PySpark on an isolated backend, not pretend a browser-only Python interpreter is Spark. Beginner exercises can run on constrained local-mode Spark workers. Delta, streaming, and optimization work will need dedicated execution modes and stronger state isolation.
+
+Structured Streaming, for example, uses checkpoints to recover query progress and state; those behaviors have to be tested using controlled event sequences rather than displaying a static table and calling it streaming.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://spark.apache.org\&sz=32)
+
+Spark 3.5.6 Documentation
+
+
+
+The content also needs these quality gates:
+
+| Validation           | Required condition                                                            |
+| -------------------- | ----------------------------------------------------------------------------- |
+| Dataset consistency  | Same entity definitions and business rules across lessons, practice, projects |
+| Concept progression  | Prerequisites introduced before they're required                              |
+| Question correctness | Reference solutions and hidden tests pass                                     |
+| Tool integration     | The tool can actually execute the operation being taught                      |
+| Project feasibility  | Every milestone is supported by available datasets and runtimes               |
+| Learning clarity     | Learner can understand the task without guessing missing business rules       |
+| Runtime isolation    | One learner's execution cannot affect another learner's environment           |
+
+## 8. The build order I'd use
+
+01
+
+Lock dataset contracts
+
+Finalize tables, relationships, licensing, formats, business rules and fixture versions across all 15 domains.
+
+02
+
+Build the curriculum dependency map
+
+Assign prerequisites, dataset views, questions, tool activities and projects to every lesson.
+
+03
+
+Implement one complete learning path
+
+Use D01 Retail: lessons → practice → Playground/SQL Lab → P01 project with real grading.
+
+04
+
+Validate all execution modes
+
+Prove DataFrame, Delta, streaming and performance grading work before relying on them.
+
+05
+
+Expand the full curriculum
+
+Produce the remaining lessons, questions and projects against the validated system.
+
+The most important principle for runtime.school is this:
+
+Datasets are the shared learning environment. Lessons teach skills using that environment. Practice tests those skills independently. Projects combine them into real engineering work. Tools help learners explore, understand, and improve their solutions.
+
+I would treat that as a non-negotiable requirement across PySpark and our future Power BI, Machine Learning, Data Engineering, and AI engineering tracks, while adapting the tools and project formats to each subject.

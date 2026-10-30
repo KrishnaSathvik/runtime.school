@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0016",
+  "kind": "predict",
+  "slug": "app-order-ids",
+  "lesson": "PS-L004",
+  "role": "foundation",
+  "format": "concept_or_trace",
+  "difficulty": "easy",
+  "minutes": 4,
+  "title": "App order ids",
+  "prompt": "This program builds a plan for the orders placed in the app, then runs it twice. What does it print? Type each line on its own line.",
+  "program": "from pyspark.sql import functions as F\n\napp = orders.filter(F.col(\"channel\") == \"app\")\nids = app.select(\"order_id\")\nprint(type(ids).__name__, len(ids.columns))\nprint(ids.count())\nprint(ids.first()[\"order_id\"])\n",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "`filter` and `select` are transformations: they give back a DataFrame and read nothing.",
+    "Count the orders whose `channel` is `app` in the table.",
+    "`first()` is an action that returns the first matching row, in file order."
+  ],
+  "explanation": "`filter` and `select` give back a new DataFrame with one column without reading any rows. `count()` and `first()` are actions: there are 6 app orders, and the first one in the file is `O00002`."
+}

@@ -1,0 +1,44 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D04",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "claims",
+   "observations"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "paid_amount: expected double, found decimal(12,2)\npayer_code: expected string, found None\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "+---------------------+------+-------+\n|rule                 |failed|checked|\n+---------------------+------+-------+\n|dates_in_order       |1     |7      |\n|allowed_within_billed|0     |7      |\n|known_status         |0     |7      |\n+---------------------+------+-------+\n\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "+---------+------------+--------------+------------+\n| claim_id|service_date|submitted_date|claim_status|\n+---------+------------+--------------+------------+\n|CLM000003|  2025-12-20|    2025-12-17|        paid|\n+---------+------------+--------------+------------+\n\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "+--------------+-----+-----+-----+-------------+-------+\n|observation_id| code|value| unit|expected_unit|unit_ok|\n+--------------+-----+-----+-----+-------------+-------+\n|     OBS000001|HBA1C|  8.7|    %|            %|   true|\n|     OBS000002|  HGB| 13.9| g/dL|         g/dL|   true|\n|     OBS000003|  GLU|131.0|mg/dL|        mg/dL|   true|\n|     OBS000004|  HGB| 16.3| g/dL|         g/dL|   true|\n|     OBS000005|HBA1C|  8.0|    %|            %|   true|\n|     OBS000006|HBA1C|  8.0|    %|            %|   true|\n|     OBS000007|  BMI| 22.6|kg/m2|        kg/m2|   true|\n|     OBS000008|  HGB| 16.5| g/dL|         g/dL|   true|\n|     OBS000009|  BMI| 30.2|kg/m2|        kg/m2|   true|\n|     OBS000010|HBA1C|  5.1|    %|            %|   true|\n+--------------+-----+-----+-----+-------------+-------+\n\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "",
+   "error": {
+    "type": "ValueError",
+    "message": "claims broke the contract: dates_in_order: 1 failed",
+    "line": 15,
+    "condition": null
+   }
+  }
+ }
+}

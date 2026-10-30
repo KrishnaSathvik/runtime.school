@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0320",
+  "slug": "owner-handover-list",
+  "lesson": "PS-L064",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 23,
+  "title": "Owner handover list",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "After each sync, the account team sends every owner a list of the accounts they've taken over. Write `solve(accounts, customer_cdc)` so it merges the feed into a Delta table that records its changes and returns, from the merge's changes, each account that moved to a new owner.",
+  "rules": [
+    "Apply each account's newest change by `sequence`, counting a repeated delivery once: a delete removes the account, other changes update it or add it, and a delete for an account the table doesn't have changes nothing.",
+    "An account is on the list when the merge updated it and its `account_owner` is different after the update. New and deleted accounts are not handovers, and an account handed on and back again within the feed has not moved.",
+    "Return `account_id`, `old_owner` and `new_owner`. When the merge changes nothing, return no rows."
+  ],
+  "hints": [
+    "In the change feed, an update gives an `update_preimage` row and an `update_postimage` row with the same `account_id`.",
+    "Take the before rows and the after rows as two DataFrames, rename `account_owner` in each, join them on `account_id`, and keep the rows where the owners differ.",
+    "A merge that changes nothing makes no commit, so there is no version 1 to read. Check `history(1)` before reading the change feed."
+  ],
+  "explanation": "Reduce the feed as in the lesson and run the usual MERGE into a table saved with `delta.enableChangeDataFeed` on. The merge's changes are its version, 1: read them with `readChangeFeed` and `startingVersion` 1. Each update has a before and an after row, so filter `_change_type` to `update_preimage` and to `update_postimage`, select `account_id` with `account_owner` renamed to `old_owner` and `new_owner`, join the two on `account_id` (an inner join, so inserts and deletes, which have only one side, drop out) and keep `old_owner != new_owner`. That last filter removes accounts whose other columns changed, and accounts handed on and back, whose final owner is the one they started with. When nothing changed there is no version 1, and reading it raises an error, so check that `history(1)` is a `MERGE` first and return an empty result otherwise, for example the joined DataFrame filtered to nothing. Joining the snapshot with the reduced feed gives the same rows without the change feed.",
+  "entry": "solve",
+  "inputs": [
+    "accounts",
+    "customer_cdc"
+  ],
+  "starter": "import shutil\nfrom pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\nfrom delta.tables import DeltaTable\n\n\ndef solve(accounts, customer_cdc):\n    path = \"/tmp/crm/accounts_cdf\"\n    shutil.rmtree(path, ignore_errors=True)  # every run starts from an empty folder\n    accounts.write.format(\"delta\").option(\"delta.enableChangeDataFeed\", \"true\").save(path)\n\n    # 1. Merge the newest change per account into the table at `path`.\n    # 2. From the merge's changes, return account_id, old_owner, new_owner.\n    return accounts.select(\"account_id\", F.col(\"account_owner\").alias(\"old_owner\"), F.col(\"account_owner\").alias(\"new_owner\"))\n",
+  "output": {
+    "columns": [
+      "account_id",
+      "old_owner",
+      "new_owner"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

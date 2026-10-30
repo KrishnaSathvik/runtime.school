@@ -1,0 +1,76 @@
+{
+  "id": "PS-P07-M3",
+  "slug": "build-silver-claims",
+  "project": "PS-P07",
+  "milestone": "PS-P07.m3",
+  "difficulty": "hard",
+  "minutes": 40,
+  "title": "Clean and normalise the Silver claims",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "prompt": "Silver holds the claims the business can trust. Two problems remain in the rows that passed: the export repeats some claims exactly, and when a payer asks for changes the clinic resubmits the visit's claim under a new `claim_id`, later. Only the latest submission counts.\n\nWrite `silver_claims(claims, providers)`: the rows of `checked_claims` with no reason, each claim once, one claim per visit, in Silver's tidy columns.",
+  "rules": [
+    "Start from the rows of `checked_claims(claims, providers)` with no `_reason`. Exact copies (every column the same) count once.",
+    "Keep one claim per `encounter_id`: the one submitted last. If two share that `submitted_date`, keep the larger `claim_id`.",
+    "`submissions` is how many different claims the visit had after copies were removed (1 when it was never resubmitted).",
+    "`days_to_submit` is the days from `service_date` to `submitted_date`. A missing `paid_amount` becomes 0.00: nothing paid yet.",
+    "Return `claim_id`, `encounter_id`, `patient_id`, `provider_id`, `payer`, `service_date`, `submitted_date`, `days_to_submit`, `billed_amount`, `allowed_amount`, `paid_amount`, `claim_status`, `denial_reason`, `submissions`, `_source_file`, `_load_month`."
+  ],
+  "hints": [
+    "`dropDuplicates()` with no columns removes exact copies only. Do it before counting submissions.",
+    "`Window.partitionBy(\"encounter_id\").orderBy(F.col(\"submitted_date\").desc(), F.col(\"claim_id\").desc())` with `F.row_number()` puts the latest submission first; keep row 1.",
+    "`F.count(\"*\").over(Window.partitionBy(\"encounter_id\"))` counts each visit's claims on every row. `F.datediff(end, start)` counts days, and `F.coalesce(\"paid_amount\", F.lit(0).cast(\"decimal(12,2)\"))` keeps the column's type."
+  ],
+  "explanation": "Two kinds of repeats need two tools. An exact copy is the same row twice, so `dropDuplicates()` on every column removes it without choosing anything. A resubmission is a different claim for the same visit, so a key-based rule decides: rank each visit's claims by `submitted_date`, newest first, with `claim_id` as a tie-breaker so the choice is the same on every run, and keep the first. Removing copies first matters: otherwise a copied claim would look like two submissions. The window count records how many claims a visit had, so nothing about the resubmission is lost. Silver also settles meanings once for every reader: days to submit are computed here, and a missing paid amount is written as 0.00 so the Gold sums never mix in NULLs. The provenance columns travel with every row.",
+  "entry": "silver_claims",
+  "inputs": [
+    "claims",
+    "providers"
+  ],
+  "file": "pipeline.py",
+  "append": "\n\ndef silver_claims(claims, providers):\n    # Step 3: the claims that passed, each once, the latest submission per visit, with tidy columns.\n    return checked_claims(claims, providers)\n",
+  "prerequisites": [
+    "PS-L019",
+    "PS-L020",
+    "PS-L033"
+  ],
+  "output": {
+    "columns": [
+      "claim_id",
+      "encounter_id",
+      "patient_id",
+      "provider_id",
+      "payer",
+      "service_date",
+      "submitted_date",
+      "days_to_submit",
+      "billed_amount",
+      "allowed_amount",
+      "paid_amount",
+      "claim_status",
+      "denial_reason",
+      "submissions",
+      "_source_file",
+      "_load_month"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "example",
+      "sample": true
+    },
+    {
+      "id": "project",
+      "edition": "project"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

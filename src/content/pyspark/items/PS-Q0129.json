@@ -1,0 +1,56 @@
+{
+  "id": "PS-Q0129",
+  "slug": "fix-no-posted-transactions",
+  "lesson": "PS-L026",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Fix the no-posted-transactions report",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "This function should return the accounts that have no posted transaction, but it always comes back empty. Find the bug and fix `solve(accounts, transactions)`.",
+  "rules": [
+    "Only transactions whose `status` is `posted` count. An account whose transactions are all pending or declined has no posted transaction.",
+    "Include accounts of every status: active, closed and frozen.",
+    "Return every column of `accounts`, in the same order, with the same types."
+  ],
+  "hints": [
+    "Both tables have a column called `status`. After the join, which table's `status` is the filter looking at?",
+    "A left anti join returns only the columns of the left table, so the filter tests the account's status, which is never `posted`.",
+    "Filter `transactions` to posted ones first, then anti join `accounts` against that smaller table."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "accounts",
+    "transactions"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(accounts, transactions):\n    # Accounts with no posted transaction.\n    unused = accounts.join(transactions, on=\"account_id\", how=\"left_anti\")\n    return unused.filter(F.col(\"status\") == \"posted\")\n",
+  "output": {
+    "columns": [
+      "account_id",
+      "customer_id",
+      "account_type",
+      "currency",
+      "status",
+      "opened_date",
+      "overdraft_limit"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "The filter is on the wrong side. A left anti join returns only the columns of `accounts`, so `F.col(\"status\") == \"posted\"` after the join tests the account's status (active, closed or frozen), which is never `posted`, and every row drops. The status we care about belongs to the transactions, so filter them before the join: `posted = transactions.filter(F.col(\"status\") == \"posted\")`, then `accounts.join(posted, on=\"account_id\", how=\"left_anti\")`. Simply deleting the filter isn't enough: an account whose only transaction was declined would then be left out."
+}

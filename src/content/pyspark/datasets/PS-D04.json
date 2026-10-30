@@ -1,0 +1,3807 @@
+{
+ "id": "PS-D04",
+ "version": "1.0.0",
+ "title": "Healthcare Operations",
+ "generated_by": "services/spark-runner/datasets/d04_healthcare.py",
+ "rules": [
+  "All people, clinics, pharmacies and payers are invented. Diagnosis codes follow the ICD-10 pattern; nothing is real patient data.",
+  "encounter_class is wellness, ambulatory, emergency, inpatient or telehealth. end_time is after start_time; inpatient stays last 1-5 days.",
+  "encounters.vitals is a struct (heart_rate, systolic, diastolic as INT; temperature_c as DOUBLE in Celsius). It is null for telehealth visits; temperature_c is sometimes null when it wasn't taken.",
+  "encounters.diagnosis_codes is an array of 1-3 codes; reason is the description of the first code.",
+  "discharge_disposition (home, home_with_care, transferred, left_against_advice) was added to the feed on 2026-01-01: older encounters have null there, and wellness and telehealth visits always do.",
+  "Patients on the Self-pay plan have no claims. Every other encounter has one claim, filed by the visit's provider on the encounter's date (service_date) and submitted 1-30 days later.",
+  "claim_status is submitted, approved, paid, denied or appealed. allowed_amount is at most billed_amount and is null until a payer decides; paid_amount is set only for paid claims (denied claims pay 0.00); denial_reason is set only for denied and appealed claims.",
+  "Prescriptions come from ambulatory, emergency and inpatient visits. filled_date is null for prescriptions never picked up.",
+  "Observations come from wellness, ambulatory and inpatient visits; each code has one unit (GLU mg/dL, HBA1C %, LDL mg/dL, HGB g/dL, BMI kg/m2).",
+  "The lesson edition is clean except one claim whose service_date is after its submitted_date. Its patient PAT00004 is Self-pay, so that visit has no claim.",
+  "The practice edition has a few problems a data-quality rule should catch: about 1% of observations with a null value, 6 HBA1C results reported in mmol/mol (values 40-80, still labelled %), and 3 encounters with temperature_c recorded in Fahrenheit (about 98-101).",
+  "The project edition (P07) has the practice problems plus: 20 claims repeated exactly, 25 claims resubmitted under a new claim_id for the same encounter (later submitted_date), 20 claims whose provider_id is not in providers (ids PRV9xxx), 10 with a null provider_id, and 30 whose service_date is after submitted_date."
+ ],
+ "relationships": [
+  {
+   "from": "patients.primary_pharmacy_id",
+   "to": "pharmacies.pharmacy_id"
+  },
+  {
+   "from": "encounters.patient_id",
+   "to": "patients.patient_id"
+  },
+  {
+   "from": "encounters.provider_id",
+   "to": "providers.provider_id"
+  },
+  {
+   "from": "claims.encounter_id",
+   "to": "encounters.encounter_id"
+  },
+  {
+   "from": "claims.patient_id",
+   "to": "patients.patient_id"
+  },
+  {
+   "from": "claims.provider_id",
+   "to": "providers.provider_id"
+  },
+  {
+   "from": "medications.patient_id",
+   "to": "patients.patient_id"
+  },
+  {
+   "from": "medications.encounter_id",
+   "to": "encounters.encounter_id"
+  },
+  {
+   "from": "medications.pharmacy_id",
+   "to": "pharmacies.pharmacy_id"
+  },
+  {
+   "from": "observations.encounter_id",
+   "to": "encounters.encounter_id"
+  },
+  {
+   "from": "observations.patient_id",
+   "to": "patients.patient_id"
+  }
+ ],
+ "tables": {
+  "patients": {
+   "note": "One row per (invented) patient: birth date, home town, insurance plan and usual pharmacy.",
+   "columns": [
+    {
+     "name": "patient_id",
+     "type": "string"
+    },
+    {
+     "name": "first_name",
+     "type": "string"
+    },
+    {
+     "name": "last_name",
+     "type": "string"
+    },
+    {
+     "name": "birth_date",
+     "type": "date"
+    },
+    {
+     "name": "sex",
+     "type": "string"
+    },
+    {
+     "name": "city",
+     "type": "string"
+    },
+    {
+     "name": "state",
+     "type": "string"
+    },
+    {
+     "name": "postal_code",
+     "type": "string"
+    },
+    {
+     "name": "insurance_plan",
+     "type": "string"
+    },
+    {
+     "name": "primary_pharmacy_id",
+     "type": "string"
+    }
+   ],
+   "key": [
+    "patient_id"
+   ],
+   "rows": {
+    "lesson": 6,
+    "practice": 360,
+    "project": 700
+   },
+   "lesson": [
+    [
+     "PAT00001",
+     "Felix",
+     "Ferro",
+     "1957-12-06",
+     "M",
+     "Pine Hollow",
+     "ID",
+     "83375",
+     "Summit Senior Advantage",
+     null
+    ],
+    [
+     "PAT00002",
+     "Arjun",
+     "Duarte",
+     "2020-02-27",
+     "M",
+     "Lakeview",
+     "WA",
+     "98893",
+     "Bluebird Health PPO",
+     "PH01"
+    ],
+    [
+     "PAT00003",
+     "Elif",
+     "Grant",
+     "1976-11-07",
+     "F",
+     "Pine Hollow",
+     "ID",
+     "83305",
+     "Bluebird Health PPO",
+     "PH04"
+    ],
+    [
+     "PAT00004",
+     "Anika",
+     "Iyer",
+     "1996-09-18",
+     "F",
+     "Riverton",
+     "OR",
+     "97054",
+     "Self-pay",
+     "PH03"
+    ],
+    [
+     "PAT00005",
+     "Jonas",
+     "Costa",
+     "1969-08-28",
+     "M",
+     "Pine Hollow",
+     "ID",
+     "83347",
+     "Bluebird Health HMO",
+     "PH03"
+    ],
+    [
+     "PAT00006",
+     "Kenji",
+     "Kowal",
+     "1966-07-30",
+     "M",
+     "Lakeview",
+     "WA",
+     "98671",
+     "Bluebird Health HMO",
+     "PH03"
+    ]
+   ],
+   "practice_head": [
+    [
+     "PAT00001",
+     "Zoe",
+     "Mori",
+     "2013-07-24",
+     "F",
+     "Millbrook",
+     "WA",
+     "98252",
+     "Self-pay",
+     "PH04"
+    ],
+    [
+     "PAT00002",
+     "Maya",
+     "Sato",
+     "2006-10-08",
+     "F",
+     "Cedar Falls",
+     "OR",
+     "97358",
+     "Bluebird Health PPO",
+     null
+    ],
+    [
+     "PAT00003",
+     "Ada",
+     "Haddad",
+     "2004-08-29",
+     "F",
+     "Millbrook",
+     "WA",
+     "98191",
+     "Cedar State Medicaid",
+     "PH03"
+    ],
+    [
+     "PAT00004",
+     "Omar",
+     "Weber",
+     "1998-11-22",
+     "M",
+     "Cedar Falls",
+     "OR",
+     "97841",
+     "Bluebird Health PPO",
+     "PH05"
+    ],
+    [
+     "PAT00005",
+     "Priya",
+     "Silva",
+     "2014-02-25",
+     "F",
+     "Millbrook",
+     "WA",
+     "98419",
+     "Cedar State Medicaid",
+     null
+    ],
+    [
+     "PAT00006",
+     "Ravi",
+     "Quill",
+     "1993-02-21",
+     "M",
+     "Riverton",
+     "OR",
+     "97133",
+     "Bluebird Health PPO",
+     "PH02"
+    ],
+    [
+     "PAT00007",
+     "Zoe",
+     "Costa",
+     "1968-09-04",
+     "F",
+     "Lakeview",
+     "WA",
+     "98216",
+     "Bluebird Health HMO",
+     "PH02"
+    ],
+    [
+     "PAT00008",
+     "Arjun",
+     "Rao",
+     "1978-10-12",
+     "M",
+     "Cedar Falls",
+     "OR",
+     "97078",
+     "Bluebird Health HMO",
+     "PH06"
+    ],
+    [
+     "PAT00009",
+     "Leo",
+     "Lind",
+     "1994-02-22",
+     "M",
+     "Pine Hollow",
+     "ID",
+     "83919",
+     "Cedar State Medicaid",
+     "PH05"
+    ],
+    [
+     "PAT00010",
+     "Maya",
+     "Grant",
+     "1948-07-04",
+     "F",
+     "Cedar Falls",
+     "OR",
+     "97426",
+     "Summit Senior Advantage",
+     "PH04"
+    ],
+    [
+     "PAT00011",
+     "Sana",
+     "Weber",
+     "1978-11-14",
+     "F",
+     "Lakeview",
+     "WA",
+     "98393",
+     "Bluebird Health PPO",
+     "PH06"
+    ],
+    [
+     "PAT00012",
+     "Hana",
+     "Silva",
+     "1952-06-30",
+     "F",
+     "Pine Hollow",
+     "ID",
+     "83783",
+     "Self-pay",
+     "PH01"
+    ],
+    [
+     "PAT00013",
+     "Maya",
+     "Achebe",
+     "2023-04-22",
+     "F",
+     "Millbrook",
+     "WA",
+     "98827",
+     "Bluebird Health PPO",
+     "PH02"
+    ],
+    [
+     "PAT00014",
+     "Tomas",
+     "Kowal",
+     "2003-10-18",
+     "M",
+     "Millbrook",
+     "WA",
+     "98407",
+     "Bluebird Health PPO",
+     "PH01"
+    ],
+    [
+     "PAT00015",
+     "Zoe",
+     "Iyer",
+     "1949-03-26",
+     "F",
+     "Cedar Falls",
+     "OR",
+     "97178",
+     "Summit Senior Advantage",
+     "PH05"
+    ],
+    [
+     "PAT00016",
+     "Felix",
+     "Novak",
+     "1989-03-04",
+     "M",
+     "Lakeview",
+     "WA",
+     "98641",
+     "Cedar State Medicaid",
+     "PH06"
+    ],
+    [
+     "PAT00017",
+     "Lena",
+     "Ferro",
+     "2007-01-13",
+     "F",
+     "Pine Hollow",
+     "ID",
+     "83056",
+     "Bluebird Health HMO",
+     null
+    ],
+    [
+     "PAT00018",
+     "Kofi",
+     "Silva",
+     "1977-06-18",
+     "M",
+     "Millbrook",
+     "WA",
+     "98061",
+     "Bluebird Health PPO",
+     "PH06"
+    ],
+    [
+     "PAT00019",
+     "Maya",
+     "Quill",
+     "1965-04-10",
+     "F",
+     "Riverton",
+     "OR",
+     "97706",
+     "Bluebird Health PPO",
+     "PH04"
+    ],
+    [
+     "PAT00020",
+     "Bea",
+     "Weber",
+     "1989-07-16",
+     "F",
+     "Pine Hollow",
+     "ID",
+     "83744",
+     "Bluebird Health PPO",
+     "PH01"
+    ]
+   ],
+   "project_head": [
+    [
+     "PAT00001",
+     "Noor",
+     "Byrne",
+     "1973-10-01",
+     "F",
+     "Cedar Falls",
+     "OR",
+     "97374",
+     "Cedar State Medicaid",
+     null
+    ],
+    [
+     "PAT00002",
+     "Noor",
+     "Weber",
+     "2011-02-23",
+     "F",
+     "Riverton",
+     "OR",
+     "97678",
+     "Bluebird Health PPO",
+     "PH08"
+    ],
+    [
+     "PAT00003",
+     "Elif",
+     "Achebe",
+     "1968-11-05",
+     "F",
+     "Cedar Falls",
+     "OR",
+     "97628",
+     "Cedar State Medicaid",
+     "PH08"
+    ],
+    [
+     "PAT00004",
+     "Leo",
+     "Achebe",
+     "1975-10-21",
+     "M",
+     "Riverton",
+     "OR",
+     "97725",
+     "Bluebird Health HMO",
+     "PH04"
+    ],
+    [
+     "PAT00005",
+     "Mateo",
+     "Lind",
+     "1966-09-20",
+     "M",
+     "Pine Hollow",
+     "ID",
+     "83919",
+     "Bluebird Health PPO",
+     "PH02"
+    ],
+    [
+     "PAT00006",
+     "Bea",
+     "Rao",
+     "2001-07-18",
+     "F",
+     "Cedar Falls",
+     "OR",
+     "97005",
+     "Bluebird Health PPO",
+     "PH02"
+    ],
+    [
+     "PAT00007",
+     "Arjun",
+     "Byrne",
+     "1939-12-08",
+     "M",
+     "Lakeview",
+     "WA",
+     "98318",
+     "Summit Senior Advantage",
+     "PH05"
+    ],
+    [
+     "PAT00008",
+     "Arjun",
+     "Grant",
+     "1985-06-01",
+     "M",
+     "Riverton",
+     "OR",
+     "97252",
+     "Cedar State Medicaid",
+     "PH07"
+    ],
+    [
+     "PAT00009",
+     "Jonas",
+     "Duarte",
+     "1999-09-28",
+     "M",
+     "Lakeview",
+     "WA",
+     "98162",
+     "Bluebird Health HMO",
+     "PH01"
+    ],
+    [
+     "PAT00010",
+     "Zoe",
+     "Weber",
+     "2001-05-07",
+     "F",
+     "Millbrook",
+     "WA",
+     "98212",
+     "Bluebird Health PPO",
+     "PH02"
+    ],
+    [
+     "PAT00011",
+     "Anika",
+     "Kowal",
+     "2020-05-16",
+     "F",
+     "Millbrook",
+     "WA",
+     "98021",
+     "Cedar State Medicaid",
+     null
+    ],
+    [
+     "PAT00012",
+     "Priya",
+     "Achebe",
+     "2007-11-01",
+     "F",
+     "Cedar Falls",
+     "OR",
+     "97066",
+     "Cedar State Medicaid",
+     "PH05"
+    ],
+    [
+     "PAT00013",
+     "Arjun",
+     "Duarte",
+     "1968-07-22",
+     "M",
+     "Millbrook",
+     "WA",
+     "98092",
+     "Bluebird Health PPO",
+     "PH02"
+    ],
+    [
+     "PAT00014",
+     "Omar",
+     "Grant",
+     "1964-07-16",
+     "M",
+     "Lakeview",
+     "WA",
+     "98168",
+     "Bluebird Health HMO",
+     "PH02"
+    ],
+    [
+     "PAT00015",
+     "Tomas",
+     "Quill",
+     "1953-10-03",
+     "M",
+     "Pine Hollow",
+     "ID",
+     "83562",
+     "Self-pay",
+     "PH06"
+    ],
+    [
+     "PAT00016",
+     "Ravi",
+     "Lind",
+     "2022-06-24",
+     "M",
+     "Millbrook",
+     "WA",
+     "98490",
+     "Cedar State Medicaid",
+     "PH04"
+    ],
+    [
+     "PAT00017",
+     "Ravi",
+     "Kowal",
+     "1977-06-26",
+     "M",
+     "Lakeview",
+     "WA",
+     "98937",
+     "Self-pay",
+     null
+    ],
+    [
+     "PAT00018",
+     "Ada",
+     "Ferro",
+     "2008-02-19",
+     "F",
+     "Riverton",
+     "OR",
+     "97173",
+     "Bluebird Health HMO",
+     null
+    ],
+    [
+     "PAT00019",
+     "Anika",
+     "Mori",
+     "2018-08-25",
+     "F",
+     "Cedar Falls",
+     "OR",
+     "97505",
+     "Cedar State Medicaid",
+     "PH08"
+    ],
+    [
+     "PAT00020",
+     "Bea",
+     "Silva",
+     "1973-09-02",
+     "F",
+     "Riverton",
+     "OR",
+     "97772",
+     "Bluebird Health HMO",
+     "PH06"
+    ]
+   ]
+  },
+  "providers": {
+   "note": "One row per clinician, with their specialty and the clinic they work for.",
+   "columns": [
+    {
+     "name": "provider_id",
+     "type": "string"
+    },
+    {
+     "name": "provider_name",
+     "type": "string"
+    },
+    {
+     "name": "specialty",
+     "type": "string"
+    },
+    {
+     "name": "organization",
+     "type": "string"
+    },
+    {
+     "name": "city",
+     "type": "string"
+    },
+    {
+     "name": "accepts_new_patients",
+     "type": "boolean"
+    }
+   ],
+   "key": [
+    "provider_id"
+   ],
+   "rows": {
+    "lesson": 5,
+    "practice": 24,
+    "project": 40
+   },
+   "lesson": [
+    [
+     "PRV0001",
+     "Dr. Mateo Iyer",
+     "family_medicine",
+     "Riverbend Family Clinic",
+     "Cedar Falls",
+     "true"
+    ],
+    [
+     "PRV0002",
+     "Dr. Ines Okafor",
+     "internal_medicine",
+     "Northfield Medical Group",
+     "Lakeview",
+     "true"
+    ],
+    [
+     "PRV0003",
+     "Dr. Hana Haddad",
+     "pediatrics",
+     "Northfield Medical Group",
+     "Pine Hollow",
+     "true"
+    ],
+    [
+     "PRV0004",
+     "Dr. Omar Haddad",
+     "emergency_medicine",
+     "Riverbend Family Clinic",
+     "Millbrook",
+     "true"
+    ],
+    [
+     "PRV0005",
+     "Dr. Sana Achebe",
+     "cardiology",
+     "Pine Hollow Health Center",
+     "Lakeview",
+     "true"
+    ]
+   ],
+   "practice_head": [
+    [
+     "PRV0001",
+     "Dr. Ines Grant",
+     "family_medicine",
+     "Lakeview Community Hospital",
+     "Lakeview",
+     "true"
+    ],
+    [
+     "PRV0002",
+     "Dr. Sana Novak",
+     "internal_medicine",
+     "Riverbend Family Clinic",
+     "Riverton",
+     "true"
+    ],
+    [
+     "PRV0003",
+     "Dr. Elif Okafor",
+     "pediatrics",
+     "Pine Hollow Health Center",
+     "Riverton",
+     "true"
+    ],
+    [
+     "PRV0004",
+     "Dr. Arjun Iyer",
+     "emergency_medicine",
+     "Riverbend Family Clinic",
+     "Cedar Falls",
+     "false"
+    ],
+    [
+     "PRV0005",
+     "Dr. Ada Ferro",
+     "cardiology",
+     "Pine Hollow Health Center",
+     "Millbrook",
+     "true"
+    ],
+    [
+     "PRV0006",
+     "Dr. Jonas Costa",
+     "endocrinology",
+     "Riverbend Family Clinic",
+     "Pine Hollow",
+     "true"
+    ],
+    [
+     "PRV0007",
+     "Dr. Sana Novak",
+     "orthopedics",
+     "Northfield Medical Group",
+     "Lakeview",
+     "false"
+    ],
+    [
+     "PRV0008",
+     "Dr. Ravi Duarte",
+     "endocrinology",
+     "Lakeview Community Hospital",
+     "Pine Hollow",
+     "true"
+    ],
+    [
+     "PRV0009",
+     "Dr. Ravi Costa",
+     "cardiology",
+     "Northfield Medical Group",
+     "Millbrook",
+     "true"
+    ],
+    [
+     "PRV0010",
+     "Dr. Arjun Mori",
+     "endocrinology",
+     "Riverbend Family Clinic",
+     "Pine Hollow",
+     "true"
+    ],
+    [
+     "PRV0011",
+     "Dr. Hana Lind",
+     "orthopedics",
+     "Lakeview Community Hospital",
+     "Millbrook",
+     "true"
+    ],
+    [
+     "PRV0012",
+     "Dr. Sana Lind",
+     "family_medicine",
+     "Northfield Medical Group",
+     "Riverton",
+     "true"
+    ],
+    [
+     "PRV0013",
+     "Dr. Anika Duarte",
+     "endocrinology",
+     "Northfield Medical Group",
+     "Cedar Falls",
+     "false"
+    ],
+    [
+     "PRV0014",
+     "Dr. Leo Byrne",
+     "internal_medicine",
+     "Lakeview Community Hospital",
+     "Lakeview",
+     "true"
+    ],
+    [
+     "PRV0015",
+     "Dr. Lena Grant",
+     "pediatrics",
+     "Lakeview Community Hospital",
+     "Pine Hollow",
+     "false"
+    ],
+    [
+     "PRV0016",
+     "Dr. Noor Quill",
+     "family_medicine",
+     "Pine Hollow Health Center",
+     "Pine Hollow",
+     "true"
+    ],
+    [
+     "PRV0017",
+     "Dr. Anika Grant",
+     "pediatrics",
+     "Northfield Medical Group",
+     "Pine Hollow",
+     "true"
+    ],
+    [
+     "PRV0018",
+     "Dr. Jonas Byrne",
+     "internal_medicine",
+     "Riverbend Family Clinic",
+     "Lakeview",
+     "false"
+    ],
+    [
+     "PRV0019",
+     "Dr. Hana Mori",
+     "internal_medicine",
+     "Northfield Medical Group",
+     "Riverton",
+     "true"
+    ],
+    [
+     "PRV0020",
+     "Dr. Felix Novak",
+     "pediatrics",
+     "Lakeview Community Hospital",
+     "Pine Hollow",
+     "true"
+    ]
+   ],
+   "project_head": [
+    [
+     "PRV0001",
+     "Dr. Maya Sato",
+     "family_medicine",
+     "Northfield Medical Group",
+     "Millbrook",
+     "true"
+    ],
+    [
+     "PRV0002",
+     "Dr. Anika Costa",
+     "internal_medicine",
+     "Northfield Medical Group",
+     "Millbrook",
+     "true"
+    ],
+    [
+     "PRV0003",
+     "Dr. Ravi Ferro",
+     "pediatrics",
+     "Riverbend Family Clinic",
+     "Riverton",
+     "true"
+    ],
+    [
+     "PRV0004",
+     "Dr. Anika Lind",
+     "emergency_medicine",
+     "Northfield Medical Group",
+     "Lakeview",
+     "false"
+    ],
+    [
+     "PRV0005",
+     "Dr. Kofi Weber",
+     "cardiology",
+     "Northfield Medical Group",
+     "Lakeview",
+     "true"
+    ],
+    [
+     "PRV0006",
+     "Dr. Jonas Mori",
+     "endocrinology",
+     "Northfield Medical Group",
+     "Lakeview",
+     "true"
+    ],
+    [
+     "PRV0007",
+     "Dr. Zoe Iyer",
+     "orthopedics",
+     "Northfield Medical Group",
+     "Riverton",
+     "true"
+    ],
+    [
+     "PRV0008",
+     "Dr. Sana Haddad",
+     "orthopedics",
+     "Lakeview Community Hospital",
+     "Millbrook",
+     "true"
+    ],
+    [
+     "PRV0009",
+     "Dr. Mateo Ferro",
+     "cardiology",
+     "Pine Hollow Health Center",
+     "Lakeview",
+     "true"
+    ],
+    [
+     "PRV0010",
+     "Dr. Kenji Okafor",
+     "family_medicine",
+     "Riverbend Family Clinic",
+     "Lakeview",
+     "true"
+    ],
+    [
+     "PRV0011",
+     "Dr. Ravi Grant",
+     "cardiology",
+     "Pine Hollow Health Center",
+     "Riverton",
+     "false"
+    ],
+    [
+     "PRV0012",
+     "Dr. Lena Costa",
+     "cardiology",
+     "Northfield Medical Group",
+     "Riverton",
+     "true"
+    ],
+    [
+     "PRV0013",
+     "Dr. Elif Weber",
+     "family_medicine",
+     "Lakeview Community Hospital",
+     "Millbrook",
+     "true"
+    ],
+    [
+     "PRV0014",
+     "Dr. Jonas Silva",
+     "emergency_medicine",
+     "Pine Hollow Health Center",
+     "Pine Hollow",
+     "true"
+    ],
+    [
+     "PRV0015",
+     "Dr. Sana Costa",
+     "internal_medicine",
+     "Lakeview Community Hospital",
+     "Pine Hollow",
+     "false"
+    ],
+    [
+     "PRV0016",
+     "Dr. Leo Lind",
+     "emergency_medicine",
+     "Pine Hollow Health Center",
+     "Pine Hollow",
+     "true"
+    ],
+    [
+     "PRV0017",
+     "Dr. Elif Kowal",
+     "orthopedics",
+     "Lakeview Community Hospital",
+     "Cedar Falls",
+     "true"
+    ],
+    [
+     "PRV0018",
+     "Dr. Kofi Costa",
+     "orthopedics",
+     "Lakeview Community Hospital",
+     "Lakeview",
+     "true"
+    ],
+    [
+     "PRV0019",
+     "Dr. Kofi Costa",
+     "internal_medicine",
+     "Pine Hollow Health Center",
+     "Pine Hollow",
+     "true"
+    ],
+    [
+     "PRV0020",
+     "Dr. Omar Byrne",
+     "orthopedics",
+     "Northfield Medical Group",
+     "Riverton",
+     "false"
+    ]
+   ]
+  },
+  "pharmacies": {
+   "note": "One row per pharmacy that fills prescriptions.",
+   "columns": [
+    {
+     "name": "pharmacy_id",
+     "type": "string"
+    },
+    {
+     "name": "pharmacy_name",
+     "type": "string"
+    },
+    {
+     "name": "city",
+     "type": "string"
+    },
+    {
+     "name": "state",
+     "type": "string"
+    },
+    {
+     "name": "open_24h",
+     "type": "boolean"
+    }
+   ],
+   "key": [
+    "pharmacy_id"
+   ],
+   "rows": {
+    "lesson": 4,
+    "practice": 6,
+    "project": 8
+   },
+   "lesson": [
+    [
+     "PH01",
+     "Corner Remedy Pharmacy",
+     "Riverton",
+     "OR",
+     "false"
+    ],
+    [
+     "PH02",
+     "Greenleaf Drugstore",
+     "Cedar Falls",
+     "OR",
+     "false"
+    ],
+    [
+     "PH03",
+     "Harbor Rx",
+     "Millbrook",
+     "WA",
+     "true"
+    ],
+    [
+     "PH04",
+     "Maple Apothecary",
+     "Lakeview",
+     "WA",
+     "false"
+    ]
+   ],
+   "practice_head": [
+    [
+     "PH01",
+     "Corner Remedy Pharmacy",
+     "Riverton",
+     "OR",
+     "false"
+    ],
+    [
+     "PH02",
+     "Greenleaf Drugstore",
+     "Cedar Falls",
+     "OR",
+     "true"
+    ],
+    [
+     "PH03",
+     "Harbor Rx",
+     "Millbrook",
+     "WA",
+     "true"
+    ],
+    [
+     "PH04",
+     "Maple Apothecary",
+     "Lakeview",
+     "WA",
+     "false"
+    ],
+    [
+     "PH05",
+     "Summit Care Pharmacy",
+     "Pine Hollow",
+     "ID",
+     "true"
+    ],
+    [
+     "PH06",
+     "Willow Pharmacy",
+     "Riverton",
+     "OR",
+     "false"
+    ]
+   ],
+   "project_head": [
+    [
+     "PH01",
+     "Corner Remedy Pharmacy",
+     "Riverton",
+     "OR",
+     "false"
+    ],
+    [
+     "PH02",
+     "Greenleaf Drugstore",
+     "Cedar Falls",
+     "OR",
+     "true"
+    ],
+    [
+     "PH03",
+     "Harbor Rx",
+     "Millbrook",
+     "WA",
+     "false"
+    ],
+    [
+     "PH04",
+     "Maple Apothecary",
+     "Lakeview",
+     "WA",
+     "false"
+    ],
+    [
+     "PH05",
+     "Summit Care Pharmacy",
+     "Pine Hollow",
+     "ID",
+     "false"
+    ],
+    [
+     "PH06",
+     "Willow Pharmacy",
+     "Riverton",
+     "OR",
+     "true"
+    ],
+    [
+     "PH07",
+     "Brightway Chemists",
+     "Cedar Falls",
+     "OR",
+     "true"
+    ],
+    [
+     "PH08",
+     "Fernside Rx",
+     "Millbrook",
+     "WA",
+     "false"
+    ]
+   ]
+  },
+  "encounters": {
+   "note": "One row per visit: who, with whom, what kind, when, the vitals taken (a struct) and the diagnoses made (an array).",
+   "columns": [
+    {
+     "name": "encounter_id",
+     "type": "string"
+    },
+    {
+     "name": "patient_id",
+     "type": "string"
+    },
+    {
+     "name": "provider_id",
+     "type": "string"
+    },
+    {
+     "name": "encounter_class",
+     "type": "string"
+    },
+    {
+     "name": "start_time",
+     "type": "timestamp"
+    },
+    {
+     "name": "end_time",
+     "type": "timestamp"
+    },
+    {
+     "name": "reason",
+     "type": "string"
+    },
+    {
+     "name": "vitals",
+     "type": "struct<heart_rate: int, systolic: int, diastolic: int, temperature_c: double>"
+    },
+    {
+     "name": "diagnosis_codes",
+     "type": "array<string>"
+    },
+    {
+     "name": "discharge_disposition",
+     "type": "string"
+    }
+   ],
+   "key": [
+    "encounter_id"
+   ],
+   "rows": {
+    "lesson": 8,
+    "practice": 1100,
+    "project": 2600
+   },
+   "lesson": [
+    [
+     "ENC000001",
+     "PAT00003",
+     "PRV0004",
+     "emergency",
+     "2025-12-03T03:00:00",
+     "2025-12-03T05:20:00",
+     "Asthma",
+     "{\"heart_rate\":96,\"systolic\":115,\"diastolic\":72,\"temperature_c\":36.2}",
+     "[\"J45.909\",\"E78.5\",\"J06.9\"]",
+     null
+    ],
+    [
+     "ENC000002",
+     "PAT00002",
+     "PRV0001",
+     "wellness",
+     "2025-12-18T11:15:00",
+     "2025-12-18T12:00:00",
+     "General adult exam",
+     "{\"heart_rate\":104,\"systolic\":107,\"diastolic\":65,\"temperature_c\":37.2}",
+     "[\"Z00.00\",\"E78.5\"]",
+     null
+    ],
+    [
+     "ENC000003",
+     "PAT00001",
+     "PRV0002",
+     "ambulatory",
+     "2025-12-20T09:00:00",
+     "2025-12-20T09:20:00",
+     "Acid reflux",
+     "{\"heart_rate\":92,\"systolic\":144,\"diastolic\":66,\"temperature_c\":37.2}",
+     "[\"K21.9\"]",
+     null
+    ],
+    [
+     "ENC000004",
+     "PAT00002",
+     "PRV0002",
+     "ambulatory",
+     "2026-01-13T13:45:00",
+     "2026-01-13T14:05:00",
+     "Acid reflux",
+     "{\"heart_rate\":91,\"systolic\":100,\"diastolic\":55,\"temperature_c\":36.3}",
+     "[\"K21.9\"]",
+     "home"
+    ],
+    [
+     "ENC000005",
+     "PAT00005",
+     "PRV0003",
+     "ambulatory",
+     "2026-01-16T10:30:00",
+     "2026-01-16T10:45:00",
+     "Urinary tract infection",
+     "{\"heart_rate\":102,\"systolic\":131,\"diastolic\":91,\"temperature_c\":null}",
+     "[\"N39.0\",\"S93.401A\"]",
+     "home"
+    ],
+    [
+     "ENC000006",
+     "PAT00006",
+     "PRV0001",
+     "inpatient",
+     "2026-01-17T11:45:00",
+     "2026-01-21T14:45:00",
+     "Ankle sprain",
+     "{\"heart_rate\":96,\"systolic\":125,\"diastolic\":64,\"temperature_c\":37.3}",
+     "[\"S93.401A\",\"J06.9\"]",
+     "left_against_advice"
+    ],
+    [
+     "ENC000007",
+     "PAT00001",
+     "PRV0005",
+     "telehealth",
+     "2026-01-30T14:30:00",
+     "2026-01-30T15:30:00",
+     "Urinary tract infection",
+     null,
+     "[\"N39.0\"]",
+     null
+    ],
+    [
+     "ENC000008",
+     "PAT00004",
+     "PRV0005",
+     "telehealth",
+     "2026-01-31T10:45:00",
+     "2026-01-31T11:30:00",
+     "Low back pain",
+     null,
+     "[\"M54.5\"]",
+     null
+    ]
+   ],
+   "practice_head": [
+    [
+     "ENC000001",
+     "PAT00239",
+     "PRV0004",
+     "emergency",
+     "2025-07-01T06:00:00",
+     "2025-07-01T14:20:00",
+     "Type 2 diabetes",
+     "{\"heart_rate\":73,\"systolic\":110,\"diastolic\":93,\"temperature_c\":36.7}",
+     "[\"E11.9\"]",
+     null
+    ],
+    [
+     "ENC000002",
+     "PAT00237",
+     "PRV0015",
+     "wellness",
+     "2025-07-01T10:30:00",
+     "2025-07-01T11:15:00",
+     "General adult exam",
+     "{\"heart_rate\":56,\"systolic\":113,\"diastolic\":86,\"temperature_c\":36.3}",
+     "[\"Z00.00\",\"I10\"]",
+     null
+    ],
+    [
+     "ENC000003",
+     "PAT00064",
+     "PRV0006",
+     "inpatient",
+     "2025-07-01T12:00:00",
+     "2025-07-06T23:00:00",
+     "Low back pain",
+     "{\"heart_rate\":58,\"systolic\":123,\"diastolic\":66,\"temperature_c\":null}",
+     "[\"M54.5\"]",
+     null
+    ],
+    [
+     "ENC000004",
+     "PAT00069",
+     "PRV0011",
+     "wellness",
+     "2025-07-01T15:15:00",
+     "2025-07-01T16:00:00",
+     "General adult exam",
+     "{\"heart_rate\":102,\"systolic\":143,\"diastolic\":74,\"temperature_c\":37.1}",
+     "[\"Z00.00\"]",
+     null
+    ],
+    [
+     "ENC000005",
+     "PAT00044",
+     "PRV0008",
+     "wellness",
+     "2025-07-02T15:45:00",
+     "2025-07-02T16:30:00",
+     "General adult exam",
+     "{\"heart_rate\":56,\"systolic\":136,\"diastolic\":72,\"temperature_c\":36.6}",
+     "[\"Z00.00\"]",
+     null
+    ],
+    [
+     "ENC000006",
+     "PAT00012",
+     "PRV0019",
+     "ambulatory",
+     "2025-07-02T17:30:00",
+     "2025-07-02T18:30:00",
+     "Upper respiratory infection",
+     "{\"heart_rate\":99,\"systolic\":143,\"diastolic\":85,\"temperature_c\":36.9}",
+     "[\"J06.9\"]",
+     null
+    ],
+    [
+     "ENC000007",
+     "PAT00215",
+     "PRV0005",
+     "telehealth",
+     "2025-07-03T08:30:00",
+     "2025-07-03T09:00:00",
+     "Ankle sprain",
+     null,
+     "[\"S93.401A\",\"K21.9\"]",
+     null
+    ],
+    [
+     "ENC000008",
+     "PAT00221",
+     "PRV0020",
+     "ambulatory",
+     "2025-07-03T10:00:00",
+     "2025-07-03T10:15:00",
+     "Acid reflux",
+     "{\"heart_rate\":56,\"systolic\":135,\"diastolic\":63,\"temperature_c\":37.1}",
+     "[\"K21.9\"]",
+     null
+    ],
+    [
+     "ENC000009",
+     "PAT00109",
+     "PRV0006",
+     "wellness",
+     "2025-07-03T11:30:00",
+     "2025-07-03T12:15:00",
+     "General adult exam",
+     "{\"heart_rate\":92,\"systolic\":124,\"diastolic\":96,\"temperature_c\":null}",
+     "[\"Z00.00\"]",
+     null
+    ],
+    [
+     "ENC000010",
+     "PAT00103",
+     "PRV0019",
+     "ambulatory",
+     "2025-07-03T12:15:00",
+     "2025-07-03T13:00:00",
+     "Low back pain",
+     "{\"heart_rate\":73,\"systolic\":142,\"diastolic\":74,\"temperature_c\":36.9}",
+     "[\"M54.5\"]",
+     null
+    ],
+    [
+     "ENC000011",
+     "PAT00321",
+     "PRV0005",
+     "ambulatory",
+     "2025-07-03T15:00:00",
+     "2025-07-03T15:30:00",
+     "Upper respiratory infection",
+     "{\"heart_rate\":100,\"systolic\":104,\"diastolic\":84,\"temperature_c\":37.2}",
+     "[\"J06.9\",\"E78.5\"]",
+     null
+    ],
+    [
+     "ENC000012",
+     "PAT00265",
+     "PRV0013",
+     "telehealth",
+     "2025-07-04T09:30:00",
+     "2025-07-04T10:15:00",
+     "Asthma",
+     null,
+     "[\"J45.909\"]",
+     null
+    ],
+    [
+     "ENC000013",
+     "PAT00164",
+     "PRV0013",
+     "telehealth",
+     "2025-07-04T15:30:00",
+     "2025-07-04T15:50:00",
+     "Ankle sprain",
+     null,
+     "[\"S93.401A\"]",
+     null
+    ],
+    [
+     "ENC000014",
+     "PAT00131",
+     "PRV0013",
+     "telehealth",
+     "2025-07-04T16:15:00",
+     "2025-07-04T16:30:00",
+     "Generalized anxiety",
+     null,
+     "[\"F41.1\",\"E78.5\",\"I10\"]",
+     null
+    ],
+    [
+     "ENC000015",
+     "PAT00170",
+     "PRV0016",
+     "ambulatory",
+     "2025-07-05T10:30:00",
+     "2025-07-05T11:00:00",
+     "Essential hypertension",
+     "{\"heart_rate\":91,\"systolic\":119,\"diastolic\":75,\"temperature_c\":36.6}",
+     "[\"I10\"]",
+     null
+    ],
+    [
+     "ENC000016",
+     "PAT00260",
+     "PRV0007",
+     "telehealth",
+     "2025-07-05T11:15:00",
+     "2025-07-05T12:00:00",
+     "Upper respiratory infection",
+     null,
+     "[\"J06.9\"]",
+     null
+    ],
+    [
+     "ENC000017",
+     "PAT00356",
+     "PRV0018",
+     "ambulatory",
+     "2025-07-05T12:15:00",
+     "2025-07-05T12:45:00",
+     "Ankle sprain",
+     "{\"heart_rate\":91,\"systolic\":154,\"diastolic\":97,\"temperature_c\":98.2}",
+     "[\"S93.401A\"]",
+     null
+    ],
+    [
+     "ENC000018",
+     "PAT00231",
+     "PRV0009",
+     "ambulatory",
+     "2025-07-05T13:30:00",
+     "2025-07-05T13:50:00",
+     "Type 2 diabetes",
+     "{\"heart_rate\":80,\"systolic\":146,\"diastolic\":82,\"temperature_c\":36.8}",
+     "[\"E11.9\",\"N39.0\"]",
+     null
+    ],
+    [
+     "ENC000019",
+     "PAT00292",
+     "PRV0009",
+     "ambulatory",
+     "2025-07-05T15:45:00",
+     "2025-07-05T16:45:00",
+     "Generalized anxiety",
+     "{\"heart_rate\":95,\"systolic\":100,\"diastolic\":69,\"temperature_c\":37.1}",
+     "[\"F41.1\"]",
+     null
+    ],
+    [
+     "ENC000020",
+     "PAT00083",
+     "PRV0009",
+     "ambulatory",
+     "2025-07-06T08:30:00",
+     "2025-07-06T09:00:00",
+     "Type 2 diabetes",
+     "{\"heart_rate\":95,\"systolic\":129,\"diastolic\":81,\"temperature_c\":36.7}",
+     "[\"E11.9\",\"R51.9\",\"F41.1\"]",
+     null
+    ]
+   ],
+   "project_head": [
+    [
+     "ENC000001",
+     "PAT00136",
+     "PRV0020",
+     "inpatient",
+     "2025-07-01T03:45:00",
+     "2025-07-06T07:45:00",
+     "Generalized anxiety",
+     "{\"heart_rate\":67,\"systolic\":150,\"diastolic\":75,\"temperature_c\":36.9}",
+     "[\"F41.1\"]",
+     null
+    ],
+    [
+     "ENC000002",
+     "PAT00176",
+     "PRV0004",
+     "emergency",
+     "2025-07-01T04:45:00",
+     "2025-07-01T14:25:00",
+     "Urinary tract infection",
+     "{\"heart_rate\":83,\"systolic\":107,\"diastolic\":97,\"temperature_c\":null}",
+     "[\"N39.0\"]",
+     null
+    ],
+    [
+     "ENC000003",
+     "PAT00508",
+     "PRV0032",
+     "telehealth",
+     "2025-07-01T08:45:00",
+     "2025-07-01T09:00:00",
+     "Acid reflux",
+     null,
+     "[\"K21.9\",\"E11.9\"]",
+     null
+    ],
+    [
+     "ENC000004",
+     "PAT00010",
+     "PRV0019",
+     "ambulatory",
+     "2025-07-01T09:30:00",
+     "2025-07-01T09:45:00",
+     "High cholesterol",
+     "{\"heart_rate\":104,\"systolic\":152,\"diastolic\":92,\"temperature_c\":37.0}",
+     "[\"E78.5\"]",
+     null
+    ],
+    [
+     "ENC000005",
+     "PAT00557",
+     "PRV0008",
+     "wellness",
+     "2025-07-01T13:45:00",
+     "2025-07-01T14:15:00",
+     "General adult exam",
+     "{\"heart_rate\":95,\"systolic\":106,\"diastolic\":78,\"temperature_c\":36.3}",
+     "[\"Z00.00\",\"I10\"]",
+     null
+    ],
+    [
+     "ENC000006",
+     "PAT00335",
+     "PRV0007",
+     "telehealth",
+     "2025-07-01T16:45:00",
+     "2025-07-01T17:00:00",
+     "Type 2 diabetes",
+     null,
+     "[\"E11.9\"]",
+     null
+    ],
+    [
+     "ENC000007",
+     "PAT00154",
+     "PRV0027",
+     "ambulatory",
+     "2025-07-01T17:45:00",
+     "2025-07-01T18:00:00",
+     "Ankle sprain",
+     "{\"heart_rate\":89,\"systolic\":138,\"diastolic\":65,\"temperature_c\":36.9}",
+     "[\"S93.401A\",\"E78.5\"]",
+     null
+    ],
+    [
+     "ENC000008",
+     "PAT00560",
+     "PRV0011",
+     "inpatient",
+     "2025-07-01T19:45:00",
+     "2025-07-05T23:45:00",
+     "Generalized anxiety",
+     "{\"heart_rate\":85,\"systolic\":118,\"diastolic\":97,\"temperature_c\":36.9}",
+     "[\"F41.1\",\"E78.5\"]",
+     null
+    ],
+    [
+     "ENC000009",
+     "PAT00286",
+     "PRV0034",
+     "emergency",
+     "2025-07-02T08:00:00",
+     "2025-07-02T10:40:00",
+     "Low back pain",
+     "{\"heart_rate\":82,\"systolic\":123,\"diastolic\":92,\"temperature_c\":37.2}",
+     "[\"M54.5\"]",
+     null
+    ],
+    [
+     "ENC000010",
+     "PAT00367",
+     "PRV0001",
+     "ambulatory",
+     "2025-07-02T08:15:00",
+     "2025-07-02T09:15:00",
+     "Urinary tract infection",
+     "{\"heart_rate\":96,\"systolic\":105,\"diastolic\":60,\"temperature_c\":38.1}",
+     "[\"N39.0\"]",
+     null
+    ],
+    [
+     "ENC000011",
+     "PAT00483",
+     "PRV0035",
+     "ambulatory",
+     "2025-07-02T10:15:00",
+     "2025-07-02T11:00:00",
+     "Essential hypertension",
+     "{\"heart_rate\":75,\"systolic\":137,\"diastolic\":83,\"temperature_c\":37.0}",
+     "[\"I10\",\"K21.9\"]",
+     null
+    ],
+    [
+     "ENC000012",
+     "PAT00176",
+     "PRV0035",
+     "ambulatory",
+     "2025-07-02T12:00:00",
+     "2025-07-02T12:15:00",
+     "Type 2 diabetes",
+     "{\"heart_rate\":92,\"systolic\":142,\"diastolic\":73,\"temperature_c\":36.5}",
+     "[\"E11.9\",\"N39.0\"]",
+     null
+    ],
+    [
+     "ENC000013",
+     "PAT00653",
+     "PRV0010",
+     "ambulatory",
+     "2025-07-02T12:00:00",
+     "2025-07-02T12:15:00",
+     "High cholesterol",
+     "{\"heart_rate\":80,\"systolic\":126,\"diastolic\":75,\"temperature_c\":37.4}",
+     "[\"E78.5\"]",
+     null
+    ],
+    [
+     "ENC000014",
+     "PAT00638",
+     "PRV0012",
+     "wellness",
+     "2025-07-02T13:30:00",
+     "2025-07-02T14:30:00",
+     "General adult exam",
+     "{\"heart_rate\":88,\"systolic\":153,\"diastolic\":88,\"temperature_c\":37.3}",
+     "[\"Z00.00\"]",
+     null
+    ],
+    [
+     "ENC000015",
+     "PAT00251",
+     "PRV0003",
+     "telehealth",
+     "2025-07-02T13:45:00",
+     "2025-07-02T14:45:00",
+     "Headache",
+     null,
+     "[\"R51.9\"]",
+     null
+    ],
+    [
+     "ENC000016",
+     "PAT00056",
+     "PRV0002",
+     "wellness",
+     "2025-07-02T14:15:00",
+     "2025-07-02T14:45:00",
+     "General adult exam",
+     "{\"heart_rate\":80,\"systolic\":126,\"diastolic\":77,\"temperature_c\":36.5}",
+     "[\"Z00.00\",\"E11.9\"]",
+     null
+    ],
+    [
+     "ENC000017",
+     "PAT00164",
+     "PRV0033",
+     "ambulatory",
+     "2025-07-02T15:30:00",
+     "2025-07-02T15:50:00",
+     "Essential hypertension",
+     "{\"heart_rate\":93,\"systolic\":109,\"diastolic\":82,\"temperature_c\":36.7}",
+     "[\"I10\"]",
+     null
+    ],
+    [
+     "ENC000018",
+     "PAT00039",
+     "PRV0009",
+     "ambulatory",
+     "2025-07-02T17:15:00",
+     "2025-07-02T18:15:00",
+     "Urinary tract infection",
+     "{\"heart_rate\":60,\"systolic\":112,\"diastolic\":95,\"temperature_c\":36.9}",
+     "[\"N39.0\"]",
+     null
+    ],
+    [
+     "ENC000019",
+     "PAT00644",
+     "PRV0004",
+     "emergency",
+     "2025-07-03T10:45:00",
+     "2025-07-03T15:05:00",
+     "Asthma",
+     "{\"heart_rate\":88,\"systolic\":117,\"diastolic\":64,\"temperature_c\":36.2}",
+     "[\"J45.909\",\"N39.0\",\"S93.401A\"]",
+     null
+    ],
+    [
+     "ENC000020",
+     "PAT00621",
+     "PRV0028",
+     "telehealth",
+     "2025-07-03T11:15:00",
+     "2025-07-03T11:30:00",
+     "Low back pain",
+     null,
+     "[\"M54.5\"]",
+     null
+    ]
+   ],
+   "format": "jsonl"
+  },
+  "claims": {
+   "note": "One row per insurance claim for a visit: what was billed, what the payer allowed and paid, and its status.",
+   "columns": [
+    {
+     "name": "claim_id",
+     "type": "string"
+    },
+    {
+     "name": "encounter_id",
+     "type": "string"
+    },
+    {
+     "name": "patient_id",
+     "type": "string"
+    },
+    {
+     "name": "provider_id",
+     "type": "string"
+    },
+    {
+     "name": "payer",
+     "type": "string"
+    },
+    {
+     "name": "service_date",
+     "type": "date"
+    },
+    {
+     "name": "submitted_date",
+     "type": "date"
+    },
+    {
+     "name": "billed_amount",
+     "type": "decimal(12,2)"
+    },
+    {
+     "name": "allowed_amount",
+     "type": "decimal(12,2)"
+    },
+    {
+     "name": "paid_amount",
+     "type": "decimal(12,2)"
+    },
+    {
+     "name": "claim_status",
+     "type": "string"
+    },
+    {
+     "name": "denial_reason",
+     "type": "string"
+    }
+   ],
+   "key": [
+    "claim_id"
+   ],
+   "rows": {
+    "lesson": 7,
+    "practice": 1032,
+    "project": 2425
+   },
+   "lesson": [
+    [
+     "CLM000001",
+     "ENC000001",
+     "PAT00003",
+     "PRV0004",
+     "Bluebird Health",
+     "2025-12-03",
+     "2025-12-18",
+     "2724.83",
+     null,
+     null,
+     "submitted",
+     null
+    ],
+    [
+     "CLM000002",
+     "ENC000002",
+     "PAT00002",
+     "PRV0001",
+     "Bluebird Health",
+     "2025-12-18",
+     "2026-01-01",
+     "217.82",
+     "0.00",
+     "0.00",
+     "denied",
+     "out_of_network"
+    ],
+    [
+     "CLM000003",
+     "ENC000003",
+     "PAT00001",
+     "PRV0002",
+     "Summit Senior Advantage",
+     "2025-12-20",
+     "2025-12-17",
+     "200.80",
+     "166.46",
+     "166.46",
+     "paid",
+     null
+    ],
+    [
+     "CLM000004",
+     "ENC000004",
+     "PAT00002",
+     "PRV0002",
+     "Bluebird Health",
+     "2026-01-13",
+     "2026-01-26",
+     "332.53",
+     "185.17",
+     null,
+     "approved",
+     null
+    ],
+    [
+     "CLM000005",
+     "ENC000005",
+     "PAT00005",
+     "PRV0003",
+     "Bluebird Health",
+     "2026-01-16",
+     "2026-01-19",
+     "458.05",
+     "339.79",
+     "339.79",
+     "paid",
+     null
+    ],
+    [
+     "CLM000006",
+     "ENC000006",
+     "PAT00006",
+     "PRV0001",
+     "Bluebird Health",
+     "2026-01-17",
+     "2026-02-13",
+     "23227.37",
+     "10680.23",
+     "10680.23",
+     "paid",
+     null
+    ],
+    [
+     "CLM000007",
+     "ENC000007",
+     "PAT00001",
+     "PRV0005",
+     "Summit Senior Advantage",
+     "2026-01-30",
+     "2026-02-27",
+     "154.34",
+     "134.08",
+     "134.08",
+     "paid",
+     null
+    ]
+   ],
+   "practice_head": [
+    [
+     "CLM000001",
+     "ENC000001",
+     "PAT00239",
+     "PRV0004",
+     "Summit Senior Advantage",
+     "2025-07-01",
+     "2025-07-29",
+     "2179.02",
+     "1941.19",
+     "1941.19",
+     "paid",
+     null
+    ],
+    [
+     "CLM000002",
+     "ENC000002",
+     "PAT00237",
+     "PRV0015",
+     "Cedar State Medicaid",
+     "2025-07-01",
+     "2025-07-21",
+     "256.50",
+     "184.92",
+     "184.92",
+     "paid",
+     null
+    ],
+    [
+     "CLM000003",
+     "ENC000003",
+     "PAT00064",
+     "PRV0006",
+     "Cedar State Medicaid",
+     "2025-07-01",
+     "2025-07-05",
+     "22222.04",
+     "16662.17",
+     null,
+     "approved",
+     null
+    ],
+    [
+     "CLM000004",
+     "ENC000004",
+     "PAT00069",
+     "PRV0011",
+     "Summit Senior Advantage",
+     "2025-07-01",
+     "2025-07-20",
+     "190.05",
+     "97.52",
+     "97.52",
+     "paid",
+     null
+    ],
+    [
+     "CLM000005",
+     "ENC000005",
+     "PAT00044",
+     "PRV0008",
+     "Cedar State Medicaid",
+     "2025-07-02",
+     "2025-07-31",
+     "267.73",
+     "0.00",
+     "0.00",
+     "denied",
+     "duplicate_claim"
+    ],
+    [
+     "CLM000006",
+     "ENC000007",
+     "PAT00215",
+     "PRV0005",
+     "Summit Senior Advantage",
+     "2025-07-03",
+     "2025-07-16",
+     "139.15",
+     "77.42",
+     "77.42",
+     "paid",
+     null
+    ],
+    [
+     "CLM000007",
+     "ENC000008",
+     "PAT00221",
+     "PRV0020",
+     "Summit Senior Advantage",
+     "2025-07-03",
+     "2025-07-18",
+     "166.38",
+     "106.74",
+     "106.74",
+     "paid",
+     null
+    ],
+    [
+     "CLM000008",
+     "ENC000009",
+     "PAT00109",
+     "PRV0006",
+     "Cedar State Medicaid",
+     "2025-07-03",
+     "2025-07-26",
+     "199.96",
+     "97.16",
+     "97.16",
+     "paid",
+     null
+    ],
+    [
+     "CLM000009",
+     "ENC000011",
+     "PAT00321",
+     "PRV0005",
+     "Summit Senior Advantage",
+     "2025-07-03",
+     "2025-07-31",
+     "441.75",
+     null,
+     null,
+     "submitted",
+     null
+    ],
+    [
+     "CLM000010",
+     "ENC000012",
+     "PAT00265",
+     "PRV0013",
+     "Bluebird Health",
+     "2025-07-04",
+     "2025-07-18",
+     "124.01",
+     "82.29",
+     "82.29",
+     "paid",
+     null
+    ],
+    [
+     "CLM000011",
+     "ENC000013",
+     "PAT00164",
+     "PRV0013",
+     "Bluebird Health",
+     "2025-07-04",
+     "2025-07-08",
+     "124.66",
+     "100.64",
+     "100.64",
+     "paid",
+     null
+    ],
+    [
+     "CLM000012",
+     "ENC000015",
+     "PAT00170",
+     "PRV0016",
+     "Bluebird Health",
+     "2025-07-05",
+     "2025-07-23",
+     "359.85",
+     "254.46",
+     null,
+     "appealed",
+     "not_covered"
+    ],
+    [
+     "CLM000013",
+     "ENC000016",
+     "PAT00260",
+     "PRV0007",
+     "Bluebird Health",
+     "2025-07-05",
+     "2025-07-14",
+     "60.52",
+     "33.00",
+     "33.00",
+     "paid",
+     null
+    ],
+    [
+     "CLM000014",
+     "ENC000017",
+     "PAT00356",
+     "PRV0018",
+     "Summit Senior Advantage",
+     "2025-07-05",
+     "2025-07-18",
+     "166.20",
+     "127.40",
+     "127.40",
+     "paid",
+     null
+    ],
+    [
+     "CLM000015",
+     "ENC000018",
+     "PAT00231",
+     "PRV0009",
+     "Bluebird Health",
+     "2025-07-05",
+     "2025-07-31",
+     "325.88",
+     null,
+     null,
+     "submitted",
+     null
+    ],
+    [
+     "CLM000016",
+     "ENC000019",
+     "PAT00292",
+     "PRV0009",
+     "Bluebird Health",
+     "2025-07-05",
+     "2025-07-28",
+     "365.88",
+     "239.82",
+     "239.82",
+     "paid",
+     null
+    ],
+    [
+     "CLM000017",
+     "ENC000020",
+     "PAT00083",
+     "PRV0009",
+     "Bluebird Health",
+     "2025-07-06",
+     "2025-07-09",
+     "406.65",
+     "277.16",
+     "277.16",
+     "paid",
+     null
+    ],
+    [
+     "CLM000018",
+     "ENC000021",
+     "PAT00285",
+     "PRV0001",
+     "Bluebird Health",
+     "2025-07-06",
+     "2025-07-14",
+     "141.13",
+     "83.33",
+     "83.33",
+     "paid",
+     null
+    ],
+    [
+     "CLM000019",
+     "ENC000022",
+     "PAT00164",
+     "PRV0001",
+     "Bluebird Health",
+     "2025-07-07",
+     "2025-07-23",
+     "441.36",
+     null,
+     null,
+     "submitted",
+     null
+    ],
+    [
+     "CLM000020",
+     "ENC000023",
+     "PAT00039",
+     "PRV0020",
+     "Summit Senior Advantage",
+     "2025-07-07",
+     "2025-07-19",
+     "291.26",
+     "261.74",
+     null,
+     "approved",
+     null
+    ]
+   ],
+   "project_head": [
+    [
+     "CLM000001",
+     "ENC000001",
+     "PAT00136",
+     "PRV0020",
+     "Bluebird Health",
+     "2025-07-01",
+     "2025-07-27",
+     "18140.74",
+     "0.00",
+     "0.00",
+     "denied",
+     "not_covered"
+    ],
+    [
+     "CLM000002",
+     "ENC000003",
+     "PAT00508",
+     "PRV0032",
+     "Bluebird Health",
+     "2025-07-01",
+     "2025-07-26",
+     "141.92",
+     "106.52",
+     null,
+     "appealed",
+     "missing_information"
+    ],
+    [
+     "CLM000003",
+     "ENC000004",
+     "PAT00010",
+     "PRV0019",
+     "Bluebird Health",
+     "2025-07-01",
+     "2025-07-22",
+     "273.62",
+     "233.99",
+     "233.99",
+     "paid",
+     null
+    ],
+    [
+     "CLM000004",
+     "ENC000005",
+     "PAT00557",
+     "PRV0008",
+     "Cedar State Medicaid",
+     "2025-07-01",
+     "2025-07-24",
+     "177.01",
+     null,
+     null,
+     "submitted",
+     null
+    ],
+    [
+     "CLM000005",
+     "ENC000006",
+     "PAT00335",
+     "PRV0007",
+     "Cedar State Medicaid",
+     "2025-07-01",
+     "2025-07-22",
+     "156.46",
+     "117.21",
+     "117.21",
+     "paid",
+     null
+    ],
+    [
+     "CLM000006",
+     "ENC000007",
+     "PAT00154",
+     "PRV0027",
+     "Bluebird Health",
+     "2025-07-01",
+     "2025-07-23",
+     "230.16",
+     "103.89",
+     "103.89",
+     "paid",
+     null
+    ],
+    [
+     "CLM000007",
+     "ENC000008",
+     "PAT00560",
+     "PRV0011",
+     "Bluebird Health",
+     "2025-07-01",
+     "2025-07-07",
+     "22953.41",
+     "11194.51",
+     null,
+     "approved",
+     null
+    ],
+    [
+     "CLM000008",
+     "ENC000010",
+     "PAT00367",
+     "PRV0001",
+     "Cedar State Medicaid",
+     "2025-07-02",
+     "2025-07-03",
+     "417.93",
+     null,
+     null,
+     "submitted",
+     null
+    ],
+    [
+     "CLM000009",
+     "ENC000011",
+     "PAT00483",
+     "PRV0035",
+     "Bluebird Health",
+     "2025-07-02",
+     "2025-07-07",
+     "313.97",
+     "257.80",
+     null,
+     "approved",
+     null
+    ],
+    [
+     "CLM000010",
+     "ENC000013",
+     "PAT00653",
+     "PRV0010",
+     "Bluebird Health",
+     "2025-07-02",
+     "2025-06-12",
+     "266.26",
+     "162.09",
+     "162.09",
+     "paid",
+     null
+    ],
+    [
+     "CLM000011",
+     "ENC000014",
+     "PAT00638",
+     "PRV0012",
+     "Bluebird Health",
+     "2025-07-02",
+     "2025-07-04",
+     "155.12",
+     null,
+     null,
+     "submitted",
+     null
+    ],
+    [
+     "CLM000012",
+     "ENC000015",
+     "PAT00251",
+     "PRV0003",
+     "Bluebird Health",
+     "2025-07-02",
+     "2025-07-27",
+     "74.61",
+     "38.11",
+     "38.11",
+     "paid",
+     null
+    ],
+    [
+     "CLM000013",
+     "ENC000017",
+     "PAT00164",
+     "PRV0033",
+     "Bluebird Health",
+     "2025-07-02",
+     "2025-07-15",
+     "152.64",
+     "83.73",
+     "83.73",
+     "paid",
+     null
+    ],
+    [
+     "CLM000014",
+     "ENC000018",
+     "PAT00039",
+     "PRV0009",
+     "Cedar State Medicaid",
+     "2025-07-02",
+     "2025-07-27",
+     "276.07",
+     "195.24",
+     "195.24",
+     "paid",
+     null
+    ],
+    [
+     "CLM000015",
+     "ENC000019",
+     "PAT00644",
+     "PRV0004",
+     "Bluebird Health",
+     "2025-07-03",
+     "2025-07-05",
+     "3213.82",
+     "2303.39",
+     null,
+     "approved",
+     null
+    ],
+    [
+     "CLM000016",
+     "ENC000020",
+     "PAT00621",
+     "PRV0028",
+     "Bluebird Health",
+     "2025-07-03",
+     "2025-07-10",
+     "101.15",
+     "47.71",
+     "47.71",
+     "paid",
+     null
+    ],
+    [
+     "CLM000017",
+     "ENC000021",
+     "PAT00329",
+     "PRV0001",
+     "Summit Senior Advantage",
+     "2025-07-03",
+     "2025-07-25",
+     "86.31",
+     "0.00",
+     "0.00",
+     "denied",
+     "not_covered"
+    ],
+    [
+     "CLM000018",
+     "ENC000022",
+     "PAT00363",
+     "PRV0024",
+     "Summit Senior Advantage",
+     "2025-07-03",
+     "2025-07-22",
+     "379.23",
+     "233.77",
+     "233.77",
+     "paid",
+     null
+    ],
+    [
+     "CLM000019",
+     "ENC000023",
+     "PAT00458",
+     "PRV0030",
+     "Cedar State Medicaid",
+     "2025-07-03",
+     "2025-08-02",
+     "242.77",
+     null,
+     null,
+     "submitted",
+     null
+    ],
+    [
+     "CLM000020",
+     "ENC000024",
+     "PAT00181",
+     "PRV0002",
+     "Cedar State Medicaid",
+     "2025-07-03",
+     "2025-07-31",
+     "163.49",
+     "0.00",
+     "0.00",
+     "denied",
+     "prior_auth_required"
+    ]
+   ]
+  },
+  "medications": {
+   "note": "One row per prescription written at a visit, and whether and when a pharmacy filled it.",
+   "columns": [
+    {
+     "name": "prescription_id",
+     "type": "string"
+    },
+    {
+     "name": "patient_id",
+     "type": "string"
+    },
+    {
+     "name": "encounter_id",
+     "type": "string"
+    },
+    {
+     "name": "pharmacy_id",
+     "type": "string"
+    },
+    {
+     "name": "drug_name",
+     "type": "string"
+    },
+    {
+     "name": "dose",
+     "type": "string"
+    },
+    {
+     "name": "quantity",
+     "type": "int"
+    },
+    {
+     "name": "days_supply",
+     "type": "int"
+    },
+    {
+     "name": "prescribed_date",
+     "type": "date"
+    },
+    {
+     "name": "filled_date",
+     "type": "date"
+    },
+    {
+     "name": "cost",
+     "type": "decimal(10,2)"
+    }
+   ],
+   "key": [
+    "prescription_id"
+   ],
+   "rows": {
+    "lesson": 5,
+    "practice": 351,
+    "project": 726
+   },
+   "lesson": [
+    [
+     "RX000001",
+     "PAT00003",
+     "ENC000001",
+     "PH04",
+     "albuterol 90 mcg inhaler",
+     "2 puffs as needed",
+     "1",
+     "30",
+     "2025-12-03",
+     "2025-12-03",
+     "31.50"
+    ],
+    [
+     "RX000002",
+     "PAT00001",
+     "ENC000003",
+     "PH02",
+     "omeprazole 20 mg capsule",
+     "1 capsule daily",
+     "60",
+     "60",
+     "2025-12-20",
+     "2025-12-20",
+     "12.00"
+    ],
+    [
+     "RX000003",
+     "PAT00002",
+     "ENC000004",
+     "PH01",
+     "omeprazole 20 mg capsule",
+     "1 capsule daily",
+     "14",
+     "14",
+     "2026-01-13",
+     "2026-01-15",
+     "5.10"
+    ],
+    [
+     "RX000004",
+     "PAT00005",
+     "ENC000005",
+     "PH03",
+     "nitrofurantoin 100 mg capsule",
+     "1 capsule 2x daily",
+     "30",
+     "15",
+     "2026-01-16",
+     "2026-01-21",
+     "30.00"
+    ],
+    [
+     "RX000005",
+     "PAT00006",
+     "ENC000006",
+     "PH03",
+     "naproxen 500 mg tablet",
+     "1 tablet 2x daily",
+     "90",
+     "45",
+     "2026-01-17",
+     null,
+     "12.60"
+    ]
+   ],
+   "practice_head": [
+    [
+     "RX000001",
+     "PAT00239",
+     "ENC000001",
+     "PH06",
+     "metformin 500 mg tablet",
+     "1 tablet 2x daily",
+     "14",
+     "7",
+     "2025-07-01",
+     "2025-07-01",
+     "2.90"
+    ],
+    [
+     "RX000002",
+     "PAT00064",
+     "ENC000003",
+     "PH01",
+     "ibuprofen 600 mg tablet",
+     "1 tablet as needed",
+     "20",
+     "10",
+     "2025-07-01",
+     "2025-07-01",
+     "1.60"
+    ],
+    [
+     "RX000003",
+     "PAT00103",
+     "ENC000010",
+     "PH02",
+     "ibuprofen 600 mg tablet",
+     "1 tablet as needed",
+     "14",
+     "7",
+     "2025-07-03",
+     "2025-07-03",
+     "1.12"
+    ],
+    [
+     "RX000004",
+     "PAT00321",
+     "ENC000011",
+     "PH04",
+     "amoxicillin 500 mg capsule",
+     "1 capsule 3x daily",
+     "60",
+     "30",
+     "2025-07-03",
+     "2025-07-03",
+     "24.00"
+    ],
+    [
+     "RX000005",
+     "PAT00231",
+     "ENC000018",
+     "PH06",
+     "metformin 500 mg tablet",
+     "1 tablet 2x daily",
+     "60",
+     "30",
+     "2025-07-05",
+     "2025-07-05",
+     "9.00"
+    ],
+    [
+     "RX000006",
+     "PAT00285",
+     "ENC000021",
+     "PH06",
+     "nitrofurantoin 100 mg capsule",
+     "1 capsule 2x daily",
+     "60",
+     "30",
+     "2025-07-06",
+     "2025-07-06",
+     "57.00"
+    ],
+    [
+     "RX000007",
+     "PAT00329",
+     "ENC000033",
+     "PH04",
+     "lisinopril 10 mg tablet",
+     "1 tablet daily",
+     "20",
+     "20",
+     "2025-07-10",
+     "2025-07-10",
+     "5.40"
+    ],
+    [
+     "RX000008",
+     "PAT00349",
+     "ENC000034",
+     "PH04",
+     "lisinopril 10 mg tablet",
+     "1 tablet daily",
+     "10",
+     "10",
+     "2025-07-11",
+     "2025-07-11",
+     "4.20"
+    ],
+    [
+     "RX000009",
+     "PAT00037",
+     "ENC000036",
+     "PH04",
+     "albuterol 90 mcg inhaler",
+     "2 puffs as needed",
+     "1",
+     "30",
+     "2025-07-11",
+     null,
+     "30.00"
+    ],
+    [
+     "RX000010",
+     "PAT00263",
+     "ENC000039",
+     "PH06",
+     "nitrofurantoin 100 mg capsule",
+     "1 capsule 2x daily",
+     "30",
+     "15",
+     "2025-07-13",
+     null,
+     "28.50"
+    ],
+    [
+     "RX000011",
+     "PAT00179",
+     "ENC000040",
+     "PH02",
+     "naproxen 500 mg tablet",
+     "1 tablet 2x daily",
+     "60",
+     "30",
+     "2025-07-14",
+     "2025-07-14",
+     "11.40"
+    ],
+    [
+     "RX000012",
+     "PAT00264",
+     "ENC000042",
+     "PH02",
+     "omeprazole 20 mg capsule",
+     "1 capsule daily",
+     "30",
+     "30",
+     "2025-07-14",
+     "2025-07-19",
+     "6.00"
+    ],
+    [
+     "RX000013",
+     "PAT00119",
+     "ENC000045",
+     "PH06",
+     "metformin 500 mg tablet",
+     "1 tablet 2x daily",
+     "30",
+     "15",
+     "2025-07-15",
+     "2025-07-17",
+     "6.00"
+    ],
+    [
+     "RX000014",
+     "PAT00290",
+     "ENC000048",
+     "PH01",
+     "metformin 500 mg tablet",
+     "1 tablet 2x daily",
+     "14",
+     "7",
+     "2025-07-16",
+     "2025-07-16",
+     "4.40"
+    ],
+    [
+     "RX000015",
+     "PAT00024",
+     "ENC000056",
+     "PH02",
+     "sertraline 50 mg tablet",
+     "1 tablet daily",
+     "20",
+     "20",
+     "2025-07-17",
+     null,
+     "7.40"
+    ],
+    [
+     "RX000016",
+     "PAT00150",
+     "ENC000059",
+     "PH03",
+     "naproxen 500 mg tablet",
+     "1 tablet 2x daily",
+     "90",
+     "45",
+     "2025-07-19",
+     "2025-07-24",
+     "15.60"
+    ],
+    [
+     "RX000017",
+     "PAT00057",
+     "ENC000060",
+     "PH02",
+     "naproxen 500 mg tablet",
+     "1 tablet 2x daily",
+     "30",
+     "15",
+     "2025-07-20",
+     "2025-07-22",
+     "4.20"
+    ],
+    [
+     "RX000018",
+     "PAT00328",
+     "ENC000061",
+     "PH01",
+     "naproxen 500 mg tablet",
+     "1 tablet 2x daily",
+     "30",
+     "15",
+     "2025-07-21",
+     "2025-07-22",
+     "5.70"
+    ],
+    [
+     "RX000019",
+     "PAT00123",
+     "ENC000063",
+     "PH02",
+     "metformin 500 mg tablet",
+     "1 tablet 2x daily",
+     "14",
+     "7",
+     "2025-07-22",
+     "2025-07-22",
+     "1.40"
+    ],
+    [
+     "RX000020",
+     "PAT00103",
+     "ENC000068",
+     "PH02",
+     "albuterol 90 mcg inhaler",
+     "2 puffs as needed",
+     "1",
+     "30",
+     "2025-07-23",
+     "2025-07-25",
+     "30.00"
+    ]
+   ],
+   "project_head": [
+    [
+     "RX000001",
+     "PAT00176",
+     "ENC000002",
+     "PH02",
+     "nitrofurantoin 100 mg capsule",
+     "1 capsule 2x daily",
+     "60",
+     "30",
+     "2025-07-01",
+     "2025-07-01",
+     "60.00"
+    ],
+    [
+     "RX000002",
+     "PAT00010",
+     "ENC000004",
+     "PH02",
+     "atorvastatin 20 mg tablet",
+     "1 tablet daily",
+     "30",
+     "30",
+     "2025-07-01",
+     "2025-07-06",
+     "6.90"
+    ],
+    [
+     "RX000003",
+     "PAT00560",
+     "ENC000008",
+     "PH04",
+     "sertraline 50 mg tablet",
+     "1 tablet daily",
+     "20",
+     "20",
+     "2025-07-01",
+     "2025-07-01",
+     "4.40"
+    ],
+    [
+     "RX000004",
+     "PAT00176",
+     "ENC000012",
+     "PH01",
+     "metformin 500 mg tablet",
+     "1 tablet 2x daily",
+     "20",
+     "10",
+     "2025-07-02",
+     "2025-07-02",
+     "2.00"
+    ],
+    [
+     "RX000005",
+     "PAT00653",
+     "ENC000013",
+     "PH05",
+     "atorvastatin 20 mg tablet",
+     "1 tablet daily",
+     "20",
+     "20",
+     "2025-07-02",
+     "2025-07-02",
+     "5.10"
+    ],
+    [
+     "RX000006",
+     "PAT00181",
+     "ENC000024",
+     "PH05",
+     "atorvastatin 20 mg tablet",
+     "1 tablet daily",
+     "90",
+     "90",
+     "2025-07-03",
+     "2025-07-03",
+     "17.70"
+    ],
+    [
+     "RX000007",
+     "PAT00621",
+     "ENC000025",
+     "PH01",
+     "naproxen 500 mg tablet",
+     "1 tablet 2x daily",
+     "60",
+     "30",
+     "2025-07-03",
+     "2025-07-08",
+     "11.40"
+    ],
+    [
+     "RX000008",
+     "PAT00241",
+     "ENC000027",
+     "PH04",
+     "ibuprofen 600 mg tablet",
+     "1 tablet as needed",
+     "20",
+     "10",
+     "2025-07-04",
+     "2025-07-05",
+     "4.60"
+    ],
+    [
+     "RX000009",
+     "PAT00699",
+     "ENC000030",
+     "PH08",
+     "naproxen 500 mg tablet",
+     "1 tablet 2x daily",
+     "60",
+     "30",
+     "2025-07-04",
+     "2025-07-06",
+     "8.40"
+    ],
+    [
+     "RX000010",
+     "PAT00408",
+     "ENC000031",
+     "PH05",
+     "omeprazole 20 mg capsule",
+     "1 capsule daily",
+     "14",
+     "14",
+     "2025-07-05",
+     "2025-07-07",
+     "3.60"
+    ],
+    [
+     "RX000011",
+     "PAT00026",
+     "ENC000032",
+     "PH02",
+     "metformin 500 mg tablet",
+     "1 tablet 2x daily",
+     "10",
+     "5",
+     "2025-07-05",
+     null,
+     "4.00"
+    ],
+    [
+     "RX000012",
+     "PAT00465",
+     "ENC000035",
+     "PH06",
+     "sertraline 50 mg tablet",
+     "1 tablet daily",
+     "60",
+     "60",
+     "2025-07-06",
+     "2025-07-07",
+     "14.70"
+    ],
+    [
+     "RX000013",
+     "PAT00622",
+     "ENC000036",
+     "PH03",
+     "lisinopril 10 mg tablet",
+     "1 tablet daily",
+     "10",
+     "10",
+     "2025-07-06",
+     "2025-07-06",
+     "2.70"
+    ],
+    [
+     "RX000014",
+     "PAT00634",
+     "ENC000039",
+     "PH06",
+     "atorvastatin 20 mg tablet",
+     "1 tablet daily",
+     "60",
+     "60",
+     "2025-07-06",
+     "2025-07-06",
+     "10.80"
+    ],
+    [
+     "RX000015",
+     "PAT00214",
+     "ENC000040",
+     "PH06",
+     "ibuprofen 600 mg tablet",
+     "1 tablet as needed",
+     "60",
+     "30",
+     "2025-07-06",
+     null,
+     "4.80"
+    ],
+    [
+     "RX000016",
+     "PAT00158",
+     "ENC000048",
+     "PH03",
+     "omeprazole 20 mg capsule",
+     "1 capsule daily",
+     "20",
+     "20",
+     "2025-07-07",
+     "2025-07-07",
+     "3.00"
+    ],
+    [
+     "RX000017",
+     "PAT00030",
+     "ENC000049",
+     "PH04",
+     "omeprazole 20 mg capsule",
+     "1 capsule daily",
+     "30",
+     "30",
+     "2025-07-07",
+     "2025-07-08",
+     "7.50"
+    ],
+    [
+     "RX000018",
+     "PAT00539",
+     "ENC000057",
+     "PH08",
+     "albuterol 90 mcg inhaler",
+     "2 puffs as needed",
+     "1",
+     "30",
+     "2025-07-09",
+     "2025-07-09",
+     "28.50"
+    ],
+    [
+     "RX000019",
+     "PAT00608",
+     "ENC000058",
+     "PH08",
+     "nitrofurantoin 100 mg capsule",
+     "1 capsule 2x daily",
+     "30",
+     "15",
+     "2025-07-09",
+     "2025-07-14",
+     "30.00"
+    ],
+    [
+     "RX000020",
+     "PAT00015",
+     "ENC000060",
+     "PH06",
+     "sertraline 50 mg tablet",
+     "1 tablet daily",
+     "10",
+     "10",
+     "2025-07-09",
+     "2025-07-09",
+     "2.20"
+    ]
+   ]
+  },
+  "observations": {
+   "note": "One row per lab result or measurement taken at a visit, with its value and unit.",
+   "columns": [
+    {
+     "name": "observation_id",
+     "type": "string"
+    },
+    {
+     "name": "encounter_id",
+     "type": "string"
+    },
+    {
+     "name": "patient_id",
+     "type": "string"
+    },
+    {
+     "name": "code",
+     "type": "string"
+    },
+    {
+     "name": "description",
+     "type": "string"
+    },
+    {
+     "name": "value",
+     "type": "double"
+    },
+    {
+     "name": "unit",
+     "type": "string"
+    },
+    {
+     "name": "observed_at",
+     "type": "timestamp"
+    }
+   ],
+   "key": [
+    "observation_id"
+   ],
+   "rows": {
+    "lesson": 10,
+    "practice": 948,
+    "project": 2275
+   },
+   "lesson": [
+    [
+     "OBS000001",
+     "ENC000002",
+     "PAT00002",
+     "HBA1C",
+     "Hemoglobin A1c",
+     "8.7",
+     "%",
+     "2025-12-18T11:50:00"
+    ],
+    [
+     "OBS000002",
+     "ENC000002",
+     "PAT00002",
+     "HGB",
+     "Hemoglobin",
+     "13.9",
+     "g/dL",
+     "2025-12-18T11:25:00"
+    ],
+    [
+     "OBS000003",
+     "ENC000002",
+     "PAT00002",
+     "GLU",
+     "Glucose",
+     "131.0",
+     "mg/dL",
+     "2025-12-18T11:25:00"
+    ],
+    [
+     "OBS000004",
+     "ENC000003",
+     "PAT00001",
+     "HGB",
+     "Hemoglobin",
+     "16.3",
+     "g/dL",
+     "2025-12-20T09:10:00"
+    ],
+    [
+     "OBS000005",
+     "ENC000003",
+     "PAT00001",
+     "HBA1C",
+     "Hemoglobin A1c",
+     "8.0",
+     "%",
+     "2025-12-20T09:20:00"
+    ],
+    [
+     "OBS000006",
+     "ENC000005",
+     "PAT00005",
+     "HBA1C",
+     "Hemoglobin A1c",
+     "8.0",
+     "%",
+     "2026-01-16T11:20:00"
+    ],
+    [
+     "OBS000007",
+     "ENC000005",
+     "PAT00005",
+     "BMI",
+     "Body mass index",
+     "22.6",
+     "kg/m2",
+     "2026-01-16T11:05:00"
+    ],
+    [
+     "OBS000008",
+     "ENC000005",
+     "PAT00005",
+     "HGB",
+     "Hemoglobin",
+     "16.5",
+     "g/dL",
+     "2026-01-16T10:50:00"
+    ],
+    [
+     "OBS000009",
+     "ENC000006",
+     "PAT00006",
+     "BMI",
+     "Body mass index",
+     "30.2",
+     "kg/m2",
+     "2026-01-17T11:55:00"
+    ],
+    [
+     "OBS000010",
+     "ENC000006",
+     "PAT00006",
+     "HBA1C",
+     "Hemoglobin A1c",
+     "5.1",
+     "%",
+     "2026-01-17T11:55:00"
+    ]
+   ],
+   "practice_head": [
+    [
+     "OBS000001",
+     "ENC000004",
+     "PAT00069",
+     "HGB",
+     "Hemoglobin",
+     "12.2",
+     "g/dL",
+     "2025-07-01T15:50:00"
+    ],
+    [
+     "OBS000002",
+     "ENC000004",
+     "PAT00069",
+     "LDL",
+     "LDL cholesterol",
+     "180.0",
+     "mg/dL",
+     "2025-07-01T15:50:00"
+    ],
+    [
+     "OBS000003",
+     "ENC000005",
+     "PAT00044",
+     "BMI",
+     "Body mass index",
+     "33.4",
+     "kg/m2",
+     "2025-07-02T16:20:00"
+    ],
+    [
+     "OBS000004",
+     "ENC000005",
+     "PAT00044",
+     "LDL",
+     "LDL cholesterol",
+     "75.0",
+     "mg/dL",
+     "2025-07-02T16:20:00"
+    ],
+    [
+     "OBS000005",
+     "ENC000008",
+     "PAT00221",
+     "HGB",
+     "Hemoglobin",
+     "13.2",
+     "g/dL",
+     "2025-07-03T10:35:00"
+    ],
+    [
+     "OBS000006",
+     "ENC000009",
+     "PAT00109",
+     "HBA1C",
+     "Hemoglobin A1c",
+     "6.7",
+     "%",
+     "2025-07-03T12:20:00"
+    ],
+    [
+     "OBS000007",
+     "ENC000010",
+     "PAT00103",
+     "GLU",
+     "Glucose",
+     "141.0",
+     "mg/dL",
+     "2025-07-03T12:35:00"
+    ],
+    [
+     "OBS000008",
+     "ENC000011",
+     "PAT00321",
+     "GLU",
+     "Glucose",
+     "93.0",
+     "mg/dL",
+     "2025-07-03T15:20:00"
+    ],
+    [
+     "OBS000009",
+     "ENC000015",
+     "PAT00170",
+     "LDL",
+     "LDL cholesterol",
+     "171.0",
+     "mg/dL",
+     "2025-07-05T10:50:00"
+    ],
+    [
+     "OBS000010",
+     "ENC000015",
+     "PAT00170",
+     "HBA1C",
+     "Hemoglobin A1c",
+     "7.5",
+     "%",
+     "2025-07-05T10:40:00"
+    ],
+    [
+     "OBS000011",
+     "ENC000015",
+     "PAT00170",
+     "HGB",
+     "Hemoglobin",
+     "13.9",
+     "g/dL",
+     "2025-07-05T10:50:00"
+    ],
+    [
+     "OBS000012",
+     "ENC000017",
+     "PAT00356",
+     "HGB",
+     "Hemoglobin",
+     "13.1",
+     "g/dL",
+     "2025-07-05T13:05:00"
+    ],
+    [
+     "OBS000013",
+     "ENC000017",
+     "PAT00356",
+     "HBA1C",
+     "Hemoglobin A1c",
+     "7.9",
+     "%",
+     "2025-07-05T12:25:00"
+    ],
+    [
+     "OBS000014",
+     "ENC000017",
+     "PAT00356",
+     "BMI",
+     "Body mass index",
+     "28.1",
+     "kg/m2",
+     "2025-07-05T12:25:00"
+    ],
+    [
+     "OBS000015",
+     "ENC000018",
+     "PAT00231",
+     "GLU",
+     "Glucose",
+     "112.0",
+     "mg/dL",
+     "2025-07-05T14:05:00"
+    ],
+    [
+     "OBS000016",
+     "ENC000020",
+     "PAT00083",
+     "BMI",
+     "Body mass index",
+     "31.6",
+     "kg/m2",
+     "2025-07-06T08:50:00"
+    ],
+    [
+     "OBS000017",
+     "ENC000022",
+     "PAT00164",
+     "GLU",
+     "Glucose",
+     "124.0",
+     "mg/dL",
+     "2025-07-07T10:05:00"
+    ],
+    [
+     "OBS000018",
+     "ENC000022",
+     "PAT00164",
+     "LDL",
+     "LDL cholesterol",
+     "83.0",
+     "mg/dL",
+     "2025-07-07T09:25:00"
+    ],
+    [
+     "OBS000019",
+     "ENC000023",
+     "PAT00039",
+     "HBA1C",
+     "Hemoglobin A1c",
+     "6.4",
+     "%",
+     "2025-07-07T11:50:00"
+    ],
+    [
+     "OBS000020",
+     "ENC000026",
+     "PAT00172",
+     "BMI",
+     "Body mass index",
+     "36.8",
+     "kg/m2",
+     "2025-07-08T08:35:00"
+    ]
+   ],
+   "project_head": [
+    [
+     "OBS000001",
+     "ENC000005",
+     "PAT00557",
+     "GLU",
+     "Glucose",
+     "71.0",
+     "mg/dL",
+     "2025-07-01T13:55:00"
+    ],
+    [
+     "OBS000002",
+     "ENC000005",
+     "PAT00557",
+     "HGB",
+     "Hemoglobin",
+     "15.8",
+     "g/dL",
+     "2025-07-01T14:20:00"
+    ],
+    [
+     "OBS000003",
+     "ENC000007",
+     "PAT00154",
+     "BMI",
+     "Body mass index",
+     "28.2",
+     "kg/m2",
+     "2025-07-01T17:55:00"
+    ],
+    [
+     "OBS000004",
+     "ENC000007",
+     "PAT00154",
+     "GLU",
+     "Glucose",
+     "159.0",
+     "mg/dL",
+     "2025-07-01T17:55:00"
+    ],
+    [
+     "OBS000005",
+     "ENC000007",
+     "PAT00154",
+     "HBA1C",
+     "Hemoglobin A1c",
+     "8.8",
+     "%",
+     "2025-07-01T18:05:00"
+    ],
+    [
+     "OBS000006",
+     "ENC000008",
+     "PAT00560",
+     "LDL",
+     "LDL cholesterol",
+     "120.0",
+     "mg/dL",
+     "2025-07-01T20:35:00"
+    ],
+    [
+     "OBS000007",
+     "ENC000008",
+     "PAT00560",
+     "BMI",
+     "Body mass index",
+     "25.7",
+     "kg/m2",
+     "2025-07-01T20:20:00"
+    ],
+    [
+     "OBS000008",
+     "ENC000011",
+     "PAT00483",
+     "LDL",
+     "LDL cholesterol",
+     "168.0",
+     "mg/dL",
+     "2025-07-02T10:50:00"
+    ],
+    [
+     "OBS000009",
+     "ENC000011",
+     "PAT00483",
+     "HBA1C",
+     "Hemoglobin A1c",
+     "5.7",
+     "%",
+     "2025-07-02T10:50:00"
+    ],
+    [
+     "OBS000010",
+     "ENC000012",
+     "PAT00176",
+     "HBA1C",
+     "Hemoglobin A1c",
+     "7.2",
+     "%",
+     "2025-07-02T12:50:00"
+    ],
+    [
+     "OBS000011",
+     "ENC000012",
+     "PAT00176",
+     "BMI",
+     "Body mass index",
+     "32.6",
+     "kg/m2",
+     "2025-07-02T12:50:00"
+    ],
+    [
+     "OBS000012",
+     "ENC000012",
+     "PAT00176",
+     "LDL",
+     "LDL cholesterol",
+     "117.0",
+     "mg/dL",
+     "2025-07-02T12:10:00"
+    ],
+    [
+     "OBS000013",
+     "ENC000013",
+     "PAT00653",
+     "HBA1C",
+     "Hemoglobin A1c",
+     "7.6",
+     "%",
+     "2025-07-02T12:20:00"
+    ],
+    [
+     "OBS000014",
+     "ENC000014",
+     "PAT00638",
+     "HBA1C",
+     "Hemoglobin A1c",
+     "6.6",
+     "%",
+     "2025-07-02T14:05:00"
+    ],
+    [
+     "OBS000015",
+     "ENC000014",
+     "PAT00638",
+     "HGB",
+     "Hemoglobin",
+     "14.9",
+     "g/dL",
+     "2025-07-02T14:05:00"
+    ],
+    [
+     "OBS000016",
+     "ENC000014",
+     "PAT00638",
+     "GLU",
+     "Glucose",
+     "88.0",
+     "mg/dL",
+     "2025-07-02T13:40:00"
+    ],
+    [
+     "OBS000017",
+     "ENC000018",
+     "PAT00039",
+     "LDL",
+     "LDL cholesterol",
+     "101.0",
+     "mg/dL",
+     "2025-07-02T17:25:00"
+    ],
+    [
+     "OBS000018",
+     "ENC000022",
+     "PAT00363",
+     "HGB",
+     "Hemoglobin",
+     "13.8",
+     "g/dL",
+     "2025-07-03T14:50:00"
+    ],
+    [
+     "OBS000019",
+     "ENC000024",
+     "PAT00181",
+     "LDL",
+     "LDL cholesterol",
+     "78.0",
+     "mg/dL",
+     "2025-07-03T17:20:00"
+    ],
+    [
+     "OBS000020",
+     "ENC000024",
+     "PAT00181",
+     "HBA1C",
+     "Hemoglobin A1c",
+     "9.6",
+     "%",
+     "2025-07-03T16:50:00"
+    ]
+   ]
+  }
+ }
+}

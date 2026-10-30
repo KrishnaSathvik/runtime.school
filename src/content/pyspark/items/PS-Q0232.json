@@ -1,0 +1,59 @@
+{
+  "id": "PS-Q0232",
+  "slug": "one-station-from-the-archive",
+  "lesson": "PS-L047",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "One station from the archive",
+  "dataset": {
+    "id": "PS-D13",
+    "version": "1.0.0"
+  },
+  "prompt": "The weather archive keeps one folder per station, and the New York desk only needs `NYC-01`. Write `load_nyc(path)` so it reads just that station's folder and returns its readings with `station_id` still in them. `solve` is written for you.",
+  "rules": [
+    "Read only the `NYC-01` folder of the archive at `path`; there is always one.",
+    "Return the readings with every column: the others in their order, then `station_id` last.",
+    "Keep the readings as they are, missing values, `NaN` and `-9999` codes included.",
+    "Readings of other stations, even ones with similar names, are not returned."
+  ],
+  "hints": [
+    "A partition's folder is named `column=value`, so this one is `station_id=NYC-01` inside `path`.",
+    "Reading one partition's folder leaves out the partition column, because it isn't stored in the files.",
+    "The `basePath` option tells Spark where the table starts, so it adds `station_id` back."
+  ],
+  "explanation": "`spark.read.option(\"basePath\", path).parquet(path + \"/station_id=NYC-01\")` opens only New York's folder, and `basePath` makes Spark treat `station_id=NYC-01` as a partition of the table at `path`, so the column comes back, last. Without `basePath` the result has no `station_id` at all. Reading the whole archive returns every station, and a pattern like `station_id=NYC-01*` also picks up a station called `NYC-010`.",
+  "entry": "solve",
+  "inputs": [
+    "observations"
+  ],
+  "starter": "def load_nyc(path):\n    # Read the NYC-01 readings from the archive at `path`.\n    pass\n\n\ndef solve(observations):\n    path = \"/tmp/weather/by_station\"\n    # The archive job, written for you: one folder per station.\n    observations.write.mode(\"overwrite\").partitionBy(\"station_id\").parquet(path)\n    return load_nyc(path)\n",
+  "output": {
+    "columns": [
+      "observation_id",
+      "observed_at",
+      "observation_date",
+      "temperature_c",
+      "humidity_pct",
+      "precipitation_mm",
+      "wind_speed_kph",
+      "pressure_hpa",
+      "quality_flag",
+      "station_id"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

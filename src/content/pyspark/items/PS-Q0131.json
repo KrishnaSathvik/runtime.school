@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0131",
+  "slug": "direct-reports",
+  "lesson": "PS-L027",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Direct reports",
+  "dataset": {
+    "id": "PS-D03",
+    "version": "1.0.0"
+  },
+  "prompt": "HR is building team pages: each employee with the people who report straight to them. Write `solve(employees)` so it returns `employee_id`, `first_name`, `report_id` and `report_first_name`.",
+  "rules": [
+    "A direct report of an employee is anyone whose `manager_id` equals that employee's `employee_id`.",
+    "An employee with several reports appears once per report. An employee with no reports appears once, with `report_id` and `report_first_name` missing.",
+    "Return only these four columns, in this order."
+  ],
+  "hints": [
+    "Join `employees` with itself. Give the copies names with `alias`: one plays the manager, the other the report.",
+    "The condition decides the roles: the report's `manager_id` must equal the manager's `employee_id`, so `F.col(\"r.manager_id\") == F.col(\"m.employee_id\")`.",
+    "Everyone must appear, even people nobody reports to, so the manager copy is the left side of a left join. Rename the report's columns with `.alias(...)`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "employees"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(employees):\n    # Each employee with each of their direct reports.\n    return employees\n",
+  "output": {
+    "columns": [
+      "employee_id",
+      "first_name",
+      "report_id",
+      "report_first_name"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "This is a self join that looks down the org chart instead of up. Name two copies, `m = employees.alias(\"m\")` for the person and `r = employees.alias(\"r\")` for their reports, and join with `F.col(\"r.manager_id\") == F.col(\"m.employee_id\")`. A left join from `m` keeps people with no reports, with NULL report columns; an inner join would drop every individual contributor. Select with prefixes and rename: `F.col(\"m.employee_id\").alias(\"employee_id\")`, ..., `F.col(\"r.employee_id\").alias(\"report_id\")`. Writing the condition the other way round, `m.manager_id == r.employee_id`, gives each person's manager instead."
+}

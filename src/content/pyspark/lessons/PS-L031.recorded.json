@@ -1,0 +1,48 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D01",
+  "version": "1.1.0",
+  "edition": "lesson",
+  "tables": [
+   "orders",
+   "order_items"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "+---------+-----+\n|   status|count|\n+---------+-----+\n|delivered|    3|\n|     paid|    4|\n|   placed|    1|\n| refunded|    1|\n|  shipped|    3|\n+---------+-----+\n\nroot\n |-- status: string (nullable = true)\n |-- count: long (nullable = false)\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "+-------+------+-------+----------+-------+-----------+---------+\n|channel|orders|revenue| avg_total|biggest|first_order|customers|\n+-------+------+-------+----------+-------+-----------+---------+\n|    app|     6|1219.75|203.291667| 418.96| 2026-01-11|        5|\n|  store|     3| 263.46| 87.820000| 117.99| 2026-06-11|        2|\n|    web|     3| 529.98|176.660000| 243.00| 2026-01-23|        3|\n+-------+------+-------+----------+-------+-----------+---------+\n\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "+--------+-----+-----+----------+\n|order_id|lines|units|line_total|\n+--------+-----+-----+----------+\n|  O00001|    3|    7|    117.99|\n|  O00002|    2|    4|     79.96|\n|  O00003|    3|    8|    291.95|\n|  O00004|    4|   10|    418.96|\n|  O00005|    2|    4|     71.97|\n+--------+-----+-----+----------+\nonly showing top 5 rows\n+-----------+-------+------+\n|customer_id|channel|orders|\n+-----------+-------+------+\n|      C0001|    app|     1|\n|      C0001|  store|     2|\n|      C0001|    web|     1|\n|      C0002|    app|     1|\n|      C0003|    web|     1|\n|      C0004|    app|     1|\n|      C0004|  store|     1|\n|      C0005|    app|     1|\n|      C0005|    web|     1|\n|      C0006|    app|     2|\n+-----------+-------+------+\n\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "+------+-------+---------+----------+\n|orders|revenue|customers|    latest|\n+------+-------+---------+----------+\n|    12|2013.19|        6|2026-08-28|\n+------+-------+---------+----------+\n\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "",
+   "error": {
+    "type": "AnalysisException",
+    "message": "[MISSING_AGGREGATION] The non-aggregating expression \"order_id\" is based on columns which are not participating in the GROUP BY clause.",
+    "line": 3,
+    "condition": "MISSING_AGGREGATION"
+   }
+  },
+  "e6": {
+   "stdout": "+-------+----+------+-------+---------+\n|channel|rows|priced|revenue|avg_total|\n+-------+----+------+-------+---------+\n|   NULL|   1|     1|   5.00| 5.000000|\n|    web|   3|     2|  40.00|20.000000|\n+-------+----+------+-------+---------+\n\n",
+   "error": null
+  }
+ }
+}

@@ -1,0 +1,27 @@
+{
+  "id": "PS-L015-C2",
+  "slug": "customer-labels",
+  "lesson": "PS-L015",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Customer labels",
+  "dataset": { "id": "PS-D01", "version": "1.1.0" },
+  "prompt": "Parcel labels list customers as last name, first name and city, like `Okafor, Ines (Leeds)`. Write `solve(customers)` so it returns `customer_id` and that `label`.",
+  "rules": [
+    "`name` is a first name and a last name with one space between them. A hyphen is part of a name.",
+    "The label is `<last>, <first> (<city>)`, exactly like `Okafor, Ines (Leeds)`.",
+    "If the name or the city is missing, the whole label is missing.",
+    "Return only `customer_id` and `label`, in that order."
+  ],
+  "hints": [
+    "`F.split(\"name\", \" \")` gives `[first, last]`; pick each with `[0]` and `[1]`.",
+    "Fixed text like `\", \"` needs `F.lit`.",
+    "Which of `concat` and `concat_ws` gives a missing result when a part is missing?"
+  ],
+  "entry": "solve",
+  "inputs": ["customers"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(customers):\n    # Return customer_id and a label like \"Okafor, Ines (Leeds)\".\n    return customers\n",
+  "output": { "columns": ["customer_id", "label"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

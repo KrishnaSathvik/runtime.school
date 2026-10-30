@@ -1,0 +1,50 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "campaign_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "mobile",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "desktop",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "CMP-0001",
+     3,
+     1
+    ],
+    [
+     "CMP-0002",
+     2,
+     0
+    ]
+   ],
+   "row_count": 2
+  }
+ },
+ "hidden": [
+  "the full practice impressions",
+  "campaigns never shown on desktop",
+  "campaigns with as many mobile as desktop impressions",
+  "tablet, TV and missing devices",
+  "campaigns whose ids and counts sort differently",
+  "no impressions"
+ ]
+}

@@ -1,0 +1,61 @@
+{
+ "id": "PS-Q0435",
+ "slug": "hot-spells-per-sensor",
+ "lesson": "PS-L087",
+ "role": "integration",
+ "format": "dataframe_coding",
+ "difficulty": "hard",
+ "minutes": 23,
+ "title": "Hot spells per sensor",
+ "dataset": {
+  "id": "PS-D09",
+  "version": "1.0.0"
+ },
+ "prompt": "Facilities wants a report of every hot spell, a stretch where a sensor keeps sending hot readings. Write `solve(sensor_readings)` so it streams the readings and returns `device_id`, `started_at`, `ended_at`, `hot_readings`, `peak_c`, `minutes` and `level` for every finished spell.",
+ "rules": [
+  "A reading is hot when `payload.temperature_c` is above 30.0; 999.0 is a glitch, not a hot reading. A spell is a run of one sensor's hot readings in which each comes at most 30 minutes after the one before. Readings that aren't hot don't break a spell.",
+  "A reading delivered more than once (same `reading_id`) counts once. Use a 20-minute watermark on `event_time` that every reading moves on, hot or not: the watermark and the duplicate check come before the hot filter.",
+  "Return each spell once, when the watermark reaches 30 minutes after its last hot reading. Spells still open when the stream stops are left out.",
+  "`started_at` and `ended_at` are the event times of the first and last hot reading (timestamps). `hot_readings` (a long) counts them, `peak_c` (a double) is the highest temperature, `minutes` (a long) is the whole minutes from `started_at` to `ended_at`, and `level` is `critical` when `peak_c` is above 40.0 and `warning` otherwise.",
+  "The rows must come from a streaming query over the delivery files: working on `sensor_readings` itself doesn't count."
+ ],
+ "hints": [
+  "`F.session_window(\"event_time\", \"30 minutes\")` builds the spells once only hot readings are left. Put `withWatermark` and `dropDuplicatesWithinWatermark` before the filter.",
+  "The session window ends 30 minutes after the last reading, so take `F.min` and `F.max` of `event_time` for the two times. A timestamp cast to `long` is seconds.",
+  "Write in append mode to a memory table with `run_stream`, then compute `minutes` and `level` with `F.when` on `spark.table(name)`."
+ ],
+ "explanation": "The watermark comes first so that every reading moves it on; filtered first, a long cool stretch would leave hot spells open. The duplicate check drops copies and readings too late for the watermark, the filter keeps hot readings, and `session_window` groups each sensor's hot readings into spells that close 30 minutes after the last one. Append mode writes each spell once, after the watermark reaches its end; update mode isn't allowed with session windows. `minutes` and `level` are ordinary column expressions on the finished table.",
+ "entry": "solve",
+ "inputs": [
+  "sensor_readings"
+ ],
+ "output": {
+  "columns": [
+   "device_id",
+   "started_at",
+   "ended_at",
+   "hot_readings",
+   "peak_c",
+   "minutes",
+   "level"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\ndef solve(sensor_readings):\n    spark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\n    make_batches(sensor_readings, \"/tmp/in\")         # one file per batch; clears the folder first\n    shutil.rmtree(\"/tmp/ck\", ignore_errors=True)     # a fresh checkpoint for every run\n    readings = spark.readStream.schema(sensor_readings.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\n\n    # Drop copies, keep the hot readings, group them into spells per sensor, write only finished spells\n    # to a memory table, run the stream, and return the seven columns.\n\n    return sensor_readings\n",
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

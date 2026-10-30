@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0155",
+  "slug": "widest-price-spread",
+  "lesson": "PS-L031",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Widest price spread",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "Pricing wants the products whose selling price has varied the most. Write `solve(order_items)` so it returns the three products with the widest gap between their lowest and highest `unit_price`.",
+  "rules": [
+    "For each `product_id`, `lowest` and `highest` are the smallest and largest `unit_price` on its lines; missing prices are skipped. `spread` is `highest - lowest`.",
+    "A product with no known price has missing `lowest`, `highest` and `spread`.",
+    "Sort by `spread` from largest to smallest, then `product_id` A to Z; a missing spread sorts last. Keep the first three products.",
+    "Return `product_id`, `lowest`, `highest` and `spread`."
+  ],
+  "hints": [
+    "Group by `product_id` and take `F.min` and `F.max` of `unit_price`.",
+    "The spread is a calculation on the two aggregates: select it from the grouped result with `(F.col(\"highest\") - F.col(\"lowest\")).alias(\"spread\")`.",
+    "Sort with `F.desc(\"spread\")` and `\"product_id\"`, then `limit(3)`. Sorting must come before the limit."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "order_items"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(order_items):\n    # Return the three products with the widest price spread.\n    return order_items\n",
+  "output": {
+    "columns": [
+      "product_id",
+      "lowest",
+      "highest",
+      "spread"
+    ],
+    "order_sensitive": true
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Aggregate first, then calculate on the result: `prices = order_items.groupBy(\"product_id\").agg(F.min(\"unit_price\").alias(\"lowest\"), F.max(\"unit_price\").alias(\"highest\"))`, then `prices.select(\"product_id\", \"lowest\", \"highest\", (F.col(\"highest\") - F.col(\"lowest\")).alias(\"spread\"))`. Sort with `orderBy(F.desc(\"spread\"), \"product_id\")` so equal spreads always come out in the same order, and `limit(3)`. `F.desc` puts missing spreads last. `F.max(\"unit_price\") - F.min(\"unit_price\")` written inside `agg` works too."
+}

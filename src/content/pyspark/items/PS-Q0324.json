@@ -1,0 +1,55 @@
+{
+  "id": "PS-Q0324",
+  "slug": "retire-two-claim-columns",
+  "lesson": "PS-L065",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 6,
+  "title": "Retire four claim columns and rename one",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "prompt": "Billing has retired `provider_id`, `submitted_date`, `allowed_amount` and `denial_reason`, and renamed `payer` to `payer_name`. This job rebuilds the claims Delta table in the new layout, but the old columns are still there. Fix `solve(claims)`.",
+  "rules": [
+    "The table ends with exactly these columns, in this order: `claim_id`, `encounter_id`, `patient_id`, `payer_name`, `service_date`, `billed_amount`, `paid_amount`, `claim_status`.",
+    "Every claim stays, once, with its values and types. Each claim's `payer_name` is its old `payer`."
+  ],
+  "hints": [
+    "Look at the table it returns: the retired columns are empty, `payer` too, and `payer_name` is at the end.",
+    "`mergeSchema` can only add columns to the schema. It never removes or renames one.",
+    "An overwrite that should also replace the schema needs a different option."
+  ],
+  "explanation": "With `mergeSchema`, the overwrite merges the new layout into the old schema: every old column stays (empty now, because the new rows don't have them) and `payer_name` is added at the end. A plain `overwrite` isn't enough either: it keeps the old schema and refuses the batch, because `payer_name` isn't in it. Replacing the schema on purpose is `.option(\"overwriteSchema\", \"true\")` with `mode(\"overwrite\")`. The table then has exactly the eight columns of `new_layout`, in its order. Reading the table and overwriting it in the same job is fine in Delta: the read uses the version that was current when it started.",
+  "entry": "solve",
+  "inputs": [
+    "claims"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(claims):\n    import shutil\n    path = \"/tmp/clinic/claims\"\n    shutil.rmtree(path, ignore_errors=True)  # every run starts from an empty folder\n    claims.write.format(\"delta\").save(path)  # the table as it is today\n\n    current = spark.read.format(\"delta\").load(path)\n    new_layout = current.select(\n        \"claim_id\",\n        \"encounter_id\",\n        \"patient_id\",\n        F.col(\"payer\").alias(\"payer_name\"),\n        \"service_date\",\n        \"billed_amount\",\n        \"paid_amount\",\n        \"claim_status\",\n    )\n    new_layout.write.format(\"delta\").mode(\"overwrite\").option(\"mergeSchema\", \"true\").save(path)  # replace the table with the new layout\n    return spark.read.format(\"delta\").load(path)\n",
+  "output": {
+    "columns": [
+      "claim_id",
+      "encounter_id",
+      "patient_id",
+      "payer_name",
+      "service_date",
+      "billed_amount",
+      "paid_amount",
+      "claim_status"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

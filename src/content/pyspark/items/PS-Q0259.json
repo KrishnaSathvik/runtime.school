@@ -1,0 +1,59 @@
+{
+  "id": "PS-Q0259",
+  "slug": "fix-the-volume-tags",
+  "lesson": "PS-L052",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Fix the volume tags",
+  "dataset": {
+    "id": "PS-D10",
+    "version": "1.0.0"
+  },
+  "prompt": "This function was turned from a Python UDF into a pandas UDF, and now every run stops with an error. Fix it, keeping it a pandas UDF, so `solve(daily_prices)` tags each day by how many shares were traded.",
+  "rules": [
+    "`tag` is `heavy` when `volume` is at least 5,000,000 shares (5,000,000 itself counts), and `normal` otherwise.",
+    "A day with a missing `volume` is `unknown`.",
+    "Keep the tagging in a pandas UDF: the check looks for it in the plan Spark runs.",
+    "Return `symbol`, `trade_date`, `volume` and `tag`, in that order. Keep every row."
+  ],
+  "hints": [
+    "Run it and read the error: what is `volume` inside a pandas UDF, one number or many?",
+    "An `if` needs one True or False, and `volume >= 5_000_000` gives a whole Series of them. Work on every value instead, for example with `volume.map(...)`, and return the resulting Series.",
+    "A missing volume arrives as NaN, not None: `pd.isna(v)` finds it. Check it before the threshold."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "daily_prices"
+  ],
+  "starter": "import pandas as pd\nfrom pyspark.sql import functions as F\n\n\n@F.pandas_udf(\"string\")\ndef volume_tag(volume: pd.Series) -> pd.Series:\n    if volume is None:\n        return \"unknown\"\n    if volume >= 5_000_000:\n        return \"heavy\"\n    return \"normal\"\n\n\ndef solve(daily_prices):\n    return daily_prices.select(\"symbol\", \"trade_date\", \"volume\", volume_tag(\"volume\").alias(\"tag\"))\n",
+  "output": {
+    "columns": [
+      "symbol",
+      "trade_date",
+      "volume",
+      "tag"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "A pandas UDF gets a whole Series, so `volume >= 5_000_000` is a Series of True and False, and `if` can't turn that into one answer: pandas raises \"The truth value of a Series is ambiguous\". The error's own advice, `.any()`, is a trap: it would tag the whole batch from one heavy day. Decide per value instead: `volume.map(lambda v: \"unknown\" if pd.isna(v) else \"heavy\" if v >= 5_000_000 else \"normal\")`, or build the tags with `np.where`. The `volume is None` test never matched either: a missing BIGINT arrives as NaN in a float Series, not as None. This question is about writing pandas UDFs, so the check looks for one in Spark's plan. Outside an exercise, a rule this simple needs no Python at all: `F.when(F.col(\"volume\").isNull(), \"unknown\").when(F.col(\"volume\") >= 5_000_000, \"heavy\").otherwise(\"normal\")` gives the same rows and runs entirely in the JVM.",
+  "technique": {
+    "name": "a pandas UDF",
+    "plan": [
+      "ArrowEvalPython"
+    ]
+  }
+}

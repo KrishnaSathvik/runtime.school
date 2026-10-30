@@ -1,0 +1,117 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "order_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "customer_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "total",
+     "type": "decimal(10,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "O00002",
+     "C0001",
+     "Ines Okafor",
+     "79.96"
+    ],
+    [
+     "O00008",
+     "C0001",
+     "Ines Okafor",
+     "59.50"
+    ],
+    [
+     "O00009",
+     "C0001",
+     "Ines Okafor",
+     "105.49"
+    ],
+    [
+     "O00011",
+     "C0005",
+     "Maya Rao",
+     "243.00"
+    ],
+    [
+     "O00001",
+     "C0001",
+     "Ines Okafor",
+     "117.99"
+    ],
+    [
+     "O00003",
+     "C0002",
+     "Kofi Mori",
+     "291.95"
+    ],
+    [
+     "O00005",
+     "C0006",
+     "Hana Rao",
+     "71.97"
+    ],
+    [
+     "O00010",
+     "C0006",
+     "Hana Rao",
+     "299.91"
+    ],
+    [
+     "O00004",
+     "C0004",
+     "Ines Costa",
+     "418.96"
+    ],
+    [
+     "O00006",
+     "C0004",
+     "Ines Costa",
+     "39.98"
+    ],
+    [
+     "O00007",
+     "C0003",
+     "Tomas Okafor",
+     "227.48"
+    ],
+    [
+     "O00012",
+     "C0005",
+     "Maya Rao",
+     "57.00"
+    ]
+   ],
+   "row_count": 12
+  }
+ },
+ "hidden": [
+  "the full practice orders and customers",
+  "orders delivered twice",
+  "a customer delivered twice",
+  "different orders from one customer with the same total",
+  "an order for a customer who isn't in the list",
+  "no orders at all"
+ ]
+}

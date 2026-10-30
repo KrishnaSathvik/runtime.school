@@ -1,0 +1,217 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "rule",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "checked",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "failed",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "decision",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "merchant_on_card_types",
+     5,
+     1,
+     "quarantine"
+    ],
+    [
+     "debit_types_are_debits",
+     4,
+     1,
+     "stop"
+    ],
+    [
+     "credit_types_are_credits",
+     7,
+     1,
+     "quarantine"
+    ],
+    [
+     "interest_from_system",
+     2,
+     1,
+     "warn"
+    ]
+   ],
+   "row_count": 4,
+   "inputs": {
+    "transactions": [
+     [
+      "T000001",
+      "A00001",
+      "M001",
+      "2026-03-02T10:00:00",
+      "purchase",
+      "online",
+      "debit",
+      "11.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000002",
+      "A00001",
+      null,
+      "2026-03-03T10:00:00",
+      "purchase",
+      "online",
+      "debit",
+      "12.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000003",
+      "A00001",
+      "M002",
+      "2026-03-04T10:00:00",
+      "purchase",
+      "card_present",
+      "debit",
+      "13.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000004",
+      "A00001",
+      "M001",
+      "2026-03-05T10:00:00",
+      "refund",
+      "online",
+      "credit",
+      "14.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000005",
+      "A00001",
+      "M003",
+      "2026-03-06T10:00:00",
+      "refund",
+      "online",
+      null,
+      "15.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000006",
+      "A00001",
+      null,
+      "2026-03-07T10:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "16.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000007",
+      "A00001",
+      null,
+      "2026-03-08T10:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "17.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000008",
+      "A00001",
+      null,
+      "2026-03-09T10:00:00",
+      "deposit",
+      "mobile",
+      "credit",
+      "18.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000009",
+      "A00001",
+      null,
+      "2026-03-10T10:00:00",
+      "interest",
+      "system",
+      "credit",
+      "19.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000010",
+      "A00001",
+      null,
+      "2026-03-11T10:00:00",
+      "interest",
+      "branch",
+      "credit",
+      "20.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000011",
+      "A00001",
+      null,
+      "2026-03-12T10:00:00",
+      "atm_withdrawal",
+      "atm",
+      "credit",
+      "21.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000012",
+      "A00001",
+      null,
+      "2026-03-13T10:00:00",
+      null,
+      "mobile",
+      "debit",
+      "22.00",
+      "USD",
+      "posted"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice transactions feed",
+  "the lesson transactions",
+  "rules failing for exactly 20% of their scope and for just over it",
+  "missing directions, channels, merchants and transaction types",
+  "a feed with only deposits and fees, so some rules check nothing",
+  "an empty feed"
+ ]
+}

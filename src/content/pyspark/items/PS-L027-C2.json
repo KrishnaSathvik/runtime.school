@@ -1,0 +1,26 @@
+{
+  "id": "PS-L027-C2",
+  "slug": "headcount-planning-grid",
+  "lesson": "PS-L027",
+  "difficulty": "easy",
+  "minutes": 6,
+  "title": "Headcount planning grid",
+  "dataset": { "id": "PS-D03", "version": "1.0.0" },
+  "prompt": "Finance plans headcount for every department at every job level, even levels a department doesn't have yet. Write `solve(departments)` so it returns one row for each department and each level from 1 to 5.",
+  "rules": [
+    "Levels are 1, 2, 3, 4 and 5. Every department gets all five, so the result has five rows per department.",
+    "`level` is a whole number of type int, like `level` in `employees`.",
+    "Return only `department_id`, `department_name` and `level`, in that order."
+  ],
+  "hints": [
+    "Build the levels yourself: `spark.createDataFrame([(1,), (2,), (3,), (4,), (5,)], \"level INT\")`.",
+    "Every department with every level, with no condition, is a cross join.",
+    "Pick the two department columns first, then `crossJoin` the levels."
+  ],
+  "entry": "solve",
+  "inputs": ["departments"],
+  "starter": "def solve(departments):\n    # Return one row per department and level 1 to 5.\n    return departments.select(\"department_id\", \"department_name\")\n",
+  "output": { "columns": ["department_id", "department_name", "level"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

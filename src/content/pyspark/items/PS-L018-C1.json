@@ -1,0 +1,26 @@
+{
+  "id": "PS-L018-C1",
+  "slug": "readings-on-new-york-time",
+  "lesson": "PS-L018",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Readings on New York time",
+  "dataset": { "id": "PS-D13", "version": "1.0.0" },
+  "prompt": "The operations desk in New York reads every station's data on its own clock. Write `solve(observations)` so it returns `observation_id`, `observed_at`, the New York clock time `ny_time` and the New York date `ny_date`.",
+  "rules": [
+    "`observed_at` is UTC. `ny_time` is the same moment as a clock in the `America/New_York` zone shows it, daylight saving included.",
+    "`ny_date` is the date of `ny_time`, as a date. Near midnight it can differ from the UTC date.",
+    "A missing `observed_at` gives missing results. Return the four columns, in that order, for every reading."
+  ],
+  "hints": [
+    "`F.from_utc_timestamp(col, \"America/New_York\")` moves a UTC time onto the New York clock.",
+    "A fixed offset like `-05:00` is wrong for half the year.",
+    "Take `F.to_date` of the converted time, not of `observed_at`."
+  ],
+  "entry": "solve",
+  "inputs": ["observations"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(observations):\n    # Return observation_id, observed_at, ny_time and ny_date.\n    return observations\n",
+  "output": { "columns": ["observation_id", "observed_at", "ny_time", "ny_date"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

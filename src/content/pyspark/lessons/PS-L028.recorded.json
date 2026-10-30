@@ -1,0 +1,39 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D08",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "shipments",
+   "inventory"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "4 shipments, 8 rows when joined on sku alone\n+-----------+---------+--------+--------+-------+\n|shipment_id|ship_from|stock_in|     sku|on_hand|\n+-----------+---------+--------+--------+-------+\n|     SH0001|     WH03|    WH01|SKU-1003|    560|\n|     SH0001|     WH03|    WH02|SKU-1003|    265|\n|     SH0001|     WH03|    WH03|SKU-1003|    388|\n|     SH0002|     WH01|    WH01|SKU-1003|    560|\n|     SH0002|     WH01|    WH02|SKU-1003|    265|\n|     SH0002|     WH01|    WH03|SKU-1003|    388|\n|     SH0003|     WH02|    WH02|SKU-1014|    266|\n|     SH0004|     WH02|    WH02|SKU-1014|    266|\n+-----------+---------+--------+--------+-------+\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "+-----------+------------+--------+--------+-------+--------+\n|shipment_id|warehouse_id|     sku|quantity|on_hand|reserved|\n+-----------+------------+--------+--------+-------+--------+\n|     SH0001|        WH03|SKU-1003|       1|    388|      72|\n|     SH0002|        WH01|SKU-1003|       2|    560|     100|\n|     SH0003|        WH02|SKU-1014|      24|    266|      80|\n|     SH0004|        WH02|SKU-1014|      24|    266|      80|\n+-----------+------------+--------+--------+-------+--------+\n\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "+-----------+------------+--------+-------+\n|shipment_id|warehouse_id|     sku|on_hand|\n+-----------+------------+--------+-------+\n|     SH0001|        WH03|SKU-1003|    388|\n|     SH0002|        WH01|SKU-1003|    560|\n|     SH0003|        WH02|SKU-1014|    266|\n|     SH0004|        WH02|SKU-1014|    266|\n+-----------+------------+--------+-------+\n\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "+-----------+--------+------+\n|shipment_id|quantity|  band|\n+-----------+--------+------+\n|     SH0001|       1|single|\n|     SH0002|       2| small|\n|     SH0003|      24|  bulk|\n|     SH0004|      24|  bulk|\n+-----------+--------+------+\n\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "+-----------+--------+-------+\n|shipment_id|     sku|on_hand|\n+-----------+--------+-------+\n|     SH0001|SKU-1003|   NULL|\n|     SH0002|SKU-1003|   NULL|\n|     SH0003|SKU-1014|    266|\n|     SH0004|SKU-1014|    266|\n+-----------+--------+-------+\n\n+-----------+--------+-------+\n|shipment_id|     sku|on_hand|\n+-----------+--------+-------+\n|     SH0003|SKU-1014|    266|\n|     SH0004|SKU-1014|    266|\n+-----------+--------+-------+\n\n",
+   "error": null
+  }
+ }
+}

@@ -16,9 +16,10 @@ import {
 } from "@/engine/python/client";
 import { gradePython, probeFor, type PyGradeReport, type PyTask } from "@/engine/python/grading";
 import { PyEditor, type PyEditorHandle } from "@/features/py/PyEditor";
-import { Keys } from "@/features/rt/Keys";
+import { Keys, MacOnly } from "@/features/rt/Keys";
+import { PLAYGROUND_EDITOR_HEIGHT } from "@/features/rt/editor-height";
 import { Code } from "./Code";
-import { ChecksView, ConsoleView, ErrorsView, errorLineOf, errorFileOf, FilesView, OnlyView } from "./Results";
+import { ChecksView, ConsoleView, errorLineOf, errorFileOf, FilesView } from "./Results";
 import { readsCsv } from "./feedback";
 
 export type WbFile = { name: string; value: string; onChange?: (v: string) => void; readOnly?: boolean };
@@ -48,7 +49,6 @@ export function Workbench({
   initialTab,
   layout = "stack",
   toolbarNote,
-  resultTabs = "basic",
   onResult,
   next,
 }: {
@@ -77,8 +77,6 @@ export function Workbench({
   layout?: "stack" | "columns";
   /** Shown in the results header (e.g. which libraries and data the run uses). */
   toolbarNote?: ReactNode;
-  /** "split" adds Tables, Charts and Errors tabs next to Output and Files (the Playground). */
-  resultTabs?: "basic" | "split";
   /** Called with every finished run (e.g. to export the files it wrote). */
   onResult?: (r: PyRunResult) => void;
   /** Where to go after a passing check (next challenge, question or step), shown in the passing verdict. */
@@ -88,7 +86,7 @@ export function Workbench({
   const [tab, setTab] = useState(initialTab ?? mainName);
   const visibleTab = useRef(tab);
   visibleTab.current = tab;
-  const [panel, setPanel] = useState<"console" | "checks" | "files" | "tables" | "charts" | "errors">("console");
+  const [panel, setPanel] = useState<"console" | "checks">("console");
   const [live, setLive] = useState<PyOutputChunk[]>([]);
   const [ran, setRan] = useState<PyRunResult | null>(null);
   const [report, setReport] = useState<PyGradeReport | null>(null);
@@ -232,110 +230,156 @@ export function Workbench({
   };
 
   const filesOut = ran && "files" in ran ? ran.files ?? [] : [];
-  const chunks = ran && "output" in ran ? ran.output : live;
-  const count = (k: "table" | "figure") => chunks.filter((c) => c.stream === k).length;
-  const failed = !!ran && ran.status !== "ok" && ran.status !== "superseded";
   const fileNames = files.map((f) => f.name);
   const csv = readsCsv({ files: task?.files, mounts: [...(task?.mounts ?? []), ...mounts] }, fileNames);
+  const multi = files.length > 1 || !!dataTab;
+  const activeName = tab === "__data" ? (dataTab?.label ?? "data") : current.name;
+  const fileTabs = (
+    <div className="py-filetabs" role="tablist" aria-label="Files">
+      {files.map((f) => (
+        <button key={f.name} type="button" role="tab" aria-selected={tab === f.name} onClick={() => setTab(f.name)}>
+          {f.name}{f.readOnly ? " · read-only" : ""}
+        </button>
+      ))}
+      {dataTab && (
+        <button type="button" role="tab" aria-selected={tab === "__data"} onClick={() => setTab("__data")}>
+          {dataTab.label} · read-only
+        </button>
+      )}
+      <span className="py-filetabs-acts" aria-hidden="true">
+        <MacOnly>
+          <Keys keys={["mod", "enter"]} /> <span>run</span>
+          {task && <><Keys keys={["mod", "shift", "enter"]} /> <span>check</span></>}
+        </MacOnly>
+      </span>
+    </div>
+  );
+  const panes = (
+    <>
+      {tab === "__data" && dataTab && <div className="p2-readonly" style={{ whiteSpace: "normal" }}>{dataTab.content}</div>}
+      {current.readOnly && tab !== "__data" && (current.name.endsWith(".py")
+        ? <Code code={current.value} label={`${current.name} (read-only)`} className="p2-readonly" />
+        : <pre className="p2-readonly" tabIndex={0} aria-label={`${current.name} (read-only)`}>{current.value}</pre>)}
+      {files.filter(f => !f.readOnly).map(f => (
+        <div key={f.name} hidden={tab !== f.name} style={tab === f.name ? { display: "contents" } : undefined}>
+          <PyEditor
+            ref={handle => { editors.current[f.name] = handle; }}
+            value={f.value}
+            onChange={v => f.onChange?.(v)}
+            onRun={() => { if (tab === f.name) void run(); }}
+            onCheck={() => { if (tab === f.name) void (task ? check() : run()); }}
+            label={`${label}: ${f.name}`}
+            errorLine={markSnapshot === sourceSnapshot && f.name === errorMark?.file ? errorMark : null}
+            minHeight={PLAYGROUND_EDITOR_HEIGHT}
+            placeholder="Write your Python here"
+          />
+        </div>
+      ))}
+    </>
+  );
+  const runCheck = (
+    <>
+      {pyStatus === "loading" && busy && <span className="rx-small" role="status">Starting Python…</span>}
+      {busy ? (
+        <button type="button" className="rx-btn" onClick={() => { if (operation.current) stopPython(operation.current); }}>
+          <Square size={13} aria-hidden="true" /> Stop
+        </button>
+      ) : (
+        <button type="button" className="rx-btn" onClick={run} disabled={!!busy}>
+          <Play size={13} aria-hidden="true" /> Run
+        </button>
+      )}
+      {task && (
+        <button type="button" className="rx-btn primary" onClick={check} disabled={!!busy}>
+          <Check size={14} aria-hidden="true" /> {checkLabel}
+        </button>
+      )}
+    </>
+  );
+  const leftActs = (
+    <>
+      {onReset && (
+        <button type="button" className="rx-btn ghost" onClick={onReset} disabled={!!busy}>
+          <RotateCcw size={13} aria-hidden="true" /> {resetLabel}
+        </button>
+      )}
+      {resetBackup && <button type="button" className="rx-btn ghost" disabled={!!busy} onClick={() => {
+        for (const [name, text] of Object.entries(resetBackup)) editors.current[name]?.replaceAll(text);
+        setResetBackup(null); editors.current[tab]?.focus();
+      }}>Undo Reset</button>}
+      {help}
+    </>
+  );
   const Wrap = layout === "columns" ? "div" : Frag;
   return (
     <Wrap {...(layout === "columns" ? { className: "p2-wb-cols" } : {})}>
-      <div className="p2-bench">
-        <div className="p2-bench-bar">
-          <div className="p2-files" role="tablist" aria-label="Files">
-            {files.map((f) => (
-              <button key={f.name} type="button" role="tab" aria-selected={tab === f.name} onClick={() => setTab(f.name)}>
-                {f.name} {f.readOnly && <i className="p2-ro">read-only</i>}
-              </button>
-            ))}
-            {dataTab && (
-              <button type="button" role="tab" aria-selected={tab === "__data"} onClick={() => setTab("__data")}>
-                {dataTab.label} <i className="p2-ro">read-only</i>
-              </button>
-            )}
+      {layout === "columns" ? (
+        <div className="p2-bench">
+          <div className="p2-bench-bar">
+            <div className="p2-files" role="tablist" aria-label="Files">
+              {files.map((f) => (
+                <button key={f.name} type="button" role="tab" aria-selected={tab === f.name} onClick={() => setTab(f.name)}>
+                  {f.name} {f.readOnly && <i className="p2-ro">read-only</i>}
+                </button>
+              ))}
+              {dataTab && (
+                <button type="button" role="tab" aria-selected={tab === "__data"} onClick={() => setTab("__data")}>
+                  {dataTab.label} <i className="p2-ro">read-only</i>
+                </button>
+              )}
+            </div>
+            {files.length + (dataTab ? 1 : 0) <= 2 && <div className="p2-keys" aria-hidden="true">
+              <Keys keys={["mod", "enter"]} /> run{task && <> · <Keys keys={["shift", "mod", "enter"]} /> check</>}
+            </div>}
           </div>
-          {files.length + (dataTab ? 1 : 0) <= 2 && <div className="p2-keys" aria-hidden="true">
-            <Keys keys={["mod", "enter"]} /> run{task && <> · <Keys keys={["shift", "mod", "enter"]} /> check</>}
-          </div>}
-        </div>
-        {tab === "__data" && dataTab && <div className="p2-readonly" style={{ whiteSpace: "normal" }}>{dataTab.content}</div>}
-        {current.readOnly && tab !== "__data" && (current.name.endsWith(".py")
-          ? <Code code={current.value} label={`${current.name} (read-only)`} className="p2-readonly" />
-          : <pre className="p2-readonly" tabIndex={0} aria-label={`${current.name} (read-only)`}>{current.value}</pre>)}
-        {files.filter(f => !f.readOnly).map(f => (
-          <div key={f.name} hidden={tab !== f.name} style={tab === f.name ? { display: "contents" } : undefined}>
-            <PyEditor
-              ref={handle => { editors.current[f.name] = handle; }}
-              value={f.value}
-              onChange={v => f.onChange?.(v)}
-              onRun={() => { if (tab === f.name) void run(); }}
-              onCheck={() => { if (tab === f.name) void (task ? check() : run()); }}
-              label={`${label}: ${f.name}`}
-              errorLine={markSnapshot === sourceSnapshot && f.name === errorMark?.file ? errorMark : null}
-              minHeight="180px"
-              placeholder="Write your Python here"
-            />
-          </div>
-        ))}
-        <div className="p2-actions" ref={actionsRef}>
-          <div>
-            {onReset && (
-              <button type="button" className="p2-btn" onClick={onReset} disabled={!!busy}>
-                <RotateCcw size={14} aria-hidden="true" /> {resetLabel}
-              </button>
-            )}
-            {resetBackup && <button type="button" className="p2-btn" disabled={!!busy} onClick={() => {
-              for (const [name, text] of Object.entries(resetBackup)) editors.current[name]?.replaceAll(text);
-              setResetBackup(null); editors.current[tab]?.focus();
-            }}>Undo Reset</button>}
-            {help}
-          </div>
-          <div>
-            {pyStatus === "loading" && busy && <span className="p2-note" role="status">Starting Python…</span>}
-            {busy ? (
-              <button type="button" className="p2-btn line" onClick={() => { if (operation.current) stopPython(operation.current); }}>
-                <Square size={13} aria-hidden="true" /> Stop
-              </button>
-            ) : (
-              <button type="button" className="p2-btn line" onClick={run} disabled={!!busy}>
-                <Play size={14} aria-hidden="true" /> Run
-              </button>
-            )}
-            {task && (
-              <button type="button" className="p2-btn primary" onClick={check} disabled={!!busy}>
-                <Check size={14} aria-hidden="true" /> {checkLabel}
-              </button>
-            )}
+          {panes}
+          <div className="p2-actions" ref={actionsRef}>
+            <div>{leftActs}</div>
+            <div>{runCheck}</div>
           </div>
         </div>
-      </div>
+      ) : (
+        <>
+          {/* Stack (Learn / Practice / Projects): same cell chrome as SQL practice and the Python playground. */}
+          {multi && fileTabs}
+          <div className="rx-cell">
+            {!multi && (
+              <div className="rx-cell-head">
+                <span className="name">{activeName}</span>
+                <span className="acts" aria-hidden="true">
+                  <MacOnly>
+                    <Keys keys={["mod", "enter"]} /> <span>run</span>
+                    {task && <><Keys keys={["mod", "shift", "enter"]} /> <span>check</span></>}
+                  </MacOnly>
+                </span>
+              </div>
+            )}
+            {panes}
+            <div className="rx-cell-foot" ref={actionsRef}>
+              <span className="hint"> </span>
+              {leftActs}
+              {runCheck}
+            </div>
+          </div>
+        </>
+      )}
       {interrupted && <p className="p2-note" role="status">Another program on this page started, so this run was stopped. Run or check it again.</p>}
       {layout === "stack" && status}
 
       <div className="p2-results" ref={resultsRef}>
-        <div className="p2-tabs" role="tablist" aria-label="Results">
-          <button type="button" role="tab" aria-selected={panel === "console"} onClick={() => setPanel("console")}>{layout === "columns" ? "Output" : "Console"}</button>
-          {task && <button type="button" role="tab" aria-selected={panel === "checks"} onClick={() => setPanel("checks")}>Checks</button>}
-          {resultTabs === "split" && (
-            <>
-              <button type="button" role="tab" aria-selected={panel === "tables"} onClick={() => setPanel("tables")}>Tables{count("table") ? ` · ${count("table")}` : ""}</button>
-              <button type="button" role="tab" aria-selected={panel === "charts"} onClick={() => setPanel("charts")}>Charts{count("figure") ? ` · ${count("figure")}` : ""}</button>
-            </>
-          )}
-          <button type="button" role="tab" aria-selected={panel === "files"} onClick={() => setPanel("files")}>Files{filesOut.length ? ` · ${filesOut.length}` : ""}</button>
-          {resultTabs === "split" && (
-            <button type="button" role="tab" aria-selected={panel === "errors"} onClick={() => setPanel("errors")} className={failed ? "p3-tab-bad" : undefined}>Errors{failed ? " · 1" : ""}</button>
-          )}
+        <div className="p2-tabs" role="tablist" aria-label="Output">
+          <span role="tab" aria-selected="true">Output</span>
         </div>
         {toolbarNote && panel === "console" && <div className="p2-results-note">{toolbarNote}</div>}
         {report && checkStale && panel === "checks" && <p className="p2-note" role="status">Previous check — code changed</p>}
         {ran && runStale && panel !== "checks" && <p className="p2-note" role="status">Previous run — code changed</p>}
-        {panel === "console" && <ConsoleView live={live} result={ran} busy={busy === "run"} onLine={runStale ? undefined : goToLine} csv={csv} />}
+        {panel === "console" && (
+          <>
+            <ConsoleView live={live} result={ran} busy={busy === "run"} onLine={runStale ? undefined : goToLine} csv={csv} />
+            {filesOut.length > 0 && <FilesView files={filesOut} />}
+          </>
+        )}
         {panel === "checks" && <ChecksView report={report} busy={busy === "check"} onLine={checkStale ? undefined : goToLine} task={task ? { ...task, mounts: [...(task.mounts ?? []), ...mounts] } : undefined} fileNames={fileNames} next={checkStale ? undefined : next} />}
-        {panel === "files" && <FilesView files={filesOut} empty={!ran && report ? "Check runs your program on its own. Press Run to see the files it writes here." : undefined} />}
-        {panel === "tables" && <OnlyView chunks={chunks} kind="table" />}
-        {panel === "charts" && <OnlyView chunks={chunks} kind="figure" />}
-        {panel === "errors" && <ErrorsView result={ran} onLine={runStale ? undefined : goToLine} csv={csv} />}
       </div>
     </Wrap>
   );

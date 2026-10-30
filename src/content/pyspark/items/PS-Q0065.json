@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0065",
+  "slug": "mean-arterial-pressure",
+  "lesson": "PS-L013",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Mean arterial pressure",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "prompt": "Cardiology screens visits by mean arterial pressure, worked out from the two blood pressure readings. Write `solve(encounters)` so it returns each visit's `encounter_id`, `reason`, `primary_code` and `mean_arterial_pressure`.",
+  "rules": [
+    "`primary_code` is the first item in `diagnosis_codes`. Every visit has at least one code.",
+    "`mean_arterial_pressure` is `(systolic + 2 * diastolic) / 3`, worked out exactly in that form from the fields inside `vitals`, as a double, not rounded.",
+    "A visit with no vitals, or with a reading missing, has a missing pressure. Return the four columns, in that order, for every visit, duplicates included."
+  ],
+  "hints": [
+    "Struct fields can be used in arithmetic like any column: `F.col(\"vitals.systolic\")`.",
+    "Put brackets around the sum before dividing, and around the whole calculation before `.alias`.",
+    "`/` always gives a `double`. `selectExpr` can write it as SQL text: `(vitals.systolic + 2 * vitals.diastolic) / 3 AS ...`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "encounters"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(encounters):\n    # encounter_id, reason, primary_code, mean_arterial_pressure\n    return encounters\n",
+  "output": {
+    "columns": [
+      "encounter_id",
+      "reason",
+      "primary_code",
+      "mean_arterial_pressure"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Read the fields with `F.col(\"vitals.systolic\")` and `F.col(\"vitals.diastolic\")` and do the arithmetic in the `select`: `encounters.select(\"encounter_id\", \"reason\", F.col(\"diagnosis_codes\")[0].alias(\"primary_code\"), ((F.col(\"vitals.systolic\") + 2 * F.col(\"vitals.diastolic\")) / 3).alias(\"mean_arterial_pressure\"))`. The brackets matter: without them only `2 * diastolic` is divided by 3. `/` gives a `double` even though both readings are whole numbers. A missing struct or a missing reading makes the result missing on its own. `selectExpr(\"encounter_id\", \"reason\", \"diagnosis_codes[0] AS primary_code\", \"(vitals.systolic + 2 * vitals.diastolic) / 3 AS mean_arterial_pressure\")` is the same in SQL text."
+}

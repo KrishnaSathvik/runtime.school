@@ -1,0 +1,73 @@
+{
+  "id": "PS-P06-M6",
+  "slug": "weather-trip-analysis",
+  "project": "PS-P06",
+  "milestone": "PS-P06.m6",
+  "difficulty": "medium",
+  "minutes": 30,
+  "title": "Compare trips in rain and dry weather",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "also": [
+    {
+      "id": "PS-D13",
+      "version": "1.1.0",
+      "tables": [
+        "observations"
+      ]
+    }
+  ],
+  "prompt": "Now the question the team asked at the start: do people ride differently when it rains? Write `weather_trip_analysis(trips, observations)`. It sorts every trip from `trip_weather` into rain, dry or no reading, and compares how busy each kind of hour was and how long and how dear its trips were.",
+  "rules": [
+    "`weather` is `rain` when `precipitation_mm` is more than 0, `dry` when it is 0, and `no reading` when it is missing: no reading that hour, or a broken rain value.",
+    "Return `weather`, `trips`, `hours`, `trips_per_hour`, `avg_fare` and `avg_minutes`, one row per weather that has trips.",
+    "`trips` counts the trips. `hours` counts the different `weather_hour` values among them. `trips_per_hour` is `trips` ÷ `hours` as a `DECIMAL(8,2)`.",
+    "`avg_fare` and `avg_minutes` are the averages of `fare` and `trip_minutes`, each as a `DECIMAL(10,2)`."
+  ],
+  "hints": [
+    "`F.when(rain > 0, \"rain\").when(rain == 0, \"dry\").otherwise(\"no reading\")`: a NULL fails both comparisons and falls through to `otherwise`.",
+    "`F.countDistinct(\"weather_hour\")` counts hours, not trips.",
+    "Divide after grouping: `(F.col(\"trips\") / F.col(\"hours\")).cast(\"decimal(8,2)\")`."
+  ],
+  "explanation": "Counting trips alone says little: dry hours are far more common than rainy ones, so of course they have more trips. Dividing by the number of hours of each kind makes them comparable. In this export it rained in 55 of the hours with trips; those hours averaged about 9.2 trips against 10.3 in dry hours, and their trips ran about two and a half minutes longer for about the same fare. Hours with no reading stay a group of their own instead of being counted as dry, so missing data can't tilt the answer. With the zone demand and the plan facts, that's what the pipeline publishes.",
+  "entry": "weather_trip_analysis",
+  "inputs": [
+    "trips",
+    "observations"
+  ],
+  "file": "pipeline.py",
+  "append": "\n\ndef weather_trip_analysis(trips, observations):\n    # Step 6: trips, hours, trips per hour, average fare and minutes in rain, dry weather and with no reading.\n    return trip_weather(trips, observations)\n",
+  "prerequisites": [
+    "PS-L017",
+    "PS-L031"
+  ],
+  "output": {
+    "columns": [
+      "weather",
+      "trips",
+      "hours",
+      "trips_per_hour",
+      "avg_fare",
+      "avg_minutes"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "example",
+      "sample": true
+    },
+    {
+      "id": "project",
+      "edition": "project"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

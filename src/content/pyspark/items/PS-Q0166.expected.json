@@ -1,0 +1,148 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "symbol",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "trade_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "close",
+     "type": "decimal(10,2)",
+     "nullable": true
+    },
+    {
+     "name": "next_open",
+     "type": "decimal(10,2)",
+     "nullable": true
+    },
+    {
+     "name": "gap",
+     "type": "decimal(11,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "ALDR.SX",
+     "2026-01-15",
+     "191.95",
+     "193.08",
+     "1.13"
+    ],
+    [
+     "ALDR.SX",
+     "2026-01-16",
+     "192.94",
+     "192.71",
+     "-0.23"
+    ],
+    [
+     "ALDR.SX",
+     "2026-01-20",
+     "197.36",
+     "98.15",
+     "-99.21"
+    ],
+    [
+     "ALDR.SX",
+     "2026-01-21",
+     "98.47",
+     "98.77",
+     "0.30"
+    ],
+    [
+     "ALDR.SX",
+     "2026-01-22",
+     "101.22",
+     null,
+     null
+    ],
+    [
+     "BRVO.SX",
+     "2026-01-15",
+     "54.62",
+     "55.18",
+     "0.56"
+    ],
+    [
+     "BRVO.SX",
+     "2026-01-16",
+     "55.34",
+     "56.12",
+     "0.78"
+    ],
+    [
+     "BRVO.SX",
+     "2026-01-21",
+     "56.05",
+     "56.35",
+     "0.30"
+    ],
+    [
+     "BRVO.SX",
+     "2026-01-22",
+     "56.40",
+     null,
+     null
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-15",
+     "122.58",
+     "123.21",
+     "0.63"
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-16",
+     "121.62",
+     "121.91",
+     "0.29"
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-20",
+     "124.71",
+     "124.78",
+     "0.07"
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-21",
+     "125.51",
+     "126.37",
+     "0.86"
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-22",
+     "126.25",
+     null,
+     null
+    ]
+   ],
+   "row_count": 14
+  }
+ },
+ "hidden": [
+  "the full practice prices",
+  "rows that arrive out of date order",
+  "a stock with a single trading day",
+  "a stock with a missing trading day",
+  "a day with a missing open",
+  "no prices"
+ ]
+}

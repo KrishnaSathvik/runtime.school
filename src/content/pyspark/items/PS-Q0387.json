@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0387",
+  "slug": "results-the-release-changes",
+  "lesson": "PS-L078",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Results the release changes",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "prompt": "A new version of the HbA1c band step is about to ship, and the clinicians want to review every result it would label differently. The starter has both versions as column expressions. Write `solve(observations)` so it returns `observation_id`, `value`, `old_band` and `new_band` for those HbA1c results only.",
+  "rules": [
+    "Compare the two versions on every HBA1C observation; other codes aren't part of the step.",
+    "A result changes when the bands differ, including when one version gives a band and the other gives none."
+  ],
+  "hints": [
+    "Select both bands next to each other: `old_band(F.col(\"value\")).alias(\"old_band\")` and the same for the new one.",
+    "`\"diabetes\" != NULL` is NULL, not true, so `filter` drops it. Which results does the new version leave without a band?",
+    "Before you negate the comparison, make a missing answer count as \"not equal\": `F.coalesce` with `F.lit(False)` turns NULL into false."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "observations"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef old_band(value):\n    # Today's step.\n    return F.when(value < 5.7, \"normal\").when(value < 6.5, \"prediabetes\").otherwise(\"diabetes\")\n\n\ndef new_band(value):\n    # The release: no band without a real value, and results above 20 are in mmol/mol, converted to %.\n    pct = F.when(value > 20, value * 0.0915 + 2.15).otherwise(value)\n    return (\n        F.when(F.isnan(value), None)\n        .when(pct < 5.7, \"normal\")\n        .when(pct < 6.5, \"prediabetes\")\n        .when(pct >= 6.5, \"diabetes\")\n    )\n\n\ndef solve(observations):\n    # Return the HbA1c results whose band the release changes.\n    return observations.select(\"observation_id\", \"value\")\n",
+  "output": {
+    "columns": [
+      "observation_id",
+      "value",
+      "old_band",
+      "new_band"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Both versions are expressions on `value`, so one `select` puts them side by side on the HBA1C rows, with no second table to match. The results that change are the mmol/mol ones that convert into a lower band and the ones the release leaves without a band: a missing value and NaN were `diabetes` before. Those are exactly the rows a plain `!=` misses, because comparing with NULL gives NULL. `~F.coalesce(old == new, F.lit(False))` treats an unknown comparison as a change. A result of 51 converts to 6.8165%, still `diabetes`, so it isn't listed."
+}

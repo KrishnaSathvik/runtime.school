@@ -1,0 +1,21 @@
+{
+  "id": "PS-L079-C2",
+  "kind": "predict",
+  "slug": "which-submits-fail",
+  "lesson": "PS-L079",
+  "difficulty": "easy",
+  "minutes": 4,
+  "title": "Which submits fail?",
+  "prompt": "This program submits the same one-line script three times, with a different master and deploy mode each time. For each command it prints the master, the deploy mode, the exit code and how many `app:` lines the script printed. Remember: this environment has no cluster and no Hadoop configuration. What does it print? Type each line on its own line.",
+  "program": "import os, subprocess\n\nopen(\"/tmp/load.py\", \"w\").write(\"print('app: loaded')\\n\")\nenv = {**os.environ, \"SPARK_LOCAL_IP\": \"127.0.0.1\"}\n\nfor master, mode in [(\"local[2]\", \"client\"), (\"local[2]\", \"cluster\"), (\"yarn\", \"client\")]:\n    run = subprocess.run(\n        [\"spark-submit\", \"--master\", master, \"--deploy-mode\", mode, \"/tmp/load.py\"],\n        capture_output=True, text=True, env=env)\n    printed = [l for l in run.stdout.splitlines() if l.startswith(\"app:\")]\n    print(master, mode, run.returncode, len(printed))\n",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "An exit code of 0 means the script ran; when `spark-submit` rejects a command, the exit code is 1 and the script never starts.",
+    "Cluster deploy mode needs a cluster to start the driver on. Does a `local` master have one?",
+    "To use `yarn`, spark-submit needs to know where YARN is, whatever the deploy mode."
+  ]
+}

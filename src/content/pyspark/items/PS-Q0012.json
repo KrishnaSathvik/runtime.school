@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0012",
+  "kind": "predict",
+  "slug": "where-is-spark-running",
+  "lesson": "PS-L003",
+  "role": "business",
+  "format": "concept_or_trace",
+  "difficulty": "easy",
+  "minutes": 4,
+  "title": "Where is Spark running?",
+  "prompt": "Before a support call, the platform team prints a short summary of the session. What does this program print? Type each line on its own line.",
+  "program": "sc = spark.sparkContext\nprint(f\"Spark {spark.version} on {sc.master}\")\nprint(sc.defaultParallelism * 2, \"tasks in two rounds\")\nprint(spark.conf.get(\"spark.sql.session.timeZone\"))\n",
+  "dataset": {
+    "id": "PS-D11",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "`spark.version` is the Spark version this environment runs, and `master` says where it runs, cores included.",
+    "`defaultParallelism` is how many tasks run side by side; here it matches the number of cores.",
+    "Times in this environment are shown in one time zone, the one with no offset."
+  ],
+  "explanation": "This environment runs Spark 4.0.1 in local mode with 2 cores, so `master` is `local[2]` and `defaultParallelism` is 2; two rounds of 2 tasks is 4. The session time zone is `UTC`."
+}

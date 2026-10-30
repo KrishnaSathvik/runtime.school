@@ -1,0 +1,49 @@
+{
+  "id": "PS-L044-C2",
+  "slug": "log-quarantine-list",
+  "lesson": "PS-L044",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Log quarantine list",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "The platform team wants every line of the log file accounted for, so broken lines can be traced back to the shipper. Write `solve(application_logs_raw)` so it returns `log_id`, `service` and `bad_record` for every non-blank line: `bad_record` is the raw line when it couldn't be parsed, and NULL otherwise.",
+  "rules": [
+    "One row per non-blank line, good or bad. Keep repeated lines.",
+    "For a line that isn't valid JSON, `log_id` and `service` are NULL and `bad_record` is the line exactly as it arrived.",
+    "A file with no bad lines still has a `bad_record` column, all NULL.",
+    "Return only `log_id`, `service` and `bad_record` (all text), in that order."
+  ],
+  "hints": [
+    "Read with a schema that ends in a text column for the raw line.",
+    "The default mode keeps bad lines; `columnNameOfCorruptRecord` names the column that gets their text.",
+    "Without a schema, `_corrupt_record` only exists when some line is bad. A schema makes the column always there."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "application_logs_raw"
+  ],
+  "starter": "def solve(application_logs_raw):\n    path = \"/tmp/logs/app\"\n    application_logs_raw.write.mode(\"overwrite\").text(path)\n    # Read the file at `path` and return log_id, service and bad_record for every line.\n    return application_logs_raw\n",
+  "output": {
+    "columns": [
+      "log_id",
+      "service",
+      "bad_record"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

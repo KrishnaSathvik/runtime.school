@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0391",
+  "kind": "predict",
+  "slug": "options-after-the-script",
+  "lesson": "PS-L079",
+  "role": "foundation",
+  "format": "concept_or_trace",
+  "difficulty": "easy",
+  "minutes": 5,
+  "title": "Options after the script",
+  "prompt": "This program submits a small job. Some options come before the script and some after it. It prints the exit code, then the job's lines without their `app:` prefix. What does it print? Type each line on its own line.",
+  "program": "import os, subprocess\n\nopen(\"/tmp/args.py\", \"w\").write(\"\"\"\nimport sys\nfrom pyspark.sql import SparkSession\n\nspark = SparkSession.builder.getOrCreate()\nsc = spark.sparkContext\nprint(\"app:\", sc.appName)\nprint(\"app:\", sc.master)\nprint(\"app:\", sys.argv[1:])\nspark.stop()\n\"\"\")\n\nenv = {**os.environ, \"SPARK_LOCAL_IP\": \"127.0.0.1\"}\nrun = subprocess.run(\n    [\"spark-submit\", \"--master\", \"local[1]\", \"--name\", \"error-digest\",\n     \"/tmp/args.py\", \"--name\", \"nightly\", \"--master\", \"yarn\", \"2026-03-01\"],\n    capture_output=True, text=True, env=env)\nprint(run.returncode)\nfor line in run.stdout.splitlines():\n    if line.startswith(\"app:\"):\n        print(line[5:])\n",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "`spark-submit` reads its own options up to the script's path. What does it do with the words after it?",
+    "Words after the script are handed to the script in `sys.argv`, even when they look like options. Spark never sees them.",
+    "So the name and the master come only from the options before `/tmp/args.py`. `yarn` is never used, so nothing is rejected."
+  ],
+  "explanation": "`spark-submit` reads options until it reaches the script. Everything after `/tmp/args.py` is the script's business: `sys.argv[1:]` is `['--name', 'nightly', '--master', 'yarn', '2026-03-01']`, and Spark ignores those words. So the application is called `error-digest` and runs on `local[1]`, the values before the script, and the job finishes with exit code 0. `yarn` would have been rejected here (there's no Hadoop configuration), but it was never an option, only an argument. Put Spark's options first, always."
+}

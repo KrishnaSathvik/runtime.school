@@ -1,0 +1,23 @@
+{
+  "id": "P07",
+  "task": "A research team wants every paper title from a publications service that returns results a page at a time. Using pages recorded ahead of time, so nothing calls the internet, build a client that reads a page, walks to the last one, reuses pages it has already read, stores the titles in SQLite and prints them A to Z.",
+  "produce": [
+    { "name": "client.py", "about": "Reads a page, walks every page, caches pages and stores the titles in SQLite." },
+    { "name": "main.py", "about": "Collects the titles and prints the count and the sorted list." },
+    { "name": "papers.db", "about": "One row per paper title." }
+  ],
+  "steps": {
+    "P07.m1": "Read one recorded page, or an empty list when it wasn't recorded.",
+    "P07.m2": "Walk the pages from the first until an empty one.",
+    "P07.m3": "Read each page once and reuse it after that.",
+    "P07.m4": "Store the titles in SQLite, one row each, and count them.",
+    "P07.m5": "Print how many titles there are, then the titles A to Z."
+  },
+  "problems": [
+    "Page 3 is empty, which marks the end of the results.",
+    "Pages hold different numbers of papers: two on page 1 and one on page 2.",
+    "Page numbers are stored as text keys in the file, so a page number has to become text to look the page up.",
+    "The titles arrive out of alphabetical order."
+  ],
+  "preparation": ["PY-L31-05", "PY-L31-03", "PY-L20-03", "PY-L05-02", "PY-L37-03", "PY-L30-04", "PY-L07-04"]
+}

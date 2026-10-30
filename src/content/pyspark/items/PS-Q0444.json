@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0444",
+  "slug": "volume-spike-that-sees-the-future",
+  "lesson": "PS-L089",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "A volume spike that sees the future",
+  "dataset": {
+    "id": "PS-D10",
+    "version": "1.0.0"
+  },
+  "prompt": "This feature compares each day's volume with the three trading days before it. A model built on it tested far too well, and the first days of each symbol already have a value. Fix `solve(daily_prices)`.",
+  "rules": [
+    "Work on each `symbol` on its own, in `trade_date` order. The three days before a row are the symbol's three previous rows, whatever the calendar gap.",
+    "`vol_ratio` is `volume` divided by the average `volume` of those three rows, rounded to 2 decimal places. It is NULL until a symbol has three earlier rows.",
+    "Return `symbol`, `trade_date`, `volume` and `vol_ratio`, in that order. Keep every row."
+  ],
+  "hints": [
+    "Run the code and look at a symbol's first rows: which days does their average come from?",
+    "A frame's negative offsets count back in the window's own order. With dates newest first, \"three rows back\" are three later days.",
+    "Order the window by date, oldest first, and keep `rowsBetween(-3, -1)`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "daily_prices"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(daily_prices):\n    # Newest first, so the previous days come right after each row.\n    before = Window.partitionBy(\"symbol\").orderBy(F.desc(\"trade_date\")).rowsBetween(-3, -1)\n    return daily_prices.select(\n        \"symbol\",\n        \"trade_date\",\n        \"volume\",\n        F.when(F.count(\"volume\").over(before) == 3,\n               F.round(F.col(\"volume\") / F.avg(\"volume\").over(before), 2)).alias(\"vol_ratio\"),\n    )\n",
+  "output": {
+    "columns": [
+      "symbol",
+      "trade_date",
+      "volume",
+      "vol_ratio"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "A frame's offsets follow the window's ordering, not the calendar. With `orderBy(F.desc(\"trade_date\"))`, the rows \"before\" the current one are the newer dates, so `rowsBetween(-3, -1)` averaged the next three days: each row was compared with its future, and the model could see what was coming. That is why the early rows had values and the latest ones didn't. Ordering oldest first, `Window.partitionBy(\"symbol\").orderBy(\"trade_date\").rowsBetween(-3, -1)`, makes the frame the three previous trading days; the count check keeps the first three rows of each symbol NULL. In the sample, ALDR.SX's 2026-01-21 volume is about five times its three previous days: the split day's spike, now visible on the day itself instead of leaking into earlier rows."
+}

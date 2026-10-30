@@ -1,0 +1,18 @@
+{
+  "id": "PS-L006-C1",
+  "kind": "predict",
+  "slug": "count-the-jobs",
+  "lesson": "PS-L006",
+  "difficulty": "easy",
+  "minutes": 4,
+  "title": "Count the jobs",
+  "prompt": "What does this program print? Ten of the lesson's 12 trips use the `standard` rate code.",
+  "program": "from pyspark.sql import functions as F\n\nsc = spark.sparkContext\ntracker = sc.statusTracker()\n\nsc.setJobGroup(\"build\", \"build the plan\")\nstandard = trips.filter(F.col(\"rate_code\") == \"standard\").select(\"trip_id\", \"total\")\nprint(len(tracker.getJobIdsForGroup(\"build\")))\n\nsc.setJobGroup(\"run\", \"collect the rows\")\nrows = standard.collect()\nprint(len(tracker.getJobIdsForGroup(\"run\")), len(rows))\n",
+  "dataset": { "id": "PS-D07", "version": "1.0.0" },
+  "edition": "lesson",
+  "hints": [
+    "The first group only covers `filter` and `select`. Do transformations start jobs?",
+    "`collect()` is an action, and an action starts a job.",
+    "`filter` and `select` are both narrow: no rows move between partitions, so one job with one stage is enough."
+  ]
+}

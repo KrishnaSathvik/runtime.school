@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0041",
+  "slug": "learner-mailing-list",
+  "lesson": "PS-L009",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "The learner mailing list",
+  "dataset": {
+    "id": "PS-D11",
+    "version": "1.0.0"
+  },
+  "prompt": "The mailing tool needs each learner's id, name, plan and country, with the name in a column called `name`. Write `solve(learners)` so it returns those four columns.",
+  "rules": [
+    "Return exactly four columns, in this order: `learner_id`, `name`, `plan`, `country`.",
+    "`name` holds the values of `display_name`, unchanged.",
+    "Keep every learner, duplicates included. Missing values stay missing."
+  ],
+  "hints": [
+    "`select` keeps the columns you list, in the order you list them.",
+    "To rename a column in the result, write it as `F.col(\"display_name\")` and add `.alias(\"name\")`.",
+    "Plain names and `F.col(...)` can be mixed in the same `select`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "learners"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(learners):\n    # Return learner_id, name, plan and country.\n    return learners\n",
+  "output": {
+    "columns": [
+      "learner_id",
+      "name",
+      "plan",
+      "country"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "One `select` does it: list the columns in the order the tool wants and rename `display_name` on the way: `learners.select(\"learner_id\", F.col(\"display_name\").alias(\"name\"), \"plan\", \"country\")`. `select` keeps every row, so duplicates and missing values come through as they are. `learners.selectExpr(\"learner_id\", \"display_name AS name\", \"plan\", \"country\")` gives the same result. Listing `country` before `plan`, or keeping the old name, is what the check catches."
+}

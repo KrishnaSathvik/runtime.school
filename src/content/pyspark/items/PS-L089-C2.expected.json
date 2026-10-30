@@ -1,0 +1,116 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "trade_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "symbol",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "prev_close",
+     "type": "decimal(10,2)",
+     "nullable": true
+    },
+    {
+     "name": "prev_volume",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "size_bucket",
+     "type": "double",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "TR-000001",
+     "ALDR.SX",
+     null,
+     null,
+     1.0
+    ],
+    [
+     "TR-000002",
+     "BRVO.SX",
+     "54.62",
+     3521500,
+     0.0
+    ],
+    [
+     "TR-000003",
+     "BRVO.SX",
+     "54.62",
+     3521500,
+     2.0
+    ],
+    [
+     "TR-000004",
+     "CYPH.SX",
+     "122.58",
+     1791600,
+     2.0
+    ],
+    [
+     "TR-000005",
+     "ALDR.SX",
+     "192.94",
+     4147700,
+     0.0
+    ],
+    [
+     "TR-000006",
+     "ALDR.SX",
+     "197.36",
+     1781600,
+     0.0
+    ],
+    [
+     "TR-000007",
+     "ALDR.SX",
+     "197.36",
+     1781600,
+     0.0
+    ],
+    [
+     "TR-000008",
+     "BRVO.SX",
+     "55.34",
+     3823300,
+     1.0
+    ],
+    [
+     "TR-000009",
+     "BRVO.SX",
+     "55.34",
+     3823300,
+     0.0
+    ],
+    [
+     "TR-000010",
+     "CYPH.SX",
+     "125.51",
+     2068000,
+     2.0
+    ]
+   ],
+   "row_count": 10
+  }
+ },
+ "hidden": [
+  "the full practice trades and prices",
+  "trades on a symbol's first price day, after a holiday weekend and after a missing day, and quantities on each bucket boundary"
+ ]
+}

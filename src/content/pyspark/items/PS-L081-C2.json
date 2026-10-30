@@ -1,0 +1,21 @@
+{
+  "id": "PS-L081-C2",
+  "kind": "predict",
+  "slug": "find-the-failed-stage",
+  "lesson": "PS-L081",
+  "difficulty": "medium",
+  "minutes": 7,
+  "title": "Find the failed stage",
+  "prompt": "This program submits an hourly job with adaptive execution off. The job's third action divides by zero on the row with id 4. The program prints the exit code, the job's `app:` lines without the prefix, and then reads the driver log's \"Task N in stage S failed K times\" line. What does it print? Type each line on its own line.",
+  "program": "import os, re, subprocess\n\nopen(\"/tmp/hourly.py\", \"w\").write(\"\"\"\nfrom pyspark.sql import SparkSession\n\nspark = SparkSession.builder.getOrCreate()\nnums = spark.range(0, 12, 1, 4)\nprint(\"app:\", nums.count())\nprint(\"app:\", len(nums.collect()))\nnums.selectExpr(\"120 div (id - 4) AS x\").collect()\nprint(\"app: done\")\n\"\"\")\n\nenv = {**os.environ, \"SPARK_LOCAL_IP\": \"127.0.0.1\"}\nrun = subprocess.run(\n    [\"spark-submit\", \"--master\", \"local[2]\",\n     \"--conf\", \"spark.sql.adaptive.enabled=false\", \"/tmp/hourly.py\"],\n    capture_output=True, text=True, env=env)\nprint(run.returncode)\nfor line in run.stdout.splitlines():\n    if line.startswith(\"app:\"):\n        print(line[5:])\nfor line in run.stderr.splitlines():\n    found = re.search(r\"Task (\\d+) in stage (\\d+)\\.\\d+ failed (\\d+) times\", line)\n    if found:\n        print(\"task\", found.group(1), \"stage\", found.group(2), \"attempts\", found.group(3))\n",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "The job doesn't catch the error, so the script stops before `app: done` and spark-submit reports a failure.",
+    "Stage ids start at 0 in a new application and go up by one per stage. `count()` uses two stages, `collect()` one.",
+    "`spark.range(0, 12, 1, 4)` puts 3 numbers in each partition, in order. Local mode tries a task once."
+  ]
+}

@@ -1,0 +1,441 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "example": {
+   "schema": [
+    {
+     "name": "movie_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "primary_genre",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "ratings",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "average_rating",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "liked_share",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "last_rated_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "cold_start",
+     "type": "boolean",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "M01",
+     "Drama",
+     3,
+     3.83,
+     0.667,
+     "2026-05-01T10:00:00",
+     false
+    ],
+    [
+     "M02",
+     "Comedy",
+     2,
+     3.75,
+     0.5,
+     "2026-06-02T10:00:00",
+     false
+    ],
+    [
+     "M03",
+     "Sci-Fi",
+     1,
+     2.5,
+     0.0,
+     "2026-02-02T10:00:00",
+     false
+    ],
+    [
+     "M04",
+     "Horror",
+     0,
+     null,
+     null,
+     null,
+     true
+    ],
+    [
+     "M05",
+     "Animation",
+     0,
+     null,
+     null,
+     null,
+     true
+    ]
+   ],
+   "row_count": 5,
+   "inputs": {
+    "ratings": [
+     [
+      "U01",
+      "M01",
+      "3.0",
+      "2026-03-01T10:00:00"
+     ],
+     [
+      "U02",
+      "M01",
+      "4.0",
+      "2026-04-01T10:00:00"
+     ],
+     [
+      "U03",
+      "M01",
+      "4.5",
+      "2026-05-01T10:00:00"
+     ],
+     [
+      "U01",
+      "M02",
+      "4.0",
+      "2026-06-01T10:00:00"
+     ],
+     [
+      "U03",
+      "M02",
+      "3.5",
+      "2026-06-02T10:00:00"
+     ],
+     [
+      "U02",
+      "M03",
+      "2.5",
+      "2026-02-02T10:00:00"
+     ],
+     [
+      "U03",
+      "M02",
+      "3.5",
+      "2026-06-02T10:00:00"
+     ],
+     [
+      "U01",
+      "M03",
+      "5.0",
+      "2026-07-01T00:00:00"
+     ],
+     [
+      "U02",
+      "M01",
+      "1.5",
+      "2026-07-05T10:00:00"
+     ],
+     [
+      "U04",
+      "M04",
+      "4.5",
+      "2026-08-01T10:00:00"
+     ]
+    ],
+    "movies": [
+     [
+      "M01",
+      "Film 01",
+      "2000",
+      "Drama",
+      "Drama|Drama",
+      "90",
+      "en",
+      "PG"
+     ],
+     [
+      "M02",
+      "Film 02",
+      "2001",
+      "Comedy",
+      "Comedy|Drama",
+      "91",
+      "en",
+      "PG"
+     ],
+     [
+      "M03",
+      "Film 03",
+      "2002",
+      "Sci-Fi",
+      "Sci-Fi|Drama",
+      "92",
+      "en",
+      "PG"
+     ],
+     [
+      "M04",
+      "Film 04",
+      "2003",
+      "Horror",
+      "Horror|Drama",
+      "93",
+      "en",
+      "PG"
+     ],
+     [
+      "M05",
+      "Film 05",
+      "2004",
+      "Animation",
+      "Animation|Drama",
+      "94",
+      "en",
+      "PG"
+     ]
+    ]
+   }
+  },
+  "project": {
+   "schema": [
+    {
+     "name": "movie_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "primary_genre",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "ratings",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "average_rating",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "liked_share",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "last_rated_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "cold_start",
+     "type": "boolean",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "M0001",
+     "Animation",
+     8,
+     1.75,
+     0.0,
+     "2026-06-29T17:59:54",
+     false
+    ],
+    [
+     "M0002",
+     "Drama",
+     14,
+     2.43,
+     0.071,
+     "2026-05-20T13:24:01",
+     false
+    ],
+    [
+     "M0003",
+     "Horror",
+     24,
+     4.48,
+     0.875,
+     "2026-06-25T23:39:45",
+     false
+    ],
+    [
+     "M0004",
+     "Sci-Fi",
+     3,
+     4.17,
+     1.0,
+     "2026-02-28T18:05:22",
+     false
+    ],
+    [
+     "M0005",
+     "Horror",
+     4,
+     4.0,
+     0.75,
+     "2026-03-27T11:05:23",
+     false
+    ],
+    [
+     "M0006",
+     "Sci-Fi",
+     5,
+     3.9,
+     0.6,
+     "2025-12-17T17:21:42",
+     false
+    ],
+    [
+     "M0007",
+     "Action",
+     24,
+     3.67,
+     0.417,
+     "2026-06-15T16:38:52",
+     false
+    ],
+    [
+     "M0008",
+     "Action",
+     3,
+     2.17,
+     0.0,
+     "2026-05-17T00:00:42",
+     false
+    ],
+    [
+     "M0009",
+     "Comedy",
+     4,
+     3.0,
+     0.0,
+     "2026-06-15T18:31:23",
+     false
+    ],
+    [
+     "M0010",
+     "Comedy",
+     3,
+     3.67,
+     0.333,
+     "2025-12-17T02:27:07",
+     false
+    ],
+    [
+     "M0011",
+     "Comedy",
+     4,
+     3.0,
+     0.25,
+     "2026-02-10T11:26:27",
+     false
+    ],
+    [
+     "M0012",
+     "Mystery",
+     8,
+     3.5,
+     0.375,
+     "2026-05-05T05:05:22",
+     false
+    ],
+    [
+     "M0013",
+     "Drama",
+     6,
+     4.08,
+     0.833,
+     "2026-06-01T07:41:07",
+     false
+    ],
+    [
+     "M0014",
+     "Action",
+     2,
+     2.75,
+     0.0,
+     "2026-06-07T00:02:00",
+     false
+    ],
+    [
+     "M0015",
+     "Drama",
+     12,
+     4.75,
+     1.0,
+     "2026-06-27T22:59:57",
+     false
+    ],
+    [
+     "M0016",
+     "Comedy",
+     3,
+     2.83,
+     0.333,
+     "2026-06-29T00:49:07",
+     false
+    ],
+    [
+     "M0017",
+     "Drama",
+     2,
+     4.5,
+     1.0,
+     "2026-06-22T10:56:07",
+     false
+    ],
+    [
+     "M0018",
+     "Horror",
+     5,
+     4.3,
+     0.8,
+     "2026-04-06T21:35:41",
+     false
+    ],
+    [
+     "M0019",
+     "Animation",
+     8,
+     2.75,
+     0.125,
+     "2026-03-11T05:14:31",
+     false
+    ],
+    [
+     "M0020",
+     "Thriller",
+     1,
+     3.5,
+     0.0,
+     "2026-06-12T07:31:07",
+     false
+    ]
+   ],
+   "row_count": 320
+  }
+ },
+ "hidden": [
+  "the full practice tables",
+  "ratings on both sides of the cutoff, some exactly on it, and re-ratings across it",
+  "every rating on or after the cutoff",
+  "empty tables"
+ ]
+}

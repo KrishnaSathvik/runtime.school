@@ -1,0 +1,47 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D13",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "observations"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "['observation_date=2026-03-07', 'observation_date=2026-03-08']\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "['observation_id', 'station_id', 'observed_at', 'temperature_c', 'humidity_pct', 'precipitation_mm', 'wind_speed_kph', 'pressure_hpa', 'quality_flag', 'observation_date']\ndate 12\n7 quality_flag\n7 observation_date\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "observation_date=2026-03-07 ['station_id=LIS-01', 'station_id=PER-01', 'station_id=PNQ-01']\nobservation_date=2026-03-08 ['station_id=LIS-01', 'station_id=NYC-01', 'station_id=PER-01']\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "overwrite: 12\nappend:    24\nignore:    24\noverwrite: 12\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "['observation_date=2026-03-07', 'observation_date=2026-03-08'] 6\n['observation_date=2026-03-08'] 1\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "",
+   "error": {
+    "type": "AnalysisException",
+    "message": "Partition column `obs_date` not found in schema struct<observation_id:string,station_id:string,observed_at:timestamp,observation_date:date,temperature_c:double,humidity_pct:int,precipitation_mm:double,wind_speed_kph:double,pressure_hpa:double,quality_flag:string>.",
+    "line": 1,
+    "condition": "_LEGACY_ERROR_TEMP_1155"
+   }
+  }
+ }
+}

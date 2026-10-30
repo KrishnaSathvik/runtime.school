@@ -1,0 +1,286 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "event_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "shipment_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "warehouse_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "event_type",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "event_time",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "location",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "sequence",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "load_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "is_correction",
+     "type": "boolean",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "E0000013",
+     "SH9999",
+     "WH02",
+     "departed",
+     "2026-03-08T21:20:00",
+     "WH02",
+     100013,
+     "2026-03-08",
+     false
+    ],
+    [
+     "E0000013",
+     "SH9999",
+     "WH02",
+     "departed",
+     "2026-03-08T21:20:00",
+     "WH02",
+     100013,
+     "2026-03-08",
+     false
+    ],
+    [
+     "E0000014",
+     "SH0004",
+     "WH02",
+     "in_transit",
+     "2026-03-05T07:15:00",
+     "WH02",
+     100014,
+     "2026-03-05",
+     null
+    ],
+    [
+     "E0000015",
+     "SH0004",
+     "WH02",
+     "delivered",
+     "2026-03-09T08:00:00",
+     "Graz",
+     100015,
+     "2026-03-09",
+     true
+    ],
+    [
+     "E0000016",
+     "SH0003",
+     "WH02",
+     "Delivered",
+     "2026-03-06T09:00:00",
+     "Turin",
+     100016,
+     "2026-03-06",
+     false
+    ]
+   ],
+   "row_count": 5,
+   "inputs": {
+    "shipment_events": [
+     [
+      "E0000001",
+      "SH0002",
+      "WH01",
+      "created",
+      "2026-03-03T08:03:00",
+      "WH01",
+      "100001",
+      "2026-03-03",
+      "false"
+     ],
+     [
+      "E0000004",
+      "SH0001",
+      "WH03",
+      "created",
+      "2026-03-03T12:24:00",
+      "WH03",
+      "100004",
+      "2026-03-03",
+      "false"
+     ],
+     [
+      "E0000006",
+      "SH0002",
+      "WH01",
+      "departed",
+      "2026-03-03T15:42:00",
+      "WH01",
+      "100006",
+      "2026-03-03",
+      "false"
+     ],
+     [
+      "E0000009",
+      "SH0003",
+      "WH02",
+      "delivered",
+      "2026-03-06T08:53:00",
+      "Turin",
+      "100009",
+      "2026-03-06",
+      "false"
+     ],
+     [
+      "E0000013",
+      "SH9999",
+      "WH02",
+      "departed",
+      "2026-03-08T21:20:00",
+      "WH02",
+      "100013",
+      "2026-03-08",
+      "false"
+     ],
+     [
+      "E0000013",
+      "SH9999",
+      "WH02",
+      "departed",
+      "2026-03-08T21:20:00",
+      "WH02",
+      "100013",
+      "2026-03-08",
+      "false"
+     ],
+     [
+      "E0000014",
+      "SH0004",
+      "WH02",
+      "in_transit",
+      "2026-03-05T07:15:00",
+      "WH02",
+      "100014",
+      "2026-03-05",
+      null
+     ],
+     [
+      "E0000015",
+      "SH0004",
+      "WH02",
+      "delivered",
+      "2026-03-09T08:00:00",
+      "Graz",
+      "100015",
+      "2026-03-09",
+      "true"
+     ],
+     [
+      "E0000016",
+      "SH0003",
+      "WH02",
+      "Delivered",
+      "2026-03-06T09:00:00",
+      "Turin",
+      "100016",
+      "2026-03-06",
+      "false"
+     ]
+    ],
+    "shipments": [
+     [
+      "SH0001",
+      "WH03",
+      "SKU-1003",
+      "1",
+      "SwiftFreight",
+      "standard",
+      "Wroc\u0142aw",
+      "2026-03-03T12:24:00",
+      "2026-03-06"
+     ],
+     [
+      "SH0002",
+      "WH01",
+      "SKU-1003",
+      "2",
+      "Parcelway",
+      "standard",
+      "Malm\u00f6",
+      "2026-03-03T08:03:00",
+      "2026-03-07"
+     ],
+     [
+      "SH0003",
+      "WH02",
+      "SKU-1014",
+      "24",
+      "Parcelway",
+      "standard",
+      "Turin",
+      "2026-03-03T12:17:00",
+      "2026-03-06"
+     ],
+     [
+      "SH0004",
+      "WH02",
+      "SKU-1014",
+      "24",
+      "Parcelway",
+      "standard",
+      "Graz",
+      "2026-03-03T09:30:00",
+      "2026-03-07"
+     ],
+     [
+      null,
+      "WH02",
+      "SKU-1014",
+      "6",
+      "Parcelway",
+      "standard",
+      "Graz",
+      "2026-03-04T10:00:00",
+      "2026-03-08"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice tracking feed",
+  "events with a missing shipment, event type or correction flag",
+  "a shipments table that contains a row with no shipment id",
+  "corrections and events in capitals",
+  "an empty shipments table",
+  "the same held-back event delivered twice",
+  "an empty tracking feed"
+ ]
+}

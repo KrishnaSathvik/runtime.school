@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0090",
+  "slug": "berlin-archive-rows",
+  "lesson": "PS-L018",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Berlin archive rows",
+  "dataset": {
+    "id": "PS-D13",
+    "version": "1.0.0"
+  },
+  "prompt": "The European archive keeps every reading by its Berlin date and hour, with the temperature stored as an exact decimal. Write `solve(observations)` so it returns `observation_id`, `station_id`, `berlin_date`, `berlin_hour` and `temperature`.",
+  "rules": [
+    "`observed_at` is UTC. `berlin_date` (a date) and `berlin_hour` (0 to 23) come from the clock in the `Europe/Berlin` zone, daylight saving included.",
+    "`temperature` is `temperature_c` as `decimal(4,1)`. A value that doesn't fit that type, such as the stations' `-9999` code, becomes missing. The job must not stop.",
+    "A missing time or temperature gives a missing result. Return the five columns, in that order, for every reading."
+  ],
+  "hints": [
+    "Convert first with `F.from_utc_timestamp(\"observed_at\", \"Europe/Berlin\")`, then take `F.to_date` and `F.hour` of the result.",
+    "`decimal(4,1)` holds at most 999.9, so a plain `cast` of -9999 stops the job.",
+    "`try_cast(\"decimal(4,1)\")` gives `NULL` for a value that doesn't fit, as it does for text that isn't a number."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "observations"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(observations):\n    # Return observation_id, station_id, berlin_date, berlin_hour and temperature.\n    return observations\n",
+  "output": {
+    "columns": [
+      "observation_id",
+      "station_id",
+      "berlin_date",
+      "berlin_hour",
+      "temperature"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Two lessons meet here. The time part is `berlin = F.from_utc_timestamp(\"observed_at\", \"Europe/Berlin\")`, then `F.to_date(berlin)` and `F.hour(berlin)`. The zone name tracks summer time: on 29 March 2026 at 01:00 UTC Berlin moves from one hour ahead of UTC to two, which a fixed `+01:00` never does, and near midnight the Berlin date is a day after the UTC date. The temperature part is `F.col(\"temperature_c\").try_cast(\"decimal(4,1)\")`: four digits with one after the point hold up to 999.9, so the -9999 code doesn't fit. A plain `cast` stops the whole job on that one value under Spark's strict rules, while `try_cast` makes it missing, which is what the code means anyway."
+}

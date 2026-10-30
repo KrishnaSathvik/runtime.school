@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0039",
+  "slug": "fix-the-order-value-range",
+  "lesson": "PS-L008",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Fix the order value range",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "A finance check reports how many orders there are, how many have a total, and the smallest and largest total. The function below was written for it, but it fails. Fix `solve(orders)`.",
+  "rules": [
+    "One row with four columns: `orders` and `priced` (bigint), then `lowest_total` and `highest_total` (decimal(10,2)).",
+    "`orders` counts every row. `priced` counts only the orders whose total isn't missing.",
+    "When no order has a total, or the table is empty, `lowest_total` and `highest_total` are missing."
+  ],
+  "hints": [
+    "Press Run and read the error: what kind of value is going into a `DECIMAL` column?",
+    "Every statistic from `describe` is text, even the count. Turn text into an exact amount with `Decimal(...)` and into a whole number with `int(...)`.",
+    "The `count` statistic skips missing totals, unlike `orders.count()`. And when there are no totals, `min` and `max` are `None`, which `Decimal` can't take."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "orders"
+  ],
+  "starter": "from decimal import Decimal\n\n\ndef solve(orders):\n    stats = {r[\"summary\"]: r[\"total\"] for r in orders.describe(\"total\").head(5)}\n    row = (orders.count(), orders.count(), stats[\"min\"], stats[\"max\"])\n    return spark.createDataFrame([row], \"orders BIGINT, priced BIGINT, lowest_total DECIMAL(10,2), highest_total DECIMAL(10,2)\")\n",
+  "output": {
+    "columns": [
+      "orders",
+      "priced",
+      "lowest_total",
+      "highest_total"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`describe` returns every statistic as text, so the starter puts the text `\"39.98\"` into a `DECIMAL` column, and Spark refuses it. Convert with `Decimal(stats[\"min\"])` and `Decimal(stats[\"max\"])`. The second bug hides in the sample, where every order has a total: `priced` must be `int(stats[\"count\"])`, the number of totals that are there, not `orders.count()` again. Last, when there are no totals at all, `min` and `max` come back as `None`; keep them as `None` instead of calling `Decimal(None)`, for example `Decimal(low) if low is not None else None`. `summary(\"count\", \"min\", \"max\")` works just as well as `describe`."
+}

@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0180",
+  "slug": "time-between-sessions",
+  "lesson": "PS-L036",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 20,
+  "title": "Days off between streaks",
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0"
+  },
+  "prompt": "Retention analysts want to see how long members take a break between viewing streaks. Write `solve(watch_sessions)` so it returns each member's streaks of consecutive viewing days, with the days off before each one.",
+  "rules": [
+    "A viewing day is the date a play `started_at`, so a play that runs past midnight counts only on the day it started. A streak is a run of one or more consecutive viewing days.",
+    "`first_day` is the streak's first day and `days` how many days it has. `days_off` is the number of days without a play between the end of the member's previous streak and this one; it is missing for a member's first streak.",
+    "Return `user_id`, `first_day`, `days` and `days_off`, one row per streak."
+  ],
+  "hints": [
+    "Start from each member's distinct viewing days, then label the runs as in the lesson: subtract a `row_number` from the date with `F.date_sub`.",
+    "`groupBy` the member and the label to get each streak's first day, last day and length.",
+    "Over the streaks, `F.lag` gives the previous streak's last day. `F.datediff` counts the days between, and the days off are one less."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "watch_sessions"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(watch_sessions):\n    # Return user_id, first_day, days and days_off for every viewing streak.\n    return watch_sessions\n",
+  "output": {
+    "columns": [
+      "user_id",
+      "first_day",
+      "days",
+      "days_off"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Two windows, one after the other. First the streaks: take each member's distinct start dates (`F.to_date(\"started_at\")`, then `distinct()`, or two plays on one day would break the pattern), label them with `F.date_sub(day, row_number)`, and `groupBy` member and label for the first day, last day and count. Then a second window over the streaks, ordered by `first_day`: `F.datediff(first_day, F.lag(\"last_day\"))` is the distance between the two streaks, and the days off are one less, because a streak that ends on the 9th and one that starts on the 12th leave the 10th and 11th without plays. A member's first streak has no previous one, so `lag` gives NULL and so does `days_off`. Dating plays by `ended_at` puts late-night plays on the wrong day."
+}

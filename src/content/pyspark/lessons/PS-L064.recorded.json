@@ -1,0 +1,48 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D14",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "accounts",
+   "customer_cdc"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "+---+--------+----------+----------+-----------------+------------+\n| op|sequence|account_id|   segment|    account_owner|credit_limit|\n+---+--------+----------+----------+-----------------+------------+\n|  U|  200001|  ACC-0001|mid_market|    Dana Whitlock|   100000.00|\n|  U|  200004|  ACC-0002|       smb|     Priya Venkat|    15000.00|\n|  I|  200007|  ACC-0006|       smb|     Priya Venkat|    15000.00|\n|  U|  200009|  ACC-0001|enterprise|    Dana Whitlock|   100000.00|\n|  D|  200012|  ACC-0003|enterprise|    Mei Lindqvist|   250000.00|\n|  I|  200015|  ACC-0007|       smb|Tobias Achterberg|    15000.00|\n|  U|  200016|  ACC-0006|       smb|     Priya Venkat|    30000.00|\n|  U|  200019|  ACC-0004|mid_market|    Rafael Ibarra|    75000.00|\n|  U|  200023|  ACC-0001|enterprise|    Mei Lindqvist|   100000.00|\n|  U|  200026|  ACC-0007|       smb|Tobias Achterberg|    15000.00|\n+---+--------+----------+----------+-----------------+------------+\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "",
+   "error": {
+    "type": "UnsupportedOperationException",
+    "message": "[DELTA_MULTIPLE_SOURCE_ROW_MATCHING_TARGET_ROW_IN_MERGE] Cannot perform Merge as multiple source rows matched and attempted to modify the same",
+    "line": 12,
+    "condition": "DELTA_MULTIPLE_SOURCE_ROW_MATCHING_TARGET_ROW_IN_MERGE"
+   }
+  },
+  "e3": {
+   "stdout": "+---+--------+----------+----------+-----------------+------------+\n| op|sequence|account_id|   segment|    account_owner|credit_limit|\n+---+--------+----------+----------+-----------------+------------+\n|  U|  200023|  ACC-0001|enterprise|    Mei Lindqvist|   100000.00|\n|  U|  200004|  ACC-0002|       smb|     Priya Venkat|    15000.00|\n|  D|  200012|  ACC-0003|enterprise|    Mei Lindqvist|   250000.00|\n|  U|  200019|  ACC-0004|mid_market|    Rafael Ibarra|    75000.00|\n|  U|  200016|  ACC-0006|       smb|     Priya Venkat|    30000.00|\n|  U|  200026|  ACC-0007|       smb|Tobias Achterberg|    15000.00|\n+---+--------+----------+----------+-----------------+------------+\n\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "['account_id', 'account_name', 'industry', 'country', 'segment', 'account_owner', 'credit_limit', 'created_on', 'is_active']\n+----------+----------+-----------------+------------+---------+\n|account_id|   segment|    account_owner|credit_limit|is_active|\n+----------+----------+-----------------+------------+---------+\n|  ACC-0001|enterprise|    Mei Lindqvist|   100000.00|     true|\n|  ACC-0002|       smb|     Priya Venkat|    15000.00|     true|\n|  ACC-0004|mid_market|    Rafael Ibarra|    75000.00|    false|\n|  ACC-0005|       smb|    Dana Whitlock|    15000.00|     true|\n|  ACC-0006|       smb|     Priya Venkat|    30000.00|     true|\n|  ACC-0007|       smb|Tobias Achterberg|    15000.00|     true|\n+----------+----------+-----------------+------------+---------+\n\nupdated 3 inserted 2 deleted 1\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "4 rows arrived, 3 are different\nrank keeps 2 rows for ACC-0001\n+---+--------+----------+----------+-------------+\n| op|sequence|account_id|   segment|account_owner|\n+---+--------+----------+----------+-------------+\n|  U|  200023|  ACC-0001|enterprise|Mei Lindqvist|\n+---+--------+----------+----------+-------------+\n\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "+----------+----------------+---------------+-----------------+------------+\n|account_id|    _change_type|_commit_version|    account_owner|credit_limit|\n+----------+----------------+---------------+-----------------+------------+\n|  ACC-0001| update_preimage|              1|    Dana Whitlock|    75000.00|\n|  ACC-0001|update_postimage|              1|    Mei Lindqvist|   100000.00|\n|  ACC-0002| update_preimage|              1|     Jonas Ekberg|    15000.00|\n|  ACC-0002|update_postimage|              1|     Priya Venkat|    15000.00|\n|  ACC-0003|          delete|              1|    Mei Lindqvist|   250000.00|\n|  ACC-0004| update_preimage|              1|    Rafael Ibarra|    75000.00|\n|  ACC-0004|update_postimage|              1|    Rafael Ibarra|    75000.00|\n|  ACC-0006|          insert|              1|     Priya Venkat|    30000.00|\n|  ACC-0007|          insert|              1|Tobias Achterberg|    15000.00|\n+----------+----------------+---------------+-----------------+------------+\n\n",
+   "error": null
+  }
+ }
+}

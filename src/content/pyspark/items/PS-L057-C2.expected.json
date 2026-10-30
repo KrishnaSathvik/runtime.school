@@ -1,0 +1,69 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "pickup_zone_id",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "partition",
+     "type": "int",
+     "nullable": false
+    },
+    {
+     "name": "trips",
+     "type": "bigint",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     4,
+     0,
+     3
+    ],
+    [
+     10,
+     0,
+     2
+    ],
+    [
+     5,
+     0,
+     2
+    ],
+    [
+     22,
+     0,
+     2
+    ],
+    [
+     1,
+     1,
+     1
+    ],
+    [
+     16,
+     2,
+     2
+    ]
+   ],
+   "row_count": 6
+  }
+ },
+ "hidden": [
+  "the full practice trips table",
+  "trips with no pickup zone",
+  "zone ids outside the usual range, including 0 and a negative id",
+  "every trip starting in the same zone",
+  "an empty trips table"
+ ]
+}

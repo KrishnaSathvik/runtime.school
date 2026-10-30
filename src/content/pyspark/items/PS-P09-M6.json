@@ -1,0 +1,71 @@
+{
+ "id": "PS-P09-M6",
+ "slug": "handle-late-and-repeated-events",
+ "project": "PS-P09",
+ "milestone": "PS-P09.m6",
+ "difficulty": "hard",
+ "minutes": 55,
+ "title": "Handle late and duplicate events with a watermark",
+ "dataset": {
+  "id": "PS-D06",
+  "version": "1.1.0"
+ },
+ "prompt": "The hourly activity board can't wait forever for stragglers. The team's policy: wait two hours of event time, then publish the hour and drop anything older. Write `hourly_counts(events)`, the watermark policy, which `run_hourly` (given) runs with `foreachBatch`. Then write `batch_timeline(page_views, cart_events, checkout_events)`: one row per micro-batch from the query's progress reports, so the watermark can be watched at work.",
+ "rules": [
+  "`hourly_counts` takes the event stream, puts a 2-hour watermark on `event_time`, drops repeated deliveries (same `event_id`) with `dropDuplicatesWithinWatermark`, and counts the events in each 1-hour window of `event_time`. It returns `window_start` and `events`.",
+  "`batch_timeline` runs `run_hourly` on `event_stream(...)` with a fresh checkpoint and returns one row per micro-batch, from the reports in the query's `recentProgress`, skipping any report with no state operators (Spark posts one when a run finds nothing to read): `micro_batch` (`batchId`), `input_rows` (`numInputRows`) and `watermark`, the report's `eventTime[\"watermark\"]` as text: its first 19 characters, with the `T` replaced by a space.",
+  "Each report lists two state operators, told apart by `operatorName`: the duplicate check (`dedupeWithinWatermark`) and the hourly count (`stateStoreSave`). `late_rows_dropped` is the sum of their `numRowsDroppedByWatermark`; `ids_in_state` and `hours_in_state` are their `numRowsTotal`.",
+  "`hours_published` is how many rows `run_hourly` published in that micro-batch and `events_published` the sum of their `events`, both 0 when it published nothing."
+ ],
+ "hints": [
+  "`events.withWatermark(\"event_time\", \"2 hours\").dropDuplicatesWithinWatermark([\"event_id\"])`, then `groupBy(F.window(\"event_time\", \"1 hour\"))`. `F.col(\"window.start\")` is the window's start.",
+  "Clear the checkpoint, then `q, published = run_hourly(stream, checkpoint)`. Read each report in `q.recentProgress` like a dict: `p[\"eventTime\"][\"watermark\"]`, `p[\"stateOperators\"]`. A dict by name, `{o[\"operatorName\"]: o for o in p[\"stateOperators\"]}`, finds each operator.",
+  "Append mode publishes an hour only once the watermark reaches its end, so the last micro-batch reads nothing: it runs because the watermark moved. A row is late, and dropped, when it is at or before the previous micro-batch's watermark."
+ ],
+ "explanation": "The watermark is the stream's promise about lateness: two hours behind the latest event time seen. Spark computes it at the end of each micro-batch and drops a row as late when it is at or before the previous micro-batch's watermark, so a straggler that arrives just one delivery later still counts, and only rows older than that are dropped. `dropDuplicatesWithinWatermark` remembers each `event_id` only until the watermark passes its event time plus two hours, so its state shrinks instead of growing forever. The timeline makes all of this visible from stable progress fields: the watermark climbing, rows dropped, state rising and falling, and hours published once the watermark passes their end, including the last, data-free micro-batch that `availableNow` runs to move the watermark on.",
+ "entry": "batch_timeline",
+ "inputs": [
+  "page_views",
+  "cart_events",
+  "checkout_events"
+ ],
+ "file": "pipeline.py",
+ "append": "\n\nfrom pyspark.errors import StreamingQueryException\n\n\ndef hourly_counts(events):\n    # Step 6: the watermark policy. Takes the event stream and returns window_start and events, per hour.\n    return events\n\n\ndef run_hourly(stream, checkpoint, fail_at=None):\n    \"\"\"Run hourly_counts(stream) in append mode until every waiting file is read. Returns the query and the rows each\n    micro-batch published, by micro-batch id. With fail_at, that micro-batch fails before it saves its rows (as if\n    the sink went down), which stops the query.\"\"\"\n    published = {}\n\n    def publish(batch_df, batch_id):\n        rows = [tuple(r) for r in batch_df.collect()]\n        if batch_id == fail_at:\n            raise RuntimeError(\"the sink went down\")\n        published[batch_id] = rows\n\n    q = (hourly_counts(stream).writeStream.outputMode(\"append\").foreachBatch(publish)\n         .option(\"checkpointLocation\", checkpoint).trigger(availableNow=True).start())\n    try:\n        q.awaitTermination()\n    except StreamingQueryException:\n        pass\n    return q, published\n\n\nTIMELINE_SCHEMA = (\"micro_batch BIGINT, input_rows BIGINT, watermark STRING, late_rows_dropped BIGINT, \"\n                   \"ids_in_state BIGINT, hours_in_state BIGINT, hours_published BIGINT, events_published BIGINT\")\n\n\ndef batch_timeline(page_views, cart_events, checkout_events):\n    # Step 6: one row per micro-batch of the hourly stream, from q.recentProgress.\n    rows = []\n    return spark.createDataFrame(rows, TIMELINE_SCHEMA)\n",
+ "prerequisites": [
+  "PS-L069",
+  "PS-L070"
+ ],
+ "output": {
+  "columns": [
+   "micro_batch",
+   "input_rows",
+   "watermark",
+   "late_rows_dropped",
+   "ids_in_state",
+   "hours_in_state",
+   "hours_published",
+   "events_published"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "example",
+   "sample": true
+  },
+  {
+   "id": "project",
+   "edition": "project"
+  }
+ ],
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ },
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

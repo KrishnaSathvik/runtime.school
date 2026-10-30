@@ -1,0 +1,236 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "service",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "endpoint",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "requests",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "server_errors",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "error_pct",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "alert",
+     "type": "boolean",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "catalog-api",
+     "/v1/catalog/items",
+     4,
+     0,
+     0.0,
+     false
+    ],
+    [
+     "catalog-api",
+     "/v1/catalog/items/{sku}",
+     3,
+     0,
+     0.0,
+     false
+    ],
+    [
+     "checkout-api",
+     "/v1/payments/authorize",
+     3,
+     2,
+     66.67,
+     true
+    ]
+   ],
+   "row_count": 3,
+   "inputs": {
+    "api_requests": [
+     [
+      "REQ-900001",
+      "0000000000000001",
+      "2026-04-14T10:00:01",
+      "catalog-api",
+      "GET",
+      "/v1/catalog/items",
+      "200",
+      "42",
+      "100",
+      "okhttp/4.12.0",
+      "us-east"
+     ],
+     [
+      "REQ-900002",
+      "0000000000000002",
+      "2026-04-14T10:00:02",
+      "catalog-api",
+      "GET",
+      "/v1/catalog/items/{sku}",
+      "404",
+      "12",
+      "100",
+      "okhttp/4.12.0",
+      "us-east"
+     ],
+     [
+      "REQ-900003",
+      "0000000000000003",
+      "2026-04-14T10:00:03",
+      "checkout-api",
+      "POST",
+      "/v1/payments/authorize",
+      "500",
+      "1240",
+      "100",
+      "okhttp/4.12.0",
+      "us-east"
+     ],
+     [
+      "REQ-900004",
+      "0000000000000004",
+      "2026-04-14T10:00:04",
+      "catalog-api",
+      "GET",
+      "/v1/catalog/items",
+      "200",
+      "38",
+      "100",
+      "okhttp/4.12.0",
+      "us-east"
+     ],
+     [
+      "REQ-900005",
+      "0000000000000005",
+      "2026-04-14T10:00:05",
+      "catalog-api",
+      "GET",
+      "/v1/catalog/items/{sku}",
+      "200",
+      "20",
+      "100",
+      "okhttp/4.12.0",
+      "us-east"
+     ],
+     [
+      "REQ-900006",
+      "0000000000000006",
+      "2026-04-14T10:00:06",
+      "checkout-api",
+      "POST",
+      "/v1/payments/authorize",
+      "201",
+      "236",
+      "100",
+      "okhttp/4.12.0",
+      "us-east"
+     ],
+     [
+      "REQ-900007",
+      "0000000000000007",
+      "2026-04-14T10:00:07",
+      "catalog-api",
+      "GET",
+      "/v1/catalog/items",
+      "200",
+      "51",
+      "100",
+      "okhttp/4.12.0",
+      "us-east"
+     ],
+     [
+      "REQ-900008",
+      "0000000000000008",
+      "2026-04-14T10:00:08",
+      "search-api",
+      "GET",
+      "/v1/search",
+      "200",
+      "118",
+      "100",
+      "okhttp/4.12.0",
+      "us-east"
+     ],
+     [
+      "REQ-900009",
+      "0000000000000009",
+      "2026-04-14T10:00:09",
+      "catalog-api",
+      "GET",
+      "/v1/catalog/items/{sku}",
+      "200",
+      "22",
+      "100",
+      "okhttp/4.12.0",
+      "us-east"
+     ],
+     [
+      "REQ-900010",
+      "000000000000000a",
+      "2026-04-14T10:00:10",
+      "checkout-api",
+      "POST",
+      "/v1/payments/authorize",
+      "503",
+      "980",
+      "100",
+      "okhttp/4.12.0",
+      "us-east"
+     ],
+     [
+      "REQ-900011",
+      "000000000000000b",
+      "2026-04-14T10:00:11",
+      "catalog-api",
+      "GET",
+      "/v1/catalog/items",
+      "200",
+      "40",
+      "100",
+      "okhttp/4.12.0",
+      "us-east"
+     ],
+     [
+      "REQ-900012",
+      "000000000000000c",
+      "2026-04-14T10:00:12",
+      "auth-service",
+      "POST",
+      "/v1/auth/token",
+      "200",
+      "61",
+      "100",
+      "okhttp/4.12.0",
+      "us-east"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice request log, with a bad deployment",
+  "endpoints at exactly the limit and just over it, client errors only, and too few requests",
+  "an empty log"
+ ]
+}

@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0083",
+  "slug": "deposit-holds",
+  "lesson": "PS-L017",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Deposit holds",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "The bank holds some deposits before the money can be spent. Write `solve(transactions)` so it returns `transaction_id`, `txn_type`, `channel`, `amount` and the `hold` each transaction gets.",
+  "rules": [
+    "A deposit with a missing amount, or an amount of 0.00 or less, gets `review`.",
+    "Otherwise a deposit of 2500.00 or more gets `3_days`, and a `mobile` or `atm` deposit of 1000.00 or more gets `1_day`. Every other deposit gets `none`, including one with a missing channel.",
+    "A transaction that isn't a deposit (`txn_type` is not exactly `deposit`) gets an empty `hold` (null).",
+    "Return the five columns, in that order, for every transaction."
+  ],
+  "hints": [
+    "The first true `when` wins, so the order is the rules' order: review, then 3 days, then 1 day, then none.",
+    "Put `F.col(\"txn_type\") == \"deposit\"` into every condition with `&`, and leave out `otherwise`, so other types get `NULL`.",
+    "A missing amount makes every comparison untrue, so it can't match `<= 0`. Write the `none` rule as `amount < 2500` so it needs a real amount, then catch the deposits that are left with a final `when(is_deposit, \"review\")`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "transactions"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(transactions):\n    # Return transaction_id, txn_type, channel, amount and hold.\n    return transactions\n",
+  "output": {
+    "columns": [
+      "transaction_id",
+      "txn_type",
+      "channel",
+      "amount",
+      "hold"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Order is everything here. With `dep = F.col(\"txn_type\") == \"deposit\"` and `amount = F.col(\"amount\")`: `F.when(dep & (amount <= 0), \"review\").when(dep & (amount >= 2500), \"3_days\").when(dep & F.col(\"channel\").isin(\"mobile\", \"atm\") & (amount >= 1000), \"1_day\").when(dep & (amount < 2500), \"none\").when(dep, \"review\")`. The bad amounts come first, because -1200.00 is also below 2500.00 and would otherwise get `none`. A missing amount fails every comparison, so it falls past them all to the last `when(dep, ...)`. A missing channel fails `isin`, so a 1500.00 deposit with no channel reaches `none`, as the rules ask. There's no `otherwise`, so anything that isn't a deposit gets `NULL`. Writing the 1-day rule as \"anything but branch\" goes wrong twice: a deposit with no channel or a `system` channel would get `1_day` instead of `none`."
+}

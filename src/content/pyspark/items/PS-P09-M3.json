@@ -1,0 +1,70 @@
+{
+ "id": "PS-P09-M3",
+ "slug": "configure-the-streaming-ingestion",
+ "project": "PS-P09",
+ "milestone": "PS-P09.m3",
+ "difficulty": "hard",
+ "minutes": 40,
+ "title": "Configure the streaming ingestion",
+ "dataset": {
+  "id": "PS-D06",
+  "version": "1.1.0"
+ },
+ "prompt": "Events reach the shop in deliveries: `batch` says which delivery brought each one, and some arrive hours after they happened. From here on the pipeline reads them as a stream. `make_batches` (at the top of your file) writes one JSON file per delivery, and `run_stream` runs a query until every waiting file is read.\n\nWrite `event_stream(page_views, cart_events, checkout_events, folder)`: it writes the parsed events to `folder` and returns a streaming DataFrame over that folder. Then write `ingest_events(page_views, cart_events, checkout_events)`: it runs that stream once with `foreachBatch` and returns one row per micro-batch.",
+ "rules": [
+  "The stream reads the parsed events with their schema, exactly one file per micro-batch, so micro-batch k holds the k-th delivery.",
+  "Every run starts from nothing: clear the checkpoint folder before the stream starts.",
+  "`ingest_events` returns `micro_batch` (Spark's batch id, from 0), `events`, `page_views`, `cart_events` and `checkout_events` (rows of each feed in that micro-batch), and `earliest_event` and `latest_event` (the smallest and largest `event_time` in it).",
+  "Repeated deliveries count as rows: this table describes what arrived."
+ ],
+ "hints": [
+  "`spark.readStream.schema(events.schema).option(\"maxFilesPerTrigger\", 1).json(folder)` reads one file per micro-batch. Without the option, the first micro-batch takes every file.",
+  "`shutil.rmtree(checkpoint, ignore_errors=True)` before starting. A checkpoint left from an earlier run remembers its files, and the stream skips them. Set `spark.sql.shuffle.partitions` to `\"1\"` in `event_stream` too: later steps' stateful queries run much faster with it.",
+  "`foreachBatch(describe)` calls `describe(batch_df, batch_id)` once per micro-batch. Inside, one `batch_df.agg(...).first()` gives the six numbers. Append `(batch_id, *row)` to a list, and after the stream stops build the result with `spark.createDataFrame(rows, INGEST_SCHEMA)`."
+ ],
+ "explanation": "A file stream with `maxFilesPerTrigger=1` and an `availableNow` trigger turns each delivery file into exactly one micro-batch, in file order, and then stops, so every run is the same. `foreachBatch` hands each micro-batch to ordinary DataFrame code, which is where the per-batch description comes from. The table shows why event time matters: a later delivery's earliest event can be hours older than the previous delivery's latest one. Clearing the checkpoint matters just as much: a stream restarted on an old checkpoint believes it has already read files with the same names and silently skips them.",
+ "entry": "ingest_events",
+ "inputs": [
+  "page_views",
+  "cart_events",
+  "checkout_events"
+ ],
+ "file": "pipeline.py",
+ "append": "\n\ndef event_stream(page_views, cart_events, checkout_events, folder):\n    # Step 3: write the parsed events to `folder` with make_batches, and return a stream that reads\n    # that folder one file per micro-batch.\n    events = parse_events(page_views, cart_events, checkout_events)\n    return events\n\n\nINGEST_SCHEMA = (\"micro_batch BIGINT, events BIGINT, page_views BIGINT, cart_events BIGINT, checkout_events BIGINT, \"\n                 \"earliest_event TIMESTAMP, latest_event TIMESTAMP\")\n\n\ndef ingest_events(page_views, cart_events, checkout_events):\n    # Step 3: run the stream once and describe every micro-batch it read.\n    rows = []\n    return spark.createDataFrame(rows, INGEST_SCHEMA)\n",
+ "prerequisites": [
+  "PS-L067",
+  "PS-L068"
+ ],
+ "output": {
+  "columns": [
+   "micro_batch",
+   "events",
+   "page_views",
+   "cart_events",
+   "checkout_events",
+   "earliest_event",
+   "latest_event"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "example",
+   "sample": true
+  },
+  {
+   "id": "project",
+   "edition": "project"
+  }
+ ],
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ },
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

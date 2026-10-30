@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0217",
+  "slug": "ticket-export-with-every-attribute",
+  "lesson": "PS-L044",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Ticket export with every attribute",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "The ticketing tool takes one row per log record, with all of the record's attributes as a single JSON text field, whatever keys they hold. The starter saves the log file; finish `solve(application_logs_raw)` to build that export from the good records.",
+  "rules": [
+    "Return `log_id`, `logged_at` (a timestamp), `level`, `service` and `attributes_json`, in that order.",
+    "`attributes_json` is the record's whole `attributes` object as JSON text, every key in the order it arrived, for example `{\"host\":\"auth-service-a41d8\",\"region\":\"us-east\"}`. No attributes gives NULL; an empty object gives `{}`.",
+    "Leave out lines that aren't valid JSON, and records whose `logged_at` isn't a valid timestamp.",
+    "Keep repeated records."
+  ],
+  "hints": [
+    "The keys change from record to record, so a struct with fixed fields won't do. A map has no fixed keys: `attributes MAP<STRING,STRING>` in the schema.",
+    "`F.to_json(...)` turns a map column into JSON text.",
+    "Put `logged_at TIMESTAMP` in the schema so a bad time counts as malformed, and choose the mode that leaves malformed records out."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "application_logs_raw"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(application_logs_raw):\n    path = \"/tmp/logs/export\"\n    application_logs_raw.write.mode(\"overwrite\").text(path)\n    # Read the file at `path` and return the ticket export.\n    return application_logs_raw\n",
+  "output": {
+    "columns": [
+      "log_id",
+      "logged_at",
+      "level",
+      "service",
+      "attributes_json"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Read `attributes` as a map, because its keys differ from line to line: `spark.read.json(path, schema=\"log_id STRING, logged_at TIMESTAMP, level STRING, service STRING, attributes MAP<STRING,STRING>\", mode=\"DROPMALFORMED\")`. Then `F.to_json(\"attributes\").alias(\"attributes_json\")` writes each map back as text with its keys in their original order. With `logged_at` typed as a timestamp in the schema, a record whose time doesn't parse is malformed, so `DROPMALFORMED` leaves it out along with the broken lines. A struct schema would only keep the keys you list, and letting Spark infer the schema would merge every key it has seen into one struct, sorted by name, and read `logged_at` as text."
+}

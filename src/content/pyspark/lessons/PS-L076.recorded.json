@@ -1,0 +1,47 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D02",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "transactions"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "not in the contract: ['channel']\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "schema says account_id may be empty: True\naccount_id: 1 empty, but the contract requires a value\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "+-------------------+----------+------+-------+\n|rule               |action    |failed|checked|\n+-------------------+----------+------+-------+\n|has_account        |quarantine|1     |14     |\n|known_currency     |quarantine|0     |14     |\n|positive_amount    |fail      |0     |14     |\n|within_review_limit|warn      |1     |14     |\n+-------------------+----------+------+-------+\n\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "has_account: 1 of 14 failed -> quarantine\nknown_currency: 0 of 14 failed -> pass\npositive_amount: 0 of 14 failed -> pass\nwithin_review_limit: 1 of 14 failed -> warn\n2 of 20 -> quarantine\n3 of 20 -> stop\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "+--------------+----------+------+--------+-----------+\n|transaction_id|account_id|amount|currency|     reason|\n+--------------+----------+------+--------+-----------+\n|       T000002|      NULL| 60.53|     GBP|has_account|\n+--------------+----------+------+--------+-----------+\n\n14 rows: 13 load + 1 quarantined\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "",
+   "error": {
+    "type": "ValueError",
+    "message": "has_account: 3 of 6 rows failed, more than the 10% a load may quarantine",
+    "line": 21,
+    "condition": null
+   }
+  }
+ }
+}

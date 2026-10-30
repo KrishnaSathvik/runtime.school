@@ -1,0 +1,54 @@
+{
+ "id": "PS-Q0418",
+ "slug": "availability-across-windows",
+ "lesson": "PS-L084",
+ "role": "edge",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 12,
+ "title": "Availability across windows",
+ "dataset": {
+  "id": "PS-D15",
+  "version": "1.0.0"
+ },
+ "prompt": "Each service promises 99% availability over the period: at least 99% of its requests without a server error. Using the 5-minute windows in `service_metrics`, write `solve` so it returns one row per service with its totals, its availability and whether it met the target.",
+ "rules": [
+  "Columns and types: `service STRING, requests BIGINT, server_errors BIGINT, availability_pct DOUBLE, meets_slo BOOLEAN`.",
+  "`availability_pct` is over the whole period: `(requests - server_errors) / requests × 100`, rounded to 2 decimals, where the totals add up all the service's windows.",
+  "`meets_slo` compares the rounded value with `TARGET_PCT`; exactly 99.00 meets it.",
+  "A service whose windows have no requests at all has NULL `availability_pct`, and `meets_slo` is false."
+ ],
+ "hints": [
+  "Compare catalog-api's windows in the sample: one busy and clean, one tiny and failing. What should one bad request out of a thousand weigh?",
+  "Add the counts first with `groupBy` and `F.sum`, then divide once.",
+  "Spark 4 raises an error on division by zero. `F.when(requests > 0, ...)` divides only when there's something to divide, and `otherwise(False)` makes a NULL comparison false."
+ ],
+ "explanation": "Availability over a period is total good requests over total requests, so sum `request_count` and `error_count` per service and divide once. Averaging each window's percentage gives a 10-request window the same weight as a 1 000-request one: catalog-api's tiny bad window drags the average to about 75% although 99.01% of its requests worked. Round before comparing, as the rule says: search-api's 98.996% rounds to 99.00 and meets the target. A service with windows but no requests can't be divided, and with ANSI mode on the division would fail the whole query, so guard it with `F.when`, which leaves NULL; a comparison with NULL is NULL, so `meets_slo` needs `otherwise(False)`.",
+ "entry": "solve",
+ "inputs": [
+  "service_metrics"
+ ],
+ "starter": "from pyspark.sql import functions as F\n\nTARGET_PCT = 99.0\n\n\ndef solve(service_metrics):\n    # One row per service: requests, server_errors, availability_pct, meets_slo.\n    return service_metrics.groupBy(\"service\").agg(F.sum(\"request_count\").alias(\"requests\"))\n",
+ "output": {
+  "columns": [
+   "service",
+   "requests",
+   "server_errors",
+   "availability_pct",
+   "meets_slo"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 45,
+  "check_timeout_s": 120,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

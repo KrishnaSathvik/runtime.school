@@ -1,0 +1,80 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "encounter_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "code_count",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "heart_rate",
+     "type": "int",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "ENC000001",
+     3,
+     96
+    ],
+    [
+     "ENC000002",
+     2,
+     104
+    ],
+    [
+     "ENC000003",
+     1,
+     92
+    ],
+    [
+     "ENC000004",
+     1,
+     91
+    ],
+    [
+     "ENC000005",
+     2,
+     102
+    ],
+    [
+     "ENC000006",
+     2,
+     96
+    ],
+    [
+     "ENC000007",
+     1,
+     null
+    ],
+    [
+     "ENC000008",
+     1,
+     null
+    ]
+   ],
+   "row_count": 8
+  }
+ },
+ "hidden": [
+  "the full practice visits table",
+  "a visit whose list of codes is empty",
+  "a visit with no list of codes at all",
+  "visits with no vitals, or vitals without a pulse",
+  "the same visit delivered twice",
+  "an empty visits table"
+ ]
+}

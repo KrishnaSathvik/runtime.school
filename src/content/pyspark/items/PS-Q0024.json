@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0024",
+  "kind": "predict",
+  "slug": "count-failed-requests-rdd",
+  "lesson": "PS-L005",
+  "role": "debugging",
+  "format": "concept_or_trace",
+  "difficulty": "easy",
+  "minutes": 4,
+  "title": "Counting failed requests",
+  "prompt": "Someone wanted the number of failed requests (status 400 or more) and wrote this. What does it actually print? Type each line on its own line.",
+  "program": "failed = api_requests.rdd.map(lambda r: r[\"status_code\"] >= 400)\nprint(failed.count())\nprint(failed.take(3))\n",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "Which RDD transformation keeps or drops items, and which one turns each item into something else?",
+    "`map` always gives back one item for every item it starts with.",
+    "Each item is now whatever the comparison returned. Check the first three status codes."
+  ],
+  "explanation": "`map` doesn't drop anything: it turns each of the 12 requests into `True` or `False`, so `count()` is 12. The first three requests all succeeded, so their items are `False`. To keep only the failed ones, use `filter` with the same function; that gives 2."
+}

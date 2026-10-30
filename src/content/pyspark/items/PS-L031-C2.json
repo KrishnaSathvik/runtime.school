@@ -1,0 +1,27 @@
+{
+  "id": "PS-L031-C2",
+  "slug": "product-sales-summary",
+  "lesson": "PS-L031",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Product sales summary",
+  "dataset": { "id": "PS-D01", "version": "1.1.0" },
+  "prompt": "The buying team wants to know how each product sells. Write `solve(order_items)` so it returns, for each `product_id`, how many different orders bought it, how many units were sold and the revenue from its lines.",
+  "rules": [
+    "`orders` is the number of different `order_id`s with the product. A product on two lines of the same order counts once.",
+    "`units` is the sum of `quantity`.",
+    "`revenue` is the sum of `quantity × unit_price` over the product's lines. A line with a missing quantity or price adds nothing.",
+    "Return `product_id`, `orders`, `units` and `revenue`, in that order, one row per product."
+  ],
+  "hints": [
+    "Group by `product_id` and compute three aggregates in one `agg`.",
+    "Counting rows would count an order twice when the product is on two of its lines. Count different values instead.",
+    "`F.countDistinct(\"order_id\")`, `F.sum(\"quantity\")`, and `F.sum(F.col(\"quantity\") * F.col(\"unit_price\"))`."
+  ],
+  "entry": "solve",
+  "inputs": ["order_items"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(order_items):\n    # One row per product: orders, units and revenue.\n    return order_items\n",
+  "output": { "columns": ["product_id", "orders", "units", "revenue"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

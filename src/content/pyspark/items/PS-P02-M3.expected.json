@@ -1,0 +1,538 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "example": {
+   "schema": [
+    {
+     "name": "employee_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "full_name",
+     "type": "string",
+     "nullable": false
+    },
+    {
+     "name": "level",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "department_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "department_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "manager_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "manager_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "line_status",
+     "type": "string",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "E01",
+     "Priya Silva",
+     5,
+     "D01",
+     "Executive",
+     null,
+     null,
+     "top"
+    ],
+    [
+     "E02",
+     "Ada Kowal",
+     4,
+     "D02",
+     "Engineering",
+     "E01",
+     "Priya Silva",
+     "ok"
+    ],
+    [
+     "E03",
+     "Lena Duarte",
+     3,
+     "D02",
+     "Engineering",
+     "E05",
+     "Jonas Mori",
+     "invalid"
+    ],
+    [
+     "E04",
+     "Maya Lind",
+     3,
+     "D02",
+     "Engineering",
+     "E02",
+     "Ada Kowal",
+     "ok"
+    ],
+    [
+     "E05",
+     "Jonas Mori",
+     1,
+     "D02",
+     "Engineering",
+     "E03",
+     "Lena Duarte",
+     "ok"
+    ],
+    [
+     "E06",
+     "Maya Sato",
+     1,
+     "D02",
+     "Engineering",
+     "E04",
+     "Maya Lind",
+     "ok"
+    ],
+    [
+     "E07",
+     "Tomas Sato",
+     2,
+     "D02",
+     "Engineering",
+     "E09",
+     null,
+     "missing"
+    ],
+    [
+     "E08",
+     "Omar Haddad",
+     1,
+     "D08",
+     null,
+     "E06",
+     "Maya Sato",
+     "invalid"
+    ]
+   ],
+   "row_count": 8,
+   "inputs": {
+    "employees": [
+     [
+      "E01",
+      "Priya",
+      "Silva",
+      "priya.silva@corp.example",
+      "555-278-7973",
+      "Chief Executive Officer",
+      "5",
+      "D01",
+      null,
+      "2025-01-06",
+      "full_time",
+      "260000.00",
+      "active",
+      null
+     ],
+     [
+      "E02",
+      "Ada",
+      "Kowal",
+      "ada.kowal@corp.example",
+      "555-299-3872",
+      "Head of Engineering",
+      "4",
+      "D02",
+      "E01",
+      "2025-03-07",
+      "full_time",
+      "167500.00",
+      "active",
+      null
+     ],
+     [
+      "E03",
+      "Lena",
+      "Duarte",
+      "lena.duarte@corp.example",
+      "555-317-4274",
+      "Engineering Manager",
+      "3",
+      "D02",
+      "E05",
+      "2025-05-13",
+      "full_time",
+      "122500.00",
+      "active",
+      null
+     ],
+     [
+      "E04",
+      "Maya",
+      "Lind",
+      "maya.lind@corp.example",
+      "555-367-6535",
+      "Engineering Manager",
+      "3",
+      "d02",
+      "E02",
+      "2025-04-01",
+      "full_time",
+      "90000.00",
+      "active",
+      null
+     ],
+     [
+      "E05",
+      "Jonas",
+      "Mori",
+      "jonas.mori@corp.example",
+      "555-972-7410",
+      "Software Engineer",
+      "1",
+      "D02",
+      "E03",
+      "2025-06-05",
+      "full_time",
+      "67500.00",
+      "active",
+      null
+     ],
+     [
+      "E06",
+      "Maya",
+      "Sato",
+      "maya.sato@corp.example",
+      "555-761-5743",
+      "Software Engineer",
+      "1",
+      "D02",
+      "E04",
+      "2025-09-14",
+      "full_time",
+      "82500.00",
+      "active",
+      null
+     ],
+     [
+      "E07",
+      "Tomas",
+      "Sato",
+      "tomas.sato@corp.example",
+      "555-440-6710",
+      "Senior Software Engineer",
+      "2",
+      "D02",
+      "E09",
+      "2025-12-15",
+      "full_time",
+      "112500.00",
+      "active",
+      null
+     ],
+     [
+      "E08",
+      "Omar",
+      "Haddad",
+      "omar.haddad@corp.example",
+      "555-684-7803",
+      "Data Analyst",
+      "1",
+      "D08",
+      "E06",
+      "2025-11-19",
+      "full_time",
+      "70000.00",
+      "active",
+      null
+     ]
+    ],
+    "departments": [
+     [
+      "D01",
+      "Executive",
+      "CC-100",
+      "Austin",
+      "E01"
+     ],
+     [
+      "D02",
+      "Engineering",
+      "CC-200",
+      "Austin",
+      "E02"
+     ]
+    ]
+   }
+  },
+  "project": {
+   "schema": [
+    {
+     "name": "employee_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "full_name",
+     "type": "string",
+     "nullable": false
+    },
+    {
+     "name": "level",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "department_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "department_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "manager_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "manager_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "line_status",
+     "type": "string",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "E0001",
+     "Priya Silva",
+     5,
+     "D01",
+     "Executive",
+     null,
+     null,
+     "top"
+    ],
+    [
+     "E0002",
+     "Ada Kowal",
+     4,
+     "D02",
+     "Engineering",
+     "E0001",
+     "Priya Silva",
+     "ok"
+    ],
+    [
+     "E0003",
+     "Lena Duarte",
+     3,
+     "D02",
+     "Engineering",
+     "E0005",
+     "Jonas Mori",
+     "invalid"
+    ],
+    [
+     "E0004",
+     "Maya Lind",
+     3,
+     "D02",
+     "Engineering",
+     "E0002",
+     "Ada Kowal",
+     "ok"
+    ],
+    [
+     "E0005",
+     "Jonas Mori",
+     1,
+     "D02",
+     "Engineering",
+     "E0003",
+     "Lena Duarte",
+     "ok"
+    ],
+    [
+     "E0006",
+     "Maya Sato",
+     1,
+     "D02",
+     "Engineering",
+     "E0004",
+     "Maya Lind",
+     "ok"
+    ],
+    [
+     "E0007",
+     "Jonas Novak",
+     1,
+     "D02",
+     "Engineering",
+     "E0004",
+     "Maya Lind",
+     "ok"
+    ],
+    [
+     "E0008",
+     "Lena Haddad",
+     1,
+     "D02",
+     "Engineering",
+     "E0003",
+     "Lena Duarte",
+     "ok"
+    ],
+    [
+     "E0009",
+     "Omar Weber",
+     1,
+     "D02",
+     "Engineering",
+     "E0004",
+     "Maya Lind",
+     "ok"
+    ],
+    [
+     "E0010",
+     "Tomas Rao",
+     1,
+     "D02",
+     "Engineering",
+     "E0004",
+     "Maya Lind",
+     "ok"
+    ],
+    [
+     "E0011",
+     "Tomas Sato",
+     2,
+     "D02",
+     "Engineering",
+     "E0003",
+     "Lena Duarte",
+     "ok"
+    ],
+    [
+     "E0012",
+     "Ines Haddad",
+     1,
+     "D02",
+     "Engineering",
+     "E0004",
+     "Maya Lind",
+     "ok"
+    ],
+    [
+     "E0013",
+     "Mateo Mori",
+     2,
+     "D02",
+     "Engineering",
+     "E0003",
+     "Lena Duarte",
+     "ok"
+    ],
+    [
+     "E0014",
+     "Omar Haddad",
+     2,
+     "D02",
+     "Engineering",
+     "E0003",
+     "Lena Duarte",
+     "ok"
+    ],
+    [
+     "E0015",
+     "Anika Lind",
+     2,
+     "D02",
+     "Engineering",
+     "E0004",
+     "Maya Lind",
+     "ok"
+    ],
+    [
+     "E0016",
+     "Leo Lind",
+     2,
+     "D02",
+     "Engineering",
+     "E0003",
+     "Lena Duarte",
+     "ok"
+    ],
+    [
+     "E0017",
+     "Kenji Kowal",
+     2,
+     "D02",
+     "Engineering",
+     "E0003",
+     "Lena Duarte",
+     "ok"
+    ],
+    [
+     "E0018",
+     "Felix Novak",
+     1,
+     "D02",
+     "Engineering",
+     "E0003",
+     "Lena Duarte",
+     "ok"
+    ],
+    [
+     "E0019",
+     "Kofi Rao",
+     1,
+     "D02",
+     "Engineering",
+     "E0003",
+     "Lena Duarte",
+     "ok"
+    ],
+    [
+     "E0020",
+     "Mateo Silva",
+     1,
+     "D02",
+     "Engineering",
+     "E0003",
+     "Lena Duarte",
+     "ok"
+    ]
+   ],
+   "row_count": 221
+  }
+ },
+ "hidden": [
+  "the full practice tables",
+  "a three-person loop and someone who manages themselves",
+  "manager ids that match nobody and departments that aren't listed",
+  "empty tables"
+ ]
+}

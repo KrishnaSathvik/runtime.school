@@ -1,0 +1,26 @@
+{
+  "id": "PS-L005-C2",
+  "slug": "flag-server-errors",
+  "lesson": "PS-L005",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Flag server errors",
+  "dataset": { "id": "PS-D15", "version": "1.0.0" },
+  "prompt": "The on-call team wants every request marked as a server error or not. Write `solve(api_requests)` so it returns a DataFrame with `request_id`, `service` and `is_server_error` for every request.",
+  "rules": [
+    "`is_server_error` is `true` when `status_code` is 500 or more, and `false` otherwise. A 4xx code is the caller's mistake, not a server error.",
+    "Return one row per request, duplicates included, with the columns in the order `request_id`, `service`, `is_server_error`.",
+    "`is_server_error` is a boolean column. On a day with no requests, return an empty DataFrame with these three columns."
+  ],
+  "hints": [
+    "`api_requests.rdd.map(...)` can turn each row into a tuple: `(r[\"request_id\"], r[\"service\"], ...)`.",
+    "In Python, `r[\"status_code\"] >= 500` is already `True` or `False`.",
+    "`toDF` can't guess types from an empty RDD. Give it the types instead of just names: `toDF(\"request_id string, service string, is_server_error boolean\")`."
+  ],
+  "entry": "solve",
+  "inputs": ["api_requests"],
+  "starter": "def solve(api_requests):\n    # Return request_id, service and is_server_error for every request.\n    return api_requests\n",
+  "output": { "columns": ["request_id", "service", "is_server_error"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

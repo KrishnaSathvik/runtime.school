@@ -1,0 +1,170 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "customer_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "order_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "total",
+     "type": "decimal(10,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "C0001",
+     "Ines Okafor",
+     "O00002",
+     "79.96"
+    ],
+    [
+     "C0001",
+     "Ines Okafor",
+     "O00002",
+     "79.96"
+    ],
+    [
+     "C0001",
+     "Ines Okafor",
+     "O00001",
+     "117.99"
+    ],
+    [
+     "C0002",
+     "Kofi Mori",
+     "O00003",
+     "291.95"
+    ],
+    [
+     "C0003",
+     "Tomas Okafor",
+     "O00007",
+     "227.48"
+    ],
+    [
+     "C0007",
+     "Lena Park",
+     null,
+     null
+    ]
+   ],
+   "row_count": 6,
+   "inputs": {
+    "customers": [
+     [
+      "C0001",
+      "Ines Okafor",
+      "Leeds",
+      "consumer",
+      "2025-04-30"
+     ],
+     [
+      "C0002",
+      "Kofi Mori",
+      "Lisbon",
+      "consumer",
+      "2024-11-19"
+     ],
+     [
+      "C0003",
+      "Tomas Okafor",
+      "Denver",
+      "consumer",
+      "2024-05-08"
+     ],
+     [
+      "C0007",
+      "Lena Park",
+      "Perth",
+      "business",
+      "2025-09-02"
+     ]
+    ],
+    "orders": [
+     [
+      "O00001",
+      "C0001",
+      "2026-06-11",
+      "paid",
+      "store",
+      "117.99"
+     ],
+     [
+      "O00002",
+      "C0001",
+      "2026-03-11",
+      "delivered",
+      "app",
+      "79.96"
+     ],
+     [
+      "O00002",
+      "C0001",
+      "2026-03-11",
+      "delivered",
+      "app",
+      "79.96"
+     ],
+     [
+      "O00003",
+      "C0002",
+      "2026-08-28",
+      "paid",
+      "app",
+      "291.95"
+     ],
+     [
+      "O00007",
+      "C0003",
+      "2026-03-23",
+      "placed",
+      "web",
+      "227.48"
+     ],
+     [
+      "O00013",
+      "C0099",
+      "2026-05-02",
+      "paid",
+      "web",
+      "45.00"
+     ],
+     [
+      "O00014",
+      null,
+      "2026-05-09",
+      "paid",
+      "store",
+      "18.50"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice customers and orders",
+  "customers who never placed an order",
+  "orders for customers that don't exist or have no customer",
+  "a customer with several orders, one of them delivered twice",
+  "an empty orders table"
+ ]
+}

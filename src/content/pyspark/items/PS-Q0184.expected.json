@@ -1,0 +1,87 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "event_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "step",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "payment_method",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "payment_provider",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "basket_lines",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "order_total",
+     "type": "double",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "CO-0001",
+     "begin",
+     null,
+     null,
+     2,
+     112.98
+    ],
+    [
+     "CO-0002",
+     "payment",
+     "card",
+     "paycore",
+     2,
+     112.98
+    ],
+    [
+     "CO-0003",
+     "complete",
+     "card",
+     "paycore",
+     2,
+     112.98
+    ],
+    [
+     "CO-0004",
+     "begin",
+     null,
+     null,
+     1,
+     119.95
+    ]
+   ],
+   "row_count": 4
+  }
+ },
+ "hidden": [
+  "the full practice checkout steps",
+  "checkout steps before any payment was chosen",
+  "a payment with its method or provider missing",
+  "baskets that are empty, missing or have several lines",
+  "different payment methods and providers",
+  "no checkout steps"
+ ]
+}

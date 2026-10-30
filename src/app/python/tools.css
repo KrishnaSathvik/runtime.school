@@ -191,27 +191,31 @@ fieldset.pt-field label { margin-bottom: 8px; }
 
 
 /* ---------------- Python tools on the SQL tool layout (rx-brief / rx-work) ---------------- */
-.py-filetabs { display: flex; overflow-x: auto; background: var(--ide-chrome); border-bottom: 1px solid var(--ide-border); }
+/* File tabs match SQL Playground: above the editor; rename/delete sit with the tabs, not Run. */
+.py-filetabs { display: flex; overflow-x: auto; margin-top: 14px; background: var(--ide-chrome); border: 1px solid var(--rx-line); border-bottom: 0; border-radius: 8px 8px 0 0; }
 .py-filetabs button { border: 0; border-right: 1px solid var(--ide-border); border-bottom: 2px solid transparent; background: none; color: var(--ide-muted); font: 12px var(--rx-mono); padding: 7px 12px; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
 .py-filetabs button[aria-selected="true"] { color: var(--ide-fg); background: var(--ide-bg); border-bottom-color: var(--rx-amber); }
-.py-myfiles { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rx-line); }
-.py-myfiles li { display: flex; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--rx-line); }
-.py-myfiles li.on .n { color: var(--rx-amber-ink); font-weight: 600; }
-.py-myfiles .n { border: 0; background: none; color: inherit; padding: 4px 0; font-size: 13.5px; cursor: pointer; text-align: left; flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.py-myfiles li > span { font-size: 12px; color: var(--rx-faint); }
-.py-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 0; }
+.py-filetabs-acts { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; flex: none; padding: 0 10px; border-left: 1px solid var(--ide-border); color: var(--ide-muted); font-family: var(--rx-sans); font-size: 12px; }
+.py-filetabs-keys { display: inline-flex; align-items: center; gap: 6px; margin-right: 4px; padding-right: 10px; border-right: 1px solid var(--ide-border); }
+.py-filetabs-keys:empty { display: none; }
+.py-filetabs-acts button { border-right: 0; border-bottom-color: transparent; }
+.py-filetabs-acts button:hover { color: var(--ide-fg); }
+.py-filetabs + .rx-cell { margin-top: 0; border-top-left-radius: 0; border-top-right-radius: 0; }
+.py-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 0; align-items: center; }
+.py-row > .p2-btn.line { border: 1px solid var(--rx-line-strong); background: var(--rx-bg); color: var(--rx-ink); font: 550 14px var(--rx-sans); }
+.py-row > .p2-btn.line:hover { border-color: var(--rx-ink); }
 .py-link { border: 0; background: none; padding: 0; color: var(--rx-amber-ink); font: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
 .py-made { border-top: 1px solid var(--ide-border); }
 .py-made details { padding: 6px 14px; border-bottom: 1px solid var(--ide-border); color: var(--ide-fg); }
 .py-made summary { cursor: pointer; font-size: 12.5px; display: flex; align-items: center; gap: 10px; }
 .py-made pre { margin: 6px 0; max-height: 200px; overflow: auto; font: 12px/1.5 var(--rx-mono); white-space: pre-wrap; }
 .py-ds-preview { margin-top: 10px; font-family: var(--rx-sans); }
-.rx-out .p2-console { max-height: 60vh; border-radius: 0; }
+.rx-out .p2-console { max-height: none; overflow: visible; border-radius: 0; }
 .rx-lesson .rx-lesson-work.py-stack { overflow-y: auto; }
 .rx-lesson .rx-lesson-work.py-stack > .rx-cell { flex: none; max-height: none; overflow: visible; margin: 0 0 14px; }
 .rx-lesson .rx-lesson-work.py-stack > .rx-cell .cm-editor { flex: none; }
-.rx-lesson .rx-lesson-work.py-stack .rx-result { max-height: 320px; }
-.rx-lesson .rx-lesson-work.rx-tool-work .rx-result { max-height: min(48vh, 440px); }
+.rx-lesson .rx-lesson-work.py-stack .rx-result { max-height: none; overflow: visible; }
+.rx-lesson .rx-lesson-work.rx-tool-work .rx-result { max-height: none; overflow: visible; }
 .py-ds-preview .pg-preview { max-height: 320px; }
 .py-stdin { margin: 14px 0 10px; }
 .py-stdin .rx-label { display: block; margin: 0 0 6px; }
@@ -255,3 +259,17 @@ fieldset.pt-field label { margin-bottom: 8px; }
 .pl-steps .pl-bar-track { height: 6px; }
 .pl-steps .pl-bar-track > span { background: var(--rx-amber); }
 .pl-step-calls { grid-column: 1 / -1; font-size: 12px; color: var(--rx-dim); }
+/* The breakdown is a panel you open and close. The control stays a real button: .rx button would otherwise strip .rx-btn. */
+.pl-where { margin-top: 28px; }
+.pl-where-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.rx-brief .pl-where-bar .rx-label.sec { margin: 0; }
+.pl-where-bar > .rx-btn.line {
+  display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 12px;
+  border: 1px solid var(--rx-line-strong); border-radius: 6px; background: var(--rx-bg); color: var(--rx-ink);
+  font: 600 13px var(--rx-sans); white-space: nowrap;
+}
+.pl-where-bar > .rx-btn.line:hover { border-color: var(--rx-ink); }
+.pl-where-bar > .rx-btn.line:disabled { opacity: 0.55; cursor: default; }
+.pl-where-open { margin-top: 12px; padding: 14px; border: 1px solid var(--rx-line-strong); border-radius: 10px; background: var(--rx-cell); }
+.pl-where-open .pl-split > div { background: var(--rx-surface); }
+.pl-where > .rx-small { margin: 8px 0 0; }

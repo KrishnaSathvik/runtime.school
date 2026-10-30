@@ -1,0 +1,48 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D01",
+  "version": "1.1.0",
+  "edition": "lesson",
+  "tables": [
+   "orders",
+   "products"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "+----------+----------------+--------+\n|product_id|            name|in_stock|\n+----------+----------------+--------+\n|      P001|      Chef Knife|       3|\n|      P002|Pour-Over Kettle|       1|\n|      P004|    Camp Lantern|       6|\n+----------+----------------+--------+\n\nroot\n |-- product_id: string (nullable = true)\n |-- name: string (nullable = true)\n |-- in_stock: integer (nullable = true)\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "root\n |-- product_id: string (nullable = true)\n |-- in_stock: long (nullable = true)\n |-- unit_price: double (nullable = true)\n\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "+----------+----------+---------+\n|product_id|changed_on|new_price|\n+----------+----------+---------+\n|      P001|2026-09-01|    21.49|\n|      P004|2026-09-01|     NULL|\n+----------+----------+---------+\n\nroot\n |-- product_id: string (nullable = true)\n |-- changed_on: date (nullable = true)\n |-- new_price: decimal(10,2) (nullable = true)\n\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "",
+   "error": {
+    "type": "PySparkTypeError",
+    "message": "[FIELD_DATA_TYPE_UNACCEPTABLE_WITH_NAME] field unit_price: DecimalType(10,2) can not accept object 19.99 in type <class 'float'>.",
+    "line": 1,
+    "condition": "FIELD_DATA_TYPE_UNACCEPTABLE_WITH_NAME"
+   }
+  },
+  "e5": {
+   "stdout": "+------+-------+\n|orders| status|\n+------+-------+\n|     4|   paid|\n|     3|shipped|\n+------+-------+\n\n+-------+------+\n| status|orders|\n+-------+------+\n|   paid|     4|\n|shipped|     3|\n+-------+------+\n\n+------+------+\n|status|orders|\n+------+------+\n|placed|     1|\n+------+------+\n\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "+---+\n| id|\n+---+\n|  0|\n|  1|\n|  2|\n|  3|\n+---+\n\n+---+\n| id|\n+---+\n| 10|\n| 20|\n| 30|\n+---+\n\n",
+   "error": null
+  }
+ }
+}

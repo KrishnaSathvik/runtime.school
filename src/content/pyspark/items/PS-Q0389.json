@@ -1,0 +1,50 @@
+{
+  "id": "PS-Q0389",
+  "slug": "fix-the-ldl-step",
+  "lesson": "PS-L078",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Fix the LDL step",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "prompt": "The cardiology team wrote a unit test for the LDL step, and the step fails it. Fix `ldl_category` so `solve(observations)` returns `observation_id`, `value` and `category` for every LDL result.",
+  "rules": [
+    "Below 100 is `optimal`, 100 up to 130 `near_optimal`, 130 up to 160 `borderline`, 160 up to 190 `high`, and 190 or more `very_high`. Each boundary value belongs to the higher category.",
+    "A result with no value, or a value that isn't a number, stays in the result with no category (NULL)."
+  ],
+  "hints": [
+    "Call `test_ldl_category()` in your code and read which rows differ. Then run the step on the sample.",
+    "\"100 up to 130\" includes 100 and stops before 130: the comparisons should be `<`, not `<=`.",
+    "`otherwise` catches a NULL value, and NaN is larger than every number in Spark. Check NaN first and end with a `.when(v >= 190, ...)`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "observations"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.testing import assertDataFrameEqual\n\n\ndef ldl_category(observations):\n    v = F.col(\"value\")\n    category = (\n        F.when(v <= 100, \"optimal\")\n        .when(v <= 130, \"near_optimal\")\n        .when(v <= 160, \"borderline\")\n        .when(v <= 190, \"high\")\n        .otherwise(\"very_high\")\n    )\n    return observations.filter((F.col(\"code\") == \"LDL\")).select(\"observation_id\", \"value\", category.alias(\"category\"))\n\n\ndef test_ldl_category():\n    # The cardiology team's unit test: call it to check the step.\n    test_input = spark.createDataFrame(\n        [(\"L1\", \"LDL\", 99.0), (\"L2\", \"LDL\", 100.0), (\"L3\", \"LDL\", 130.0), (\"L4\", \"LDL\", 160.0), (\"L5\", \"LDL\", 190.0),\n         (\"L6\", \"LDL\", None), (\"L7\", \"LDL\", float(\"nan\")), (\"G1\", \"GLU\", 131.0)],\n        \"observation_id STRING, code STRING, value DOUBLE\",\n    )\n    expected = spark.createDataFrame(\n        [(\"L1\", 99.0, \"optimal\"), (\"L2\", 100.0, \"near_optimal\"), (\"L3\", 130.0, \"borderline\"), (\"L4\", 160.0, \"high\"),\n         (\"L5\", 190.0, \"very_high\"), (\"L6\", None, None), (\"L7\", float(\"nan\"), None)],\n        \"observation_id STRING, value DOUBLE, category STRING\",\n    )\n    assertDataFrameEqual(ldl_category(test_input), expected)\n    print(\"test_ldl_category passed\")\n\n\ndef solve(observations):\n    return ldl_category(observations)\n",
+  "output": {
+    "columns": [
+      "observation_id",
+      "value",
+      "category"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "The test's boundary rows show the first bug: with `<=`, an LDL of exactly 100 is `optimal` instead of `near_optimal`, and so on at every boundary. Each `when` should use `<`, because a boundary value starts the next category. The test's last two rows show the second bug: `otherwise` gives `very_high` to a missing value, because a NULL comparison isn't true for any `when`. Replacing `otherwise` with `.when(v >= 190, ...)` fixes NULL but not NaN, which Spark treats as larger than 190; checking `F.isnan` first gives it no category. Those rows still belong in the result: the next step needs to see that the result wasn't measured."
+}

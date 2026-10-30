@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0192",
+  "slug": "seasonal-mailing-list",
+  "lesson": "PS-L039",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Seasonal mailing list",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "Marketing sends three mailings a year to every customer: spring, summer and autumn. Write `solve(customers)` so it returns one row per customer per mailing, numbered in that order.",
+  "rules": [
+    "Every customer gets exactly three rows: `mailing_no` 1 with `mailing` `spring`, 2 with `summer` and 3 with `autumn`.",
+    "Include every customer, even one whose name or city is missing.",
+    "`mailing_no` is a whole number. Return `customer_id`, `name`, `mailing_no` and `mailing`."
+  ],
+  "hints": [
+    "`F.lit(\"spring\")` is a column holding the same value on every row, and `F.array(...)` can hold several of them.",
+    "Exploding an array that is the same on every row repeats each customer once per element.",
+    "`F.posexplode` also gives each element's position, from 0, so add 1 for the mailing number."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "customers"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(customers):\n    # Return customer_id, name, mailing_no and mailing: three rows per customer.\n    return customers\n",
+  "output": {
+    "columns": [
+      "customer_id",
+      "name",
+      "mailing_no",
+      "mailing"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Build the same three-element array on every row and explode it: `customers.select(\"customer_id\", \"name\", F.posexplode(F.array(F.lit(\"spring\"), F.lit(\"summer\"), F.lit(\"autumn\"))).alias(\"pos\", \"mailing\"))`, then `(F.col(\"pos\") + 1).alias(\"mailing_no\")`. Each customer becomes three rows because the array has three elements, whatever else is missing on the row. Exploding an array of structs such as `F.struct(F.lit(1).alias(\"mailing_no\"), F.lit(\"spring\").alias(\"mailing\"))` and spreading it with `\"m.*\"` works too. Positions start at 0, which is why the 1 is added."
+}

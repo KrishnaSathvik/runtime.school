@@ -1,0 +1,77 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "warehouse_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "city",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "shipment_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "sku",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "quantity",
+     "type": "int",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "WH01",
+     "Harbor Point DC",
+     "Rotterdam",
+     null,
+     null,
+     null
+    ],
+    [
+     "WH02",
+     "Ridgeway Fulfilment",
+     "Leeds",
+     null,
+     null,
+     null
+    ],
+    [
+     "WH03",
+     "Sunbelt Cross-Dock",
+     "Valencia",
+     null,
+     null,
+     null
+    ]
+   ],
+   "row_count": 3
+  }
+ },
+ "hidden": [
+  "the full practice warehouses and shipments",
+  "warehouses with express and standard shipments, and one with only standard",
+  "service levels in capitals or missing",
+  "an empty shipments table"
+ ]
+}

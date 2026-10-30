@@ -1,0 +1,198 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "trade_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "ticker",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "notional",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "size",
+     "type": "string",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "TR-000001",
+     "ALDR",
+     19168.0,
+     "large"
+    ],
+    [
+     "TR-000003",
+     "BRVO",
+     13825.0,
+     "large"
+    ],
+    [
+     "TR-000010",
+     "CYPH",
+     31585.0,
+     "large"
+    ],
+    [
+     "TR-000011",
+     "NSXT",
+     10000.0,
+     "large"
+    ],
+    [
+     "TR-000012",
+     "ALDR",
+     100000.0,
+     "block"
+    ]
+   ],
+   "row_count": 5,
+   "inputs": {
+    "trades": [
+     [
+      "TR-000001",
+      "ACC-0002",
+      "ALDR.SX",
+      "2026-01-15T15:06:15",
+      "buy",
+      "100",
+      "191.68",
+      "9.58"
+     ],
+     [
+      "TR-000002",
+      "ACC-0003",
+      "BRVO.SX",
+      "2026-01-16T15:34:53",
+      "sell",
+      "10",
+      "55.36",
+      "1.00"
+     ],
+     [
+      "TR-000003",
+      "ACC-0004",
+      "BRVO.SX",
+      "2026-01-16T18:38:35",
+      "buy",
+      "250",
+      "55.30",
+      "6.91"
+     ],
+     [
+      "TR-000004",
+      "ACC-0001",
+      "CYPH.SX",
+      "2026-01-16T19:25:24",
+      "sell",
+      "250",
+      "118.88",
+      "14.86"
+     ],
+     [
+      "TR-000005",
+      "ACC-0003",
+      "ALDR.SX",
+      "2026-01-20T16:37:49",
+      "buy",
+      "20",
+      "198.72",
+      "1.99"
+     ],
+     [
+      "TR-000006",
+      "ACC-0001",
+      "ALDR.SX",
+      "2026-01-21T15:17:27",
+      "buy",
+      "10",
+      "98.35",
+      "1.00"
+     ],
+     [
+      "TR-000007",
+      "ACC-0003",
+      "ALDR.SX",
+      "2026-01-21T16:27:23",
+      "buy",
+      "10",
+      "98.36",
+      "1.00"
+     ],
+     [
+      "TR-000008",
+      "ACC-0002",
+      "BRVO.SX",
+      "2026-01-21T20:37:10",
+      "buy",
+      "100",
+      "56.08",
+      "2.80"
+     ],
+     [
+      "TR-000009",
+      "ACC-0001",
+      "BRVO.SX",
+      "2026-01-21T20:59:19",
+      "buy",
+      "1",
+      "56.05",
+      "1.00"
+     ],
+     [
+      "TR-000010",
+      "ACC-0004",
+      "CYPH.SX",
+      "2026-01-22T18:59:33",
+      "buy",
+      "250",
+      "126.34",
+      "15.79"
+     ],
+     [
+      "TR-000011",
+      "ACC-0002",
+      "NSXT.SX",
+      "2026-01-22T19:10:00",
+      "buy",
+      "200",
+      "50.00",
+      "5.00"
+     ],
+     [
+      "TR-000012",
+      "ACC-0001",
+      "ALDR.SX",
+      "2026-01-22T20:02:41",
+      "buy",
+      "1000",
+      "100.00",
+      "50.00"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice trades",
+  "trades worth just under, exactly and just over 10,000.00 and 100,000.00",
+  "trades with a missing quantity, price or side",
+  "symbols with SX inside the ticker",
+  "an empty trades table"
+ ]
+}

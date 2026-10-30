@@ -1,0 +1,66 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "encounter_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "payload",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "ENC000001",
+     "{\"class\":\"emergency\",\"vitals\":{\"heart_rate\":96,\"systolic\":115,\"diastolic\":72},\"codes\":3}"
+    ],
+    [
+     "ENC000002",
+     "{\"class\":\"wellness\",\"vitals\":{\"heart_rate\":104,\"systolic\":107,\"diastolic\":65},\"codes\":2}"
+    ],
+    [
+     "ENC000003",
+     "{\"class\":\"ambulatory\",\"vitals\":{\"heart_rate\":92,\"systolic\":144,\"diastolic\":66},\"codes\":1}"
+    ],
+    [
+     "ENC000004",
+     "{\"class\":\"ambulatory\",\"vitals\":{\"heart_rate\":91,\"systolic\":100,\"diastolic\":55},\"codes\":1}"
+    ],
+    [
+     "ENC000005",
+     "{\"class\":\"ambulatory\",\"vitals\":{\"heart_rate\":102,\"systolic\":131,\"diastolic\":91},\"codes\":2}"
+    ],
+    [
+     "ENC000006",
+     "{\"class\":\"inpatient\",\"vitals\":{\"heart_rate\":96,\"systolic\":125,\"diastolic\":64},\"codes\":2}"
+    ],
+    [
+     "ENC000007",
+     "{\"class\":\"telehealth\",\"codes\":1}"
+    ],
+    [
+     "ENC000008",
+     "{\"class\":\"telehealth\",\"codes\":1}"
+    ]
+   ],
+   "row_count": 8
+  }
+ },
+ "hidden": [
+  "the full practice encounters",
+  "telehealth visits with no vitals",
+  "vitals with some readings missing, and with all of them missing",
+  "an empty code list, a missing one and several codes",
+  "no encounters"
+ ]
+}

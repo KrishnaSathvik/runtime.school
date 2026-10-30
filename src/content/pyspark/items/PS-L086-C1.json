@@ -1,0 +1,51 @@
+{
+  "id": "PS-L086-C1",
+  "slug": "lay-out-the-invoice-table",
+  "lesson": "PS-L086",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Lay out the invoice table",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "Billing writes its invoices to a Delta table partitioned by status, and a partner's loader takes files of at most 4 invoices (a tiny limit, so the effect shows on small data). Fix `write_table` so each status gets as few files as the limit allows. `solve` and `layout` are written for you: `layout` reports each status's files from the log.",
+  "rules": [
+    "Partition the table by `status`; invoices with no status are a partition of their own.",
+    "No file holds more than 4 invoices.",
+    "Each status has as few files as that allows, and every invoice is in the table.",
+    "Don't change `layout` or `solve`."
+  ],
+  "hints": [
+    "Run the starter on the sample: how many files does `paid` get, and why more than one per partition of the feed?",
+    "Each task writes its own file for every status it holds. Put all of a status's invoices in one task first.",
+    "A write option caps the rows per file and starts a new file when the cap is reached."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "invoices"
+  ],
+  "starter": "import json\nimport os\nimport shutil\n\n\ndef layout(path):\n    # One row per status: the table's data files, their rows, and the rows in the largest file. Don't change this.\n    files = {}\n    log = path + \"/_delta_log/\"\n    for name in sorted(f for f in os.listdir(log) if f.endswith(\".json\")):\n        with open(log + name) as f:\n            for line in f:\n                action = json.loads(line)\n                if \"add\" in action:\n                    add = action[\"add\"]\n                    files[add[\"path\"]] = (add[\"partitionValues\"].get(\"status\"), json.loads(add[\"stats\"])[\"numRecords\"])\n                if \"remove\" in action:\n                    files.pop(action[\"remove\"][\"path\"], None)\n    by_status = {}\n    for status, rows in files.values():\n        by_status.setdefault(status, []).append(rows)\n    return spark.createDataFrame(\n        [(status, len(rows), sum(rows), max(rows)) for status, rows in by_status.items()],\n        \"status STRING, files INT, rows INT, largest INT\",\n    )\n\n\ndef write_table(invoices, path):\n    # Partition by status, at most 4 invoices per file, as few files as possible.\n    invoices.write.format(\"delta\").partitionBy(\"status\").save(path)\n\n\ndef solve(invoices):\n    path = \"/tmp/billing/invoices\"\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty folder on every run\n    feed = invoices.repartition(4)  # the feed hands the invoices over in four partitions\n    write_table(feed, path)\n    return layout(path)\n",
+  "output": {
+    "columns": [
+      "status",
+      "files",
+      "rows",
+      "largest"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

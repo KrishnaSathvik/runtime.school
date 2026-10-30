@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0257",
+  "slug": "whole-shares-for-a-budget",
+  "lesson": "PS-L052",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Whole shares for a fixed budget",
+  "dataset": {
+    "id": "PS-D10",
+    "version": "1.0.0"
+  },
+  "prompt": "A savings plan puts 10,000.00 USD into a stock at the day's close, buying whole shares only, and keeps the change as cash. Write `solve(daily_prices)` so it returns, for every day, `symbol`, `trade_date`, `close`, `shares` and `cash_left`. Pandas UDFs work here, but any correct approach passes.",
+  "rules": [
+    "`shares` is the largest whole number of shares that 10,000.00 buys at `close`, as a long.",
+    "`cash_left` is 10,000.00 minus `shares` × `close`, rounded to 2 decimal places, as a double.",
+    "A day with a missing `close` has a missing `shares` and a missing `cash_left`.",
+    "Return `symbol`, `trade_date`, `close`, `shares` and `cash_left`, in that order. Keep every row and keep `close` as it is."
+  ],
+  "hints": [
+    "With pandas UDFs, one UDF returns one column, so write two: one declared `\"long\"` for the shares and one declared `\"double\"` for the cash.",
+    "In a pandas UDF, convert `close` with `.astype(\"float64\")`. Floor division `10_000 // c` gives whole shares; plain `/` followed by `.round()` can round up to a share you can't afford.",
+    "A UDF can take any columns you pass it, so the cash UDF can work out the shares again from `close` before subtracting. NaN in a long result comes back as NULL too."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "daily_prices"
+  ],
+  "starter": "import pandas as pd\nfrom pyspark.sql import functions as F\n\n\ndef solve(daily_prices):\n    # Return symbol, trade_date, close, shares and cash_left.\n    return daily_prices\n",
+  "output": {
+    "columns": [
+      "symbol",
+      "trade_date",
+      "close",
+      "shares",
+      "cash_left"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Two pandas UDFs, both fed `close`. The first converts it with `.astype(\"float64\")` and returns `10_000 // c`, declared `\"long\"`: floor division never buys a share the budget can't cover. The second works out the same shares and returns `(10_000 - shares * c).round(2)` as a double. At 98.47 a share, 10,000.00 buys 101 shares and leaves 54.53. Rounding `10_000 / c` instead would buy 102 shares here and leave a negative balance. A missing close is NaN inside both functions, so both results come back NULL; a NaN is allowed in a long result and becomes NULL like any other. Built-ins are often the better choice here: `F.floor(10_000 / F.col(\"close\")).cast(\"long\")` and `10_000 - shares * F.col(\"close\")` work on the exact decimals, run in the JVM without moving any data to Python, and give the same rows."
+}

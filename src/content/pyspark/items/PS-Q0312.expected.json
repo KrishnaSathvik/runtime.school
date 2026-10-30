@@ -1,0 +1,148 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "warehouse_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "sku",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "sku_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "on_hand",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "reserved",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "reorder_point",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "as_of_date",
+     "type": "date",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "WH01",
+     "SKU-1003",
+     "Packing tape 48mm",
+     560,
+     100,
+     150,
+     "2026-03-10"
+    ],
+    [
+     "WH01",
+     "SKU-1012",
+     "Bath mat, grey",
+     279,
+     19,
+     180,
+     "2026-03-10"
+    ],
+    [
+     "WH01",
+     "SKU-1019",
+     "Notebook A5",
+     160,
+     72,
+     100,
+     "2026-03-10"
+    ],
+    [
+     "WH02",
+     "SKU-1003",
+     "Packing tape 48mm",
+     265,
+     117,
+     250,
+     "2026-03-10"
+    ],
+    [
+     "WH02",
+     "SKU-1014",
+     "Extension lead",
+     266,
+     80,
+     50,
+     "2026-03-10"
+    ],
+    [
+     "WH02",
+     "SKU-1021",
+     "Water bottle",
+     620,
+     32,
+     50,
+     "2026-03-10"
+    ],
+    [
+     "WH03",
+     "SKU-1003",
+     "Packing tape 48mm",
+     388,
+     72,
+     50,
+     "2026-03-10"
+    ],
+    [
+     "WH03",
+     "SKU-1009",
+     "Ceramic mug",
+     131,
+     45,
+     60,
+     "2026-03-10"
+    ],
+    [
+     "WH03",
+     "SKU-1029",
+     "Step stool",
+     436,
+     71,
+     50,
+     "2026-03-10"
+    ],
+    [
+     "WH04",
+     "SKU-1050",
+     "Cable ties",
+     80,
+     5,
+     40,
+     "2026-03-09"
+    ]
+   ],
+   "row_count": 10
+  }
+ },
+ "hidden": [
+  "the full practice count",
+  "a count of rows the table already holds, with other reorder points",
+  "a count of warehouses and SKUs the table doesn't hold yet",
+  "an empty count"
+ ]
+}

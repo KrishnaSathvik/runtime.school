@@ -1,0 +1,213 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "order_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "line_no",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "product_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "paid_price",
+     "type": "decimal(10,2)",
+     "nullable": true
+    },
+    {
+     "name": "list_price",
+     "type": "decimal(10,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "O00001",
+     1,
+     "P005",
+     "Desk Lamp",
+     "19.99",
+     "19.99"
+    ],
+    [
+     "O00001",
+     2,
+     "P005",
+     "Desk Lamp",
+     "17.99",
+     "19.99"
+    ],
+    [
+     "O00001",
+     3,
+     "P004",
+     "Camp Lantern",
+     "4.05",
+     "4.50"
+    ],
+    [
+     "O00002",
+     1,
+     "P001",
+     "Chef Knife",
+     "19.99",
+     "19.99"
+    ],
+    [
+     "O00002",
+     2,
+     "P001",
+     "Chef Knife",
+     "19.99",
+     "19.99"
+    ],
+    [
+     "O00003",
+     1,
+     "P001",
+     "Chef Knife",
+     "19.99",
+     "19.99"
+    ],
+    [
+     "O00003",
+     2,
+     "P007",
+     "Linen Throw",
+     "59.99",
+     "59.99"
+    ],
+    [
+     "O00003",
+     3,
+     "P003",
+     "Trail Bottle",
+     "24.00",
+     "24.00"
+    ],
+    [
+     "O00004",
+     1,
+     "P001",
+     "Chef Knife",
+     "19.99",
+     "19.99"
+    ],
+    [
+     "O00004",
+     2,
+     "P008",
+     "Wall Clock",
+     "89.00",
+     "89.00"
+    ],
+    [
+     "O00004",
+     3,
+     "P005",
+     "Desk Lamp",
+     "19.99",
+     "19.99"
+    ],
+    [
+     "O00004",
+     4,
+     "P003",
+     "Trail Bottle",
+     "24.00",
+     "24.00"
+    ],
+    [
+     "O00005",
+     1,
+     "P006",
+     "Notebook Set",
+     "12.00",
+     "12.00"
+    ],
+    [
+     "O00005",
+     2,
+     "P001",
+     "Chef Knife",
+     "19.99",
+     "19.99"
+    ],
+    [
+     "O00006",
+     1,
+     "P001",
+     "Chef Knife",
+     "19.99",
+     "19.99"
+    ],
+    [
+     "O00007",
+     1,
+     "P004",
+     "Camp Lantern",
+     "4.50",
+     "4.50"
+    ],
+    [
+     "O00007",
+     2,
+     "P008",
+     "Wall Clock",
+     "89.00",
+     "89.00"
+    ],
+    [
+     "O00007",
+     3,
+     "P005",
+     "Desk Lamp",
+     "17.99",
+     "19.99"
+    ],
+    [
+     "O00008",
+     1,
+     "P004",
+     "Camp Lantern",
+     "4.50",
+     "4.50"
+    ],
+    [
+     "O00008",
+     2,
+     "P002",
+     "Pour-Over Kettle",
+     "32.50",
+     "32.50"
+    ]
+   ],
+   "row_count": 32
+  }
+ },
+ "hidden": [
+  "the full practice order lines and products",
+  "lines for products that aren't in the catalogue, or have no product",
+  "lines paid above, at and below today's price",
+  "an empty products table"
+ ]
+}

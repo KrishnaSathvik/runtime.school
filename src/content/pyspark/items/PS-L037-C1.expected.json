@@ -1,0 +1,83 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "event_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "user_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "action",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "lines",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "items_json",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "CA-0001",
+     "CU-001",
+     "add",
+     1,
+     "[{\"sku\":\"SKU-1001\",\"qty\":1,\"price\":89.0}]"
+    ],
+    [
+     "CA-0002",
+     "CU-001",
+     "add",
+     1,
+     "[{\"sku\":\"SKU-1013\",\"qty\":2,\"price\":11.99}]"
+    ],
+    [
+     "CA-0003",
+     "CU-002",
+     "add",
+     2,
+     "[{\"sku\":\"SKU-1002\",\"qty\":1,\"price\":119.95},{\"sku\":\"SKU-1008\",\"qty\":1,\"price\":34.99}]"
+    ],
+    [
+     "CA-0004",
+     "CU-002",
+     "remove",
+     1,
+     "[{\"sku\":\"SKU-1008\",\"qty\":1,\"price\":34.99}]"
+    ],
+    [
+     "CA-0005",
+     "CU-003",
+     "add",
+     1,
+     "[{\"sku\":\"SKU-1005\",\"qty\":3,\"price\":24.0}]"
+    ]
+   ],
+   "row_count": 5
+  }
+ },
+ "hidden": [
+  "the full practice cart events",
+  "an empty item list, a missing one and a repeated item",
+  "cart events from an anonymous visitor",
+  "an empty cart events table"
+ ]
+}

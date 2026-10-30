@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0376",
+  "slug": "check-the-feed-against-its-contract",
+  "lesson": "PS-L076",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Check the feed against its contract",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "The starter holds the transactions contract as data. Write `solve(transactions)` so it returns one row per contract column: the column's name in `column`, the type the table has in `found_type`, the number of empty values in `empty`, and whether the column `passes`.",
+  "rules": [
+    "A column passes when the table has it with the contract's type and, if the contract requires a value, none of its values is empty. A column the contract allows to be empty passes with empty values.",
+    "A contract column the table doesn't have gets NULL in `found_type` and `empty`, and doesn't pass.",
+    "`empty` counts the NULLs in every column the table has, required or not. It is a bigint."
+  ],
+  "hints": [
+    "`dict(transactions.dtypes)` maps each column to its type name, such as `decimal(12,2)`. `.get(name)` gives `None` for a column that isn't there.",
+    "Don't ask the schema whether a column may be empty: a file read marks every column nullable. Count the values with `F.col(name).isNull()`.",
+    "Collect a tuple per column in a loop and build the result with `spark.createDataFrame(results, schema)`; `None` becomes NULL."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "transactions"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n# Each column's type, and whether it may be empty (True) or must always have a value (False).\ncontract = {\n    \"transaction_id\": (\"string\", False),\n    \"account_id\": (\"string\", False),\n    \"merchant_id\": (\"string\", True),\n    \"posted_at\": (\"date\", False),\n    \"amount\": (\"decimal(12,2)\", False),\n    \"currency\": (\"string\", False),\n    \"status\": (\"string\", False),\n    \"settled_at\": (\"timestamp\", True),\n}\n\n\ndef solve(transactions):\n    # One row per contract column: the type the table has, how many values are empty, and whether it passes.\n    results = []\n    return spark.createDataFrame(results, \"column STRING, found_type STRING, empty BIGINT, passes BOOLEAN\")\n",
+  "output": {
+    "columns": [
+      "column",
+      "found_type",
+      "empty",
+      "passes"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "The contract is a dict, so the check is a loop over it. `dict(transactions.dtypes)` gives the type the table has; `.get` returns `None` for `settled_at`, which the feed doesn't send, and that column fails. For a present column, `filter(F.col(name).isNull()).count()` counts its empty values, and a required column passes only with none. `posted_at` fails on its type: the contract says `date` but the feed sends `timestamp`. The schema's nullable flag can't replace the count: Spark marks every column of a file read as nullable, so it says nothing about the data. Comparing with `== None` never matches, and leaving out the flag would fail `merchant_id`, which deposits leave empty on purpose."
+}

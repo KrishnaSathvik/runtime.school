@@ -1,0 +1,58 @@
+{
+ "id": "PS-Q0407",
+ "slug": "the-new-carriers-dead-letter",
+ "lesson": "PS-L082",
+ "role": "business",
+ "format": "dataframe_coding",
+ "difficulty": "hard",
+ "minutes": 14,
+ "title": "The new carrier's dead letter",
+ "dataset": {
+  "id": "PS-D08",
+  "version": "1.0.0"
+ },
+ "prompt": "A new carrier has started sending events, and the load must not stop on bad ones. The operations team wants the dead-letter output: every event the load sets aside, as it arrived, with the reason. Write `solve(shipment_events)`.",
+ "rules": [
+  "Return every column of `shipment_events`, unchanged and in the same order, then `error STRING`. Events that pass every check have no row.",
+  "`error` is the first reason that applies: `missing event id` when there's no id; `bad event id` when the id without its first character can't be read as a whole number; `unknown event type` when `event_type` is missing or isn't one of `TYPES`, written exactly.",
+  "Every set-aside delivery gets its own row, repeats included."
+ ],
+ "hints": [
+  "Run the starter on the sample, then find the six rows that should be set aside and why.",
+  "`F.substring(\"event_id\", 2, 20).try_cast(\"int\")` is NULL where the plain `cast` would fail. A chain of `F.when(...).when(...)` keeps the first reason that matches.",
+  "`isin` on a missing value gives NULL, not `False`, so a NULL `event_type` slips past `~F.col(\"event_type\").isin(TYPES)`. Test `isNull()` too."
+ ],
+ "explanation": "Each check is one condition, and a chain of `F.when` keeps the first that's true, which gives the order the team asked for. `try_cast` turns an unreadable id into NULL instead of failing the run, so `event_no.isNull()` marks a bad id once a missing id has been handled first; otherwise a missing id would come out as a bad one. The trap is the event type: `isin` on a NULL is NULL, and `~NULL` is still NULL, so an event with no type passes the check unless you also test `isNull()`. Keep repeats: the dead letter is a record of what arrived, so a bad event sent twice is there twice. Rows with no reason are filtered out last.",
+ "entry": "solve",
+ "inputs": [
+  "shipment_events"
+ ],
+ "starter": "from pyspark.sql import functions as F\n\nTYPES = [\"created\", \"picked\", \"departed\", \"in_transit\", \"out_for_delivery\", \"delivered\", \"exception\"]\n\n\ndef solve(shipment_events):\n    # The events the load sets aside, unchanged, with the reason in `error`.\n    return shipment_events.select(\"*\", F.lit(None).cast(\"string\").alias(\"error\"))\n",
+ "output": {
+  "columns": [
+   "event_id",
+   "shipment_id",
+   "warehouse_id",
+   "event_type",
+   "event_time",
+   "location",
+   "sequence",
+   "load_date",
+   "is_correction",
+   "error"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 45,
+  "check_timeout_s": 120,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

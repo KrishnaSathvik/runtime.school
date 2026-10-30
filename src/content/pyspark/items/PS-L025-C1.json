@@ -1,0 +1,26 @@
+{
+  "id": "PS-L025-C1",
+  "slug": "orders-with-customer-names",
+  "lesson": "PS-L025",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Orders with customer names",
+  "dataset": { "id": "PS-D01", "version": "1.1.0" },
+  "prompt": "The packing team wants each order with the name and city of the customer who placed it. Write `solve(orders, customers)` so it returns `order_id`, `name`, `city` and `total`.",
+  "rules": [
+    "Match an order to the customer with the same `customer_id`.",
+    "Leave out orders whose customer isn't in `customers`, and don't list customers who have no orders.",
+    "Return only `order_id`, `name`, `city` and `total`, in that order. Keep duplicate orders."
+  ],
+  "hints": [
+    "Both tables have a `customer_id` column: pass it as `on=`.",
+    "Only rows that match on both sides should stay. Which join type does that?",
+    "Join first, then `select` the four columns."
+  ],
+  "entry": "solve",
+  "inputs": ["orders", "customers"],
+  "starter": "def solve(orders, customers):\n    # Return order_id, name, city and total for each order with a known customer.\n    return orders\n",
+  "output": { "columns": ["order_id", "name", "city", "total"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

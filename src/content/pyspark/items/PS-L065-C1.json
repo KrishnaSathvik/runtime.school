@@ -1,0 +1,50 @@
+{
+  "id": "PS-L065-C1",
+  "slug": "add-the-discharge-column",
+  "lesson": "PS-L065",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Add the discharge column",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "prompt": "The encounters table was created in 2025, before the feed had `discharge_disposition`. Write `add_batch(batch, path)` so the 2026 visits, which carry the new column, are added to the Delta table. `solve` is written for you: it builds the 2025 table, calls `add_batch` and reads the table back.",
+  "rules": [
+    "Every visit from both years stays in the table.",
+    "`discharge_disposition` becomes the table's last column. The 2025 visits have it missing; the 2026 visits keep the value they came with.",
+    "The batch may be empty. The column is still added."
+  ],
+  "hints": [
+    "Run it first: Delta refuses the batch, and the message says which option allows a new column.",
+    "Keep appending. Replacing the table, even with a schema option, throws the 2025 visits away.",
+    "The error names a write option that merges the batch's new columns into the table's schema. Add it to the append."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "encounters"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef add_batch(batch, path):\n    # Append `batch` to the Delta table at `path`.\n    batch.write.format(\"delta\").mode(\"append\").save(path)\n\n\ndef solve(encounters):\n    import shutil\n    path = \"/tmp/clinic/encounters\"\n    shutil.rmtree(path, ignore_errors=True)  # every run starts from an empty folder\n\n    cols = [\"encounter_id\", \"patient_id\", \"encounter_class\", \"start_time\"]\n    # filter keeps the rows where a condition is true: here, the visits before and after 1 January 2026.\n    before = encounters.filter(F.col(\"start_time\") < \"2026-01-01\").select(cols)\n    after = encounters.filter(F.col(\"start_time\") >= \"2026-01-01\").select(cols + [\"discharge_disposition\"])\n\n    before.write.format(\"delta\").save(path)  # the table as it was in 2025\n    add_batch(after, path)                   # the 2026 feed has a new column\n    return spark.read.format(\"delta\").load(path)\n",
+  "output": {
+    "columns": [
+      "encounter_id",
+      "patient_id",
+      "encounter_class",
+      "start_time",
+      "discharge_disposition"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

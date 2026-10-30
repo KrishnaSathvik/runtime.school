@@ -1,0 +1,62 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "position",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "order_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "total",
+     "type": "decimal(10,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     1,
+     "O00001",
+     "paid",
+     "117.99"
+    ],
+    [
+     2,
+     "O00002",
+     "delivered",
+     "79.96"
+    ],
+    [
+     3,
+     "O00003",
+     "paid",
+     "291.95"
+    ]
+   ],
+   "row_count": 3
+  }
+ },
+ "hidden": [
+  "the full practice orders table",
+  "an orders table with only two rows",
+  "first rows with a missing order id, status or total",
+  "the same order row twice at the top of the file",
+  "an empty orders table"
+ ]
+}

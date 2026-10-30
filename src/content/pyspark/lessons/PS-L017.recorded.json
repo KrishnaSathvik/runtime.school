@@ -1,0 +1,38 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D02",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "transactions"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "+--------------+---------+-------+-------------+\n|transaction_id|direction| amount|signed_amount|\n+--------------+---------+-------+-------------+\n|       T000001|   credit| 800.00|       800.00|\n|       T000002|    debit|  60.53|       -60.53|\n|       T000003|    debit|  27.90|       -27.90|\n|       T000004|   credit| 800.00|       800.00|\n|       T000005|   credit|3100.00|      3100.00|\n+--------------+---------+-------+-------------+\nonly showing top 5 rows\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "+--------------+--------+-----+\n|transaction_id|txn_type| kind|\n+--------------+--------+-----+\n|       T000001| deposit| NULL|\n|       T000002|purchase|spend|\n|       T000003|purchase|spend|\n|       T000004| deposit| NULL|\n|       T000005| deposit| NULL|\n+--------------+--------+-----+\nonly showing top 5 rows\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "+--------------+-------+------+\n|transaction_id| amount|  band|\n+--------------+-------+------+\n|       T000001| 800.00|medium|\n|       T000002|  60.53| small|\n|       T000003|  27.90| small|\n|       T000004| 800.00|medium|\n|       T000005|3100.00| large|\n|       T000006|  21.91| small|\n+--------------+-------+------+\nonly showing top 6 rows\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "+--------------+-----------+----------+\n|transaction_id|merchant_id|spend_type|\n+--------------+-----------+----------+\n|       T000001|       NULL|     other|\n|       T000002|       M004|      fuel|\n|       T000003|       M003|     other|\n|       T000004|       NULL|     other|\n+--------------+-----------+----------+\nonly showing top 4 rows\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "+--------------+-------+------+\n|transaction_id| amount|  band|\n+--------------+-------+------+\n|       T000001| 800.00|medium|\n|       T000004| 800.00|medium|\n|       T000005|3100.00| large|\n|       T000012| 500.00|medium|\n|       T000013| 800.00|medium|\n+--------------+-------+------+\n\n",
+   "error": null
+  }
+ }
+}

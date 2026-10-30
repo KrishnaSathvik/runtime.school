@@ -1,0 +1,78 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "symbol",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "trade_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "prev_high",
+     "type": "decimal(10,2)",
+     "nullable": true
+    },
+    {
+     "name": "open",
+     "type": "decimal(10,2)",
+     "nullable": true
+    },
+    {
+     "name": "gap",
+     "type": "decimal(11,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "ALDR.SX",
+     "2026-01-16",
+     "192.26",
+     "193.08",
+     "0.82"
+    ],
+    [
+     "BRVO.SX",
+     "2026-01-21",
+     "55.67",
+     "56.12",
+     "0.45"
+    ],
+    [
+     "BRVO.SX",
+     "2026-01-22",
+     "56.24",
+     "56.35",
+     "0.11"
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-22",
+     "125.66",
+     "126.37",
+     "0.71"
+    ]
+   ],
+   "row_count": 4
+  }
+ },
+ "hidden": [
+  "the full practice prices",
+  "a day that opens exactly at the previous high",
+  "rows that arrive out of date order",
+  "a stock with a missing trading day",
+  "a day with a missing high or open",
+  "one stock's first day opening above another stock's last high"
+ ]
+}

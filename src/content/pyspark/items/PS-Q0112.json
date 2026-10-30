@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0112",
+  "slug": "vitals-quality-report",
+  "lesson": "PS-L023",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Vitals quality report",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "prompt": "Before the clinic dashboard refreshes, clinical operations checks the vital signs on every visit. Write `solve(encounters)` so it returns one row per rule with how many visits break it and how many were checked.",
+  "rules": [
+    "`vitals_recorded`: every visit not marked `telehealth` has `vitals`. `temperature_recorded`: every visit not marked `telehealth` has a `temperature_c` reading.",
+    "`temperature_in_celsius`: `temperature_c` is missing, or between 34.0 and 42.0 with both ends allowed. A visit with a missing `encounter_class` counts as not telehealth.",
+    "Return `rule`, `failed` and `checked` for all three rules, even when nothing fails. `checked` is the number of visits. Both counts are bigint."
+  ],
+  "hints": [
+    "Keep the rules as `(name, condition)` pairs, each true for a good visit. The temperature is a struct field: `F.col(\"vitals.temperature_c\")`.",
+    "Count the visits where `~F.coalesce(rule, F.lit(False))` holds, so a rule that comes out NULL is a failure, and collect `(name, failed, checked)` tuples in a loop.",
+    "`spark.createDataFrame(results, \"rule STRING, failed BIGINT, checked BIGINT\")` turns the list into the report."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "encounters"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(encounters):\n    # One row per rule: rule, failed, checked.\n    return encounters\n",
+  "output": {
+    "columns": [
+      "rule",
+      "failed",
+      "checked"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Each rule is a condition true for a good visit. Telehealth visits are excused from the first two, so they read `(F.col(\"encounter_class\") != \"telehealth\")` negated or-ed with the check: `~in_person | F.col(\"vitals\").isNotNull()`. A missing class makes `in_person` NULL, and `coalesce(rule, F.lit(False))` then decides: with vitals the rule still passes (`NULL | true` is true), without them it fails, which is what \"not marked telehealth\" means. The temperature range must let a missing reading through, `F.col(\"vitals.temperature_c\").isNull() | ...between(34, 42)` (the same as `>= 34` and `<= 42`), because a missing reading is the second rule's business. A loop counts the failures with `filter(~F.coalesce(rule, F.lit(False))).count()`, and `spark.createDataFrame` builds the report, all three rules included even when a count is 0."
+}

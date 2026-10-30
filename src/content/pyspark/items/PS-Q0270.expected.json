@@ -1,0 +1,97 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "user_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "plan",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "features",
+     "type": "array<double>",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "U01",
+     "premium",
+     [
+      0.0,
+      0.0,
+      17.99,
+      1.0
+     ]
+    ],
+    [
+     "U02",
+     "standard",
+     [
+      1.0,
+      0.0,
+      11.99,
+      1.0
+     ]
+    ],
+    [
+     "U03",
+     "standard",
+     [
+      1.0,
+      0.0,
+      11.99,
+      1.0
+     ]
+    ],
+    [
+     "U04",
+     "basic",
+     [
+      0.0,
+      1.0,
+      6.99,
+      1.0
+     ]
+    ],
+    [
+     "U05",
+     "standard",
+     [
+      1.0,
+      0.0,
+      11.99,
+      1.0
+     ]
+    ],
+    [
+     "U06",
+     "basic",
+     [
+      0.0,
+      1.0,
+      6.99,
+      1.0
+     ]
+    ]
+   ],
+   "row_count": 6
+  }
+ },
+ "hidden": [
+  "all practice subscriptions",
+  "members who changed plan two and three times, listed out of order",
+  "plan periods with no status"
+ ]
+}

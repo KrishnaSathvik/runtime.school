@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0220",
+  "slug": "attribute-count-for-every-line",
+  "lesson": "PS-L044",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Attribute count for every line",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "To spot log shippers that drop context, the platform team wants every line of the log file with the number of attributes its record carries, and broken lines flagged. Write `solve(application_logs_raw)` to build that list.",
+  "rules": [
+    "The starter saves the log file. Return `log_id`, `service`, `attribute_count` and `bad_record`, in that order.",
+    "`attribute_count` is how many keys the record's `attributes` object has: 0 for `{}`, NULL when there are no attributes.",
+    "One row per non-blank line. A line that isn't a valid JSON record has NULL fields and its raw text in `bad_record`. A record whose `attributes` isn't an object is flagged too, with its `log_id` and `service` still read.",
+    "A good record has a NULL `bad_record`. Keep repeated lines."
+  ],
+  "hints": [
+    "The keys differ from record to record, so read `attributes` as `MAP<STRING,STRING>` rather than a struct.",
+    "`F.size(...)` counts the entries of a map as well as an array. Check what it gives for a missing map.",
+    "Keep every line with the default mode, plus a `bad_record STRING` column named in `columnNameOfCorruptRecord`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "application_logs_raw"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(application_logs_raw):\n    path = \"/tmp/logs/export\"\n    application_logs_raw.write.mode(\"overwrite\").text(path)\n    # Read the file at `path` and return log_id, service, attribute_count and bad_record for every line.\n    return application_logs_raw\n",
+  "output": {
+    "columns": [
+      "log_id",
+      "service",
+      "attribute_count",
+      "bad_record"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Read with a map and a corrupt-record column, then count: `logs = spark.read.json(path, schema=\"log_id STRING, service STRING, attributes MAP<STRING,STRING>, bad_record STRING\", columnNameOfCorruptRecord=\"bad_record\")` and `logs.select(\"log_id\", \"service\", F.size(\"attributes\").alias(\"attribute_count\"), \"bad_record\")`. A map has no fixed keys, so it holds whatever each record carries, and `F.size` counts them, giving 0 for an empty object and NULL for a missing one. A broken line keeps its text in `bad_record`; a record with `\"attributes\": \"none\"` is valid JSON but doesn't fit the map type, so it's flagged while its other fields are still read. A struct schema would only see the keys you list, and `F.size` doesn't work on a struct at all."
+}

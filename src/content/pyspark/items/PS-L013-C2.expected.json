@@ -1,0 +1,103 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "encounter_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "heart_rate",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "temperature_c",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "primary_code",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "code_count",
+     "type": "int",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "ENC000001",
+     96,
+     36.2,
+     "J45.909",
+     3
+    ],
+    [
+     "ENC000002",
+     104,
+     37.2,
+     "Z00.00",
+     2
+    ],
+    [
+     "ENC000003",
+     92,
+     37.2,
+     "K21.9",
+     1
+    ],
+    [
+     "ENC000004",
+     91,
+     36.3,
+     "K21.9",
+     1
+    ],
+    [
+     "ENC000005",
+     102,
+     null,
+     "N39.0",
+     2
+    ],
+    [
+     "ENC000006",
+     96,
+     37.3,
+     "S93.401A",
+     2
+    ],
+    [
+     "ENC000007",
+     null,
+     null,
+     "N39.0",
+     1
+    ],
+    [
+     "ENC000008",
+     null,
+     null,
+     "M54.5",
+     1
+    ]
+   ],
+   "row_count": 8
+  }
+ },
+ "hidden": [
+  "the full practice encounters table",
+  "visits with no vitals, a missing temperature or no list of codes",
+  "an empty encounters table"
+ ]
+}

@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0143",
+  "slug": "suppliers-that-agree",
+  "lesson": "PS-L029",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Suppliers both systems agree on",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "The supplier list comes from two systems. Write `solve(suppliers)` so it returns the suppliers whose two records are exactly the same in both systems.",
+  "rules": [
+    "Each system lists a supplier at most once; `source_system` says which system a row comes from.",
+    "A supplier qualifies when both systems list it and every other column is equal. Two missing values count as equal.",
+    "A supplier listed by only one system, or with any difference between its two records, is left out.",
+    "Return `supplier_id`, `supplier_name`, `country`, `payment_terms_days` and `contact_email`, one row per qualifying supplier."
+  ],
+  "hints": [
+    "Leave out `source_system` and select the other five columns. A supplier the systems agree on now appears as two identical rows.",
+    "`distinct()` keeps one copy of each row. What is left if you take those copies away from the full list, counting repeats?",
+    "`exceptAll` removes one copy per matching row, so `details.exceptAll(details.distinct())` keeps exactly the second copies. `subtract` would remove everything."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "suppliers"
+  ],
+  "starter": "def solve(suppliers):\n    # Return the suppliers whose records match in both systems, once each.\n    return suppliers\n",
+  "output": {
+    "columns": [
+      "supplier_id",
+      "supplier_name",
+      "country",
+      "payment_terms_days",
+      "contact_email"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Drop `source_system` so the two records of a supplier can be compared: `details = suppliers.select(\"supplier_id\", \"supplier_name\", \"country\", \"payment_terms_days\", \"contact_email\")`. A supplier both systems agree on is now a repeated row; one with any difference is two different rows, and one listed once is a single row. `details.exceptAll(details.distinct())` takes one copy of every row away and leaves only the second copies. Set operations treat two missing values as equal, so a supplier missing the same field in both systems still matches. Filtering each system and using `intersect` on the five columns gives the same rows. `subtract` in place of `exceptAll` removes every copy and returns nothing."
+}

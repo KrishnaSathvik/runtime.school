@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0219",
+  "slug": "fix-the-log-loader",
+  "lesson": "PS-L044",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Fix the untraced-records report",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "The tracing team wants the log records that were written without a trace id. The report below also lists rows with no id, level or service at all. Fix `solve(application_logs_raw)`.",
+  "rules": [
+    "Return `log_id`, `level` and `service`, all text, for every record whose `trace_id` is null or missing.",
+    "A line that isn't valid JSON isn't a record, so it never appears. A record with no `log_id` is still a record.",
+    "Keep repeated records."
+  ],
+  "hints": [
+    "Look at the rows with nothing in them: which lines of the file did they come from?",
+    "In the default mode a broken line still becomes a row, with every field NULL, so it passes a NULL check on `trace_id`.",
+    "Read with `mode=\"DROPMALFORMED\"` so broken lines are left out before you look for missing trace ids."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "application_logs_raw"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(application_logs_raw):\n    path = \"/tmp/logs/export\"\n    application_logs_raw.write.mode(\"overwrite\").text(path)\n    schema = \"log_id STRING, level STRING, service STRING, trace_id STRING\"\n    logs = spark.read.json(path, schema=schema)\n    return logs.filter(F.col(\"trace_id\").isNull()).select(\"log_id\", \"level\", \"service\")\n",
+  "output": {
+    "columns": [
+      "log_id",
+      "level",
+      "service"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "A missing field and a broken line both end up as NULL, but they aren't the same thing. With the default `PERMISSIVE` mode, each broken line becomes a row whose fields are all NULL, so `trace_id` is NULL there too and the filter lets it through. Add `mode=\"DROPMALFORMED\"` to the read and the broken lines are gone before the filter; a record that simply has no `trace_id`, or `\"trace_id\": null`, is valid JSON and stays. Filtering on `log_id` being present instead looks right on the sample but also drops a real record that has no id. Reading without a schema and checking `_corrupt_record` fails on a file with no broken lines, because Spark only adds that column when it finds one."
+}

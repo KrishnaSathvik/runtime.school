@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0040",
+  "slug": "data-dictionary-for-customers",
+  "lesson": "PS-L008",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "A data dictionary for customers",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "New analysts get a data dictionary: one line per column of `customers`, with its type and an example value. Write `solve(customers)` so it returns it, taking the example from the table's first row.",
+  "rules": [
+    "Four columns, in this order: `position` (int, 1 for the first column), `column_name`, `data_type` and `example` (all text).",
+    "One row per column of `customers`, in the table's order. `data_type` is written the way `dtypes` writes it, for example `string` or `date`.",
+    "`example` is the first row's value as text, such as `2025-04-30` for a date. It's missing when that value is missing or the table is empty."
+  ],
+  "hints": [
+    "`customers.dtypes` gives every column's name and type as a pair, in order, and `customers.first()` gives the first row.",
+    "`str(value)` turns a value into text, but `str(None)` is the text `\"None\"`. Check for `None` first.",
+    "On an empty table, `first()` gives back `None`, not a row. You still need one line per column."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "customers"
+  ],
+  "starter": "def solve(customers):\n    # Return position, column_name, data_type and example for each column.\n    return customers\n",
+  "output": {
+    "columns": [
+      "position",
+      "column_name",
+      "data_type",
+      "example"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`customers.dtypes` lists `(name, type)` pairs in the table's order, so `enumerate` gives each column its position (add 1). The example comes from `first = customers.first()`, as `str(first[name])`: a date becomes text like `2025-04-30`. Two cases need care. A missing value must stay missing, and `str(None)` would give the text `\"None\"`. On an empty table `first()` returns `None`, so `first[name]` would fail: check `first is None` and use `None` for every example, while still listing every column. Build the rows with the schema `\"position INT, column_name STRING, data_type STRING, example STRING\"`. `str(field.dataType)` from `schema` gives `StringType()`, not `string`."
+}

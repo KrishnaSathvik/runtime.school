@@ -1,0 +1,318 @@
+# runtime.school — 10 PySpark Projects: Beginner to Advanced
+
+Since we're working on the PySpark track, I would design these as 10 PySpark programming and data engineering projects, not ordinary Python projects.
+
+We already have the foundation: 90 lessons, 450 planned practice questions, and 15 dataset domains. Now the projects need to bring those pieces together into realistic work that someone could demonstrate in an interview or portfolio.
+
+The biggest difference between Practice and Projects should be:
+
+Practice: Solve a specific problem, such as finding duplicate transactions using window functions.
+
+Projects: Solve a complete business problem, such as building a transaction reconciliation pipeline that ingests files, validates records, handles duplicates, produces reconciled balances, and generates a quality report.
+
+## 1. Recommended project portfolio
+
+# 3
+
+Beginner projects
+
+# 4
+
+Intermediate projects
+
+# 3
+
+Advanced projects
+
+Proposed final progression: first transform data, then build pipelines, then operate and optimize distributed systems.
+
+| ID  | Project                                 | Level        | Main datasets | Outcome                                         |
+| --- | --------------------------------------- | ------------ | ------------- | ----------------------------------------------- |
+| P01 | Retail Sales Data Explorer              | Beginner     | D01           | Clean and analyze retail orders                 |
+| P02 | Employee & Payroll Analytics            | Beginner     | D03           | Salary, department and promotion analytics      |
+| P03 | Learning Platform Activity Analytics    | Beginner     | D11           | Completion rates, activity and learner progress |
+| P04 | Banking Transaction Reconciliation      | Intermediate | D02           | Reconcile transactions and ledger balances      |
+| P05 | Movie Ratings & Recommendation Features | Intermediate | D05           | Build recommendation-ready datasets             |
+| P06 | NYC Taxi Analytics & Performance        | Intermediate | D07 + D13     | Process real Parquet data and optimize queries  |
+| P07 | Healthcare Claims Lakehouse             | Intermediate | D04           | Build Bronze, Silver and Gold pipelines         |
+| P08 | Logistics CDC & Warehouse History       | Advanced     | D08 + D14     | Incremental processing, Delta MERGE, SCD2       |
+| P09 | Real-Time Clickstream & Attribution     | Advanced     | D06 + D12     | Streaming, late events, funnels                 |
+| P10 | IoT Monitoring & Recovery               | Advanced     | D09 + D15     | Stateful streaming, monitoring and recovery     |
+
+This is a refinement of our earlier project list: I would replace the oversized multi-industry enterprise capstone with a focused IoT streaming project, and add a beginner education analytics project. The result is a smoother difficulty progression and better coverage of our dataset library.
+
+## 2. Detailed project specifications
+
+These are the ten projects I would actually build, including the business story, learner tasks, dataset requirements, and expected deliverables.
+
+### Beginner projects
+
+[Warehouse Management System for Businesses | Baseer](https://images.openai.com/static-rsc-4/0Nry3O9X2zcBr6iB0ax3cKL1vgaZOpI0DD9rduNbcPaUFjH1lWlSSw6CcQZw80Yr9w9oDB4E08U8FN3URCLDHwjKSAui03txR7MSCFYUlCYlG022FwptkOdkwOgnHNvm0_nbkIYVKWDOsTUahl5yaR0DD6vFMk_u3ut1hcUHmxk?purpose=inline)
+
+## P01 — Retail Sales Data Explorer
+
+D01 Retail · Lessons L008–L020, L025, L031 · 2–3 hours
+
+A retail company needs reliable daily sales reports. The learner cleans order records, joins order items to products, calculates net sales using defined refund rules, and produces category-level and daily summaries.
+
+Milestones: inspect data → clean orders → join product information → calculate sales → export reporting tables.
+
+Deliverables: `clean_orders`, `daily_sales`, `category_sales`, and a quality summary.
+
+Practice prerequisites: filtering, casting, null handling, joins, groupBy.
+
+[Spécialiste Payroll - Nos formations - CVPC](https://images.openai.com/static-rsc-4/438YegAJ-0A_YmthFMy5AGlNEOby9e12QUuvOaqNi-I-hW-GUKBzGzf9E3x3-axgGafSbzKo0WymlGJ1IUSj0r9BtzSRBAsok-6Xon-XTfvxag7yZ0gWhrqqvtLGa0UbXitBXomoEFgr6nXA87tiXD5yTVFa_v2YihYFuDx3-lc?purpose=inline)
+
+## P02 — Employee & Payroll Analytics
+
+D03 HR · Lessons L007, L012, L021, L027, L033 · 2–3 hours
+
+An HR team needs consistent workforce metrics. The learner standardizes employee records, joins department data, calculates salary distributions, identifies reporting relationships, and ranks employees within departments.
+
+Milestones: validate employees → normalize fields → join departments → calculate payroll metrics → rank salaries.
+
+Deliverables: `employee_clean`, `department_payroll`, `salary_rankings`.
+
+Practice prerequisites: DataFrames, strings, self joins, groupBy, ranking windows.
+
+[The Silent Struggle of Self-Paced Learning: Why Motivation is Your Biggest Hurdle (and How to Conquer It) | Blog](https://images.openai.com/static-rsc-4/HF8L3XRyz9OcSmDoYCzHQcluPSh_urq-pB0cnqas4a49CX68Z7PvePIX2eY9iESsAXX0ma9CgeQci9ZjOTz_xbXaWpar5jMPTmomLgEmEfzoI9DwY3CTPtCbGctjwvZcgtIFSrCQpxHo11ReE5BQJjxvyXpBQObQf5X71-ue4mU?purpose=inline)
+
+## P03 — Learning Platform Activity Analytics
+
+D11 Education · Lessons L001, L009, L031, L035 · 3–4 hours
+
+A learning platform wants to understand completion, participation, and learner engagement. The learner combines course enrollment, attempts, and completion records into progress summaries.
+
+Milestones: load activity → count attempts → calculate completion rates → find inactive learners → generate course summaries.
+
+Deliverables: `learner_progress`, `course_completion`, `inactive_learners`.
+
+Practice prerequisites: joins, conditional aggregations, dates, simple windows.
+
+### Intermediate projects
+
+[ویژگی‌های یک نرم‌افزار مغایرت‌گیری بانکی حرفه‌ای - پردازش ابری نیماد](https://images.openai.com/static-rsc-4/UY4nTNfZm4HmLcYaHql-lwJ9u89wFi7PXs3i3LY_hqUCbsYCb6tLUpQVbSPj9t3u22lboJWApVKz5MiOiJ6CvdnVyNred1kskTUMxdEh1v_D1caAGZC9LWNUbJubKqOxnnRnKjQIHgLZDRwLK7_6dDxFtoE2vvrzjzH36G_jUYo?purpose=inline)
+
+## P04 — Banking Transaction Reconciliation
+
+D02 Banking · L014, L022, L026, L035, L076 · 4–6 hours
+
+A bank receives transaction records from multiple systems. The learner must identify duplicates, validate transaction references, calculate balances using debit/credit rules, and explain discrepancies.
+
+Milestones: validate schema → deduplicate → match ledger entries → calculate balances → produce exception reports.
+
+Deliverables: `reconciled_transactions`, `account_balances`, `reconciliation_exceptions`.
+
+Hard cases: duplicate transfers, reversals, missing account references, decimal precision, unmatched entries.
+
+[Dlaczego Filmowe Wpadki Czynią Komedie Trwalszymi Niż Hity](https://images.openai.com/static-rsc-4/RS9JrgAkZId3M_kPQmn72DbHBSkEjIDH6_ij4ERxMN2v8Pg0x-v9j2_PZ4BHkmZfI3KOQNSTCmxCEZsXq_4V0lTE33xGeO6V1JOnBlHROm7B_vnjmdG_RUr0pZSZJK-Vs6edl6_WZ1i3vok7NUbMi5gTAj_6ZLgVzVPCPzbeEno?purpose=inline)
+
+## P05 — Movie Recommendation Feature Pipeline
+
+D05 Movies · L011, L036, L054, L060, L088 · 4–6 hours
+
+A streaming platform wants datasets ready for a recommendation model. The learner cleans ratings, calculates popularity and engagement features, and creates reproducible train/test-ready outputs.
+
+Milestones: ingest ratings → validate users/movies → calculate user and movie features → create leakage-aware splits → write Parquet outputs.
+
+Deliverables: `movie_features`, `user_features`, `training_interactions`.
+
+Hard cases: sparse ratings, cold-start users, timestamp-based splits, duplicate interactions.
+
+[Best Transportation Apps for New Yorkers, From Uber to Cabs](https://images.openai.com/static-rsc-4/aNvrbacwQVocBPLPvUJnmJ2Mj4Basgr6_h_umXxU3OpEP_ZF8SDHYeibVzSbH71YZZTHOkE_zRw7A5x80V3tfV3nVsNQG96E2RI6HJ_zQDkbAti9xlXsFCZJPKCQbNBHkneN2NviZYyU0i9VIa12MCuYlcKdqpxfsK2j427nuDY?purpose=inline)
+
+## P06 — NYC Taxi Analytics & Performance
+
+D07 Taxi + D13 Weather · L045, L055–L058, L080, L085 · 5–7 hours
+
+A city mobility team wants trip demand, fare, and operational trends, with faster analytical queries. Learners process real Parquet records, join taxi zones and weather observations, then benchmark their transformations.
+
+Milestones: read Parquet → validate trips → aggregate zones and hours → enrich weather → inspect explain plans → optimize.
+
+Deliverables: `trip_metrics`, `zone_demand`, `weather_trip_analysis`, performance report.
+
+NYC TLC publishes monthly Parquet trip records, taxi-zone lookups, and data dictionaries, making this one of the strongest real-data engineering projects in our set.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://www.nyc.gov\&sz=32)
+
+TLC
+
+
+
+[Swami Vivekanand College of Pharmacy](https://images.openai.com/static-rsc-4/Cz_tgsRsaVTMwlrO81ydsRwmB61BmOJrqqv60qTJTo5StfjZ5kZ3h68pGJtUpNB5u2yqBWbWWC6muAUaqozZJD9ByZZlUjaIWjMJeXEiGbkR9UkcAJ4bRyYYIJvd0LSiACWpQ27elJ1UQuq0mzL2GivjGK8iyYB0vbguTWJVxgg?purpose=inline)
+
+## P07 — Healthcare Claims Lakehouse
+
+D04 Healthcare · L013, L023, L038, L065, L073, L078 · 6–8 hours
+
+A healthcare operations team needs consistent reporting across encounters, claims, and providers. Learners build a small lakehouse that preserves raw data, validates records, and publishes curated reporting tables.
+
+Milestones: Bronze ingestion → Silver validation → claim/provider enrichment → Gold reporting → automated quality tests.
+
+Deliverables: Bronze/Silver/Gold datasets, claim-quality report, rejected-records table, tested transformation code.
+
+Hard cases: duplicate claims, missing providers, conflicting dates, evolving schemas.
+
+### Advanced projects
+
+[Lexikon: Disposition](https://images.openai.com/static-rsc-4/S-YxXeUhxm0LnCmHCIRVWizTPN1njQgKA74GoeeCY332PyckK0ENvoaZVrPvqDIh9u0g7qVFLgry71IPk14KMbV-na7SzwK4eogd5DQU2nrnyxByfk_m9ky5smqxxbSj6WZA958hZCz6EaqQezbtUVJARuKV2WYWOltTAIf1C98?purpose=inline)
+
+## P08 — Logistics CDC & Warehouse History
+
+D08 Logistics + D14 CRM/ERP · 8–12 hours
+
+A logistics company receives changing orders, shipments, and supplier records. Learners must apply inserts, updates, and deletes while preserving historical dimension records.
+
+Milestones: ingest CDC batches → resolve event ordering → implement Delta MERGE → build SCD Type 2 → replay batches → verify history.
+
+Deliverables: Delta fact tables, historical dimensions, CDC audit table, replay-safe pipeline.
+
+Core concepts: L063, L064, L074, L075, L082, L083.
+
+This is grounded in Delta Lake's documented `MERGE` and SCD Type 2 patterns, which maintain current records and historical versions.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://docs.delta.io\&sz=32)
+
+Delta Lake
+
+
+
+[Shopify SEO Best Practices: Boost Your Store's Visibility](https://images.openai.com/static-rsc-4/cCuISqPrrBzlKlTQnjFpXTjRBNoZyftIDSGu6VgHxprw3HpHqzpbcw7ReIuXHGShdkudFyMmRFNU8pJM29E67N1VE2RgQvuzlPGRWw-EGb9u5Y8cKbNIXZUsPcT93irEKseyyhL7j3533VK8oUA94awRS1lE7hU2SRpbTwl6TT8?purpose=inline)
+
+## P09 — Real-Time Clickstream & Attribution
+
+D06 Clickstream + D12 Advertising · 8–12 hours
+
+A commerce platform needs to understand how visitors move from advertisements to product views, carts, and purchases—even when events arrive late.
+
+Milestones: parse event JSON → build streaming sessions → join campaign data → calculate conversion funnels → handle late events → validate recovery.
+
+Deliverables: session summaries, funnel metrics, attributed conversions, streaming checkpoint/recovery tests.
+
+Core concepts: L037, L041, L067–L072.
+
+Spark Structured Streaming supports event-time windows, stream joins, watermarks, and checkpoint-based recovery, so this is a real engineering problem rather than a simulated SQL-only exercise.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://spark.apache.org\&sz=32)
+
+Spark 4.2.0 Documentation
+
+
+
+[AI | IoT Solutions for Manufacturing | Ombrulla](https://images.openai.com/static-rsc-4/eUCgoXumTRqihDOK1pypfQwUQeVEIyQO9hWDI_DMnfIJWEjRjsfiquo-nDzgyqbhPZ37ZubiRXqfXmFD94wY0GCKcQg-dT7xqNKkehUSLfJHVnM216j5wxhzTqCuqZyKD8TZcd4ys4mK_xOkAsxWgnoRfHmvMzyjZBy7zcM7rVA?purpose=inline)
+
+## P10 — IoT Monitoring & Failure Recovery
+
+D09 IoT + D15 Application Logs · 10–14 hours
+
+An operations team receives sensor readings from thousands of devices. Learners must detect abnormal readings, handle out-of-order data, track state, and recover from simulated failures.
+
+Milestones: ingest sensor batches → validate devices → calculate rolling metrics → detect anomalies → correlate errors → restart safely.
+
+Deliverables: device health metrics, anomaly events, incident summaries, recovery verification report.
+
+Core concepts: L042, L053, L070, L072, L081, L084, L087.
+
+This project should include controlled replay and checkpoint scenarios, because Spark documents that some stateful configurations cannot safely be changed after a checkpoint has been created.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://spark.apache.org\&sz=32)
+
+Spark 4.2.0 Documentation
+
+
+
+## 3. How projects connect to the 450 practice questions
+
+We should not ask learners to repeat their earlier practice questions inside projects. Instead, projects should combine those concepts under new requirements.
+
+| Project | Prerequisite practice categories                | New project-level challenge                  |
+| ------- | ----------------------------------------------- | -------------------------------------------- |
+| P01     | Filtering, strings, joins, aggregations         | Consistent retail reporting                  |
+| P02     | Schemas, self joins, ranking                    | Workforce reporting with salary history      |
+| P03     | GroupBy, conditional logic, windows             | Course completion and learner engagement     |
+| P04     | Deduplication, anti joins, decimal types        | Ledger reconciliation and exception handling |
+| P05     | Aggregations, time windows, feature preparation | Leakage-aware feature pipeline               |
+| P06     | Parquet, joins, partitioning, explain plans     | Measurable query optimization                |
+| P07     | Data quality, nested fields, Delta              | Validated multi-layer lakehouse              |
+| P08     | MERGE, CDC, SCD2, idempotency                   | Correct historical state under replay        |
+| P09     | JSON, event time, streaming joins               | Late-event-safe attribution                  |
+| P10     | Stateful streaming, logging, recovery           | Resilient device monitoring                  |
+
+This means all 90 lessons remain available as prerequisites, but learners do not need to finish every lesson before starting their first project. Each project should show its required skills and recommend relevant practice questions.
+
+## 4. How projects will work inside runtime.school
+
+I would use one project workspace with progressive milestones, rather than making students download a repository and complete everything outside the app.
+
+## Project workspace example
+
+P04 — Banking Transaction Reconciliation
+
+Prototype
+
+Milestone 1 of 6
+
+17% preview
+
+Understand the problem
+
+Read the business requirements, dataset schema, accounting rules and expected outputs.
+
+&#x20;PreviousNext milestone&#x20;
+
+This is an illustrative project flow, not a live grading environment.
+
+Each milestone should include the task description, relevant tables, code editor, Run and Submit actions, test feedback, hints, and a clear output artifact. The learner can return later without losing code.
+
+### Project grading
+
+I recommend four separate checks:
+
+| Dimension                                 | Weight |
+| ----------------------------------------- | ------ |
+| Correct outputs and business rules        | 50%    |
+| Edge cases and data quality               | 20%    |
+| Pipeline completeness and reproducibility | 20%    |
+| Engineering-specific requirements         | 10%    |
+
+For optimization projects, the last category should include benchmark evidence. For streaming projects, it should include replay and recovery behavior. A project must pass critical correctness and data-integrity gates regardless of its overall score.
+
+Apache Spark's own testing utilities, including `assertDataFrameEqual` and `assertSchemaEqual`, give us a documented basis for the correctness checks.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://spark.apache.org\&sz=32)
+
+PySpark 4.2.0 documentation
+
+
+
+## 5. Which of the 15 datasets do the projects cover?
+
+Dataset coverage
+
+13 of 15 used directly
+
+These ten projects use D01–D09 and D11–D15, except D10 Financial Markets. More precisely, D01–D09, D11–D15 are 14 domains, so project coverage is 14 of 15.
+
+D10 Financial Markets is the only domain not directly assigned to a project. I would keep it for advanced window-function practice and feature engineering rather than force another project into the first release. It can support a future optional market-data pipeline.
+
+## 6. Development sequence
+
+| Release | Projects      | What we need first                                                  |
+| ------- | ------------- | ------------------------------------------------------------------- |
+| R1      | P01, P02, P03 | Core DataFrame runner, CSV/Parquet fixtures, output grader          |
+| R2      | P04, P05      | Multi-table fixtures, window tests, decimal correctness             |
+| R3      | P06, P07      | Larger Parquet files, Delta environment, benchmark runner           |
+| R4      | P08           | Delta MERGE, CDC batches, stateful test harness                     |
+| R5      | P09, P10      | Streaming micro-batch harness, checkpoint isolation, recovery tests |
+
+The first three projects can share our basic PySpark execution infrastructure. The intermediate and advanced projects introduce additional capabilities only when needed, keeping initial development manageable.
+
+For every project, we should author a project manifest containing its dataset version, prerequisites, business rules, milestone definitions, starter files, expected artifacts, reference implementation, tests, and scoring rules.
+
+## 7. Research-based decisions to keep
+
+The research and your Spark/Delta notes point to three important design choices.
+
+First, projects should be data engineering deliverables, not notebooks that only display a few rows. A learner should finish with transformed tables, reusable code, quality checks, and a clear explanation of what was built.
+
+Second, we should use genuine distributed workloads only where they teach something. NYC Taxi is appropriate for performance tuning because it provides real monthly Parquet files. Beginner projects should stay small and

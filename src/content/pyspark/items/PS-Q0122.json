@@ -1,0 +1,55 @@
+{
+  "id": "PS-Q0122",
+  "slug": "order-lines-with-order-details",
+  "lesson": "PS-L025",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Order lines with order details",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "The returns desk looks up order lines and needs each one with its order's date and status. Write `solve(order_items, orders)` so it returns `order_id`, `line_no`, `order_date`, `status`, `product_id` and `quantity`.",
+  "rules": [
+    "Match a line to the order with the same `order_id`. Every line appears exactly once.",
+    "`orders` sometimes holds an exact copy of an order row, delivered twice by the load. A copy must not repeat its lines.",
+    "A line whose order isn't in `orders` still appears, with `order_date` and `status` missing. Orders with no lines are not listed. Return only these six columns, in this order."
+  ],
+  "hints": [
+    "Every line must appear, so `order_items` is the side to keep whole: a left join from `order_items`.",
+    "A join pairs a line with every matching order row. If the same order row is there twice, the line comes out twice.",
+    "Remove the exact copies from `orders` with `distinct()` before joining. Don't use `distinct()` on the result: two identical order lines are both real."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "order_items",
+    "orders"
+  ],
+  "starter": "def solve(order_items, orders):\n    # Each order line with its order's date and status.\n    return order_items\n",
+  "output": {
+    "columns": [
+      "order_id",
+      "line_no",
+      "order_date",
+      "status",
+      "product_id",
+      "quantity"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Keep every line with a left join from `order_items`, after removing the copies from the other side: `order_items.join(orders.distinct(), on=\"order_id\", how=\"left\")`, then select the six columns. A join returns one row per matching pair, so an order row delivered twice would double every line of that order. `distinct()` on `orders` removes exact copies before they can multiply anything. Calling `distinct()` on the joined result instead looks similar but also merges two genuinely identical lines in `order_items`. Lines with an unknown order keep their row, with NULL date and status, which an inner join would drop."
+}

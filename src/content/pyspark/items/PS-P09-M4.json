@@ -1,0 +1,67 @@
+{
+ "id": "PS-P09-M4",
+ "slug": "count-the-funnel-as-events-stream-in",
+ "project": "PS-P09",
+ "milestone": "PS-P09.m4",
+ "difficulty": "hard",
+ "minutes": 45,
+ "title": "Calculate the funnel from the event stream",
+ "dataset": {
+  "id": "PS-D06",
+  "version": "1.1.0"
+ },
+ "prompt": "The team watches a five-stage funnel: product page, add to cart, checkout, payment, purchase. Write `funnels(page_views, cart_events, checkout_events)`. It reads `event_stream(...)`, keeps the events that mark a stage, and counts how many sessions reached each stage with a streaming aggregation.",
+ "rules": [
+  "The stages, in order: `product` (a page view whose action is `product`), `cart` (cart action `add`), `checkout` (checkout step `begin`), `payment` (step `payment`) and `purchase` (step `complete`). Other events mark no stage.",
+  "`sessions` counts each session once per stage, however many events or repeated deliveries it has there. A session counts at every stage it reached, even when an earlier stage's events are missing.",
+  "Late events count too: this query has no watermark.",
+  "Return `step` (1 to 5), `stage` and `sessions`: all five stages, with 0 for a stage nobody reached."
+ ],
+ "hints": [
+  "Chain `F.when(...).when(...)` to map each event to its stage name, or null, and filter out the nulls.",
+  "Exact distinct counts don't run on a stream. `dropDuplicates([\"session_id\", \"stage\"])` keeps one row per session and stage; then `groupBy(\"stage\").count()`. An aggregation without a watermark writes in output mode `complete`, here to a memory table.",
+  "After `run_stream`, `spark.table(name).collect()` gives at most five rows. Build the five result rows in Python from `STAGES`, with 0 for a missing stage, and pass them to `spark.createDataFrame(rows, FUNNEL_SCHEMA)`."
+ ],
+ "explanation": "Mapping events to stages with `when` keeps the funnel's definition in one expression. Counting sessions, not events, needs one row per session and stage: `dropDuplicates` on the stream keeps exactly that in state, so a repeated delivery or a third product view changes nothing. The aggregation on top has no watermark, so its state is kept for the whole run and output mode `complete` rewrites all its rows each micro-batch: a late event still lands in its stage. The final table is built in Python from the five stage names, so a stage nobody reached shows a real 0 instead of a missing row.",
+ "entry": "funnels",
+ "inputs": [
+  "page_views",
+  "cart_events",
+  "checkout_events"
+ ],
+ "file": "pipeline.py",
+ "append": "\n\nSTAGES = [\"product\", \"cart\", \"checkout\", \"payment\", \"purchase\"]\nFUNNEL_SCHEMA = \"step INT, stage STRING, sessions BIGINT\"\n\n\ndef funnels(page_views, cart_events, checkout_events):\n    # Step 4: how many sessions reached each stage, counted as the events stream in.\n    rows = []\n    return spark.createDataFrame(rows, FUNNEL_SCHEMA)\n",
+ "prerequisites": [
+  "PS-L068",
+  "PS-L020",
+  "PS-L031"
+ ],
+ "output": {
+  "columns": [
+   "step",
+   "stage",
+   "sessions"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "example",
+   "sample": true
+  },
+  {
+   "id": "project",
+   "edition": "project"
+  }
+ ],
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ },
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

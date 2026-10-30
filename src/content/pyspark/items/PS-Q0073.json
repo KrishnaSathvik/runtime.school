@@ -1,0 +1,50 @@
+{
+  "id": "PS-Q0073",
+  "slug": "clean-shipping-lines",
+  "lesson": "PS-L015",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Clean shipping lines",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "Customer names and cities were typed by hand, with stray spaces and odd capitals. Write `solve(customers)` so it returns `customer_id` and a tidy shipping `line` like `Ines Okafor, Leeds`.",
+  "rules": [
+    "Tidy the name and the city the same way: no spaces at either end, exactly one space between words, and each word with a capital first letter and the rest in lower case.",
+    "`line` is the tidy name, a comma and a space, then the tidy city. If one of them is missing, `line` is just the other one, with no comma. If both are missing, `line` is empty text.",
+    "Return `customer_id` and `line`, in that order, for every customer, duplicates included."
+  ],
+  "hints": [
+    "`F.trim` removes the outer spaces and `F.regexp_replace(col, r\"\\s+\", \" \")` turns every run of spaces into one. `F.initcap` fixes the capitals.",
+    "Apply the same tidy-up to both columns, then join them.",
+    "`concat` gives a missing result if any part is missing; `concat_ws(\", \", a, b)` skips missing parts. Check what each gives when both parts are missing."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "customers"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(customers):\n    # customer_id, line\n    return customers\n",
+  "output": {
+    "columns": [
+      "customer_id",
+      "line"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Tidy each column with nested functions, `F.initcap(F.regexp_replace(F.trim(c), r\"\\s+\", \" \"))`, then join with `concat_ws(\", \", name, city)`. `concat_ws` skips a missing part, so a customer with no city gets just the name with no dangling comma, and when both parts are missing it returns empty text, not a missing value. `concat` would make the whole line missing as soon as one part is. `initcap` alone doesn't touch spaces, and `trim` only clears the ends: the double space in `ines   okafor` needs `regexp_replace`. The order of trim, replace and initcap doesn't matter."
+}

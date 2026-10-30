@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0310",
+  "slug": "what-the-clean-up-deleted",
+  "lesson": "PS-L062",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "What the clean-up deleted",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "Today's clean-up deleted some transactions, and the fraud team wants to know exactly which ones without trusting the clean-up's code. `build_table` replays the day's commits. Write `solve` so it compares the table just before and just after the clean-up and returns the rows it deleted.",
+  "rules": [
+    "Return each row the clean-up deleted, repeats included: `transaction_id`, `account_id`, `posted_date` (the day of `posted_at`, as a date) and `amount`.",
+    "Find the clean-up's commit in the history: it's the table's only delete. If it deleted nothing, it left no commit, and the result is empty.",
+    "Rows changed by later commits weren't deleted. Don't change `build_table`."
+  ],
+  "hints": [
+    "Look for the version whose `operation` is `DELETE`, then read it and the version before it with `versionAsOf`.",
+    "`collect()` both versions. A `Counter` of rows works like a multiset: `before - after` keeps the rows that disappeared, as many times as they did.",
+    "Build a DataFrame from those rows with the table's schema, then cast `posted_at` to a date."
+  ],
+  "explanation": "The delete's version `d` comes from the history; versions `d - 1` and `d` are the table just before and just after it. Collect both, subtract them as `Counter`s so a row deleted twice counts twice, and turn the leftover rows back into a DataFrame with `transactions.schema`. Then select the four columns, casting `posted_at` to `date`. Comparing the first version with the current table goes wrong because the hold changed some rows and tonight's batch added one, so changed rows look deleted. Hard-coding version 1 breaks on a day with no declined transactions: the delete writes no version, and version 1 is the hold instead.",
+  "entry": "solve",
+  "inputs": [
+    "transactions"
+  ],
+  "starter": "import shutil\nfrom collections import Counter\nfrom datetime import datetime\nfrom decimal import Decimal\n\nfrom pyspark.sql import functions as F\nfrom delta.tables import DeltaTable\n\n\ndef build_table(transactions, path):\n    # The day's commits, replayed on a fresh table. Don't change this.\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty folder on every run\n    transactions.write.format(\"delta\").save(path)  # the morning load\n    table = DeltaTable.forPath(spark, path)\n    table.delete(\"status = 'declined'\")  # the clean-up\n    table.update(\"account_id IS NULL\", {\"status\": \"'held'\"})  # hold transactions with no account\n    tonight = spark.createDataFrame(\n        [(\"T000103\", \"A00001\", \"M003\", datetime(2026, 3, 2, 8, 0, 0), \"purchase\", \"card_present\", \"debit\", Decimal(\"12.00\"), \"USD\", \"posted\")],\n        transactions.schema,\n    )\n    tonight.write.format(\"delta\").mode(\"append\").save(path)  # tonight's batch\n\n\ndef solve(transactions):\n    path = \"/tmp/bank/transactions\"\n    build_table(transactions, path)\n    # Return the rows the clean-up deleted: transaction_id, account_id, posted_date, amount.\n    return spark.read.format(\"delta\").load(path).select(\"transaction_id\", \"account_id\", \"posted_at\", \"amount\")\n",
+  "output": {
+    "columns": [
+      "transaction_id",
+      "account_id",
+      "posted_date",
+      "amount"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 240,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0050",
+  "slug": "gift-guide-picks",
+  "lesson": "PS-L010",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Gift guide picks",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "The gift guide shows products customers can still buy: home items under 60.00, and kitchen or outdoor items at 25.00 or less. Write `solve(products)` so it returns them as `product_id`, `product_name`, `category` and `price`.",
+  "rules": [
+    "Only products whose `active` value is true appear.",
+    "Home products need a `unit_price` below 60.00. Kitchen and outdoor products need 25.00 or less. No other category appears.",
+    "A product with a missing price, category or `active` value is left out.",
+    "Return four columns in this order: `product_id`, `name` renamed to `product_name`, `category`, and `unit_price` renamed to `price` (still a decimal)."
+  ],
+  "hints": [
+    "Write the two price rules as two conditions, one for home and one for kitchen and outdoor, then join them with `|` inside one pair of parentheses.",
+    "`active` is already true or false, so `F.col(\"active\")` can be used as a condition on its own. Join it to the price rules with `&`.",
+    "After `filter`, `select` the columns and rename two of them with `.alias(...)`, for example `F.col(\"name\").alias(\"product_name\")`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "products"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(products):\n    # Return product_id, product_name, category and price for the gift guide.\n    return products\n",
+  "output": {
+    "columns": [
+      "product_id",
+      "product_name",
+      "category",
+      "price"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Build the two price rules separately: `home = (F.col(\"category\") == \"home\") & (F.col(\"unit_price\") < 60)` and `kit = F.col(\"category\").isin(\"kitchen\", \"outdoor\") & (F.col(\"unit_price\") <= 25)`. A product needs either one, and it must be active: `products.filter(F.col(\"active\") & (home | kit))`. The parentheses around `home | kit` matter: without them `&` is worked out first, and an inactive kitchen product slips back in. Then `select(\"product_id\", F.col(\"name\").alias(\"product_name\"), \"category\", F.col(\"unit_price\").alias(\"price\"))` names the columns; `alias` changes only the name, so `price` stays a decimal. Missing values drop out by themselves, because a check on a missing value isn't true."
+}

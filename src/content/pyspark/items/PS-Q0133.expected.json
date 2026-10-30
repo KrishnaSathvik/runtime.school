@@ -1,0 +1,100 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "employee_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "manager_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "skip_level_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "skip_level_name",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "E0001",
+     null,
+     null,
+     null
+    ],
+    [
+     "E0008",
+     "E0007",
+     "E0001",
+     "Tomas"
+    ],
+    [
+     "E0002",
+     "E0001",
+     null,
+     null
+    ],
+    [
+     "E0007",
+     "E0001",
+     null,
+     null
+    ],
+    [
+     "E0003",
+     "E0002",
+     "E0001",
+     "Tomas"
+    ],
+    [
+     "E0004",
+     "E0002",
+     "E0001",
+     "Tomas"
+    ],
+    [
+     "E0005",
+     "E0002",
+     "E0001",
+     "Tomas"
+    ],
+    [
+     "E0006",
+     "E0002",
+     "E0001",
+     "Tomas"
+    ],
+    [
+     "E0009",
+     "E0007",
+     "E0001",
+     "Tomas"
+    ]
+   ],
+   "row_count": 9
+  }
+ },
+ "hidden": [
+  "the full practice employees",
+  "the chief executive and the people who report to them",
+  "an employee whose manager isn't in the table",
+  "a manager whose own manager isn't in the table",
+  "an employee and a manager each loaded twice",
+  "two people recorded as each other's manager",
+  "an empty employees table"
+ ]
+}

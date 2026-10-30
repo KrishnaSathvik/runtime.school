@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0113",
+  "slug": "claims-broken-rule-count",
+  "lesson": "PS-L023",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "How many rules each claim breaks",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "prompt": "Claims that break several rules go to the front of the review queue. Write `solve(claims)` so it returns every claim with the number of contract rules it breaks.",
+  "rules": [
+    "`dates_in_order`: both dates are present and `service_date` is not after `submitted_date`. `paid_within_allowed`: `paid_amount` is missing, or `allowed_amount` is present and `paid_amount` is not more than it.",
+    "`denial_reason_matches`: a `denied` or `appealed` claim has a `denial_reason`, and a claim with any other status has none. A claim with a missing status breaks this rule.",
+    "A rule that can't be checked because a value is missing counts as broken. `failed` is a whole number from 0 to 3, of type int.",
+    "Return `claim_id` and `failed`, in that order, one row per claim (duplicates included)."
+  ],
+  "hints": [
+    "Write each rule as a condition that is true for a good claim, then turn each into 1 when broken and 0 when not with `F.when(...).otherwise(0)`.",
+    "`F.when(~F.coalesce(rule, F.lit(False)), 1).otherwise(0)` counts a NULL rule as broken. Add the three columns with `+` (Python's `sum` works too).",
+    "Watch the missing status: `F.when(status.isin(\"denied\", \"appealed\"), ...).otherwise(...)` sends a missing status to `otherwise`, where it may pass. The rule says it must break."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "claims"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(claims):\n    # claim_id and the number of rules each claim breaks.\n    return claims\n",
+  "output": {
+    "columns": [
+      "claim_id",
+      "failed"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Write the rules as data, each true for a good claim, and score each one with `F.when(~F.coalesce(rule, F.lit(False)), 1).otherwise(0)`, then add the scores. `coalesce` matters on every rule here: a missing date makes `dates_in_order` NULL, and a paid amount with no allowed amount makes `paid_within_allowed` NULL; both must count as broken. The denial rule is the trap. Written as `(denied & has_reason) | (~denied & ~has_reason)`, a missing status gives NULL either way and `coalesce` breaks it. Written as `F.when(denied, has_reason).otherwise(~has_reason)`, a missing status falls into `otherwise` and a claim with no reason passes, so that form needs an extra `F.col(\"claim_status\").isNotNull()`. The literals 1 and 0 are ints, so their sum is an int."
+}

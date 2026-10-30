@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0097",
+  "slug": "dispatch-list-from-a-resent-feed",
+  "lesson": "PS-L020",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Dispatch list from a re-sent feed",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "The order feed sends an order again every time its status or total changes, and the dispatch team only needs each order once. Write `solve(orders)` so it returns `order_id`, `customer_id`, `order_date` and `channel`, one row per order.",
+  "rules": [
+    "Every copy of an order has the same `customer_id`, `order_date` and `channel`. Only `status` and `total` can change.",
+    "Return each `order_id` once, with the four columns in that order. Different orders stay separate, even when their other values match.",
+    "Missing values count as matching when comparing copies."
+  ],
+  "hints": [
+    "Copies of a changed order differ in `status` or `total`, so they aren't exact copies of each other and `distinct()` on the whole table keeps them all.",
+    "`orders.dropDuplicates([\"order_id\"])` keeps one row per order, whichever copy Spark picks.",
+    "Which copy is kept doesn't matter here, because the columns you return are the same on every copy. Selecting those four columns and then calling `distinct()` works too."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "orders"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(orders):\n    # Return each order once with order_id, customer_id, order_date and channel.\n    return orders\n",
+  "output": {
+    "columns": [
+      "order_id",
+      "customer_id",
+      "order_date",
+      "channel"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "The copies of a changed order aren't exact copies, so `distinct()` on the whole table keeps every version. Deduplicate on the key instead: `orders.dropDuplicates([\"order_id\"]).select(\"order_id\", \"customer_id\", \"order_date\", \"channel\")`. Spark doesn't promise which copy it keeps, and that's fine here, because the four columns returned are the same on every copy. Returning `status` or `total` from that row would not be safe, since they depend on which copy survived. `orders.select(\"order_id\", \"customer_id\", \"order_date\", \"channel\").distinct()` gives the same rows and never depends on the kept copy at all."
+}

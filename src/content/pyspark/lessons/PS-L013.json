@@ -1,0 +1,124 @@
+{
+  "id": "PS-L013",
+  "minutes": 25,
+  "lede": "Every column in Spark has a type, and some columns hold more than one value: a group of named fields, or a list. Knowing the types, and writing a schema in code, lets you read nested data like a clinic's visit records without guessing.",
+  "objectives": [
+    "Name Spark's common types and the Python values that go with them",
+    "Write a schema in code with `StructType` and `StructField`, including nested fields",
+    "Read the fields of a struct column with `\"vitals.heart_rate\"` or `F.col(\"vitals\")[\"heart_rate\"]`",
+    "Pick items out of an array column by position and count them with `F.size`"
+  ],
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "encounters"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "The `encounters` table above has one row per visit to a clinic. On this page it's loaded as a DataFrame called `encounters`, and `F` is `pyspark.sql.functions`.\n\nTwo of its columns aren't plain values. `vitals` is a **struct**: a small group of named fields (heart rate, blood pressure, temperature) stored together in one column. `diagnosis_codes` is an **array**: a list of codes, as many as the visit needed. `printSchema()` shows the fields of each."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "A schema with nested columns",
+      "code": "encounters.printSchema()\n\nprint(dict(encounters.dtypes)[\"vitals\"])\nprint(dict(encounters.dtypes)[\"diagnosis_codes\"])\n",
+      "note": "`vitals` lists its four fields, indented under it. `diagnosis_codes` is an array whose items (`element`) are strings. In `dtypes` the same types are written on one line, the way you'd write them in a schema string."
+    },
+    {
+      "kind": "text",
+      "md": "Each type has a name for schema strings, a class in `pyspark.sql.types`, and a kind of Python value that goes in it:\n\n- `STRING`: `StringType()`, a `str`\n- `INT` and `BIGINT`: `IntegerType()` and `LongType()`, an `int`\n- `DOUBLE`: `DoubleType()`, a `float`\n- `DECIMAL(10,2)`: `DecimalType(10, 2)`, a `Decimal`\n- `BOOLEAN`: `BooleanType()`, `True` or `False`\n- `DATE` and `TIMESTAMP`: `DateType()` and `TimestampType()`, a `date` or `datetime`\n- `ARRAY<STRING>`: `ArrayType(StringType())`, a `list`\n- `STRUCT<heart_rate: INT>`: `StructType([...])`, a `tuple`, `dict` or `Row`\n\nA whole schema is a `StructType` too: a list of `StructField(name, type, nullable)`, one per column. The third argument says whether the column may be missing; it's `True` unless you say otherwise."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Write a schema in code",
+      "code": "from pyspark.sql.types import StructType, StructField, StringType, IntegerType, DoubleType, ArrayType\n\nschema = StructType([\n    StructField(\"encounter_id\", StringType(), False),\n    StructField(\"vitals\", StructType([\n        StructField(\"heart_rate\", IntegerType()),\n        StructField(\"temperature_c\", DoubleType()),\n    ])),\n    StructField(\"diagnosis_codes\", ArrayType(StringType())),\n])\n\nrows = [(\"T1\", (88, 36.9), [\"J06.9\"]), (\"T2\", None, [\"Z00.00\", \"E78.5\"])]\nvisits = spark.createDataFrame(rows, schema)\nvisits.show()\nvisits.printSchema()\nprint(visits.schema.simpleString())\n",
+      "note": "A struct value is a tuple with one item per field, and an array is a Python list. `T2` has no vitals at all, so the whole struct is `None`. `simpleString()` prints the same schema as one string, which `createDataFrame` would accept too."
+    },
+    {
+      "kind": "error-example",
+      "id": "e3",
+      "title": "A missing value in a column that may not be missing",
+      "code": "from pyspark.sql.types import StructType, StructField, StringType\n\nschema = StructType([StructField(\"encounter_id\", StringType(), False)])\nspark.createDataFrame([(\"T1\",), (None,)], schema)\n",
+      "error": "PySparkValueError",
+      "note": "`encounter_id` was declared with `nullable` set to `False`, so Spark refuses a row where it's `None`, and names the field."
+    },
+    {
+      "kind": "text",
+      "md": "To read one field of a struct, write the column and the field with a dot, `\"vitals.heart_rate\"`, or pick it out with brackets, `F.col(\"vitals\")[\"heart_rate\"]`. The dot form names the result after the field; the bracket form names it `vitals.heart_rate`, so give it an `alias`. `\"vitals.*\"` takes every field at once.\n\nWhen the whole struct is missing, every field read from it is missing too."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Read fields of a struct",
+      "code": "from pyspark.sql import functions as F\n\nencounters.select(\"encounter_id\", \"vitals.heart_rate\", F.col(\"vitals\")[\"systolic\"].alias(\"systolic\")).show()\n\nencounters.select(\"encounter_id\", \"vitals.*\").show(3)\n",
+      "note": "The last two visits were by video, so they have no vitals and their fields are `NULL`. `vitals.*` turns the four fields into four columns."
+    },
+    {
+      "kind": "text",
+      "md": "An array's items are numbered from **0**. `F.col(\"diagnosis_codes\")[0]` is the first code. `F.size(\"diagnosis_codes\")` counts the items. Asking for a position past the end of an array stops with an error in Spark 4, so only pick positions every row has."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Pick items from an array",
+      "code": "from pyspark.sql import functions as F\n\nencounters.select(\n    \"encounter_id\",\n    \"diagnosis_codes\",\n    F.col(\"diagnosis_codes\")[0].alias(\"first_code\"),\n    F.size(\"diagnosis_codes\").alias(\"code_count\"),\n).show(truncate=False)\n",
+      "note": "Every visit has at least one code, so position 0 is always there. `reason` in the table describes that first code."
+    }
+  ],
+  "challenges": [
+    "PS-L013-C1",
+    "PS-L013-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "A row of `encounters` has `diagnosis_codes` `[\"J45.909\", \"E78.5\", \"J06.9\"]`. What is `F.col(\"diagnosis_codes\")[1]` for it?",
+      "choices": [
+        "J45.909",
+        "E78.5",
+        "J06.9",
+        "3"
+      ],
+      "answer": 1,
+      "why": "Array positions start at 0, so position 1 is the second code."
+    },
+    {
+      "id": "k2",
+      "prompt": "A video visit has no vitals: the whole `vitals` value is missing. What does `\"vitals.heart_rate\"` give for that row?",
+      "choices": [
+        "0",
+        "An error, because the struct is missing",
+        "NULL",
+        "The heart rate of the previous row"
+      ],
+      "answer": 2,
+      "why": "When a struct is missing, every field read from it is missing too. No error is raised."
+    },
+    {
+      "id": "k3",
+      "prompt": "Which schema string matches `StructType([StructField(\"heart_rate\", IntegerType()), StructField(\"codes\", ArrayType(StringType()))])`?",
+      "choices": [
+        "\"heart_rate BIGINT, codes STRING\"",
+        "\"heart_rate INT, codes ARRAY<STRING>\"",
+        "\"heart_rate INT, codes STRUCT<STRING>\"",
+        "\"heart_rate DOUBLE, codes LIST<STRING>\""
+      ],
+      "answer": 1,
+      "why": "`IntegerType()` is `INT` and `ArrayType(StringType())` is `ARRAY<STRING>`. `BIGINT` is `LongType()`."
+    }
+  ],
+  "review": [
+    "Every column has a type. A struct holds named fields in one column; an array holds a list of values of one type.",
+    "A schema in code is a `StructType` of `StructField(name, type, nullable)`. It can nest a `StructType` or an `ArrayType`.",
+    "A struct value is a tuple (or dict or `Row`) and an array value is a Python list. A missing struct is `None`.",
+    "Read a struct field with `\"vitals.heart_rate\"` or `F.col(\"vitals\")[\"heart_rate\"]`; `\"vitals.*\"` takes every field.",
+    "Array items start at position 0, and `F.size` counts them. A position past the end is an error.",
+    "Fields read from a missing struct are missing too."
+  ],
+  "practice": ["PS-Q0061", "PS-Q0062", "PS-Q0063", "PS-Q0064", "PS-Q0065"]
+}

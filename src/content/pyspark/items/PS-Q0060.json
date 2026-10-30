@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0060",
+  "slug": "timesheet-in-day-units",
+  "lesson": "PS-L012",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Timesheet in day units",
+  "dataset": {
+    "id": "PS-D03",
+    "version": "1.0.0"
+  },
+  "prompt": "Payroll counts work in eight-hour days. Write `solve(attendance)` so it returns a timesheet with each day's hours, how far they are from eight, and how many eight-hour days they make.",
+  "rules": [
+    "Return six columns, in this order: `employee_id`, `work_date`, `status`, `hours`, `hours_vs_standard`, `day_units`.",
+    "`hours` is `hours_worked`, unchanged. `hours_vs_standard` is `hours_worked - 8` (negative for a short day), and `day_units` is `hours_worked / 8`, not rounded.",
+    "A day with no hours recorded has all three missing. Keep every row, duplicates included."
+  ],
+  "hints": [
+    "`select` decides which columns come back and in what order; `alias` names a calculated column.",
+    "Another way: `withColumnRenamed` and two `withColumn` calls, then a `select` to put the columns in order and leave `check_in` out.",
+    "Dividing with `/` gives a `double`. There's nothing to round."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "attendance"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(attendance):\n    # employee_id, work_date, status, hours, hours_vs_standard, day_units\n    return attendance\n",
+  "output": {
+    "columns": [
+      "employee_id",
+      "work_date",
+      "status",
+      "hours",
+      "hours_vs_standard",
+      "day_units"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "One `select` does it all: `attendance.select(\"employee_id\", \"work_date\", \"status\", F.col(\"hours_worked\").alias(\"hours\"), (F.col(\"hours_worked\") - 8).alias(\"hours_vs_standard\"), (F.col(\"hours_worked\") / 8).alias(\"day_units\"))`. The same result comes from `withColumnRenamed(\"hours_worked\", \"hours\")`, two `withColumn` calls on `hours`, and a final `select` for the order, which also leaves out `check_in`. `/` always gives a `double`, so 7.5 hours is 0.9375 days. Sick and vacation days have no hours, so all three numbers are missing, while an absent day has 0 hours and gives -8 and 0.0. Mind the direction: `8 - hours_worked` flips every sign."
+}

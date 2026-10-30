@@ -1,0 +1,142 @@
+{
+ "id": "PS-L021",
+ "minutes": 20,
+ "lede": "To Spark, `\"Senior Software Engineer\"` and `\"  senior software engineer\"` are two different titles. Before you count, compare or join text, make every value follow one standard form.",
+ "objectives": [
+  "Remove stray spaces with `trim` and inner runs of spaces with `regexp_replace`",
+  "Pick one case for text you compare, such as lower-case emails",
+  "Rewrite values like phone numbers into one format",
+  "Map known variants to one canonical value with `replace`, and split raw text lines safely"
+ ],
+ "dataset": {
+  "id": "PS-D03",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "employees",
+   "employees_raw"
+  ]
+ },
+ "blocks": [
+  {
+   "kind": "text",
+   "md": "The `employees` table comes from an HR system that people type into. Most values are tidy, but not all of them. Text comparisons in Spark are exact, so a leading space or a capital letter is enough to make two equal values look different.\n\n**Standardizing** means choosing one form for a value and rewriting every row into it. The tools are the string functions you already know, applied with `select` and `alias`."
+  },
+  {
+   "kind": "example",
+   "id": "e1",
+   "title": "Trim the ends and lower the case",
+   "code": "from pyspark.sql import functions as F\n\nemployees.select(\"employee_id\", \"job_title\", \"email\").show(truncate=False)\n\nemployees.select(\n    \"employee_id\",\n    F.trim(\"job_title\").alias(\"job_title\"),\n    F.lower(\"email\").alias(\"email\"),\n).show(truncate=False)\n",
+   "note": "`truncate=False` shows the two spaces in front of E0004's title. `trim` removes spaces at both ends, and `lower` makes E0007's email match the others. Email addresses aren't case sensitive, so lower case is the usual standard."
+  },
+  {
+   "kind": "text",
+   "md": "`trim` only touches the ends. A value like `\"Software  Engineer\"`, with two spaces in the middle, needs a regular expression: `r\"\\s+\"` matches one or more spaces, and `regexp_replace` turns each run into a single space.\n\nWhen a value is only used to compare or group, such as a job title, a lower-case version is often the simplest standard. Call it a key so it's clear it isn't for display."
+  },
+  {
+   "kind": "example",
+   "id": "e2",
+   "title": "One space between words",
+   "code": "from pyspark.sql import functions as F\n\ntitles = spark.createDataFrame(\n    [(\"Software  Engineer\",), (\"  data manager \",), (\"SENIOR   Data Analyst\",)],\n    \"job_title STRING\",\n)\n\ntitle_key = F.lower(F.regexp_replace(F.trim(\"job_title\"), r\"\\s+\", \" \"))\n\ntitles.select(\n    \"job_title\",\n    F.length(\"job_title\").alias(\"length\"),\n    title_key.alias(\"title_key\"),\n    F.length(title_key).alias(\"key_length\"),\n).show(truncate=False)\n",
+   "note": "Steps can be stored in a Python variable like `title_key` and used more than once. The lengths show what changed: every extra space is gone."
+  },
+  {
+   "kind": "text",
+   "md": "Some values have a format, not just spacing. Phone numbers arrive as `555-201-3344`, `(555) 201-3344`, `555.201.3344`, `+1 555 201 3344` or `5552013344`. A reliable way to standardize them is:\n\n1. Keep only the digits: `regexp_replace(phone, \"[^0-9]\", \"\")`. `[^0-9]` means any character that isn't a digit.\n2. Keep the last ten digits, which drops a leading country code `1`. `F.substring(digits, -10, 10)` counts from the end.\n3. Put the dashes back with groups: `r\"(\\d{3})\"` captures three digits, and `$1` in the replacement puts them back."
+  },
+  {
+   "kind": "example",
+   "id": "e3",
+   "title": "Five phone formats, one result",
+   "code": "from pyspark.sql import functions as F\n\nphones = spark.createDataFrame(\n    [(\"555-201-3344\",), (\"(555) 201-3344\",), (\"555.201.3344\",), (\"+1 555 201 3344\",), (\"5552013344\",), (None,)],\n    \"phone STRING\",\n)\n\ndigits = F.regexp_replace(\"phone\", \"[^0-9]\", \"\")\nlast_ten = F.substring(digits, -10, 10)\nstandard = F.regexp_replace(last_ten, r\"^(\\d{3})(\\d{3})(\\d{4})$\", \"$1-$2-$3\")\n\nphones.select(\"phone\", digits.alias(\"digits\"), standard.alias(\"standard\")).show()\n",
+   "note": "All five spellings end up as `555-201-3344`. A missing phone stays missing: string functions give NULL for NULL, so you don't need a special case."
+  },
+  {
+   "kind": "text",
+   "md": "Sometimes the variants are words, not spacing: `eng` and `Engineering` mean the same department. After trimming and lowering, list the known variants in a Python dict and let `replace` swap them. `subset` names the columns to touch; values that aren't in the dict stay as they are."
+  },
+  {
+   "kind": "example",
+   "id": "e4",
+   "title": "Map variants to one value",
+   "code": "from pyspark.sql import functions as F\n\ndepts = spark.createDataFrame(\n    [(\"E1\", \"Engineering\"), (\"E2\", \" eng\"), (\"E3\", \"ENGINEERING\"), (\"E4\", \"Fin \"), (\"E5\", \"finance\")],\n    \"employee_id STRING, department STRING\",\n)\n\ntidy = depts.select(\"employee_id\", F.lower(F.trim(\"department\")).alias(\"department\"))\ntidy.show()\n\ntidy.replace({\"eng\": \"engineering\", \"fin\": \"finance\"}, subset=[\"department\"]).show()\n",
+   "note": "`replace` matches whole values only: it changes `eng` but would leave `engineer` alone. Trim and lower first, so the dict needs one entry per variant, not one per spelling."
+  },
+  {
+   "kind": "text",
+   "md": "Raw exports are messier still. `employees_raw` is the same HR data as plain text lines, one `value` column, with `;` between fields. `F.split(\"value\", \";\")` turns each line into a list of fields, and `.getItem(i)` picks field `i`, counting from 0.\n\nOne line in the export is cut short. Watch what happens when you ask for a field it doesn't have."
+  },
+  {
+   "kind": "error-example",
+   "id": "e5",
+   "title": "A short line breaks getItem",
+   "code": "from pyspark.sql import functions as F\n\nparts = F.split(\"value\", \";\")\nemployees_raw.select(parts.getItem(0).alias(\"employee_id\"), parts.getItem(3).alias(\"department\")).show()\n",
+   "error": "ArrayIndexOutOfBoundsException",
+   "note": "E0005's line has only three fields, so there is no field 3. Spark stops the whole job instead of guessing."
+  },
+  {
+   "kind": "example",
+   "id": "e6",
+   "title": "Read fields safely with get",
+   "code": "from pyspark.sql import functions as F\n\nlines = employees_raw.filter(F.col(\"value\").rlike(r\"^E\\d\"))\nparts = F.split(\"value\", \";\")\nlines.select(\n    parts.getItem(0).alias(\"employee_id\"),\n    F.get(parts, 3).alias(\"department\"),\n    F.size(parts).alias(\"fields\"),\n).show(truncate=False)\n",
+   "note": "Read as text, the file's header line is just another line, so `filter` keeps only the lines that start with an employee id. `F.get(parts, 3)` gives NULL when field 3 is missing, and `F.size` counts the fields. Two lines stand out: E0005 has 3 fields, and E0007 has 7 because its job title contains a `;` inside quotes. Splitting on `;` can't handle quotes; reading the file as CSV with `sep=\";\"` can."
+  }
+ ],
+ "challenges": [
+  "PS-L021-C1",
+  "PS-L021-C2"
+ ],
+ "concept": [
+  {
+   "id": "k1",
+   "prompt": "What does `F.trim` give for the value `\"  data  manager \"`?",
+   "choices": [
+    "\"data manager\"",
+    "\"data  manager\"",
+    "\"datamanager\"",
+    "\"  data  manager\""
+   ],
+   "answer": 1,
+   "why": "`trim` removes spaces at the two ends only. The two spaces in the middle stay; collapse them with `regexp_replace(..., r\"\\s+\", \" \")`."
+  },
+  {
+   "id": "k2",
+   "prompt": "What does `F.regexp_replace(\"phone\", \"[^0-9]\", \"\")` give for `\"+1 555 201 3344\"`?",
+   "choices": [
+    "\"5552013344\"",
+    "\"+15552013344\"",
+    "\"15552013344\"",
+    "\"555-201-3344\""
+   ],
+   "answer": 2,
+   "why": "It removes every character that isn't a digit, so the `+` and spaces go but the country code `1` stays. Keeping the last ten digits removes it."
+  },
+  {
+   "id": "k3",
+   "prompt": "A raw line splits into 3 fields. What does `F.get(parts, 3)` give for it?",
+   "choices": [
+    "NULL",
+    "An empty string",
+    "The last field",
+    "An error that stops the job"
+   ],
+   "answer": 0,
+   "why": "`F.get` gives NULL for a field that isn't there. `parts.getItem(3)` is the one that stops the job with an out-of-bounds error."
+  }
+ ],
+ "review": [
+  "Text comparisons are exact: spaces and case make equal values look different.",
+  "`F.trim` removes spaces at both ends; `F.regexp_replace(col, r\"\\s+\", \" \")` turns inner runs of spaces into one.",
+  "Pick one case for values you compare, such as `F.lower` for emails and title keys.",
+  "For formats like phone numbers: keep the digits, keep the last ten, then rebuild the format with regex groups.",
+  "`df.replace(dict, subset=[...])` maps whole known variants to one canonical value.",
+  "`F.split` turns a raw line into fields; `F.get` gives NULL for a missing field where `getItem` stops the job."
+ ],
+ "practice": [
+  "PS-Q0101",
+  "PS-Q0102",
+  "PS-Q0103",
+  "PS-Q0104",
+  "PS-Q0105"
+ ]
+}

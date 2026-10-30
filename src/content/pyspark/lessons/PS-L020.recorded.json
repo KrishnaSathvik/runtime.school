@@ -1,0 +1,40 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D01",
+  "version": "1.1.0",
+  "edition": "lesson",
+  "tables": [
+   "orders",
+   "order_items"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "6 rows in the feed\n4 after distinct\n4 after dropDuplicates\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "2 rows\n['order_id', 'customer_id', 'order_date', 'status', 'channel', 'total']\n['O00001', 'O00002']\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "32 order lines\n27 different order and product pairs\n27 rows after dropDuplicates on the pair\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "",
+   "error": {
+    "type": "PySparkTypeError",
+    "message": "[NOT_LIST_OR_TUPLE] Argument `subset` should be a list or tuple, got str.",
+    "line": 1,
+    "condition": "NOT_LIST_OR_TUPLE"
+   }
+  }
+ }
+}

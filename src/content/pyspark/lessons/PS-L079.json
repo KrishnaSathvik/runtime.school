@@ -1,0 +1,137 @@
+{
+  "id": "PS-L079",
+  "minutes": 25,
+  "lede": "A notebook is where you try things; a scheduled job is a script handed to `spark-submit`. Reading a submit command tells you where the driver runs, which settings the job gets and why it fails before it even starts.",
+  "objectives": [
+    "Read a `spark-submit` command: its options, the script and the script's own arguments",
+    "Explain the master URL and the difference between client and cluster deploy mode",
+    "Predict which value wins when code, `--conf` and defaults disagree",
+    "Diagnose a submit that fails before any Spark job runs"
+  ],
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "api_requests"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "So far your code has run in a session that was already open. A production job is a Python file that a scheduler starts with **spark-submit**, the command that launches a Spark application:\n\n```\nspark-submit \\\n  --master yarn \\\n  --deploy-mode cluster \\\n  --name nightly-requests \\\n  --conf spark.sql.shuffle.partitions=200 \\\n  --py-files helpers.zip \\\n  jobs/requests_report.py 2026-01-15\n```\n\nEverything before the script is for Spark. Everything after it goes to your script, as `sys.argv[1:]`.\n\n- `--master` says where to find executors (below).\n- `--deploy-mode` says where the driver runs (below).\n- `--name` is the application name you'll see in logs and in the Spark UI.\n- `--conf key=value` sets any Spark setting for this run.\n- `--py-files` ships extra Python files or zips to the driver and executors."
+    },
+    {
+      "kind": "text",
+      "md": "The **master URL** picks the cluster manager:\n\n- `local`, `local[4]`, `local[*]`: no cluster. Spark runs in one process with 1, 4 or all cores. This is the default.\n- `spark://host:7077`: Spark's own standalone cluster.\n- `yarn`: a Hadoop YARN cluster, found through `HADOOP_CONF_DIR` or `YARN_CONF_DIR`.\n- `k8s://https://host:443`: a Kubernetes cluster, where the executors (and, in cluster mode, the driver) run in pods.\n\nThe **deploy mode** only matters on a cluster:\n\n- **client** (the default): the driver runs on the machine where you typed `spark-submit`, such as an edge node or your laptop. Its output appears in your terminal, and if that machine goes away, the job dies with it.\n- **cluster**: the cluster starts the driver on one of its own machines. `spark-submit` can return at once, and the driver's output goes to the cluster's logs.\n\nShells and notebooks always run in client mode, because you are typing into the driver. None of the cluster managers exist here: this environment is local mode only, with no network."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "How was this session started?",
+      "code": "sc = spark.sparkContext\nprint(sc.master)\nprint(sc.getConf().get(\"spark.submit.deployMode\"))\nprint(sc.appName)\nprint(api_requests.count(), \"requests\")\n",
+      "note": "The session you've been using was started for you with master `local[2]`, in client mode: the driver is the process running your code. `appName` is the name it was given at start."
+    },
+    {
+      "kind": "text",
+      "md": "The `spark-submit` command is installed in this environment, but there's no terminal, so the next examples run it from Python with `subprocess`. Each one first writes a small script to `/tmp`, then calls a helper, `submit(...)`, that:\n\n- runs `spark-submit` with the options you give it, as a second Spark application next to this one,\n- prints its **exit code**: 0 means the application finished, anything else means it failed,\n- prints the lines the script printed that start with `app:`, skipping Spark's start-up messages.\n\n`SPARK_LOCAL_IP` tells the new application to use this machine's loopback address, because this environment has no network."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Submit a script",
+      "code": "import os, subprocess\n\ndef submit(*args):\n    env = {**os.environ, \"SPARK_LOCAL_IP\": \"127.0.0.1\"}\n    run = subprocess.run([\"spark-submit\", *args], capture_output=True, text=True, env=env)\n    print(\"exit code:\", run.returncode)\n    for line in run.stdout.splitlines():\n        if line.startswith(\"app:\"):\n            print(line)\n    return run\n\nopen(\"/tmp/report.py\", \"w\").write(\"\"\"\nimport sys\nfrom pyspark.sql import SparkSession\n\nspark = SparkSession.builder.getOrCreate()\nsc = spark.sparkContext\nprint(\"app: name\", sc.appName)\nprint(\"app: master\", sc.master)\nprint(\"app: deploy mode\", sc.getConf().get(\"spark.submit.deployMode\"))\nprint(\"app: shuffle partitions\", spark.conf.get(\"spark.sql.shuffle.partitions\"))\nprint(\"app: arguments\", sys.argv[1:])\nspark.stop()\n\"\"\")\n\nsubmit(\"--master\", \"local[1]\", \"--name\", \"daily-requests\",\n       \"--conf\", \"spark.sql.shuffle.partitions=8\",\n       \"/tmp/report.py\", \"2026-01-15\", \"eu-west\")\n",
+      "note": "The script never names itself or its master: `--name` and `--master` came from the command, `--conf` set the shuffle partitions, and the two words after the file arrived in `sys.argv`. With no `--deploy-mode`, the driver ran in client mode."
+    },
+    {
+      "kind": "text",
+      "md": "A setting can come from three places. When they disagree, the most specific wins:\n\n1. Values set in the code, on `SparkSession.builder` (`.master(...)`, `.config(...)`).\n2. Options on the `spark-submit` command line: `--master`, `--conf` and the rest.\n3. The cluster's defaults file, `conf/spark-defaults.conf`.\n\nSpark's built-in defaults apply only when none of them set a value. So a script with `.master(\"local[*]\")` in it ignores `--master yarn` and quietly runs on one machine. Leave the master and the sizing out of the code and let the command decide."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Code beats the command line",
+      "code": "import os, subprocess\n\ndef submit(*args):\n    env = {**os.environ, \"SPARK_LOCAL_IP\": \"127.0.0.1\"}\n    run = subprocess.run([\"spark-submit\", *args], capture_output=True, text=True, env=env)\n    print(\"exit code:\", run.returncode)\n    for line in run.stdout.splitlines():\n        if line.startswith(\"app:\"):\n            print(line)\n    return run\n\nopen(\"/tmp/hardcoded.py\", \"w\").write(\"\"\"\nfrom pyspark.sql import SparkSession\n\nspark = (SparkSession.builder\n         .master(\"local[1]\")\n         .config(\"spark.sql.shuffle.partitions\", \"3\")\n         .getOrCreate())\nsc = spark.sparkContext\nprint(\"app: master\", sc.master)\nprint(\"app: shuffle partitions\", spark.conf.get(\"spark.sql.shuffle.partitions\"))\nspark.stop()\n\"\"\")\n\nsubmit(\"--master\", \"local[2]\", \"--conf\", \"spark.sql.shuffle.partitions=8\", \"/tmp/hardcoded.py\")\n",
+      "note": "The command asked for `local[2]` and 8 shuffle partitions, but the builder's `.master(\"local[1]\")` and `.config(...)` won. Submit flags only fill in what the code leaves unset."
+    },
+    {
+      "kind": "text",
+      "md": "A job usually imports your own modules. On a cluster, the driver and executors run on other machines that don't have your files, so you ship them with `--py-files` (single `.py` files, or a `.zip` of a package). Spark puts them on the Python path of the driver and every executor."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "A helper module the job can't find",
+      "code": "import os, subprocess\n\ndef submit(*args):\n    env = {**os.environ, \"SPARK_LOCAL_IP\": \"127.0.0.1\"}\n    run = subprocess.run([\"spark-submit\", *args], capture_output=True, text=True, env=env)\n    print(\"exit code:\", run.returncode)\n    for line in run.stdout.splitlines():\n        if line.startswith(\"app:\"):\n            print(line)\n    return run\n\nos.makedirs(\"/tmp/libs\", exist_ok=True)\nos.makedirs(\"/tmp/jobs\", exist_ok=True)\nopen(\"/tmp/libs/request_rules.py\", \"w\").write(\"def is_server_error(code):\\n    return code >= 500\\n\")\nopen(\"/tmp/jobs/errors.py\", \"w\").write(\"\"\"\nfrom request_rules import is_server_error\nfrom pyspark.sql import SparkSession\n\nspark = SparkSession.builder.getOrCreate()\ncodes = [200, 503, 404, 500]\nprint(\"app:\", sum(is_server_error(c) for c in codes), \"server errors\")\nspark.stop()\n\"\"\")\n\nrun = submit(\"--master\", \"local[1]\", \"/tmp/jobs/errors.py\")\nfor line in run.stdout.splitlines() + run.stderr.splitlines():\n    if line.startswith(\"ModuleNotFoundError\"):\n        print(line)\n\nsubmit(\"--master\", \"local[1]\", \"--py-files\", \"/tmp/libs/request_rules.py\", \"/tmp/jobs/errors.py\")\n",
+      "note": "The first submit fails with exit code 1: the script imports `request_rules`, which lives in another folder, and Python can't find it. With `--py-files` the same command works. On a cluster the same mistake shows up the same way, or later inside a task on an executor."
+    },
+    {
+      "kind": "text",
+      "md": "`spark-submit` checks the command before it starts anything. Some mistakes it catches right away:\n\n- `--deploy-mode cluster` with a `local` master: there is no cluster to put the driver on.\n- `--master yarn` on a machine with no Hadoop configuration: it doesn't know where YARN is.\n\nThese fail in about a second, before any Spark job runs, and the reason is the last line of the error, after `SparkException:`."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Mistakes spark-submit catches first",
+      "code": "import os, subprocess\n\ndef submit(*args):\n    env = {**os.environ, \"SPARK_LOCAL_IP\": \"127.0.0.1\"}\n    run = subprocess.run([\"spark-submit\", *args], capture_output=True, text=True, env=env)\n    print(\"exit code:\", run.returncode)\n    for line in run.stdout.splitlines():\n        if line.startswith(\"app:\"):\n            print(line)\n    return run\n\nopen(\"/tmp/report.py\", \"w\").write(\"print('app: started')\\n\")\n\ndef reason(run):\n    for line in run.stderr.splitlines():\n        if line.startswith(\"Exception in thread\"):\n            return line.split(\"SparkException: \")[1]\n\nrun = submit(\"--master\", \"local[2]\", \"--deploy-mode\", \"cluster\", \"/tmp/report.py\")\nprint(reason(run))\nrun = submit(\"--master\", \"yarn\", \"/tmp/report.py\")\nprint(reason(run))\n",
+      "note": "Both commands fail with exit code 1, and neither script printed anything: Spark stopped at the command. The messages name the problem, so read them before looking at the code."
+    }
+  ],
+  "challenges": [
+    "PS-L079-C1",
+    "PS-L079-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "In `spark-submit --master yarn --name report job.py 2026-01-15 --verbose`, what is `--verbose`?",
+      "choices": [
+        "A spark-submit option that prints more output",
+        "An argument for `job.py`, found in `sys.argv`",
+        "An error: options must come before the master",
+        "A Spark setting, the same as `--conf verbose=true`"
+      ],
+      "answer": 1,
+      "why": "Everything after the script's path is passed to the script. Options for Spark go before the script."
+    },
+    {
+      "id": "k2",
+      "prompt": "A job runs in client deploy mode from an edge node. Where does the driver run?",
+      "choices": [
+        "On the edge node, where `spark-submit` was typed",
+        "On one of the cluster's worker machines",
+        "Inside every executor",
+        "Nowhere: client mode has no driver"
+      ],
+      "answer": 0,
+      "why": "In client mode the driver runs where you submitted from, so its output appears there. In cluster mode the cluster starts it on one of its own machines."
+    },
+    {
+      "id": "k3",
+      "prompt": "A script's builder has `.config(\"spark.sql.shuffle.partitions\", \"50\")`, and it's submitted with `--conf spark.sql.shuffle.partitions=400`. What does the job use?",
+      "choices": [
+        "400, because the command line comes last",
+        "50, because values set in code win",
+        "200, Spark's default",
+        "The job fails because the values disagree"
+      ],
+      "answer": 1,
+      "why": "Values set on the builder in code take precedence over `--conf`, which in turn beats the defaults file."
+    }
+  ],
+  "review": [
+    "`spark-submit [options] script.py [script arguments]`: options are for Spark, words after the script go to `sys.argv`.",
+    "The master URL picks the cluster manager: `local[n]`, `spark://`, `yarn` or `k8s://`. This environment is `local[2]`.",
+    "Client mode runs the driver where you submitted; cluster mode runs it inside the cluster. Shells and notebooks are always client.",
+    "Code beats `--conf`, which beats `spark-defaults.conf`. Keep the master and sizing out of the script.",
+    "Ship your own modules with `--py-files`, or the import fails on the driver or the executors.",
+    "A non-zero exit code with no output from your script means `spark-submit` rejected the command; read the `SparkException` line."
+  ],
+  "practice": [
+    "PS-Q0391",
+    "PS-Q0392",
+    "PS-Q0393",
+    "PS-Q0394",
+    "PS-Q0395"
+  ]
+}

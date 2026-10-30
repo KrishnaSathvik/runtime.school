@@ -10,6 +10,7 @@ export function Select({
   onChange,
   options = [],
   groups,
+  disabled = false,
 }: {
   id: string;
   label: string;
@@ -18,12 +19,13 @@ export function Select({
   options?: { value: string; label: string }[];
   /** Grouped options (rendered as optgroups). */
   groups?: { label: string; options: { value: string; label: string }[] }[];
+  disabled?: boolean;
 }) {
   return (
     <div className="rx-field">
       <label className="rx-label" htmlFor={id}>{label}</label>
       <div className="rx-select-wrap">
-        <select id={id} value={value} onChange={(e) => onChange(e.target.value)}>
+        <select id={id} value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)}>
           {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           {groups?.map((g) => (
             <optgroup key={g.label} label={g.label}>

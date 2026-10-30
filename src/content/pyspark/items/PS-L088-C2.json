@@ -1,0 +1,48 @@
+{
+  "id": "PS-L088-C2",
+  "slug": "runtime-model-against-a-guess",
+  "lesson": "PS-L088",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "A runtime model against a guess",
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0"
+  },
+  "prompt": "Before a model fills in missing runtimes, the team wants to know if it beats a simple guess. Write `solve(movies)` so it returns one row per approach with its error on films the model never saw.",
+  "rules": [
+    "Use only films with both a `runtime_min` and a `release_year`. Hold out the films whose `F.crc32(\"movie_id\") % 3` is 0 for testing; the rest are for training.",
+    "`linear` is a `LinearRegression` with default settings that predicts `runtime_min` from `release_year`, fitted on the training films. `baseline` always predicts the average training runtime.",
+    "`rmse` is the root mean squared error over the held-out films, rounded to 2 decimal places.",
+    "Return two rows, `model` (`baseline` or `linear`) and `rmse` (a double)."
+  ],
+  "hints": [
+    "Filter out the incomplete films first: a `VectorAssembler` stops on a NULL, and a film with no runtime can't be scored.",
+    "`RegressionEvaluator` reads the `label` and `prediction` columns. For the baseline, add a `prediction` column holding the training average with `F.lit`.",
+    "Build the answer with `movies.sparkSession.createDataFrame([...], \"model STRING, rmse DOUBLE\")`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "movies"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.ml.feature import VectorAssembler\nfrom pyspark.ml.regression import LinearRegression\nfrom pyspark.ml.evaluation import RegressionEvaluator\n\n\ndef solve(movies):\n    # Hold out films by crc32, fit on the rest, compare test RMSE with a baseline.\n    return movies\n",
+  "output": {
+    "columns": [
+      "model",
+      "rmse"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 150,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

@@ -1,0 +1,47 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D03",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "employees_raw"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "+---------------------------------------------------------------------------+\n|value                                                                      |\n+---------------------------------------------------------------------------+\n|employee_id;full_name;job_title;department;salary;hire_date                |\n|E0001;Tomas Haddad;Chief Executive Officer;Executive;260000.00;2025-01-06  |\n|E0002;Noor Novak;Head of Engineering;Engineering;200000.00;2025-05-26      |\n|E0003;Lena Duarte;Software Engineer;Engineering;75000.00;2025-07-15        |\n|E0004;Anika Silva;Senior Software Engineer;Engineering;70000.00;2025-08-15 |\n|E0005;Elif Rao;Senior Software Engineer                                    |\n|E0006;Maya Rao;Senior Software Engineer;Engineering;62500.00;2025-08-10    |\n|E0007;Ines Novak;\"Head of Finance; Onboarding\";Finance;150000.00;2025-01-06|\n|E0008;Elif Weber;Senior Financial Analyst;Finance;75000.00;2025-05-20      |\n|E0009;Anika Grant;Senior Financial Analyst;Finance;90000.00;2025-05-08     |\n+---------------------------------------------------------------------------+\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "+--------------------+\n|                 _c0|\n+--------------------+\n|employee_id;full_...|\n|E0001;Tomas Hadda...|\n|E0002;Noor Novak;...|\n+--------------------+\nonly showing top 3 rows\n+-----------+------------+---------------------------+-----------+---------+----------+\n|employee_id|full_name   |job_title                  |department |salary   |hire_date |\n+-----------+------------+---------------------------+-----------+---------+----------+\n|E0001      |Tomas Haddad|Chief Executive Officer    |Executive  |260000.00|2025-01-06|\n|E0002      |Noor Novak  |Head of Engineering        |Engineering|200000.00|2025-05-26|\n|E0003      |Lena Duarte |Software Engineer          |Engineering|75000.00 |2025-07-15|\n|E0004      |Anika Silva |Senior Software Engineer   |Engineering|70000.00 |2025-08-15|\n|E0005      |Elif Rao    |Senior Software Engineer   |NULL       |NULL     |NULL      |\n|E0006      |Maya Rao    |Senior Software Engineer   |Engineering|62500.00 |2025-08-10|\n|E0007      |Ines Novak  |Head of Finance; Onboarding|Finance    |150000.00|2025-01-06|\n|E0008      |Elif Weber  |Senior Financial Analyst   |Finance    |75000.00 |2025-05-20|\n|E0009      |Anika Grant |Senior Financial Analyst   |Finance    |90000.00 |2025-05-08|\n+-----------+------------+---------------------------+-----------+---------+----------+\n\nroot\n |-- employee_id: string (nullable = true)\n |-- full_name: string (nullable = true)\n |-- job_title: string (nullable = true)\n |-- department: string (nullable = true)\n |-- salary: string (nullable = true)\n |-- hire_date: string (nullable = true)\n\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "root\n |-- employee_id: string (nullable = true)\n |-- full_name: string (nullable = true)\n |-- job_title: string (nullable = true)\n |-- department: string (nullable = true)\n |-- salary: double (nullable = true)\n |-- hire_date: date (nullable = true)\n\nroot\n |-- employee_id: string (nullable = true)\n |-- full_name: string (nullable = true)\n |-- job_title: string (nullable = true)\n |-- department: string (nullable = true)\n |-- salary: decimal(10,2) (nullable = true)\n |-- hire_date: date (nullable = true)\n\n+-----------+---------+----------+\n|employee_id|   salary| hire_date|\n+-----------+---------+----------+\n|      E0001|260000.00|2025-01-06|\n|      E0002|200000.00|2025-05-26|\n|      E0003| 75000.00|2025-07-15|\n+-----------+---------+----------+\nonly showing top 3 rows\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "+-----------+---------------------------+-----------+\n|employee_id|job_title                  |department |\n+-----------+---------------------------+-----------+\n|E0001      |Chief Executive Officer    |Executive  |\n|E0002      |Head of Engineering        |Engineering|\n|E0003      |Software Engineer          |Engineering|\n|E0004      |Senior Software Engineer   |Engineering|\n|E0005      |Senior Software Engineer   |NULL       |\n|E0006      |Senior Software Engineer   |Engineering|\n|E0007      |Head of Finance; Onboarding|Finance    |\n|E0008      |Senior Financial Analyst   |Finance    |\n|E0009      |Senior Financial Analyst   |Finance    |\n+-----------+---------------------------+-----------+\n\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "+-----------+------------+---------------------------+-----------+---------+----------+---------------------------------------+\n|employee_id|full_name   |job_title                  |department |salary   |hire_date |bad_line                               |\n+-----------+------------+---------------------------+-----------+---------+----------+---------------------------------------+\n|E0001      |Tomas Haddad|Chief Executive Officer    |Executive  |260000.00|2025-01-06|NULL                                   |\n|E0002      |Noor Novak  |Head of Engineering        |Engineering|200000.00|2025-05-26|NULL                                   |\n|E0003      |Lena Duarte |Software Engineer          |Engineering|75000.00 |2025-07-15|NULL                                   |\n|E0004      |Anika Silva |Senior Software Engineer   |Engineering|70000.00 |2025-08-15|NULL                                   |\n|E0005      |Elif Rao    |Senior Software Engineer   |NULL       |NULL     |NULL      |E0005;Elif Rao;Senior Software Engineer|\n|E0006      |Maya Rao    |Senior Software Engineer   |Engineering|62500.00 |2025-08-10|NULL                                   |\n|E0007      |Ines Novak  |Head of Finance; Onboarding|Finance    |150000.00|2025-01-06|NULL                                   |\n|E0008      |Elif Weber  |Senior Financial Analyst   |Finance    |75000.00 |2025-05-20|NULL                                   |\n|E0009      |Anika Grant |Senior Financial Analyst   |Finance    |90000.00 |2025-05-08|NULL                                   |\n+-----------+------------+---------------------------+-----------+---------+----------+---------------------------------------+\n\n+-----------+------------+---------------------------+-----------+---------+----------+\n|employee_id|full_name   |job_title                  |department |salary   |hire_date |\n+-----------+------------+---------------------------+-----------+---------+----------+\n|E0001      |Tomas Haddad|Chief Executive Officer    |Executive  |260000.00|2025-01-06|\n|E0002      |Noor Novak  |Head of Engineering        |Engineering|200000.00|2025-05-26|\n|E0003      |Lena Duarte |Software Engineer          |Engineering|75000.00 |2025-07-15|\n|E0004      |Anika Silva |Senior Software Engineer   |Engineering|70000.00 |2025-08-15|\n|E0006      |Maya Rao    |Senior Software Engineer   |Engineering|62500.00 |2025-08-10|\n|E0007      |Ines Novak  |Head of Finance; Onboarding|Finance    |150000.00|2025-01-06|\n|E0008      |Elif Weber  |Senior Financial Analyst   |Finance    |75000.00 |2025-05-20|\n|E0009      |Anika Grant |Senior Financial Analyst   |Finance    |90000.00 |2025-05-08|\n+-----------+------------+---------------------------+-----------+---------+----------+\n\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "",
+   "error": {
+    "type": "AnalysisException",
+    "message": "[PATH_NOT_FOUND] Path does not exist: file:/tmp/hr/employes. SQLSTATE: 42K03",
+    "line": 1,
+    "condition": "PATH_NOT_FOUND"
+   }
+  }
+ }
+}

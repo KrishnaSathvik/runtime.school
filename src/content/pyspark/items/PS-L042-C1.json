@@ -1,0 +1,54 @@
+{
+  "id": "PS-L042-C1",
+  "slug": "flat-sensor-readings",
+  "lesson": "PS-L042",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Flat sensor readings",
+  "dataset": {
+    "id": "PS-D09",
+    "version": "1.0.0"
+  },
+  "prompt": "The operations report can't read nested columns. Write `solve(sensor_readings)` so it returns one flat row per reading: `reading_id`, `device_id`, `event_time`, `temperature_c`, `battery_v`, `status`, `firmware_version` and `late_s`, the seconds between `event_time` and `arrival_time`.",
+  "rules": [
+    "`temperature_c`, `battery_v` and `status` come from `payload`; `firmware_version` is the `version` field of `firmware`.",
+    "`late_s` is `arrival_time` minus `event_time`, in whole seconds.",
+    "A missing struct or field gives a missing value. Keep every row, including repeated deliveries.",
+    "Return only these eight columns, in this order."
+  ],
+  "hints": [
+    "Read a struct field with its path, `F.col(\"payload.temperature_c\")`, and rename it with `.alias(...)`.",
+    "Cast a timestamp to `long` to get seconds.",
+    "`(F.col(\"arrival_time\").cast(\"long\") - F.col(\"event_time\").cast(\"long\")).alias(\"late_s\")`"
+  ],
+  "entry": "solve",
+  "inputs": [
+    "sensor_readings"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(sensor_readings):\n    # Return one flat row per reading.\n    return sensor_readings\n",
+  "output": {
+    "columns": [
+      "reading_id",
+      "device_id",
+      "event_time",
+      "temperature_c",
+      "battery_v",
+      "status",
+      "firmware_version",
+      "late_s"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

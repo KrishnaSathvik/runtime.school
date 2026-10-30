@@ -1,0 +1,110 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "patient_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "name",
+     "type": "struct<first:string,last:string>",
+     "nullable": false
+    },
+    {
+     "name": "address",
+     "type": "struct<city:string,state:string,zip:string>",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "PAT00001",
+     {
+      "first": "Felix",
+      "last": "Ferro"
+     },
+     {
+      "city": "Pine Hollow",
+      "state": "ID",
+      "zip": "83375"
+     }
+    ],
+    [
+     "PAT00002",
+     {
+      "first": "Arjun",
+      "last": "Duarte"
+     },
+     {
+      "city": "Lakeview",
+      "state": "WA",
+      "zip": "98893"
+     }
+    ],
+    [
+     "PAT00003",
+     {
+      "first": "Elif",
+      "last": "Grant"
+     },
+     {
+      "city": "Pine Hollow",
+      "state": "ID",
+      "zip": "83305"
+     }
+    ],
+    [
+     "PAT00004",
+     {
+      "first": "Anika",
+      "last": "Iyer"
+     },
+     {
+      "city": "Riverton",
+      "state": "OR",
+      "zip": "97054"
+     }
+    ],
+    [
+     "PAT00005",
+     {
+      "first": "Jonas",
+      "last": "Costa"
+     },
+     {
+      "city": "Pine Hollow",
+      "state": "ID",
+      "zip": "83347"
+     }
+    ],
+    [
+     "PAT00006",
+     {
+      "first": "Kenji",
+      "last": "Kowal"
+     },
+     {
+      "city": "Lakeview",
+      "state": "WA",
+      "zip": "98671"
+     }
+    ]
+   ],
+   "row_count": 6
+  }
+ },
+ "hidden": [
+  "the full practice patients table",
+  "postal codes that start with 0",
+  "patients with some or all address and name parts missing",
+  "an empty patients table"
+ ]
+}

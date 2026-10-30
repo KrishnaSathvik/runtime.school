@@ -1,0 +1,126 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "event_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "step",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "lines",
+     "type": "array<struct<sku:string,qty:int,price:double,line_value:double>>",
+     "nullable": true
+    },
+    {
+     "name": "skus",
+     "type": "array<string>",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "CO-0001",
+     "begin",
+     [
+      {
+       "sku": "SKU-1001",
+       "qty": 1,
+       "price": 89.0,
+       "line_value": 89.0
+      },
+      {
+       "sku": "SKU-1013",
+       "qty": 2,
+       "price": 11.99,
+       "line_value": 23.98
+      }
+     ],
+     [
+      "SKU-1001",
+      "SKU-1013"
+     ]
+    ],
+    [
+     "CO-0002",
+     "payment",
+     [
+      {
+       "sku": "SKU-1001",
+       "qty": 1,
+       "price": 89.0,
+       "line_value": 89.0
+      },
+      {
+       "sku": "SKU-1013",
+       "qty": 2,
+       "price": 11.99,
+       "line_value": 23.98
+      }
+     ],
+     [
+      "SKU-1001",
+      "SKU-1013"
+     ]
+    ],
+    [
+     "CO-0003",
+     "complete",
+     [
+      {
+       "sku": "SKU-1001",
+       "qty": 1,
+       "price": 89.0,
+       "line_value": 89.0
+      },
+      {
+       "sku": "SKU-1013",
+       "qty": 2,
+       "price": 11.99,
+       "line_value": 23.98
+      }
+     ],
+     [
+      "SKU-1001",
+      "SKU-1013"
+     ]
+    ],
+    [
+     "CO-0004",
+     "begin",
+     [
+      {
+       "sku": "SKU-1002",
+       "qty": 1,
+       "price": 119.95,
+       "line_value": 119.95
+      }
+     ],
+     [
+      "SKU-1002"
+     ]
+    ]
+   ],
+   "row_count": 4
+  }
+ },
+ "hidden": [
+  "the full practice checkout steps",
+  "the same sku on two lines of one basket",
+  "baskets whose skus arrive out of order",
+  "lines with a missing quantity or price",
+  "an empty basket and a step with no items list",
+  "no checkout steps"
+ ]
+}

@@ -1,0 +1,26 @@
+{
+  "id": "PS-L017-C1",
+  "slug": "signed-amounts",
+  "lesson": "PS-L017",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Signed amounts",
+  "dataset": { "id": "PS-D02", "version": "1.0.0" },
+  "prompt": "The balance report adds amounts up, so money leaving an account must be negative. Write `solve(transactions)` so it returns `transaction_id`, `direction`, `amount` and a new `signed_amount`.",
+  "rules": [
+    "For `debit`, `signed_amount` is minus `amount`. For `credit`, it's `amount`.",
+    "Any other direction, or a missing one, gives a missing `signed_amount`. Directions are matched exactly: `DEBIT` isn't `debit`.",
+    "`signed_amount` keeps the type of `amount`, `decimal(12,2)`. Return the four columns, in that order, for every transaction."
+  ],
+  "hints": [
+    "One `F.when` per direction, chained.",
+    "Without `otherwise`, rows that match neither get `NULL`.",
+    "`-F.col(\"amount\")` flips the sign and keeps the type; multiplying by `-1` widens it."
+  ],
+  "entry": "solve",
+  "inputs": ["transactions"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(transactions):\n    # Return transaction_id, direction, amount and signed_amount (debits negative).\n    return transactions\n",
+  "output": { "columns": ["transaction_id", "direction", "amount", "signed_amount"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

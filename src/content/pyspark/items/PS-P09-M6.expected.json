@@ -1,0 +1,493 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "example": {
+   "schema": [
+    {
+     "name": "micro_batch",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "input_rows",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "watermark",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "late_rows_dropped",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "ids_in_state",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "hours_in_state",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "hours_published",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "events_published",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     0,
+     6,
+     "1970-01-01 00:00:00",
+     0,
+     6,
+     2,
+     0,
+     0
+    ],
+    [
+     1,
+     5,
+     "2026-03-05 07:50:00",
+     0,
+     10,
+     4,
+     0,
+     0
+    ],
+    [
+     2,
+     4,
+     "2026-03-05 09:30:00",
+     1,
+     13,
+     5,
+     1,
+     4
+    ],
+    [
+     3,
+     6,
+     "2026-03-05 11:40:00",
+     1,
+     9,
+     5,
+     2,
+     7
+    ],
+    [
+     4,
+     0,
+     "2026-03-05 13:10:00",
+     0,
+     5,
+     3,
+     2,
+     2
+    ]
+   ],
+   "row_count": 5,
+   "inputs": {
+    "page_views": [
+     [
+      "PV-W01",
+      "SES-21",
+      "U00021",
+      "2026-03-05T08:10:00",
+      "2026-03-05T08:10:03",
+      "1",
+      "/home",
+      "home",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":\"search.example\",\"utm\":null}",
+      "30"
+     ],
+     [
+      "PV-W02",
+      "SES-21",
+      "U00021",
+      "2026-03-05T08:40:00",
+      "2026-03-05T08:40:06",
+      "1",
+      "/product",
+      "product",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":\"search.example\",\"utm\":null}",
+      "30"
+     ],
+     [
+      "PV-W03",
+      "SES-21",
+      "U00021",
+      "2026-03-05T09:20:00",
+      "2026-03-05T09:20:05",
+      "1",
+      "/product",
+      "product",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":\"search.example\",\"utm\":null}",
+      "30"
+     ],
+     [
+      "PV-W10",
+      "SES-23",
+      null,
+      "2026-03-05T10:15:00",
+      "2026-03-05T10:15:02",
+      "2",
+      "/home",
+      "home",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":\"search.example\",\"utm\":null}",
+      "30"
+     ],
+     [
+      "PV-W11",
+      "SES-23",
+      null,
+      "2026-03-05T10:45:00",
+      "2026-03-05T10:45:05",
+      "2",
+      "/product",
+      "product",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":\"search.example\",\"utm\":null}",
+      "30"
+     ],
+     [
+      "PV-W03",
+      "SES-21",
+      "U00021",
+      "2026-03-05T09:20:00",
+      "2026-03-05T10:02:00",
+      "2",
+      "/product",
+      "product",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":\"search.example\",\"utm\":null}",
+      "30"
+     ],
+     [
+      "PV-W04",
+      "SES-22",
+      null,
+      "2026-03-05T08:20:00",
+      "2026-03-05T10:20:00",
+      "2",
+      "/home",
+      "home",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":\"search.example\",\"utm\":null}",
+      "30"
+     ],
+     [
+      "PV-W12",
+      "SES-24",
+      "U00024",
+      "2026-03-05T12:10:00",
+      "2026-03-05T12:10:04",
+      "3",
+      "/product",
+      "product",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":\"search.example\",\"utm\":null}",
+      "30"
+     ],
+     [
+      "PV-W05",
+      "SES-22",
+      null,
+      "2026-03-05T08:50:00",
+      "2026-03-05T12:30:00",
+      "3",
+      "/product",
+      "product",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":\"search.example\",\"utm\":null}",
+      "30"
+     ],
+     [
+      "PV-W06",
+      "SES-20",
+      null,
+      "2026-03-05T07:30:00",
+      "2026-03-05T12:31:00",
+      "3",
+      "/home",
+      "home",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":\"search.example\",\"utm\":null}",
+      "30"
+     ],
+     [
+      "PV-W14",
+      "SES-25",
+      "U00025",
+      "2026-03-05T14:20:00",
+      "2026-03-05T14:20:03",
+      "4",
+      "/home",
+      "home",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":\"search.example\",\"utm\":null}",
+      "30"
+     ],
+     [
+      "PV-W12",
+      "SES-24",
+      "U00024",
+      "2026-03-05T12:10:00",
+      "2026-03-05T14:25:00",
+      "4",
+      "/product",
+      "product",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":\"search.example\",\"utm\":null}",
+      "30"
+     ]
+    ],
+    "cart_events": [
+     [
+      "CA-W01",
+      "SES-21",
+      "U00021",
+      "2026-03-05T09:30:00",
+      "2026-03-05T09:30:04",
+      "1",
+      "add",
+      "[{\"sku\":\"SKU-1\",\"qty\":1,\"price\":15.0}]"
+     ],
+     [
+      "CA-W02",
+      "SES-23",
+      null,
+      "2026-03-05T11:30:00",
+      "2026-03-05T11:30:02",
+      "2",
+      "add",
+      "[{\"sku\":\"SKU-2\",\"qty\":2,\"price\":9.0}]"
+     ],
+     [
+      "CA-W03",
+      "SES-26",
+      null,
+      "2026-03-05T09:40:00",
+      "2026-03-05T14:40:00",
+      "4",
+      "add",
+      "[{\"sku\":\"SKU-3\",\"qty\":1,\"price\":4.0}]"
+     ],
+     [
+      "CA-W04",
+      "SES-26",
+      null,
+      "2026-03-05T09:10:00",
+      "2026-03-05T14:41:00",
+      "4",
+      "add",
+      "[{\"sku\":\"SKU-4\",\"qty\":1,\"price\":6.0}]"
+     ]
+    ],
+    "checkout_events": [
+     [
+      "CO-W01",
+      "SES-21",
+      "U00021",
+      "2026-03-05T09:45:00",
+      "2026-03-05T09:45:02",
+      "1",
+      "begin",
+      null,
+      null,
+      "[{\"sku\":\"SKU-1\",\"qty\":1,\"price\":15.0}]",
+      "15.0",
+      "{}"
+     ],
+     [
+      "CO-W02",
+      "SES-21",
+      "U00021",
+      "2026-03-05T09:50:00",
+      "2026-03-05T09:50:03",
+      "1",
+      "complete",
+      "ORD-W1",
+      "{\"method\":\"card\",\"provider\":\"paycore\"}",
+      "[{\"sku\":\"SKU-1\",\"qty\":1,\"price\":15.0}]",
+      "15.0",
+      "{}"
+     ],
+     [
+      "CO-W03",
+      "SES-24",
+      "U00024",
+      "2026-03-05T13:40:00",
+      "2026-03-05T13:40:05",
+      "3",
+      "complete",
+      "ORD-W2",
+      "{\"method\":\"card\",\"provider\":\"paycore\"}",
+      "[{\"sku\":\"SKU-7\",\"qty\":2,\"price\":11.0}]",
+      "22.0",
+      "{}"
+     ],
+     [
+      "CO-W04",
+      "SES-25",
+      "U00025",
+      "2026-03-05T15:10:00",
+      "2026-03-05T15:10:04",
+      "4",
+      "complete",
+      "ORD-W3",
+      "{\"method\":\"card\",\"provider\":\"paycore\"}",
+      "[{\"sku\":\"SKU-8\",\"qty\":1,\"price\":30.0}]",
+      "30.0",
+      "{}"
+     ],
+     [
+      "CO-W02",
+      "SES-21",
+      "U00021",
+      "2026-03-05T09:50:00",
+      "2026-03-05T14:55:00",
+      "4",
+      "complete",
+      "ORD-W1",
+      "{\"method\":\"card\",\"provider\":\"paycore\"}",
+      "[{\"sku\":\"SKU-1\",\"qty\":1,\"price\":15.0}]",
+      "15.0",
+      "{}"
+     ]
+    ]
+   }
+  },
+  "project": {
+   "schema": [
+    {
+     "name": "micro_batch",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "input_rows",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "watermark",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "late_rows_dropped",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "ids_in_state",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "hours_in_state",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "hours_published",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "events_published",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     0,
+     657,
+     "1970-01-01 00:00:00",
+     0,
+     642,
+     2,
+     0,
+     0
+    ],
+    [
+     1,
+     758,
+     "2026-03-05 07:59:35",
+     0,
+     1389,
+     4,
+     0,
+     0
+    ],
+    [
+     2,
+     757,
+     "2026-03-05 09:59:46",
+     0,
+     2123,
+     5,
+     1,
+     288
+    ],
+    [
+     3,
+     885,
+     "2026-03-05 11:59:57",
+     3,
+     2292,
+     5,
+     2,
+     734
+    ],
+    [
+     4,
+     563,
+     "2026-03-05 13:59:59",
+     7,
+     2058,
+     5,
+     2,
+     807
+    ],
+    [
+     5,
+     0,
+     "2026-03-05 15:06:19",
+     0,
+     1639,
+     3,
+     2,
+     749
+    ]
+   ],
+   "row_count": 6
+  }
+ },
+ "hidden": [
+  "the full practice feeds",
+  "the watermark's lag of one micro-batch, a row exactly at the watermark and one a second later, repeats in later deliveries",
+  "empty feeds"
+ ]
+}

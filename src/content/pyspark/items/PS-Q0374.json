@@ -1,0 +1,61 @@
+{
+ "id": "PS-Q0374",
+ "slug": "history-with-no-current-version",
+ "lesson": "PS-L075",
+ "role": "debugging",
+ "format": "dataframe_coding",
+ "difficulty": "hard",
+ "minutes": 14,
+ "title": "History with no current version",
+ "dataset": {
+  "id": "PS-D14",
+  "version": "1.0.0"
+ },
+ "prompt": "After a batch of changes, every account that changed has lost its current version: the new version is there, but closed at the moment it began. Fix `apply_batch(changes)`.",
+ "rules": [
+  "Each account's newest change in the batch, by `sequence`, closes its current version at `changed_at`. Unless it's a delete, the account then gets a new version from `changed_at`, with `effective_to` NULL and `is_current` true.",
+  "Accounts that didn't change stay as they are.",
+  "Don't change `start_history` or `solve`."
+ ],
+ "hints": [
+  "Look at a changed account's rows after the batch. Which write set `effective_to` on its new version?",
+  "At the moment the MERGE runs, how many rows of that account have `is_current` true?",
+  "The order of the two writes matters."
+ ],
+ "entry": "solve",
+ "inputs": [
+  "accounts",
+  "customer_cdc"
+ ],
+ "starter": "import shutil\n\nfrom pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\nfrom delta.tables import DeltaTable\n\nPATH = \"/tmp/crm/dim_accounts\"\nCOLS = [\"account_id\", \"account_name\", \"industry\", \"country\", \"segment\", \"account_owner\", \"credit_limit\", \"created_on\", \"is_active\"]\n\n\ndef start_history(accounts):\n    # The history starts with each snapshot account, valid from the snapshot. Don't change this.\n    shutil.rmtree(PATH, ignore_errors=True)  # start from an empty folder on every run\n    (accounts\n        .withColumn(\"effective_from\", F.lit(\"2026-01-01 00:00:00\").cast(\"timestamp\"))\n        .withColumn(\"effective_to\", F.lit(None).cast(\"timestamp\"))\n        .withColumn(\"is_current\", F.lit(True))\n        .write.format(\"delta\").save(PATH))\n\n\ndef apply_batch(changes):\n    # One row per account: its newest change in this batch.\n    newest_first = Window.partitionBy(\"account_id\").orderBy(F.col(\"sequence\").desc())\n    latest = changes.withColumn(\"rn\", F.row_number().over(newest_first)).filter(F.col(\"rn\") == 1).drop(\"rn\")\n    # 1. Add the new versions; a delete adds none.\n    (latest.filter(F.col(\"op\") != \"D\")\n        .select(*COLS,\n                F.col(\"changed_at\").alias(\"effective_from\"),\n                F.lit(None).cast(\"timestamp\").alias(\"effective_to\"),\n                F.lit(True).alias(\"is_current\"))\n        .write.format(\"delta\").mode(\"append\").save(PATH))\n\n    # 2. Close the current version of every account that changed.\n    (DeltaTable.forPath(spark, PATH).alias(\"t\")\n        .merge(latest.alias(\"s\"), \"t.account_id = s.account_id AND t.is_current\")\n        .whenMatchedUpdate(set={\"effective_to\": \"s.changed_at\", \"is_current\": \"false\"})\n        .execute())\n\n\ndef solve(accounts, customer_cdc):\n    start_history(accounts)\n    apply_batch(customer_cdc)\n    return spark.read.format(\"delta\").load(PATH)\n",
+ "output": {
+  "columns": [
+   "account_id",
+   "account_name",
+   "industry",
+   "country",
+   "segment",
+   "account_owner",
+   "credit_limit",
+   "created_on",
+   "is_active",
+   "effective_from",
+   "effective_to",
+   "is_current"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 180,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "explanation": "The new versions are appended first, so when the MERGE runs each changed account has two current rows: the old version and the one just added. The merge condition `t.account_id = s.account_id AND t.is_current` matches both, and one source row may update several target rows, so both are closed at `changed_at`. Close first, then append. Adding `t.effective_from < s.changed_at` to the merge condition also works, because the new version starts exactly at `changed_at`. Appending the new versions as not current, or appending every change in the batch instead of the newest, leaves a history that still doesn't say what each account looks like now."
+}

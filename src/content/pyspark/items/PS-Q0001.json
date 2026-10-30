@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0001",
+  "kind": "predict",
+  "slug": "attempts-and-lessons",
+  "lesson": "PS-L001",
+  "role": "foundation",
+  "format": "concept_or_trace",
+  "difficulty": "easy",
+  "minutes": 4,
+  "title": "Attempts and lessons",
+  "prompt": "This program counts the rows of the `attempts` and `lessons` tables and compares their columns. What does it print? Type each line on its own line.",
+  "program": "print(attempts.count())\nprint(lessons.count(), \"lessons\")\nprint(len(attempts.columns) - len(lessons.columns))\n",
+  "dataset": {
+    "id": "PS-D11",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "There are three `print` calls, so there are three lines.",
+    "`count()` counts the rows of a table; the header with the column names isn't a row.",
+    "`columns` is a list of names. Count the columns of each table, then subtract."
+  ],
+  "explanation": "`count()` gives back the number of rows as a plain Python number: 13 attempts and 8 lessons. `attempts` has 8 columns and `lessons` has 5, and because `columns` is an ordinary list, `len` and subtraction work on it like on any list."
+}

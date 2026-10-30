@@ -1,0 +1,3178 @@
+{
+ "id": "PS-D08",
+ "version": "1.0.0",
+ "title": "Logistics & Supply Chain",
+ "generated_by": "services/spark-runner/datasets/d08_logistics.py",
+ "rules": [
+  "inventory is keyed by warehouse_id + sku together: the same SKU is stocked in several warehouses, so joining shipments to inventory on sku alone multiplies rows.",
+  "event_type is one of created, picked, departed, in_transit, out_for_delivery, delivered, exception, always lowercase; a shipment's events follow that order in event_time.",
+  "sequence is the source system's log number: it increases with event_time across all events, so within a shipment a higher sequence is a later step.",
+  "load_date is the day the event reached the platform. Most events load the day they happen; some load one to four days late, so process loads by load_date, not by event_time.",
+  "location is the warehouse_id for created, picked and departed, a hub code (HUB-\u2026) for in_transit, and the destination city after that. warehouse_id on an event is the shipment's sending warehouse.",
+  "A delivery is on_time when delivered_at falls between window_start and window_end (inclusive), late when it is after window_end, and failed when the carrier gave up after an exception event (no delivered_at).",
+  "Shipments created near the end of the data are still in flight: they have no delivered event and no delivery row until they go out for delivery.",
+  "purchase_orders keeps every version of an order: version 1 is the original, higher versions change quantity, status or expected_date, and updated_at orders them. The current state of an order is its highest version; to rehearse MERGE, load version 1 as the target and apply later versions as updates.",
+  "purchase_orders status is one of open, confirmed, shipped, received, cancelled.",
+  "unit_cost is in exact decimals (DECIMAL(10,2)); on_time_rate is a share between 0 and 1.",
+  "Lesson edition: two deliberate cases for quarantine and reconciliation: event E0000007 is delivered twice (the same event_id on two rows, the copy loaded a day later), and event E0000013 is for shipment SH9999, which is not in shipments.",
+  "Practice edition: a few events are delivered twice with the same event_id (an exact copy loaded on the same or the next day), and some events load late; every event's shipment exists.",
+  "Project edition (the P08 CDC feed): the file is not in event order; about 3% of events are duplicated with the same event_id (sometimes on a later load_date); about 2% of events have a late correction: a second row with a new event_id, the same shipment_id, event_type and sequence, a corrected event_time or location, is_correction = true and a later load_date, so it arrives after events with higher sequences (the correction wins); about 1% of events are for shipment_ids not in shipments (quarantine them).",
+  "is_correction is false on every row except the project edition's late corrections."
+ ],
+ "relationships": [
+  {
+   "from": "inventory.warehouse_id",
+   "to": "warehouses.warehouse_id"
+  },
+  {
+   "from": "purchase_orders.supplier_id",
+   "to": "suppliers.supplier_id"
+  },
+  {
+   "from": "purchase_orders.warehouse_id",
+   "to": "warehouses.warehouse_id"
+  },
+  {
+   "from": "shipments.warehouse_id",
+   "to": "warehouses.warehouse_id"
+  },
+  {
+   "from": "shipments.warehouse_id+sku",
+   "to": "inventory.warehouse_id+sku"
+  },
+  {
+   "from": "shipment_events.shipment_id",
+   "to": "shipments.shipment_id"
+  },
+  {
+   "from": "shipment_events.warehouse_id",
+   "to": "warehouses.warehouse_id"
+  },
+  {
+   "from": "deliveries.shipment_id",
+   "to": "shipments.shipment_id"
+  }
+ ],
+ "tables": {
+  "warehouses": {
+   "note": "One row per warehouse: where it is, its region and how many pallets it holds.",
+   "columns": [
+    {
+     "name": "warehouse_id",
+     "type": "string"
+    },
+    {
+     "name": "name",
+     "type": "string"
+    },
+    {
+     "name": "city",
+     "type": "string"
+    },
+    {
+     "name": "region",
+     "type": "string"
+    },
+    {
+     "name": "capacity_pallets",
+     "type": "int"
+    },
+    {
+     "name": "opened_date",
+     "type": "date"
+    }
+   ],
+   "key": [
+    "warehouse_id"
+   ],
+   "rows": {
+    "lesson": 3,
+    "practice": 6,
+    "project": 8
+   },
+   "lesson": [
+    [
+     "WH01",
+     "Harbor Point DC",
+     "Rotterdam",
+     "north",
+     "6500",
+     "2025-10-11"
+    ],
+    [
+     "WH02",
+     "Ridgeway Fulfilment",
+     "Leeds",
+     "north",
+     "12000",
+     "2025-03-03"
+    ],
+    [
+     "WH03",
+     "Sunbelt Cross-Dock",
+     "Valencia",
+     "south",
+     "4000",
+     "2025-07-28"
+    ]
+   ],
+   "practice_head": [
+    [
+     "WH01",
+     "Harbor Point DC",
+     "Rotterdam",
+     "north",
+     "8000",
+     "2025-03-28"
+    ],
+    [
+     "WH02",
+     "Ridgeway Fulfilment",
+     "Leeds",
+     "north",
+     "12000",
+     "2025-02-03"
+    ],
+    [
+     "WH03",
+     "Sunbelt Cross-Dock",
+     "Valencia",
+     "south",
+     "8000",
+     "2025-04-06"
+    ],
+    [
+     "WH04",
+     "Lakeside Depot",
+     "Lyon",
+     "central",
+     "8000",
+     "2025-03-04"
+    ],
+    [
+     "WH05",
+     "Granite Hub",
+     "Krak\u00f3w",
+     "east",
+     "6500",
+     "2025-05-02"
+    ],
+    [
+     "WH06",
+     "Riverbend DC",
+     "Porto",
+     "south",
+     "6500",
+     "2025-03-31"
+    ]
+   ],
+   "project_head": [
+    [
+     "WH01",
+     "Harbor Point DC",
+     "Rotterdam",
+     "north",
+     "6500",
+     "2025-09-12"
+    ],
+    [
+     "WH02",
+     "Ridgeway Fulfilment",
+     "Leeds",
+     "north",
+     "12000",
+     "2025-05-03"
+    ],
+    [
+     "WH03",
+     "Sunbelt Cross-Dock",
+     "Valencia",
+     "south",
+     "15000",
+     "2025-08-18"
+    ],
+    [
+     "WH04",
+     "Lakeside Depot",
+     "Lyon",
+     "central",
+     "12000",
+     "2025-05-17"
+    ],
+    [
+     "WH05",
+     "Granite Hub",
+     "Krak\u00f3w",
+     "east",
+     "6500",
+     "2025-04-13"
+    ],
+    [
+     "WH06",
+     "Riverbend DC",
+     "Porto",
+     "south",
+     "15000",
+     "2025-05-10"
+    ],
+    [
+     "WH07",
+     "Pinecrest Store",
+     "Gothenburg",
+     "north",
+     "8000",
+     "2025-10-06"
+    ],
+    [
+     "WH08",
+     "Meadowgate Depot",
+     "Munich",
+     "central",
+     "12000",
+     "2025-09-17"
+    ]
+   ]
+  },
+  "suppliers": {
+   "note": "One row per supplier: country, usual lead time and share of past orders that arrived on time.",
+   "columns": [
+    {
+     "name": "supplier_id",
+     "type": "string"
+    },
+    {
+     "name": "name",
+     "type": "string"
+    },
+    {
+     "name": "country",
+     "type": "string"
+    },
+    {
+     "name": "lead_time_days",
+     "type": "int"
+    },
+    {
+     "name": "on_time_rate",
+     "type": "double"
+    }
+   ],
+   "key": [
+    "supplier_id"
+   ],
+   "rows": {
+    "lesson": 4,
+    "practice": 10,
+    "project": 12
+   },
+   "lesson": [
+    [
+     "SUP01",
+     "Kestrel Packaging Co",
+     "PL",
+     "7",
+     "0.86"
+    ],
+    [
+     "SUP02",
+     "Bluefin Components",
+     "PT",
+     "5",
+     "0.99"
+    ],
+    [
+     "SUP03",
+     "Amberline Textiles",
+     "TR",
+     "7",
+     "0.83"
+    ],
+    [
+     "SUP04",
+     "Copperleaf Tools",
+     "DE",
+     "14",
+     "0.94"
+    ]
+   ],
+   "practice_head": [
+    [
+     "SUP01",
+     "Kestrel Packaging Co",
+     "PL",
+     "14",
+     "0.9"
+    ],
+    [
+     "SUP02",
+     "Bluefin Components",
+     "PT",
+     "10",
+     "0.97"
+    ],
+    [
+     "SUP03",
+     "Amberline Textiles",
+     "TR",
+     "3",
+     "0.88"
+    ],
+    [
+     "SUP04",
+     "Copperleaf Tools",
+     "DE",
+     "10",
+     "0.99"
+    ],
+    [
+     "SUP05",
+     "Tidewater Plastics",
+     "NL",
+     "7",
+     "0.91"
+    ],
+    [
+     "SUP06",
+     "Saltmarsh Paper",
+     "SE",
+     "3",
+     "0.91"
+    ],
+    [
+     "SUP07",
+     "Ironbark Fixings",
+     "CZ",
+     "5",
+     "0.98"
+    ],
+    [
+     "SUP08",
+     "Larkspur Ceramics",
+     "ES",
+     "7",
+     "0.94"
+    ],
+    [
+     "SUP09",
+     "Brightwell Electrics",
+     "IT",
+     "7",
+     "0.97"
+    ],
+    [
+     "SUP10",
+     "Foxglove Home",
+     "FR",
+     "5",
+     "0.87"
+    ]
+   ],
+   "project_head": [
+    [
+     "SUP01",
+     "Kestrel Packaging Co",
+     "PL",
+     "5",
+     "0.91"
+    ],
+    [
+     "SUP02",
+     "Bluefin Components",
+     "PT",
+     "7",
+     "0.84"
+    ],
+    [
+     "SUP03",
+     "Amberline Textiles",
+     "TR",
+     "5",
+     "0.83"
+    ],
+    [
+     "SUP04",
+     "Copperleaf Tools",
+     "DE",
+     "3",
+     "0.84"
+    ],
+    [
+     "SUP05",
+     "Tidewater Plastics",
+     "NL",
+     "7",
+     "0.82"
+    ],
+    [
+     "SUP06",
+     "Saltmarsh Paper",
+     "SE",
+     "14",
+     "0.95"
+    ],
+    [
+     "SUP07",
+     "Ironbark Fixings",
+     "CZ",
+     "10",
+     "0.83"
+    ],
+    [
+     "SUP08",
+     "Larkspur Ceramics",
+     "ES",
+     "5",
+     "0.9"
+    ],
+    [
+     "SUP09",
+     "Brightwell Electrics",
+     "IT",
+     "7",
+     "0.95"
+    ],
+    [
+     "SUP10",
+     "Foxglove Home",
+     "FR",
+     "3",
+     "0.81"
+    ],
+    [
+     "SUP11",
+     "Quarry Lane Metals",
+     "SK",
+     "3",
+     "0.88"
+    ],
+    [
+     "SUP12",
+     "Oakhollow Goods",
+     "BE",
+     "3",
+     "0.99"
+    ]
+   ]
+  },
+  "inventory": {
+   "note": "One row per SKU stocked in a warehouse (warehouse_id + sku), with stock on hand at the as-of date.",
+   "columns": [
+    {
+     "name": "warehouse_id",
+     "type": "string"
+    },
+    {
+     "name": "sku",
+     "type": "string"
+    },
+    {
+     "name": "sku_name",
+     "type": "string"
+    },
+    {
+     "name": "on_hand",
+     "type": "int"
+    },
+    {
+     "name": "reserved",
+     "type": "int"
+    },
+    {
+     "name": "reorder_point",
+     "type": "int"
+    },
+    {
+     "name": "as_of_date",
+     "type": "date"
+    }
+   ],
+   "key": [
+    "warehouse_id",
+    "sku"
+   ],
+   "rows": {
+    "lesson": 9,
+    "practice": 108,
+    "project": 160
+   },
+   "lesson": [
+    [
+     "WH01",
+     "SKU-1003",
+     "Packing tape 48mm",
+     "560",
+     "100",
+     "100",
+     "2026-03-10"
+    ],
+    [
+     "WH01",
+     "SKU-1012",
+     "Bath mat",
+     "279",
+     "19",
+     "200",
+     "2026-03-10"
+    ],
+    [
+     "WH01",
+     "SKU-1019",
+     "Notebook A5",
+     "160",
+     "72",
+     "100",
+     "2026-03-10"
+    ],
+    [
+     "WH02",
+     "SKU-1003",
+     "Packing tape 48mm",
+     "265",
+     "117",
+     "200",
+     "2026-03-10"
+    ],
+    [
+     "WH02",
+     "SKU-1014",
+     "Extension lead",
+     "266",
+     "80",
+     "50",
+     "2026-03-10"
+    ],
+    [
+     "WH02",
+     "SKU-1021",
+     "Water bottle",
+     "620",
+     "32",
+     "50",
+     "2026-03-10"
+    ],
+    [
+     "WH03",
+     "SKU-1003",
+     "Packing tape 48mm",
+     "388",
+     "72",
+     "50",
+     "2026-03-10"
+    ],
+    [
+     "WH03",
+     "SKU-1009",
+     "Ceramic mug",
+     "131",
+     "45",
+     "50",
+     "2026-03-10"
+    ],
+    [
+     "WH03",
+     "SKU-1029",
+     "Step stool",
+     "436",
+     "71",
+     "50",
+     "2026-03-10"
+    ]
+   ],
+   "practice_head": [
+    [
+     "WH01",
+     "SKU-1001",
+     "Corrugated box M",
+     "839",
+     "112",
+     "200",
+     "2026-03-29"
+    ],
+    [
+     "WH01",
+     "SKU-1002",
+     "Corrugated box L",
+     "755",
+     "43",
+     "150",
+     "2026-03-29"
+    ],
+    [
+     "WH01",
+     "SKU-1003",
+     "Packing tape 48mm",
+     "302",
+     "27",
+     "150",
+     "2026-03-29"
+    ],
+    [
+     "WH01",
+     "SKU-1008",
+     "Drill bit set",
+     "793",
+     "110",
+     "50",
+     "2026-03-29"
+    ],
+    [
+     "WH01",
+     "SKU-1011",
+     "Cotton towel",
+     "712",
+     "37",
+     "100",
+     "2026-03-29"
+    ],
+    [
+     "WH01",
+     "SKU-1013",
+     "LED bulb 4-pack",
+     "529",
+     "40",
+     "200",
+     "2026-03-29"
+    ],
+    [
+     "WH01",
+     "SKU-1014",
+     "Extension lead",
+     "654",
+     "8",
+     "200",
+     "2026-03-29"
+    ],
+    [
+     "WH01",
+     "SKU-1015",
+     "Storage crate",
+     "2",
+     "2",
+     "200",
+     "2026-03-29"
+    ],
+    [
+     "WH01",
+     "SKU-1016",
+     "Wall shelf",
+     "730",
+     "37",
+     "200",
+     "2026-03-29"
+    ],
+    [
+     "WH01",
+     "SKU-1017",
+     "Wood screws 200",
+     "356",
+     "37",
+     "200",
+     "2026-03-29"
+    ],
+    [
+     "WH01",
+     "SKU-1018",
+     "Wall plugs 100",
+     "697",
+     "56",
+     "200",
+     "2026-03-29"
+    ],
+    [
+     "WH01",
+     "SKU-1019",
+     "Notebook A5",
+     "482",
+     "3",
+     "100",
+     "2026-03-29"
+    ],
+    [
+     "WH01",
+     "SKU-1021",
+     "Water bottle",
+     "564",
+     "95",
+     "50",
+     "2026-03-29"
+    ],
+    [
+     "WH01",
+     "SKU-1022",
+     "Lunch box",
+     "883",
+     "21",
+     "50",
+     "2026-03-29"
+    ],
+    [
+     "WH01",
+     "SKU-1023",
+     "Doormat",
+     "382",
+     "68",
+     "200",
+     "2026-03-29"
+    ],
+    [
+     "WH01",
+     "SKU-1025",
+     "Picture frame",
+     "211",
+     "19",
+     "150",
+     "2026-03-29"
+    ],
+    [
+     "WH01",
+     "SKU-1028",
+     "Work gloves",
+     "609",
+     "46",
+     "50",
+     "2026-03-29"
+    ],
+    [
+     "WH01",
+     "SKU-1029",
+     "Step stool",
+     "576",
+     "74",
+     "100",
+     "2026-03-29"
+    ],
+    [
+     "WH02",
+     "SKU-1002",
+     "Corrugated box L",
+     "342",
+     "18",
+     "50",
+     "2026-03-29"
+    ],
+    [
+     "WH02",
+     "SKU-1003",
+     "Packing tape 48mm",
+     "685",
+     "67",
+     "150",
+     "2026-03-29"
+    ]
+   ],
+   "project_head": [
+    [
+     "WH01",
+     "SKU-1001",
+     "Corrugated box M",
+     "247",
+     "70",
+     "50",
+     "2026-05-31"
+    ],
+    [
+     "WH01",
+     "SKU-1002",
+     "Corrugated box L",
+     "804",
+     "37",
+     "200",
+     "2026-05-31"
+    ],
+    [
+     "WH01",
+     "SKU-1005",
+     "Pallet wrap film",
+     "335",
+     "115",
+     "50",
+     "2026-05-31"
+    ],
+    [
+     "WH01",
+     "SKU-1010",
+     "Dinner plate set",
+     "325",
+     "99",
+     "100",
+     "2026-05-31"
+    ],
+    [
+     "WH01",
+     "SKU-1011",
+     "Cotton towel",
+     "186",
+     "27",
+     "150",
+     "2026-05-31"
+    ],
+    [
+     "WH01",
+     "SKU-1012",
+     "Bath mat",
+     "348",
+     "107",
+     "100",
+     "2026-05-31"
+    ],
+    [
+     "WH01",
+     "SKU-1013",
+     "LED bulb 4-pack",
+     "62",
+     "26",
+     "200",
+     "2026-05-31"
+    ],
+    [
+     "WH01",
+     "SKU-1014",
+     "Extension lead",
+     "94",
+     "94",
+     "200",
+     "2026-05-31"
+    ],
+    [
+     "WH01",
+     "SKU-1017",
+     "Wood screws 200",
+     "317",
+     "111",
+     "50",
+     "2026-05-31"
+    ],
+    [
+     "WH01",
+     "SKU-1018",
+     "Wall plugs 100",
+     "301",
+     "40",
+     "100",
+     "2026-05-31"
+    ],
+    [
+     "WH01",
+     "SKU-1019",
+     "Notebook A5",
+     "100",
+     "3",
+     "150",
+     "2026-05-31"
+    ],
+    [
+     "WH01",
+     "SKU-1020",
+     "Printer paper",
+     "446",
+     "87",
+     "50",
+     "2026-05-31"
+    ],
+    [
+     "WH01",
+     "SKU-1021",
+     "Water bottle",
+     "763",
+     "36",
+     "100",
+     "2026-05-31"
+    ],
+    [
+     "WH01",
+     "SKU-1022",
+     "Lunch box",
+     "565",
+     "31",
+     "100",
+     "2026-05-31"
+    ],
+    [
+     "WH01",
+     "SKU-1023",
+     "Doormat",
+     "80",
+     "70",
+     "100",
+     "2026-05-31"
+    ],
+    [
+     "WH01",
+     "SKU-1024",
+     "Cushion cover",
+     "598",
+     "86",
+     "100",
+     "2026-05-31"
+    ],
+    [
+     "WH01",
+     "SKU-1027",
+     "Garden hose",
+     "74",
+     "65",
+     "100",
+     "2026-05-31"
+    ],
+    [
+     "WH01",
+     "SKU-1028",
+     "Work gloves",
+     "370",
+     "34",
+     "200",
+     "2026-05-31"
+    ],
+    [
+     "WH01",
+     "SKU-1029",
+     "Step stool",
+     "886",
+     "29",
+     "150",
+     "2026-05-31"
+    ],
+    [
+     "WH01",
+     "SKU-1030",
+     "Tool box",
+     "551",
+     "106",
+     "150",
+     "2026-05-31"
+    ]
+   ]
+  },
+  "purchase_orders": {
+   "note": "One row per version of a purchase order: the first version is the order, later versions are its updates.",
+   "columns": [
+    {
+     "name": "po_id",
+     "type": "string"
+    },
+    {
+     "name": "version",
+     "type": "int"
+    },
+    {
+     "name": "supplier_id",
+     "type": "string"
+    },
+    {
+     "name": "warehouse_id",
+     "type": "string"
+    },
+    {
+     "name": "sku",
+     "type": "string"
+    },
+    {
+     "name": "quantity",
+     "type": "int"
+    },
+    {
+     "name": "unit_cost",
+     "type": "decimal(10,2)"
+    },
+    {
+     "name": "status",
+     "type": "string"
+    },
+    {
+     "name": "expected_date",
+     "type": "date"
+    },
+    {
+     "name": "updated_at",
+     "type": "timestamp"
+    }
+   ],
+   "key": [
+    "po_id",
+    "version"
+   ],
+   "rows": {
+    "lesson": 9,
+    "practice": 278,
+    "project": 510
+   },
+   "lesson": [
+    [
+     "PO00001",
+     "1",
+     "SUP04",
+     "WH01",
+     "SKU-1012",
+     "100",
+     "2.50",
+     "open",
+     "2026-03-17",
+     "2026-03-03T16:05:00"
+    ],
+    [
+     "PO00001",
+     "2",
+     "SUP04",
+     "WH01",
+     "SKU-1012",
+     "100",
+     "2.50",
+     "confirmed",
+     "2026-03-18",
+     "2026-03-05T14:05:00"
+    ],
+    [
+     "PO00001",
+     "3",
+     "SUP04",
+     "WH01",
+     "SKU-1012",
+     "100",
+     "2.50",
+     "shipped",
+     "2026-03-18",
+     "2026-03-06T05:05:00"
+    ],
+    [
+     "PO00001",
+     "4",
+     "SUP04",
+     "WH01",
+     "SKU-1012",
+     "100",
+     "2.50",
+     "received",
+     "2026-03-18",
+     "2026-03-07T23:05:00"
+    ],
+    [
+     "PO00002",
+     "1",
+     "SUP01",
+     "WH03",
+     "SKU-1003",
+     "250",
+     "14.50",
+     "open",
+     "2026-03-10",
+     "2026-03-03T14:48:00"
+    ],
+    [
+     "PO00003",
+     "1",
+     "SUP02",
+     "WH03",
+     "SKU-1003",
+     "100",
+     "9.90",
+     "open",
+     "2026-03-07",
+     "2026-03-02T12:00:00"
+    ],
+    [
+     "PO00003",
+     "2",
+     "SUP02",
+     "WH03",
+     "SKU-1003",
+     "100",
+     "9.90",
+     "confirmed",
+     "2026-03-08",
+     "2026-03-03T03:00:00"
+    ],
+    [
+     "PO00004",
+     "1",
+     "SUP01",
+     "WH01",
+     "SKU-1012",
+     "100",
+     "3.75",
+     "open",
+     "2026-03-10",
+     "2026-03-03T11:23:00"
+    ],
+    [
+     "PO00005",
+     "1",
+     "SUP03",
+     "WH02",
+     "SKU-1014",
+     "500",
+     "0.85",
+     "open",
+     "2026-03-09",
+     "2026-03-02T14:01:00"
+    ]
+   ],
+   "practice_head": [
+    [
+     "PO00001",
+     "1",
+     "SUP01",
+     "WH02",
+     "SKU-1018",
+     "500",
+     "22.00",
+     "open",
+     "2026-04-01",
+     "2026-03-18T15:21:00"
+    ],
+    [
+     "PO00002",
+     "1",
+     "SUP07",
+     "WH06",
+     "SKU-1026",
+     "250",
+     "9.90",
+     "open",
+     "2026-03-19",
+     "2026-03-14T12:43:00"
+    ],
+    [
+     "PO00002",
+     "2",
+     "SUP07",
+     "WH06",
+     "SKU-1026",
+     "250",
+     "9.90",
+     "confirmed",
+     "2026-03-23",
+     "2026-03-17T22:43:00"
+    ],
+    [
+     "PO00002",
+     "3",
+     "SUP07",
+     "WH06",
+     "SKU-1026",
+     "300",
+     "9.90",
+     "confirmed",
+     "2026-03-23",
+     "2026-03-20T05:43:00"
+    ],
+    [
+     "PO00003",
+     "1",
+     "SUP02",
+     "WH03",
+     "SKU-1015",
+     "100",
+     "22.00",
+     "open",
+     "2026-03-30",
+     "2026-03-20T07:08:00"
+    ],
+    [
+     "PO00004",
+     "1",
+     "SUP05",
+     "WH06",
+     "SKU-1021",
+     "500",
+     "1.20",
+     "open",
+     "2026-03-09",
+     "2026-03-02T17:48:00"
+    ],
+    [
+     "PO00005",
+     "1",
+     "SUP04",
+     "WH06",
+     "SKU-1004",
+     "100",
+     "0.85",
+     "open",
+     "2026-04-01",
+     "2026-03-22T11:49:00"
+    ],
+    [
+     "PO00006",
+     "1",
+     "SUP08",
+     "WH06",
+     "SKU-1008",
+     "1000",
+     "3.75",
+     "open",
+     "2026-03-18",
+     "2026-03-11T07:35:00"
+    ],
+    [
+     "PO00007",
+     "1",
+     "SUP03",
+     "WH04",
+     "SKU-1010",
+     "250",
+     "2.50",
+     "open",
+     "2026-03-18",
+     "2026-03-15T16:09:00"
+    ],
+    [
+     "PO00007",
+     "2",
+     "SUP03",
+     "WH04",
+     "SKU-1010",
+     "250",
+     "2.50",
+     "confirmed",
+     "2026-03-18",
+     "2026-03-17T09:09:00"
+    ],
+    [
+     "PO00007",
+     "3",
+     "SUP03",
+     "WH04",
+     "SKU-1010",
+     "250",
+     "2.50",
+     "shipped",
+     "2026-03-18",
+     "2026-03-21T02:09:00"
+    ],
+    [
+     "PO00007",
+     "4",
+     "SUP03",
+     "WH04",
+     "SKU-1010",
+     "250",
+     "2.50",
+     "received",
+     "2026-03-18",
+     "2026-03-22T19:09:00"
+    ],
+    [
+     "PO00008",
+     "1",
+     "SUP06",
+     "WH02",
+     "SKU-1018",
+     "200",
+     "1.20",
+     "open",
+     "2026-03-05",
+     "2026-03-02T10:27:00"
+    ],
+    [
+     "PO00008",
+     "2",
+     "SUP06",
+     "WH02",
+     "SKU-1018",
+     "150",
+     "1.20",
+     "confirmed",
+     "2026-03-05",
+     "2026-03-05T09:27:00"
+    ],
+    [
+     "PO00008",
+     "3",
+     "SUP06",
+     "WH02",
+     "SKU-1018",
+     "150",
+     "1.20",
+     "shipped",
+     "2026-03-05",
+     "2026-03-07T06:27:00"
+    ],
+    [
+     "PO00009",
+     "1",
+     "SUP07",
+     "WH01",
+     "SKU-1011",
+     "1000",
+     "0.85",
+     "open",
+     "2026-03-27",
+     "2026-03-22T10:04:00"
+    ],
+    [
+     "PO00009",
+     "2",
+     "SUP07",
+     "WH01",
+     "SKU-1011",
+     "1000",
+     "0.85",
+     "confirmed",
+     "2026-03-27",
+     "2026-03-22T17:04:00"
+    ],
+    [
+     "PO00009",
+     "3",
+     "SUP07",
+     "WH01",
+     "SKU-1011",
+     "1000",
+     "0.85",
+     "shipped",
+     "2026-03-27",
+     "2026-03-25T08:04:00"
+    ],
+    [
+     "PO00010",
+     "1",
+     "SUP03",
+     "WH03",
+     "SKU-1005",
+     "100",
+     "3.75",
+     "open",
+     "2026-03-12",
+     "2026-03-09T12:47:00"
+    ],
+    [
+     "PO00010",
+     "2",
+     "SUP03",
+     "WH03",
+     "SKU-1005",
+     "100",
+     "3.75",
+     "confirmed",
+     "2026-03-12",
+     "2026-03-11T13:47:00"
+    ]
+   ],
+   "project_head": [
+    [
+     "PO00001",
+     "1",
+     "SUP06",
+     "WH08",
+     "SKU-1003",
+     "100",
+     "22.00",
+     "open",
+     "2026-06-07",
+     "2026-05-24T07:11:00"
+    ],
+    [
+     "PO00001",
+     "2",
+     "SUP06",
+     "WH08",
+     "SKU-1003",
+     "100",
+     "22.00",
+     "confirmed",
+     "2026-06-10",
+     "2026-05-28T07:11:00"
+    ],
+    [
+     "PO00002",
+     "1",
+     "SUP05",
+     "WH07",
+     "SKU-1010",
+     "1000",
+     "0.85",
+     "open",
+     "2026-05-28",
+     "2026-05-21T08:18:00"
+    ],
+    [
+     "PO00002",
+     "2",
+     "SUP05",
+     "WH07",
+     "SKU-1010",
+     "1050",
+     "0.85",
+     "cancelled",
+     "2026-05-28",
+     "2026-05-23T11:18:00"
+    ],
+    [
+     "PO00003",
+     "1",
+     "SUP02",
+     "WH07",
+     "SKU-1005",
+     "200",
+     "6.40",
+     "open",
+     "2026-05-24",
+     "2026-05-17T17:39:00"
+    ],
+    [
+     "PO00003",
+     "2",
+     "SUP02",
+     "WH07",
+     "SKU-1005",
+     "200",
+     "6.40",
+     "confirmed",
+     "2026-05-24",
+     "2026-05-18T15:39:00"
+    ],
+    [
+     "PO00004",
+     "1",
+     "SUP07",
+     "WH06",
+     "SKU-1030",
+     "500",
+     "9.90",
+     "open",
+     "2026-05-31",
+     "2026-05-21T11:50:00"
+    ],
+    [
+     "PO00004",
+     "2",
+     "SUP07",
+     "WH06",
+     "SKU-1030",
+     "500",
+     "9.90",
+     "confirmed",
+     "2026-06-03",
+     "2026-05-22T21:50:00"
+    ],
+    [
+     "PO00004",
+     "3",
+     "SUP07",
+     "WH06",
+     "SKU-1030",
+     "500",
+     "9.90",
+     "shipped",
+     "2026-06-03",
+     "2026-05-23T04:50:00"
+    ],
+    [
+     "PO00005",
+     "1",
+     "SUP02",
+     "WH05",
+     "SKU-1004",
+     "500",
+     "6.40",
+     "open",
+     "2026-05-12",
+     "2026-05-05T16:18:00"
+    ],
+    [
+     "PO00006",
+     "1",
+     "SUP09",
+     "WH06",
+     "SKU-1013",
+     "250",
+     "14.50",
+     "open",
+     "2026-05-12",
+     "2026-05-05T15:35:00"
+    ],
+    [
+     "PO00006",
+     "2",
+     "SUP09",
+     "WH06",
+     "SKU-1013",
+     "250",
+     "14.50",
+     "confirmed",
+     "2026-05-14",
+     "2026-05-07T20:35:00"
+    ],
+    [
+     "PO00007",
+     "1",
+     "SUP09",
+     "WH07",
+     "SKU-1008",
+     "200",
+     "22.00",
+     "open",
+     "2026-05-27",
+     "2026-05-20T10:13:00"
+    ],
+    [
+     "PO00007",
+     "2",
+     "SUP09",
+     "WH07",
+     "SKU-1008",
+     "300",
+     "22.00",
+     "confirmed",
+     "2026-05-27",
+     "2026-05-23T10:13:00"
+    ],
+    [
+     "PO00008",
+     "1",
+     "SUP05",
+     "WH03",
+     "SKU-1025",
+     "500",
+     "9.90",
+     "open",
+     "2026-05-21",
+     "2026-05-14T17:59:00"
+    ],
+    [
+     "PO00008",
+     "2",
+     "SUP05",
+     "WH03",
+     "SKU-1025",
+     "500",
+     "9.90",
+     "cancelled",
+     "2026-05-21",
+     "2026-05-18T14:59:00"
+    ],
+    [
+     "PO00009",
+     "1",
+     "SUP02",
+     "WH01",
+     "SKU-1011",
+     "1000",
+     "2.50",
+     "open",
+     "2026-05-21",
+     "2026-05-14T12:16:00"
+    ],
+    [
+     "PO00010",
+     "1",
+     "SUP12",
+     "WH04",
+     "SKU-1016",
+     "250",
+     "2.50",
+     "open",
+     "2026-05-25",
+     "2026-05-22T11:14:00"
+    ],
+    [
+     "PO00011",
+     "1",
+     "SUP05",
+     "WH05",
+     "SKU-1024",
+     "500",
+     "3.75",
+     "open",
+     "2026-05-16",
+     "2026-05-09T12:50:00"
+    ],
+    [
+     "PO00011",
+     "2",
+     "SUP05",
+     "WH05",
+     "SKU-1024",
+     "500",
+     "3.75",
+     "confirmed",
+     "2026-05-16",
+     "2026-05-10T03:50:00"
+    ]
+   ]
+  },
+  "shipments": {
+   "note": "One row per outbound shipment: which warehouse sends which SKU, by which carrier, promised for which day.",
+   "columns": [
+    {
+     "name": "shipment_id",
+     "type": "string"
+    },
+    {
+     "name": "warehouse_id",
+     "type": "string"
+    },
+    {
+     "name": "sku",
+     "type": "string"
+    },
+    {
+     "name": "quantity",
+     "type": "int"
+    },
+    {
+     "name": "carrier",
+     "type": "string"
+    },
+    {
+     "name": "service_level",
+     "type": "string"
+    },
+    {
+     "name": "destination_city",
+     "type": "string"
+    },
+    {
+     "name": "created_at",
+     "type": "timestamp"
+    },
+    {
+     "name": "promised_date",
+     "type": "date"
+    }
+   ],
+   "key": [
+    "shipment_id"
+   ],
+   "rows": {
+    "lesson": 4,
+    "practice": 380,
+    "project": 760
+   },
+   "lesson": [
+    [
+     "SH0001",
+     "WH03",
+     "SKU-1003",
+     "1",
+     "SwiftFreight",
+     "standard",
+     "Wroc\u0142aw",
+     "2026-03-03T12:24:00",
+     "2026-03-06"
+    ],
+    [
+     "SH0002",
+     "WH01",
+     "SKU-1003",
+     "2",
+     "Parcelway",
+     "standard",
+     "Malm\u00f6",
+     "2026-03-03T08:03:00",
+     "2026-03-07"
+    ],
+    [
+     "SH0003",
+     "WH02",
+     "SKU-1014",
+     "24",
+     "Parcelway",
+     "standard",
+     "Turin",
+     "2026-03-03T12:17:00",
+     "2026-03-06"
+    ],
+    [
+     "SH0004",
+     "WH02",
+     "SKU-1014",
+     "24",
+     "Parcelway",
+     "standard",
+     "Graz",
+     "2026-03-03T09:30:00",
+     "2026-03-07"
+    ]
+   ],
+   "practice_head": [
+    [
+     "SH0001",
+     "WH05",
+     "SKU-1003",
+     "1",
+     "Parcelway",
+     "express",
+     "Cork",
+     "2026-03-10T06:25:00",
+     "2026-03-11"
+    ],
+    [
+     "SH0002",
+     "WH01",
+     "SKU-1015",
+     "1",
+     "Parcelway",
+     "standard",
+     "Bremen",
+     "2026-03-24T18:22:00",
+     "2026-03-27"
+    ],
+    [
+     "SH0003",
+     "WH06",
+     "SKU-1021",
+     "4",
+     "Parcelway",
+     "standard",
+     "Wroc\u0142aw",
+     "2026-03-28T15:23:00",
+     "2026-03-30"
+    ],
+    [
+     "SH0004",
+     "WH05",
+     "SKU-1023",
+     "24",
+     "SwiftFreight",
+     "standard",
+     "Antwerp",
+     "2026-03-28T17:58:00",
+     "2026-04-01"
+    ],
+    [
+     "SH0005",
+     "WH03",
+     "SKU-1005",
+     "4",
+     "Northline Express",
+     "standard",
+     "Wroc\u0142aw",
+     "2026-03-03T08:50:00",
+     "2026-03-06"
+    ],
+    [
+     "SH0006",
+     "WH01",
+     "SKU-1019",
+     "2",
+     "Parcelway",
+     "standard",
+     "Turin",
+     "2026-03-22T19:51:00",
+     "2026-03-25"
+    ],
+    [
+     "SH0007",
+     "WH05",
+     "SKU-1021",
+     "1",
+     "Northline Express",
+     "standard",
+     "Malm\u00f6",
+     "2026-03-11T18:37:00",
+     "2026-03-16"
+    ],
+    [
+     "SH0008",
+     "WH06",
+     "SKU-1018",
+     "1",
+     "SwiftFreight",
+     "express",
+     "Bremen",
+     "2026-03-12T06:59:00",
+     "2026-03-14"
+    ],
+    [
+     "SH0009",
+     "WH06",
+     "SKU-1005",
+     "2",
+     "Parcelway",
+     "standard",
+     "Seville",
+     "2026-03-22T13:53:00",
+     "2026-03-24"
+    ],
+    [
+     "SH0010",
+     "WH04",
+     "SKU-1020",
+     "1",
+     "SwiftFreight",
+     "standard",
+     "Graz",
+     "2026-03-04T18:46:00",
+     "2026-03-09"
+    ],
+    [
+     "SH0011",
+     "WH04",
+     "SKU-1004",
+     "4",
+     "Parcelway",
+     "standard",
+     "Antwerp",
+     "2026-03-16T12:22:00",
+     "2026-03-20"
+    ],
+    [
+     "SH0012",
+     "WH03",
+     "SKU-1017",
+     "24",
+     "Northline Express",
+     "express",
+     "Brno",
+     "2026-03-10T14:19:00",
+     "2026-03-12"
+    ],
+    [
+     "SH0013",
+     "WH03",
+     "SKU-1006",
+     "6",
+     "Parcelway",
+     "standard",
+     "Antwerp",
+     "2026-03-09T17:24:00",
+     "2026-03-11"
+    ],
+    [
+     "SH0014",
+     "WH03",
+     "SKU-1010",
+     "2",
+     "Northline Express",
+     "standard",
+     "Bremen",
+     "2026-03-18T11:54:00",
+     "2026-03-20"
+    ],
+    [
+     "SH0015",
+     "WH04",
+     "SKU-1025",
+     "6",
+     "Parcelway",
+     "express",
+     "Wroc\u0142aw",
+     "2026-03-06T10:02:00",
+     "2026-03-07"
+    ],
+    [
+     "SH0016",
+     "WH01",
+     "SKU-1008",
+     "4",
+     "Northline Express",
+     "express",
+     "Utrecht",
+     "2026-03-21T13:57:00",
+     "2026-03-22"
+    ],
+    [
+     "SH0017",
+     "WH01",
+     "SKU-1011",
+     "6",
+     "Parcelway",
+     "standard",
+     "Cork",
+     "2026-03-12T06:25:00",
+     "2026-03-15"
+    ],
+    [
+     "SH0018",
+     "WH06",
+     "SKU-1011",
+     "24",
+     "SwiftFreight",
+     "express",
+     "Bremen",
+     "2026-03-18T18:11:00",
+     "2026-03-20"
+    ],
+    [
+     "SH0019",
+     "WH03",
+     "SKU-1022",
+     "1",
+     "SwiftFreight",
+     "standard",
+     "Seville",
+     "2026-03-06T08:06:00",
+     "2026-03-09"
+    ],
+    [
+     "SH0020",
+     "WH05",
+     "SKU-1019",
+     "1",
+     "Parcelway",
+     "express",
+     "Seville",
+     "2026-03-25T17:31:00",
+     "2026-03-27"
+    ]
+   ],
+   "project_head": [
+    [
+     "SH0001",
+     "WH05",
+     "SKU-1015",
+     "24",
+     "Parcelway",
+     "standard",
+     "Bremen",
+     "2026-05-20T11:03:00",
+     "2026-05-22"
+    ],
+    [
+     "SH0002",
+     "WH03",
+     "SKU-1003",
+     "24",
+     "SwiftFreight",
+     "express",
+     "Utrecht",
+     "2026-05-30T13:26:00",
+     "2026-06-01"
+    ],
+    [
+     "SH0003",
+     "WH05",
+     "SKU-1029",
+     "4",
+     "SwiftFreight",
+     "standard",
+     "Wroc\u0142aw",
+     "2026-05-17T15:33:00",
+     "2026-05-21"
+    ],
+    [
+     "SH0004",
+     "WH01",
+     "SKU-1018",
+     "6",
+     "SwiftFreight",
+     "standard",
+     "Turin",
+     "2026-05-24T16:22:00",
+     "2026-05-28"
+    ],
+    [
+     "SH0005",
+     "WH02",
+     "SKU-1022",
+     "2",
+     "Parcelway",
+     "standard",
+     "Graz",
+     "2026-05-06T17:28:00",
+     "2026-05-08"
+    ],
+    [
+     "SH0006",
+     "WH05",
+     "SKU-1017",
+     "6",
+     "SwiftFreight",
+     "standard",
+     "Graz",
+     "2026-05-07T18:19:00",
+     "2026-05-09"
+    ],
+    [
+     "SH0007",
+     "WH03",
+     "SKU-1018",
+     "6",
+     "Parcelway",
+     "standard",
+     "Brno",
+     "2026-05-16T08:08:00",
+     "2026-05-21"
+    ],
+    [
+     "SH0008",
+     "WH07",
+     "SKU-1003",
+     "4",
+     "SwiftFreight",
+     "standard",
+     "Cork",
+     "2026-05-25T08:13:00",
+     "2026-05-27"
+    ],
+    [
+     "SH0009",
+     "WH01",
+     "SKU-1028",
+     "2",
+     "Northline Express",
+     "standard",
+     "Bordeaux",
+     "2026-05-04T10:45:00",
+     "2026-05-09"
+    ],
+    [
+     "SH0010",
+     "WH04",
+     "SKU-1014",
+     "1",
+     "Northline Express",
+     "standard",
+     "Turin",
+     "2026-05-06T13:51:00",
+     "2026-05-09"
+    ],
+    [
+     "SH0011",
+     "WH02",
+     "SKU-1021",
+     "6",
+     "Northline Express",
+     "standard",
+     "Turin",
+     "2026-05-30T19:17:00",
+     "2026-06-01"
+    ],
+    [
+     "SH0012",
+     "WH08",
+     "SKU-1007",
+     "4",
+     "SwiftFreight",
+     "standard",
+     "Utrecht",
+     "2026-05-14T08:24:00",
+     "2026-05-16"
+    ],
+    [
+     "SH0013",
+     "WH06",
+     "SKU-1014",
+     "24",
+     "SwiftFreight",
+     "express",
+     "Bordeaux",
+     "2026-05-19T07:45:00",
+     "2026-05-20"
+    ],
+    [
+     "SH0014",
+     "WH03",
+     "SKU-1021",
+     "1",
+     "SwiftFreight",
+     "standard",
+     "Seville",
+     "2026-05-27T12:12:00",
+     "2026-05-29"
+    ],
+    [
+     "SH0015",
+     "WH02",
+     "SKU-1022",
+     "1",
+     "SwiftFreight",
+     "standard",
+     "Cork",
+     "2026-05-11T18:50:00",
+     "2026-05-15"
+    ],
+    [
+     "SH0016",
+     "WH07",
+     "SKU-1013",
+     "4",
+     "Northline Express",
+     "standard",
+     "Antwerp",
+     "2026-05-07T07:47:00",
+     "2026-05-09"
+    ],
+    [
+     "SH0017",
+     "WH07",
+     "SKU-1005",
+     "1",
+     "Parcelway",
+     "standard",
+     "Graz",
+     "2026-05-24T12:02:00",
+     "2026-05-27"
+    ],
+    [
+     "SH0018",
+     "WH08",
+     "SKU-1012",
+     "1",
+     "Parcelway",
+     "standard",
+     "Bremen",
+     "2026-05-14T10:24:00",
+     "2026-05-18"
+    ],
+    [
+     "SH0019",
+     "WH05",
+     "SKU-1004",
+     "6",
+     "SwiftFreight",
+     "standard",
+     "Brno",
+     "2026-05-16T07:19:00",
+     "2026-05-18"
+    ],
+    [
+     "SH0020",
+     "WH04",
+     "SKU-1022",
+     "2",
+     "Northline Express",
+     "standard",
+     "Brno",
+     "2026-05-05T09:15:00",
+     "2026-05-07"
+    ]
+   ]
+  },
+  "shipment_events": {
+   "note": "One row per tracking event a carrier or warehouse reported, with the day it was loaded and its source sequence number.",
+   "columns": [
+    {
+     "name": "event_id",
+     "type": "string"
+    },
+    {
+     "name": "shipment_id",
+     "type": "string"
+    },
+    {
+     "name": "warehouse_id",
+     "type": "string"
+    },
+    {
+     "name": "event_type",
+     "type": "string"
+    },
+    {
+     "name": "event_time",
+     "type": "timestamp"
+    },
+    {
+     "name": "location",
+     "type": "string"
+    },
+    {
+     "name": "sequence",
+     "type": "bigint"
+    },
+    {
+     "name": "load_date",
+     "type": "date"
+    },
+    {
+     "name": "is_correction",
+     "type": "boolean"
+    }
+   ],
+   "key": [
+    "event_id"
+   ],
+   "rows": {
+    "lesson": 14,
+    "practice": 2418,
+    "project": 5125
+   },
+   "lesson": [
+    [
+     "E0000001",
+     "SH0002",
+     "WH01",
+     "created",
+     "2026-03-03T08:03:00",
+     "WH01",
+     "100001",
+     "2026-03-03",
+     "false"
+    ],
+    [
+     "E0000002",
+     "SH0004",
+     "WH02",
+     "created",
+     "2026-03-03T09:30:00",
+     "WH02",
+     "100002",
+     "2026-03-03",
+     "false"
+    ],
+    [
+     "E0000003",
+     "SH0003",
+     "WH02",
+     "created",
+     "2026-03-03T12:17:00",
+     "WH02",
+     "100003",
+     "2026-03-03",
+     "false"
+    ],
+    [
+     "E0000004",
+     "SH0001",
+     "WH03",
+     "created",
+     "2026-03-03T12:24:00",
+     "WH03",
+     "100004",
+     "2026-03-03",
+     "false"
+    ],
+    [
+     "E0000005",
+     "SH0004",
+     "WH02",
+     "departed",
+     "2026-03-03T14:29:00",
+     "WH02",
+     "100005",
+     "2026-03-03",
+     "false"
+    ],
+    [
+     "E0000006",
+     "SH0002",
+     "WH01",
+     "departed",
+     "2026-03-03T15:42:00",
+     "WH01",
+     "100006",
+     "2026-03-03",
+     "false"
+    ],
+    [
+     "E0000007",
+     "SH0001",
+     "WH03",
+     "departed",
+     "2026-03-03T16:06:00",
+     "WH03",
+     "100007",
+     "2026-03-03",
+     "false"
+    ],
+    [
+     "E0000007",
+     "SH0001",
+     "WH03",
+     "departed",
+     "2026-03-03T16:06:00",
+     "WH03",
+     "100007",
+     "2026-03-04",
+     "false"
+    ],
+    [
+     "E0000008",
+     "SH0003",
+     "WH02",
+     "departed",
+     "2026-03-03T18:00:00",
+     "WH02",
+     "100008",
+     "2026-03-03",
+     "false"
+    ],
+    [
+     "E0000009",
+     "SH0003",
+     "WH02",
+     "delivered",
+     "2026-03-06T08:53:00",
+     "Turin",
+     "100009",
+     "2026-03-06",
+     "false"
+    ],
+    [
+     "E0000010",
+     "SH0002",
+     "WH01",
+     "delivered",
+     "2026-03-07T12:34:00",
+     "Malm\u00f6",
+     "100010",
+     "2026-03-07",
+     "false"
+    ],
+    [
+     "E0000011",
+     "SH0001",
+     "WH03",
+     "delivered",
+     "2026-03-07T19:50:00",
+     "Wroc\u0142aw",
+     "100011",
+     "2026-03-07",
+     "false"
+    ],
+    [
+     "E0000012",
+     "SH0004",
+     "WH02",
+     "delivered",
+     "2026-03-08T20:50:00",
+     "Graz",
+     "100012",
+     "2026-03-08",
+     "false"
+    ],
+    [
+     "E0000013",
+     "SH9999",
+     "WH02",
+     "departed",
+     "2026-03-08T21:20:00",
+     "WH02",
+     "100013",
+     "2026-03-08",
+     "false"
+    ]
+   ],
+   "practice_head": [
+    [
+     "E0000002",
+     "SH0038",
+     "WH04",
+     "picked",
+     "2026-03-02T09:33:00",
+     "WH04",
+     "100002",
+     "2026-03-02",
+     "false"
+    ],
+    [
+     "E0000003",
+     "SH0367",
+     "WH05",
+     "created",
+     "2026-03-02T09:58:00",
+     "WH05",
+     "100003",
+     "2026-03-02",
+     "false"
+    ],
+    [
+     "E0000004",
+     "SH0298",
+     "WH04",
+     "created",
+     "2026-03-02T10:42:00",
+     "WH04",
+     "100004",
+     "2026-03-02",
+     "false"
+    ],
+    [
+     "E0000005",
+     "SH0076",
+     "WH06",
+     "created",
+     "2026-03-02T11:02:00",
+     "WH06",
+     "100005",
+     "2026-03-02",
+     "false"
+    ],
+    [
+     "E0000006",
+     "SH0298",
+     "WH04",
+     "picked",
+     "2026-03-02T11:43:00",
+     "WH04",
+     "100006",
+     "2026-03-02",
+     "false"
+    ],
+    [
+     "E0000007",
+     "SH0348",
+     "WH04",
+     "created",
+     "2026-03-02T12:02:00",
+     "WH04",
+     "100007",
+     "2026-03-02",
+     "false"
+    ],
+    [
+     "E0000008",
+     "SH0261",
+     "WH03",
+     "created",
+     "2026-03-02T12:37:00",
+     "WH03",
+     "100008",
+     "2026-03-02",
+     "false"
+    ],
+    [
+     "E0000009",
+     "SH0038",
+     "WH04",
+     "departed",
+     "2026-03-02T13:21:00",
+     "WH04",
+     "100009",
+     "2026-03-02",
+     "false"
+    ],
+    [
+     "E0000010",
+     "SH0367",
+     "WH05",
+     "picked",
+     "2026-03-02T13:40:00",
+     "WH05",
+     "100010",
+     "2026-03-02",
+     "false"
+    ],
+    [
+     "E0000011",
+     "SH0087",
+     "WH04",
+     "created",
+     "2026-03-02T13:52:00",
+     "WH04",
+     "100011",
+     "2026-03-02",
+     "false"
+    ],
+    [
+     "E0000012",
+     "SH0348",
+     "WH04",
+     "picked",
+     "2026-03-02T14:19:00",
+     "WH04",
+     "100012",
+     "2026-03-02",
+     "false"
+    ],
+    [
+     "E0000013",
+     "SH0076",
+     "WH06",
+     "picked",
+     "2026-03-02T15:47:00",
+     "WH06",
+     "100013",
+     "2026-03-02",
+     "false"
+    ],
+    [
+     "E0000014",
+     "SH0298",
+     "WH04",
+     "departed",
+     "2026-03-02T15:51:00",
+     "WH04",
+     "100014",
+     "2026-03-02",
+     "false"
+    ],
+    [
+     "E0000015",
+     "SH0261",
+     "WH03",
+     "picked",
+     "2026-03-02T16:28:00",
+     "WH03",
+     "100015",
+     "2026-03-02",
+     "false"
+    ],
+    [
+     "E0000016",
+     "SH0106",
+     "WH01",
+     "created",
+     "2026-03-02T16:49:00",
+     "WH01",
+     "100016",
+     "2026-03-02",
+     "false"
+    ],
+    [
+     "E0000017",
+     "SH0087",
+     "WH04",
+     "picked",
+     "2026-03-02T17:03:00",
+     "WH04",
+     "100017",
+     "2026-03-02",
+     "false"
+    ],
+    [
+     "E0000018",
+     "SH0348",
+     "WH04",
+     "departed",
+     "2026-03-02T17:48:00",
+     "WH04",
+     "100018",
+     "2026-03-02",
+     "false"
+    ],
+    [
+     "E0000019",
+     "SH0247",
+     "WH02",
+     "created",
+     "2026-03-02T18:01:00",
+     "WH02",
+     "100019",
+     "2026-03-02",
+     "false"
+    ],
+    [
+     "E0000020",
+     "SH0180",
+     "WH06",
+     "created",
+     "2026-03-02T18:03:00",
+     "WH06",
+     "100020",
+     "2026-03-02",
+     "false"
+    ],
+    [
+     "E0000021",
+     "SH0106",
+     "WH01",
+     "picked",
+     "2026-03-02T18:23:00",
+     "WH01",
+     "100021",
+     "2026-03-02",
+     "false"
+    ]
+   ],
+   "project_head": [
+    [
+     "E0000030",
+     "SH0666",
+     "WH01",
+     "picked",
+     "2026-05-04T14:20:00",
+     "WH01",
+     "100030",
+     "2026-05-04",
+     "false"
+    ],
+    [
+     "E0000075",
+     "SH0198",
+     "WH02",
+     "departed",
+     "2026-05-04T20:09:00",
+     "WH02",
+     "100075",
+     "2026-05-04",
+     "false"
+    ],
+    [
+     "E0000056",
+     "SH0192",
+     "WH02",
+     "departed",
+     "2026-05-04T18:10:00",
+     "WH02",
+     "100056",
+     "2026-05-04",
+     "false"
+    ],
+    [
+     "E0000064",
+     "SH0509",
+     "WH08",
+     "picked",
+     "2026-05-04T18:49:00",
+     "WH08",
+     "100064",
+     "2026-05-04",
+     "false"
+    ],
+    [
+     "E0000082",
+     "SH0609",
+     "WH04",
+     "picked",
+     "2026-05-04T21:22:00",
+     "WH04",
+     "100082",
+     "2026-05-04",
+     "false"
+    ],
+    [
+     "E0000029",
+     "SH0376",
+     "WH07",
+     "picked",
+     "2026-05-04T14:11:00",
+     "WH07",
+     "100029",
+     "2026-05-04",
+     "false"
+    ],
+    [
+     "E0000045",
+     "SH0192",
+     "WH02",
+     "picked",
+     "2026-05-04T16:15:00",
+     "WH02",
+     "100045",
+     "2026-05-04",
+     "false"
+    ],
+    [
+     "E0000073",
+     "SH0666",
+     "WH01",
+     "departed",
+     "2026-05-04T19:50:00",
+     "WH01",
+     "100073",
+     "2026-05-04",
+     "false"
+    ],
+    [
+     "E0000021",
+     "SH0078",
+     "WH01",
+     "picked",
+     "2026-05-04T12:49:00",
+     "WH01",
+     "100021",
+     "2026-05-04",
+     "false"
+    ],
+    [
+     "E0000057",
+     "SH0609",
+     "WH04",
+     "created",
+     "2026-05-04T18:26:00",
+     "WH04",
+     "100057",
+     "2026-05-04",
+     "false"
+    ],
+    [
+     "E0000068",
+     "SH0044",
+     "WH06",
+     "created",
+     "2026-05-04T19:15:00",
+     "WH06",
+     "100068",
+     "2026-05-04",
+     "false"
+    ],
+    [
+     "E0000043",
+     "SH0288",
+     "WH03",
+     "picked",
+     "2026-05-04T16:07:00",
+     "WH03",
+     "100043",
+     "2026-05-04",
+     "false"
+    ],
+    [
+     "E0000023",
+     "SH0635",
+     "WH01",
+     "picked",
+     "2026-05-04T13:17:00",
+     "WH01",
+     "100023",
+     "2026-05-04",
+     "false"
+    ],
+    [
+     "E0000084",
+     "SH0509",
+     "WH08",
+     "departed",
+     "2026-05-04T21:44:00",
+     "WH08",
+     "100084",
+     "2026-05-04",
+     "false"
+    ],
+    [
+     "E0000038",
+     "SH0299",
+     "WH08",
+     "departed",
+     "2026-05-04T15:36:00",
+     "WH08",
+     "100038",
+     "2026-05-04",
+     "false"
+    ],
+    [
+     "E0000070",
+     "SH0114",
+     "WH06",
+     "created",
+     "2026-05-04T19:42:00",
+     "WH06",
+     "100070",
+     "2026-05-04",
+     "false"
+    ],
+    [
+     "E0000041",
+     "SH0503",
+     "WH01",
+     "created",
+     "2026-05-04T15:50:00",
+     "WH01",
+     "100041",
+     "2026-05-04",
+     "false"
+    ],
+    [
+     "E0000006",
+     "SH0178",
+     "WH08",
+     "created",
+     "2026-05-04T08:42:00",
+     "WH08",
+     "100006",
+     "2026-05-04",
+     "false"
+    ],
+    [
+     "E0000011",
+     "SH0382",
+     "WH02",
+     "picked",
+     "2026-05-04T10:30:00",
+     "WH02",
+     "100011",
+     "2026-05-04",
+     "false"
+    ],
+    [
+     "E0000005",
+     "SH0233",
+     "WH01",
+     "created",
+     "2026-05-04T08:14:00",
+     "WH01",
+     "100005",
+     "2026-05-04",
+     "false"
+    ]
+   ]
+  },
+  "deliveries": {
+   "note": "One row per delivery attempt booked for a shipment: the promised time window and when it was actually delivered.",
+   "columns": [
+    {
+     "name": "delivery_id",
+     "type": "string"
+    },
+    {
+     "name": "shipment_id",
+     "type": "string"
+    },
+    {
+     "name": "window_start",
+     "type": "timestamp"
+    },
+    {
+     "name": "window_end",
+     "type": "timestamp"
+    },
+    {
+     "name": "delivered_at",
+     "type": "timestamp"
+    },
+    {
+     "name": "status",
+     "type": "string"
+    }
+   ],
+   "key": [
+    "delivery_id"
+   ],
+   "rows": {
+    "lesson": 4,
+    "practice": 344,
+    "project": 696
+   },
+   "lesson": [
+    [
+     "DL00001",
+     "SH0001",
+     "2026-03-07T16:00:00",
+     "2026-03-07T20:00:00",
+     "2026-03-07T19:50:00",
+     "on_time"
+    ],
+    [
+     "DL00002",
+     "SH0002",
+     "2026-03-07T12:00:00",
+     "2026-03-07T16:00:00",
+     "2026-03-07T12:34:00",
+     "on_time"
+    ],
+    [
+     "DL00003",
+     "SH0003",
+     "2026-03-06T08:00:00",
+     "2026-03-06T12:00:00",
+     "2026-03-06T08:53:00",
+     "on_time"
+    ],
+    [
+     "DL00004",
+     "SH0004",
+     "2026-03-08T16:00:00",
+     "2026-03-08T20:00:00",
+     "2026-03-08T20:50:00",
+     "late"
+    ]
+   ],
+   "practice_head": [
+    [
+     "DL00001",
+     "SH0001",
+     "2026-03-11T08:00:00",
+     "2026-03-11T12:00:00",
+     "2026-03-11T09:04:00",
+     "on_time"
+    ],
+    [
+     "DL00002",
+     "SH0002",
+     "2026-03-28T16:00:00",
+     "2026-03-28T20:00:00",
+     "2026-03-28T18:19:00",
+     "on_time"
+    ],
+    [
+     "DL00003",
+     "SH0005",
+     "2026-03-06T12:00:00",
+     "2026-03-06T16:00:00",
+     "2026-03-06T13:50:00",
+     "on_time"
+    ],
+    [
+     "DL00004",
+     "SH0006",
+     "2026-03-25T12:00:00",
+     "2026-03-25T16:00:00",
+     "2026-03-25T15:05:00",
+     "on_time"
+    ],
+    [
+     "DL00005",
+     "SH0007",
+     "2026-03-16T12:00:00",
+     "2026-03-16T16:00:00",
+     "2026-03-16T15:40:00",
+     "on_time"
+    ],
+    [
+     "DL00006",
+     "SH0008",
+     "2026-03-14T12:00:00",
+     "2026-03-14T16:00:00",
+     "2026-03-14T17:53:00",
+     "late"
+    ],
+    [
+     "DL00007",
+     "SH0009",
+     "2026-03-24T16:00:00",
+     "2026-03-24T20:00:00",
+     "2026-03-24T19:43:00",
+     "on_time"
+    ],
+    [
+     "DL00008",
+     "SH0010",
+     "2026-03-10T12:00:00",
+     "2026-03-10T16:00:00",
+     "2026-03-10T13:11:00",
+     "on_time"
+    ],
+    [
+     "DL00009",
+     "SH0011",
+     "2026-03-20T08:00:00",
+     "2026-03-20T12:00:00",
+     "2026-03-20T08:28:00",
+     "on_time"
+    ],
+    [
+     "DL00010",
+     "SH0012",
+     "2026-03-12T12:00:00",
+     "2026-03-12T16:00:00",
+     "2026-03-12T14:52:00",
+     "on_time"
+    ],
+    [
+     "DL00011",
+     "SH0013",
+     "2026-03-12T08:00:00",
+     "2026-03-12T12:00:00",
+     "2026-03-12T08:20:00",
+     "on_time"
+    ],
+    [
+     "DL00012",
+     "SH0014",
+     "2026-03-22T12:00:00",
+     "2026-03-22T16:00:00",
+     "2026-03-22T15:35:00",
+     "on_time"
+    ],
+    [
+     "DL00013",
+     "SH0015",
+     "2026-03-09T12:00:00",
+     "2026-03-09T16:00:00",
+     "2026-03-09T15:11:00",
+     "on_time"
+    ],
+    [
+     "DL00014",
+     "SH0016",
+     "2026-03-23T08:00:00",
+     "2026-03-23T12:00:00",
+     "2026-03-23T09:39:00",
+     "on_time"
+    ],
+    [
+     "DL00015",
+     "SH0017",
+     "2026-03-15T08:00:00",
+     "2026-03-15T12:00:00",
+     "2026-03-15T08:06:00",
+     "on_time"
+    ],
+    [
+     "DL00016",
+     "SH0018",
+     "2026-03-20T16:00:00",
+     "2026-03-20T20:00:00",
+     "2026-03-20T17:31:00",
+     "on_time"
+    ],
+    [
+     "DL00017",
+     "SH0019",
+     "2026-03-09T08:00:00",
+     "2026-03-09T12:00:00",
+     "2026-03-09T10:55:00",
+     "on_time"
+    ],
+    [
+     "DL00018",
+     "SH0020",
+     "2026-03-27T12:00:00",
+     "2026-03-27T16:00:00",
+     "2026-03-27T19:21:00",
+     "late"
+    ],
+    [
+     "DL00019",
+     "SH0021",
+     "2026-03-12T12:00:00",
+     "2026-03-12T16:00:00",
+     "2026-03-12T14:47:00",
+     "on_time"
+    ],
+    [
+     "DL00020",
+     "SH0022",
+     "2026-03-21T16:00:00",
+     "2026-03-21T20:00:00",
+     "2026-03-21T18:23:00",
+     "on_time"
+    ]
+   ],
+   "project_head": [
+    [
+     "DL00001",
+     "SH0001",
+     "2026-05-22T12:00:00",
+     "2026-05-22T16:00:00",
+     "2026-05-22T19:34:00",
+     "late"
+    ],
+    [
+     "DL00002",
+     "SH0003",
+     "2026-05-21T12:00:00",
+     "2026-05-21T16:00:00",
+     "2026-05-21T13:15:00",
+     "on_time"
+    ],
+    [
+     "DL00003",
+     "SH0004",
+     "2026-05-28T12:00:00",
+     "2026-05-28T16:00:00",
+     "2026-05-28T14:49:00",
+     "on_time"
+    ],
+    [
+     "DL00004",
+     "SH0005",
+     "2026-05-09T12:00:00",
+     "2026-05-09T16:00:00",
+     null,
+     "failed"
+    ],
+    [
+     "DL00005",
+     "SH0006",
+     "2026-05-11T12:00:00",
+     "2026-05-11T16:00:00",
+     null,
+     "failed"
+    ],
+    [
+     "DL00006",
+     "SH0007",
+     "2026-05-21T12:00:00",
+     "2026-05-21T16:00:00",
+     "2026-05-21T19:09:00",
+     "late"
+    ],
+    [
+     "DL00007",
+     "SH0008",
+     "2026-05-27T12:00:00",
+     "2026-05-27T16:00:00",
+     "2026-05-27T14:38:00",
+     "on_time"
+    ],
+    [
+     "DL00008",
+     "SH0009",
+     "2026-05-10T16:00:00",
+     "2026-05-10T20:00:00",
+     "2026-05-10T23:22:00",
+     "late"
+    ],
+    [
+     "DL00009",
+     "SH0010",
+     "2026-05-10T16:00:00",
+     "2026-05-10T20:00:00",
+     "2026-05-10T18:47:00",
+     "on_time"
+    ],
+    [
+     "DL00010",
+     "SH0012",
+     "2026-05-16T08:00:00",
+     "2026-05-16T12:00:00",
+     null,
+     "failed"
+    ],
+    [
+     "DL00011",
+     "SH0013",
+     "2026-05-20T08:00:00",
+     "2026-05-20T12:00:00",
+     "2026-05-20T09:24:00",
+     "on_time"
+    ],
+    [
+     "DL00012",
+     "SH0014",
+     "2026-05-29T08:00:00",
+     "2026-05-29T12:00:00",
+     "2026-05-29T11:49:00",
+     "on_time"
+    ],
+    [
+     "DL00013",
+     "SH0015",
+     "2026-05-15T16:00:00",
+     "2026-05-15T20:00:00",
+     "2026-05-15T17:07:00",
+     "on_time"
+    ],
+    [
+     "DL00014",
+     "SH0016",
+     "2026-05-09T16:00:00",
+     "2026-05-09T20:00:00",
+     "2026-05-09T16:37:00",
+     "on_time"
+    ],
+    [
+     "DL00015",
+     "SH0017",
+     "2026-05-27T16:00:00",
+     "2026-05-27T20:00:00",
+     "2026-05-27T18:49:00",
+     "on_time"
+    ],
+    [
+     "DL00016",
+     "SH0018",
+     "2026-05-18T12:00:00",
+     "2026-05-18T16:00:00",
+     null,
+     "failed"
+    ],
+    [
+     "DL00017",
+     "SH0019",
+     "2026-05-18T12:00:00",
+     "2026-05-18T16:00:00",
+     "2026-05-18T13:16:00",
+     "on_time"
+    ],
+    [
+     "DL00018",
+     "SH0020",
+     "2026-05-07T12:00:00",
+     "2026-05-07T16:00:00",
+     "2026-05-07T15:30:00",
+     "on_time"
+    ],
+    [
+     "DL00019",
+     "SH0021",
+     "2026-05-25T08:00:00",
+     "2026-05-25T12:00:00",
+     "2026-05-25T11:31:00",
+     "on_time"
+    ],
+    [
+     "DL00020",
+     "SH0022",
+     "2026-05-19T12:00:00",
+     "2026-05-19T16:00:00",
+     "2026-05-19T13:52:00",
+     "on_time"
+    ]
+   ]
+  }
+ }
+}

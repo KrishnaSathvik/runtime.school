@@ -1,0 +1,246 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "order_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "customer_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "order_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "total",
+     "type": "decimal(10,2)",
+     "nullable": true
+    },
+    {
+     "name": "reason",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "O00013",
+     "C0004",
+     null,
+     "Paid",
+     "52.00",
+     "no order date"
+    ],
+    [
+     "O00014",
+     "C0005",
+     "2026-03-12",
+     null,
+     "40.00",
+     "unknown status"
+    ],
+    [
+     "O00015",
+     "C0009",
+     "2026-03-14",
+     "shipped",
+     "88.00",
+     "unknown customer"
+    ],
+    [
+     "O00016",
+     null,
+     "2026-03-15",
+     "paid",
+     "19.99",
+     "unknown customer"
+    ],
+    [
+     "O00017",
+     "C0006",
+     "2026-03-15",
+     "refunded",
+     "-12.00",
+     "negative total"
+    ],
+    [
+     "O00015",
+     "C0009",
+     "2026-03-14",
+     "shipped",
+     "88.00",
+     "unknown customer"
+    ],
+    [
+     "O00018",
+     "C0002",
+     "2026-03-16",
+     "returned",
+     "30.00",
+     "unknown status"
+    ]
+   ],
+   "row_count": 7,
+   "inputs": {
+    "orders": [
+     [
+      "O00001",
+      "C0001",
+      "2026-06-11",
+      "paid",
+      "store",
+      "117.99"
+     ],
+     [
+      "O00002",
+      "C0001",
+      "2026-03-11",
+      "delivered",
+      "app",
+      "79.96"
+     ],
+     [
+      "O00007",
+      "C0003",
+      "2026-03-23",
+      "placed",
+      "web",
+      null
+     ],
+     [
+      "O00013",
+      "C0004",
+      null,
+      "Paid",
+      "web",
+      "52.00"
+     ],
+     [
+      "O00014",
+      "C0005",
+      "2026-03-12",
+      null,
+      "app",
+      "40.00"
+     ],
+     [
+      "O00015",
+      "C0009",
+      "2026-03-14",
+      "shipped",
+      "web",
+      "88.00"
+     ],
+     [
+      "O00016",
+      null,
+      "2026-03-15",
+      "paid",
+      "store",
+      "19.99"
+     ],
+     [
+      "O00017",
+      "C0006",
+      "2026-03-15",
+      "refunded",
+      "app",
+      "-12.00"
+     ],
+     [
+      "O00015",
+      "C0009",
+      "2026-03-14",
+      "shipped",
+      "web",
+      "88.00"
+     ],
+     [
+      "O00018",
+      "C0002",
+      "2026-03-16",
+      "returned",
+      "web",
+      "30.00"
+     ],
+     [
+      "O00019",
+      "C0002",
+      "2026-03-16",
+      "cancelled",
+      "web",
+      "0.00"
+     ]
+    ],
+    "customers": [
+     [
+      "C0001",
+      "Ines Okafor",
+      "Leeds",
+      "consumer",
+      "2025-04-30"
+     ],
+     [
+      "C0002",
+      "Kofi Mori",
+      "Lisbon",
+      "consumer",
+      "2024-11-19"
+     ],
+     [
+      "C0003",
+      "Tomas Okafor",
+      "Denver",
+      "consumer",
+      "2024-05-08"
+     ],
+     [
+      "C0004",
+      "Ines Costa",
+      "Denver",
+      "business",
+      "2024-11-15"
+     ],
+     [
+      "C0005",
+      "Maya Rao",
+      "Perth",
+      "consumer",
+      "2024-05-01"
+     ],
+     [
+      "C0006",
+      "Hana Rao",
+      "Osaka",
+      "consumer",
+      "2025-11-07"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice orders, with a few rows sent twice",
+  "the shop's raw export, with statuses in the wrong case, missing dates and negative totals",
+  "totals of zero and just below it, statuses in the wrong case, and rows that break several rules",
+  "a bad order sent three times next to good ones",
+  "an empty orders file"
+ ]
+}

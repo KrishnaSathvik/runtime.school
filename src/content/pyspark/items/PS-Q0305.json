@@ -1,0 +1,55 @@
+{
+  "id": "PS-Q0305",
+  "slug": "load-tonights-invoice-file",
+  "lesson": "PS-L061",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Load tonight's invoice file",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "Each night the billing system exports its invoices to a CSV file, and the Delta invoice table is replaced with them. The file uses `;` between values, has a header line, and writes dates as day/month/year. Fix `load_file(folder)` so `solve` replaces the table with tonight's invoices.",
+  "rules": [
+    "After `solve`, the table holds tonight's invoices only: none of last night's.",
+    "Every column keeps the table's type: dates are dates and `total_amount` is a `decimal(12,2)`. An empty value in the file is missing.",
+    "Keep repeated rows. A night with no invoices leaves an empty table.",
+    "Don't change `start_table` or `write_tonights_file`."
+  ],
+  "hints": [
+    "Run the starter: Delta refuses to replace a table with columns of other types. Which columns come back as text?",
+    "Give `spark.read.csv` the separator and a schema. Read the dates as text first.",
+    "`F.to_date(col, \"dd/MM/yyyy\")` reads day/month/year text. Keep the columns in the table's order."
+  ],
+  "explanation": "Read the file with `sep=\";\"`, `header=True` and a schema that gives `total_amount` its decimal type but reads both dates as text, then turn the dates into dates with `F.to_date(..., \"dd/MM/yyyy\")` in a `select` that keeps the table's column order. The starter reads every column as text, and Delta checks the schema of an overwrite against the table's, so it refuses. A `MM/dd/yyyy` pattern fails on the 14th of a month, and a `DATE` schema with no pattern can't read `14/10/2025`. Overwrite, not append, and read the result through Delta: a Parquet read of the folder still finds last night's file.",
+  "entry": "solve",
+  "inputs": [
+    "invoices"
+  ],
+  "starter": "import os\nimport shutil\nfrom datetime import date\nfrom decimal import Decimal\n\nfrom pyspark.sql import functions as F\n\n\ndef start_table(invoices, path):\n    # Last night's Delta table, with two invoices. Don't change this.\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty folder on every run\n    last_night = spark.createDataFrame(\n        [\n            (\"INV-000001\", \"ACC-0001\", date(2025, 10, 14), date(2025, 11, 13), \"open\", Decimal(\"244.00\")),\n            (\"INV-000090\", \"ACC-0004\", date(2025, 9, 30), date(2025, 10, 30), \"void\", Decimal(\"99.00\")),\n        ],\n        invoices.schema,\n    )\n    last_night.write.format(\"delta\").save(path)\n\n\ndef write_tonights_file(invoices, folder):\n    # Tonight's export from the billing system. Don't change this.\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n\n    def text(value):\n        if value is None:\n            return \"\"\n        if isinstance(value, date):\n            return value.strftime(\"%d/%m/%Y\")  # day/month/year\n        return str(value)\n\n    lines = [\"invoice_id;account_id;invoice_date;due_date;status;total_amount\"]\n    for row in invoices.collect():\n        lines.append(\";\".join(text(v) for v in row))\n    with open(folder + \"/invoices.csv\", \"w\") as f:\n        f.write(\"\\n\".join(lines) + \"\\n\")\n\n\ndef load_file(folder):\n    # Read tonight's file with the table's column types.\n    return spark.read.csv(folder, header=True)\n\n\ndef save(df, path):\n    # Replace the table with tonight's invoices.\n    df.write.format(\"delta\").mode(\"overwrite\").save(path)\n\n\ndef solve(invoices):\n    path = \"/tmp/billing/invoices\"\n    folder = \"/tmp/billing/incoming\"\n    start_table(invoices, path)\n    write_tonights_file(invoices, folder)\n    save(load_file(folder), path)\n    return spark.read.format(\"delta\").load(path)\n",
+  "output": {
+    "columns": [
+      "invoice_id",
+      "account_id",
+      "invoice_date",
+      "due_date",
+      "status",
+      "total_amount"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

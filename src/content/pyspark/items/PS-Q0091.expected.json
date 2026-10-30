@@ -1,0 +1,64 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "observation_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "station_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "observed_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "temperature_c",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "precipitation_mm",
+     "type": "double",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "OBS-000006",
+     "LIS-01",
+     "2026-03-08T00:30:00",
+     11.0,
+     "NaN"
+    ],
+    [
+     "OBS-000012",
+     "NYC-01",
+     "2026-03-08T08:00:00",
+     null,
+     0.4
+    ]
+   ],
+   "row_count": 2
+  }
+ },
+ "hidden": [
+  "the full practice readings table",
+  "rain values that are NaN, empty, zero and positive",
+  "the -9999 code in the temperature and in other columns",
+  "a reading with a missing temperature and a faulty gauge at once",
+  "readings with nothing wrong, including cold ones",
+  "an empty readings table"
+ ]
+}

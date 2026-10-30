@@ -1,0 +1,26 @@
+{
+  "id": "PS-L018-C2",
+  "slug": "forecast-lead-times",
+  "lesson": "PS-L018",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Forecast lead times",
+  "dataset": { "id": "PS-D13", "version": "1.0.0" },
+  "prompt": "To check how accuracy changes with distance, the forecasting team needs each forecast's issue day, the hour it's for and how many hours ahead it looked. Write `solve(forecasts)` so it returns `forecast_id`, `issued_date`, `valid_hour` and `lead_hours`.",
+  "rules": [
+    "`issued_date` is the date of `issued_at`, as a date. `valid_hour` is the hour of `valid_for` (0 to 23).",
+    "`lead_hours` is the time from `issued_at` to `valid_for` in whole hours, as an int. A part hour is dropped: 6 hours 30 minutes is 6.",
+    "All times are UTC. A missing time gives missing results. Return the four columns, in that order."
+  ],
+  "hints": [
+    "Cast a timestamp to `long` to get seconds; subtract one from the other.",
+    "Divide the seconds by 3600, then `.cast(\"int\")` drops the part hour.",
+    "Subtracting `hour(...)` values goes wrong when the forecast is for the next day."
+  ],
+  "entry": "solve",
+  "inputs": ["forecasts"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(forecasts):\n    # Return forecast_id, issued_date, valid_hour and lead_hours.\n    return forecasts\n",
+  "output": { "columns": ["forecast_id", "issued_date", "valid_hour", "lead_hours"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

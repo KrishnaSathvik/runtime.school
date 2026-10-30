@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0077",
+  "slug": "driver-payout",
+  "lesson": "PS-L016",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Driver payout",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "prompt": "Drivers keep 85% of each fare and all of the tip. Write `solve(trips)` so it returns `trip_id`, `fare`, `tip` and the driver's `payout` for every trip, to the cent.",
+  "rules": [
+    "`payout` is `fare` times 0.85, plus `tip`, worked out exactly and rounded to 2 decimal places with a half going up: 9.435 is 9.44.",
+    "`payout` is a `decimal(10,2)`. A missing fare or tip gives a missing payout.",
+    "Return the four columns, in that order, for every trip, duplicates included."
+  ],
+  "hints": [
+    "Keep it in decimals: `F.lit(Decimal(\"0.85\"))` is an exact 0.85, and decimal times decimal stays exact.",
+    "`F.round(col, 2)` sends a half up. Casting to `\"decimal(10,2)\"` sets the type, and rounds a half up as well.",
+    "A plain `0.85` is a `double`. A fare like 11.10 then gives 9.434999… instead of 9.435, which rounds down."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "trips"
+  ],
+  "starter": "from decimal import Decimal\nfrom pyspark.sql import functions as F\n\n\ndef solve(trips):\n    # trip_id, fare, tip, payout\n    return trips\n",
+  "output": {
+    "columns": [
+      "trip_id",
+      "fare",
+      "tip",
+      "payout"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`(F.col(\"fare\") * F.lit(Decimal(\"0.85\")) + F.col(\"tip\")).cast(\"decimal(10,2)\")`, or with `F.round(..., 2)` before the cast. Decimals keep 11.10 × 0.85 at exactly 9.435, and rounding half up gives 9.44. With a plain `0.85` the arithmetic happens in doubles, 9.435 becomes 9.434999…, and it rounds to 9.43: a cent lost on some trips. `bround` is wrong here too: it sends 8.585 to 8.58. The cast at the end gives the `decimal(10,2)` the payroll file expects; without it the type is a wider decimal with four places."
+}

@@ -1,0 +1,47 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D15",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "api_requests"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "RDD 12\ncatalog-api 200\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "['catalog-api', 'catalog-api', 'auth-service', 'checkout-api']\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "[('REQ-000006', 404), ('REQ-000008', 500)]\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "2 partitions\n[30, 10, 40, 10, 50, 90, 20, 60]\n3 even numbers\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "root\n |-- request_id: string (nullable = true)\n |-- latency_ms: long (nullable = true)\n\nroot\n |-- request_id: string (nullable = true)\n |-- latency_ms: integer (nullable = true)\n\n+----------+----------+\n|request_id|latency_ms|\n+----------+----------+\n|REQ-000001|        42|\n|REQ-000002|        38|\n|REQ-000003|        61|\n+----------+----------+\nonly showing top 3 rows\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "",
+   "error": {
+    "type": "ValueError",
+    "message": "RDD is empty",
+    "line": 2,
+    "condition": null
+   }
+  }
+ }
+}

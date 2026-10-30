@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0167",
+  "slug": "gap-up-opens",
+  "lesson": "PS-L034",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Gap-up opens",
+  "dataset": {
+    "id": "PS-D10",
+    "version": "1.0.0"
+  },
+  "prompt": "A gap up is a day that opens above the previous trading day's high: the price jumped before anyone could trade in between. Write `solve(daily_prices)` so it returns every gap-up day.",
+  "rules": [
+    "The previous row is the same `symbol`'s row with the latest earlier `trade_date`, even when days are missing in between.",
+    "A day gaps up when its `open` is more than the previous row's `high`. Exactly equal isn't a gap, and a symbol's first row never is.",
+    "`gap` is `open - prev_high`.",
+    "Return `symbol`, `trade_date`, `prev_high`, `open` and `gap` for the gap-up days only."
+  ],
+  "hints": [
+    "Bring the previous row's `high` onto each row with `F.lag(\"high\")` over each symbol in date order.",
+    "Add the columns first, then filter the result on `open > prev_high`.",
+    "On a symbol's first row `prev_high` is missing, and a comparison with a missing value isn't true, so `filter` drops it without extra code."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "daily_prices"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(daily_prices):\n    # Return the days that open above the previous row's high.\n    return daily_prices\n",
+  "output": {
+    "columns": [
+      "symbol",
+      "trade_date",
+      "prev_high",
+      "open",
+      "gap"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Put yesterday's high next to today's open, then filter: `w = Window.partitionBy(\"symbol\").orderBy(\"trade_date\")`, `with_prev = daily_prices.select(\"symbol\", \"trade_date\", F.lag(\"high\").over(w).alias(\"prev_high\"), \"open\")`, then `with_prev.filter(F.col(\"open\") > F.col(\"prev_high\")).select(\"symbol\", \"trade_date\", \"prev_high\", \"open\", (F.col(\"open\") - F.col(\"prev_high\")).alias(\"gap\"))`. The window function has to be computed before the filter. A first row has no previous high, so the comparison isn't true and it drops out. Comparing with the previous close is a different, much more common event."
+}

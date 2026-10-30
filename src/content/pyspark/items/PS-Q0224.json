@@ -1,0 +1,66 @@
+{
+  "id": "PS-Q0224",
+  "slug": "fix-the-daily-trip-copy",
+  "lesson": "PS-L045",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Fix the daily trip copy",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "prompt": "This job keeps a daily copy of the trips for the finance team, but the money comes back as doubles, which finance can't reconcile to the cent. Fix `solve(trips)` so the copy keeps every column's type.",
+  "rules": [
+    "Save `trip_id`, `pickup_at`, `dropoff_at`, `fare`, `tip` and `total`, in that order, at `path`, replacing any earlier copy, and return what you read back from there.",
+    "The columns come back with the types they have in `trips`: text, two timestamps and three `decimal(8,2)` money columns.",
+    "Missing values stay missing. Keep every trip, duplicates included.",
+    "Save the copy as Parquet or ORC: both keep the types without you repeating the schema."
+  ],
+  "hints": [
+    "Run the starter and compare the types of `fare`, `tip` and `total` with the expected result.",
+    "The starter writes CSV, which holds only text, and then guesses the types when it reads.",
+    "A columnar format stores the schema in the file. Change both the write and the read."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "trips"
+  ],
+  "starter": "def solve(trips):\n    path = \"/tmp/taxi/daily\"\n    trips.select(\"trip_id\", \"pickup_at\", \"dropoff_at\", \"fare\", \"tip\", \"total\").write.mode(\"overwrite\").csv(path, header=True)\n    return spark.read.csv(path, header=True, inferSchema=True)\n",
+  "output": {
+    "columns": [
+      "trip_id",
+      "pickup_at",
+      "dropoff_at",
+      "fare",
+      "tip",
+      "total"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "The starter saved the copy as CSV, which has no types, and read it back with `inferSchema=True`, which guesses `double` for anything with a decimal point. Switching both ends to Parquet fixes it: `trips.select(...).write.mode(\"overwrite\").parquet(path)` and `spark.read.parquet(path)`. Parquet stores the schema in the file, so the money columns come back as `decimal(8,2)` and the timestamps as timestamps, with no options. ORC works the same way. Reading the CSV with an explicit schema would also give the right types, but every reader of the file would have to repeat it, which is why the rules ask for Parquet or ORC.",
+  "technique": {
+    "name": "a Parquet or ORC copy",
+    "plan": [
+      "ColumnarToRow"
+    ],
+    "source": [
+      "parquet",
+      "orc",
+      "format"
+    ]
+  }
+}

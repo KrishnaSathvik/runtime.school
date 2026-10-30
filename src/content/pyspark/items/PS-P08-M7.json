@@ -1,0 +1,79 @@
+{
+ "id": "PS-P08-M7",
+ "slug": "verify-the-delta-state",
+ "project": "PS-P08",
+ "milestone": "PS-P08.m7",
+ "difficulty": "hard",
+ "minutes": 45,
+ "title": "Verify the final state and the replay",
+ "dataset": {
+  "id": "PS-D08",
+  "version": "1.0.0"
+ },
+ "also": [
+  {
+   "id": "PS-D14",
+   "version": "1.0.0",
+   "tables": [
+    "accounts",
+    "customer_cdc"
+   ]
+  }
+ ],
+ "prompt": "Before the tables go to finance, the team wants proof in numbers that they're right and that a replay changes nothing. Delta keeps every version of a table, so you can compare the table before and after the retry directly.\n\nWrite `replay_report(accounts, customer_cdc, shipment_events, shipments)`: one row per table, built from the pipeline you've written, with facts that are the same on every run.",
+ "rules": [
+  "One row per table, `shipment_fact` and `account_history`, with the columns of `REPORT_SCHEMA`.",
+  "After batch 2: `version` is the table's latest Delta version, `rows` its row count, and `current_rows` its rows with `is_current` true (every fact row is current).",
+  "`matches_rebuild` is true when the table's current rows equal a full rebuild from all the data at once: `latest_steps(event_log(...))` of every load for the fact; for the history, the snapshot with each account's newest change of the whole feed applied, deletes removed, in `ACCOUNT_COLUMNS`.",
+  "Then retry batch 2 on the table: `replay_version` is its latest version after the retry, and `replay_same_rows` is true when it holds exactly the rows it held at `version` (read that version with time travel).",
+  "No timestamps, table ids or other values from Delta's history that change between runs."
+ ],
+ "hints": [
+  "`DeltaTable.forPath(spark, path).history(1).first().version` is the latest version. Note it, and the counts, before the retry.",
+  "Two DataFrames hold the same rows when `a.exceptAll(b).union(b.exceptAll(a)).count() == 0`. For the rebuild: the snapshot accounts with no change (`left_anti`), plus the newest change of each account that isn't a delete.",
+  "`spark.read.format(\"delta\").option(\"versionAsOf\", v).load(path)` reads the table as it was at version `v`."
+ ],
+ "explanation": "Each fact checks something different. `matches_rebuild` checks the incremental pipeline against a full rebuild: applying the loads in two batches with the merge rules must give the same current rows as cleaning everything at once, and the history's current versions must equal the account table you'd get by applying every newest change. The replay facts check idempotency the way Delta sees it: an unchanged `replay_version` means no commit at all, and `replay_same_rows` compares the data with time travel, so a pipeline that rewrote identical rows would show a new version with the same rows. Versions, counts and booleans are the same on every run; Delta's timestamps and ids are not, so the report never uses them.",
+ "entry": "replay_report",
+ "inputs": [
+  "accounts",
+  "customer_cdc",
+  "shipment_events",
+  "shipments"
+ ],
+ "file": "pipeline.py",
+ "append": "\n\nREPORT_SCHEMA = (\n    \"table_name STRING, version BIGINT, rows BIGINT, current_rows BIGINT, matches_rebuild BOOLEAN, \"\n    \"replay_version BIGINT, replay_same_rows BOOLEAN\"\n)\n\n\ndef replay_report(accounts, customer_cdc, shipment_events, shipments):\n    # Step 7: facts about each table after batch 2, and after batch 2 is retried.\n    rows = [\n        (\"shipment_fact\", 0, 0, 0, False, 0, False),\n        (\"account_history\", 0, 0, 0, False, 0, False),\n    ]\n    return spark.createDataFrame(rows, REPORT_SCHEMA)\n",
+ "prerequisites": [
+  "PS-L029",
+  "PS-L062",
+  "PS-L083"
+ ],
+ "output": {
+  "columns": [
+   "table_name",
+   "version",
+   "rows",
+   "current_rows",
+   "matches_rebuild",
+   "replay_version",
+   "replay_same_rows"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "example",
+   "sample": true
+  },
+  {
+   "id": "project",
+   "edition": "project"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 240,
+  "check_timeout_s": 480,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

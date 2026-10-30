@@ -1,0 +1,140 @@
+{
+ "id": "PS-P06",
+ "workspace": "guided",
+ "file": "pipeline.py",
+ "dataset": {
+  "id": "PS-D07",
+  "version": "1.0.0",
+  "edition": "project"
+ },
+ "also": [
+  {
+   "id": "PS-D13",
+   "version": "1.1.0",
+   "tables": [
+    "observations"
+   ]
+  }
+ ],
+ "inputs": [
+  "trips",
+  "taxi_zones",
+  "observations"
+ ],
+ "task": "The city's taxi office gets a raw meter export every month and a separate feed from its official weather station, and trusts neither: some trips run backwards, some fares were reversed, and the station misses hours. Build a pipeline that cleans the trips, measures demand by zone and hour, joins each trip to the weather for its hour, shows from Spark's own plans which way of running the weekly query does the least work, and publishes how rain changes the rides.",
+ "skills": [
+  "time zones and UTC",
+  "validation filters",
+  "joins and aggregation",
+  "Parquet and partition pruning",
+  "reading query plans"
+ ],
+ "problems": [
+  "Trip times are New York local time; the weather station reports in UTC.",
+  "Trips whose dropoff time is before the pickup.",
+  "Trips with zero distance.",
+  "Negative fares and totals from reversed charges.",
+  "Pickup and dropoff zone ids 0 and 99, which aren't in the zone list.",
+  "The station misses a dozen hours, sends some readings twice, and records missing values as -9999, NaN or impossible numbers."
+ ],
+ "revenue": "A trip counts when it lasted more than 0 seconds, went more than 0 miles and charged a fare above 0. Its revenue is its total: fare, tip, tolls and surcharge. A trip takes the weather of the hour it started in: the station's reading at the next full UTC hour, because a reading describes the hour that ends at it.",
+ "milestones": [
+  {
+   "step": 1,
+   "summary": "Read the trips and put their pickup times on the UTC clock.",
+   "label": "Read trips"
+  },
+  {
+   "step": 2,
+   "summary": "Keep only trips with sensible times, distances and fares.",
+   "label": "Validate trips"
+  },
+  {
+   "step": 3,
+   "summary": "Count trips, revenue and fares per pickup zone and local hour.",
+   "label": "Zone demand"
+  },
+  {
+   "step": 4,
+   "summary": "Clean the station's readings and join each trip to its hour's weather.",
+   "label": "Join weather"
+  },
+  {
+   "step": 5,
+   "summary": "Run one query three ways and compare what Spark's plans did.",
+   "label": "Compare plans"
+  },
+  {
+   "step": 6,
+   "summary": "Compare trips in rain, dry weather and hours with no reading.",
+   "label": "Rain vs dry"
+  }
+ ],
+ "artifacts": [
+  {
+   "name": "trip_times",
+   "inputs": [
+    "trips"
+   ],
+   "step": 1,
+   "about": "The trip columns, with the pickup time in UTC, the local date and hour, and the length in seconds."
+  },
+  {
+   "name": "trip_metrics",
+   "inputs": [
+    "trips"
+   ],
+   "step": 2,
+   "about": "Trips that pass every check, with their length in minutes.",
+   "deliverable": true
+  },
+  {
+   "name": "zone_demand",
+   "inputs": [
+    "trips",
+    "taxi_zones"
+   ],
+   "step": 3,
+   "about": "Trips, revenue and average fare per pickup zone and local hour.",
+   "deliverable": true
+  },
+  {
+   "name": "nyc_readings",
+   "inputs": [
+    "observations"
+   ],
+   "step": 4,
+   "about": "One clean reading per hour from the city's station."
+  },
+  {
+   "name": "trip_weather",
+   "inputs": [
+    "trips",
+    "observations"
+   ],
+   "step": 4,
+   "about": "Every valid trip with the reading for the hour it started in."
+  },
+  {
+   "name": "benchmark_report",
+   "inputs": [
+    "trips",
+    "taxi_zones"
+   ],
+   "step": 5,
+   "about": "Three ways to run the week's query: same rows, join, shuffles, files and rows read.",
+   "deliverable": true
+  },
+  {
+   "name": "weather_trip_analysis",
+   "inputs": [
+    "trips",
+    "observations"
+   ],
+   "step": 6,
+   "about": "Trips per hour, average fare and minutes in rain, dry weather and with no reading.",
+   "deliverable": true
+  }
+ ],
+ "run_timeout_s": 120
+}

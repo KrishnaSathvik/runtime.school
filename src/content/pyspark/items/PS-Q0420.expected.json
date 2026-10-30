@@ -1,0 +1,297 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "deployment_id",
+     "type": "string",
+     "nullable": false
+    },
+    {
+     "name": "service",
+     "type": "string",
+     "nullable": false
+    },
+    {
+     "name": "version",
+     "type": "string",
+     "nullable": false
+    },
+    {
+     "name": "before_requests",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "before_error_pct",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "before_p95_ms",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "after_requests",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "after_error_pct",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "after_p95_ms",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "verdict",
+     "type": "string",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "DEP-0005",
+     "search-api",
+     "5.0.4",
+     2,
+     0.0,
+     120,
+     2,
+     0.0,
+     130,
+     "ok"
+    ],
+    [
+     "DEP-0006",
+     "checkout-api",
+     "2.14.0",
+     3,
+     0.0,
+     240,
+     3,
+     66.67,
+     1300,
+     "worse"
+    ],
+    [
+     "DEP-0008",
+     "iot-gateway",
+     "0.19.3",
+     1,
+     0.0,
+     25,
+     0,
+     null,
+     null,
+     "no data"
+    ]
+   ],
+   "row_count": 3,
+   "inputs": {
+    "api_requests": [
+     [
+      "REQ-800001",
+      "0000000000000001",
+      "2026-04-14T12:05:10",
+      "checkout-api",
+      "POST",
+      "/v1/checkout",
+      "201",
+      "200",
+      "500",
+      "okhttp/4.12.0",
+      "us-east"
+     ],
+     [
+      "REQ-800002",
+      "0000000000000002",
+      "2026-04-14T12:18:40",
+      "checkout-api",
+      "POST",
+      "/v1/checkout",
+      "201",
+      "220",
+      "500",
+      "okhttp/4.12.0",
+      "us-east"
+     ],
+     [
+      "REQ-800003",
+      "0000000000000003",
+      "2026-04-14T12:29:59",
+      "checkout-api",
+      "POST",
+      "/v1/checkout",
+      "201",
+      "240",
+      "500",
+      "okhttp/4.12.0",
+      "us-east"
+     ],
+     [
+      "REQ-800004",
+      "0000000000000004",
+      "2026-04-14T12:30:00",
+      "checkout-api",
+      "POST",
+      "/v1/checkout",
+      "500",
+      "900",
+      "500",
+      "okhttp/4.12.0",
+      "us-east"
+     ],
+     [
+      "REQ-800005",
+      "0000000000000005",
+      "2026-04-14T12:41:12",
+      "checkout-api",
+      "POST",
+      "/v1/checkout",
+      "201",
+      "230",
+      "500",
+      "okhttp/4.12.0",
+      "us-east"
+     ],
+     [
+      "REQ-800006",
+      "0000000000000006",
+      "2026-04-14T12:59:30",
+      "checkout-api",
+      "POST",
+      "/v1/checkout",
+      "503",
+      "1300",
+      "500",
+      "okhttp/4.12.0",
+      "us-east"
+     ],
+     [
+      "REQ-800007",
+      "0000000000000007",
+      "2026-04-14T10:21:00",
+      "search-api",
+      "GET",
+      "/v1/search",
+      "200",
+      "100",
+      "500",
+      "okhttp/4.12.0",
+      "us-east"
+     ],
+     [
+      "REQ-800008",
+      "0000000000000008",
+      "2026-04-14T10:40:05",
+      "search-api",
+      "GET",
+      "/v1/search",
+      "200",
+      "120",
+      "500",
+      "okhttp/4.12.0",
+      "us-east"
+     ],
+     [
+      "REQ-800009",
+      "0000000000000009",
+      "2026-04-14T10:51:00",
+      "search-api",
+      "GET",
+      "/v1/search",
+      "200",
+      "110",
+      "500",
+      "okhttp/4.12.0",
+      "us-east"
+     ],
+     [
+      "REQ-800010",
+      "000000000000000a",
+      "2026-04-14T11:02:44",
+      "search-api",
+      "GET",
+      "/v1/search",
+      "200",
+      "130",
+      "500",
+      "okhttp/4.12.0",
+      "us-east"
+     ],
+     [
+      "REQ-800011",
+      "000000000000000b",
+      "2026-04-14T11:21:00",
+      "search-api",
+      "GET",
+      "/v1/search",
+      "500",
+      "2000",
+      "500",
+      "okhttp/4.12.0",
+      "us-east"
+     ],
+     [
+      "REQ-800012",
+      "000000000000000c",
+      "2026-04-14T14:10:00",
+      "iot-gateway",
+      "POST",
+      "/v1/devices/{device_id}/telemetry",
+      "201",
+      "25",
+      "500",
+      "okhttp/4.12.0",
+      "us-east"
+     ]
+    ],
+    "deployments": [
+     [
+      "DEP-0005",
+      "search-api",
+      "5.0.4",
+      "production",
+      "2026-04-14T10:51:00",
+      "discovery-team",
+      "succeeded"
+     ],
+     [
+      "DEP-0006",
+      "checkout-api",
+      "2.14.0",
+      "production",
+      "2026-04-14T12:30:00",
+      "payments-team",
+      "rolled_back"
+     ],
+     [
+      "DEP-0008",
+      "iot-gateway",
+      "0.19.3",
+      "production",
+      "2026-04-14T14:24:00",
+      "devices-team",
+      "succeeded"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the lesson log, where no deployment has requests on both sides",
+  "the full practice log and deployments, with the bad release",
+  "no deployments"
+ ]
+}

@@ -32,3 +32,20 @@ describe.each(steps)("entering %s", (_, project, prev, ms) => {
     expect(stepFiles({ ...out, "main.py": custom }, ms, project.milestones)["main.py"]).toBe(custom);
   });
 });
+
+// Nothing written yet: opening a later step must not insert that step's stubs, and must not reveal an earlier answer.
+describe.each(steps)("jumping straight to %s", (_, project, prev, ms) => {
+  it("leaves the first step's starter untouched and hands out no earlier answer", () => {
+    const files = stepFiles({ ...project.milestones[0].starters }, ms, project.milestones);
+    expect(files).toEqual({ ...project.milestones[0].starters });
+    for (const [name, text] of Object.entries(files)) {
+      if (name === "main.py") continue;
+      for (const earlier of project.milestones.slice(0, project.milestones.indexOf(ms))) {
+        for (const solved of (earlier.solution[name] ?? "").split(/\n(?=def )/).filter((b) => b.startsWith("def ") && !b.includes("pass\n"))) {
+          expect(text.includes(solved.trimEnd()), `${ms.id} ${name} shows ${solved.split("(")[0]}`).toBe(false);
+        }
+      }
+    }
+    void prev;
+  });
+});

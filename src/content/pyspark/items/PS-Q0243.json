@@ -1,0 +1,62 @@
+{
+  "id": "PS-Q0243",
+  "slug": "latency-from-raw-logs",
+  "lesson": "PS-L049",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Latency from raw log lines",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "Many log records carry the request's latency in `attributes.latency_ms`, as text. Write `solve(application_logs_raw)` with RDD functions so it returns `log_id`, `service` and `latency_ms` (a whole number) for every record whose latency is usable.",
+  "rules": [
+    "Only lines that are JSON objects count; skip broken lines, plain text and JSON that isn't an object.",
+    "A latency is usable only when `attributes.latency_ms` is text made only of the digits 0–9, such as `\"42\"` or `\"0\"`. Skip `\"12.5\"`, `\"-5\"`, `\"fast\"` and empty text.",
+    "Skip records with no `attributes`, a null one, one that isn't an object, or no `latency_ms` key. A record without `log_id` or `service` gives NULL there.",
+    "Keep repeated records. Return `log_id`, `service` (text) and `latency_ms` (`int`), in that order."
+  ],
+  "hints": [
+    "Parse each line safely with a function that returns `[record]` or `[]`, and use `flatMap`.",
+    "A second `flatMap` can decide per record: return `[(log_id, service, ms)]` to keep it or `[]` to drop it.",
+    "Check every step: is `attributes` a dict, is the value a `str`, and does `value.isdigit()` hold? Only then call `int(value)`."
+  ],
+  "explanation": "Two `flatMap` steps keep this safe: `parse` turns each line into `[record]` or `[]`, and a second function returns `[(log_id, service, int(value))]` only when `attributes` is a dict and its `latency_ms` is a string for which `isdigit()` is true. `int(value)` inside a `try` isn't the same rule: it accepts `\"-5\"`. Calling `.get` on a null or list `attributes` stops the whole job, and a schema string with `latency_ms int` gives the whole-number column.",
+  "entry": "solve",
+  "inputs": [
+    "application_logs_raw"
+  ],
+  "starter": "import json\n\n\ndef solve(application_logs_raw):\n    # Parse the raw lines and keep records with a usable latency.\n    return application_logs_raw\n",
+  "output": {
+    "columns": [
+      "log_id",
+      "service",
+      "latency_ms"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "technique": {
+    "name": "RDD functions",
+    "plan": [
+      "Scan"
+    ],
+    "source": [
+      "rdd",
+      "parallelize"
+    ]
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "id": "PS-Q0231",
+  "slug": "alerts-by-type",
+  "lesson": "PS-L047",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Alerts filed by type",
+  "dataset": {
+    "id": "PS-D13",
+    "version": "1.0.0"
+  },
+  "prompt": "The alerts desk usually opens one kind of alert at a time. Write `save(weather_alerts, path)` so it saves the alerts as Parquet with one folder per `alert_type`. `solve` is written for you: it saves them and reads the folder back.",
+  "rules": [
+    "Partition the folder by `alert_type`.",
+    "The folder may already hold an earlier save: replace it, don't add to it.",
+    "`solve` returns what reading the folder gives: the other columns in their order, then `alert_type` last.",
+    "Keep every alert, repeated rows included. An alert with no type is kept too."
+  ],
+  "hints": [
+    "`write.partitionBy(\"column\")` puts each value's rows in its own `column=value` folder.",
+    "Reading the top folder adds the partition column back as the last column.",
+    "Writing to a folder that exists needs `.mode(\"overwrite\")`; `append` would keep the old rows too."
+  ],
+  "explanation": "`weather_alerts.write.mode(\"overwrite\").partitionBy(\"alert_type\").parquet(path)` writes one folder per type. The type lives in the folder name, so reading the top folder puts `alert_type` back as the last column, which is how the expected result is shaped. An alert with no type goes into a special default folder and reads back as missing. Partitioning by a different column moves that column to the end instead, and without `overwrite` the second save fails because the folder exists.",
+  "entry": "solve",
+  "inputs": [
+    "weather_alerts"
+  ],
+  "starter": "def save(weather_alerts, path):\n    # Save the alerts at `path`, one folder per alert_type.\n    pass\n\n\ndef solve(weather_alerts):\n    path = \"/tmp/alerts/by_type\"\n    save(weather_alerts, path)\n    return spark.read.parquet(path)\n",
+  "output": {
+    "columns": [
+      "alert_id",
+      "station_id",
+      "severity",
+      "issued_at",
+      "starts_at",
+      "ends_at",
+      "headline",
+      "alert_type"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

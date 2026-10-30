@@ -1,0 +1,50 @@
+{
+  "id": "PS-Q0109",
+  "slug": "fix-the-ledger-entry-check",
+  "lesson": "PS-L022",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Fix the ledger entry check",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "Every ledger entry gets a check label, but entries with no type, amount or currency come out `ok`, and so do entries of 0.00. Fix `solve(ledger_entries)`.",
+  "rules": [
+    "Check in this order and use the first problem found: `no transfer` (`transfer_id` missing), `bad type` (`entry_type` missing or not `debit` or `credit`), `bad amount` (`amount` missing or not more than 0), `bad currency` (`currency` missing or not `USD`, `EUR` or `GBP`).",
+    "An entry with none of these problems gets `ok`.",
+    "Return `entry_id` and `check`, in that order, for every entry."
+  ],
+  "hints": [
+    "Follow an entry with a missing `entry_type` through the starter: `~F.col(\"entry_type\").isin(...)` is NULL, not true, so that `when` doesn't match.",
+    "Add `F.col(...).isNull() |` in front of each rule that can meet a missing value.",
+    "\"Not more than 0\" includes 0 itself."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "ledger_entries"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(ledger_entries):\n    check = (\n        F.when(F.col(\"transfer_id\").isNull(), \"no transfer\")\n        .when(~F.col(\"entry_type\").isin(\"debit\", \"credit\"), \"bad type\")\n        .when(F.col(\"amount\") < 0, \"bad amount\")\n        .when(~F.col(\"currency\").isin(\"USD\", \"EUR\", \"GBP\"), \"bad currency\")\n        .otherwise(\"ok\")\n    )\n    return ledger_entries.select(\"entry_id\", check.alias(\"check\"))\n",
+  "output": {
+    "columns": [
+      "entry_id",
+      "check"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "A rule on a missing value is NULL, and a `when` only fires on true, so an entry with no type, amount or currency falls past every check and lands in `otherwise(\"ok\")`. Each rule needs its missing case spelled out: `.when(F.col(\"entry_type\").isNull() | ~F.col(\"entry_type\").isin(\"debit\", \"credit\"), \"bad type\")`, `.when(F.col(\"amount\").isNull() | (F.col(\"amount\") <= 0), \"bad amount\")` and `.when(F.col(\"currency\").isNull() | ~F.col(\"currency\").isin(\"USD\", \"EUR\", \"GBP\"), \"bad currency\")`. The second bug is `< 0`: the rule says an amount must be more than 0, so 0.00 is bad too, and the test is `<= 0`. The `transfer_id` rule was already right, because `isNull()` is never NULL itself."
+}

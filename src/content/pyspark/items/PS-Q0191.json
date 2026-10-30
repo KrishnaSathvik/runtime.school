@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0191",
+  "slug": "unit-price-list",
+  "lesson": "PS-L039",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Unit prices as a list",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "The receipt printer lists every unit of an order line with its price. Write `solve(order_items)` so each line comes back with that list and how many entries it has.",
+  "rules": [
+    "`unit_prices` repeats the line's `unit_price` once per unit, so a line with `quantity` 3 has three entries.",
+    "A `quantity` of 0 or less gives an empty list. A missing quantity gives a missing list.",
+    "`units` is the number of entries in `unit_prices`: 0 for an empty list, missing for a missing one.",
+    "Return `order_id`, `line_no`, `unit_prices` and `units`, one row per order line."
+  ],
+  "hints": [
+    "You don't need to explode anything: every line stays one row.",
+    "`F.array_repeat(value, n)` repeats a value `n` times, and `n` can be a column.",
+    "`F.size(...)` counts the entries of the array you just built."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "order_items"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(order_items):\n    # Return order_id, line_no, unit_prices and units for every line.\n    return order_items\n",
+  "output": {
+    "columns": [
+      "order_id",
+      "line_no",
+      "unit_prices",
+      "units"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`F.array_repeat(\"unit_price\", \"quantity\")` builds the list straight from the two columns, and `F.size` of the same expression counts it: `order_items.select(\"order_id\", \"line_no\", F.array_repeat(\"unit_price\", \"quantity\").alias(\"unit_prices\"), F.size(F.array_repeat(\"unit_price\", \"quantity\")).alias(\"units\"))`. A count of 0 or less gives an empty array, whose size is 0, and a missing count gives a missing array and a missing size. Using `quantity` itself for `units` looks the same until a line has a negative quantity. Exploding would turn each unit into a row, which isn't asked for here."
+}

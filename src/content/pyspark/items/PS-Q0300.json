@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0300",
+  "slug": "spread-cache-and-fill",
+  "lesson": "PS-L060",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Spread, cache and fill the working set",
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0"
+  },
+  "prompt": "Several reports reuse the well-rated films, so build them once: ratings of 4.0 or more, spread over 4 partitions, cached. Write `solve(ratings)` so it returns `user_id`, `movie_id`, `rating`, `partitions`, `kept_before` and `kept_after`.",
+  "rules": [
+    "Keep ratings of 4.0 or more; one with no value is left out. Repartition into exactly 4 partitions, and cache the DataFrame you return the rows from.",
+    "`partitions` is its number of partitions. `kept_before` is the total of partitions kept (from `cached_partitions()`) right after marking it, `kept_after` the total after one `count()`.",
+    "Add the three numbers with `with_facts`. Return only these six columns, in this order."
+  ],
+  "hints": [
+    "`repartition(4)` from the lesson on executors gives four partitions; `df.rdd.getNumPartitions()` reads the count.",
+    "Measure right after `cache()`: marking stores nothing. Then run the `count()` and measure again.",
+    "Add up the first number of each pair: `sum(kept for kept, total in cached_partitions())`."
+  ],
+  "explanation": "`ratings.repartition(4).filter(...)` keeps four partitions, since a filter doesn't move rows between them. `cache()` is lazy like a transformation, so right after it the storage list is empty and `kept_before` is 0. The `count()` computes every partition and keeps each one, even a partition that ends up with no rows, so `kept_after` is 4. Without the repartition there's only the one partition of the file. Measuring after the count reports a cache that looks full from the start, which hides that the first action is what pays for filling it. None of this changes the rows; it only shows what's stored.",
+  "entry": "solve",
+  "inputs": [
+    "ratings"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n# Start every run with an empty storage list, so cached_partitions() sees only this job's caches.\nspark.catalog.clearCache()\n\n\ndef cached_partitions():\n    # (partitions kept, partitions in total) for each cached dataset.\n    infos = spark.sparkContext._jsc.sc().getRDDStorageInfo()\n    return [(i.numCachedPartitions(), i.numPartitions()) for i in infos]\n\n\ndef with_facts(df, **facts):\n    # Adds one column per fact, holding the same value on every row.\n    for name, value in facts.items():\n        df = df.withColumn(name, F.lit(value))\n    return df\n\n\ndef solve(ratings):\n    # Build, cache and fill the working set, measuring the kept partitions before and after.\n    return with_facts(ratings, partitions=0, kept_before=0, kept_after=0)\n",
+  "output": {
+    "columns": [
+      "user_id",
+      "movie_id",
+      "rating",
+      "partitions",
+      "kept_before",
+      "kept_after"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

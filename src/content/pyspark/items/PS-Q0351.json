@@ -1,0 +1,57 @@
+{
+ "id": "PS-Q0351",
+ "slug": "searches-from-campaign-visits",
+ "lesson": "PS-L071",
+ "role": "foundation",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 12,
+ "title": "Searches from campaign visits",
+ "dataset": {
+  "id": "PS-D06",
+  "version": "1.0.0"
+ },
+ "prompt": "The marketing team wants to see what people search for when a campaign brought them in. Write `solve(searches, sessions)` so it streams `searches`, joins `sessions` as a static table, and returns `event_id`, `query` and `campaign_id` for every search made during a campaign visit.",
+ "rules": [
+  "A search belongs to the visit with the same `session_id`. It's from a campaign visit when that visit's `campaign_id` is set.",
+  "Leave out searches from other visits, and searches whose visit isn't in `sessions`. Anonymous visitors (no `user_id`) count like everyone else.",
+  "Return these three columns, one row per search.",
+  "The rows must come from a streaming query over the delivery files: working on `searches` itself doesn't count."
+ ],
+ "hints": [
+  "A stream-static join is written like a batch join: `stream.join(static_df, \"session_id\")`.",
+  "Filter `sessions` to the visits with a campaign before the join; an inner join then drops every other search.",
+  "Write the joined stream to a memory table with `run_stream` and read it back with `spark.table`."
+ ],
+ "explanation": "Each micro-batch of searches is joined with the static `sessions` table, so nothing is kept between micro-batches. Filtering `sessions` to rows with a `campaign_id` and joining on `session_id` with an inner join keeps exactly the searches from campaign visits; searches whose visit isn't in `sessions` find no match and drop out too. Joining on `user_id` instead would lose anonymous visitors, whose `user_id` is missing, and would repeat a search for every visit of a returning customer.",
+ "entry": "solve",
+ "inputs": [
+  "searches",
+  "sessions"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\ndef solve(searches, sessions):\n    make_batches(searches, \"/tmp/searches\")          # one file per batch; clears the folder first\n    shutil.rmtree(\"/tmp/ck\", ignore_errors=True)     # a fresh checkpoint for every run\n    stream = spark.readStream.schema(searches.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/searches\")\n    # Join the searches with the campaign visits in sessions, write the result to a memory table,\n    # run the stream, and return event_id, query and campaign_id from that table.\n\n    return searches\n",
+ "output": {
+  "columns": [
+   "event_id",
+   "query",
+   "campaign_id"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

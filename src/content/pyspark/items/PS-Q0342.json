@@ -1,0 +1,56 @@
+{
+ "id": "PS-Q0342",
+ "slug": "spend-in-the-last-hour-every-half-hour",
+ "lesson": "PS-L069",
+ "role": "business",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 10,
+ "title": "Spend in the last hour, every half hour",
+ "dataset": {
+  "id": "PS-D12",
+  "version": "1.0.0"
+ },
+ "prompt": "Campaign managers check pacing every half hour: how much each campaign spent in the hour before. Write `solve(impressions)` so a streaming query keeps that spend in a memory table, and return `window_start`, `window_end`, `campaign_id` and `spend` from it once the deliveries are done.",
+ "rules": [
+  "Windows are one hour long and start every 30 minutes, by `event_time`; `spend` is the sum of `cost` in the window.",
+  "After the last delivery the table has one row per window and campaign, with the final spend; late impressions count where they were shown.",
+  "The totals must come from that streaming query: grouping `impressions` itself doesn't count."
+ ],
+ "hints": [
+  "`F.window(col, length, slide)`: the second argument is the window's length, the third how often a new one starts.",
+  "Group by the window and `campaign_id`, then `agg(F.sum(\"cost\").alias(\"spend\"))`.",
+  "Use the output mode that leaves each window once in the memory table, and read it with `spark.table`."
+ ],
+ "explanation": "`F.window(\"event_time\", \"1 hour\", \"30 minutes\")` makes hour-long windows starting at :00 and :30, so each impression counts in two of them. Group by it and `campaign_id`, sum `cost`, and write in complete mode so the memory table ends with each window once. Swapping the length and the slide asks for 30-minute windows every hour, which Spark refuses, since windows would leave gaps. Tumbling one-hour windows answer a different question (spend per clock hour), and windows on `arrival_time` move a late impression to the hour it reached the pipeline. `cost` is a decimal, so the sum stays exact.",
+ "entry": "solve",
+ "inputs": [
+  "impressions"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef solve(impressions):\n    spark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")  # small data: one partition keeps the stream fast\n    make_batches(impressions, \"/tmp/ads\")\n    stream = spark.readStream.schema(impressions.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/ads\")\n    # Sum cost per campaign in one-hour windows that start every 30 minutes, keep the totals in a memory table,\n    # and return window_start, window_end, campaign_id and spend from it.\n    return impressions\n",
+ "output": {
+  "columns": [
+   "window_start",
+   "window_end",
+   "campaign_id",
+   "spend"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

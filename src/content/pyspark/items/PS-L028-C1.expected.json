@@ -1,0 +1,86 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "shipment_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "warehouse_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "sku",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "quantity",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "on_hand",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "reserved",
+     "type": "int",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "SH0001",
+     "WH03",
+     "SKU-1003",
+     1,
+     388,
+     72
+    ],
+    [
+     "SH0002",
+     "WH01",
+     "SKU-1003",
+     2,
+     560,
+     100
+    ],
+    [
+     "SH0003",
+     "WH02",
+     "SKU-1014",
+     24,
+     266,
+     80
+    ],
+    [
+     "SH0004",
+     "WH02",
+     "SKU-1014",
+     24,
+     266,
+     80
+    ]
+   ],
+   "row_count": 4
+  }
+ },
+ "hidden": [
+  "the full practice shipments and inventory",
+  "a SKU stocked in four warehouses",
+  "a shipment whose warehouse has no stock row for its SKU",
+  "a SKU stocked only in a different warehouse from the shipment's",
+  "an empty inventory table"
+ ]
+}

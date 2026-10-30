@@ -1,0 +1,55 @@
+{
+  "id": "PS-Q0262",
+  "slug": "readings-with-their-building",
+  "lesson": "PS-L053",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 20,
+  "title": "Readings with their building",
+  "dataset": {
+    "id": "PS-D09",
+    "version": "1.0.0"
+  },
+  "prompt": "The facilities dashboard shows each reading next to the building and floor where its sensor is now. Write `solve(sensor_readings, device_locations)` so it returns `reading_id`, `device_id`, `building`, `floor` and `temperature_c`. A lookup inside `mapInPandas` works here, but any correct approach passes.",
+  "rules": [
+    "A sensor's current location is its `device_locations` row with no `valid_to`. Earlier rows describe where it used to be.",
+    "A reading whose sensor has no current location keeps its row, with a missing `building` and `floor`.",
+    "Keep every delivered row, repeats included.",
+    "Return `reading_id`, `device_id`, `building` (text), `floor` (int) and `temperature_c` (double), in that order."
+  ],
+  "hints": [
+    "With `mapInPandas`: `device_locations` is small, so filter it to the current rows, `toPandas()` it on the driver and build two dictionaries, device to building and device to floor.",
+    "Inside a `mapInPandas` function, `pdf[\"device_id\"].map(...)` looks each sensor up; a sensor that isn't in the dictionary gets NaN, which comes back as NULL.",
+    "Look at DEV-003 in the sample: it was moved, so it has two location rows. Only one of them is where it is now."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "sensor_readings",
+    "device_locations"
+  ],
+  "starter": "import pandas as pd\nfrom pyspark.sql import functions as F\n\n\ndef solve(sensor_readings, device_locations):\n    # The temperature from inside the payload struct, as a plain column.\n    readings = sensor_readings.select(\"reading_id\", \"device_id\", F.col(\"payload.temperature_c\").alias(\"temperature_c\"))\n    # Return reading_id, device_id, building, floor and temperature_c.\n    return readings\n",
+  "output": {
+    "columns": [
+      "reading_id",
+      "device_id",
+      "building",
+      "floor",
+      "temperature_c"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Build the lookup on the driver first: `current = device_locations.filter(F.col(\"valid_to\").isNull()).toPandas()`, then `building = dict(zip(current[\"device_id\"], current[\"building\"]))` and the same for `floor`. The dictionaries are shipped with the function, so inside it each batch only needs `pdf[\"device_id\"].map(building)` and `.map(floor)`, then a yield. Without the `valid_to` filter, a moved sensor has two rows, and which one wins depends on the order of the file: `drop_duplicates` keeps the old location, and `dict(zip(...))` keeps whichever row comes last. A sensor that isn't in the lookup maps to NaN, so it keeps its reading with NULLs, unlike a pandas `merge` with `how=\"inner\"`, which would drop it. The floor is NaN for those rows, so pandas makes it a float column; the `INT` in the schema turns it back into whole numbers. Outside this exercise, a join is the better tool: `readings.join(current.select(\"device_id\", \"building\", \"floor\"), \"device_id\", \"left\")` gives the same rows, keeps the lookup inside Spark, and doesn't need the lookup table to fit on the driver."
+}

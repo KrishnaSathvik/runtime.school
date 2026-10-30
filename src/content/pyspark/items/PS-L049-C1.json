@@ -1,0 +1,58 @@
+{
+  "id": "PS-L049-C1",
+  "slug": "parse-log-lines-rdd",
+  "lesson": "PS-L049",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Parse log lines with an RDD",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "Write `solve(application_logs_raw)` so it parses the raw log lines with RDD functions and returns a DataFrame of `log_id`, `level` and `service` for every line that is a JSON object.",
+  "rules": [
+    "A line counts only if it parses as JSON and is an object (`{...}`). Skip everything else: broken records, plain text, and JSON that isn't an object.",
+    "A record without a field gives NULL for it. Keep repeated records.",
+    "Return `log_id`, `level` and `service`, all text, in that order. An empty file gives an empty result."
+  ],
+  "hints": [
+    "Start with `application_logs_raw.rdd.map(lambda r: r[\"value\"])` to get plain strings.",
+    "Write a `parse(line)` function that returns `[record]` for a dict and `[]` otherwise, and use it with `flatMap`.",
+    "`rec.get(\"service\")` gives `None` for a missing field. Finish with `toDF(\"log_id string, level string, service string\")`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "application_logs_raw"
+  ],
+  "starter": "import json\n\n\ndef solve(application_logs_raw):\n    lines = application_logs_raw.rdd.map(lambda r: r[\"value\"])\n    # Keep the JSON objects and return log_id, level and service as a DataFrame.\n    return application_logs_raw\n",
+  "output": {
+    "columns": [
+      "log_id",
+      "level",
+      "service"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "technique": {
+    "name": "RDD functions",
+    "plan": [
+      "Scan"
+    ],
+    "source": [
+      "rdd",
+      "parallelize"
+    ]
+  }
+}

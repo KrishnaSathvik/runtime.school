@@ -1,0 +1,48 @@
+{
+  "id": "PS-L077-C1",
+  "slug": "run-the-tasks-in-order",
+  "lesson": "PS-L077",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Run the tasks in order",
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0"
+  },
+  "prompt": "The starter defines the five tasks of the nightly shipments job and what each one needs. Write the rest of `solve(shipments, shipment_events, deliveries)` so it runs every task and returns one row per task: its name in `task` and the number of rows its output has in `rows`.",
+  "rules": [
+    "A task runs only after every task it needs, and gets their outputs as arguments, in the order its list names them. The tasks are listed in no useful order.",
+    "Run each task once. Return all five tasks; `rows` is a bigint."
+  ],
+  "hints": [
+    "Work out a run order first: repeatedly pick the tasks whose needs have all been placed.",
+    "Keep each task's output in a dict by name, and call the function with `*[outputs[d] for d in needs]`.",
+    "Count each output as you go and build the result with `spark.createDataFrame(results, \"task STRING, rows BIGINT\")`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "shipments",
+    "shipment_events",
+    "deliveries"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef make_tasks(shipments, shipment_events, deliveries):\n    def clean_events():\n        # One row per event: the copies of a re-sent event differ only in load_date.\n        return shipment_events.select([c for c in shipment_events.columns if c != \"load_date\"]).distinct()\n\n    def known_events(clean_events):\n        ids = [r.shipment_id for r in shipments.select(\"shipment_id\").collect()]\n        return clean_events.filter(F.coalesce(F.col(\"shipment_id\").isin(ids), F.lit(False)))\n\n    def delivered(known_events):\n        return known_events.filter(F.col(\"event_type\") == \"delivered\")\n\n    def late_deliveries():\n        return deliveries.filter(F.col(\"status\") == \"late\")\n\n    def late_scans(delivered, late_deliveries):\n        # Delivered scans of the shipments whose delivery was late.\n        late_ids = [r.shipment_id for r in late_deliveries.select(\"shipment_id\").collect()]\n        return delivered.filter(F.col(\"shipment_id\").isin(late_ids))\n\n    return {\n        \"late_scans\": (late_scans, [\"delivered\", \"late_deliveries\"]),\n        \"delivered\": (delivered, [\"known_events\"]),\n        \"known_events\": (known_events, [\"clean_events\"]),\n        \"late_deliveries\": (late_deliveries, []),\n        \"clean_events\": (clean_events, []),\n    }\n\n\ndef solve(shipments, shipment_events, deliveries):\n    tasks = make_tasks(shipments, shipment_events, deliveries)\n    # Run every task after the tasks it needs, pass it their outputs,\n    # and return one row per task with the number of rows it produced.\n    results = []\n    return spark.createDataFrame(results, \"task STRING, rows BIGINT\")\n",
+  "output": {
+    "columns": [
+      "task",
+      "rows"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

@@ -1,0 +1,218 @@
+{
+  "sql": [
+    {
+      "id": "paid-orders",
+      "title": "Query paid orders",
+      "dataset": "PS-D01",
+      "about": "Filter orders using the real Spark SQL engine. The orders view is already registered.",
+      "sql": "SELECT order_id, total FROM orders WHERE status = 'paid' ORDER BY order_id;",
+      "python": "result = orders.filter(orders.status == 'paid').select('order_id', 'total').orderBy('order_id')"
+    },
+    {
+      "id": "account-currencies",
+      "title": "Group accounts by currency",
+      "dataset": "PS-D02",
+      "about": "Group the same banking records with SQL or the DataFrame API.",
+      "sql": "SELECT currency, COUNT(*) AS count FROM accounts GROUP BY currency ORDER BY currency;",
+      "python": "result = accounts.groupBy('currency').count().orderBy('currency')"
+    },
+    {
+      "id": "department-payroll",
+      "title": "Join employees and departments",
+      "dataset": "PS-D03",
+      "about": "Inspect department membership, including employees without a matching department.",
+      "sql": "SELECT e.employee_id, e.department_id, d.department_name FROM employees e LEFT JOIN departments d ON e.department_id = d.department_id ORDER BY e.employee_id;",
+      "python": "result = employees.join(departments, 'department_id', 'left').select('employee_id', 'department_id', 'department_name').orderBy('employee_id')"
+    },
+    {
+      "id": "department-window",
+      "title": "Number employees within departments",
+      "dataset": "PS-D03",
+      "about": "Use a Spark SQL window to number employees without changing the number of rows.",
+      "sql": "SELECT employee_id, department_id, ROW_NUMBER() OVER (PARTITION BY department_id ORDER BY employee_id) AS position FROM employees ORDER BY employee_id;",
+      "python": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\nresult = employees.select('employee_id', 'department_id', F.row_number().over(Window.partitionBy('department_id').orderBy('employee_id')).alias('position')).orderBy('employee_id')"
+    },
+    {
+      "id": "temporary-view",
+      "title": "Create and query a temporary view",
+      "dataset": "PS-D01",
+      "about": "Both statements share one run. Running again starts from the original data.",
+      "sql": "CREATE OR REPLACE TEMP VIEW paid_orders AS SELECT * FROM orders WHERE status = 'paid';\nSELECT order_id, total FROM paid_orders ORDER BY order_id;",
+      "python": "orders.filter(orders.status == 'paid').createOrReplaceTempView('paid_orders')\nresult = spark.table('paid_orders').select('order_id', 'total').orderBy('order_id')"
+    },
+    {
+      "id": "catalog-table",
+      "title": "Create a disposable reporting table",
+      "dataset": "PS-D14",
+      "about": "Build a Parquet table in the private warehouse. It exists only during this run.",
+      "sql": "CREATE TABLE account_counts USING parquet AS SELECT country, COUNT(*) AS count FROM accounts GROUP BY country;\nSELECT * FROM account_counts ORDER BY country;",
+      "python": "accounts.groupBy('country').count().write.mode('overwrite').saveAsTable('account_counts')\nresult = spark.table('account_counts').orderBy('country')"
+    },
+    {
+      "id": "parquet-query",
+      "title": "Query a Parquet file",
+      "dataset": "PS-D07",
+      "about": "Write a disposable Parquet table, then query its files in the same run.",
+      "sql": "CREATE TABLE trip_counts USING parquet LOCATION '/tmp/work/trip_counts' AS SELECT pickup_zone_id, COUNT(*) AS count FROM trips GROUP BY pickup_zone_id;\nSELECT * FROM parquet.`/tmp/work/trip_counts` ORDER BY pickup_zone_id;",
+      "python": "trips.groupBy('pickup_zone_id').count().write.mode('overwrite').parquet('/tmp/work/trip_counts')\nresult = spark.read.parquet('/tmp/work/trip_counts').orderBy('pickup_zone_id')"
+    },
+    {
+      "id": "delta-table",
+      "title": "Update a disposable Delta table",
+      "dataset": "PS-D08",
+      "about": "Create a private Delta table and update one region. Shared warehouses are read-only inputs.",
+      "sql": "CREATE TABLE lab_warehouses USING delta AS SELECT * FROM warehouses;\nUPDATE lab_warehouses SET region = 'Lab region' WHERE warehouse_id = 'WH01';\nSELECT warehouse_id, region FROM lab_warehouses ORDER BY warehouse_id;",
+      "python": "warehouses.write.format('delta').mode('overwrite').saveAsTable('lab_warehouses')\nspark.sql(\"UPDATE lab_warehouses SET region = 'Lab region' WHERE warehouse_id = 'WH01'\")\nresult = spark.table('lab_warehouses').select('warehouse_id', 'region').orderBy('warehouse_id')"
+    }
+  ],
+  "compare": [
+    {
+      "id": "api-sql",
+      "title": "DataFrame API and Spark SQL",
+      "dataset": "PS-D01",
+      "about": "Two ways to count orders by status. Equivalence checks every row and its multiplicity; the scratch workspace has no independent task oracle.",
+      "a": "result = orders.groupBy('status').count()",
+      "b": "result = spark.sql('SELECT status, COUNT(*) AS count FROM orders GROUP BY status')"
+    },
+    {
+      "id": "duplicates",
+      "title": "Keeping and removing duplicates",
+      "dataset": "PS-D01",
+      "about": "The practice export has duplicate deliveries. Removing duplicates changes the result contract.",
+      "a": "result = orders.select('order_id', 'total')",
+      "b": "result = orders.select('order_id', 'total').dropDuplicates()"
+    },
+    {
+      "id": "join-types",
+      "title": "Inner and left joins",
+      "dataset": "PS-D02",
+      "about": "A left join retains unmatched transactions. Check missing account keys and nulls.",
+      "a": "result = transactions.join(accounts.select('account_id'), 'account_id', 'inner')",
+      "b": "result = transactions.join(accounts.select('account_id'), 'account_id', 'left')"
+    },
+    {
+      "id": "builtin-udf",
+      "title": "Built-in function and Python UDF",
+      "dataset": "PS-D03",
+      "about": "Both uppercase first names. Inspect the actual Python evaluation operator; timing is a separate experiment.",
+      "a": "from pyspark.sql import functions as F\nresult = employees.select('employee_id', F.upper('first_name').alias('name'))",
+      "b": "from pyspark.sql import functions as F\nupper_name = F.udf(lambda x: x.upper() if x is not None else None, 'string')\nresult = employees.select('employee_id', upper_name('first_name').alias('name'))"
+    },
+    {
+      "id": "partitioning",
+      "title": "Repartition and coalesce",
+      "dataset": "PS-D07",
+      "about": "Both preserve records. Their physical plans reveal different partition operations.",
+      "a": "result = trips.repartition(2)",
+      "b": "result = trips.coalesce(2)"
+    },
+    {
+      "id": "aggregate-window",
+      "title": "Aggregation and window grain",
+      "dataset": "PS-D01",
+      "about": "Aggregation returns one row per status. A window preserves the source grain, even if it repeats the same totals.",
+      "a": "result = orders.groupBy('status').count()",
+      "b": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\nresult = orders.select('status', F.count('*').over(Window.partitionBy('status')).alias('count'))"
+    }
+  ],
+  "pipeline": [
+    {
+      "id": "retail-cleaning",
+      "title": "Clean and report retail orders",
+      "dataset": "PS-D01",
+      "about": "Raw orders flow into validation and reporting. Run stage replays every required upstream stage in a fresh workspace.",
+      "stages": [
+        "Raw orders",
+        "Valid orders",
+        "Orders by status"
+      ],
+      "code": "from pyspark.sql import functions as F\n\ndef bronze(orders):\n    return orders\n\ndef silver(raw):\n    return raw.filter(F.col('total').isNotNull() & (F.col('total') >= 0)).dropDuplicates(['order_id'])\n\ndef gold(clean):\n    return clean.groupBy('status').count().orderBy('status')\n"
+    },
+    {
+      "id": "delta-history",
+      "title": "Delta changes and history",
+      "dataset": "PS-D08",
+      "about": "Write warehouses to a disposable Delta table, change a region and inspect real version history.",
+      "stages": [
+        "Initial warehouses",
+        "Updated warehouses",
+        "Delta history"
+      ],
+      "code": "from pyspark.sql import functions as F\n\ndef bronze(warehouses):\n    return warehouses\n\ndef silver(raw):\n    return raw.withColumn('region', F.lit('Lab region'))\n\ndef gold(updated):\n    return spark.sql(\"DESCRIBE HISTORY delta.`/tmp/work/warehouses`\").select('version', 'operation', 'operationParameters')\n"
+    },
+    {
+      "id": "healthcare-layers",
+      "title": "Healthcare claims layers",
+      "dataset": "PS-D04",
+      "about": "Inspect raw claims, reject missing or negative billed amounts, then build a payer summary. Running a stage materializes every required upstream stage.",
+      "stages": [
+        "Bronze claims",
+        "Silver claims",
+        "Gold payer totals"
+      ],
+      "code": "from pyspark.sql import functions as F\n\ndef bronze(claims):\n    return claims\n\ndef silver(raw):\n    return raw.filter(F.col('billed_amount').isNotNull() & (F.col('billed_amount') >= 0)).dropDuplicates(['claim_id'])\n\ndef gold(clean):\n    return clean.groupBy('payer').agg(F.sum('billed_amount').alias('billed_total')).orderBy('payer')\n"
+    },
+    {
+      "id": "banking-report",
+      "title": "Banking transaction report",
+      "dataset": "PS-D02",
+      "about": "Validate raw transactions and report amounts by currency. This experiment does not change the saved reconciliation project.",
+      "stages": [
+        "Raw transactions",
+        "Valid transactions",
+        "Currency totals"
+      ],
+      "code": "from pyspark.sql import functions as F\n\ndef bronze(transactions):\n    return transactions\n\ndef silver(raw):\n    return raw.filter(F.col('amount').isNotNull() & (F.col('amount') >= 0)).dropDuplicates(['transaction_id'])\n\ndef gold(clean):\n    return clean.groupBy('currency').agg(F.sum('amount').alias('amount_total')).orderBy('currency')\n"
+    }
+  ],
+  "stream": [
+    {
+      "id": "clickstream-replay",
+      "title": "Clickstream batches and recovery",
+      "dataset": "PS-D06",
+      "table": "page_views",
+      "about": "Count received events by arrival batch using a real file stream. Each click replays the selected steps from the beginning.",
+      "stages": [
+        "Feed batch 1",
+        "Feed batch 2",
+        "Restart without new data",
+        "Fail batch 3",
+        "Recover from checkpoint"
+      ],
+      "code": "def transform(events):\n    # Keep event identifiers and arrival batches for the replay audit.\n    return events.select('event_id', 'batch')\n"
+    },
+    {
+      "id": "iot-replay",
+      "title": "Sensor batches and recovery",
+      "dataset": "PS-D09",
+      "table": "sensor_readings",
+      "about": "Inspect real checkpoint commits and an idempotent foreachBatch sink. Late-event/window state panels are unavailable in this first scenario.",
+      "stages": [
+        "Feed batch 1",
+        "Feed batch 2",
+        "Restart without new data",
+        "Fail batch 3",
+        "Recover from checkpoint"
+      ],
+      "code": "def transform(events):\n    return events.select('reading_id', 'batch')\n"
+    }
+  ],
+  "benchmark": [
+    {
+      "id": "broadcast",
+      "title": "Broadcast and shuffle joins",
+      "dataset": "PS-D07",
+      "about": "Join a deterministic taxi benchmark fixture to a small zone lookup. Both execute the same grouped result with automatic broadcast disabled.",
+      "a": "result = source.join(F.broadcast(lookup), 'pickup_zone_id').groupBy('borough').agg(F.sum('fare_units').alias('total')).orderBy('borough')",
+      "b": "result = source.join(lookup.hint('merge'), 'pickup_zone_id').groupBy('borough').agg(F.sum('fare_units').alias('total')).orderBy('borough')"
+    },
+    {
+      "id": "builtin",
+      "title": "Built-in and Python UDF",
+      "dataset": "PS-D15",
+      "about": "Compare equivalent response-status classifications on a deterministic request benchmark fixture.",
+      "a": "result = source.select((F.col('status_code') >= 400).alias('error')).groupBy('error').count().orderBy('error')",
+      "b": "is_error = F.udf(lambda status: status >= 400, 'boolean')\nresult = source.select(is_error('status_code').alias('error')).groupBy('error').count().orderBy('error')"
+    }
+  ]
+}

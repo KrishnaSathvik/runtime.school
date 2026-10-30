@@ -1,0 +1,79 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "movie_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "runtime_min",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "release_year",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "scaled",
+     "type": "array<double>",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "M02",
+     104,
+     2024,
+     [
+      0.37209302325581395,
+      1.25
+     ]
+    ],
+    [
+     "M05",
+     109,
+     2024,
+     [
+      0.4883720930232558,
+      1.25
+     ]
+    ],
+    [
+     "M08",
+     97,
+     2025,
+     [
+      0.20930232558139533,
+      1.5
+     ]
+    ],
+    [
+     "M09",
+     112,
+     2024,
+     [
+      0.5581395348837209,
+      1.25
+     ]
+    ]
+   ],
+   "row_count": 4
+  }
+ },
+ "hidden": [
+  "the full practice catalogue",
+  "films with a missing runtime or year, older and newer",
+  "new films shorter, longer and later than anything in the older catalogue",
+  "a catalogue with no films from 2024 on"
+ ]
+}

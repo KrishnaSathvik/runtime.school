@@ -1,0 +1,26 @@
+{
+  "id": "PS-L029-C1",
+  "slug": "accounts-with-a-contact-and-an-invoice",
+  "lesson": "PS-L029",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Accounts with a contact and an invoice",
+  "dataset": { "id": "PS-D14", "version": "1.0.0" },
+  "prompt": "Collections can only chase accounts that have both a contact person and at least one invoice. Write `solve(contacts, invoices)` so it returns the `account_id` of every such account.",
+  "rules": [
+    "An account qualifies when its `account_id` appears in `contacts` and also in `invoices`.",
+    "Return one column, `account_id`, with each account once, however many contacts or invoices it has.",
+    "Compare ids exactly as they are. A missing id on both sides counts as a match, as in any set operation."
+  ],
+  "hints": [
+    "Reduce each table to just its `account_id` column first.",
+    "You want the ids that are in both lists.",
+    "`intersect` returns each matching row once."
+  ],
+  "entry": "solve",
+  "inputs": ["contacts", "invoices"],
+  "starter": "def solve(contacts, invoices):\n    # Return each account_id found in both contacts and invoices, once.\n    return contacts.select(\"account_id\")\n",
+  "output": { "columns": ["account_id"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

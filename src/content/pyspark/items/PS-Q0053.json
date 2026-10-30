@@ -1,0 +1,50 @@
+{
+  "id": "PS-Q0053",
+  "slug": "countries-and-devices",
+  "lesson": "PS-L011",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Countries and devices",
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0"
+  },
+  "prompt": "Before choosing which apps to test in which markets, the product team wants every combination of country and preferred device that members have. Write `solve(users)` so it returns each combination once, in a fixed order.",
+  "rules": [
+    "Return two columns, `country` and `preferred_device`, with each combination exactly once.",
+    "Sort by `country` from A to Z, then by `preferred_device` from A to Z.",
+    "A missing value counts as its own value: a combination with a missing country or device appears once. Missing countries go after all others, and within a country a missing device goes last."
+  ],
+  "hints": [
+    "Keep the two columns first, then remove repeated combinations with `distinct()`.",
+    "`distinct()` treats two missing values as the same, so they collapse into one row.",
+    "An ascending sort puts missing values first. Use `asc_nulls_last()` on both sort columns."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "users"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(users):\n    # Return each country and device combination once, in order.\n    return users\n",
+  "output": {
+    "columns": [
+      "country",
+      "preferred_device"
+    ],
+    "order_sensitive": true
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Select the two columns, then `distinct()`: `users.select(\"country\", \"preferred_device\").distinct()`. The order matters: `distinct()` on the whole table compares every column, so two members with the same country and device but different ids are both kept. `distinct()` treats missing values as equal, so all members with no device in one country become one row. Then sort with missing values last on both keys: `orderBy(F.col(\"country\").asc_nulls_last(), F.col(\"preferred_device\").asc_nulls_last())`. A plain `orderBy(\"country\", \"preferred_device\")` puts the missing ones first. `dropDuplicates([\"country\", \"preferred_device\"])` before the `select` gives the same combinations."
+}

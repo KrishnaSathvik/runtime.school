@@ -1,0 +1,42 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "method",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "avg_bytes",
+     "type": "double",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "GET",
+     13087.142857142857
+    ],
+    [
+     "POST",
+     504.2
+    ]
+   ],
+   "row_count": 2
+  }
+ },
+ "hidden": [
+  "the full practice requests",
+  "a method with exactly three requests",
+  "methods with a single request each",
+  "requests with no bytes value",
+  "an empty requests table"
+ ]
+}

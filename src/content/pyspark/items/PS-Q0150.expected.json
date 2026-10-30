@@ -1,0 +1,208 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "order_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "line_no",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "line_value",
+     "type": "decimal(21,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "O00004",
+     2,
+     "Wall Clock",
+     "267.00"
+    ],
+    [
+     "O00012",
+     1,
+     null,
+     "220.00"
+    ],
+    [
+     "O00003",
+     2,
+     "Linen Throw",
+     "179.97"
+    ],
+    [
+     "O00010",
+     1,
+     "Linen Throw",
+     "179.97"
+    ],
+    [
+     "O00011",
+     2,
+     "Wall Clock",
+     "178.00"
+    ]
+   ],
+   "row_count": 5,
+   "inputs": {
+    "order_items": [
+     [
+      "O00001",
+      "1",
+      "P005",
+      "3",
+      "19.99"
+     ],
+     [
+      "O00001",
+      "2",
+      "P005",
+      "3",
+      "17.99"
+     ],
+     [
+      "O00003",
+      "2",
+      "P007",
+      "3",
+      "59.99"
+     ],
+     [
+      "O00004",
+      "2",
+      "P008",
+      "3",
+      "89.00"
+     ],
+     [
+      "O00007",
+      "2",
+      "P008",
+      "2",
+      "84.00"
+     ],
+     [
+      "O00008",
+      "2",
+      "P002",
+      "1",
+      "32.50"
+     ],
+     [
+      "O00010",
+      "1",
+      "P007",
+      "3",
+      "59.99"
+     ],
+     [
+      "O00011",
+      "2",
+      "P008",
+      "2",
+      "89.00"
+     ],
+     [
+      "O00012",
+      "1",
+      "P009",
+      "4",
+      "55.00"
+     ]
+    ],
+    "products": [
+     [
+      "P001",
+      "Chef Knife",
+      "kitchen",
+      "19.99",
+      "true"
+     ],
+     [
+      "P002",
+      "Pour-Over Kettle",
+      "kitchen",
+      "32.50",
+      "true"
+     ],
+     [
+      "P003",
+      "Trail Bottle",
+      "outdoor",
+      "24.00",
+      "true"
+     ],
+     [
+      "P004",
+      "Camp Lantern",
+      "outdoor",
+      "4.50",
+      "true"
+     ],
+     [
+      "P005",
+      "Desk Lamp",
+      "office",
+      "19.99",
+      "true"
+     ],
+     [
+      "P006",
+      "Notebook Set",
+      "office",
+      "12.00",
+      "true"
+     ],
+     [
+      "P007",
+      "Linen Throw",
+      "home",
+      "59.99",
+      "true"
+     ],
+     [
+      "P008",
+      "Wall Clock",
+      "home",
+      "89.00",
+      "true"
+     ],
+     [
+      "P008",
+      "Wall Clock",
+      "home",
+      "89.00",
+      "true"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice order lines and products",
+  "a top product repeated in the product list",
+  "lines sold at a different price from today's list price",
+  "several lines with the same value",
+  "a valuable line for a product that isn't listed",
+  "fewer than five lines, one with a missing quantity",
+  "no order lines at all"
+ ]
+}

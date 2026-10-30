@@ -1,0 +1,125 @@
+{
+  "id": "PS-L023",
+  "minutes": 25,
+  "lede": "A data contract is the promise a table makes to everyone who reads it: these columns, these types, these rules. Writing it down as code lets a pipeline check the promise on every load and stop when it's broken.",
+  "objectives": [
+    "Check a table's columns and types against a written contract",
+    "Keep data-quality rules as a list of named conditions",
+    "Count the rows that fail each rule and put the results in a report DataFrame",
+    "Stop a pipeline with an error when a rule fails"
+  ],
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "claims",
+      "observations"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "The `claims` table holds insurance claims for clinic visits. Billing, finance and reporting all read it, so they agree on what it contains. A contract has two parts:\n\n- **the shape**: which columns exist and their types;\n- **the rules**: what must be true of every row.\n\nThe shape comes first, because rules on a missing or mistyped column make no sense. `dtypes` gives every column with its type as text, so a contract can be a plain dict."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Check the shape",
+      "code": "contract = {\n    \"claim_id\": \"string\",\n    \"service_date\": \"date\",\n    \"submitted_date\": \"date\",\n    \"billed_amount\": \"decimal(12,2)\",\n    \"allowed_amount\": \"decimal(12,2)\",\n    \"paid_amount\": \"double\",\n    \"claim_status\": \"string\",\n    \"payer_code\": \"string\",\n}\n\nactual = dict(claims.dtypes)\nfor name, wanted in contract.items():\n    found = actual.get(name)\n    if found != wanted:\n        print(f\"{name}: expected {wanted}, found {found}\")\n",
+      "note": "Two problems: the contract says `paid_amount` is a double but the table stores exact decimals, and `payer_code` doesn't exist (`get` gives `None`). One of them is the contract's mistake, the other the table's. Either way someone has to decide before the data moves on."
+    },
+    {
+      "kind": "text",
+      "md": "Rules are conditions, so keep them as a list of `(name, condition)` pairs, each **true for a good row**. A Python loop can then check them all the same way.\n\nDecide what a missing value means in each rule. `allowed_amount` is empty until the payer decides, which is fine, so that rule says so with `isNull() |`. As a safety net, `F.coalesce(passes, F.lit(False))` treats any rule that still comes out NULL as a failure, so no row slips through unchecked."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Rules as data, counted in a loop",
+      "code": "from pyspark.sql import functions as F\n\nrules = [\n    (\"dates_in_order\", F.col(\"service_date\") <= F.col(\"submitted_date\")),\n    (\"allowed_within_billed\", F.col(\"allowed_amount\").isNull() | (F.col(\"allowed_amount\") <= F.col(\"billed_amount\"))),\n    (\"known_status\", F.col(\"claim_status\").isin(\"submitted\", \"approved\", \"paid\", \"denied\", \"appealed\")),\n]\n\ntotal = claims.count()\nresults = []\nfor name, passes in rules:\n    failed = claims.filter(~F.coalesce(passes, F.lit(False))).count()\n    results.append((name, failed, total))\n\nreport = spark.createDataFrame(results, \"rule STRING, failed BIGINT, checked BIGINT\")\nreport.show(truncate=False)\n",
+      "note": "The report is an ordinary DataFrame, built with `createDataFrame` from the Python list. It could be saved next to the data so every load leaves a record of how it scored."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Look at the rows behind a failure",
+      "code": "from pyspark.sql import functions as F\n\ndates_in_order = F.col(\"service_date\") <= F.col(\"submitted_date\")\n\nclaims.filter(~F.coalesce(dates_in_order, F.lit(False))).select(\"claim_id\", \"service_date\", \"submitted_date\", \"claim_status\").show()\n",
+      "note": "A claim can't be submitted three days before the visit it bills for. A count tells you something is wrong; the rows tell you what."
+    },
+    {
+      "kind": "text",
+      "md": "Some rules depend on another column. Each lab result in `observations` has a code, and each code has exactly one correct unit. A `F.when` chain can work out the expected unit for every row; a code it doesn't know gets NULL, which then fails the rule."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "A rule that depends on another column",
+      "code": "from pyspark.sql import functions as F\n\nexpected_unit = (\n    F.when(F.col(\"code\") == \"GLU\", \"mg/dL\")\n    .when(F.col(\"code\") == \"HBA1C\", \"%\")\n    .when(F.col(\"code\") == \"LDL\", \"mg/dL\")\n    .when(F.col(\"code\") == \"HGB\", \"g/dL\")\n    .when(F.col(\"code\") == \"BMI\", \"kg/m2\")\n)\nunit_ok = F.coalesce(F.col(\"unit\") == expected_unit, F.lit(False))\n\nobservations.select(\"observation_id\", \"code\", \"value\", \"unit\", expected_unit.alias(\"expected_unit\"), unit_ok.alias(\"unit_ok\")).show()\n",
+      "note": "Every unit matches here. In a bigger feed this rule catches results sent in the wrong unit, which would otherwise be compared with numbers they don't match."
+    },
+    {
+      "kind": "text",
+      "md": "A report nobody reads doesn't protect anyone. The last step of a contract check is a **gate**: if any rule failed, raise an error so the pipeline stops before the bad data reaches the people who rely on it."
+    },
+    {
+      "kind": "error-example",
+      "id": "e5",
+      "title": "Stop when the contract is broken",
+      "code": "from pyspark.sql import functions as F\n\nrules = [\n    (\"dates_in_order\", F.col(\"service_date\") <= F.col(\"submitted_date\")),\n    (\"known_status\", F.col(\"claim_status\").isin(\"submitted\", \"approved\", \"paid\", \"denied\", \"appealed\")),\n]\n\nbroken = []\nfor name, passes in rules:\n    failed = claims.filter(~F.coalesce(passes, F.lit(False))).count()\n    if failed > 0:\n        broken.append(f\"{name}: {failed} failed\")\n\nif broken:\n    raise ValueError(\"claims broke the contract: \" + \", \".join(broken))\nprint(\"claims passed every rule\")\n",
+      "error": "ValueError",
+      "note": "The `print` never runs. Raising is deliberate here: the error message names each broken rule and how many rows failed it."
+    }
+  ],
+  "challenges": [
+    "PS-L023-C1",
+    "PS-L023-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "A rule is `F.col(\"service_date\") <= F.col(\"submitted_date\")` and a claim's `submitted_date` is missing. What does `claims.filter(~F.coalesce(rule, F.lit(False)))` do with that claim?",
+      "choices": [
+        "Leaves it out, because the rule is NULL",
+        "Keeps it as a failure, because NULL becomes false",
+        "Raises an error",
+        "Keeps it only if service_date is also missing"
+      ],
+      "answer": 1,
+      "why": "The comparison is NULL, `coalesce` turns it into false, and `~` makes it true, so the row is counted as failing."
+    },
+    {
+      "id": "k2",
+      "prompt": "What does `dict(claims.dtypes)[\"billed_amount\"]` give?",
+      "choices": [
+        "\"decimal(12,2)\"",
+        "\"double\"",
+        "DecimalType(12,2)",
+        "\"DECIMAL\""
+      ],
+      "answer": 0,
+      "why": "`dtypes` lists each column with its type as lower-case text, including precision and scale for decimals."
+    },
+    {
+      "id": "k3",
+      "prompt": "Why keep rules as a list of `(name, condition)` pairs?",
+      "choices": [
+        "Spark runs a list of rules faster than separate filters",
+        "It's the only way to use `F.coalesce`",
+        "One loop can check every rule the same way and report each by name",
+        "Spark saves the list with the table"
+      ],
+      "answer": 2,
+      "why": "A condition is an ordinary Python value, so rules can live in a list. Adding a rule is one new line, and the loop counts and names it."
+    }
+  ],
+  "review": [
+    "A contract is the shape (columns and types) plus the rules every row must follow.",
+    "Check the shape first: compare `dict(df.dtypes)` with the types you expect.",
+    "Keep rules as `(name, condition)` pairs, each true for a good row, and decide what a missing value means in each.",
+    "`F.coalesce(rule, F.lit(False))` makes a NULL rule count as a failure.",
+    "Count failures per rule in a loop and build a report with `spark.createDataFrame`.",
+    "A gate raises an error when any rule fails, so bad data doesn't move on."
+  ],
+  "practice": ["PS-Q0111", "PS-Q0112", "PS-Q0113", "PS-Q0114", "PS-Q0115"]
+}

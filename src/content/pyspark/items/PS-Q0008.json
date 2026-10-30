@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0008",
+  "kind": "predict",
+  "slug": "one-partition-or-none",
+  "lesson": "PS-L002",
+  "role": "edge",
+  "format": "concept_or_trace",
+  "difficulty": "medium",
+  "minutes": 6,
+  "title": "One partition, or none",
+  "prompt": "This program asks for the smallest sensible number of partitions, then for none at all. What does it print? Type each line on its own line.",
+  "program": "one = api_requests.repartition(1)\nprint(one.rdd.getNumPartitions(), one.count())\ntry:\n    api_requests.repartition(0)\n    print(\"made it\")\nexcept Exception as e:\n    print(type(e).__name__)\n",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "`repartition(1)` puts every row in one partition; rows are never lost.",
+    "Every task works on one partition. Can a DataFrame have zero partitions to work on?",
+    "Spark checks the number when you call `repartition`, before any rows are read, and raises an error that names a bad argument."
+  ],
+  "explanation": "`repartition(1)` gives one partition holding all 12 requests. Asking for 0 partitions is refused straight away with `IllegalArgumentException`, because the number must be positive, so `made it` is never printed."
+}

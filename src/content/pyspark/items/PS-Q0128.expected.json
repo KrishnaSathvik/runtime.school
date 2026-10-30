@@ -1,0 +1,58 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "transaction_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "issue",
+     "type": "string",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "T000002",
+     null,
+     "60.53",
+     "missing account"
+    ],
+    [
+     "T000013",
+     "A99999",
+     "800.00",
+     "unknown account"
+    ]
+   ],
+   "row_count": 2
+  }
+ },
+ "hidden": [
+  "the full practice transactions and accounts",
+  "transactions with no account_id",
+  "account ids that are almost, but not exactly, right",
+  "an accounts table that also holds a row with no account_id",
+  "an empty accounts table",
+  "every transaction has a real account",
+  "the same orphan transaction delivered twice"
+ ]
+}

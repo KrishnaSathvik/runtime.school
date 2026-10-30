@@ -1,0 +1,149 @@
+{
+ "id": "PS-L075",
+ "minutes": 35,
+ "lede": "Accounts change owner, segment and limit over time. Overwriting the old values answers \"what is it now?\" but not \"what was it when we sent that invoice?\". A type 2 dimension keeps every version, each with the time it was valid.",
+ "objectives": [
+  "Tell type 1 (overwrite) from type 2 (keep history) and choose between them",
+  "Build a type 2 table with `effective_from`, `effective_to` and `is_current`, using times from the data",
+  "Apply a batch of changes with a MERGE that closes the old row, then add the new version",
+  "Find the version that was valid at a given time, and see why a rerun needs a guard"
+ ],
+ "dataset": {
+  "id": "PS-D14",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "accounts",
+   "customer_cdc"
+  ]
+ },
+ "blocks": [
+  {
+   "kind": "text",
+   "md": "`accounts` is a CRM's customer table as it stood at the snapshot, midnight on 1 January 2026. Since then the CRM has sent every change in `customer_cdc`:\n\n- `op` is `I` (insert), `U` (update) or `D` (delete);\n- `sequence` orders the changes: it only goes up;\n- `changed_at` is when the change happened;\n- the other columns are the **whole account** after the change (for a `D`, as it was before).\n\nA table like `accounts`, which describes things other tables refer to, is a **dimension**. Its rows change slowly, and how you apply those changes is the **slowly changing dimension** (SCD) question."
+  },
+  {
+   "kind": "example",
+   "id": "e1",
+   "title": "The changes since the snapshot",
+   "code": "customer_cdc.orderBy(\"sequence\").select(\"op\", \"sequence\", \"changed_at\", \"account_id\", \"segment\", \"account_owner\", \"credit_limit\").show()\n",
+   "note": "ACC-0001 changes three times: limit, segment, owner. ACC-0003 is deleted. ACC-0006 and ACC-0007 are new. ACC-0005 never changes."
+  },
+  {
+   "kind": "text",
+   "md": "**Type 1** keeps one row per account and overwrites it. Because each change carries the whole account, the newest change of each account (lesson 33's `row_number`, newest `sequence` first) is all you need, and one MERGE applies it (lesson 63): delete on `D`, update other matches, insert new accounts. `UpdateAll` and `InsertAll` set the table's columns from source columns with the same names, so `op`, `sequence` and `changed_at` are left out."
+  },
+  {
+   "kind": "example",
+   "id": "e2",
+   "title": "Type 1: overwrite",
+   "code": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\nfrom delta.tables import DeltaTable\n\nnewest_first = Window.partitionBy(\"account_id\").orderBy(F.col(\"sequence\").desc())\nlatest = customer_cdc.withColumn(\"rn\", F.row_number().over(newest_first)).filter(F.col(\"rn\") == 1).drop(\"rn\")\n\npath = \"/tmp/crm/accounts_type1\"\naccounts.write.format(\"delta\").save(path)\n(DeltaTable.forPath(spark, path).alias(\"t\")\n    .merge(latest.alias(\"s\"), \"t.account_id = s.account_id\")\n    .whenMatchedDelete(condition=\"s.op = 'D'\")\n    .whenMatchedUpdateAll()\n    .whenNotMatchedInsertAll(condition=\"s.op != 'D'\")\n    .execute())\n\nspark.read.format(\"delta\").load(path).orderBy(\"account_id\").select(\"account_id\", \"segment\", \"account_owner\", \"credit_limit\", \"is_active\").show()\n",
+   "note": "Today's accounts, and nothing else. Nobody can tell that ACC-0001 used to be mid-market or that ACC-0003 existed. That's fine for a typo fix, but not when reports must show what was true at the time."
+  },
+  {
+   "kind": "text",
+   "md": "**Type 2** keeps every version as its own row, with three extra columns:\n\n- `effective_from`: when this version started;\n- `effective_to`: when it stopped, or NULL while it's still valid;\n- `is_current`: true for the one version that's valid now.\n\nThe times come from the data: the snapshot's rows start at the snapshot time, and a change starts its version at its `changed_at`. Never use the clock (`current_timestamp`): a rerun would give different times, and the history would claim changes happened when the job ran."
+  },
+  {
+   "kind": "example",
+   "id": "e3",
+   "title": "Start the history from the snapshot",
+   "code": "from pyspark.sql import functions as F\n\nCOLS = accounts.columns\npath = \"/tmp/crm/dim_accounts\"\n(accounts\n    .withColumn(\"effective_from\", F.lit(\"2026-01-01 00:00:00\").cast(\"timestamp\"))\n    .withColumn(\"effective_to\", F.lit(None).cast(\"timestamp\"))\n    .withColumn(\"is_current\", F.lit(True))\n    .write.format(\"delta\").save(path))\n\nspark.read.format(\"delta\").load(path).orderBy(\"account_id\") \\\n    .select(\"account_id\", \"segment\", \"account_owner\", \"effective_from\", \"effective_to\", \"is_current\").show()\n",
+   "note": "Five accounts, each with one open version from the snapshot. `F.lit(None).cast(\"timestamp\")` gives an empty timestamp column, so later versions can fill it."
+  },
+  {
+   "kind": "text",
+   "md": "Applying a batch of changes is two writes:\n\n1. **Close** the current row of every account that changed: a MERGE matched on the account **and** `t.is_current`, so older versions are never touched. It sets `effective_to` to the change's `changed_at` and `is_current` to false. A delete is closed the same way.\n2. **Add** the new version of every account that wasn't deleted, open from its `changed_at`.\n\nA MERGE refuses two source rows for one target row (lesson 63), so the batch is first cut down to each account's newest change in it. The history is as detailed as the batches: two changes in one batch become one version.\n\nThe two writes are two commits. A reader between them would see a closed row with no new one yet; a single MERGE can do both, but it needs the source rows twice, which is harder to read."
+  },
+  {
+   "kind": "example",
+   "id": "e4",
+   "title": "Apply January's changes",
+   "code": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\nfrom delta.tables import DeltaTable\n\nnewest_first = Window.partitionBy(\"account_id\").orderBy(F.col(\"sequence\").desc())\nCOLS = accounts.columns\npath = \"/tmp/crm/dim_accounts\"\n(accounts\n    .withColumn(\"effective_from\", F.lit(\"2026-01-01 00:00:00\").cast(\"timestamp\"))\n    .withColumn(\"effective_to\", F.lit(None).cast(\"timestamp\"))\n    .withColumn(\"is_current\", F.lit(True))\n    .write.format(\"delta\").save(path))\n\n\ndef apply_batch(changes):\n    # One row per account: its newest change in this batch.\n    latest = (changes\n        .withColumn(\"rn\", F.row_number().over(newest_first))\n        .filter(F.col(\"rn\") == 1)\n        .drop(\"rn\"))\n    # 1. Close the current row of every account that changed.\n    (DeltaTable.forPath(spark, path).alias(\"t\")\n        .merge(latest.alias(\"s\"), \"t.account_id = s.account_id AND t.is_current\")\n        .whenMatchedUpdate(set={\"effective_to\": \"s.changed_at\", \"is_current\": \"false\"})\n        .execute())\n    # 2. Add the new versions; a delete adds none.\n    (latest.filter(F.col(\"op\") != \"D\")\n        .select(*COLS,\n                F.col(\"changed_at\").alias(\"effective_from\"),\n                F.lit(None).cast(\"timestamp\").alias(\"effective_to\"),\n                F.lit(True).alias(\"is_current\"))\n        .write.format(\"delta\").mode(\"append\").save(path))\n\njanuary = customer_cdc.filter(F.col(\"changed_at\") < \"2026-02-01\")\napply_batch(january)\n\nhistory = spark.read.format(\"delta\").load(path)\nhistory.filter(F.col(\"account_id\").isin(\"ACC-0001\", \"ACC-0003\", \"ACC-0006\")).orderBy(\"account_id\", \"effective_from\") \\\n    .select(\"account_id\", \"segment\", \"account_owner\", \"credit_limit\", \"effective_from\", \"effective_to\", \"is_current\").show()\nprint(history.count(), \"rows,\", history.filter(\"is_current\").count(), \"current\")\n",
+   "note": "ACC-0001 changed twice in January; its newest January change, the move to enterprise, closes the snapshot row at 27 January 16:05 and opens a new one. ACC-0006 was new, so it just gets one open row. ACC-0003's delete is in February, so it's untouched."
+  },
+  {
+   "kind": "example",
+   "id": "e5",
+   "title": "Two batches, and a look back",
+   "code": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\nfrom delta.tables import DeltaTable\n\nnewest_first = Window.partitionBy(\"account_id\").orderBy(F.col(\"sequence\").desc())\nCOLS = accounts.columns\npath = \"/tmp/crm/dim_accounts\"\n(accounts\n    .withColumn(\"effective_from\", F.lit(\"2026-01-01 00:00:00\").cast(\"timestamp\"))\n    .withColumn(\"effective_to\", F.lit(None).cast(\"timestamp\"))\n    .withColumn(\"is_current\", F.lit(True))\n    .write.format(\"delta\").save(path))\n\n\ndef apply_batch(changes):\n    # One row per account: its newest change in this batch.\n    latest = (changes\n        .withColumn(\"rn\", F.row_number().over(newest_first))\n        .filter(F.col(\"rn\") == 1)\n        .drop(\"rn\"))\n    # 1. Close the current row of every account that changed.\n    (DeltaTable.forPath(spark, path).alias(\"t\")\n        .merge(latest.alias(\"s\"), \"t.account_id = s.account_id AND t.is_current\")\n        .whenMatchedUpdate(set={\"effective_to\": \"s.changed_at\", \"is_current\": \"false\"})\n        .execute())\n    # 2. Add the new versions; a delete adds none.\n    (latest.filter(F.col(\"op\") != \"D\")\n        .select(*COLS,\n                F.col(\"changed_at\").alias(\"effective_from\"),\n                F.lit(None).cast(\"timestamp\").alias(\"effective_to\"),\n                F.lit(True).alias(\"is_current\"))\n        .write.format(\"delta\").mode(\"append\").save(path))\n\nfor first, last in [(\"2026-01-01\", \"2026-02-01\"), (\"2026-02-01\", \"2026-04-01\")]:\n    apply_batch(customer_cdc.filter((F.col(\"changed_at\") >= first) & (F.col(\"changed_at\") < last)))\n\nhistory = spark.read.format(\"delta\").load(path)\nhistory.filter(F.col(\"account_id\").isin(\"ACC-0001\", \"ACC-0003\", \"ACC-0006\")).orderBy(\"account_id\", \"effective_from\") \\\n    .select(\"account_id\", \"segment\", \"account_owner\", \"credit_limit\", \"effective_from\", \"effective_to\", \"is_current\").show()\n\non = F.lit(\"2026-02-15 12:00:00\").cast(\"timestamp\")\nthen = history.filter((F.col(\"effective_from\") <= on) & (F.col(\"effective_to\").isNull() | (on < F.col(\"effective_to\"))))\nthen.orderBy(\"account_id\").select(\"account_id\", \"segment\", \"account_owner\", \"credit_limit\").show()\n",
+   "note": "January, then February and March. ACC-0001 has three versions, each closed when the next began. ACC-0003's only row was closed by its delete, so it has no current row. The second table is the accounts as they were on 15 February at noon: a version was valid when it had started and not yet ended. ACC-0007 is missing although it was created on 9 February: its insert and its rename came in the same batch, so its history starts at the rename. A history is only as detailed as its batches."
+  },
+  {
+   "kind": "text",
+   "md": "Batches get rerun. Run the same batch twice and step 1 closes the version the first run just opened, and step 2 adds a copy of it. Lesson 63 solved the same problem for MERGE with a condition: only a change newer than what the table has may apply. Here that's a change whose `changed_at` is after the current row's `effective_from`."
+  },
+  {
+   "kind": "example",
+   "id": "e6",
+   "title": "A rerun without a guard",
+   "code": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\nfrom delta.tables import DeltaTable\n\nnewest_first = Window.partitionBy(\"account_id\").orderBy(F.col(\"sequence\").desc())\nCOLS = accounts.columns\npath = \"/tmp/crm/dim_accounts\"\n(accounts\n    .withColumn(\"effective_from\", F.lit(\"2026-01-01 00:00:00\").cast(\"timestamp\"))\n    .withColumn(\"effective_to\", F.lit(None).cast(\"timestamp\"))\n    .withColumn(\"is_current\", F.lit(True))\n    .write.format(\"delta\").save(path))\n\n\ndef apply_batch(changes):\n    # One row per account: its newest change in this batch.\n    latest = (changes\n        .withColumn(\"rn\", F.row_number().over(newest_first))\n        .filter(F.col(\"rn\") == 1)\n        .drop(\"rn\"))\n    # 1. Close the current row of every account that changed.\n    (DeltaTable.forPath(spark, path).alias(\"t\")\n        .merge(latest.alias(\"s\"), \"t.account_id = s.account_id AND t.is_current\")\n        .whenMatchedUpdate(set={\"effective_to\": \"s.changed_at\", \"is_current\": \"false\"})\n        .execute())\n    # 2. Add the new versions; a delete adds none.\n    (latest.filter(F.col(\"op\") != \"D\")\n        .select(*COLS,\n                F.col(\"changed_at\").alias(\"effective_from\"),\n                F.lit(None).cast(\"timestamp\").alias(\"effective_to\"),\n                F.lit(True).alias(\"is_current\"))\n        .write.format(\"delta\").mode(\"append\").save(path))\n\nmarch = customer_cdc.filter(F.col(\"changed_at\") >= \"2026-03-01\")\napply_batch(march)\napply_batch(march)  # the same batch, run again\n\nhistory = spark.read.format(\"delta\").load(path)\nhistory.filter(F.col(\"account_id\") == \"ACC-0004\").orderBy(\"effective_from\", \"effective_to\") \\\n    .select(\"account_id\", \"is_active\", \"effective_from\", \"effective_to\", \"is_current\").show()\n",
+   "note": "The second run closed ACC-0004's March version at the moment it began and opened a copy of it. ACC-0004 now has a version that lasted no time at all, and two rows saying it's been inactive since 2 March."
+  },
+  {
+   "kind": "error-example",
+   "id": "e7",
+   "title": "Two changes for one account",
+   "code": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\nfrom delta.tables import DeltaTable\n\nCOLS = accounts.columns\npath = \"/tmp/crm/dim_accounts\"\n(accounts\n    .withColumn(\"effective_from\", F.lit(\"2026-01-01 00:00:00\").cast(\"timestamp\"))\n    .withColumn(\"effective_to\", F.lit(None).cast(\"timestamp\"))\n    .withColumn(\"is_current\", F.lit(True))\n    .write.format(\"delta\").save(path))\n\njanuary = customer_cdc.filter(F.col(\"changed_at\") < \"2026-02-01\")\n(DeltaTable.forPath(spark, path).alias(\"t\")\n    .merge(january.alias(\"s\"), \"t.account_id = s.account_id AND t.is_current\")\n    .whenMatchedUpdate(set={\"effective_to\": \"s.changed_at\", \"is_current\": \"false\"})\n    .execute())\n",
+   "error": "UnsupportedOperationException",
+   "note": "January has two changes for ACC-0001, so two source rows match its current row and Delta refuses the whole merge. Keep each account's newest change in the batch first."
+  }
+ ],
+ "challenges": [
+  "PS-L075-C1",
+  "PS-L075-C2"
+ ],
+ "concept": [
+  {
+   "id": "k1",
+   "prompt": "An invoice report must show each account's segment on the invoice date, even after the segment changes. Which dimension type?",
+   "choices": [
+    "Type 1, because it's always up to date",
+    "Type 2, because it keeps each version with when it was valid",
+    "Either: they hold the same rows",
+    "Neither: use the change feed directly"
+   ],
+   "answer": 1,
+   "why": "Type 1 overwrites the old segment, so the history is gone. Type 2 keeps every version with `effective_from` and `effective_to`."
+  },
+  {
+   "id": "k2",
+   "prompt": "Why does the closing MERGE match on `t.account_id = s.account_id AND t.is_current`?",
+   "choices": [
+    "MERGE needs two conditions",
+    "So only the open version is closed, and a source row never matches older versions",
+    "To make the merge faster",
+    "So deletes are skipped"
+   ],
+   "answer": 1,
+   "why": "Without `is_current`, a change would match every version of the account and overwrite the end time of versions that were already closed."
+  },
+  {
+   "id": "k3",
+   "prompt": "Where should `effective_from` of a new version come from?",
+   "choices": [
+    "`F.current_timestamp()` when the job runs",
+    "The change's `changed_at`",
+    "The snapshot time",
+    "The change's `sequence`"
+   ],
+   "answer": 1,
+   "why": "The version started when the change happened. The job's clock would differ on every run and would put the change at the wrong time."
+  }
+ ],
+ "review": [
+  "Type 1 overwrites a dimension's rows: simple, but the old values are gone.",
+  "Type 2 keeps every version with `effective_from`, `effective_to` (NULL while open) and `is_current`.",
+  "Take the times from the data (the snapshot time, each change's `changed_at`), never from the clock.",
+  "Cut a batch to each key's newest change, close the current rows with a MERGE on the key and `is_current`, then add the new versions; a delete adds none.",
+  "A version was valid at time T when `effective_from <= T` and `effective_to` is NULL or after T.",
+  "A rerun closes and copies versions again unless only changes newer than the current row apply."
+ ],
+ "practice": [
+  "PS-Q0371",
+  "PS-Q0372",
+  "PS-Q0373",
+  "PS-Q0374",
+  "PS-Q0375"
+ ]
+}

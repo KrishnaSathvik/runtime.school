@@ -1,0 +1,52 @@
+{
+ "id": "PS-L073-C2",
+ "slug": "claims-through-the-layers",
+ "lesson": "PS-L073",
+ "format": "dataframe_coding",
+ "difficulty": "hard",
+ "minutes": 14,
+ "title": "Claims through the layers",
+ "dataset": {
+  "id": "PS-D04",
+  "version": "1.0.0"
+ },
+ "prompt": "Claims arrive in two loads, and finance reads gold: totals per load and payer. Complete `run(load, source_file, batch_id)` so each load goes into bronze and silver is rebuilt, then `build_gold` runs.",
+ "rules": [
+  "Bronze keeps every load as it arrived, with `_source_file` and `_batch_id` set from `run`'s arguments.",
+  "Silver holds the bronze claims of all loads so far that pass every rule, each claim once, with bronze's columns.",
+  "A claim passes when both dates are present and `service_date` is not after `submitted_date`, `allowed_amount` is missing or at most `billed_amount`, and `claim_status` is submitted, approved, paid, denied or appealed.",
+  "Don't change `build_gold` or `solve`."
+ ],
+ "hints": [
+  "Bronze is a record of everything that arrived: which write mode keeps the first load when the second one comes?",
+  "Rebuild silver from all of bronze on every run. Which mode makes sure the first load's claims aren't counted twice?",
+  "An `allowed_amount` that's missing is fine: `F.col(\"allowed_amount\").isNull() | (...)`."
+ ],
+ "entry": "solve",
+ "inputs": [
+  "claims"
+ ],
+ "starter": "import shutil\n\nfrom pyspark.sql import functions as F\n\nBRONZE = \"/tmp/clinic/bronze/claims\"\nSILVER = \"/tmp/clinic/silver/claims\"\nGOLD = \"/tmp/clinic/gold/load_totals\"\n\n\ndef build_gold():\n    # Gold: one row per load and payer, built from silver. Don't change this.\n    # groupBy(...).agg(...) makes one row per group; the aggregation lesson covers it.\n    silver = spark.read.format(\"delta\").load(SILVER)\n    (silver.groupBy(\"_batch_id\", \"_source_file\", \"payer\")\n        .agg(F.count(\"*\").alias(\"claims\"), F.sum(\"billed_amount\").alias(\"billed\"))\n        .write.format(\"delta\").mode(\"overwrite\").save(GOLD))\n\n\ndef run(load, source_file, batch_id):\n    # 1. Bronze: add this load, with its lineage columns.\n\n    # 2. Silver: the bronze claims that pass every rule.\n\n    build_gold()\n\n\ndef solve(claims):\n    shutil.rmtree(\"/tmp/clinic\", ignore_errors=True)  # start from empty folders on every run\n    run(claims.where(\"submitted_date < '2026-01-20'\"), \"claims_2026-01-19.csv\", 1)\n    run(claims.where(\"submitted_date >= '2026-01-20'\"), \"claims_2026-02-28.csv\", 2)\n    return spark.read.format(\"delta\").load(GOLD)\n",
+ "output": {
+  "columns": [
+   "_batch_id",
+   "_source_file",
+   "payer",
+   "claims",
+   "billed"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 120,
+  "check_timeout_s": 300,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

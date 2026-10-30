@@ -1,0 +1,67 @@
+{
+  "id": "PS-P03-M2",
+  "slug": "clean-the-attempts",
+  "project": "PS-P03",
+  "milestone": "PS-P03.m2",
+  "difficulty": "medium",
+  "minutes": 30,
+  "title": "Remove repeated attempts and check the timestamps",
+  "dataset": {
+    "id": "PS-D11",
+    "version": "1.0.0"
+  },
+  "prompt": "The export was re-run once, so some attempts appear twice, and a few rows can't be placed in time. Every report is measured as of one fixed day, `AS_OF_DATE`: the last day of the data, 2026-06-28. It is a constant in the file, never today's date, so the numbers come out the same whenever the pipeline runs.\n\nWrite `clean_attempts(attempts)`. It starts from your `attempt_view(attempts)`, removes the copies and keeps only attempts that happened by the as-of date.",
+  "rules": [
+    "A copy is an exact repeat: every column the same. Keep one of them.",
+    "An attempt with no `started_at` can't be placed in time: drop it.",
+    "Keep attempts whose `activity_date` is on or before `AS_OF_DATE`. One started at 23:15 on 2026-06-28 stays; one on 2026-06-29 is dropped.",
+    "An abandoned attempt (no `score_pct`, `passed` false) is real activity: it stays.",
+    "Return `attempt_view`'s columns."
+  ],
+  "hints": [
+    "Call `attempt_view(attempts)` first. `dropDuplicates()` with no columns removes exact copies.",
+    "Compare the day, not the timestamp: `F.col(\"activity_date\") <= AS_OF_DATE`. A timestamp compared with \"2026-06-28\" means midnight, so it would drop that whole day.",
+    "A missing date fails any comparison, but saying `F.col(\"started_at\").isNotNull()` makes the rule plain."
+  ],
+  "explanation": "`dropDuplicates()` on the view removes rows that repeat in every column, which is exactly what a re-run export produces, so one attempt can't count twice in any later report. Filtering on `activity_date` rather than `started_at` keeps the whole as-of day: comparing a timestamp with the string \"2026-06-28\" compares with midnight and would lose that day's activity. Rows with no start time are dropped because no report can say when they happened. Abandoned attempts stay: they never pass a lesson, but they show a learner was there.",
+  "entry": "clean_attempts",
+  "inputs": [
+    "attempts"
+  ],
+  "file": "pipeline.py",
+  "append": "\n\nAS_OF_DATE = \"2026-06-28\"\n\n\ndef clean_attempts(attempts):\n    # Step 2: start from attempt_view(attempts), remove the copies and keep attempts with a valid start time.\n    return attempt_view(attempts)\n",
+  "prerequisites": [
+    "PS-L010",
+    "PS-L018",
+    "PS-L020"
+  ],
+  "output": {
+    "columns": [
+      "attempt_id",
+      "learner_id",
+      "lesson_id",
+      "attempt_no",
+      "started_at",
+      "activity_date",
+      "score_pct",
+      "passed"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "example",
+      "sample": true
+    },
+    {
+      "id": "project",
+      "edition": "project"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

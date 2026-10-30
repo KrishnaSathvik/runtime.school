@@ -1,0 +1,55 @@
+{
+  "id": "PS-Q0221",
+  "slug": "keep-the-trips-as-parquet",
+  "lesson": "PS-L045",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Keep the trips as Parquet",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "prompt": "The data team wants the trips kept in a format that remembers its types. Write `solve(trips)` so it saves six columns of `trips` as Parquet at the given path and returns what it reads back from there.",
+  "rules": [
+    "Save `trip_id`, `pickup_at`, `trip_distance`, `fare`, `total` and `payment_type`, in that order, as Parquet at `path` (under `/tmp`).",
+    "The job runs again and again, so the write must replace whatever is already at `path`.",
+    "Return the DataFrame read back from `path`. Every column keeps its type: timestamps, a double and exact decimals.",
+    "Keep every trip, duplicates and missing values included."
+  ],
+  "hints": [
+    "`df.write.mode(\"overwrite\").parquet(path)` saves a DataFrame as Parquet and replaces an earlier copy.",
+    "`spark.read.parquet(path)` reads it back. No schema or options are needed.",
+    "Select the six columns before writing, so the file holds only those."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "trips"
+  ],
+  "starter": "def solve(trips):\n    path = \"/tmp/taxi/archive\"\n    # Save the six columns as Parquet at `path` and return what you read back.\n    return trips\n",
+  "output": {
+    "columns": [
+      "trip_id",
+      "pickup_at",
+      "trip_distance",
+      "fare",
+      "total",
+      "payment_type"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Select, write, read: `trips.select(\"trip_id\", \"pickup_at\", \"trip_distance\", \"fare\", \"total\", \"payment_type\").write.mode(\"overwrite\").parquet(path)`, then `return spark.read.parquet(path)`. Parquet stores the schema inside the file, so the read needs no options and the money columns come back as `decimal(8,2)`, not text. `mode(\"overwrite\")` matters because the check runs your function once per test case on the same path: without it, the second run stops because the folder already exists. A CSV copy would lose the types, and reading it with `inferSchema=True` would turn the money into doubles."
+}

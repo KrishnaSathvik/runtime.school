@@ -1,0 +1,53 @@
+{
+ "id": "PS-Q0450",
+ "slug": "credit-the-owner-at-the-time",
+ "lesson": "PS-L090",
+ "role": "integration",
+ "format": "dataframe_coding",
+ "difficulty": "hard",
+ "minutes": 14,
+ "title": "Which tasks ran tonight",
+ "dataset": {
+  "id": "PS-D14",
+  "version": "1.0.0"
+ },
+ "prompt": "The night's invoice pipeline is a graph of tasks, and silver has a gate that stops it when too many rows break a rule. Finish `gate` and `run_night` so the morning report says, for every task, whether it finished, failed or was held back, and how many rows it returned.",
+ "rules": [
+  "`gate(rows)` raises a `ValueError` when more than one row in ten has a `_problem` (exactly one in ten passes). A file with no rows passes.",
+  "`run_night` runs the tasks in `run_order` of their needs. A task whose needs didn't all finish `ok` is `skipped` and doesn't run. A task that raises an exception is `failed`. Every other task is `ok`.",
+  "`rows` is the number of rows an `ok` task returned, and NULL for a `failed` or `skipped` task.",
+  "Return one row per task: `task`, `status` and `rows` (a long). Don't change `make_tasks`, `run_order` or `solve`."
+ ],
+ "hints": [
+  "`rows.select(F.count(\"*\"), F.count(\"_problem\")).first()` gives the total and the number of rows with a problem in one pass. Compare with multiplication, so an empty file doesn't divide by zero.",
+  "Keep each task's status and output in dicts, as in lesson 77. Before running a task, look up the status of everything it needs.",
+  "Wrap the call and its `count()` in `try`/`except Exception`. Build the answer with `spark.createDataFrame(report, \"task STRING, status STRING, rows BIGINT\")`."
+ ],
+ "explanation": "The gate counts the rows with a `_problem` and raises when `bad * 10 > total`, so one bad row in ten still passes, and an empty file passes without dividing by zero. `run_night` walks `run_order`: a task runs only if every task it needs finished `ok`; the call and its `count()` sit in a `try`, so the gate's `ValueError` marks `silver_invoices` as `failed` instead of ending the night. In the sample one row in six has an unknown status, more than the gate allows: silver fails, and `fact_invoices`, `gold_revenue` and `checks` are skipped because each needs a task that didn't finish. `quarantine` needs only bronze and the line totals, so it still runs and holds the one bad row. Stopping everything after the first failure would lose the quarantine, and skipping only the direct dependants of a failed task would try to run gold on a skipped task's missing output. A rerun would start from silver and the three tasks it held back.",
+ "entry": "solve",
+ "inputs": [
+  "invoices",
+  "invoice_lines"
+ ],
+ "starter": "from pyspark.sql import functions as F\n\nSTATUSES = [\"draft\", \"open\", \"paid\", \"overdue\", \"void\"]\n\n\ndef make_tasks(invoices, invoice_lines):\n    # Tonight's tasks: each name maps to (function, the tasks it needs). Don't change this.\n    def bronze_invoices():\n        return invoices.withColumn(\"_batch_id\", F.lit(7))\n\n    def line_totals():\n        return invoice_lines.groupBy(\"invoice_id\").agg(F.sum(\"line_amount\").alias(\"lines_total\"))\n\n    def checked(bronze, totals):\n        problem = (\n            F.when(F.col(\"account_id\").isNull(), \"no account\")\n            .when(~F.coalesce(F.col(\"status\").isin(STATUSES), F.lit(False)), \"unknown status\")\n            .when(~F.coalesce(F.col(\"total_amount\") == F.col(\"lines_total\"), F.lit(False)), \"total differs from its lines\")\n        )\n        return bronze.join(totals, on=\"invoice_id\", how=\"left\").withColumn(\"_problem\", problem)\n\n    def silver_invoices(bronze_invoices, line_totals):\n        rows = checked(bronze_invoices, line_totals)\n        gate(rows)  # raises when too many rows break a rule\n        return rows.filter(F.col(\"_problem\").isNull()).select(bronze_invoices.columns)\n\n    def quarantine(bronze_invoices, line_totals):\n        return checked(bronze_invoices, line_totals).filter(F.col(\"_problem\").isNotNull())\n\n    def fact_invoices(silver_invoices):\n        return silver_invoices.dropDuplicates([\"invoice_id\"])\n\n    def gold_revenue(fact_invoices):\n        billed = fact_invoices.filter(~F.col(\"status\").isin(\"draft\", \"void\"))\n        return billed.groupBy(F.date_format(\"invoice_date\", \"yyyy-MM\").alias(\"month\")).agg(F.sum(\"total_amount\").alias(\"revenue\"))\n\n    def checks(gold_revenue, fact_invoices):\n        gold = gold_revenue.agg(F.sum(\"revenue\").alias(\"gold_total\"))\n        fact = fact_invoices.filter(~F.col(\"status\").isin(\"draft\", \"void\")).agg(F.sum(\"total_amount\").alias(\"fact_total\"))\n        return gold.crossJoin(fact).withColumn(\"agree\", F.col(\"gold_total\").eqNullSafe(F.col(\"fact_total\")))\n\n    return {\n        \"bronze_invoices\": (bronze_invoices, []),\n        \"line_totals\": (line_totals, []),\n        \"silver_invoices\": (silver_invoices, [\"bronze_invoices\", \"line_totals\"]),\n        \"quarantine\": (quarantine, [\"bronze_invoices\", \"line_totals\"]),\n        \"fact_invoices\": (fact_invoices, [\"silver_invoices\"]),\n        \"gold_revenue\": (gold_revenue, [\"fact_invoices\"]),\n        \"checks\": (checks, [\"gold_revenue\", \"fact_invoices\"]),\n    }\n\n\ndef run_order(deps):\n    # Lesson 77's order: a task runs once everything it needs has run. Don't change this.\n    order = []\n    while len(order) < len(deps):\n        ready = [t for t in deps if t not in order and all(d in order for d in deps[t])]\n        if not ready:\n            raise ValueError(\"these tasks wait on each other: \" + \", \".join(t for t in deps if t not in order))\n        order += ready\n    return order\n\n\ndef gate(rows):\n    # Stop silver: raise a ValueError when more than one row in ten has a _problem.\n    pass\n\n\ndef run_night(tasks):\n    # Run every task in order and return one row per task: task, status and rows.\n    pass\n\n\ndef solve(invoices, invoice_lines):\n    return run_night(make_tasks(invoices, invoice_lines))\n",
+ "output": {
+  "columns": [
+   "task",
+   "status",
+   "rows"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 180,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

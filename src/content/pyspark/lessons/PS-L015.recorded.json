@@ -1,0 +1,40 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D01",
+  "version": "1.1.0",
+  "edition": "lesson",
+  "tables": [
+   "customers",
+   "products",
+   "orders"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "+----------------+----------------+----------------+-----+\n|            name|        shouting|           quiet|chars|\n+----------------+----------------+----------------+-----+\n|      Chef Knife|      CHEF KNIFE|      chef knife|   10|\n|Pour-Over Kettle|POUR-OVER KETTLE|pour-over kettle|   16|\n|    Trail Bottle|    TRAIL BOTTLE|    trail bottle|   12|\n|    Camp Lantern|    CAMP LANTERN|    camp lantern|   12|\n+----------------+----------------+----------------+-----+\nonly showing top 4 rows\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "+--------+-----+-----+\n|    city|chars|clean|\n+--------+-----+-----+\n|  Leeds |    8|Leeds|\n|   LEEDS|    5|Leeds|\n|   leeds|    5|Leeds|\n+--------+-----+-----+\n\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "+-----------+--------------+\n|with_concat|with_concat_ws|\n+-----------+--------------+\n|Ines Okafor|   Ines Okafor|\n|       NULL|          Kofi|\n+-----------+--------------+\n\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "+------------+-----+------+-------+\n|        name|first|  last|initial|\n+------------+-----+------+-------+\n| Ines Okafor| Ines|Okafor|      I|\n|   Kofi Mori| Kofi|  Mori|      K|\n|Tomas Okafor|Tomas|Okafor|      T|\n+------------+-----+------+-------+\nonly showing top 3 rows\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "+--------+------+\n|order_id|number|\n+--------+------+\n|  O00001| 00001|\n|  O00002| 00002|\n|  O00003| 00003|\n+--------+------+\nonly showing top 3 rows\n+----------------+----------------+------------+\n|            name|            slug|outdoor_word|\n+----------------+----------------+------------+\n|      Chef Knife|      chef-knife|       false|\n|Pour-Over Kettle|pour-over-kettle|       false|\n|    Trail Bottle|    trail-bottle|        true|\n|    Camp Lantern|    camp-lantern|        true|\n|       Desk Lamp|       desk-lamp|       false|\n|    Notebook Set|    notebook-set|       false|\n|     Linen Throw|     linen-throw|       false|\n|      Wall Clock|      wall-clock|       false|\n+----------------+----------------+------------+\n\n",
+   "error": null
+  }
+ }
+}

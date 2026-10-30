@@ -1,0 +1,48 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D09",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "sensor_readings",
+   "devices"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "+----------+---------+-------------+-------------+\n|reading_id|device_id|temperature_c|temperature_f|\n+----------+---------+-------------+-------------+\n|     R0001|  DEV-001|          3.2|         37.8|\n|     R0004|  DEV-004|         25.1|         77.2|\n|     R0002|  DEV-002|         21.4|         70.5|\n|     R0003|  DEV-003|         28.7|         83.7|\n|     R0007|  DEV-003|         29.6|         85.3|\n|     R0005|  DEV-001|          3.4|         38.1|\n|     R0008|  DEV-004|         41.2|        106.2|\n|     R0011|  DEV-003|         31.4|         88.5|\n|     R0012|  DEV-004|         26.0|         78.8|\n|     R0010|  DEV-002|         21.9|         71.4|\n|     R0009|  DEV-001|          3.3|         37.9|\n|     R0011|  DEV-003|         31.4|         88.5|\n|     R0006|  DEV-002|         21.6|         70.9|\n+----------+---------+-------------+-------------+\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "+----------+---------+-------------+-----+\n|reading_id|device_id|       metric|value|\n+----------+---------+-------------+-----+\n|     R0001|  DEV-001|temperature_c|  3.2|\n|     R0002|  DEV-002|temperature_c| 21.4|\n|     R0002|  DEV-002| humidity_pct| 41.5|\n|     R0001|  DEV-001|    battery_v| 3.31|\n|     R0002|  DEV-002|    battery_v| 3.92|\n+----------+---------+-------------+-----+\n\n13 readings became 36 rows\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "",
+   "error": {
+    "type": "PythonException",
+    "message": "An exception was thrown from the Python worker. Please see the stack trace below.",
+    "line": 12,
+    "condition": null
+   }
+  },
+  "e4": {
+   "stdout": "+--------+----+-------------+\n|batch_no|rows|first_reading|\n+--------+----+-------------+\n|       0|   4|        R0001|\n|       1|   4|        R0007|\n|       2|   4|        R0012|\n|       3|   1|        R0006|\n+--------+----+-------------+\n\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "batches of 10000 -> 12 rows; copies of R0011: 1\nbatches of 4 -> 13 rows; copies of R0011: 2\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "{'DEV-001': 'temp', 'DEV-002': 'climate', 'DEV-003': 'climate', 'DEV-004': 'climate'}\n+----------+---------+-----------+------------+\n|reading_id|device_id|device_type|humidity_pct|\n+----------+---------+-----------+------------+\n|     R0001|  DEV-001|       temp|        NULL|\n|     R0004|  DEV-004|    climate|        37.9|\n|     R0002|  DEV-002|    climate|        41.5|\n|     R0003|  DEV-003|    climate|        79.0|\n|     R0007|  DEV-003|    climate|        82.4|\n|     R0005|  DEV-001|       temp|        NULL|\n+----------+---------+-----------+------------+\nonly showing top 6 rows\n",
+   "error": null
+  }
+ }
+}

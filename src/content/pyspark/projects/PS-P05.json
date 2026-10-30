@@ -1,0 +1,140 @@
+{
+ "id": "PS-P05",
+ "workspace": "guided",
+ "file": "pipeline.py",
+ "dataset": {
+  "id": "PS-D05",
+  "version": "1.0.0",
+  "edition": "project"
+ },
+ "inputs": [
+  "ratings",
+  "users",
+  "movies"
+ ],
+ "task": "The streaming service's recommendations team wants to train a model on what members have rated, but the ratings export is a raw event log with repeats and changed opinions. Build a pipeline that cleans the interactions, describes every member and film with a few features, and splits the data by time so the features never see the months the model will be tested on, with a summary that proves the split is clean.",
+ "skills": [
+  "latest row per key with a window",
+  "group and aggregate",
+  "left joins that keep cold starts",
+  "time-based train and test split",
+  "validation facts"
+ ],
+ "problems": [
+  "Rating rows delivered twice by the export (exact copies).",
+  "Re-ratings: the same member rates the same film again later with a new value.",
+  "Members with an account but no ratings at all, and films nobody has rated.",
+  "Some re-ratings cross the cutoff: the first rating is in the training months, the new one after them."
+ ],
+ "revenue": "A member's opinion of a film is their latest rating of it; if two ratings share the same moment, the higher one counts. The model trains on ratings made before 1 July 2026 and is tested on ratings from that moment on. Features describe the training months only, so a member or film first seen after the cutoff is a cold start.",
+ "milestones": [
+  {
+   "step": 1,
+   "summary": "Look at the ratings and count them month by month.",
+   "label": "Explore ratings"
+  },
+  {
+   "step": 2,
+   "summary": "Keep one rating per member and film: the latest.",
+   "label": "Clean ratings"
+  },
+  {
+   "step": 3,
+   "summary": "Describe every member and film, cold starts included.",
+   "label": "Features"
+  },
+  {
+   "step": 4,
+   "summary": "Split by a fixed cutoff and build the features from the training rows only.",
+   "label": "Time split"
+  },
+  {
+   "step": 5,
+   "summary": "Summarise the split and check the feature tables agree with it.",
+   "label": "Validate outputs"
+  }
+ ],
+ "artifacts": [
+  {
+   "name": "ratings_by_month",
+   "inputs": [
+    "ratings"
+   ],
+   "step": 1,
+   "about": "Ratings, members, films and the mean rating per month, repeats included."
+  },
+  {
+   "name": "clean_interactions",
+   "inputs": [
+    "ratings"
+   ],
+   "step": 2,
+   "about": "One row per member and film: the latest rating."
+  },
+  {
+   "name": "user_stats",
+   "inputs": [
+    "ratings",
+    "users"
+   ],
+   "step": 3,
+   "about": "Every member's rating count, mean, latest rating time and cold-start flag."
+  },
+  {
+   "name": "movie_stats",
+   "inputs": [
+    "ratings",
+    "movies"
+   ],
+   "step": 3,
+   "about": "Every film's rating count, mean, liked share, latest rating time and cold-start flag."
+  },
+  {
+   "name": "training_interactions",
+   "inputs": [
+    "ratings"
+   ],
+   "step": 4,
+   "about": "Clean interactions rated before the cutoff.",
+   "deliverable": true
+  },
+  {
+   "name": "evaluation_interactions",
+   "inputs": [
+    "ratings"
+   ],
+   "step": 4,
+   "about": "Clean interactions rated on or after the cutoff."
+  },
+  {
+   "name": "movie_features",
+   "inputs": [
+    "ratings",
+    "movies"
+   ],
+   "step": 4,
+   "about": "Film features from the training rows only.",
+   "deliverable": true
+  },
+  {
+   "name": "user_features",
+   "inputs": [
+    "ratings",
+    "users"
+   ],
+   "step": 4,
+   "about": "Member features from the training rows only.",
+   "deliverable": true
+  },
+  {
+   "name": "split_summary",
+   "inputs": [
+    "ratings",
+    "users",
+    "movies"
+   ],
+   "step": 5,
+   "about": "Row counts and time limits of each side of the split, cold starts, and the feature tables checked against it."
+  }
+ ]
+}

@@ -1,0 +1,190 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "claim_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "encounter_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "patient_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "provider_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "payer",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "service_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "submitted_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "billed_amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "allowed_amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "paid_amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "claim_status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "denial_reason",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "_source_file",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "_batch_id",
+     "type": "int",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "CLM000001",
+     "ENC000001",
+     "PAT00003",
+     "PRV0004",
+     "Bluebird Health",
+     "2025-12-03",
+     "2025-12-18",
+     "2724.83",
+     null,
+     null,
+     "submitted",
+     null,
+     "claims_2026-01-19.csv",
+     1
+    ],
+    [
+     "CLM000002",
+     "ENC000002",
+     "PAT00002",
+     "PRV0001",
+     "Bluebird Health",
+     "2025-12-18",
+     "2026-01-01",
+     "217.82",
+     "0.00",
+     "0.00",
+     "denied",
+     "out_of_network",
+     "claims_2026-01-19.csv",
+     1
+    ],
+    [
+     "CLM000004",
+     "ENC000004",
+     "PAT00002",
+     "PRV0002",
+     "Bluebird Health",
+     "2026-01-13",
+     "2026-01-26",
+     "332.53",
+     "185.17",
+     null,
+     "approved",
+     null,
+     "claims_2026-02-28.csv",
+     2
+    ],
+    [
+     "CLM000005",
+     "ENC000005",
+     "PAT00005",
+     "PRV0003",
+     "Bluebird Health",
+     "2026-01-16",
+     "2026-01-19",
+     "458.05",
+     "339.79",
+     "339.79",
+     "paid",
+     null,
+     "claims_2026-01-19.csv",
+     1
+    ],
+    [
+     "CLM000006",
+     "ENC000006",
+     "PAT00006",
+     "PRV0001",
+     "Bluebird Health",
+     "2026-01-17",
+     "2026-02-13",
+     "23227.37",
+     "10680.23",
+     "10680.23",
+     "paid",
+     null,
+     "claims_2026-02-28.csv",
+     2
+    ],
+    [
+     "CLM000007",
+     "ENC000007",
+     "PAT00001",
+     "PRV0005",
+     "Summit Senior Advantage",
+     "2026-01-30",
+     "2026-02-27",
+     "154.34",
+     "134.08",
+     "134.08",
+     "paid",
+     null,
+     "claims_2026-02-28.csv",
+     2
+    ]
+   ],
+   "row_count": 6
+  }
+ },
+ "hidden": [
+  "the full practice claims, many still waiting for a payer decision",
+  "claims waiting for the payer, in both loads",
+  "waiting claims that break another rule",
+  "allowed amounts equal to, above and below the billed amount",
+  "no claims at all"
+ ]
+}

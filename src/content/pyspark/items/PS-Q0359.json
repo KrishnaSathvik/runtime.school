@@ -1,0 +1,55 @@
+{
+ "id": "PS-Q0359",
+ "slug": "a-new-count-on-an-old-checkpoint",
+ "lesson": "PS-L072",
+ "role": "debugging",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 12,
+ "title": "A new count on an old checkpoint",
+ "dataset": {
+  "id": "PS-D15",
+  "version": "1.0.0"
+ },
+ "prompt": "Yesterday's job counted log lines per level. Today it was changed to count per service and restarted, but its table shows level names as services and counts that are too low. Fix `solve(application_logs)` so it returns `service` and `lines`, counted over every delivered file.",
+ "rules": [
+  "Keep yesterday's job and its run as they are: they're setup. Fix only today's job.",
+  "`lines` counts every log line of the service in every file in the folder, the three yesterday's job read included, as a count started from scratch would.",
+  "Return `service` and `lines` (a long), one row per service.",
+  "The rows must come from a streaming query over the delivery files: working on `application_logs` itself doesn't count."
+ ],
+ "hints": [
+  "Both jobs use the checkpoint `/tmp/ck`. What does today's job find there when it starts?",
+  "The state still holds yesterday's counts per level, and the files it committed are skipped.",
+  "A changed query needs a new checkpoint. A new query reads every file in the folder from the start."
+ ],
+ "explanation": "The checkpoint belongs to yesterday's query. Today's job started from it, so it skipped the three files already committed and carried on from a state holding counts per level. Both keys are one text column, so Spark didn't notice, and level names showed up as services next to counts of only the new files. Give the changed query its own checkpoint, such as `/tmp/ck_service`: a new query reads every file in the folder from the beginning and counts per service from scratch. Filtering the level names out would hide the stray rows but still miss the old files.",
+ "entry": "solve",
+ "inputs": [
+  "application_logs"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\ndef solve(application_logs):\n    spark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\n    logs = application_logs.withColumn(\"batch\", F.hour(\"logged_at\"))   # each hour of logs is one file\n    for path in [\"/tmp/all\", \"/tmp/in\", \"/tmp/ck\", \"/tmp/ck_service\"]:\n        shutil.rmtree(path, ignore_errors=True)\n    make_batches(logs, \"/tmp/all\")\n    files = sorted(os.listdir(\"/tmp/all\"))\n    os.makedirs(\"/tmp/in\")\n\n    def deliver(names):\n        \"\"\"Copy files into the folder the stream reads, keeping their times.\"\"\"\n        for name in names:\n            shutil.copy2(f\"/tmp/all/{name}\", f\"/tmp/in/{name}\")\n\n    stream = spark.readStream.schema(logs.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\n    # Yesterday's job (setup): it counted lines per level and stopped after three files.\n    deliver(files[:3])\n    run_stream(stream.groupBy(\"level\").count().writeStream.outputMode(\"complete\").format(\"memory\")\n               .queryName(\"by_level\").option(\"checkpointLocation\", \"/tmp/ck\"))\n    deliver(files[3:])\n\n    # Today's job counts lines per service.\n    run_stream(stream.groupBy(\"service\").count().writeStream.outputMode(\"complete\").format(\"memory\")\n               .queryName(\"by_service\").option(\"checkpointLocation\", \"/tmp/ck\"))\n    return spark.table(\"by_service\").select(\"service\", F.col(\"count\").alias(\"lines\"))\n",
+ "output": {
+  "columns": [
+   "service",
+   "lines"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

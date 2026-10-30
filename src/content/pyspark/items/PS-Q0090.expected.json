@@ -1,0 +1,134 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "observation_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "station_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "berlin_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "berlin_hour",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "temperature",
+     "type": "decimal(4,1)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "OBS-000001",
+     "PER-01",
+     "2026-03-07",
+     16,
+     "21.3"
+    ],
+    [
+     "OBS-000002",
+     "PER-01",
+     "2026-03-07",
+     17,
+     "21.0"
+    ],
+    [
+     "OBS-000003",
+     "PNQ-01",
+     "2026-03-07",
+     19,
+     "24.8"
+    ],
+    [
+     "OBS-000004",
+     "PNQ-01",
+     "2026-03-07",
+     19,
+     "24.1"
+    ],
+    [
+     "OBS-000005",
+     "LIS-01",
+     "2026-03-08",
+     0,
+     "11.4"
+    ],
+    [
+     "OBS-000006",
+     "LIS-01",
+     "2026-03-08",
+     1,
+     "11.0"
+    ],
+    [
+     "OBS-000007",
+     "NYC-01",
+     "2026-03-08",
+     5,
+     "2.1"
+    ],
+    [
+     "OBS-000008",
+     "PER-01",
+     "2026-03-08",
+     5,
+     "33.4"
+    ],
+    [
+     "OBS-000009",
+     "NYC-01",
+     "2026-03-08",
+     6,
+     "1.6"
+    ],
+    [
+     "OBS-000010",
+     "NYC-01",
+     "2026-03-08",
+     7,
+     "1.2"
+    ],
+    [
+     "OBS-000011",
+     "NYC-01",
+     "2026-03-08",
+     8,
+     "0.9"
+    ],
+    [
+     "OBS-000012",
+     "NYC-01",
+     "2026-03-08",
+     9,
+     null
+    ]
+   ],
+   "row_count": 12
+  }
+ },
+ "hidden": [
+  "the full practice readings table",
+  "readings across the night Berlin moved to summer time",
+  "readings just before and after Berlin midnight, in winter and in summer",
+  "the -9999 code, missing temperatures and the largest values that fit",
+  "a reading with no time",
+  "an empty readings table"
+ ]
+}

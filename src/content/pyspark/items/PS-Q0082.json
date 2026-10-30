@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0082",
+  "slug": "statement-money-in-and-out",
+  "lesson": "PS-L017",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Statement money in and out",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "The monthly statement lists posted transactions with money in and money out in two separate columns. Write `solve(transactions)` so it returns `transaction_id`, `posted_at`, `txn_type`, `money_in` and `money_out`.",
+  "rules": [
+    "Keep only transactions whose `status` is exactly `posted`.",
+    "A `credit` shows its `amount` in `money_in` and leaves `money_out` empty (null). A `debit` is the other way round.",
+    "Any other direction, or a missing one, leaves both columns empty. Amounts stay positive and keep their type, `decimal(12,2)`."
+  ],
+  "hints": [
+    "Filter first, then build each money column with its own `F.when(...)`.",
+    "`F.when(F.col(\"direction\") == \"credit\", F.col(\"amount\"))` with no `otherwise` gives `NULL` on every other row, which is exactly an empty column.",
+    "An empty column means `NULL`, not 0: a statement line of 0.00 says something happened. Don't add `.otherwise(0)`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "transactions"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(transactions):\n    # Return transaction_id, posted_at, txn_type, money_in and money_out for posted transactions.\n    return transactions\n",
+  "output": {
+    "columns": [
+      "transaction_id",
+      "posted_at",
+      "txn_type",
+      "money_in",
+      "money_out"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Two columns, two rules, and both rely on what `when` gives without `otherwise`: `NULL`. `money_in` is `F.when(F.col(\"direction\") == \"credit\", F.col(\"amount\"))` and `money_out` is the same with `\"debit\"`. Each keeps `amount`'s type, `decimal(12,2)`. Filter on `F.col(\"status\") == \"posted\"` first, then `select(\"transaction_id\", \"posted_at\", \"txn_type\", money_in.alias(\"money_in\"), money_out.alias(\"money_out\"))`. Testing the direction rather than the type matters: refunds and interest are money in as well as deposits. Adding `.otherwise(0)` would print 0.00 in the empty column, and a direction that is neither would wrongly show money in one column."
+}

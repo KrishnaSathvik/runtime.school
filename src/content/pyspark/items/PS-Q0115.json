@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0115",
+  "slug": "encounter-contract-violations",
+  "lesson": "PS-L023",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 17,
+  "title": "Encounter contract violations",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "prompt": "The encounters feed has a contract, and the data team wants every visit that breaks it, with the first rule it breaks. Write `solve(encounters)` so it returns those visits.",
+  "rules": [
+    "Check in this order and report the first rule broken: `codes_count` (`diagnosis_codes` has 1 to 3 codes; a missing list breaks it), `times_in_order` (both times present and `end_time` after `start_time`).",
+    "Then `vitals_match_class` (a `telehealth` visit has no `vitals`, any other visit has them; a missing class breaks it), then `vitals_complete` (when `vitals` is present, all four readings are present).",
+    "A rule that can't be checked because a value is missing counts as broken. Return `encounter_id`, `encounter_class` and `broken`, in that order, only for visits that break a rule. Keep duplicate rows."
+  ],
+  "hints": [
+    "`F.size(\"diagnosis_codes\")` counts the codes. Struct fields read as `F.col(\"vitals.heart_rate\")`.",
+    "Write each rule true for a good visit and wrap it in `F.coalesce(rule, F.lit(False))`. Then a `F.when` chain on `~rule` picks the first rule broken, and is NULL for a good visit.",
+    "For the class rule, `F.when(telehealth, ...).otherwise(...)` sends a missing class to `otherwise`. The rule says a missing class breaks it, so make sure it does."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "encounters"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(encounters):\n    # Visits that break the contract, with the first rule broken.\n    return encounters\n",
+  "output": {
+    "columns": [
+      "encounter_id",
+      "encounter_class",
+      "broken"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Write the four rules as conditions true for a good visit, make each NULL-safe with `F.coalesce(rule, F.lit(False))`, and label with a `F.when` chain: `F.when(~codes_ok, \"codes_count\").when(~times_ok, \"times_in_order\")...`. With no `otherwise`, a good visit gets NULL, so `select(\"encounter_id\", \"encounter_class\", broken.alias(\"broken\"))` followed by `filter(F.col(\"broken\").isNotNull())` keeps only the violations. `F.size(\"diagnosis_codes\").between(1, 3)` (both ends included, like `>= 1` and `<= 3`) handles an empty list (size 0) and too many codes; a missing list makes it NULL or -1, which breaks either way. Equal start and end times break `times_in_order`, because the end must come after the start. For the class rule, `(telehealth & no_vitals) | (~telehealth & has_vitals)` is NULL for a missing class, and `coalesce` breaks it. `vitals_complete` must pass when there are no vitals at all: that case belongs to the class rule."
+}

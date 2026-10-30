@@ -1,0 +1,64 @@
+{
+  "id": "PS-P05-M1",
+  "slug": "explore-the-ratings-by-month",
+  "project": "PS-P05",
+  "milestone": "PS-P05.m1",
+  "difficulty": "medium",
+  "minutes": 20,
+  "title": "Explore the ratings month by month",
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0"
+  },
+  "prompt": "The recommendations team wants features that describe each member and each film. They all come from the `ratings` export below: 4,704 rows, one per time a member rated a film. Look at it first. Add `ratings.printSchema()` and `print(ratings.count())` to your file and press Run.\n\nThen write `ratings_by_month(ratings)`, one row per month, so you can see how much there is to learn from and when it happened. Count every row as it comes, repeats included: the next step cleans them.",
+  "rules": [
+    "`month` is the month of `rated_at` as text, like `2026-03`.",
+    "`ratings` is how many rows fall in the month; `members` and `films` are how many different `user_id` and `movie_id` values they have.",
+    "`average_rating` is the mean `rating` of the month's rows, rounded to 2 decimals.",
+    "Every row counts, repeated rows included. Return `month`, `ratings`, `members`, `films` and `average_rating`."
+  ],
+  "hints": [
+    "`F.date_format(\"rated_at\", \"yyyy-MM\")` turns a timestamp into its month. Capital `MM` is the month; small `mm` is minutes.",
+    "Group by that month with `groupBy(...)` and compute all four numbers in one `agg(...)`.",
+    "`F.countDistinct(\"user_id\")` counts members once each; `F.count(\"*\")` counts rows. Round the mean with `F.round(F.avg(\"rating\"), 2)`."
+  ],
+  "explanation": "One `groupBy` on the month text gives one row per month, and one `agg` computes all four numbers in a single pass. `countDistinct` counts each member and film once, however often they rate, while `count(\"*\")` counts the raw rows, repeats and re-ratings included. The table shows two things the rest of the project depends on: ratings grow fast towards the end of the export, and the dates run long enough to train on the past and check on the most recent months.",
+  "entry": "ratings_by_month",
+  "inputs": [
+    "ratings"
+  ],
+  "file": "pipeline.py",
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef ratings_by_month(ratings):\n    # Step 1: one row per month of ratings.\n    return ratings\n",
+  "prerequisites": [
+    "PS-L008",
+    "PS-L011",
+    "PS-L018",
+    "PS-L031"
+  ],
+  "output": {
+    "columns": [
+      "month",
+      "ratings",
+      "members",
+      "films",
+      "average_rating"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "example",
+      "sample": true
+    },
+    {
+      "id": "project",
+      "edition": "project"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

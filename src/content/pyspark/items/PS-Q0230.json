@@ -1,0 +1,58 @@
+{
+  "id": "PS-Q0230",
+  "slug": "erp-csv-to-avro",
+  "lesson": "PS-L046",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "From the ERP's CSV to Avro",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "The ERP exports accounts as a semicolon-separated CSV with a header line, and the event platform wants Avro. Write `convert(csv_path, avro_path)` so it reads the CSV with the right types and saves it as Avro. `solve` is written for you.",
+  "rules": [
+    "The CSV uses `;` between values and has a header line. Values that contain `;` are in double quotes.",
+    "Columns keep the types they have in `accounts`: `credit_limit` is `decimal(12,2)`, `created_on` a date and `is_active` a boolean.",
+    "The Avro folder may exist from the night before: replace it.",
+    "`solve` returns what reading the Avro folder gives: every account, the columns of `accounts` in order. An empty export gives an empty result."
+  ],
+  "hints": [
+    "`spark.read.csv(path, sep=..., header=True, schema=...)` reads the file. Without a schema every column is text.",
+    "Write the schema as a string, one `name TYPE` per column, in the file's column order. Money is `DECIMAL(12,2)`.",
+    "Avro keeps the types you read, so `write.mode(\"overwrite\").format(\"avro\").save(avro_path)` is all the writing needs."
+  ],
+  "explanation": "Read with `spark.read.csv(csv_path, sep=\";\", header=True, schema=\"account_id STRING, ..., credit_limit DECIMAL(12,2), created_on DATE, is_active BOOLEAN\")` and save with `.write.mode(\"overwrite\").format(\"avro\").save(avro_path)`. CSV is plain text, so the types have to come from your schema; Avro then stores them with the data. `inferSchema=True` guesses `double` for the credit limit, the default comma separator puts each whole line in the first column, and forgetting `header=True` reads the header line as an account.",
+  "entry": "solve",
+  "inputs": [
+    "accounts"
+  ],
+  "starter": "def convert(csv_path, avro_path):\n    # Read the semicolon CSV at csv_path and save it as Avro at avro_path.\n    pass\n\n\ndef solve(accounts):\n    csv_path = \"/tmp/erp/accounts_csv\"\n    avro_path = \"/tmp/erp/accounts_avro\"\n    # The ERP's nightly export, written for you: semicolon-separated, with a header line.\n    accounts.write.mode(\"overwrite\").option(\"sep\", \";\").option(\"header\", True).csv(csv_path)\n    convert(csv_path, avro_path)\n    return spark.read.format(\"avro\").load(avro_path)\n",
+  "output": {
+    "columns": [
+      "account_id",
+      "account_name",
+      "industry",
+      "country",
+      "segment",
+      "account_owner",
+      "credit_limit",
+      "created_on",
+      "is_active"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

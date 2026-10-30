@@ -1,0 +1,139 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "order_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "line_no",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "product_id",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "O00001",
+     1,
+     "P005"
+    ],
+    [
+     "O00001",
+     2,
+     "P005"
+    ],
+    [
+     "O00001",
+     3,
+     "P004"
+    ],
+    [
+     "O00002",
+     1,
+     "P001"
+    ],
+    [
+     "O00002",
+     2,
+     "P001"
+    ],
+    [
+     "O00003",
+     1,
+     "P001"
+    ],
+    [
+     "O00003",
+     2,
+     "P007"
+    ],
+    [
+     "O00003",
+     3,
+     "P003"
+    ],
+    [
+     "O00004",
+     1,
+     "P001"
+    ],
+    [
+     "O00004",
+     2,
+     "P008"
+    ],
+    [
+     "O00004",
+     3,
+     "P005"
+    ],
+    [
+     "O00004",
+     4,
+     "P003"
+    ],
+    [
+     "O00005",
+     1,
+     "P006"
+    ],
+    [
+     "O00005",
+     2,
+     "P001"
+    ],
+    [
+     "O00006",
+     1,
+     "P001"
+    ],
+    [
+     "O00007",
+     1,
+     "P004"
+    ],
+    [
+     "O00007",
+     2,
+     "P008"
+    ],
+    [
+     "O00007",
+     3,
+     "P005"
+    ],
+    [
+     "O00008",
+     1,
+     "P004"
+    ],
+    [
+     "O00008",
+     2,
+     "P002"
+    ]
+   ],
+   "row_count": 32
+  }
+ },
+ "hidden": [
+  "the full practice order lines table",
+  "lines sent again with a corrected quantity or price",
+  "one order holding the same product on several lines",
+  "lines with a missing line number or order",
+  "an empty order lines table"
+ ]
+}

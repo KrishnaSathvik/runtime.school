@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0277",
+  "slug": "segment-filter-in-the-scan",
+  "lesson": "PS-L056",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Where the segment filter runs",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "The account team wants the orders of business customers, with each customer's name. The data team also wants proof that the segment condition is applied while `customers` is read, not after the join. Write `solve(orders, customers)` to return the orders and the filters pushed into the customers scan.",
+  "rules": [
+    "Join `orders` to `customers` on `customer_id` (an inner join) and keep rows whose `segment` is `business`. Filtering before or after the join both pass: Catalyst pushes the condition into the customers scan either way.",
+    "Return `order_id`, `name`, `total`, plus `customers_filters`: the entries of the `PushedFilters` list on the scan that reads `customers`, as an array of text in alphabetical order (`[B, A]` gives `[\"A\", \"B\"]`). `with_fact` in the starter adds it.",
+    "An order with a missing or unknown customer, or a customer with a missing segment, isn't kept. A customer listed twice gives the order twice."
+  ],
+  "hints": [
+    "The physical plan (`executedPlan().toString()`) has one `FileScan` line per table read. The customers scan is the one whose `ReadSchema` includes `segment`.",
+    "On that line, the list is the text after `PushedFilters: `, between `[` and the first `]`. Its entries are separated by `, `; sort them.",
+    "Catalyst moved the filter below the join, so the segment condition shows up in the customers scan, next to the not-null checks it added."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "orders",
+    "customers"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef with_fact(df, name, value):\n    # Adds a column called name holding the same value on every row.\n    return df.withColumn(name, F.lit(value))\n\n\ndef solve(orders, customers):\n    joined = orders.join(customers, \"customer_id\")\n    # Keep business customers, choose the columns, then read the customers scan's PushedFilters.\n    return with_fact(joined, \"customers_filters\", \"\")\n",
+  "output": {
+    "columns": [
+      "order_id",
+      "name",
+      "total",
+      "customers_filters"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Even though the filter is written after the join, Catalyst pushes it below the join to the customers side, and from there into the reader itself. The customers scan's `PushedFilters` is `[IsNotNull(segment), EqualTo(segment,business), IsNotNull(customer_id)]`, which sorted is `EqualTo(segment,business)`, `IsNotNull(customer_id)`, `IsNotNull(segment)`: the segment condition, a not-null check on `segment` (a missing segment can't equal `business`), and a not-null check on the join key (an inner join can't match a missing key). The orders scan only gets `[IsNotNull(customer_id)]`, so taking the first scan in the plan gives the wrong list. To find the right line, look for the scan whose `ReadSchema` has `segment`."
+}

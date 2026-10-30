@@ -1,0 +1,50 @@
+{
+  "id": "PS-L065-C2",
+  "slug": "fit-the-new-billing-feed",
+  "lesson": "PS-L065",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Fit the new billing feed",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "prompt": "Since 2026, claims come from a new billing system with text dates, double amounts and two renamed columns. Write `conform(batch)` so its claims can be appended to the existing Delta table without changing the table's schema. `solve` is written for you.",
+  "rules": [
+    "The table keeps exactly its six columns: `claim_id`, `patient_id`, `service_date` (date), `billed_amount` and `paid_amount` (both decimal(12,2)) and `claim_status`.",
+    "The new system's `amount_paid` is the table's `paid_amount`, and its `status` is `claim_status`. No value from the new claims may be lost."
+  ],
+  "hints": [
+    "Run it as it is and read the error. Then compare the batch's `dtypes` with the table's.",
+    "`mergeSchema` doesn't help here: it can add columns, but it won't turn a double into a decimal, and a renamed column would arrive as a new, extra column.",
+    "In one `select`, give each column the table's name and cast it to the table's exact type; Delta refuses even a decimal with fewer digits."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "claims"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef conform(batch):\n    # Return the new system's claims with the table's column names and types.\n    return batch\n\n\ndef solve(claims):\n    import shutil\n    path = \"/tmp/clinic/claims\"\n    shutil.rmtree(path, ignore_errors=True)  # every run starts from an empty folder\n\n    cols = [\"claim_id\", \"patient_id\", \"service_date\", \"billed_amount\", \"paid_amount\", \"claim_status\"]\n    # filter keeps the rows where a condition is true: claims for visits before and after 1 January 2026.\n    claims.filter(F.col(\"service_date\") < \"2026-01-01\").select(cols).write.format(\"delta\").save(path)\n\n    # Since 2026 claims come from a new billing system, in its own format.\n    new_system = claims.filter(F.col(\"service_date\") >= \"2026-01-01\").select(\n        \"claim_id\",\n        \"patient_id\",\n        F.col(\"service_date\").cast(\"string\").alias(\"service_date\"),\n        F.col(\"billed_amount\").cast(\"double\").alias(\"billed_amount\"),\n        F.col(\"paid_amount\").cast(\"double\").alias(\"amount_paid\"),\n        F.col(\"claim_status\").alias(\"status\"),\n    )\n    conform(new_system).write.format(\"delta\").mode(\"append\").save(path)\n    return spark.read.format(\"delta\").load(path)\n",
+  "output": {
+    "columns": [
+      "claim_id",
+      "patient_id",
+      "service_date",
+      "billed_amount",
+      "paid_amount",
+      "claim_status"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

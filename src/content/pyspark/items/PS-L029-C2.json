@@ -1,0 +1,49 @@
+{
+  "id": "PS-L029-C2",
+  "slug": "accounts-nobody-works-with",
+  "lesson": "PS-L029",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Accounts nobody works with",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "Sales wants the accounts that no one is working with yet: known to the CRM, but with no contact person and no invoice. Write `solve(accounts, customer_cdc, contacts, invoices)` so it returns the `account_id` of each of them.",
+  "rules": [
+    "An account is known if its `account_id` is in `accounts` (the snapshot) or in `customer_cdc` (accounts added or changed since).",
+    "Leave out every account whose id appears in `contacts` or in `invoices`.",
+    "Return one column, `account_id`, with each account once."
+  ],
+  "hints": [
+    "Build two lists of ids: the known ones (snapshot and change feed) and the ones in use (contacts and invoices).",
+    "`union` stacks two one-column DataFrames into one list.",
+    "Then take the known ids that aren't in use with `subtract`, which also returns each one once."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "accounts",
+    "customer_cdc",
+    "contacts",
+    "invoices"
+  ],
+  "starter": "def solve(accounts, customer_cdc, contacts, invoices):\n    # Return each known account_id with no contact and no invoice, once.\n    return accounts.select(\"account_id\")\n",
+  "output": {
+    "columns": [
+      "account_id"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

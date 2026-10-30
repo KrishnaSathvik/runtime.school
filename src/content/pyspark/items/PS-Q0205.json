@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0205",
+  "slug": "basket-lines-with-their-value",
+  "lesson": "PS-L041",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Basket lines with their value",
+  "dataset": {
+    "id": "PS-D06",
+    "version": "1.0.0"
+  },
+  "prompt": "The order service wants every basket item to carry its own line value, plus the basket's distinct skus in a stable order. Write `solve(checkout_events)` to build both.",
+  "rules": [
+    "Return `event_id`, `step`, `lines` and `skus`, in that order.",
+    "`lines` keeps every item in basket order with its `sku`, `qty` and `price`, and adds `line_value` = `qty` × `price` as a fourth field. A missing `qty` or `price` makes that line's `line_value` missing.",
+    "`skus` lists each sku of the basket once, sorted A to Z.",
+    "An empty basket gives two empty arrays; a missing `items` gives missing values. Keep one row per checkout step."
+  ],
+  "hints": [
+    "Inside `F.transform`, each item is a struct, so the struct tools from earlier lessons work on it.",
+    "`x.withField(\"line_value\", ...)` adds a field to a struct and keeps the ones it has.",
+    "For `skus`, transform the items to their sku first, then tidy the array with the array functions from the lesson on arrays."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "checkout_events"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(checkout_events):\n    # Return event_id, step, lines and skus for each checkout step.\n    return checkout_events\n",
+  "output": {
+    "columns": [
+      "event_id",
+      "step",
+      "lines",
+      "skus"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`lines` is `F.transform(\"items\", lambda x: x.withField(\"line_value\", x[\"qty\"] * x[\"price\"]))`: `withField` adds the new field after `sku`, `qty` and `price`, and the item order stays as it was. Building the struct again with `F.struct(x[\"sku\"], x[\"qty\"], x[\"price\"], (x[\"qty\"] * x[\"price\"]).alias(\"line_value\"))` gives the same result. `skus` is `F.sort_array(F.array_distinct(F.transform(\"items\", lambda x: x[\"sku\"])))`: transform to text, drop repeats, sort. Both columns stay arrays, so the row count never changes. Common slips are sorting without removing repeats, or the other way round."
+}

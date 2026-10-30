@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0044",
+  "slug": "fix-lessons-left",
+  "lesson": "PS-L009",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 6,
+  "title": "Fix the lessons left",
+  "dataset": {
+    "id": "PS-D11",
+    "version": "1.0.0"
+  },
+  "prompt": "The progress page shows how many lessons each learner still has to pass in a course. The function below was written for it, but the column has the wrong name and the wrong numbers. Fix `solve(completions)`.",
+  "rules": [
+    "Return four columns, in this order: `learner_id`, `course_id`, `as_of_date` and `lessons_left`.",
+    "`lessons_left` is `lessons_total` minus `lessons_completed`, so 0 when the course is finished.",
+    "A missing count gives a missing `lessons_left`. Keep every row, duplicates included."
+  ],
+  "hints": [
+    "Press Run and look at the last column's name and values. A learner with 1 of 2 lessons done shows -1.",
+    "`.alias(...)` names only the column it's attached to. Here that's `lessons_total`, not the result of the subtraction.",
+    "`alias` has to go on the finished calculation, so the subtraction needs its own brackets. Then check the order of the subtraction against the rule."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "completions"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(completions):\n    # How many lessons each learner still has to pass in each course.\n    return completions.select(\n        \"learner_id\",\n        \"course_id\",\n        \"as_of_date\",\n        F.col(\"lessons_completed\") - F.col(\"lessons_total\").alias(\"lessons_left\"),\n    )\n",
+  "output": {
+    "columns": [
+      "learner_id",
+      "course_id",
+      "as_of_date",
+      "lessons_left"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "The starter has two bugs. `.alias(\"lessons_left\")` is attached to `F.col(\"lessons_total\")` only, so the name is lost inside the subtraction and the column gets a long generated name. Wrapping the calculation in brackets puts the name on the result. The subtraction is also the wrong way round: completed minus total is negative for anyone still working. The fix is `(F.col(\"lessons_total\") - F.col(\"lessons_completed\")).alias(\"lessons_left\")`. `selectExpr(\"learner_id\", \"course_id\", \"as_of_date\", \"lessons_total - lessons_completed AS lessons_left\")` is the same."
+}

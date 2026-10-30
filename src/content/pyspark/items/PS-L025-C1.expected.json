@@ -1,0 +1,116 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "order_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "city",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "total",
+     "type": "decimal(10,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "O00001",
+     "Ines Okafor",
+     "Leeds",
+     "117.99"
+    ],
+    [
+     "O00002",
+     "Ines Okafor",
+     "Leeds",
+     "79.96"
+    ],
+    [
+     "O00003",
+     "Kofi Mori",
+     "Lisbon",
+     "291.95"
+    ],
+    [
+     "O00004",
+     "Ines Costa",
+     "Denver",
+     "418.96"
+    ],
+    [
+     "O00005",
+     "Hana Rao",
+     "Osaka",
+     "71.97"
+    ],
+    [
+     "O00006",
+     "Ines Costa",
+     "Denver",
+     "39.98"
+    ],
+    [
+     "O00007",
+     "Tomas Okafor",
+     "Denver",
+     "227.48"
+    ],
+    [
+     "O00008",
+     "Ines Okafor",
+     "Leeds",
+     "59.50"
+    ],
+    [
+     "O00009",
+     "Ines Okafor",
+     "Leeds",
+     "105.49"
+    ],
+    [
+     "O00010",
+     "Hana Rao",
+     "Osaka",
+     "299.91"
+    ],
+    [
+     "O00011",
+     "Maya Rao",
+     "Perth",
+     "243.00"
+    ],
+    [
+     "O00012",
+     "Maya Rao",
+     "Perth",
+     "57.00"
+    ]
+   ],
+   "row_count": 12
+  }
+ },
+ "hidden": [
+  "the full practice orders and customers",
+  "orders for a customer who isn't in the customer list, or with no customer",
+  "customers who never placed an order",
+  "the same order delivered twice",
+  "no orders at all"
+ ]
+}

@@ -1,0 +1,75 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "report",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "cached",
+     "type": "boolean",
+     "nullable": true
+    },
+    {
+     "name": "rows",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "files",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "cached_rows",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "zones",
+     false,
+     6,
+     2,
+     0
+    ],
+    [
+     "drivers",
+     false,
+     3,
+     1,
+     0
+    ],
+    [
+     "zones",
+     true,
+     6,
+     1,
+     8
+    ],
+    [
+     "drivers",
+     true,
+     3,
+     0,
+     8
+    ]
+   ],
+   "row_count": 4
+  }
+ },
+ "hidden": [
+  "the full practice trips and zones",
+  "no card trips at all",
+  "card trips in a zone that isn't listed or with no pickup zone, and a card trip recorded twice"
+ ]
+}

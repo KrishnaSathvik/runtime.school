@@ -1,0 +1,173 @@
+{
+ "id": "PS-P09",
+ "workspace": "guided",
+ "file": "pipeline.py",
+ "dataset": {
+  "id": "PS-D06",
+  "version": "1.1.0",
+  "edition": "project"
+ },
+ "also": [
+  {
+   "id": "PS-D12",
+   "version": "1.1.0",
+   "tables": [
+    "clicks",
+    "campaigns",
+    "conversions"
+   ]
+  }
+ ],
+ "inputs": [
+  "page_views",
+  "cart_events",
+  "checkout_events",
+  "sessions",
+  "clicks",
+  "campaigns",
+  "conversions"
+ ],
+ "task": "The shop's site streams page views, cart and checkout events all day, and marketing wants to know which ad campaigns actually sell. The events arrive in deliveries, some hours late and some twice. Build a streaming pipeline that parses the nested events, measures sessions and the funnel, credits orders to the ad clicks that brought them, and proves it handles late data and recovers from a crash without losing or repeating anything.",
+ "skills": [
+  "nested JSON and array functions",
+  "file streams and micro-batches",
+  "streaming aggregation and deduplication",
+  "stream-static joins",
+  "watermarks and late events",
+  "checkpoints and recovery"
+ ],
+ "problems": [
+  "Each feed has its own nested shape: the campaign sits in a struct, the basket in an array of structs.",
+  "Some events are delivered twice, with the same event_id and a later arrival time.",
+  "Some events arrive hours after they happened, a few beyond a two-hour watermark.",
+  "Some sessions lost their page views upstream, and about a third of visitors are anonymous.",
+  "The ad platform delivers some clicks twice, and only a session's landing click within 30 minutes counts."
+ ],
+ "revenue": "A campaign session starts with a landing click: the same user and campaign, at most 30 minutes before the session started (the latest click wins when several qualify). An order (checkout step complete) is credited to that click when it happens within the campaign's attribution window, measured in days from the click. Anonymous sessions can't be matched to a click and are never credited.",
+ "milestones": [
+  {
+   "step": 1,
+   "summary": "Flatten the three nested event feeds into one table.",
+   "label": "Parse events"
+  },
+  {
+   "step": 2,
+   "summary": "Measure every session from its events, counting repeated deliveries once.",
+   "label": "Sessions"
+  },
+  {
+   "step": 3,
+   "summary": "Stream the events one delivery per micro-batch and describe each micro-batch.",
+   "label": "Stream ingest"
+  },
+  {
+   "step": 4,
+   "summary": "Count the sessions that reach each funnel stage with a streaming aggregation.",
+   "label": "Funnel"
+  },
+  {
+   "step": 5,
+   "summary": "Find each session's landing click and credit streamed orders within the attribution window.",
+   "label": "Attribution"
+  },
+  {
+   "step": 6,
+   "summary": "Apply a two-hour watermark, drop repeats within it, and chart every micro-batch.",
+   "label": "Late events"
+  },
+  {
+   "step": 7,
+   "summary": "Crash the stream at micro-batch 3, restart it from the checkpoint, and prove nothing was lost or repeated.",
+   "label": "Restart"
+  }
+ ],
+ "run_timeout_s": 240,
+ "artifacts": [
+  {
+   "name": "parse_events",
+   "inputs": [
+    "page_views",
+    "cart_events",
+    "checkout_events"
+   ],
+   "step": 1,
+   "about": "Every event of the three feeds, flat, with campaign, units and order fields."
+  },
+  {
+   "name": "session_metrics",
+   "inputs": [
+    "sessions",
+    "page_views",
+    "cart_events",
+    "checkout_events"
+   ],
+   "step": 2,
+   "about": "One row per session: length, page views, cart adds, orders, revenue and bounce.",
+   "deliverable": true
+  },
+  {
+   "name": "ingest_events",
+   "inputs": [
+    "page_views",
+    "cart_events",
+    "checkout_events"
+   ],
+   "step": 3,
+   "about": "One row per micro-batch of the event stream: rows of each feed and the event-time range."
+  },
+  {
+   "name": "funnels",
+   "inputs": [
+    "page_views",
+    "cart_events",
+    "checkout_events"
+   ],
+   "step": 4,
+   "about": "Sessions that reached each of the five funnel stages.",
+   "deliverable": true
+  },
+  {
+   "name": "landing_clicks",
+   "inputs": [
+    "sessions",
+    "clicks"
+   ],
+   "step": 5,
+   "about": "The ad click that started each signed-in campaign session."
+  },
+  {
+   "name": "attributed_conversions",
+   "inputs": [
+    "checkout_events",
+    "sessions",
+    "clicks",
+    "campaigns",
+    "conversions"
+   ],
+   "step": 5,
+   "about": "Orders credited to their landing click within the campaign's window, with the platform's conversion.",
+   "deliverable": true
+  },
+  {
+   "name": "batch_timeline",
+   "inputs": [
+    "page_views",
+    "cart_events",
+    "checkout_events"
+   ],
+   "step": 6,
+   "about": "One row per micro-batch of the hourly stream: rows in, watermark, late rows dropped, state and hours published."
+  },
+  {
+   "name": "recovery_evidence",
+   "inputs": [
+    "page_views",
+    "cart_events",
+    "checkout_events"
+   ],
+   "step": 7,
+   "about": "A crashed and restarted run compared with a straight run: batches, rows read and hours published.",
+   "deliverable": true
+  }
+ ]
+}

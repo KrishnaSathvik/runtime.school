@@ -1,0 +1,21 @@
+{
+ "id": "PS-L008-C1",
+ "kind": "predict",
+ "slug": "read-the-products-schema",
+ "lesson": "PS-L008",
+ "difficulty": "easy",
+ "minutes": 4,
+ "title": "Read the orders table",
+ "prompt": "The `orders` table is loaded as a DataFrame called `orders`. What does this program print?",
+ "program": "print(orders.columns)\nprint(orders.dtypes[2])\nprint(orders.count())\n",
+ "dataset": {
+  "id": "PS-D01",
+  "version": "1.1.0"
+ },
+ "edition": "lesson",
+ "hints": [
+  "`columns` is a plain Python list of the column names, in the table's order.",
+  "`dtypes` is a list of `(name, type)` pairs, and Python lists start counting at 0.",
+  "`count()` counts rows, not columns."
+ ]
+}

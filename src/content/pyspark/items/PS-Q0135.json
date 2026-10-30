@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0135",
+  "slug": "biggest-pay-gaps-to-manager",
+  "lesson": "PS-L027",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 17,
+  "title": "Biggest pay gaps to the manager",
+  "dataset": {
+    "id": "PS-D03",
+    "version": "1.0.0"
+  },
+  "prompt": "The pay review starts with the employees who earn furthest below their own manager. Write `solve(employees)` so it returns the five employees with the biggest gap.",
+  "rules": [
+    "`gap` is the manager's `salary` minus the employee's `salary`. Only employees whose manager is in the table count.",
+    "Sort by `gap` from largest to smallest, then by `employee_id` A to Z when gaps are equal, and keep the first five. A missing salary gives a missing gap, which sorts after every real gap. If fewer than five employees count, return them all.",
+    "Return `employee_id`, `salary`, `manager_id`, `manager_salary` and `gap`, in that order and in that sort order."
+  ],
+  "hints": [
+    "Join `employees` to itself, the employee's `manager_id` to the manager's `employee_id`. An inner join keeps only employees whose manager exists.",
+    "Work out the gap inside `select`: `(F.col(\"m.salary\") - F.col(\"e.salary\")).alias(\"gap\")`. Subtracting two decimals keeps an exact decimal.",
+    "`orderBy(F.col(\"gap\").desc(), \"employee_id\")` then `limit(5)`. Salaries are multiples of 2,500, so equal gaps are common, and the second sort column decides who makes the cut."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "employees"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(employees):\n    # The five biggest gaps between an employee's salary and their manager's.\n    return employees\n",
+  "output": {
+    "columns": [
+      "employee_id",
+      "salary",
+      "manager_id",
+      "manager_salary",
+      "gap"
+    ],
+    "order_sensitive": true
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Self join with an inner join, `e.join(m, F.col(\"e.manager_id\") == F.col(\"m.employee_id\"), \"inner\")`, so the chief executive and anyone whose manager is unknown drop out. Select the five columns, computing `(F.col(\"m.salary\") - F.col(\"e.salary\")).alias(\"gap\")`; the difference of two decimals is an exact decimal. Then `orderBy(F.col(\"gap\").desc(), F.col(\"employee_id\"))` and `limit(5)`. Descending order puts missing values last by default, as the rules ask. Salaries come in steps of 2,500, so gaps tie often; without `employee_id` as the second sort column, which employee makes fifth place could change from run to run."
+}

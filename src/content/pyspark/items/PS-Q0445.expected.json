@@ -1,0 +1,150 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "symbol",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "trade_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "close",
+     "type": "decimal(10,2)",
+     "nullable": true
+    },
+    {
+     "name": "ret_1d",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "direction",
+     "type": "double",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "ALDR.SX",
+     "2026-01-15",
+     "191.95",
+     null,
+     null
+    ],
+    [
+     "ALDR.SX",
+     "2026-01-16",
+     "192.94",
+     0.005,
+     1.0
+    ],
+    [
+     "ALDR.SX",
+     "2026-01-20",
+     "197.36",
+     0.023,
+     2.0
+    ],
+    [
+     "ALDR.SX",
+     "2026-01-21",
+     "98.47",
+     -0.002,
+     1.0
+    ],
+    [
+     "ALDR.SX",
+     "2026-01-22",
+     "101.22",
+     0.028,
+     2.0
+    ],
+    [
+     "BRVO.SX",
+     "2026-01-15",
+     "54.62",
+     null,
+     null
+    ],
+    [
+     "BRVO.SX",
+     "2026-01-16",
+     "55.34",
+     0.013,
+     2.0
+    ],
+    [
+     "BRVO.SX",
+     "2026-01-21",
+     "56.05",
+     0.013,
+     2.0
+    ],
+    [
+     "BRVO.SX",
+     "2026-01-22",
+     "56.40",
+     0.006,
+     1.0
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-15",
+     "122.58",
+     null,
+     null
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-16",
+     "121.62",
+     -0.008,
+     1.0
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-20",
+     "124.71",
+     0.025,
+     2.0
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-21",
+     "125.51",
+     0.006,
+     1.0
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-22",
+     "126.25",
+     0.006,
+     1.0
+    ]
+   ],
+   "row_count": 14
+  }
+ },
+ "hidden": [
+  "the full practice prices and corporate actions",
+  "a 2-for-1 split in the middle of a symbol's prices",
+  "a split and a dividend on the same day",
+  "a split on a symbol's first row",
+  "a dividend with no split",
+  "a return of exactly 1% up",
+  "a return of exactly 1% down",
+  "no prices and no corporate actions"
+ ]
+}

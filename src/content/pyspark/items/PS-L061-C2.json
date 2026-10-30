@@ -1,0 +1,21 @@
+{
+  "id": "PS-L061-C2",
+  "kind": "predict",
+  "slug": "count-the-commits",
+  "lesson": "PS-L061",
+  "difficulty": "easy",
+  "minutes": 4,
+  "title": "Count the commits",
+  "prompt": "`accounts` has 5 rows. This program writes them to a new Delta table four times, with four different modes, then looks at the log, reads the table two ways and lists the history. What does it print? Type each line on its own line.",
+  "program": "import os\nfrom delta.tables import DeltaTable\n\npath = \"/tmp/c2/accounts\"\naccounts.write.format(\"delta\").save(path)\naccounts.write.format(\"delta\").mode(\"append\").save(path)\naccounts.write.format(\"delta\").mode(\"ignore\").save(path)\naccounts.write.format(\"delta\").mode(\"overwrite\").save(path)\n\nlog = [f for f in os.listdir(path + \"/_delta_log\") if f.endswith(\".json\")]\nprint(len(log))\nprint(spark.read.format(\"delta\").load(path).count(), spark.read.parquet(path).count())\nprint([row.operationParameters[\"mode\"] for row in DeltaTable.forPath(spark, path).history().collect()])\n",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "Each write that changes the table adds one commit. Does `ignore` change a table that already exists?",
+    "The overwrite commit marks the older files as removed, but they stay on disk. Which reader looks at the log?",
+    "`history()` lists commits newest first, and Delta records the default mode as `ErrorIfExists`."
+  ]
+}

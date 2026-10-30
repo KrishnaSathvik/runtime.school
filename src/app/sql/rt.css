@@ -169,6 +169,9 @@ html[data-theme="dark"] .rx {
 .rx-btn.amber { background: var(--rx-amber); border-color: var(--rx-amber); color: var(--rx-band-ink); }
 .rx-btn.ghost { border-color: transparent; background: transparent; color: var(--rx-dim); }
 .rx-btn.ghost:hover { color: var(--rx-ink); background: var(--rx-line); }
+.rx-btn.line { border: 1px solid var(--rx-line-strong); background: var(--rx-bg); color: var(--rx-ink); font: 550 14px var(--rx-sans); }
+.rx-btn.line:hover { border-color: var(--rx-ink); }
+.rx-btn.line:disabled { opacity: 0.55; }
 .rx-btn .k { font-family: var(--rx-mono); font-size: 11px; opacity: 0.7; font-weight: 500; }
 
 /* ── Session layout (lessons, home) ────────────────────────────────── */
@@ -250,23 +253,67 @@ html[data-theme="dark"] .rx {
 .rx-verdict.ok { color: var(--rx-ok); }
 .rx-verdict.bad { color: var(--rx-bad); }
 
+/* Results / Checks panel under the editor (Python-style console). */
+.rx-results { border: 1px solid var(--rx-line); border-radius: 8px; overflow: hidden; background: var(--rx-surface); margin: 0 0 14px; min-width: 0; display: flex; flex-direction: column; min-height: 0; }
+.rx-results-tabs { display: flex; gap: 2px; padding: 0 6px; background: var(--rx-cell); border-bottom: 1px solid var(--rx-line); overflow-x: auto; flex: none; }
+.rx-results-tabs .acts { margin-left: auto; display: flex; align-items: center; gap: 4px; }
+.rx-results-tabs button, .rx-results-tabs > span[role="tab"] { display: inline-flex; align-items: center; gap: 7px; padding: 10px 12px 9px; font: 550 14px var(--rx-sans); border: 0; border-bottom: 2px solid transparent; background: none; color: inherit; white-space: nowrap; }
+.rx-results-tabs button { cursor: pointer; }
+.rx-results-tabs button:hover { color: var(--rx-ink); }
+.rx-results-pane { flex: none; min-height: auto; overflow: visible; background: var(--ide-bg); }
+.rx-results-empty { margin: 0; padding: 8px 14px; font: 13px/1.5 var(--rx-mono); color: var(--ide-muted); font-style: italic; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+/* Empty console hugs its chrome so the editor keeps the column. */
+.rx-results:has(.rx-results-empty) { flex: 0 0 auto; max-height: none; }
+.rx-results .rx-verdict { padding-top: 12px; }
+.rx-results .rx-small { margin: 8px 14px 0; }
+.rx-cell + .rx-results { margin-top: 0; }
+.rx-walk-body > .rx-results { margin-bottom: 8px; min-height: 0; }
+.rx-project .rx-work > .rx-results { margin: 10px 0 0; }
+.rx-project.project-contract .rx-work > .rx-results:has(.rx-results-empty) { flex: 0 0 auto; max-height: none; }
+.rx-project.project-contract .rx-project-nav { margin-top: 10px; padding-top: 10px; }
+.rx-project.project-contract .rx-project-field { margin: 12px 0; }
+
+/* Predict-output practice: JSON editor + Checks are separate stacked panels (no overlap). */
+.rx-predict-help { margin: 0; padding: 8px 14px; border-bottom: 1px solid var(--ide-border); background: var(--ide-chrome); font-size: 13px; line-height: 1.45; color: var(--ide-muted); }
+.rx-predict-help .mono, .rx-predict-help code { font-family: var(--rx-mono); font-size: 12.5px; color: var(--ide-fg); }
+.rx-predict-help code { white-space: nowrap; }
+.rx-predict-editor {
+  display: block; width: 100%; min-height: 220px; margin: 0; padding: 12px 14px; box-sizing: border-box;
+  border: 0; resize: none; background: var(--ide-bg); color: var(--ide-fg);
+  font: 13.5px/1.55 var(--rx-mono); overflow: hidden; field-sizing: fixed;
+}
+.rx-predict-editor:focus { outline: none; }
+.rx-predict-editor::placeholder { color: var(--ide-muted); opacity: 0.7; }
+
 /* ── Small parts ───────────────────────────────────────────────────── */
 .rx-schema { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 12px; margin: 14px 0; }
 .rx-schema-table { border: 1px solid var(--rx-line); border-radius: 8px; background: var(--rx-surface); padding: 10px 14px; font-family: var(--rx-mono); font-size: 12.5px; min-width: 0; }
-.rx-schema-table summary { cursor: pointer; display: flex; justify-content: space-between; gap: 10px; list-style: none; }
+.rx-schema-table summary { cursor: pointer; display: flex; align-items: center; gap: 8px; list-style: none; }
 .rx-schema-table summary::-webkit-details-marker { display: none; }
-.rx-schema-table summary b { font-weight: 600; color: var(--rx-ink); }
-.rx-schema-table summary span { color: var(--rx-faint); }
+/* Closed points right; open rotates down — the click-to-expand cue for dataset and expected-result cards. */
+.rx-schema-table summary::before { content: ""; flex: none; width: 0; height: 0; border-style: solid; border-width: 3.5px 0 3.5px 5.5px; border-color: transparent transparent transparent var(--rx-faint); transform-origin: 35% 50%; transition: transform 0.12s ease; }
+.rx-schema-table[open] summary::before { transform: rotate(90deg); }
+.rx-schema-table summary b { font-weight: 600; color: var(--rx-ink); margin-right: auto; min-width: 0; }
+.rx-schema-table summary span { color: var(--rx-faint); flex: none; }
 .rx-schema-cols { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 8px; color: var(--rx-dim); }
 .rx-schema-cols i { font-style: normal; color: var(--rx-faint); }
 .rx-tag { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border: 1px solid var(--rx-line-strong); border-radius: 999px; font-family: var(--rx-mono); font-size: 11.5px; color: var(--rx-dim); white-space: nowrap; }
 .rx-tag.ok { color: var(--rx-ok); border-color: color-mix(in srgb, var(--rx-ok) 45%, var(--rx-line)); }
 .rx-tag.amber { color: var(--rx-amber-ink); border-color: color-mix(in srgb, var(--rx-amber) 60%, var(--rx-line)); }
-.rx-quiz { display: grid; gap: 8px; margin: 12px 0; max-width: 42rem; }
-.rx-quiz button { text-align: left; padding: 10px 14px; border: 1px solid var(--rx-line-strong); border-radius: 8px; background: var(--rx-surface); font-size: 15px; }
-.rx-quiz button:hover:not(:disabled) { border-color: var(--rx-ink); }
-.rx-quiz button[aria-pressed="true"] { border-color: var(--rx-amber); background: var(--rx-amber-soft); }
-.rx-quiz button:disabled { cursor: default; }
+.rx-quiz-prompt { margin: 8px 0 0; font-size: 14px; color: var(--rx-dim); }
+/* One full-width row per answer. Short options must not sit beside each other. */
+.rx-quiz { display: flex; flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 8px; margin: 12px 0 0; width: 100%; max-width: none; }
+.rx-quiz > label,
+.rx-quiz > button { display: flex; align-items: center; gap: 10px; width: 100%; max-width: 100%; box-sizing: border-box; margin: 0; text-align: left; padding: 10px 14px; border: 1px solid var(--rx-line-strong); border-radius: 8px; background: var(--rx-surface); font-size: 15px; line-height: 1.4; cursor: pointer; }
+.rx-quiz > label .rx-opt,
+.rx-quiz > button .rx-opt { flex: none; margin: 0; }
+.rx-quiz > label:hover:not(:has(input:disabled)),
+.rx-quiz > button:hover:not(:disabled) { border-color: var(--rx-ink); }
+.rx-quiz > label.right,
+.rx-quiz > button[aria-pressed="true"] { border-color: var(--rx-ok); background: color-mix(in srgb, var(--rx-ok) 8%, var(--rx-surface)); }
+.rx-quiz > label.wrong { border-color: var(--rx-bad); background: color-mix(in srgb, var(--rx-bad) 8%, var(--rx-surface)); }
+.rx-quiz > button:disabled,
+.rx-quiz > label:has(input:disabled) { cursor: default; }
 .rx-feedback { max-width: 42rem; font-size: 15px; margin: 8px 0; }
 .rx-feedback.ok { color: var(--rx-ok); }
 .rx-feedback.bad { color: var(--rx-bad); }
@@ -361,6 +408,26 @@ html[data-theme="dark"] .rx {
 .rx-compare td.bad { color: var(--rx-bad); font-weight: 600; }
 .rx-compare td { white-space: normal; }
 .rx-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 18px; }
+/* Query Performance plan panel: same open and close control as the Python time breakdown.
+   SQL pages do not load tools.css, where the Python copy of these rules lives. */
+.pl-where { margin-top: 28px; }
+.pl-where-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.rx-brief .pl-where-bar .rx-label.sec { margin: 0; }
+.pl-where-bar > .rx-btn.line {
+  display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 12px;
+  border: 1px solid var(--rx-line-strong); border-radius: 6px; background: var(--rx-bg); color: var(--rx-ink);
+  font: 600 13px var(--rx-sans); white-space: nowrap;
+}
+.pl-where-bar > .rx-btn.line:hover { border-color: var(--rx-ink); }
+.pl-where-bar > .rx-btn.line:disabled { opacity: 0.55; cursor: default; }
+.pl-where-open { margin-top: 12px; padding: 14px; border: 1px solid var(--rx-line-strong); border-radius: 10px; background: var(--rx-cell); }
+.pl-where-open .pl-split { margin-top: 12px; }
+.pl-split { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.pl-split > div { padding: 12px 14px; border: 1px solid var(--rx-line); border-radius: 10px; background: var(--rx-surface); min-width: 0; }
+.pl-split-head { margin: 0 0 8px; font-size: 14px; }
+.pl-where-open .pl-split > div { background: var(--rx-surface); }
+.pl-where-open .rx-plan { padding: 0; }
+.pl-where > .rx-small, .pl-where .rx-small { margin: 8px 0 0; }
 .rx-plan { list-style: none; margin: 0; padding: 0 14px 12px; font-size: 13px; }
 .rx-plan li { padding: 3px 0; overflow-wrap: anywhere; }
 .rx-plan li.ok { color: var(--rx-ok); }
@@ -566,7 +633,7 @@ html[data-theme="dark"] .rx {
 .rx-table-foot { margin: 8px 0 0; font-size: 12px; color: var(--rx-faint); }
 .rx-expected { border-color: color-mix(in srgb, var(--rx-amber) 55%, var(--rx-line)); border-left: 3px solid var(--rx-amber); }
 .rx-expected-head { display: flex; justify-content: space-between; gap: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--rx-line); }
-.rx-expected-head b { font-weight: 600; color: var(--rx-amber-ink); }
+.rx-expected-head b, .rx-expected summary b { font-weight: 600; color: var(--rx-amber-ink); }
 .rx-expected-head span { color: var(--rx-faint); }
 
 /* Step-by-step walkthrough. */
@@ -576,6 +643,7 @@ html[data-theme="dark"] .rx {
 .rx-walk-body { min-width: 0; }
 .rx-walk-body > p { margin: 2px 0 0; font-size: 15.5px; line-height: 1.6; }
 .rx-walk-body .rx-cell { margin-top: 10px; }
+.rx-walk-body .rx-cell + .rx-results { margin-bottom: 4px; }
 .rx-walk-tag { display: inline-block; margin-left: 8px; padding: 1px 8px; border: 1px solid var(--rx-amber-ink); border-radius: 999px; font-family: var(--rx-mono); font-size: 11px; color: var(--rx-amber-ink); vertical-align: 2px; white-space: nowrap; }
 
 /* Task text, help and feedback on the right. */
@@ -682,7 +750,7 @@ html[data-theme="dark"] .rx {
   /* Work column: the prompt and results scroll. Run / Check stay on screen. */
   .rx-lesson .rx-lesson-work:has(> .rx-tabs),
   .rx-lesson .rx-lesson-work:has(> .rx-cell) {
-    overflow: hidden;
+    overflow: auto;
     display: flex;
     flex-direction: column;
   }
@@ -734,11 +802,12 @@ html[data-theme="dark"] .rx {
     flex: 1 0 auto;
   }
   .rx-lesson .rx-lesson-work .rx-editor {
-    flex: 1 0 auto;
-    /* A result must not shrink the SQL you wrote down to a line. */
+    flex: 1 1 auto;
+    /* Editor fills the cell; long SQL scrolls inside — Run/Check stay put under it. */
     min-height: 96px;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
   }
   .rx-lesson .rx-lesson-work .rx-editor .cm-editor,
   .rx-lesson .rx-lesson-work .rx-editor .cm-scroller {
@@ -748,49 +817,108 @@ html[data-theme="dark"] .rx {
     max-height: none;
     overflow: auto;
   }
-  .rx-lesson .rx-lesson-work .rx-cell-foot { flex: none; }
+  .rx-lesson .rx-lesson-work .rx-cell-foot { flex: 0 0 auto; }
   .rx-lesson .rx-lesson-work .rx-result {
-    flex: 0 0 auto;
-    min-height: 0;
-    max-height: 220px;
-    overflow: auto;
-    scroll-margin-top: 12px;
-  }
-}
-.rx-lesson .rx-work .rx-cell,
-.rx-project .rx-work .rx-cell { overflow: visible; }
-.rx-lesson .rx-work .rx-editor,
-.rx-lesson .rx-work .cm-editor,
-.rx-lesson .rx-work .cm-scroller,
-.rx-project .rx-work .rx-editor,
-.rx-project .rx-work .cm-editor,
-.rx-project .rx-work .cm-scroller {
-  height: auto; max-height: none; overflow: visible;
-}
-/* Beat the height:auto rule above so a short desktop still keeps Run / Check in view. */
-@media (min-width: 1200px) {
-  .rx-lesson .rx-lesson-work .rx-cell.rx-cell {
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    min-height: 160px;
-  }
-  .rx-lesson .rx-lesson-work > [role="tabpanel"] .rx-cell.rx-cell {
-    flex: 1 0 auto;
-  }
-  .rx-lesson .rx-lesson-work .rx-editor > * {
-    flex: 1 1 auto;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-  }
-  .rx-lesson .rx-lesson-work .rx-editor .cm-editor.cm-editor,
-  .rx-lesson .rx-lesson-work .rx-editor .cm-scroller.cm-scroller {
-    flex: 1 1 auto;
-    height: auto;
+    flex: none;
     min-height: 0;
     max-height: none;
-    overflow: auto;
+    overflow: visible;
+    scroll-margin-top: 12px;
+  }
+  /* Results grow with their rows. Close or hide them; the pane itself does not scroll. */
+  .rx-lesson .rx-lesson-work > .rx-results {
+    flex: none;
+    min-height: 0;
+    max-height: none;
+    margin: 0;
+    overflow: visible;
+  }
+  .rx-lesson .rx-lesson-work > .rx-results:has(.rx-results-empty),
+  .rx-lesson .rx-lesson-work > .rx-results:not(:has(.rx-results-pane)) {
+    flex: 0 0 auto;
+    max-height: none;
+  }
+}
+/*
+ * Work column: editor scrolls inside its pane; Run/Check stay glued under it.
+ * Brief / walkthrough cells (outside .rx-lesson-work) still size to their SQL.
+ */
+.rx-lesson .rx-brief .rx-editor,
+.rx-lesson .rx-brief .cm-editor,
+.rx-lesson .rx-brief .cm-scroller {
+  height: auto; max-height: none; overflow: visible;
+}
+.rx-lesson .rx-lesson-work > .rx-cell {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+.rx-lesson .rx-lesson-work > .rx-cell .rx-editor {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.rx-lesson .rx-lesson-work > .rx-cell .rx-editor > * {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.rx-lesson .rx-lesson-work > .rx-cell .rx-editor .cm-editor,
+.rx-lesson .rx-lesson-work > .rx-cell .rx-editor .cm-scroller {
+  flex: 1 1 auto;
+  min-height: 0 !important;
+  height: 100% !important;
+  max-height: none;
+  overflow: auto;
+}
+.rx-lesson .rx-lesson-work > .rx-cell .rx-cell-foot {
+  flex: 0 0 auto;
+}
+/* SQL projects: the editor grows with the step column. A floor keeps one line of SQL from collapsing it. */
+.rx-project.project-contract .rx-work > .rx-cell {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: auto;
+}
+.rx-project.project-contract .rx-work > .rx-cell .rx-editor,
+.rx-project.project-contract .rx-work > .rx-cell .rx-editor.rx-editor-auto {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 220px;
+  max-height: none;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.rx-project.project-contract .rx-work > .rx-cell .rx-editor > *,
+.rx-project.project-contract .rx-work > .rx-cell .rx-editor .cm-editor,
+.rx-project.project-contract .rx-work > .rx-cell .rx-editor .cm-scroller {
+  flex: 1 1 auto;
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+}
+.rx-project.project-contract .rx-work > .rx-cell .rx-editor .cm-scroller {
+  overflow: auto;
+}
+.rx-project.project-contract .rx-work > .rx-cell .rx-cell-foot {
+  flex: 0 0 auto;
+}
+@media (min-width: 1200px) {
+  .rx-lesson .rx-lesson-work > .rx-cell {
+    min-height: 160px;
+  }
+  .rx-lesson .rx-lesson-work > [role="tabpanel"] .rx-cell {
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
   }
 }
 .rx-lesson .rx-tabs { flex-wrap: wrap; overflow: visible; }
@@ -841,6 +969,13 @@ html[data-theme="dark"] .rx {
   .rx-lesson .rx-ms-list a { grid-template-columns: 20px minmax(0, 1fr); gap: 4px; }
 }
 .rx-lesson .rx-work textarea { field-sizing: content; height: auto; max-height: none; overflow: visible; }
+/* Predict JSON: height is set in JS from scrollHeight; keep it in normal flow (no spill over Checks). */
+.rx-lesson .rx-work textarea.rx-predict-editor {
+  field-sizing: fixed;
+  overflow: hidden;
+  min-height: 220px;
+  resize: none;
+}
 @media (max-width: 420px) {
   .rx-bar .rx-brand { font-size: 0; gap: 0; }
   .rx-bar .rx-brand .rx-caret { display: none; }
@@ -853,7 +988,7 @@ html[data-theme="dark"] .rx {
 .rx-table-records { display: none; }
 .rx-learn-tables .rx-schema { grid-template-columns: minmax(0, 1fr); gap: 16px; }
 .rx-learn-tables .rx-schema-table { container-type: inline-size; padding: 14px 16px; }
-.rx-learn-tables .rx-schema-table summary { align-items: baseline; flex-wrap: wrap; gap: 4px 12px; }
+.rx-learn-tables .rx-schema-table summary { align-items: center; flex-wrap: wrap; gap: 4px 12px; }
 .rx-learn-tables .rx-table-wrap { overflow: visible; padding-inline: 0; }
 .rx-learn-tables .rx-table { width: 100%; min-width: 0; table-layout: auto; }
 .rx-learn-tables .rx-table th,
@@ -868,9 +1003,13 @@ html[data-theme="dark"] .rx {
 .rx-learn-tables .rx-table-record dd { margin: 0; overflow-wrap: anywhere; }
 .rx-learn-tables .rx-table-record .null { color: var(--rx-faint); font-style: italic; }
 @container (max-width: 440px) {
-  .rx-learn-tables .rx-schema-table .rx-table-wrap { display: none; }
+  .rx-learn-tables .rx-schema-table:not(.rx-expected) .rx-table-wrap { display: none; }
   .rx-learn-tables .rx-schema-table .rx-table-records { display: block; }
+  /* The expected result has no record view: keep its table, scrolling inside the card. */
+  .rx-learn-tables .rx-expected .rx-table td,
+  .rx-learn-tables .rx-expected .rx-table th { white-space: nowrap; }
 }
+.rx-learn-tables .rx-expected .rx-table-wrap { overflow-x: auto; }
 @container (max-width: 700px) {
   .rx-learn-tables .rx-schema-dense .rx-table-wrap { display: none; }
   .rx-learn-tables .rx-schema-dense .rx-table-records { display: block; }
@@ -977,12 +1116,17 @@ html[data-theme="dark"] .rx-project-q[data-tone="prep"] .q { color: #a8b0b8; }
 .rx-project-data-stage .rx-schema { grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); }
 .rx-project-library .rx-project-level { margin-top: 28px; }
 .rx-project-level-title { margin: 0 0 10px; font-size: 0.95rem; font-weight: 650; letter-spacing: 0.04em; text-transform: uppercase; color: var(--rx-faint); }
+.rx-project-level-title.beginner { color: var(--rx-ok); }
+.rx-project-level-title.intermediate { color: var(--rx-amber-ink); }
+.rx-project-level-title.advanced { color: var(--rx-bad); }
 .rx-project-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); }
-.rx-project-card { display: grid; gap: 6px; padding: 16px 18px; border: 1px solid var(--rx-line); border-radius: 10px; background: var(--rx-surface); color: inherit; text-decoration: none; }
+.rx-project-list > li { display: flex; }
+/* Cards in a row share its height; the description takes the slack so steps and Start line up along the bottom. */
+.rx-project-card { flex: 1; display: flex; flex-direction: column; gap: 6px; padding: 16px 18px; border: 1px solid var(--rx-line); border-radius: 10px; background: var(--rx-surface); color: inherit; text-decoration: none; }
 .rx-project-card:hover { border-color: var(--rx-line-strong); }
 .rx-project-card-title { font-size: 1.15rem; font-weight: 650; letter-spacing: -0.02em; }
 .rx-project-card-meta { font-size: 13px; color: var(--rx-faint); }
-.rx-project-card-ask { font-size: 14.5px; line-height: 1.45; color: var(--rx-dim); }
+.rx-project-card-ask { flex: 1; font-size: 14.5px; line-height: 1.45; color: var(--rx-dim); }
 .rx-project-card-cta { font-size: 13.5px; font-weight: 600; color: var(--rx-amber-ink); }
 .rx-project-field { display: grid; gap: 6px; margin: 16px 0; max-width: 44rem; }
 .rx-project-writeup { max-width: 44rem; margin-top: 8px; }
@@ -1023,7 +1167,7 @@ html[data-theme="dark"] .rx-project-q[data-tone="prep"] .q { color: #a8b0b8; }
 /* SQL Projects shares the Python workspace frame and Practice data tables. */
 .project-contract { container-type:inline-size; padding:24px clamp(16px,3vw,40px) 48px; }
 .project-header { padding-bottom:20px; position:relative; }
-.project-header > a { font-size:13px; }
+.project-header > a { font-size:14px; text-decoration:none; }
 .project-header h1 { font-size:clamp(25px,3vw,36px); line-height:1.2; font-weight:650; letter-spacing:-.03em; margin:16px 0 10px; }
 .project-header p { font-size:14px; margin:0; }
 .project-header > span { position:absolute; right:0; top:0; font-size:12px; }
@@ -1042,7 +1186,7 @@ html[data-theme="dark"] .rx-project-q[data-tone="prep"] .q { color: #a8b0b8; }
 .project-overview-grid ol { list-style:decimal; padding-left:22px; }
 .project-overview-grid li { margin:14px 0; font-size:14px; padding-left:4px; }
 .project-overview-grid li p { margin:4px 0; }
-.project-contract .rx-task-split { grid-template-columns:minmax(0,42fr) minmax(0,58fr); align-items:start; border:0; gap:0; }
+.project-contract .rx-task-split { grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:start; border:0; gap:0; }
 .project-contract .rx-brief { padding:0 28px 24px 0; border-right:1px solid var(--rx-line); min-width:0; }
 .project-contract .rx-work { padding:0 0 24px 28px; min-width:0; height:auto; overflow:visible; display:block; }
 .project-current-stage { font-size:12px; margin:0 0 8px; }
@@ -1068,7 +1212,7 @@ html[data-theme="dark"] .rx-project-q[data-tone="prep"] .q { color: #a8b0b8; }
 .project-contract .rx-project-field > .rx-label { font:600 16px var(--rx-sans); text-transform:none; letter-spacing:normal; }
 .project-contract .rx-project-field > .rx-small { line-height:1.6; }
 .project-contract .rx-project-textarea { min-height:100px; box-sizing:border-box; resize:vertical; }
-.project-contract .rx-project-nav { border-top:1px solid var(--rx-line); padding-top:20px; margin-top:24px; }
+.project-contract .rx-project-nav { border-top:1px solid var(--rx-line); padding-top:10px; margin-top:10px; }
 .project-actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:20px; }
 .project-check-pass { color:var(--rx-ok); }
 .project-findings > section { padding:18px 0; border-bottom:1px solid var(--rx-line); }
@@ -1101,6 +1245,32 @@ html[data-theme="dark"] .rx-project-q[data-tone="prep"] .q { color: #a8b0b8; }
 .project-reference-section { margin-top:28px; padding-top:4px; border-top:1px solid var(--rx-line); }
 .project-contract .project-reference-section > h3 { font-size:18px; }
 .project-contract .project-metrics > div { padding:12px 0; }
+.project-contract .project-step-checks {
+  margin-top: 8px;
+  padding-top: 0;
+  border-top: 0;
+  max-width: none;
+}
+.project-contract .project-step-checks > h3 {
+  margin: 0 0 10px;
+  font: 600 12px var(--rx-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rx-amber-ink);
+}
+.project-contract .project-more { margin: 18px 0 0; }
+.project-contract .project-more > summary {
+  cursor: pointer;
+  font: 600 12px var(--rx-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rx-amber-ink);
+  list-style: none;
+}
+.project-contract .project-more > summary::-webkit-details-marker { display: none; }
+.project-contract .project-more > summary::before { content: "▸ "; }
+.project-contract .project-more[open] > summary::before { content: "▾ "; }
+.project-contract .project-more > :not(summary) { margin-top: 10px; }
 .project-data-browser .rx-label.sec { margin-top: 20px; }
 .project-data-browser .rx-ds-rels { margin-bottom: 8px; }
 @media(min-width:1024px){
@@ -1163,14 +1333,6 @@ html[data-theme="dark"] .rx-project-q[data-tone="prep"] .q { color: #a8b0b8; }
  .project-document-body { padding:20px; }
  .project-delivery { padding:18px; }
 }
-.project-picker { position:relative; width:fit-content; }
-.project-picker > .rx-btn { gap:8px; padding-left:0; }
-.project-picker .rx-drawer { top:calc(100% + 8px); left:0; width:min(440px,calc(100vw - 40px)); }
-.project-picker .rx-drawer-head { justify-content:space-between; }
-.project-picker nav { overflow:auto; }
-.project-picker .rx-drawer a { display:block; padding:10px 12px; }
-.project-picker .rx-drawer-group { padding:12px; font-weight:600; font-size:12px; }
-.project-picker .rx-drawer ol { overflow:visible; }
 .project-certificate { background:#fffdf7; color:#24221c; padding:32px 40px; border-color:#a68a4b; }
 .project-document-brand { text-align:center; font-size:15px; }
 .project-certificate-title { font:48px/1.15 Georgia,serif; margin:26px 0 8px; }
@@ -1251,6 +1413,11 @@ html[data-theme="dark"] .rx-project-q[data-tone="prep"] .q { color: #a8b0b8; }
 .rx .workspace-bounded > .rx-task > :not(.p2-split) { flex: 0 0 auto; }
 .rx .workspace-bounded.project-contract { padding-bottom: 12px; }
 .rx .workspace-bounded.project-contract .project-stage-nav { margin-bottom: 12px; }
+/* Project steps use the same viewport fill as other workspaces. A long brief scrolls
+   inside the left pane; the editor takes the leftover height of the right pane. */
+.rx .workspace-bounded.project-contract > .rx-task-split {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
 .rx .workspace-bounded > .rx-task-split {
   flex: 1 1 0; min-height: 0; height: auto;
   grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: minmax(0, 1fr);
@@ -1277,6 +1444,16 @@ html[data-theme="dark"] .rx-project-q[data-tone="prep"] .q { color: #a8b0b8; }
 .rx .workspace-bounded .rx-work .rx-editor {
   display: block; height: clamp(120px, 30dvh, 360px); min-height: 0; overflow: hidden;
 }
+.rx .workspace-bounded.project-contract .rx-work .rx-editor,
+.rx .workspace-bounded.project-contract .rx-work .rx-editor.rx-editor-auto {
+  flex: 1 1 auto !important;
+  height: auto !important;
+  min-height: 220px !important;
+  max-height: none !important;
+  overflow: hidden !important;
+  display: flex;
+  flex-direction: column;
+}
 .rx .workspace-bounded .rx-work .rx-editor > *,
 .rx .workspace-bounded .rx-work .rx-editor .cm-editor.cm-editor {
   height: 100%; min-height: 0 !important; max-height: none; overflow: hidden;
@@ -1284,17 +1461,31 @@ html[data-theme="dark"] .rx-project-q[data-tone="prep"] .q { color: #a8b0b8; }
 .rx .workspace-bounded .rx-work .rx-editor .cm-scroller.cm-scroller {
   height: 100%; min-height: 0; max-height: none; overflow: auto;
 }
+/* Projects: fill the same pane as Python. Long SQL scrolls inside it. */
+.rx .workspace-bounded.project-contract .rx-work .rx-editor > *,
+.rx .workspace-bounded.project-contract .rx-work .rx-editor .cm-editor.cm-editor,
+.rx .workspace-bounded.project-contract .rx-work .rx-editor .cm-scroller.cm-scroller {
+  flex: 1 1 auto;
+  height: 100% !important;
+  max-height: none !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+.rx .workspace-bounded.project-contract .rx-work .rx-editor .cm-scroller.cm-scroller {
+  overflow: auto !important;
+}
 /* Run / Check stays on screen while its cell is: pinned under the pane top while results
    scroll, pinned to the pane bottom while long code does. Never under the site header. */
 .rx .workspace-bounded .rx-work .rx-cell-foot {
   position: sticky; top: -20px; bottom: 0; z-index: 2; background: var(--rx-bg);
 }
-/* Sticks to the pane's top edge: minus the pane's own top padding (none on projects). */
-.rx .workspace-bounded.project-contract .rx-work .rx-cell-foot { top: 0; }
+/* Projects: keep Run/Check in normal flow under the editor (no sticky void). */
+.rx .workspace-bounded.project-contract .rx-work .rx-cell-foot { position: static; }
 .rx .workspace-bounded > .rx-task-split > .rx-work { scroll-padding-block: 64px 64px; }
 .rx .workspace-bounded .rx-work .rx-result { max-height: none; overflow: visible; }
 @media (max-width: 899px) {
-  .rx .workspace-bounded > .rx-task-split { grid-template-columns: minmax(0, 1fr); }
+  .rx .workspace-bounded > .rx-task-split,
+  .rx .workspace-bounded.project-contract > .rx-task-split { grid-template-columns: minmax(0, 1fr); }
   .rx .workspace-bounded > .rx-task-split > .rx-brief {
     border-right: 0; border-bottom: 1px solid var(--rx-line); padding: 12px;
   }
@@ -1316,6 +1507,45 @@ html[data-theme="dark"] .rx-project-q[data-tone="prep"] .q { color: #a8b0b8; }
     overflow: visible; overscroll-behavior: auto; scrollbar-gutter: auto;
   }
   .rx .workspace-bounded .rx-work .rx-cell-foot { position: static; }
+}
+
+/* Desktop project steps: both panes share the viewport. The editor grows into the
+   right pane so Output sits at the bottom instead of leaving a blank band. */
+@media (min-width: 900px) and (min-height: 601px) {
+  .rx .workspace-bounded.project-contract > .rx-task-split > .rx-work {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 0;
+    overflow: auto;
+    container-type: size;
+    container-name: project-step;
+  }
+  .rx .workspace-bounded.project-contract .rx-work > .pf-sql-files,
+  .rx .workspace-bounded.project-contract .rx-work > .rx-results,
+  .rx .workspace-bounded.project-contract .rx-work > .rx-hints,
+  .rx .workspace-bounded.project-contract .rx-work > .rx-project-field,
+  .rx .workspace-bounded.project-contract .rx-work > .rx-project-nav,
+  .rx .workspace-bounded.project-contract .rx-work > .p2-help,
+  .rx .workspace-bounded.project-contract .rx-work > p {
+    flex: none;
+  }
+  .rx .workspace-bounded.project-contract .rx-work > .rx-cell.rx-cell {
+    display: flex;
+    flex-direction: column;
+    flex: 1 0 auto;
+    /* Stay the height the column had before a result arrived, so Run does not shrink the editor. */
+    min-height: calc(100cqh - 108px);
+    height: auto;
+    max-height: none;
+    overflow: hidden;
+  }
+  .rx .workspace-bounded.project-contract .rx-work .rx-editor,
+  .rx .workspace-bounded.project-contract .rx-work .rx-editor.rx-editor-auto {
+    min-height: 0 !important;
+  }
+  .rx .workspace-bounded.project-contract .rx-work > .rx-results {
+    margin-bottom: 0;
+  }
 }
 
 /* ── Batch 5 learner UX ─────────────────────────────────────────────── */
@@ -1358,11 +1588,46 @@ html[data-theme="dark"] .rx-project-q[data-tone="prep"] .q { color: #a8b0b8; }
 .project-complete-mark { margin: 0; font-size: 28px; color: var(--rx-ok); }
 .project-complete-recap { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 12px 0 0; padding: 0; list-style: none; color: var(--rx-dim); font-size: 14px; }
 .project-actions .rx-btn { height: auto; min-height: 34px; white-space: normal; }
+/* Lab reset sits under the results bar. The bar's own margin is cleared, so the row needs its own gap. */
+.rx-lesson .rx-tool-work > .py-row { margin: 14px 0 0; }
 
-/* Tools: results get the room once there are results; the editor keeps its own height. */
+/* Tools: the editor keeps the column. Tabs and the results bar do not shrink, and a result does not squeeze the editor. */
 @media (min-width: 1200px) {
-  .rx-lesson .rx-tool-work .rx-cell:has(> .rx-result) .rx-editor { flex: 0 0 auto; }
-  .rx-lesson .rx-tool-work .rx-cell > .rx-result { flex: 1 1 auto; max-height: none; min-height: 120px; }
+  .rx-lesson .rx-tool-work > :not(.rx-cell) { flex: none; }
+  .rx-lesson .rx-tool-work > .rx-cell {
+    flex: 1 0 auto;
+    min-height: max(280px, calc(100% - 96px));
+  }
+  .rx-lesson .rx-tool-work > .rx-results { flex: none; min-height: 0; max-height: none; overflow: visible; }
+  .rx-lesson .rx-tool-work > .rx-results:has(.rx-results-empty),
+  .rx-lesson .rx-tool-work > .rx-results:not(:has(.rx-results-pane)) {
+    flex: 0 0 auto;
+    max-height: none;
+  }
+  /*
+   * Predict: leave flex height-sharing. Stack SQL → JSON → Checks in normal flow so the
+   * textarea cannot spill over the results panel (overflow:visible caused that overlap).
+   */
+  .rx-lesson .rx-tool-work:has(.rx-predict-editor) { overflow: auto; }
+  .rx-lesson .rx-tool-work:has(.rx-predict-editor) > .rx-cell {
+    flex: 0 0 auto;
+    min-height: 0;
+    max-height: none;
+    height: auto;
+    overflow: hidden;
+  }
+  .rx-lesson .rx-tool-work:has(.rx-predict-editor) > .rx-cell:has(.rx-predict-editor) {
+    display: flex;
+    flex-direction: column;
+  }
+  .rx-lesson .rx-tool-work:has(.rx-predict-editor) .rx-predict-editor {
+    flex: 0 0 auto;
+  }
+  .rx-lesson .rx-tool-work:has(.rx-predict-editor) > .rx-results {
+    flex: 0 0 auto;
+    min-height: 120px;
+    max-height: none;
+  }
 }
 
 /* SQL Datasets: what to watch for. */
@@ -1390,10 +1655,15 @@ html[data-theme="dark"] .rx-project-q[data-tone="prep"] .q { color: #a8b0b8; }
 .rx-btn.pt-danger { color: var(--rx-bad); border-color: var(--rx-bad); }
 .pt-modal { margin: auto; }
 
-/* SQL Playground: saved query tabs on top of the editor. */
+/* SQL Playground: saved query tabs on top of the editor. Rename/Delete sit with the tabs, not Run. */
 .rx-sqltabs { display: flex; overflow-x: auto; margin-top: 14px; background: var(--ide-chrome); border: 1px solid var(--rx-line); border-bottom: 0; border-radius: 8px 8px 0 0; }
 .rx-sqltabs button { border: 0; border-right: 1px solid var(--ide-border); border-bottom: 2px solid transparent; background: none; color: var(--ide-muted); font: 12px var(--rx-mono); padding: 7px 12px; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; }
 .rx-sqltabs button[aria-selected="true"] { color: var(--ide-fg); background: var(--ide-bg); border-bottom-color: var(--rx-amber); }
+.rx-sqltabs-acts { margin-left: auto; display: inline-flex; align-items: stretch; flex: none; border-left: 1px solid var(--ide-border); }
+.rx-sqltabs-keys { display: inline-flex; align-items: center; gap: 6px; padding: 0 10px; border-right: 1px solid var(--ide-border); color: var(--ide-muted); font: 12px var(--rx-sans); }
+.rx-sqltabs-keys:empty { display: none; }
+.rx-sqltabs-acts button { border-right: 0; border-bottom-color: transparent; }
+.rx-sqltabs-acts button:hover { color: var(--ide-fg); }
 .rx-sqltabs + .rx-cell { margin-top: 0; border-top-left-radius: 0; border-top-right-radius: 0; }
 .rx-ds-usage a { color: var(--rx-ink); text-decoration: underline; text-decoration-color: var(--rx-line-strong); text-underline-offset: 3px; }
 .rx-ds-usage a:hover { text-decoration-color: var(--rx-amber); }
@@ -1406,12 +1676,76 @@ html[data-theme="dark"] .rx-project-q[data-tone="prep"] .q { color: #a8b0b8; }
  * sharing its height between editors, and the examples being compared get one equal row height on desktop.
  */
 .rx-equal-rows { display: grid; gap: 14px; margin: 8px 0 0; }
-.rx-equal-rows > .rx-cell { margin: 0; }
+.rx-equal-rows > .rx-cell,
+.rx-equal-rows > .rx-approach { margin: 0; min-width: 0; }
+.rx-approach { display: flex; flex-direction: column; gap: 0; min-width: 0; }
+.rx-approach > .rx-cell { margin: 0; }
+.rx-approach > .rx-results { margin: 0; border-top-left-radius: 0; border-top-right-radius: 0; border-top: 0; }
+.rx-approach > .rx-cell { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
 @media (min-width: 1200px) {
   .rx-equal-rows { grid-auto-rows: 1fr; }
   .rx-lesson .rx-lesson-work.rx-stack-work { overflow: auto; padding-top: 28px; }
   .rx-lesson .rx-lesson-work.rx-stack-work > * { flex: none; max-height: none; }
-  .rx-lesson .rx-lesson-work.rx-stack-work .rx-cell { flex: none; min-height: 0; overflow: visible; }
+  .rx-lesson .rx-lesson-work.rx-stack-work .rx-cell { flex: none; min-height: 0; overflow: hidden; }
+  .rx-lesson .rx-lesson-work.rx-stack-work .rx-approach { display: flex; flex-direction: column; min-height: 0; }
+  .rx-lesson .rx-lesson-work.rx-stack-work .rx-approach > .rx-results { flex: none; min-height: 0; max-height: none; }
+  /* Query Performance and Python Performance Lab: A and B split the column.
+     Results stay under the editor. They add height and the column scrolls; they do not cover the code or shrink it away. */
+  .rx-lesson .rx-lesson-work.rx-stack-work:has(.rx-approach) {
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    container-type: size;
+    container-name: pair;
+  }
+  .rx-lesson .rx-lesson-work.rx-stack-work:has(.rx-approach) > .rx-equal-rows {
+    flex: 1 0 auto;
+    min-height: 100%;
+    margin: 0;
+    grid-template-rows: auto auto;
+    align-items: start;
+  }
+  .rx-lesson .rx-lesson-work.rx-stack-work .rx-approach {
+    height: auto;
+    min-height: calc((100cqh - 14px) / 2);
+    width: 100%;
+    overflow: visible;
+  }
+  .rx-lesson .rx-lesson-work.rx-stack-work .rx-approach > .rx-cell {
+    flex: 1 0 auto;
+    min-height: calc((100cqh - 14px) / 2 - 48px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .rx-lesson .rx-lesson-work.rx-stack-work .rx-approach > .rx-cell .rx-editor > * {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  .rx-lesson .rx-lesson-work.rx-stack-work .rx-approach .cm-editor,
+  .rx-lesson .rx-lesson-work.rx-stack-work .rx-approach .cm-scroller {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+  }
+  /* Python Performance Lab uses .py-editor inside the same split. */
+  .rx-lesson .rx-lesson-work.rx-stack-work .rx-approach > .rx-cell > .py-editor {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .rx-lesson .rx-lesson-work.rx-stack-work .rx-approach > .rx-cell > .py-editor > div {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
 }
 .rx-ds-credit { margin-top: 36px; padding-top: 12px; border-top: 1px solid var(--rx-line); }
 .rx-ds-credit-stacked { display: none; }

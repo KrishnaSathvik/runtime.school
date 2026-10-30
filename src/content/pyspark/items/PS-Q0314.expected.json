@@ -1,0 +1,181 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "po_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "version",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "supplier_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "warehouse_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "sku",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "quantity",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "unit_cost",
+     "type": "decimal(10,2)",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "expected_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "updated_at",
+     "type": "timestamp",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "PO00001",
+     2,
+     "SUP04",
+     "WH01",
+     "SKU-1012",
+     100,
+     "2.50",
+     "confirmed",
+     "2026-03-18",
+     "2026-03-05T14:05:00"
+    ],
+    [
+     "PO00001",
+     3,
+     "SUP04",
+     "WH01",
+     "SKU-1012",
+     100,
+     "2.50",
+     "shipped",
+     "2026-03-18",
+     "2026-03-06T05:05:00"
+    ],
+    [
+     "PO00001",
+     4,
+     "SUP04",
+     "WH01",
+     "SKU-1012",
+     100,
+     "2.50",
+     "received",
+     "2026-03-18",
+     "2026-03-07T23:05:00"
+    ],
+    [
+     "PO00003",
+     2,
+     "SUP02",
+     "WH03",
+     "SKU-1003",
+     100,
+     "9.90",
+     "confirmed",
+     "2026-03-08",
+     "2026-03-03T03:00:00"
+    ],
+    [
+     "PO00001",
+     1,
+     "SUP04",
+     "WH01",
+     "SKU-1012",
+     100,
+     "2.50",
+     "open",
+     "2026-03-17",
+     "2026-03-03T16:05:00"
+    ],
+    [
+     "PO00002",
+     1,
+     "SUP01",
+     "WH03",
+     "SKU-1003",
+     250,
+     "14.50",
+     "open",
+     "2026-03-10",
+     "2026-03-03T14:48:00"
+    ],
+    [
+     "PO00003",
+     1,
+     "SUP02",
+     "WH03",
+     "SKU-1003",
+     100,
+     "9.90",
+     "open",
+     "2026-03-07",
+     "2026-03-02T12:00:00"
+    ],
+    [
+     "PO00004",
+     1,
+     "SUP01",
+     "WH01",
+     "SKU-1012",
+     100,
+     "3.75",
+     "open",
+     "2026-03-10",
+     "2026-03-03T11:23:00"
+    ],
+    [
+     "PO00005",
+     1,
+     "SUP03",
+     "WH02",
+     "SKU-1014",
+     500,
+     "0.85",
+     "open",
+     "2026-03-09",
+     "2026-03-02T14:01:00"
+    ]
+   ],
+   "row_count": 9
+  }
+ },
+ "hidden": [
+  "the full practice purchase orders",
+  "orders whose first version never arrived",
+  "orders that only have a first version",
+  "no purchase orders at all"
+ ]
+}

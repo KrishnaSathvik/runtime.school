@@ -1,0 +1,50 @@
+{
+  "id": "PS-Q0101",
+  "slug": "name-tags",
+  "lesson": "PS-L021",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Name tags",
+  "dataset": {
+    "id": "PS-D03",
+    "version": "1.0.0"
+  },
+  "prompt": "The office prints a name tag for everyone, and names were typed by hand in all sorts of case. Write `solve(employees)` so it returns `employee_id` and `name_tag`.",
+  "rules": [
+    "`name_tag` is the first name, one space, then the last name, with no spaces at the start or end of either.",
+    "Each word starts with a capital letter and the rest is lower case: `aNNA de la CRUZ` becomes `Anna De La Cruz`.",
+    "If one of the two names is missing, the tag is the other name alone. Return one row per employee, with only these two columns."
+  ],
+  "hints": [
+    "`F.trim` removes the spaces around a value and `F.initcap` gives each word a capital first letter and lower-cases the rest.",
+    "Tidy each name on its own, then join them with a space.",
+    "`F.concat` gives `NULL` when any part is missing. `F.concat_ws(\" \", ...)` skips the missing part instead."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "employees"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(employees):\n    # Return employee_id and name_tag.\n    return employees\n",
+  "output": {
+    "columns": [
+      "employee_id",
+      "name_tag"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Standardize each name, then join them: `F.concat_ws(\" \", F.initcap(F.trim(\"first_name\")), F.initcap(F.trim(\"last_name\")))`, selected next to `employee_id` with `.alias(\"name_tag\")`. `trim` removes the stray spaces at the ends, so the tag never has two spaces in the middle or one at the start. `initcap` capitalizes the first letter of every word and lower-cases the rest, which fixes `SILVA` and `de la cruz` alike. `concat_ws` is the right join here because it skips a missing part, so someone with no last name still gets a tag; `F.concat(first, F.lit(\" \"), last)` would give `NULL` for them."
+}

@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0160",
+  "slug": "campaigns-that-lean-mobile",
+  "lesson": "PS-L032",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Campaigns that lean mobile",
+  "dataset": {
+    "id": "PS-D12",
+    "version": "1.0.0"
+  },
+  "prompt": "Creative teams build mobile-first ads for campaigns seen more on phones than on computers. Write `solve(impressions)` so it returns those campaigns with their mobile and desktop impression counts, in campaign order.",
+  "rules": [
+    "For each campaign, `mobile` and `desktop` count its impressions whose `device` is `mobile` and `desktop`; a campaign with none on a device has 0 there. Other or missing devices count in neither.",
+    "Keep a campaign only if `mobile` is more than `desktop`. Equal counts don't qualify.",
+    "Sort by `campaign_id` A to Z and return `campaign_id`, `mobile` and `desktop`."
+  ],
+  "hints": [
+    "Count both devices per campaign with conditional aggregates that give 0, not missing, when there's no match.",
+    "Compare the two counts after grouping: `filter` works on the grouped result like on any DataFrame.",
+    "A pivot leaves a missing cell where a campaign had no desktop impressions, and `mobile > NULL` isn't true, so that campaign would vanish. Use `otherwise(0)`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "impressions"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(impressions):\n    # Return campaign_id, mobile and desktop for campaigns with more mobile than desktop impressions.\n    return impressions\n",
+  "output": {
+    "columns": [
+      "campaign_id",
+      "mobile",
+      "desktop"
+    ],
+    "order_sensitive": true
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Count first, compare second. `impressions.groupBy(\"campaign_id\").agg(F.sum(F.when(F.col(\"device\") == \"mobile\", 1).otherwise(0)).alias(\"mobile\"), F.sum(F.when(F.col(\"device\") == \"desktop\", 1).otherwise(0)).alias(\"desktop\"))` gives every campaign both counts, with 0 where it had none. Then `.filter(F.col(\"mobile\") > F.col(\"desktop\")).orderBy(\"campaign_id\")`. Filtering rows before grouping can't compare two devices, and a pivot leaves a missing desktop count for a campaign never shown on desktop, so the comparison isn't true and the campaign is lost."
+}

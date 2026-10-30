@@ -1,0 +1,57 @@
+{
+  "id": "PS-L053-C2",
+  "slug": "sensor-rule-breaches",
+  "lesson": "PS-L053",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Readings that break a rule",
+  "dataset": {
+    "id": "PS-D09",
+    "version": "1.0.0"
+  },
+  "prompt": "The alerting team wants to replay its rules over the raw readings. Write `solve(sensor_readings)` with `mapInPandas` so it returns `reading_id`, `device_id`, `rule_id` and `observed_value`: one row for each reading and each rule it breaks.",
+  "rules": [
+    "`TEMP_HIGH`: temperature_c above 30. `TEMP_CRIT`: temperature_c above 40. `HUM_HIGH`: humidity_pct above 80. `BATT_LOW`: battery_v below 3.3. A value exactly on a limit doesn't break it.",
+    "A reading can break several rules: 41.2 °C breaks both temperature rules. A missing measurement breaks nothing.",
+    "`observed_value` is the measurement that broke the rule. Check every delivered row; don't remove repeats.",
+    "Find the broken rules with `mapInPandas`: the check looks for it in the plan Spark runs.",
+    "Return `reading_id`, `device_id`, `rule_id` (text) and `observed_value` (double), in that order."
+  ],
+  "hints": [
+    "The starter pulls the three measurements out of `payload`. Missing ones arrive in pandas as NaN, and a comparison with NaN is False.",
+    "For each rule, keep the rows of the batch that break it, add `rule_id` and `observed_value`, and collect the pieces in a list.",
+    "`pd.concat(pieces)` joins the pieces into one DataFrame to `yield` per batch."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "sensor_readings"
+  ],
+  "starter": "import pandas as pd\nfrom pyspark.sql import functions as F\n\n\ndef solve(sensor_readings):\n    # The measurements from inside the payload struct, as plain columns.\n    readings = sensor_readings.select(\n        \"reading_id\", \"device_id\",\n        F.col(\"payload.temperature_c\").alias(\"temperature_c\"),\n        F.col(\"payload.humidity_pct\").alias(\"humidity_pct\"),\n        F.col(\"payload.battery_v\").alias(\"battery_v\"),\n    )\n    # Return one row per reading and broken rule: reading_id, device_id, rule_id, observed_value.\n    return readings\n",
+  "output": {
+    "columns": [
+      "reading_id",
+      "device_id",
+      "rule_id",
+      "observed_value"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "technique": {
+    "name": "mapInPandas",
+    "plan": [
+      "MapInPandas"
+    ]
+  }
+}

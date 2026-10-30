@@ -1,0 +1,64 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "supplier_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "supplier_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "country",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "payment_terms_days",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "contact_email",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "SUP-001",
+     "Pellacott Fasteners",
+     "GB",
+     30,
+     "orders@pellacottfasteners.example"
+    ],
+    [
+     "SUP-002",
+     "Rindell Tooling",
+     "DE",
+     45,
+     "orders@rindelltooling.example"
+    ]
+   ],
+   "row_count": 2
+  }
+ },
+ "hidden": [
+  "the full practice suppliers",
+  "records missing the same field, or a field in only one system",
+  "records that differ in a single column",
+  "suppliers that only one system lists",
+  "every supplier matches in both systems",
+  "an empty supplier list"
+ ]
+}

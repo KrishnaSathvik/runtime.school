@@ -1,0 +1,48 @@
+{
+  "id": "PS-L077-C2",
+  "slug": "task-statuses-after-a-failure",
+  "lesson": "PS-L077",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Task statuses after a failure",
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0"
+  },
+  "prompt": "Three of the nightly job's tasks are quality gates that raise an error when the data is wrong. Finish `solve(shipments, shipment_events, deliveries)` so it runs the tasks in order and returns one row per task: its name in `task` and its `status`.",
+  "rules": [
+    "`failed`: the task ran and raised an error. `skipped`: a task it needs is `failed` or `skipped`, so it doesn't run at all. `ok`: it ran without an error.",
+    "A failure doesn't stop tasks that don't need the failed one: they still run. Return all five tasks."
+  ],
+  "hints": [
+    "`run_order(deps)` gives an order where every task comes after the tasks it needs.",
+    "Before running a task, look at the statuses of the tasks it needs. Any that isn't `ok` means `skipped`.",
+    "Wrap the call in `try` / `except Exception` and set `failed` in the `except`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "shipments",
+    "shipment_events",
+    "deliveries"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef make_tasks(shipments, shipment_events, deliveries):\n    def clean_events():\n        missing = shipment_events.filter(F.col(\"event_id\").isNull() | F.col(\"shipment_id\").isNull()).count()\n        if missing > 0:\n            raise ValueError(f\"{missing} events without an event_id or shipment_id\")\n        return shipment_events.select([c for c in shipment_events.columns if c != \"load_date\"]).distinct()\n\n    def known_events(clean_events):\n        ids = [r.shipment_id for r in shipments.select(\"shipment_id\").collect()]\n        unknown = clean_events.filter(~F.col(\"shipment_id\").isin(ids)).count()\n        if unknown > 0:\n            raise ValueError(f\"{unknown} events for unknown shipments\")\n        return clean_events\n\n    def delivered(known_events):\n        return known_events.filter(F.col(\"event_type\") == \"delivered\")\n\n    def late_deliveries():\n        allowed = F.col(\"status\").isin(\"on_time\", \"late\", \"failed\")\n        bad = deliveries.filter(~F.coalesce(allowed, F.lit(False))).count()\n        if bad > 0:\n            raise ValueError(f\"{bad} deliveries with an unknown status\")\n        return deliveries.filter(F.col(\"status\") == \"late\")\n\n    def late_scans(delivered, late_deliveries):\n        late_ids = [r.shipment_id for r in late_deliveries.select(\"shipment_id\").collect()]\n        return delivered.filter(F.col(\"shipment_id\").isin(late_ids))\n\n    return {\n        \"late_scans\": (late_scans, [\"delivered\", \"late_deliveries\"]),\n        \"delivered\": (delivered, [\"known_events\"]),\n        \"known_events\": (known_events, [\"clean_events\"]),\n        \"clean_events\": (clean_events, []),\n        \"late_deliveries\": (late_deliveries, []),\n    }\n\n\ndef run_order(deps):\n    order = []\n    while len(order) < len(deps):\n        ready = [t for t in deps if t not in order and all(d in order for d in deps[t])]\n        if not ready:\n            raise ValueError(\"these tasks wait on each other: \" + \", \".join(t for t in deps if t not in order))\n        order += ready\n    return order\n\n\ndef solve(shipments, shipment_events, deliveries):\n    tasks = make_tasks(shipments, shipment_events, deliveries)\n    deps = {name: needs for name, (fn, needs) in tasks.items()}\n    outputs, status = {}, {}\n    # Run the tasks in order and give each one a status: ok, failed or skipped.\n    return spark.createDataFrame(list(status.items()), \"task STRING, status STRING\")\n",
+  "output": {
+    "columns": [
+      "task",
+      "status"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

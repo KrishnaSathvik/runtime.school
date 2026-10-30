@@ -1,0 +1,89 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "invoice_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "lines",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "line_amounts",
+     "type": "array<decimal(12,2)>",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "INV-000001",
+     "paid",
+     2,
+     [
+      "130.00",
+      "114.00"
+     ]
+    ],
+    [
+     "INV-000002",
+     "paid",
+     2,
+     [
+      "178.00",
+      "54.00"
+     ]
+    ],
+    [
+     "INV-000003",
+     "overdue",
+     2,
+     [
+      "69.00",
+      "400.50"
+     ]
+    ],
+    [
+     "INV-000004",
+     "open",
+     2,
+     [
+      "223.50",
+      "60.00"
+     ]
+    ],
+    [
+     "INV-000005",
+     "draft",
+     2,
+     [
+      "156.00",
+      "89.00"
+     ]
+    ]
+   ],
+   "row_count": 5
+  }
+ },
+ "hidden": [
+  "the full practice invoices and their lines",
+  "an export where every invoice has exactly one line",
+  "an invoice with no lines next to invoices with several",
+  "lines listed out of order, and amounts that need every cent",
+  "an export with no invoices"
+ ]
+}

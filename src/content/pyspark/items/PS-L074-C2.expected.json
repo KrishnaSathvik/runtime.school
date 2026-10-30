@@ -1,0 +1,305 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "event_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "shipment_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "warehouse_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "event_type",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "event_time",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "location",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "sequence",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "load_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "is_correction",
+     "type": "boolean",
+     "nullable": true
+    },
+    {
+     "name": "event_date",
+     "type": "date",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "E0000001",
+     "SH0001",
+     "WH01",
+     "created",
+     "2026-03-03T08:00:00",
+     "WH01",
+     100001,
+     "2026-03-03",
+     false,
+     "2026-03-03"
+    ],
+    [
+     "E0000002",
+     "SH0001",
+     "WH01",
+     "picked",
+     "2026-03-03T10:00:00",
+     "WH01",
+     100002,
+     "2026-03-03",
+     false,
+     "2026-03-03"
+    ],
+    [
+     "E0000005",
+     "SH0002",
+     "WH02",
+     "picked",
+     "2026-03-05T07:00:00",
+     "WH02",
+     100005,
+     "2026-03-05",
+     false,
+     "2026-03-05"
+    ],
+    [
+     "E0000006",
+     "SH0002",
+     "WH02",
+     "departed",
+     "2026-03-05T15:00:00",
+     "WH02",
+     100006,
+     "2026-03-07",
+     false,
+     "2026-03-05"
+    ],
+    [
+     "E0000009",
+     "SH0001",
+     "WH01",
+     "delivered",
+     "2026-03-07T14:00:00",
+     "Graz",
+     100009,
+     "2026-03-07",
+     false,
+     "2026-03-07"
+    ],
+    [
+     "E0000007",
+     "SH0001",
+     "WH01",
+     "in_transit",
+     "2026-03-06T06:00:00",
+     "HUB-GRZ",
+     100007,
+     "2026-03-06",
+     false,
+     "2026-03-06"
+    ],
+    [
+     "E0000008",
+     "SH0003",
+     "WH03",
+     "created",
+     "2026-03-06T11:00:00",
+     "WH03",
+     100008,
+     "2026-03-06",
+     false,
+     "2026-03-06"
+    ],
+    [
+     "E0000003",
+     "SH0002",
+     "WH02",
+     "created",
+     "2026-03-04T09:00:00",
+     "WH02",
+     100003,
+     "2026-03-04",
+     false,
+     "2026-03-04"
+    ],
+    [
+     "E0000004",
+     "SH0001",
+     "WH01",
+     "departed",
+     "2026-03-04T12:00:00",
+     "WH01",
+     100004,
+     "2026-03-06",
+     false,
+     "2026-03-04"
+    ]
+   ],
+   "row_count": 9,
+   "inputs": {
+    "shipment_events": [
+     [
+      "E0000001",
+      "SH0001",
+      "WH01",
+      "created",
+      "2026-03-03T08:00:00",
+      "WH01",
+      "100001",
+      "2026-03-03",
+      "false"
+     ],
+     [
+      "E0000002",
+      "SH0001",
+      "WH01",
+      "picked",
+      "2026-03-03T10:00:00",
+      "WH01",
+      "100002",
+      "2026-03-03",
+      "false"
+     ],
+     [
+      "E0000003",
+      "SH0002",
+      "WH02",
+      "created",
+      "2026-03-04T09:00:00",
+      "WH02",
+      "100003",
+      "2026-03-04",
+      "false"
+     ],
+     [
+      "E0000004",
+      "SH0001",
+      "WH01",
+      "departed",
+      "2026-03-04T12:00:00",
+      "WH01",
+      "100004",
+      "2026-03-06",
+      "false"
+     ],
+     [
+      "E0000005",
+      "SH0002",
+      "WH02",
+      "picked",
+      "2026-03-05T07:00:00",
+      "WH02",
+      "100005",
+      "2026-03-05",
+      "false"
+     ],
+     [
+      "E0000006",
+      "SH0002",
+      "WH02",
+      "departed",
+      "2026-03-05T15:00:00",
+      "WH02",
+      "100006",
+      "2026-03-07",
+      "false"
+     ],
+     [
+      "E0000007",
+      "SH0001",
+      "WH01",
+      "in_transit",
+      "2026-03-06T06:00:00",
+      "HUB-GRZ",
+      "100007",
+      "2026-03-06",
+      "false"
+     ],
+     [
+      "E0000008",
+      "SH0003",
+      "WH03",
+      "created",
+      "2026-03-06T11:00:00",
+      "WH03",
+      "100008",
+      "2026-03-06",
+      "false"
+     ],
+     [
+      "E0000009",
+      "SH0001",
+      "WH01",
+      "delivered",
+      "2026-03-07T14:00:00",
+      "Graz",
+      "100009",
+      "2026-03-07",
+      "false"
+     ],
+     [
+      "E0000010",
+      "SH0003",
+      "WH03",
+      "picked",
+      "2026-03-07T16:00:00",
+      "WH03",
+      "100010",
+      "2026-03-08",
+      "false"
+     ],
+     [
+      "E0000011",
+      "SH0003",
+      "WH03",
+      "departed",
+      "2026-03-08T09:00:00",
+      "WH03",
+      "100011",
+      "2026-03-08",
+      "false"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice feed, where many events load a day or more late",
+  "late events that show up only in a later extract, one that never shows up, and an event delivered twice",
+  "a feed with only four event days, so the last extracts are shorter"
+ ]
+}

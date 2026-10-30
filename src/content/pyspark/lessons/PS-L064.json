@@ -1,0 +1,150 @@
+{
+  "id": "PS-L064",
+  "minutes": 25,
+  "lede": "Source systems rarely send you a fresh copy of a table. They send a stream of changes: this row was added, that one updated, this one deleted. Change data capture is turning that stream back into the table as it is today.",
+  "objectives": [
+    "Read a change feed: the operation, the sequence and the full row image on each change",
+    "Reduce a feed to the latest change per key, after removing repeated deliveries",
+    "Apply the latest changes to a Delta table with one MERGE that updates, inserts and deletes",
+    "Turn on Delta's change data feed and read back what a write changed"
+  ],
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "accounts",
+      "customer_cdc"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`accounts` is a copy of a CRM's account table taken at midnight on 1 January 2026. Since then the CRM has written every change to `customer_cdc`, its change feed. Each change row has:\n\n- `op`: `I` for an insert, `U` for an update, `D` for a delete.\n- `sequence`: the change's position in the source's log. It only ever goes up, so it decides which change came first.\n- `changed_at`: when the change was committed.\n- the **full row image**: every column of the account. For `I` and `U` it's the row after the change; for `D` it's the last row before the delete.\n\nBecause every change carries the whole row, you never patch single columns: the newest image of a key *is* that key's row."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "The feed, in sequence order",
+      "code": "customer_cdc.orderBy(\"sequence\").select(\"op\", \"sequence\", \"account_id\", \"segment\", \"account_owner\", \"credit_limit\").show()\n",
+      "note": "ACC-0001 changes three times: credit limit, then segment, then owner. ACC-0003 is deleted. ACC-0006 and ACC-0007 are new accounts, inserted and then updated. ACC-0005 doesn't appear, so it hasn't changed since the snapshot."
+    },
+    {
+      "kind": "text",
+      "md": "Lesson 63's `MERGE` looks like the right tool: match on `account_id`, delete when the change is a `D`, update the other matches, insert the rest. But the raw feed has **several rows for the same key**, and as lesson 63 showed, a MERGE refuses to let two source rows change the same target row. In a change feed that isn't a rare accident: it's every key that changed more than once."
+    },
+    {
+      "kind": "error-example",
+      "id": "e2",
+      "title": "Merging the raw feed",
+      "code": "from delta.tables import DeltaTable\n\npath = \"/tmp/crm/accounts\"\naccounts.write.format(\"delta\").mode(\"overwrite\").save(path)\n\ntarget = DeltaTable.forPath(spark, path)\n(target.alias(\"t\")\n    .merge(customer_cdc.alias(\"s\"), \"t.account_id = s.account_id\")\n    .whenMatchedDelete(condition=\"s.op = 'D'\")\n    .whenMatchedUpdateAll()\n    .whenNotMatchedInsertAll(condition=\"s.op != 'D'\")\n    .execute())\n",
+      "error": "UnsupportedOperationException",
+      "note": "ACC-0001 has three changes, so three source rows match its one target row. Delta stops before writing anything; the table is unchanged."
+    },
+    {
+      "kind": "text",
+      "md": "Only the newest change of each key matters, because it carries the whole row. Number each key's changes from newest to oldest with `row_number` over a window partitioned by the key and ordered by `sequence` descending (lesson 33), and keep number 1."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "The latest change per account",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\nnewest_first = Window.partitionBy(\"account_id\").orderBy(F.col(\"sequence\").desc())\nlatest = (customer_cdc\n    .withColumn(\"rn\", F.row_number().over(newest_first))\n    .filter(F.col(\"rn\") == 1)\n    .drop(\"rn\"))\n\nlatest.orderBy(\"account_id\").select(\"op\", \"sequence\", \"account_id\", \"segment\", \"account_owner\", \"credit_limit\").show()\n",
+      "note": "Six accounts changed, so six rows. ACC-0001 keeps only its third change (owner Mei Lindqvist), ACC-0006 its update to 30000.00. ACC-0003's latest change is its delete."
+    },
+    {
+      "kind": "text",
+      "md": "Now each key appears once, and one MERGE can apply everything:\n\n- matched and the change is `D`: delete the row.\n- matched otherwise: replace the row with the change's image (`whenMatchedUpdateAll`).\n- not matched and not `D`: insert it. An account that was inserted and then updated arrives as a `U` for a key the table doesn't have yet; its image is complete, so inserting it is right.\n- not matched and `D`: do nothing. That key is already absent.\n\n`UpdateAll` and `InsertAll` set the target's columns from the source columns with the same names. `op`, `sequence` and `changed_at` aren't target columns, so they're left out."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Apply the latest changes",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\nfrom delta.tables import DeltaTable\n\nnewest_first = Window.partitionBy(\"account_id\").orderBy(F.col(\"sequence\").desc())\nlatest = customer_cdc.withColumn(\"rn\", F.row_number().over(newest_first)).filter(F.col(\"rn\") == 1).drop(\"rn\")\n\npath = \"/tmp/crm/accounts\"\naccounts.write.format(\"delta\").mode(\"overwrite\").save(path)\n\ntarget = DeltaTable.forPath(spark, path)\n(target.alias(\"t\")\n    .merge(latest.alias(\"s\"), \"t.account_id = s.account_id\")\n    .whenMatchedDelete(condition=\"s.op = 'D'\")\n    .whenMatchedUpdateAll()\n    .whenNotMatchedInsertAll(condition=\"s.op != 'D'\")\n    .execute())\n\ntoday = spark.read.format(\"delta\").load(path)\nprint(today.columns)\ntoday.orderBy(\"account_id\").select(\"account_id\", \"segment\", \"account_owner\", \"credit_limit\", \"is_active\").show()\n\nm = target.history(1).select(\"operationMetrics\").first()[0]\nprint(\"updated\", m[\"numTargetRowsUpdated\"], \"inserted\", m[\"numTargetRowsInserted\"], \"deleted\", m[\"numTargetRowsDeleted\"])\n",
+      "note": "The table keeps its nine columns. ACC-0003 is gone, ACC-0004 is now inactive, the two new accounts are in, and ACC-0005 is untouched. The merge's history entry counts what it did: three updates, two inserts, one delete. These counts are the same on every run."
+    },
+    {
+      "kind": "text",
+      "md": "Real feeds are messier than this one. Two problems are common:\n\n- **Late arrivals.** Changes can reach you out of order, so the last row in the file is not always the newest change. Always order by `sequence`, never by file position.\n- **Repeated deliveries.** The same change can be delivered twice: identical rows, same key and sequence. Remove them with `distinct()` first. If you rank with `rank` instead of `row_number`, two copies of the newest change both get 1, and the MERGE fails again."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "A late change and a repeated one",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\narrived = spark.createDataFrame(\n    [\n        (\"U\", 200001, \"ACC-0001\", \"mid_market\", \"Dana Whitlock\"),\n        (\"U\", 200023, \"ACC-0001\", \"enterprise\", \"Mei Lindqvist\"),\n        (\"U\", 200009, \"ACC-0001\", \"enterprise\", \"Dana Whitlock\"),\n        (\"U\", 200023, \"ACC-0001\", \"enterprise\", \"Mei Lindqvist\"),\n    ],\n    \"op STRING, sequence BIGINT, account_id STRING, segment STRING, account_owner STRING\",\n)\nprint(arrived.count(), \"rows arrived,\", arrived.distinct().count(), \"are different\")\n\nnewest_first = Window.partitionBy(\"account_id\").orderBy(F.col(\"sequence\").desc())\ntied = arrived.withColumn(\"r\", F.rank().over(newest_first)).filter(F.col(\"r\") == 1)\nprint(\"rank keeps\", tied.count(), \"rows for ACC-0001\")\n\nlatest = arrived.distinct().withColumn(\"rn\", F.row_number().over(newest_first)).filter(F.col(\"rn\") == 1).drop(\"rn\")\nlatest.show()\n",
+      "note": "Change 200009 arrived after 200023, and 200023 arrived twice. Ordering by `sequence` still finds 200023 as the newest, and `distinct()` leaves one copy of it. Without `distinct()`, `rank` keeps both copies."
+    },
+    {
+      "kind": "text",
+      "md": "Downstream jobs often need the reverse: not today's table, but **what changed** in it. Delta can record that for you. Create the table with the property `delta.enableChangeDataFeed` set to `true`, and every later write also records its row changes. Read them back with `option(\"readChangeFeed\", \"true\")` and the first version you want, `startingVersion`. Version 0 is the first write (lesson 61), so the merge is version 1.\n\nEach change row is the table's row plus three columns: `_change_type` (`insert`, `delete`, `update_preimage` for the row before an update, `update_postimage` for the row after), `_commit_version`, and `_commit_timestamp`, which differs on every run."
+    },
+    {
+      "kind": "example",
+      "id": "e6",
+      "title": "Read what the merge changed",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\nfrom delta.tables import DeltaTable\n\nnewest_first = Window.partitionBy(\"account_id\").orderBy(F.col(\"sequence\").desc())\nlatest = customer_cdc.withColumn(\"rn\", F.row_number().over(newest_first)).filter(F.col(\"rn\") == 1).drop(\"rn\")\n\npath = \"/tmp/crm/accounts_cdf\"\naccounts.write.format(\"delta\").option(\"delta.enableChangeDataFeed\", \"true\").save(path)\n\ntarget = DeltaTable.forPath(spark, path)\n(target.alias(\"t\")\n    .merge(latest.alias(\"s\"), \"t.account_id = s.account_id\")\n    .whenMatchedDelete(condition=\"s.op = 'D'\")\n    .whenMatchedUpdateAll()\n    .whenNotMatchedInsertAll(condition=\"s.op != 'D'\")\n    .execute())\n\nchanges = (spark.read.format(\"delta\")\n    .option(\"readChangeFeed\", \"true\")\n    .option(\"startingVersion\", 1)\n    .load(path))\n(changes\n    .select(\"account_id\", \"_change_type\", \"_commit_version\", \"account_owner\", \"credit_limit\")\n    .orderBy(\"account_id\", F.col(\"_change_type\").desc())\n    .show())\n",
+      "note": "Each update gives two rows, before and after. ACC-0004's owner and limit didn't change (its `is_active` did), so those two columns look the same in both. The delete row is the last image of ACC-0003. Reading from version 0 would also list the five snapshot rows as inserts."
+    },
+    {
+      "kind": "text",
+      "md": "One caution: the change data feed records changes only from the moment it's switched on. Asking for versions written before that raises an error rather than guessing. Switch it on when you create the table, as here, if anyone downstream will need the changes."
+    }
+  ],
+  "challenges": [
+    "PS-L064-C1",
+    "PS-L064-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "Why does merging the raw `customer_cdc` feed into `accounts` fail?",
+      "choices": [
+        "The feed has extra columns `op`, `sequence` and `changed_at`",
+        "Several feed rows match the same account, and a MERGE won't let two source rows change one target row",
+        "MERGE can't delete rows",
+        "The feed isn't a Delta table"
+      ],
+      "answer": 1,
+      "why": "ACC-0001 has three changes, so three source rows match its target row. Reduce the feed to one row per key first. Extra source columns are simply ignored by `UpdateAll` and `InsertAll`."
+    },
+    {
+      "id": "k2",
+      "prompt": "The feed arrived out of order, and one change was delivered twice. Which steps give the right latest change per key?",
+      "choices": [
+        "Keep the last row of each key in file order",
+        "`distinct()`, then `row_number` over the key ordered by `sequence` descending, keeping 1",
+        "`rank` over the key ordered by `sequence` descending, keeping 1",
+        "Order by `op` so deletes come last"
+      ],
+      "answer": 1,
+      "why": "`sequence` decides the order, not the file. `distinct()` removes the repeated delivery; `row_number` then keeps exactly one row. `rank` without `distinct()` would keep both copies of a repeated newest change."
+    },
+    {
+      "id": "k3",
+      "prompt": "The newest change for a key is a `D`, and the key is not in the target table. What should the MERGE do?",
+      "choices": [
+        "Insert the delete's row image",
+        "Raise an error",
+        "Nothing: the key is already absent",
+        "Update every row"
+      ],
+      "answer": 2,
+      "why": "A delete for a key the table doesn't have changes nothing. That's why the insert clause has the condition `op != 'D'`."
+    }
+  ],
+  "review": [
+    "A change feed row has an operation (`I`, `U`, `D`), a sequence that orders the changes, and the full row image.",
+    "Because each change carries the whole row, a key's newest change is its current row, unless that change is a delete.",
+    "A MERGE fails if several source rows match one target row, so reduce the feed to one row per key first.",
+    "Order by `sequence`, not by file position, and remove repeated deliveries with `distinct()` before `row_number`.",
+    "One MERGE applies everything: delete on `D`, update the other matches, insert unmatched keys that aren't deletes.",
+    "With `delta.enableChangeDataFeed` on, `readChangeFeed` and `startingVersion` return each write's row changes, with `_change_type` and `_commit_version`."
+  ],
+  "practice": [
+    "PS-Q0316",
+    "PS-Q0317",
+    "PS-Q0318",
+    "PS-Q0319",
+    "PS-Q0320"
+  ]
+}

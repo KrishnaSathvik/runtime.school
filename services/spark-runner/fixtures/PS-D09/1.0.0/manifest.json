@@ -1,0 +1,141 @@
+{
+  "dataset_id": "PS-D09",
+  "version": "1.0.0",
+  "title": "IoT & Sensors",
+  "source": "synthetic",
+  "licence": {
+    "status": "ours",
+    "note": "Runtime-owned deterministic synthetic data."
+  },
+  "seed": 2009,
+  "schemas": {
+    "devices": "device_id STRING, device_type STRING, model STRING, installed_date DATE, active BOOLEAN",
+    "device_locations": "device_id STRING, site STRING, building STRING, floor INT, latitude DOUBLE, longitude DOUBLE, valid_from DATE, valid_to DATE",
+    "sensor_readings": "reading_id STRING, device_id STRING, event_time TIMESTAMP, arrival_time TIMESTAMP, batch INT, payload STRUCT<temperature_c: DOUBLE, humidity_pct: DOUBLE, battery_v: DOUBLE, status: STRING, tags: ARRAY<STRING>>, firmware STRUCT<version: STRING, build: INT>",
+    "alerts": "alert_id STRING, device_id STRING, reading_id STRING, rule_id STRING, metric STRING, operator STRING, threshold DOUBLE, observed_value DOUBLE, severity STRING, triggered_at TIMESTAMP, acknowledged BOOLEAN",
+    "maintenance_events": "maintenance_id STRING, device_id STRING, kind STRING, started_at TIMESTAMP, ended_at TIMESTAMP, performed_by STRING, firmware_after STRING"
+  },
+  "keys": {
+    "primary": {
+      "devices": [
+        "device_id"
+      ],
+      "device_locations": [
+        "device_id",
+        "valid_from"
+      ],
+      "sensor_readings": [
+        "reading_id"
+      ],
+      "alerts": [
+        "alert_id"
+      ],
+      "maintenance_events": [
+        "maintenance_id"
+      ]
+    },
+    "foreign": {
+      "device_locations.device_id": "devices.device_id",
+      "sensor_readings.device_id": "devices.device_id",
+      "alerts.device_id": "devices.device_id",
+      "alerts.reading_id": "sensor_readings.reading_id",
+      "maintenance_events.device_id": "devices.device_id"
+    }
+  },
+  "rules": [
+    "Each sensor measures every 15 minutes; event_time is when it measured, arrival_time when the platform received it. Normally a reading arrives within two minutes.",
+    "sensor_readings is written in arrival order, as a stream delivers it. batch is the micro-batch it arrived in: whole 15-minute periods (lesson) or whole hours (practice, project) since the first reading, counted from 0.",
+    "device_type climate measures temperature and humidity; device_type temp has no humidity sensor, so payload.humidity_pct is always null for it (that null is expected, not a fault).",
+    "payload.status is ok, low_battery (battery_v below 3.4) or degraded. payload.tags lists the sensor's placement tags, plus low_battery while the battery is low.",
+    "firmware is the version the sensor ran when it measured; it changes only after a firmware_update maintenance event (firmware_after).",
+    "Sensors send nothing while a maintenance visit is in progress (between started_at and ended_at); a battery_swap brings battery_v back to about 4.15.",
+    "Alert rules: TEMP_HIGH temperature_c > 30 (warning), TEMP_CRIT temperature_c > 40 (critical), HUM_HIGH humidity_pct > 80 (warning), BATT_LOW battery_v < 3.3 (warning). A rule alerts on the first breaching reading of an episode and stays quiet for that sensor and rule until an hour passes without a breach. triggered_at is the reading's arrival_time.",
+    "device_locations has one current row per sensor (valid_to empty); a sensor that was moved also has an earlier row whose valid_to is the day before the current valid_from.",
+    "Lesson edition: two deliberate cases. Reading R0006 (event_time 09:15) arrives late, at 09:52, in batch 3 instead of batch 1; reading R0011 is delivered twice (same reading_id, the copy arrives six minutes later). Otherwise clean.",
+    "Practice edition: about 2% of readings arrive late (20 minutes to 6 hours after event_time); about 1% are delivered twice with the same reading_id; about 1% miss a payload field (battery_v, status or humidity_pct null) or the whole firmware struct; three readings are sensor glitches with temperature_c = 999.0, and the TEMP_CRIT alert they raised is a false alarm.",
+    "Project edition (P10): about 6% of readings arrive late (up to 12 hours), about 4% are delivered twice (some three times), about 4% miss payload fields or firmware, about 0.5% are glitches (temperature_c = 999.0 or humidity_pct = 255.0, both out of range), and most glitches raised false TEMP_CRIT / HUM_HIGH alerts (a glitch inside an episode that was already alerting stays quiet, per the hour rule)."
+  ],
+  "editions": {
+    "lesson": {
+      "devices": {
+        "file": "lesson/devices.csv",
+        "rows": 4,
+        "sha256": "3840800c6c2e80bb74c7ab395467cfef197ef94a6d07e30b88c156c59efec16f"
+      },
+      "device_locations": {
+        "file": "lesson/device_locations.csv",
+        "rows": 5,
+        "sha256": "543f291fd3142295f540ef21a4126b813d7b3cb35b548f0e43a7c1968581d952"
+      },
+      "sensor_readings": {
+        "file": "lesson/sensor_readings.jsonl",
+        "rows": 13,
+        "sha256": "89eb04bdd5e0bd67cbeff4736a18555ee1b0ecb69285a1c7ce26a5c22dc15ed9"
+      },
+      "alerts": {
+        "file": "lesson/alerts.csv",
+        "rows": 5,
+        "sha256": "9012d58909611a5ead7edfa60412b7a515185fde3d65da55de64f2438d3e0fad"
+      },
+      "maintenance_events": {
+        "file": "lesson/maintenance_events.csv",
+        "rows": 4,
+        "sha256": "b11237997fb5a23d829f9776ec79f87afcab8ec38afb7dd8ae211386dc1e624a"
+      }
+    },
+    "practice": {
+      "devices": {
+        "file": "practice/devices.csv",
+        "rows": 12,
+        "sha256": "4235ae73c579dbd2e139b879afca940531e752985189a88f4beaffec0f37d014"
+      },
+      "device_locations": {
+        "file": "practice/device_locations.csv",
+        "rows": 15,
+        "sha256": "b8288fd00c9faf3a95f535eba9428140919fd213ea80a5892f33e276efdfd5bd"
+      },
+      "sensor_readings": {
+        "file": "practice/sensor_readings.jsonl",
+        "rows": 2288,
+        "sha256": "12741b31dbaa8d564334b66bb36071343cabba023859d97dc13907de9e7f948f"
+      },
+      "alerts": {
+        "file": "practice/alerts.csv",
+        "rows": 35,
+        "sha256": "2dd657dd1e702b5d2104f616f6bd0f1a0f6f9d17bd567563378339bd5b51fdf7"
+      },
+      "maintenance_events": {
+        "file": "practice/maintenance_events.csv",
+        "rows": 12,
+        "sha256": "690e7edf56662b312542884611d93c84187f072587c6a75943f72d413a2a81d6"
+      }
+    },
+    "project": {
+      "devices": {
+        "file": "project/devices.csv",
+        "rows": 18,
+        "sha256": "65ee215efc0bc73be634389f643f527c9218073f3ebbf9b7edfc9216dd4c3ac0"
+      },
+      "device_locations": {
+        "file": "project/device_locations.csv",
+        "rows": 19,
+        "sha256": "0fb5083e58dd32d686e067164fb8f9697850ce31f0fc18bc4b330b5eab2141db"
+      },
+      "sensor_readings": {
+        "file": "project/sensor_readings.jsonl",
+        "rows": 5384,
+        "sha256": "e069b7a896d23180618e85d4318cc483da178d346d30aa50a2765f8d70d18d4e"
+      },
+      "alerts": {
+        "file": "project/alerts.csv",
+        "rows": 99,
+        "sha256": "e837cb9d9944d3fc5d173ed661bf1a9f32a37829ed94e44a6739705ddb63eefa"
+      },
+      "maintenance_events": {
+        "file": "project/maintenance_events.csv",
+        "rows": 11,
+        "sha256": "604f3179abb2a0dae7cd4f2629dba82afab231caf0df60760daf3384322d9d0c"
+      }
+    }
+  }
+}

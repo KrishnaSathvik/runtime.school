@@ -1,0 +1,53 @@
+{
+  "id": "PS-L043-C2",
+  "slug": "flag-bad-export-lines",
+  "lesson": "PS-L043",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Flag the bad export lines",
+  "dataset": {
+    "id": "PS-D03",
+    "version": "1.0.0"
+  },
+  "prompt": "HR wants to fix broken lines at the source, so nothing may be dropped. Write `solve(employees_raw)` so it reads the saved export, keeps every employee line, and adds `bad_line`: the raw text of each line that didn't fit, and NULL for good lines.",
+  "rules": [
+    "Fields are separated by `;`, the first line is a header (not an employee), and quoted values can contain `;`.",
+    "Columns: `employee_id STRING, full_name STRING, job_title STRING, department STRING, salary DECIMAL(10,2), hire_date DATE`, then `bad_line STRING`.",
+    "Keep every employee line. Values that couldn't be read are NULL, and `bad_line` holds the line exactly as it arrived.",
+    "Return all seven columns, in this order."
+  ],
+  "hints": [
+    "Start from the same read as a clean import: separator, header and schema.",
+    "Add `bad_line STRING` to the end of the schema string.",
+    "The default mode keeps bad lines; `columnNameOfCorruptRecord=\"bad_line\"` tells Spark where to put their raw text."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "employees_raw"
+  ],
+  "starter": "def solve(employees_raw):\n    path = \"/tmp/hr/employees\"\n    employees_raw.write.mode(\"overwrite\").text(path)\n    # Read the file at `path` as CSV and return every line with bad_line.\n    return employees_raw\n",
+  "output": {
+    "columns": [
+      "employee_id",
+      "full_name",
+      "job_title",
+      "department",
+      "salary",
+      "hire_date",
+      "bad_line"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

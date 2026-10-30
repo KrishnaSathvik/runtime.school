@@ -1,0 +1,56 @@
+{
+ "id": "PS-Q0343",
+ "slug": "hourly-impressions-per-device-missing-ones-too",
+ "lesson": "PS-L069",
+ "role": "edge",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 10,
+ "title": "Hourly impressions per device, missing ones too",
+ "dataset": {
+  "id": "PS-D12",
+  "version": "1.0.0"
+ },
+ "prompt": "Some impressions arrive without a `device`. The devices report must still add up to the hour's total. Write `solve(impressions)` so a streaming query keeps hourly impression counts per device in a memory table, and return `window_start`, `device` and `impressions` from it once the deliveries are done.",
+ "rules": [
+  "Windows are one clock hour, by `event_time`; an impression at exactly 10:00:00 belongs to the 10:00 hour.",
+  "Impressions without a device are counted too, in a row of their own with `device` missing.",
+  "After the last delivery the table has one row per hour and device, with the final count.",
+  "The counts must come from that streaming query: grouping `impressions` itself doesn't count."
+ ],
+ "hints": [
+  "Group by `F.window(\"event_time\", \"1 hour\")` and `device`. A missing device forms a group like any other value.",
+  "`F.count(\"device\")` skips missing values. Which count counts every row?",
+  "Complete mode leaves each hour and device once in the memory table."
+ ],
+ "explanation": "`groupBy(F.window(\"event_time\", \"1 hour\"), \"device\")` puts every impression without a device into one group whose key is missing, so the counts per hour add up to the hour's total. Count it with `count()` or `F.count(\"*\")`; `F.count(\"device\")` counts only rows where `device` is set, which gives that group 0. Filtering missing devices out first makes the hours look quieter than they were. A window includes its start and excludes its end, so 10:00:00 opens the 10:00 hour. The late impression shown at 09:12 on 2 March still counts in that hour, two deliveries later.",
+ "entry": "solve",
+ "inputs": [
+  "impressions"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef solve(impressions):\n    spark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")  # small data: one partition keeps the stream fast\n    make_batches(impressions, \"/tmp/ads\")\n    stream = spark.readStream.schema(impressions.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/ads\")\n    # Count impressions per clock hour and device (missing devices included), keep the counts in a memory table,\n    # and return window_start, device and impressions from it.\n    return impressions\n",
+ "output": {
+  "columns": [
+   "window_start",
+   "device",
+   "impressions"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

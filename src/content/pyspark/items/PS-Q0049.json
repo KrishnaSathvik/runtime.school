@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0049",
+  "slug": "fix-padded-bag-lines",
+  "lesson": "PS-L010",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 6,
+  "title": "Fix the padded-bag lines",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "The warehouse packs order lines for products `P005` and `P006` in a padded bag when there are at least two of them. The function below was written for that, but it returns the wrong lines. Fix `solve(order_items)`.",
+  "rules": [
+    "A line goes in a padded bag when `product_id` is `P005` or `P006` and `quantity` is at least 2 (2 itself counts).",
+    "A line with a missing product or quantity isn't packed this way.",
+    "Return every column of `order_items`, unchanged, duplicates included."
+  ],
+  "hints": [
+    "Press Run and compare the result with the expected rows: some `P005` lines with a quantity of 1 are there.",
+    "Python works out `&` before `|`, so the quantity check only applies to `P006`. The two product checks need their own pair of parentheses, or one `isin`.",
+    "\"At least 2\" is `>= 2`; `> 2` loses every line with exactly two items."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "order_items"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(order_items):\n    # Lines of P005 or P006 with at least two items.\n    return order_items.filter(\n        (F.col(\"product_id\") == \"P005\") | (F.col(\"product_id\") == \"P006\") & (F.col(\"quantity\") > 2)\n    )\n",
+  "output": {
+    "columns": [
+      "order_id",
+      "line_no",
+      "product_id",
+      "quantity",
+      "unit_price"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "The starter has two bugs. First, `&` is worked out before `|`, so it reads as \"P005, or (P006 with a big quantity)\": every `P005` line comes back, whatever its quantity. Grouping the product checks fixes that, and `isin` is the neatest way: `order_items.filter(F.col(\"product_id\").isin(\"P005\", \"P006\") & (F.col(\"quantity\") >= 2))`. Second, `> 2` means three or more, and the rule is at least two, so it must be `>= 2`. Writing `((F.col(\"product_id\") == \"P005\") | (F.col(\"product_id\") == \"P006\")) & (F.col(\"quantity\") >= 2)` gives the same rows."
+}

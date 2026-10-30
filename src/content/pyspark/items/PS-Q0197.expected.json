@@ -1,0 +1,301 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "request_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "service",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "tags",
+     "type": "map<string,string>",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "REQ-000001",
+     "catalog-api",
+     [
+      [
+       "agent",
+       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36"
+      ],
+      [
+       "endpoint",
+       "/v1/catalog/items"
+      ],
+      [
+       "method",
+       "GET"
+      ],
+      [
+       "region",
+       "us-east"
+      ]
+     ]
+    ],
+    [
+     "REQ-000002",
+     "catalog-api",
+     [
+      [
+       "agent",
+       "RuntimeShop-iOS/4.12.0 (iPhone; iOS 17.5)"
+      ],
+      [
+       "endpoint",
+       "/v1/catalog/items"
+      ],
+      [
+       "method",
+       "GET"
+      ],
+      [
+       "region",
+       "eu-west"
+      ]
+     ]
+    ],
+    [
+     "REQ-000003",
+     "auth-service",
+     [
+      [
+       "agent",
+       "RuntimeShop-Android/4.11.2 (Android 14)"
+      ],
+      [
+       "endpoint",
+       "/v1/auth/token"
+      ],
+      [
+       "method",
+       "POST"
+      ],
+      [
+       "region",
+       "us-east"
+      ]
+     ]
+    ],
+    [
+     "REQ-000004",
+     "checkout-api",
+     [
+      [
+       "agent",
+       "RuntimeShop-iOS/4.12.0 (iPhone; iOS 17.5)"
+      ],
+      [
+       "endpoint",
+       "/v1/checkout"
+      ],
+      [
+       "method",
+       "POST"
+      ],
+      [
+       "region",
+       "us-west"
+      ]
+     ]
+    ],
+    [
+     "REQ-000005",
+     "search-api",
+     [
+      [
+       "agent",
+       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36"
+      ],
+      [
+       "endpoint",
+       "/v1/search"
+      ],
+      [
+       "method",
+       "GET"
+      ],
+      [
+       "region",
+       "eu-west"
+      ]
+     ]
+    ],
+    [
+     "REQ-000006",
+     "catalog-api",
+     [
+      [
+       "agent",
+       "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 Version/17.5 Safari/605.1.15"
+      ],
+      [
+       "endpoint",
+       "/v1/catalog/items/{sku}"
+      ],
+      [
+       "method",
+       "GET"
+      ],
+      [
+       "region",
+       "us-east"
+      ]
+     ]
+    ],
+    [
+     "REQ-000007",
+     "iot-gateway",
+     [
+      [
+       "agent",
+       "SensorHub-Agent/2.3 (firmware 1.8.4)"
+      ],
+      [
+       "endpoint",
+       "/v1/devices/{device_id}/telemetry"
+      ],
+      [
+       "method",
+       "POST"
+      ],
+      [
+       "region",
+       "ap-south"
+      ]
+     ]
+    ],
+    [
+     "REQ-000008",
+     "checkout-api",
+     [
+      [
+       "agent",
+       "RuntimeShop-Android/4.11.2 (Android 14)"
+      ],
+      [
+       "endpoint",
+       "/v1/payments/authorize"
+      ],
+      [
+       "method",
+       "POST"
+      ],
+      [
+       "region",
+       "us-east"
+      ]
+     ]
+    ],
+    [
+     "REQ-000009",
+     "catalog-api",
+     [
+      [
+       "agent",
+       "okhttp/4.12.0"
+      ],
+      [
+       "endpoint",
+       "/v1/catalog/items"
+      ],
+      [
+       "method",
+       "GET"
+      ],
+      [
+       "region",
+       "us-west"
+      ]
+     ]
+    ],
+    [
+     "REQ-000010",
+     "iot-gateway",
+     [
+      [
+       "agent",
+       "SensorHub-Agent/2.3 (firmware 1.8.4)"
+      ],
+      [
+       "endpoint",
+       "/v1/devices/{device_id}/telemetry"
+      ],
+      [
+       "method",
+       "POST"
+      ],
+      [
+       "region",
+       "ap-south"
+      ]
+     ]
+    ],
+    [
+     "REQ-000011",
+     "search-api",
+     [
+      [
+       "agent",
+       "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 Version/17.5 Safari/605.1.15"
+      ],
+      [
+       "endpoint",
+       "/v1/search"
+      ],
+      [
+       "method",
+       "GET"
+      ],
+      [
+       "region",
+       "us-east"
+      ]
+     ]
+    ],
+    [
+     "REQ-000012",
+     "catalog-api",
+     [
+      [
+       "agent",
+       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36"
+      ],
+      [
+       "endpoint",
+       "/v1/catalog/items"
+      ],
+      [
+       "method",
+       "GET"
+      ],
+      [
+       "region",
+       "eu-west"
+      ]
+     ]
+    ]
+   ],
+   "row_count": 12
+  }
+ },
+ "hidden": [
+  "the full practice requests",
+  "requests with no user agent or no region",
+  "no requests"
+ ]
+}

@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0289",
+  "slug": "did-adaptive-execution-broadcast",
+  "lesson": "PS-L058",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Did adaptive execution switch the join?",
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0"
+  },
+  "prompt": "This report should show that adaptive execution planned a sort-merge join for `shipments` and `warehouses`, then ran a broadcast hash join instead. It always says no broadcast ran. Fix `solve(shipments, warehouses)` so it returns one row with `rows`, `planned_sort_merge` and `ran_broadcast`.",
+  "rules": [
+    "`rows` is the number of rows the inner join on `warehouse_id` returns.",
+    "`planned_sort_merge` is whether the plan before anything runs uses a sort-merge join. `ran_broadcast` is whether the final plan, the one that actually ran, uses a broadcast hash join.",
+    "Keep the settings at the top of the starter. Return the one row from `report`."
+  ],
+  "hints": [
+    "Before an action runs, the plan text is only the first plan. Adaptive execution decides the rest while the query runs.",
+    "`joined.count()` runs a new counting query, not `joined` itself. `len(joined.collect())` runs `joined`, and afterwards its plan text shows what ran.",
+    "After the run, the text holds the final plan first, then `== Initial Plan ==`. Read the planned join before the action (or after that marker) and the final one before it."
+  ],
+  "explanation": "Two things hide the switch. The starter reads the plan text before any action, when it's still the first plan. And `count()` doesn't run `joined`: it builds and runs a separate counting query, so `joined`'s own plan never becomes final. Read `before` first, run `joined` itself with `rows = len(joined.collect())`, then read the plan again and keep the part before `== Initial Plan ==`. On real data that's `True` and `True`. When `shipments` is empty, adaptive execution sees an empty side after the shuffle and replaces the join with an empty result, so neither join is in the final plan and `ran_broadcast` is `False`. The broadcast changes how the join runs, never which rows it returns.",
+  "entry": "solve",
+  "inputs": [
+    "shipments",
+    "warehouses"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n# The first plan can't broadcast (a 10-byte limit), but adaptive execution may (its limit is 10 MB).\nspark.conf.set(\"spark.sql.adaptive.enabled\", True)\nspark.conf.set(\"spark.sql.autoBroadcastJoinThreshold\", 10)\nspark.conf.set(\"spark.sql.adaptive.autoBroadcastJoinThreshold\", \"10MB\")\n\n\ndef report(rows, planned_sort_merge, ran_broadcast):\n    return spark.createDataFrame(\n        [(rows, planned_sort_merge, ran_broadcast)],\n        \"rows bigint, planned_sort_merge boolean, ran_broadcast boolean\",\n    )\n\n\ndef solve(shipments, warehouses):\n    joined = shipments.join(warehouses, \"warehouse_id\")\n    plan = joined._jdf.queryExecution().executedPlan().toString()\n    rows = joined.count()\n    return report(rows, \"SortMergeJoin\" in plan, \"BroadcastHashJoin\" in plan)\n",
+  "output": {
+    "columns": [
+      "rows",
+      "planned_sort_merge",
+      "ran_broadcast"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

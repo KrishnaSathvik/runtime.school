@@ -1,0 +1,165 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "reading_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "tag_no",
+     "type": "int",
+     "nullable": false
+    },
+    {
+     "name": "tag",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "temperature_c",
+     "type": "decimal(3,1)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "R0001",
+     1,
+     "indoor",
+     "3.2"
+    ],
+    [
+     "R0001",
+     2,
+     "cold_chain",
+     "3.2"
+    ],
+    [
+     "R0001",
+     3,
+     "low_battery",
+     "3.2"
+    ],
+    [
+     "R0004",
+     1,
+     "indoor",
+     "25.1"
+    ],
+    [
+     "R0004",
+     2,
+     "critical",
+     "25.1"
+    ],
+    [
+     "R0002",
+     1,
+     "indoor",
+     "21.4"
+    ],
+    [
+     "R0002",
+     2,
+     "hvac",
+     "21.4"
+    ],
+    [
+     "R0003",
+     1,
+     "outdoor",
+     "28.7"
+    ],
+    [
+     "R0003",
+     2,
+     "greenhouse",
+     "28.7"
+    ],
+    [
+     "R0007",
+     1,
+     "outdoor",
+     "29.6"
+    ],
+    [
+     "R0007",
+     2,
+     "greenhouse",
+     "29.6"
+    ],
+    [
+     "R0005",
+     1,
+     "indoor",
+     "3.4"
+    ],
+    [
+     "R0005",
+     2,
+     "cold_chain",
+     "3.4"
+    ],
+    [
+     "R0005",
+     3,
+     "low_battery",
+     "3.4"
+    ],
+    [
+     "R0008",
+     1,
+     "indoor",
+     "41.2"
+    ],
+    [
+     "R0008",
+     2,
+     "critical",
+     "41.2"
+    ],
+    [
+     "R0011",
+     1,
+     "outdoor",
+     "31.4"
+    ],
+    [
+     "R0011",
+     2,
+     "greenhouse",
+     "31.4"
+    ],
+    [
+     "R0012",
+     1,
+     "indoor",
+     "26.0"
+    ],
+    [
+     "R0012",
+     2,
+     "critical",
+     "26.0"
+    ]
+   ],
+   "row_count": 29
+  }
+ },
+ "hidden": [
+  "the full practice readings",
+  "temperatures at and beyond the largest the decimal holds, both signs",
+  "readings with no tags, a missing tag list or no payload",
+  "readings with a missing temperature",
+  "a tag listed twice and a reading delivered twice",
+  "no readings"
+ ]
+}

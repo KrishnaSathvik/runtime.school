@@ -1,0 +1,56 @@
+{
+  "id": "PS-Q0399",
+  "slug": "room-on-the-driver",
+  "lesson": "PS-L080",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 6,
+  "title": "Room on the driver",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "prompt": "The daily payments summary counts trips per payment type. Its author worried the driver would run out of room, so the starter raises the driver's result limit, then brings every trip back and counts in Python. It fails before counting anything. Fix `solve(trips)` so it returns the counts, without bringing the trips back to the driver.",
+  "rules": [
+    "One row per `payment_type` in `trips`, with `count`, the number of trips that have it.",
+    "Columns, in order: `payment_type` and `count`.",
+    "Count on the executors: the check looks at Spark's plan for an aggregation."
+  ],
+  "hints": [
+    "Run the starter and read the error: can a running session change `spark.driver.maxResultSize`?",
+    "Raising the limit only moves the problem. What would send back one row per payment type instead of one row per trip?",
+    "`groupBy(...).count()` counts inside Spark and names its column `count`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "trips"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(trips):\n    # Make room on the driver for every trip.\n    spark.conf.set(\"spark.driver.maxResultSize\", \"4g\")\n    counts = {}\n    for row in trips.collect():\n        counts[row[\"payment_type\"]] = counts.get(row[\"payment_type\"], 0) + 1\n    # spark.createDataFrame builds a DataFrame from a list of Python tuples, with these columns and types.\n    return spark.createDataFrame(list(counts.items()), \"payment_type STRING, count BIGINT\")\n",
+  "output": {
+    "columns": [
+      "payment_type",
+      "count"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "technique": {
+    "name": "an aggregation on the executors",
+    "plan": [
+      "HashAggregate"
+    ]
+  },
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`spark.driver.maxResultSize` is a driver setting, fixed when the application starts, so `spark.conf.set` raises `CANNOT_MODIFY_CONFIG` before anything runs. Raising it on the command line would only move the problem: the job would still pull every trip into the driver. `trips.groupBy(\"payment_type\").count()` does the counting in the tasks and returns one row per payment type, however many trips there are; Spark's plan shows it as a `HashAggregate`. Deleting only the `spark.conf.set` line gives the right numbers on small data, but it still collects every row, so the check's plan test fails it."
+}

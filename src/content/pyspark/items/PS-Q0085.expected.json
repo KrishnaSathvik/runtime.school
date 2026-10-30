@@ -1,0 +1,254 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "transaction_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "merchant_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "posted_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "spend_change",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "size",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "T000008",
+     "M002",
+     "2026-02-19T10:23:22",
+     "15.99",
+     "everyday"
+    ],
+    [
+     "T000009",
+     "M001",
+     "2026-02-20T12:56:02",
+     "-43.95",
+     "everyday"
+    ],
+    [
+     "T000010",
+     "M004",
+     "2026-02-21T13:36:29",
+     "19.23",
+     "everyday"
+    ],
+    [
+     "T000014",
+     "M004",
+     "2026-02-28T18:17:37",
+     "60.53",
+     "everyday"
+    ],
+    [
+     "T000015",
+     "M002",
+     "2026-02-12T13:40:05",
+     "-320.00",
+     "big"
+    ],
+    [
+     "T000016",
+     "M003",
+     "2026-02-15T09:02:44",
+     null,
+     null
+    ],
+    [
+     "T000019",
+     "M002",
+     "2026-02-01T00:00:00",
+     "41.20",
+     "everyday"
+    ],
+    [
+     "T000020",
+     "M001",
+     "2026-02-26T12:10:09",
+     "250.00",
+     "big"
+    ]
+   ],
+   "row_count": 8,
+   "inputs": {
+    "transactions": [
+     [
+      "T000002",
+      null,
+      "M004",
+      "2026-01-16T07:14:10",
+      "purchase",
+      "online",
+      "debit",
+      "60.53",
+      "GBP",
+      "posted"
+     ],
+     [
+      "T000006",
+      "A00001",
+      null,
+      "2026-02-08T14:02:36",
+      "interest",
+      "system",
+      "credit",
+      "21.91",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000008",
+      "A00001",
+      "M002",
+      "2026-02-19T10:23:22",
+      "purchase",
+      "card_present",
+      "debit",
+      "15.99",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000009",
+      "A00008",
+      "M001",
+      "2026-02-20T12:56:02",
+      "refund",
+      "card_present",
+      "credit",
+      "43.95",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000010",
+      "A00001",
+      "M004",
+      "2026-02-21T13:36:29",
+      "purchase",
+      "card_present",
+      "debit",
+      "19.23",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000014",
+      "A00006",
+      "M004",
+      "2026-02-28T18:17:37",
+      "purchase",
+      "online",
+      "debit",
+      "60.53",
+      "GBP",
+      "posted"
+     ],
+     [
+      "T000015",
+      "A00001",
+      "M002",
+      "2026-02-12T13:40:05",
+      "refund",
+      "online",
+      "credit",
+      "320.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000016",
+      "A00008",
+      "M003",
+      "2026-02-15T09:02:44",
+      "purchase",
+      "card_present",
+      "debit",
+      null,
+      "USD",
+      "posted"
+     ],
+     [
+      "T000017",
+      "A00006",
+      "M004",
+      "2026-02-20T17:55:31",
+      "purchase",
+      "online",
+      "debit",
+      "75.00",
+      "GBP",
+      "declined"
+     ],
+     [
+      "T000018",
+      "A00001",
+      "M001",
+      "2026-03-01T00:00:00",
+      "purchase",
+      "card_present",
+      "debit",
+      "12.40",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000019",
+      "A00008",
+      "M002",
+      "2026-02-01T00:00:00",
+      "purchase",
+      "online",
+      "debit",
+      "41.20",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000020",
+      "A00006",
+      "M001",
+      "2026-02-26T12:10:09",
+      "purchase",
+      "card_present",
+      "debit",
+      "250.00",
+      "GBP",
+      "posted"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice transactions table",
+  "purchases at the first and last seconds of February and just outside it",
+  "refunds and purchases around 250.00",
+  "February transactions that aren't posted purchases or refunds",
+  "the same purchase delivered twice",
+  "an empty transactions table"
+ ]
+}

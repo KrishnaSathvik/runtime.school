@@ -1,0 +1,49 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D15",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "api_requests",
+   "service_metrics",
+   "application_logs"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "+------------+--------+-------------+---------+\n|     service|requests|server_errors|error_pct|\n+------------+--------+-------------+---------+\n|auth-service|       1|            0|      0.0|\n| catalog-api|       5|            0|      0.0|\n|checkout-api|       2|            1|     50.0|\n| iot-gateway|       2|            0|      0.0|\n|  search-api|       2|            0|      0.0|\n+------------+--------+-------------+---------+\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "[12, 38, 40, 42, 51]\n+--------+--------+----------------+------------------+\n|p50_rank|p95_rank|p50_interpolated|  p95_interpolated|\n+--------+--------+----------------+------------------+\n|      40|      51|            40.0|49.199999999999996|\n+--------+--------+----------------+------------------+\n\n+--------------+--------------+\n|p50_latency_ms|p95_latency_ms|\n+--------------+--------------+\n|            40|            51|\n+--------------+--------------+\n\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "+------------+-------------------+--------------+---------+------------------+\n|service     |window_start       |p95_latency_ms|error_pct|alert             |\n+------------+-------------------+--------------+---------+------------------+\n|checkout-api|2026-04-14 10:00:00|1240          |50.0     |latency and errors|\n+------------+-------------------+--------------+---------+------------------+\n\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "+-------------------+-----------------------+-------+---------+\n|service            |last_log               |quiet_s|freshness|\n+-------------------+-----------------------+-------+---------+\n|auth-service       |2026-04-14 10:00:09.061|111    |stale    |\n|catalog-api        |2026-04-14 10:00:02.142|118    |stale    |\n|checkout-api       |2026-04-14 10:01:00.14 |60     |fresh    |\n|iot-gateway        |2026-04-14 10:01:12.522|48     |fresh    |\n|notification-worker|2026-04-14 10:01:28    |32     |fresh    |\n|search-api         |2026-04-14 10:01:21.562|39     |fresh    |\n+-------------------+-----------------------+-------+---------+\n\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "+------------+-----------------------+-------+-----+\n|service     |at                     |alert  |value|\n+------------+-----------------------+-------+-----+\n|auth-service|2026-04-14 10:00:09.061|stale  |111  |\n|catalog-api |2026-04-14 10:00:02.142|stale  |118  |\n|checkout-api|2026-04-14 10:00:00    |latency|1240 |\n+------------+-----------------------+-------+-----+\n\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "",
+   "error": {
+    "type": "AnalysisException",
+    "message": "[DATATYPE_MISMATCH.VALUE_OUT_OF_RANGE] Cannot resolve \"percentile_approx(latency_ms, 95, 10000)\" due to data type mismatch: The percentage must be between [0.0, 1.0] (current value = 95.0D). SQLSTATE: 42K09",
+    "line": 3,
+    "condition": "DATATYPE_MISMATCH.VALUE_OUT_OF_RANGE"
+   }
+  }
+ }
+}

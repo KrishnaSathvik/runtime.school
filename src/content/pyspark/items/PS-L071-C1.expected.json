@@ -1,0 +1,354 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "event_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "session_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "page_type",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "traffic_source",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "country",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "PV-0001",
+     "SES-0001",
+     "home",
+     "social",
+     "US"
+    ],
+    [
+     "PV-0002",
+     "SES-0001",
+     "category",
+     "social",
+     "US"
+    ],
+    [
+     "PV-0004",
+     "SES-0002",
+     "category",
+     "organic",
+     "GB"
+    ],
+    [
+     "PV-0005",
+     "SES-0002",
+     "product",
+     "organic",
+     "GB"
+    ],
+    [
+     "PV-0006",
+     "SES-0003",
+     "category",
+     "email",
+     "DE"
+    ],
+    [
+     "PV-0007",
+     "SES-0003",
+     "product",
+     "email",
+     "DE"
+    ],
+    [
+     "PV-0008",
+     "SES-0003",
+     "cart",
+     "email",
+     "DE"
+    ],
+    [
+     "PV-0003",
+     "SES-0001",
+     "product",
+     "social",
+     "US"
+    ],
+    [
+     "PV-0009",
+     "SES-0004",
+     "home",
+     "direct",
+     "CA"
+    ],
+    [
+     "PV-0010",
+     "SES-0004",
+     "product",
+     "direct",
+     "CA"
+    ],
+    [
+     "PV-0011",
+     "SES-0005",
+     "product",
+     "social",
+     "US"
+    ],
+    [
+     "PV-0013",
+     "SES-0099",
+     "home",
+     null,
+     null
+    ]
+   ],
+   "row_count": 12,
+   "inputs": {
+    "page_views": [
+     [
+      "PV-0001",
+      "SES-0001",
+      "CU-001",
+      "2026-03-14T10:01:05",
+      "2026-03-14T10:01:08",
+      "1",
+      "/",
+      "home",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":\"social.example\",\"utm\":{\"source\":\"social\",\"campaign\":\"CMP-0007\"}}",
+      "40"
+     ],
+     [
+      "PV-0002",
+      "SES-0001",
+      "CU-001",
+      "2026-03-14T10:01:45",
+      "2026-03-14T10:01:47",
+      "1",
+      "/c/shoes",
+      "category",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":\"/\",\"utm\":{\"source\":\"social\",\"campaign\":\"CMP-0007\"}}",
+      "95"
+     ],
+     [
+      "PV-0003",
+      "SES-0001",
+      "CU-001",
+      "2026-03-14T10:03:20",
+      "2026-03-14T10:23:50",
+      "3",
+      "/p/SKU-1001",
+      "product",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":\"/c/shoes\",\"utm\":{\"source\":\"social\",\"campaign\":\"CMP-0007\"}}",
+      "140"
+     ],
+     [
+      "PV-0004",
+      "SES-0002",
+      null,
+      "2026-03-14T10:04:12",
+      "2026-03-14T10:04:16",
+      "1",
+      "/c/tents",
+      "category",
+      "{\"type\":\"desktop\",\"os\":\"Windows\"}",
+      "{\"referrer\":\"search.example\",\"utm\":null}",
+      "70"
+     ],
+     [
+      "PV-0005",
+      "SES-0002",
+      null,
+      "2026-03-14T10:05:22",
+      "2026-03-14T10:05:24",
+      "1",
+      "/p/SKU-1004",
+      "product",
+      "{\"type\":\"desktop\",\"os\":\"Windows\"}",
+      "{\"referrer\":\"/c/tents\",\"utm\":null}",
+      null
+     ],
+     [
+      "PV-0006",
+      "SES-0003",
+      "CU-002",
+      "2026-03-14T10:12:00",
+      "2026-03-14T10:12:05",
+      "2",
+      "/c/jackets",
+      "category",
+      "{\"type\":\"desktop\",\"os\":\"macOS\"}",
+      "{\"referrer\":\"mail.example\",\"utm\":{\"source\":\"email\",\"campaign\":\"CMP-0012\"}}",
+      "50"
+     ],
+     [
+      "PV-0007",
+      "SES-0003",
+      "CU-002",
+      "2026-03-14T10:12:50",
+      "2026-03-14T10:12:53",
+      "2",
+      "/p/SKU-1002",
+      "product",
+      "{\"type\":\"desktop\",\"os\":\"macOS\"}",
+      "{\"referrer\":\"/c/jackets\",\"utm\":{\"source\":\"email\",\"campaign\":\"CMP-0012\"}}",
+      "120"
+     ],
+     [
+      "PV-0008",
+      "SES-0003",
+      "CU-002",
+      "2026-03-14T10:15:30",
+      "2026-03-14T10:15:32",
+      "2",
+      "/cart",
+      "cart",
+      "{\"type\":\"desktop\",\"os\":\"macOS\"}",
+      "{\"referrer\":\"/p/SKU-1002\",\"utm\":{\"source\":\"email\",\"campaign\":\"CMP-0012\"}}",
+      null
+     ],
+     [
+      "PV-0009",
+      "SES-0004",
+      "CU-003",
+      "2026-03-14T10:23:30",
+      "2026-03-14T10:23:36",
+      "3",
+      "/",
+      "home",
+      "{\"type\":\"tablet\",\"os\":\"Android\"}",
+      "{\"referrer\":null,\"utm\":null}",
+      "85"
+     ],
+     [
+      "PV-0010",
+      "SES-0004",
+      "CU-003",
+      "2026-03-14T10:24:55",
+      "2026-03-14T10:24:57",
+      "3",
+      "/p/SKU-1005",
+      "product",
+      "{\"type\":\"tablet\",\"os\":\"Android\"}",
+      "{\"referrer\":\"/\",\"utm\":null}",
+      null
+     ],
+     [
+      "PV-0011",
+      "SES-0005",
+      null,
+      "2026-03-14T10:38:00",
+      "2026-03-14T10:38:04",
+      "4",
+      "/p/SKU-1007",
+      "product",
+      "{\"type\":\"mobile\",\"os\":\"Android\"}",
+      "{\"referrer\":\"social.example\",\"utm\":{\"source\":\"social\",\"campaign\":\"CMP-0007\"}}",
+      "220"
+     ],
+     [
+      "PV-0013",
+      "SES-0099",
+      null,
+      "2026-03-14T10:44:00",
+      "2026-03-14T10:44:00",
+      "5",
+      "/",
+      "home",
+      "{\"type\":\"mobile\",\"os\":\"iOS\"}",
+      "{\"referrer\":null,\"utm\":null}",
+      "30"
+     ]
+    ],
+    "sessions": [
+     [
+      "SES-0001",
+      "CU-001",
+      "2026-03-14T10:01:05",
+      "2026-03-14T10:09:40",
+      "mobile",
+      "iOS",
+      "US",
+      "/",
+      "social",
+      "CMP-0007"
+     ],
+     [
+      "SES-0002",
+      null,
+      "2026-03-14T10:04:12",
+      "2026-03-14T10:05:22",
+      "desktop",
+      "Windows",
+      "GB",
+      "/c/tents",
+      "organic",
+      null
+     ],
+     [
+      "SES-0003",
+      "CU-002",
+      "2026-03-14T10:12:00",
+      "2026-03-14T10:19:55",
+      "desktop",
+      "macOS",
+      "DE",
+      "/c/jackets",
+      "email",
+      "CMP-0012"
+     ],
+     [
+      "SES-0004",
+      "CU-003",
+      "2026-03-14T10:23:30",
+      "2026-03-14T10:25:40",
+      "tablet",
+      "Android",
+      "CA",
+      "/",
+      "direct",
+      null
+     ],
+     [
+      "SES-0005",
+      null,
+      "2026-03-14T10:38:00",
+      "2026-03-14T10:41:50",
+      "mobile",
+      "Android",
+      "US",
+      "/p/SKU-1007",
+      "social",
+      "CMP-0007"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice page views and sessions",
+  "views from sessions that aren't in the sessions table",
+  "anonymous visitors next to signed-in ones",
+  "no page views at all"
+ ]
+}

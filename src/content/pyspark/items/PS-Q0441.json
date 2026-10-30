@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0441",
+  "slug": "label-each-day-with-the-next-move",
+  "lesson": "PS-L089",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Label each day with the next move",
+  "dataset": {
+    "id": "PS-D10",
+    "version": "1.0.0"
+  },
+  "prompt": "Features may only look back, but the label is what the model has to predict, so it looks forward. Write `solve(daily_prices)` so every price row gets the symbol's next close and whether it went up.",
+  "rules": [
+    "Work on each `symbol` on its own, in `trade_date` order. \"Next\" means the symbol's next row, whatever the calendar gap.",
+    "`next_close` is the next row's `close`. `up_next` is 1.0 when `next_close` is higher than `close`, and 0.0 when it is the same or lower.",
+    "A symbol's last row has no next row: `next_close` and `up_next` are NULL there, not 0.0.",
+    "Return `symbol`, `trade_date`, `close`, `next_close` and `up_next`, in that order. Keep every row."
+  ],
+  "hints": [
+    "`F.lead(\"close\")` over `Window.partitionBy(\"symbol\").orderBy(\"trade_date\")` reads the next row of the same symbol.",
+    "`F.when(cond, 1.0)` gives NULL where no branch matches. Which condition is true for a row with a next close that is not higher?",
+    "A comparison with NULL is never true, so `F.when(...).when(...)` without `otherwise` leaves the last row NULL on its own."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "daily_prices"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(daily_prices):\n    # Add next_close and up_next from each symbol's next row.\n    return daily_prices\n",
+  "output": {
+    "columns": [
+      "symbol",
+      "trade_date",
+      "close",
+      "next_close",
+      "up_next"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`F.lead(\"close\")` over a window partitioned by symbol and ordered by date is the next trading day's close: after a weekend or a missing day it reaches further ahead, and BRVO.SX's 2026-01-16 row reads 2026-01-21. The label then needs two branches, `F.when(next_close > close, 1.0).when(next_close <= close, 0.0)`, so the last row of each symbol stays NULL: that day's outcome isn't known yet, and calling it 0.0 would teach the model a fall that never happened. Drop those rows when you train. Looking ahead is right for a label and wrong for a feature: the same `lead` in a feature column would hand the model the answer. ALDR.SX's 2026-01-20 row is labelled 0.0 because of the unadjusted 2-for-1 split, a reminder to clean prices before building labels too."
+}

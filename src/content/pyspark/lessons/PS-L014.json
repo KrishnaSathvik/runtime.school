@@ -1,0 +1,125 @@
+{
+  "id": "PS-L014",
+  "minutes": 20,
+  "lede": "Data often arrives as the wrong type: numbers stored as text, timestamps where you want a date. `cast` changes a column's type, and knowing what it does to codes, money and bad values keeps your numbers right.",
+  "objectives": [
+    "Change a column's type with `cast`, by name or with a type class",
+    "Spot what casting loses, such as the leading zero of a code like `0742`",
+    "Use `try_cast` so values that don't fit become missing instead of stopping the job",
+    "Keep money exact with decimals, and see why doubles aren't"
+  ],
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "merchants",
+      "transactions"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "The tables above come from a small bank: `merchants`, the shops customers pay, and `transactions`, one row per payment, deposit or fee. On this page they're loaded as DataFrames with those names, and `F` is `pyspark.sql.functions`.\n\n`F.col(\"name\").cast(\"int\")` gives the same values as a new type. The type is written as in a schema string (`\"int\"`, `\"bigint\"`, `\"double\"`, `\"decimal(12,2)\"`, `\"string\"`, `\"date\"`) or as a class from `pyspark.sql.types`, like `IntegerType()`. The cast column is named after the original only if you `alias` it; otherwise it gets a name like `CAST(mcc_code AS INT)`."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "A code stored as text",
+      "code": "from pyspark.sql import functions as F\n\ncodes = merchants.select(\"merchant_id\", \"mcc_code\", F.col(\"mcc_code\").cast(\"int\").alias(\"mcc_number\"))\ncodes.show()\ncodes.printSchema()\n",
+      "note": "`mcc_code` is a four-digit category code stored as text. As a number, the vet's `0742` becomes `742`: the leading zero is gone. Codes, ids and postcodes are labels, not amounts, so they usually stay text."
+    },
+    {
+      "kind": "text",
+      "md": "Casting text to a number only works when the text **is** a number. In Spark 4, a value like `\"N/A\"` stops the whole job with an error that names the bad value."
+    },
+    {
+      "kind": "error-example",
+      "id": "e2",
+      "title": "Text that isn't a number",
+      "code": "from pyspark.sql import functions as F\n\nraw = spark.createDataFrame([(\"5411\",), (\"N/A\",)], \"code STRING\")\nraw.select(F.col(\"code\").cast(\"int\")).show()\n",
+      "error": "NumberFormatException",
+      "note": "One bad value is enough. The message suggests `try_cast`, which is the next example."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "try_cast: missing instead of an error",
+      "code": "from pyspark.sql import functions as F\n\nraw = spark.createDataFrame([(\"5411\",), (\"0742\",), (\"N/A\",), (\"\",), (None,)], \"code STRING\")\nraw.select(\"code\", F.col(\"code\").try_cast(\"int\").alias(\"as_number\")).show()\n",
+      "note": "`try_cast` gives `NULL` for `N/A` and for empty text, and the good values come through as before. Use it when bad values are expected and should simply count as missing."
+    },
+    {
+      "kind": "text",
+      "md": "For money, the type matters. A `double` stores numbers in binary, so most decimal fractions are stored as a tiny bit more or less than you wrote. A `decimal` stores the digits exactly. That's why `amount` in `transactions` is `decimal(12,2)`: up to 12 digits, 2 after the point."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Doubles round, decimals don't",
+      "code": "from decimal import Decimal\nfrom pyspark.sql import functions as F\n\nspark.range(1).select(\n    (F.lit(0.1) + F.lit(0.2)).alias(\"as_double\"),\n    (F.lit(Decimal(\"0.1\")) + F.lit(Decimal(\"0.2\"))).alias(\"as_decimal\"),\n).show()\n",
+      "note": "`spark.range(1)` gives one row to work on, and `F.lit(value)` turns a plain Python value into a column so Spark can add it. The doubles add up to just over 0.3; the decimals add up to exactly 0.3. Small errors like this grow when you add up thousands of amounts."
+    },
+    {
+      "kind": "text",
+      "md": "Casting between number types follows simple rules. Arithmetic on a decimal keeps it a decimal, with more digits when the result needs them. Casting a decimal to `int` or `bigint` **drops** the fraction rather than rounding. Casting a timestamp to `date` keeps the day."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Cents, whole numbers and days",
+      "code": "from pyspark.sql import functions as F\n\nt = transactions.select(\n    \"transaction_id\",\n    \"amount\",\n    (F.col(\"amount\") * 100).cast(\"bigint\").alias(\"cents\"),\n    F.col(\"amount\").cast(\"int\").alias(\"whole\"),\n    F.col(\"posted_at\").cast(\"date\").alias(\"posted_on\"),\n)\nt.show(4)\nt.printSchema()\n",
+      "note": "`60.53` becomes 6053 cents exactly, but as an `int` it's 60: the .53 is dropped, not rounded. A `bigint` is printed as `long` by `printSchema()`."
+    }
+  ],
+  "challenges": [
+    "PS-L014-C1",
+    "PS-L014-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "What does `F.col(\"mcc_code\").cast(\"int\")` give for the code `\"0742\"`?",
+      "choices": [
+        "\"0742\"",
+        "742",
+        "NULL",
+        "An error"
+      ],
+      "answer": 1,
+      "why": "The text is a valid number, so the cast works, but a number has no leading zeros. That's why codes usually stay text."
+    },
+    {
+      "id": "k2",
+      "prompt": "A column of text has the value `\"N/A\"`. What does `F.col(\"code\").try_cast(\"int\")` give for it?",
+      "choices": [
+        "0",
+        "An error that stops the job",
+        "NULL",
+        "\"N/A\""
+      ],
+      "answer": 2,
+      "why": "`try_cast` turns values that can't be cast into `NULL`. A plain `cast` would stop with an error in Spark 4."
+    },
+    {
+      "id": "k3",
+      "prompt": "What does `F.col(\"amount\").cast(\"int\")` give for an amount of 60.53?",
+      "choices": [
+        "61",
+        "60",
+        "60.53",
+        "6053"
+      ],
+      "answer": 1,
+      "why": "Casting a decimal to a whole number drops the fraction instead of rounding it."
+    }
+  ],
+  "review": [
+    "`F.col(\"x\").cast(\"int\")` changes the type; name the result with `alias`.",
+    "Types can be written as text (`\"int\"`, `\"decimal(12,2)\"`, `\"date\"`) or as classes like `IntegerType()`.",
+    "Casting a code like `\"0742\"` to a number loses the leading zero, so codes stay text.",
+    "A plain `cast` of a bad value stops the job; `try_cast` gives `NULL` instead.",
+    "Doubles store most fractions approximately; decimals are exact, so money is a decimal.",
+    "Casting a decimal to `int` or `bigint` drops the fraction; casting a timestamp to `date` keeps the day."
+  ],
+  "practice": ["PS-Q0066", "PS-Q0067", "PS-Q0068", "PS-Q0069", "PS-Q0070"]
+}

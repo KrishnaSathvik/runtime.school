@@ -1,0 +1,56 @@
+{
+  "id": "PS-L062-C1",
+  "slug": "before-the-clean-up",
+  "lesson": "PS-L062",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Before the clean-up",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "An auditor asks what the transactions table held just before today's clean-up deleted the declined transactions. `build_table` replays the day's commits on a fresh Delta table. Finish `solve` so it returns the table as it was right before the clean-up ran.",
+  "rules": [
+    "Return the rows of the version just before the clean-up's commit: the morning load and the late arrivals, declined ones included.",
+    "Keep every column with its type, and keep repeated rows.",
+    "Don't change `build_table`."
+  ],
+  "hints": [
+    "The table's history lists every commit with its version and operation. Which one is the clean-up?",
+    "`option(\"versionAsOf\", n)` reads version `n`. You want the one before the clean-up.",
+    "Collect the history and pick the clean-up's version in plain Python, rather than counting by hand."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "transactions"
+  ],
+  "starter": "import shutil\nfrom datetime import datetime\nfrom decimal import Decimal\n\nfrom delta.tables import DeltaTable\n\n\ndef build_table(transactions, path):\n    # The day's commits, replayed on a fresh table. Don't change this.\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty folder on every run\n    transactions.write.format(\"delta\").save(path)  # the morning load\n    late = spark.createDataFrame(\n        [\n            (\"T000101\", \"A00008\", None, datetime(2026, 3, 1, 9, 15, 0), \"deposit\", \"branch\", \"credit\", Decimal(\"250.00\"), \"USD\", \"posted\"),\n            (\"T000102\", \"A00006\", \"M002\", datetime(2026, 3, 1, 11, 2, 30), \"purchase\", \"online\", \"debit\", Decimal(\"18.40\"), \"GBP\", \"declined\"),\n        ],\n        transactions.schema,\n    )\n    late.write.format(\"delta\").mode(\"append\").save(path)  # late arrivals\n    DeltaTable.forPath(spark, path).delete(\"status = 'declined'\")  # the clean-up\n    tonight = spark.createDataFrame(\n        [(\"T000103\", \"A00001\", \"M003\", datetime(2026, 3, 2, 8, 0, 0), \"purchase\", \"card_present\", \"debit\", Decimal(\"12.00\"), \"USD\", \"posted\")],\n        transactions.schema,\n    )\n    tonight.write.format(\"delta\").mode(\"append\").save(path)  # tonight's batch\n\n\ndef solve(transactions):\n    path = \"/tmp/bank/transactions\"\n    build_table(transactions, path)\n    # Return the table as it was just before the clean-up ran.\n    return spark.read.format(\"delta\").load(path)\n",
+  "output": {
+    "columns": [
+      "transaction_id",
+      "account_id",
+      "merchant_id",
+      "posted_at",
+      "txn_type",
+      "channel",
+      "direction",
+      "amount",
+      "currency",
+      "status"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

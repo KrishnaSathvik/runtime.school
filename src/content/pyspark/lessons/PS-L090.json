@@ -1,0 +1,163 @@
+{
+  "id": "PS-L090",
+  "minutes": 40,
+  "lede": "Every lesson so far built one piece of a pipeline. A platform joins them up: files checked at the door, layered Delta tables, a dimension that remembers history, facts that are safe to reload, and a run that knows what failed and what to run again.",
+  "objectives": [
+    "Lay out a nightly job as tasks with dependencies, from tonight's file to gold and checks",
+    "Stop a file that breaks its contract, and send rows that break the rules to quarantine",
+    "Rebuild a type 2 dimension from the change feed and join each fact to the version valid on its date",
+    "Run the night with statuses and checks, and say what a rerun must run again"
+  ],
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "accounts",
+      "customer_cdc",
+      "invoices",
+      "invoice_lines"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "This is the course's last lesson, and it builds nothing new. It joins the pieces you already have into one nightly job.\n\nEvery night the ERP sends a file of invoices, and the CRM sends its account changes, `customer_cdc` from lesson 75. Finance wants billed revenue per customer segment, counted under the segment each account had **on the invoice date**, not today's.\n\nThe job is six tasks:\n\n- `bronze_invoices`: tonight's file as it arrived, once its shape passes the contract (lessons 23 and 73);\n- `silver_invoices`: the invoices that pass the rules; the others wait in quarantine (lesson 73);\n- `dim_accounts`: a type 2 account dimension (lesson 75);\n- `fact_invoices`: one row per invoice, loaded so a rerun is safe (lesson 83);\n- `gold_revenue`: billed revenue per segment;\n- `checks`: numbers that must agree before anyone reads gold.\n\nLesson 77's run order places them, and its `downstream` says what each failure holds back."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "The night as a task graph",
+      "code": "deps = {\n    \"checks\": [\"gold_revenue\", \"fact_invoices\"],\n    \"gold_revenue\": [\"fact_invoices\", \"dim_accounts\"],\n    \"fact_invoices\": [\"silver_invoices\"],\n    \"silver_invoices\": [\"bronze_invoices\"],\n    \"dim_accounts\": [],\n    \"bronze_invoices\": [],\n}\n\n\ndef run_order(deps):\n    order = []\n    while len(order) < len(deps):\n        ready = [t for t in deps if t not in order and all(d in order for d in deps[t])]\n        if not ready:\n            waiting = [t for t in deps if t not in order]\n            raise ValueError(\"these tasks wait on each other: \" + \", \".join(waiting))\n        order += ready\n    return order\n\n\ndef downstream(task, deps):\n    # Every task that needs `task`, directly or through another task.\n    found = []\n    for name in run_order(deps):\n        if any(d == task or d in found for d in deps[name]):\n            found.append(name)\n    return found\n\n\nprint(\"run order:\", run_order(deps))\nprint(\"if silver_invoices fails, these can't run:\", downstream(\"silver_invoices\", deps))\nprint(\"if dim_accounts fails, these can't run:\", downstream(\"dim_accounts\", deps))\n",
+      "note": "`dim_accounts` and `bronze_invoices` need nothing, so they go first. A failed `silver_invoices` holds back three tasks. A failed dimension holds back only gold and the checks: the facts can still load."
+    },
+    {
+      "kind": "text",
+      "md": "The first two tasks guard the door, at two levels:\n\n- The **contract** is about the file's shape: the right columns with the right types, as in lesson 23. When it's broken, nothing in the file can be trusted, so the run stops before anything is written.\n- The **rules** are about rows. Here: an account is named, the status is one of the five the ERP uses, and the total equals the sum of the invoice's lines. `groupBy` adds up the lines (lesson 31), and a left join brings the sum in (lesson 25). An invoice with no lines gets a NULL sum and fails the rule.\n\nAs in lesson 73, a row that breaks a rule goes to quarantine with the reason, the rest go on to silver, and bronze carries lineage columns that describe the load."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Contract, rules and quarantine",
+      "code": "from datetime import date\nfrom decimal import Decimal\nfrom pyspark.sql import functions as F\n\nCONTRACT = {\n    \"invoice_id\": \"string\",\n    \"account_id\": \"string\",\n    \"invoice_date\": \"date\",\n    \"due_date\": \"date\",\n    \"status\": \"string\",\n    \"total_amount\": \"decimal(12,2)\",\n}\n\n\ndef check_contract(df):\n    actual = dict(df.dtypes)\n    broken = [f\"{c}: expected {t}, found {actual.get(c)}\" for c, t in CONTRACT.items() if actual.get(c) != t]\n    if broken:\n        raise ValueError(\"the invoice file broke its contract: \" + \"; \".join(broken))\n\n\n# Tonight's file: the five invoices and one more that arrived late.\nlate = spark.createDataFrame(\n    [(\"INV-000006\", \"ACC-0006\", date(2026, 3, 20), date(2026, 4, 19), \"sent\", Decimal(\"120.00\"))],\n    invoices.schema,\n)\ntonight = invoices.union(late)\n\ncheck_contract(tonight)\nbronze = tonight.select(\"*\", F.lit(\"invoices_2026-03-20.csv\").alias(\"_source_file\"), F.lit(1).alias(\"_batch_id\"))\n\nline_totals = invoice_lines.groupBy(\"invoice_id\").agg(F.sum(\"line_amount\").alias(\"lines_total\"))\nproblem = (\n    F.when(F.col(\"account_id\").isNull(), \"no account\")\n    .when(~F.coalesce(F.col(\"status\").isin(\"draft\", \"open\", \"paid\", \"overdue\", \"void\"), F.lit(False)), \"unknown status\")\n    .when(~F.coalesce(F.col(\"total_amount\") == F.col(\"lines_total\"), F.lit(False)), \"total differs from its lines\")\n)\nchecked = bronze.join(line_totals, on=\"invoice_id\", how=\"left\").withColumn(\"_problem\", problem)\nsilver = checked.filter(F.col(\"_problem\").isNull()).select(bronze.columns)\nquarantine = checked.filter(F.col(\"_problem\").isNotNull()).select(*bronze.columns, \"_problem\")\n\nchecked.groupBy(\"_problem\").count().show()\nquarantine.select(\"invoice_id\", \"account_id\", \"status\", \"total_amount\", \"_problem\").show(truncate=False)\n",
+      "note": "A sixth invoice came in late, with the status `sent`, which isn't one the ERP uses. It waits in quarantine with its reason, and the five others go to silver. The first table counts both groups: `_problem` is NULL for the rows that passed."
+    },
+    {
+      "kind": "text",
+      "md": "Lesson 75 applied the CRM's changes batch by batch with a MERGE, and needed a guard so a rerun wouldn't close and copy versions again. When bronze keeps the **whole** change feed, as it should, there's a simpler way: rebuild the dimension from the snapshot and the feed every night, and write it with `overwrite`. A rebuild reads only its inputs, so running it twice writes the same rows. It's idempotent without any guard.\n\nThe rebuild lines up each account's events: its snapshot row, then its changes in `sequence` order, numbered with lesson 33's `row_number`. Every event except a delete starts a version. A version ends where the account's next event starts, so each event is joined to the one numbered after it. An account's newest version has no next event, and its `effective_to` stays NULL.\n\nThe CRM sent no history from before the snapshot, so the snapshot row is the oldest version there is. Here it starts when the account was created, so invoices from before the snapshot still find a version. That's a choice, and worth writing down: those invoices get the segment the account had at the snapshot."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Rebuild the dimension from the feed",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\nCOLS = accounts.columns\n\n\ndef dim_accounts(accounts, customer_cdc):\n    # Every event in an account's life: its snapshot row first, then each change in sequence order.\n    snapshot = accounts.select(*COLS, F.lit(\"S\").alias(\"op\"), F.lit(0).cast(\"bigint\").alias(\"sequence\"),\n                               F.col(\"created_on\").cast(\"timestamp\").alias(\"starts\"))\n    changes = customer_cdc.select(*COLS, \"op\", \"sequence\", F.col(\"changed_at\").alias(\"starts\"))\n    in_order = Window.partitionBy(\"account_id\").orderBy(\"sequence\")\n    events = snapshot.union(changes).withColumn(\"n\", F.row_number().over(in_order))\n    # A version ends when the account's next event starts.\n    ends = events.select(\"account_id\", (F.col(\"n\") - 1).alias(\"n\"), F.col(\"starts\").alias(\"effective_to\"))\n    return (events.filter(F.col(\"op\") != \"D\")\n        .join(ends, on=[\"account_id\", \"n\"], how=\"left\")\n        .select(*COLS, F.col(\"starts\").alias(\"effective_from\"), \"effective_to\",\n                F.col(\"effective_to\").isNull().alias(\"is_current\")))\n\n\ndim = dim_accounts(accounts, customer_cdc)\ndim.filter(F.col(\"account_id\").isin(\"ACC-0001\", \"ACC-0003\", \"ACC-0006\")).orderBy(\"account_id\", \"effective_from\") \\\n    .select(\"account_id\", \"segment\", \"account_owner\", \"credit_limit\", \"effective_from\", \"effective_to\", \"is_current\").show()\n",
+      "note": "ACC-0001 has four versions, one per change. Replaying the whole feed keeps every change, where lesson 75's monthly batches kept only the newest change of each batch. ACC-0003's only version ends at its delete, so it has no current row. ACC-0006 starts at its insert."
+    },
+    {
+      "kind": "text",
+      "md": "Use the rebuild when the feed is kept in full and small enough to replay every night. When it isn't, use lesson 75's MERGE with its guard.\n\nFacts are different: there are many of them and they keep coming, so they're loaded, not rebuilt. Invoices also change after they're sent, for example an overdue invoice gets paid. So tonight's silver holds new invoices and new states of old ones, and the fact table needs one row per invoice. That's lesson 83's MERGE on the natural key, `invoice_id`, after removing repeated deliveries. It updates every invoice the table has and inserts the rest, so a retry finds everything already there and leaves the same rows."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Load the facts, twice",
+      "code": "from delta.tables import DeltaTable\nfrom pyspark.sql import functions as F\n\npath = \"/tmp/platform/fact_invoices\"\ninvoices.filter(F.col(\"invoice_date\") < \"2026-01-01\").write.format(\"delta\").save(path)  # the table before tonight\n\n# Tonight's silver invoices: two new ones, INV-000003 now paid, and INV-000005 sent twice.\nnew = invoices.filter(F.col(\"invoice_date\") >= \"2026-01-01\")\npaid = invoices.filter(F.col(\"invoice_id\") == \"INV-000003\").withColumn(\"status\", F.lit(\"paid\"))\ntonight = new.union(paid).union(new.filter(F.col(\"invoice_id\") == \"INV-000005\"))\n\n\ndef fact_invoices(silver):\n    return (DeltaTable.forPath(spark, path).alias(\"t\")\n        .merge(silver.dropDuplicates([\"invoice_id\"]).alias(\"s\"), \"t.invoice_id = s.invoice_id\")\n        .whenMatchedUpdateAll()\n        .whenNotMatchedInsertAll()\n        .execute())\n\n\nfor run in (\"tonight\", \"the retry\"):\n    counts = fact_invoices(tonight).first()  # the MERGE reports what it did\n    print(f\"{run}: {counts.num_inserted_rows} inserted, {counts.num_updated_rows} updated\")\n\nspark.read.format(\"delta\").load(path).orderBy(\"invoice_id\").select(\"invoice_id\", \"account_id\", \"invoice_date\", \"status\", \"total_amount\").show()\n",
+      "note": "`execute()` returns one row that says what the MERGE did. Tonight it updated INV-000003 to paid and inserted the two new invoices, INV-000005 once although it came twice. The retry inserted nothing: it rewrote three invoices with the values they already had. The table holds five invoices, once each."
+    },
+    {
+      "kind": "text",
+      "md": "Gold joins each **billed** invoice (not `draft` or `void`) to the account version that was valid on its date. That's lesson 75's test, used as the join condition: the same account, a version that started on or before the invoice date, and one that hadn't ended by then. Casting the date to a timestamp makes it midnight at the start of that day, so it compares with the versions' times.\n\nIt's a left join, so an invoice that finds no version stays, with a NULL segment, and the checks can see it."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Revenue by the segment at the time",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\nCOLS = accounts.columns\n\n\ndef dim_accounts(accounts, customer_cdc):\n    # Every event in an account's life: its snapshot row first, then each change in sequence order.\n    snapshot = accounts.select(*COLS, F.lit(\"S\").alias(\"op\"), F.lit(0).cast(\"bigint\").alias(\"sequence\"),\n                               F.col(\"created_on\").cast(\"timestamp\").alias(\"starts\"))\n    changes = customer_cdc.select(*COLS, \"op\", \"sequence\", F.col(\"changed_at\").alias(\"starts\"))\n    in_order = Window.partitionBy(\"account_id\").orderBy(\"sequence\")\n    events = snapshot.union(changes).withColumn(\"n\", F.row_number().over(in_order))\n    # A version ends when the account's next event starts.\n    ends = events.select(\"account_id\", (F.col(\"n\") - 1).alias(\"n\"), F.col(\"starts\").alias(\"effective_to\"))\n    return (events.filter(F.col(\"op\") != \"D\")\n        .join(ends, on=[\"account_id\", \"n\"], how=\"left\")\n        .select(*COLS, F.col(\"starts\").alias(\"effective_from\"), \"effective_to\",\n                F.col(\"effective_to\").isNull().alias(\"is_current\")))\n\n\ndim = dim_accounts(accounts, customer_cdc)\nbilled = invoices.filter(~F.col(\"status\").isin(\"draft\", \"void\")).withColumn(\"billed_at\", F.col(\"invoice_date\").cast(\"timestamp\"))\n\n# The version that was valid on the invoice date.\nvalid_then = (\n    (billed[\"account_id\"] == dim[\"account_id\"])\n    & (dim[\"effective_from\"] <= billed[\"billed_at\"])\n    & (dim[\"effective_to\"].isNull() | (billed[\"billed_at\"] < dim[\"effective_to\"]))\n)\nthen = billed.join(dim, valid_then, \"left\")\nthen.select(\"invoice_id\", billed[\"account_id\"], \"invoice_date\", \"segment\", \"total_amount\").orderBy(\"invoice_id\").show()\nthen.groupBy(\"segment\").agg(F.count(\"*\").alias(\"invoices\"), F.sum(\"total_amount\").alias(\"revenue\")).orderBy(\"segment\").show()\n\n# For comparison: today's segment for every invoice.\nnow = billed.join(dim.filter(\"is_current\"), on=\"account_id\", how=\"left\")\nnow.groupBy(\"segment\").agg(F.count(\"*\").alias(\"invoices\"), F.sum(\"total_amount\").alias(\"revenue\")).orderBy(\"segment\").show()\n",
+      "note": "INV-000004 is from 5 February, after ACC-0001 moved to enterprise, so it counts as enterprise, and INV-000001 from October counts as mid-market. The last table joins today's versions instead: INV-000001 becomes enterprise, and INV-000003 has no segment, because ACC-0003 has been deleted. Same invoices, same total, different story. The draft INV-000005 isn't billed yet, so it's in neither."
+    },
+    {
+      "kind": "text",
+      "md": "Now the whole night as lesson 77's tasks, with statuses. Two tasks can stop it:\n\n- the silver gate fails when more than a tenth of tonight's invoices break a rule. A few bad rows wait in quarantine, but that many means something upstream is broken;\n- `checks` compares numbers that must agree: every billed invoice in the facts is counted once in gold, gold's revenue adds up to the billed total, and no invoice is missing its account version.\n\nChecks like these catch a join that dropped or doubled rows, which no single task would notice. To keep the example short, each task returns its DataFrame instead of writing its Delta table; the examples above showed the writes."
+    },
+    {
+      "kind": "example",
+      "id": "e6",
+      "title": "Run the night with statuses and checks",
+      "code": "from datetime import date\nfrom decimal import Decimal\nfrom pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\nCOLS = accounts.columns\n\n\ndef make_tasks(invoice_file):\n    def bronze_invoices():\n        return invoice_file.select(\"*\", F.lit(1).alias(\"_batch_id\"))\n\n    def silver_invoices(bronze_invoices):\n        line_totals = invoice_lines.groupBy(\"invoice_id\").agg(F.sum(\"line_amount\").alias(\"lines_total\"))\n        good = (F.col(\"status\").isin(\"draft\", \"open\", \"paid\", \"overdue\", \"void\")\n                & (F.col(\"total_amount\") == F.col(\"lines_total\")))\n        checked = bronze_invoices.join(line_totals, on=\"invoice_id\", how=\"left\").withColumn(\"ok\", F.coalesce(good, F.lit(False)))\n        total, bad = checked.select(F.count(\"*\"), F.sum(F.when(F.col(\"ok\"), 0).otherwise(1))).first()\n        if bad > total / 10:  # the gate: a few bad rows wait in quarantine, many stop the run\n            raise ValueError(f\"{bad} of {total} invoices broke the rules\")\n        return checked.filter(\"ok\").select(bronze_invoices.columns)\n\n    def dim_accounts():\n        snapshot = accounts.select(*COLS, F.lit(\"S\").alias(\"op\"), F.lit(0).cast(\"bigint\").alias(\"sequence\"),\n                                   F.col(\"created_on\").cast(\"timestamp\").alias(\"starts\"))\n        changes = customer_cdc.select(*COLS, \"op\", \"sequence\", F.col(\"changed_at\").alias(\"starts\"))\n        events = snapshot.union(changes).withColumn(\"n\", F.row_number().over(Window.partitionBy(\"account_id\").orderBy(\"sequence\")))\n        ends = events.select(\"account_id\", (F.col(\"n\") - 1).alias(\"n\"), F.col(\"starts\").alias(\"effective_to\"))\n        return (events.filter(F.col(\"op\") != \"D\").join(ends, on=[\"account_id\", \"n\"], how=\"left\")\n                .select(*COLS, F.col(\"starts\").alias(\"effective_from\"), \"effective_to\"))\n\n    def fact_invoices(silver_invoices):\n        return silver_invoices.dropDuplicates([\"invoice_id\"])  # the real task MERGEs into its Delta table\n\n    def gold_revenue(fact_invoices, dim_accounts):\n        billed = fact_invoices.filter(~F.col(\"status\").isin(\"draft\", \"void\")).withColumn(\"at\", F.col(\"invoice_date\").cast(\"timestamp\"))\n        d = dim_accounts\n        valid_then = ((billed[\"account_id\"] == d[\"account_id\"]) & (d[\"effective_from\"] <= billed[\"at\"])\n                      & (d[\"effective_to\"].isNull() | (billed[\"at\"] < d[\"effective_to\"])))\n        return (billed.join(d, valid_then, \"left\")\n                .groupBy(\"segment\").agg(F.count(\"*\").alias(\"invoices\"), F.sum(\"total_amount\").alias(\"revenue\")))\n\n    def checks(gold_revenue, fact_invoices):\n        billed = fact_invoices.filter(~F.col(\"status\").isin(\"draft\", \"void\"))\n        found = gold_revenue.select(F.sum(\"invoices\"), F.sum(\"revenue\"), F.sum(F.when(F.col(\"segment\").isNull(), 1).otherwise(0))).first()\n        wanted = billed.select(F.count(\"*\"), F.sum(\"total_amount\")).first()\n        report = {\n            \"every billed invoice counted once\": found[0] == wanted[0],\n            \"revenue adds up\": found[1] == wanted[1],\n            \"every invoice found its account\": found[2] == 0,\n        }\n        print(\"  checks:\", report)\n        if not all(report.values()):\n            raise ValueError(\"the night's tables don't agree\")\n\n    return {\n        \"checks\": (checks, [\"gold_revenue\", \"fact_invoices\"]),\n        \"gold_revenue\": (gold_revenue, [\"fact_invoices\", \"dim_accounts\"]),\n        \"fact_invoices\": (fact_invoices, [\"silver_invoices\"]),\n        \"silver_invoices\": (silver_invoices, [\"bronze_invoices\"]),\n        \"dim_accounts\": (dim_accounts, []),\n        \"bronze_invoices\": (bronze_invoices, []),\n    }\n\n\ndef run_order(deps):\n    order = []\n    while len(order) < len(deps):\n        ready = [t for t in deps if t not in order and all(d in order for d in deps[t])]\n        if not ready:\n            raise ValueError(\"these tasks wait on each other: \" + \", \".join(t for t in deps if t not in order))\n        order += ready\n    return order\n\n\ndef run_night(invoice_file):\n    tasks = make_tasks(invoice_file)\n    outputs, status = {}, {}\n    for name in run_order({n: needs for n, (fn, needs) in tasks.items()}):\n        fn, needs = tasks[name]\n        if any(status[d] != \"ok\" for d in needs):\n            status[name] = \"skipped\"\n            continue\n        try:\n            outputs[name] = fn(*[outputs[d] for d in needs])\n            status[name] = \"ok\"\n        except Exception as e:\n            status[name] = \"failed\"\n            print(f\"  {name} failed: {e}\")\n    return outputs, status\n\n\nprint(\"night 1\")\noutputs, status = run_night(invoices)\nprint(\" \", status)\n\nprint(\"night 2\")\nlate = spark.createDataFrame(\n    [(\"INV-000006\", \"ACC-0006\", date(2026, 3, 20), date(2026, 4, 19), \"sent\", Decimal(\"120.00\"))], invoices.schema)\noutputs, status = run_night(invoices.union(late))\nprint(\" \", status)\nprint(\"  a rerun runs:\", [t for t, s in status.items() if s != \"ok\"])\n",
+      "note": "Night 1 is clean: every task is `ok` and the checks agree. On night 2 one invoice in six breaks a rule, more than the gate allows, so `silver_invoices` failed and the three tasks below it were skipped. `dim_accounts` still ran. Once the file is fixed, a rerun runs the failed task and the skipped ones, and can reuse the dimension if it was saved, as in lesson 77."
+    },
+    {
+      "kind": "text",
+      "md": "The contract check comes first for a reason. When the ERP changes its export, the run should stop at the door, with a message that names every broken column, not load text where amounts should be."
+    },
+    {
+      "kind": "error-example",
+      "id": "e7",
+      "title": "The file breaks its contract",
+      "code": "from pyspark.sql import functions as F\n\nCONTRACT = {\n    \"invoice_id\": \"string\",\n    \"account_id\": \"string\",\n    \"invoice_date\": \"date\",\n    \"due_date\": \"date\",\n    \"status\": \"string\",\n    \"total_amount\": \"decimal(12,2)\",\n}\n\n\ndef check_contract(df):\n    actual = dict(df.dtypes)\n    broken = [f\"{c}: expected {t}, found {actual.get(c)}\" for c, t in CONTRACT.items() if actual.get(c) != t]\n    if broken:\n        raise ValueError(\"the invoice file broke its contract: \" + \"; \".join(broken))\n\n\n# The ERP's export changed: amounts now come as text, and the due date is gone.\ntonight = invoices.withColumn(\"total_amount\", F.col(\"total_amount\").cast(\"string\")).drop(\"due_date\")\ncheck_contract(tonight)\nprint(\"never printed: the run stops before bronze is written\")\n",
+      "note": "Amounts came as text and `due_date` is gone. The check names both and raises before bronze is written, so no table holds any of tonight's file. The task is `failed`, and everything below it is skipped.",
+      "error": "ValueError"
+    },
+    {
+      "kind": "text",
+      "md": "That's the platform: a contract and rules at the door, bronze and silver with lineage and quarantine, a dimension that remembers history, facts that are safe to reload, gold that uses the history, checks that compare the tables, and a run that knows what failed and what to run again. The same shape fits any feed. The first challenge applies it to a web shop's orders."
+    }
+  ],
+  "challenges": [
+    "PS-L090-C1",
+    "PS-L090-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "Why can the dimension rebuild run twice without lesson 75's guard?",
+      "choices": [
+        "Delta skips a write it has seen before",
+        "It reads only the snapshot and the whole feed, so with `overwrite` every run writes the same rows",
+        "`row_number` makes any write idempotent",
+        "It can't: a rerun copies versions again"
+      ],
+      "answer": 1,
+      "why": "A rebuild doesn't depend on what the table held before. Same inputs, same rows, and `overwrite` replaces the old ones. Lesson 75's MERGE changes the table it reads, so a rerun sees its own work and needs the guard."
+    },
+    {
+      "id": "k2",
+      "prompt": "ACC-0001 moved from mid-market to enterprise on 27 January 2026. An invoice for it is dated 5 February 2026. Under which segment does gold count it?",
+      "choices": [
+        "mid-market, the segment at the snapshot",
+        "enterprise, the version valid on 5 February",
+        "whichever segment is current when the job runs",
+        "none: the snapshot row was closed"
+      ],
+      "answer": 1,
+      "why": "The join picks the version that started on or before the invoice date and hadn't ended by then. On 5 February that's the enterprise version that began on 27 January."
+    },
+    {
+      "id": "k3",
+      "prompt": "On a night when `silver_invoices` fails its gate, which tasks run?",
+      "choices": [
+        "None: the whole run stops",
+        "`bronze_invoices` and `dim_accounts`",
+        "All of them, with yesterday's silver",
+        "Only `bronze_invoices`"
+      ],
+      "answer": 1,
+      "why": "`bronze_invoices` ran before silver, and `dim_accounts` doesn't need silver, so both run. The facts, gold and the checks all need silver, directly or through another task, so they're skipped."
+    }
+  ],
+  "review": [
+    "A platform is lesson 77's task graph over the earlier pieces: contract and rules at the door, bronze, silver, a dimension, facts, gold and checks.",
+    "Check the file's shape before writing anything. Send rows that break a rule to quarantine, and fail the gate only when too many do.",
+    "When the whole change feed is kept, rebuild the type 2 dimension from it with `overwrite`: a rebuild is idempotent by itself.",
+    "Load facts with a MERGE on the natural key after removing repeated deliveries, so a retry adds nothing.",
+    "Join a fact to the version valid on its date: same key, `effective_from` on or before it, and `effective_to` NULL or after it.",
+    "Finish with checks that compare counts and totals across tables, and rerun the failed and skipped tasks."
+  ],
+  "practice": [
+    "PS-Q0446",
+    "PS-Q0447",
+    "PS-Q0448",
+    "PS-Q0449",
+    "PS-Q0450"
+  ]
+}

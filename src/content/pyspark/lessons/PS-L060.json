@@ -1,0 +1,138 @@
+{
+  "id": "PS-L060",
+  "minutes": 20,
+  "lede": "Every action runs its whole plan again, from reading the files onward. When several actions need the same intermediate result, caching keeps it after the first run so the others can reuse it. It costs memory, so it's a trade, not a free speed-up.",
+  "objectives": [
+    "Explain why each action recomputes a DataFrame from its source, and how a cache changes that",
+    "Mark a DataFrame with `cache()` or `persist(level)`, and check it with `is_cached` and `storageLevel`",
+    "Show that a cache is filled lazily, by the first action, and released with `unpersist()`",
+    "Choose a storage level by weighing memory, disk and recomputation"
+  ],
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "ratings",
+      "movies"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`ratings` has one star rating per member and film, and `movies` one row per film. Both are loaded as DataFrames, and `F` is `pyspark.sql.functions`. The examples use `filter` and `select` only as simple transformations to cache.\n\nFrom lessons 4 and 55 you know a DataFrame is a plan, and each action turns the plan into a job. Spark keeps no results between actions: run `count()` and then `show()` on the same DataFrame, and both jobs read the file and redo every step. That's usually right, since data can change and memory is limited.\n\n`df.cache()` changes it. It **marks** the DataFrame: the next action that computes it also keeps its rows, partition by partition, and later actions read those kept rows instead of starting from the file."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "cache() marks; the first action fills",
+      "code": "from pyspark.sql import functions as F\n\ndef cached_partitions():\n    infos = spark.sparkContext._jsc.sc().getRDDStorageInfo()\n    return [(i.numCachedPartitions(), i.numPartitions()) for i in infos]\n\nliked = ratings.filter(F.col(\"rating\") >= 4.0)\nprint(liked.is_cached, cached_partitions())\n\nliked.cache()\nprint(liked.is_cached, liked.storageLevel)\nprint(\"before an action:\", cached_partitions())\n\nprint(liked.count(), \"ratings of 4 or more\")\nprint(\"after an action:\", cached_partitions())\n",
+      "note": "`cached_partitions()` asks Spark's storage manager what it holds, as (partitions kept, partitions in total) per cached dataset; it's what the Spark UI's Storage tab lists. Right after `cache()` nothing is stored: `cache()` is lazy, like a transformation. The `count()` computes the one partition and keeps it."
+    },
+    {
+      "kind": "text",
+      "md": "`is_cached` says whether you marked this DataFrame. `storageLevel` asks Spark how its data is kept. For a DataFrame, `cache()` uses the level `MEMORY_AND_DISK_DESER`, printed as `Disk Memory Deserialized 1x Replicated`: keep partitions in memory, and write the ones that don't fit to local disk.\n\nOnce a DataFrame is cached, anything built on it reads the cache. The plan shows it: `InMemoryTableScan` is the step that reads cached rows. Spark recognises the cached plan itself, not your variable, so a new DataFrame with exactly the same steps also uses it."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Later plans read the cache",
+      "code": "from pyspark.sql import functions as F\n\ndef reads_cache(df):\n    return \"InMemoryTableScan\" in df._jdf.queryExecution().executedPlan().toString()\n\nliked = ratings.filter(F.col(\"rating\") >= 4.0).cache()\nprint(liked.count())\n\nprint(reads_cache(liked.select(\"movie_id\")))\nprint(reads_cache(ratings.filter(F.col(\"rating\") >= 4.0)))\nprint(reads_cache(ratings.filter(F.col(\"rating\") >= 3.0)))\nprint(reads_cache(ratings))\n",
+      "note": "`reads_cache` looks for `InMemoryTableScan` in the physical plan text. A `select` on `liked`, and a fresh DataFrame with the same filter, both read the cached rows. A different filter, or `ratings` itself, goes back to the file: only the exact plan that was cached is reused. `cache()` also returns the DataFrame, so it can end a chain."
+    },
+    {
+      "kind": "text",
+      "md": "`persist(level)` is `cache()` with a choice of **storage level**, from `pyspark.StorageLevel`:\n\n- `MEMORY_AND_DISK`, and its twin `MEMORY_AND_DISK_DESER` that `cache()` uses: memory first, spill to disk. Nothing is lost if memory runs short, but disk reads are slower than memory.\n- `MEMORY_ONLY`: memory only. A partition that doesn't fit isn't kept; it's **recomputed** from the source each time it's needed.\n- `DISK_ONLY`: local disk only. Saves memory, still skips the recomputation.\n- Levels ending in `_2` keep two copies on different executors, so losing one executor doesn't lose the cache. In this single-machine environment there's only one executor."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Choosing a storage level",
+      "code": "from pyspark import StorageLevel\n\nmovies.persist(StorageLevel.MEMORY_ONLY)\nprint(movies.storageLevel)\n\nmovies.unpersist()\nmovies.persist(StorageLevel.DISK_ONLY)\nprint(movies.storageLevel)\nprint(movies.count(), \"films kept on disk\")\n\nprint(StorageLevel.MEMORY_AND_DISK_DESER)\n",
+      "note": "Spark prints a level by what it uses: `Memory`, `Disk`, or both, and how many copies. The last line is the level `cache()` uses. `Serialized` and `Deserialized` describe how the rows are stored in memory; you rarely need to choose between them for DataFrames."
+    },
+    {
+      "kind": "text",
+      "md": "A DataFrame's storage level is fixed once it's persisted. Calling `persist` again with another level, or `cache()`, changes nothing; Spark only logs a warning. To change the level, `unpersist()` first."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "A second persist doesn't change the level",
+      "code": "from pyspark import StorageLevel\n\nmovies.persist(StorageLevel.DISK_ONLY)\nmovies.persist(StorageLevel.MEMORY_ONLY)\nprint(movies.storageLevel)\n\nsame = movies.cache()\nprint(movies.storageLevel, same is movies)\n",
+      "note": "The first `persist` wins: the level is still disk only. `cache()` and `persist()` return the same DataFrame object, which is why `liked = ratings.filter(...).cache()` works."
+    },
+    {
+      "kind": "text",
+      "md": "`unpersist()` drops the stored partitions and the mark. Do it when you're done: cached data shares the executors' memory with the work of running queries, so an old cache nobody reads makes joins and aggregations spill to disk sooner. `spark.catalog.clearCache()` drops every cache in the session at once."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "unpersist() releases the cache",
+      "code": "from pyspark.sql import functions as F\n\ndef cached_partitions():\n    infos = spark.sparkContext._jsc.sc().getRDDStorageInfo()\n    return [(i.numCachedPartitions(), i.numPartitions()) for i in infos]\n\ndef reads_cache(df):\n    return \"InMemoryTableScan\" in df._jdf.queryExecution().executedPlan().toString()\n\nrecent = ratings.filter(F.col(\"rated_at\") >= \"2026-01-01\").cache()\nprint(recent.count(), cached_partitions())\n\nrecent.unpersist()\nprint(recent.is_cached, recent.storageLevel, cached_partitions())\nprint(reads_cache(recent.select(\"movie_id\")))\n",
+      "note": "After `unpersist()` nothing is stored and the storage level is back to none: `Serialized 1x Replicated` names no memory and no disk. New plans built on `recent` read the file again. `recent` itself still works; it's just recomputed."
+    },
+    {
+      "kind": "text",
+      "md": "So when does a cache pay off? Weigh it by mechanism:\n\n- **Reuse.** A cache helps only when two or more actions need the same result. One action over a DataFrame gains nothing; the first fill is a full computation plus the cost of storing it.\n- **Cost of recomputing.** Cache after the expensive part (a join, a shuffle, a parse of messy text), not the raw file read. Re-reading a small, fast file can be as cheap as reading a cache.\n- **Memory.** Cached data competes with query execution for the same memory. `MEMORY_AND_DISK` never loses partitions, but slows down when it spills; `MEMORY_ONLY` never touches disk, but recomputes what doesn't fit.\n- **Freshness.** A cache is a snapshot from the first action. If the files change, the cached DataFrame keeps returning the old rows until you unpersist it.\n\nThis environment is local mode with two cores and tables of a few rows, so timing a cache here would only measure noise. The facts you can check on any size of data are the ones above: what's marked, what's stored, and which plan reads it."
+    }
+  ],
+  "challenges": [
+    "PS-L060-C1",
+    "PS-L060-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "You call `liked.cache()` and then, without any action, look at Spark's storage. What's stored?",
+      "choices": [
+        "Every partition of `liked`",
+        "Nothing yet: the first action that computes `liked` fills the cache",
+        "Only the first partition",
+        "The whole `ratings` table"
+      ],
+      "answer": 1,
+      "why": "`cache()` is lazy. It marks the DataFrame; the partitions are stored when an action computes them."
+    },
+    {
+      "id": "k2",
+      "prompt": "A DataFrame is persisted with `MEMORY_ONLY`, and one partition doesn't fit in memory. What happens when a later action needs it?",
+      "choices": [
+        "The action fails with an out-of-memory error",
+        "The partition is read from disk",
+        "Spark recomputes that partition from the source",
+        "The partition is skipped and its rows are missing"
+      ],
+      "answer": 2,
+      "why": "With `MEMORY_ONLY`, partitions that don't fit aren't kept, and Spark recomputes them when they're needed. The rows are always correct; only the work changes. `MEMORY_AND_DISK` would have written that partition to disk instead."
+    },
+    {
+      "id": "k3",
+      "prompt": "A script builds `report`, calls `report.cache()`, then runs one `report.write...` and ends. What did the cache do?",
+      "choices": [
+        "Made the write faster",
+        "Nothing useful: no second action reused it, and storing the rows was extra work",
+        "Saved the rows so the next run of the script can reuse them",
+        "Made the write safer if the file changes"
+      ],
+      "answer": 1,
+      "why": "A cache pays off only when later actions in the same session reuse it. It lives in the session's executors and is gone when the session ends."
+    }
+  ],
+  "review": [
+    "Without a cache, every action recomputes its DataFrame from the source files.",
+    "`cache()` and `persist(level)` only mark a DataFrame; the first action that computes it fills the cache. Later plans read it through `InMemoryTableScan`.",
+    "`is_cached` says whether you marked it; `storageLevel` says how Spark keeps it. `cache()` on a DataFrame keeps it in memory and spills to disk.",
+    "`MEMORY_ONLY` recomputes partitions that don't fit; `MEMORY_AND_DISK` spills them to disk; `DISK_ONLY` saves memory. The first level set stays until `unpersist()`.",
+    "Cache only results that two or more actions reuse, after the expensive steps, and `unpersist()` when done.",
+    "A cache is a snapshot from its first action and lives only as long as the session."
+  ],
+  "practice": [
+    "PS-Q0296",
+    "PS-Q0297",
+    "PS-Q0298",
+    "PS-Q0299",
+    "PS-Q0300"
+  ]
+}

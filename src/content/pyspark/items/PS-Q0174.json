@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0174",
+  "slug": "fix-received-so-far",
+  "lesson": "PS-L035",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Fix the money received so far",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "This function should show how much each account has received after every completed transfer, but some totals include money that never arrived. Find the bugs and fix `solve(transfers)`.",
+  "rules": [
+    "Only `completed` transfers count, both as rows returned and in the totals.",
+    "Work per `to_account_id`, in `requested_at` order. Two transfers requested at the same moment go in `transfer_id` order, so their totals differ.",
+    "`received_so_far` is the sum of `amount` over the account's completed transfers up to and including this one.",
+    "Return `transfer_id`, `to_account_id`, `requested_at`, `amount` and `received_so_far`."
+  ],
+  "hints": [
+    "Run the starter and look at an account that had a failed transfer before a completed one.",
+    "A window sees the rows it is given. Filtering afterwards removes rows from the result, but their amounts are already in the totals.",
+    "There are two fixes. The window must only ever see completed transfers, and it needs a tie-breaker and a row frame, so transfers at the same moment are added one at a time."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "transfers"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(transfers):\n    w = Window.partitionBy(\"to_account_id\").orderBy(\"requested_at\")\n    running = transfers.select(\n        \"transfer_id\",\n        \"to_account_id\",\n        \"requested_at\",\n        \"amount\",\n        \"status\",\n        F.sum(\"amount\").over(w).alias(\"received_so_far\"),\n    )\n    return running.filter(F.col(\"status\") == \"completed\").drop(\"status\")\n",
+  "output": {
+    "columns": [
+      "transfer_id",
+      "to_account_id",
+      "requested_at",
+      "amount",
+      "received_so_far"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "There are two bugs. The window runs over every transfer and the filter comes afterwards, so failed, pending and reversed transfers still add their amounts to later totals; filter to `completed` first. And the window orders by `requested_at` alone with the default frame, so two transfers requested at the same moment are added together and show the same total. Order by `requested_at` and `transfer_id` and use `rowsBetween(Window.unboundedPreceding, Window.currentRow)`: `w = Window.partitionBy(\"to_account_id\").orderBy(\"requested_at\", \"transfer_id\").rowsBetween(Window.unboundedPreceding, Window.currentRow)`, then `F.sum(\"amount\").over(w)` on the filtered rows."
+}

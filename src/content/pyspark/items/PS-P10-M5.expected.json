@@ -1,0 +1,659 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "example": {
+   "schema": [
+    {
+     "name": "error_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "device_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "error_type",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "occurred_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "cause",
+     "type": "string",
+     "nullable": false
+    },
+    {
+     "name": "evidence",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "false_alerts",
+     "type": "bigint",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "ERR-9001",
+     "DEV-102",
+     "HeartbeatMissed",
+     "2026-05-12T01:40:00",
+     "maintenance",
+     "MT9001",
+     0
+    ],
+    [
+     "ERR-9002",
+     "DEV-104",
+     "OutOfRangeReading",
+     "2026-05-12T02:01:00",
+     "sensor_glitch",
+     "R9007",
+     2
+    ],
+    [
+     "ERR-9003",
+     "DEV-101",
+     "TelemetryRejected",
+     "2026-05-12T00:20:12.500000",
+     "gateway",
+     null,
+     0
+    ],
+    [
+     "ERR-9004",
+     "DEV-102",
+     "ClockSkew",
+     "2026-05-12T05:00:00",
+     "unexplained",
+     null,
+     0
+    ],
+    [
+     "ERR-9006",
+     "DEV-101",
+     "HeartbeatMissed",
+     "2026-05-12T05:10:00",
+     "maintenance",
+     "MT9002",
+     0
+    ],
+    [
+     "ERR-9007",
+     "DEV-103",
+     "OutOfRangeReading",
+     "2026-05-12T01:00:30",
+     "gateway",
+     null,
+     0
+    ]
+   ],
+   "row_count": 6,
+   "inputs": {
+    "sensor_readings": [
+     [
+      "R9001",
+      "DEV-101",
+      "2026-05-12T00:00:00",
+      "2026-05-12T00:02:00",
+      "0",
+      "{\"temperature_c\":31.0,\"humidity_pct\":60.0,\"battery_v\":3.9,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9002",
+      "DEV-101",
+      "2026-05-12T00:30:00",
+      "2026-05-12T00:31:00",
+      "0",
+      "{\"temperature_c\":33.5,\"humidity_pct\":82.0,\"battery_v\":3.9,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9003",
+      "DEV-102",
+      "2026-05-12T00:15:00",
+      "2026-05-12T00:15:40",
+      "0",
+      "{\"temperature_c\":2.0,\"humidity_pct\":null,\"battery_v\":3.25,\"status\":\"low_battery\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9002",
+      "DEV-101",
+      "2026-05-12T00:30:00",
+      "2026-05-12T00:45:00",
+      "0",
+      "{\"temperature_c\":33.5,\"humidity_pct\":82.0,\"battery_v\":3.9,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9004",
+      "DEV-199",
+      "2026-05-12T01:00:00",
+      "2026-05-12T01:00:10",
+      "1",
+      "{\"temperature_c\":20.0,\"humidity_pct\":50.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9005",
+      "DEV-103",
+      "2026-05-12T01:00:00",
+      "2026-05-12T01:00:20",
+      "1",
+      "{\"temperature_c\":45.0,\"humidity_pct\":50.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9006",
+      "DEV-101",
+      "2026-05-12T01:20:00",
+      "2026-05-12T02:25:00",
+      "2",
+      "{\"temperature_c\":34.0,\"humidity_pct\":70.0,\"battery_v\":3.9,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9007",
+      "DEV-104",
+      "2026-05-12T02:00:00",
+      "2026-05-12T02:01:00",
+      "2",
+      "{\"temperature_c\":999.0,\"humidity_pct\":50.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9007",
+      "DEV-104",
+      "2026-05-12T02:00:00",
+      "2026-05-12T03:05:00",
+      "3",
+      "{\"temperature_c\":999.0,\"humidity_pct\":50.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9008",
+      "DEV-101",
+      "2026-05-12T03:15:00",
+      "2026-05-12T03:16:00",
+      "3",
+      "{\"temperature_c\":null,\"humidity_pct\":85.0,\"battery_v\":3.9,\"status\":null,\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9009",
+      "DEV-101",
+      "2026-05-12T00:45:00",
+      "2026-05-12T04:10:00",
+      "4",
+      "{\"temperature_c\":36.0,\"humidity_pct\":70.0,\"battery_v\":3.9,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9010",
+      "DEV-104",
+      "2026-05-12T06:30:00",
+      "2026-05-12T06:31:00",
+      "6",
+      "{\"temperature_c\":25.0,\"humidity_pct\":null,\"battery_v\":3.7,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      null
+     ]
+    ],
+    "devices": [
+     [
+      "DEV-101",
+      "climate",
+      "TH-210",
+      "2025-06-01",
+      "true"
+     ],
+     [
+      "DEV-102",
+      "temp",
+      "T-100",
+      "2025-06-01",
+      "true"
+     ],
+     [
+      "DEV-103",
+      "climate",
+      "TH-210",
+      "2025-06-01",
+      "false"
+     ],
+     [
+      "DEV-104",
+      "climate",
+      "TH-210",
+      "2025-06-01",
+      "true"
+     ]
+    ],
+    "device_locations": [
+     [
+      "DEV-101",
+      "greenhouse",
+      "B1",
+      "0",
+      "52.38",
+      "4.9",
+      "2025-06-01",
+      null
+     ],
+     [
+      "DEV-102",
+      "cold_store",
+      "B1",
+      "0",
+      "52.38",
+      "4.9",
+      "2025-06-01",
+      null
+     ],
+     [
+      "DEV-103",
+      "office_north",
+      "B1",
+      "0",
+      "52.38",
+      "4.9",
+      "2025-06-01",
+      null
+     ],
+     [
+      "DEV-104",
+      "server_room",
+      "B1",
+      "0",
+      "52.38",
+      "4.9",
+      "2025-01-01",
+      "2026-05-11"
+     ],
+     [
+      "DEV-104",
+      "office_north",
+      "B1",
+      "0",
+      "52.38",
+      "4.9",
+      "2026-05-12",
+      null
+     ]
+    ],
+    "maintenance_events": [
+     [
+      "MT9001",
+      "DEV-102",
+      "battery_swap",
+      "2026-05-12T01:30:00",
+      "2026-05-12T02:00:00",
+      "facilities-a",
+      null
+     ],
+     [
+      "MT9002",
+      "DEV-101",
+      "recalibration",
+      "2026-05-12T05:00:00",
+      "2026-05-12T05:30:00",
+      "facilities-a",
+      null
+     ]
+    ],
+    "alerts": [
+     [
+      "AL9001",
+      "DEV-101",
+      "R9001",
+      "TEMP_HIGH",
+      "temperature_c",
+      ">",
+      "30.0",
+      "31.0",
+      "warning",
+      "2026-05-12T00:00:30",
+      "true"
+     ],
+     [
+      "AL9002",
+      "DEV-104",
+      "R9007",
+      "TEMP_CRIT",
+      "temperature_c",
+      ">",
+      "40.0",
+      "999.0",
+      "critical",
+      "2026-05-12T02:01:00",
+      "true"
+     ],
+     [
+      "AL9003",
+      "DEV-104",
+      "R9007",
+      "TEMP_HIGH",
+      "temperature_c",
+      ">",
+      "30.0",
+      "999.0",
+      "warning",
+      "2026-05-12T02:01:00",
+      "true"
+     ]
+    ],
+    "error_events": [
+     [
+      "ERR-9001",
+      "2026-05-12T01:40:00",
+      "iot-gateway",
+      "HeartbeatMissed",
+      "no heartbeat for 10 minutes",
+      "warning",
+      null,
+      "DEV-102"
+     ],
+     [
+      "ERR-9002",
+      "2026-05-12T02:01:00",
+      "iot-gateway",
+      "OutOfRangeReading",
+      "reading R9007 has temperature_c 999.0, outside the sensor's range",
+      "warning",
+      null,
+      "DEV-104"
+     ],
+     [
+      "ERR-9003",
+      "2026-05-12T00:20:12.500000",
+      "iot-gateway",
+      "TelemetryRejected",
+      "payload failed schema validation",
+      "warning",
+      "REQ-9001",
+      "DEV-101"
+     ],
+     [
+      "ERR-9004",
+      "2026-05-12T05:00:00",
+      "iot-gateway",
+      "ClockSkew",
+      "device clock more than 5 minutes off server time",
+      "warning",
+      "REQ-9002",
+      "DEV-102"
+     ],
+     [
+      "ERR-9005",
+      "2026-05-12T03:00:00",
+      "notification-worker",
+      "ProviderTimeout",
+      "email provider did not answer within 10 s",
+      "error",
+      null,
+      null
+     ],
+     [
+      "ERR-9006",
+      "2026-05-12T05:10:00",
+      "iot-gateway",
+      "HeartbeatMissed",
+      "no heartbeat for 10 minutes",
+      "warning",
+      null,
+      "DEV-101"
+     ],
+     [
+      "ERR-9007",
+      "2026-05-12T01:00:30",
+      "iot-gateway",
+      "OutOfRangeReading",
+      "reading R9005 failed the range check",
+      "warning",
+      null,
+      "DEV-103"
+     ]
+    ]
+   }
+  },
+  "project": {
+   "schema": [
+    {
+     "name": "error_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "device_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "error_type",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "occurred_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "cause",
+     "type": "string",
+     "nullable": false
+    },
+    {
+     "name": "evidence",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "false_alerts",
+     "type": "bigint",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "ERR-00003",
+     "DEV-015",
+     "OutOfRangeReading",
+     "2026-05-12T01:29:00",
+     "sensor_glitch",
+     "R004081",
+     1
+    ],
+    [
+     "ERR-00008",
+     "DEV-014",
+     "HeartbeatMissed",
+     "2026-05-12T02:40:00",
+     "maintenance",
+     "MT0004",
+     0
+    ],
+    [
+     "ERR-00009",
+     "DEV-009",
+     "TelemetryRejected",
+     "2026-05-12T02:55:44.855000",
+     "gateway",
+     null,
+     0
+    ],
+    [
+     "ERR-00011",
+     "DEV-015",
+     "TelemetryRejected",
+     "2026-05-12T03:53:52.137000",
+     "gateway",
+     null,
+     0
+    ],
+    [
+     "ERR-00012",
+     "DEV-013",
+     "OutOfRangeReading",
+     "2026-05-12T04:30:42",
+     "sensor_glitch",
+     "R003548",
+     2
+    ],
+    [
+     "ERR-00018",
+     "DEV-013",
+     "OutOfRangeReading",
+     "2026-05-12T05:00:25",
+     "sensor_glitch",
+     "R003550",
+     0
+    ],
+    [
+     "ERR-00019",
+     "DEV-013",
+     "OutOfRangeReading",
+     "2026-05-12T06:01:46",
+     "sensor_glitch",
+     "R003554",
+     0
+    ],
+    [
+     "ERR-00022",
+     "DEV-017",
+     "DeviceAuthFailed",
+     "2026-05-12T08:20:59.308000",
+     "gateway",
+     null,
+     0
+    ],
+    [
+     "ERR-00025",
+     "DEV-005",
+     "HeartbeatMissed",
+     "2026-05-12T08:42:00",
+     "maintenance",
+     "MT0005",
+     0
+    ],
+    [
+     "ERR-00027",
+     "DEV-011",
+     "HeartbeatMissed",
+     "2026-05-12T09:26:00",
+     "maintenance",
+     "MT0006",
+     0
+    ],
+    [
+     "ERR-00028",
+     "DEV-009",
+     "OutOfRangeReading",
+     "2026-05-12T09:46:29",
+     "sensor_glitch",
+     "R002424",
+     2
+    ],
+    [
+     "ERR-00032",
+     "DEV-008",
+     "OutOfRangeReading",
+     "2026-05-12T11:17:00",
+     "sensor_glitch",
+     "R002119",
+     2
+    ],
+    [
+     "ERR-00033",
+     "DEV-012",
+     "BadGateway",
+     "2026-05-12T11:57:18.854000",
+     "gateway",
+     null,
+     0
+    ],
+    [
+     "ERR-00035",
+     "DEV-002",
+     "OutOfRangeReading",
+     "2026-05-12T12:32:42",
+     "sensor_glitch",
+     "R000431",
+     2
+    ],
+    [
+     "ERR-00037",
+     "DEV-015",
+     "OutOfRangeReading",
+     "2026-05-12T13:31:04",
+     "sensor_glitch",
+     "R004157",
+     1
+    ],
+    [
+     "ERR-00050",
+     "DEV-016",
+     "TelemetryRejected",
+     "2026-05-12T15:27:36.328000",
+     "gateway",
+     null,
+     0
+    ],
+    [
+     "ERR-00052",
+     "DEV-004",
+     "DeviceAuthFailed",
+     "2026-05-12T16:50:55.914000",
+     "gateway",
+     null,
+     0
+    ],
+    [
+     "ERR-00053",
+     "DEV-015",
+     "OutOfRangeReading",
+     "2026-05-12T17:00:05",
+     "sensor_glitch",
+     "R004171",
+     1
+    ],
+    [
+     "ERR-00055",
+     "DEV-012",
+     "HeartbeatMissed",
+     "2026-05-12T17:55:00",
+     "maintenance",
+     "MT0007",
+     0
+    ],
+    [
+     "ERR-00057",
+     "DEV-017",
+     "PayloadTooLarge",
+     "2026-05-12T18:32:21.422000",
+     "gateway",
+     null,
+     0
+    ]
+   ],
+   "row_count": 25
+  }
+ },
+ "hidden": [
+  "errors on the edges of a maintenance visit and of the 15-minute rule, and readings named by the wrong sensor",
+  "no device errors at all"
+ ]
+}

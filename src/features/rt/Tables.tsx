@@ -4,8 +4,8 @@ import type { DatasetPreview as Preview } from "@/data/datasets/learning";
 
 type Column = Preview["columns"][number];
 
-/** Sample rows shown per table; queries always run on every row. */
-export const PREVIEW_ROWS = 6;
+/** Sample rows shown per table when the card is opened; queries always run on every row. */
+export const PREVIEW_ROWS = 10;
 
 const KIND: Record<string, string> = { INTEGER: "number", REAL: "decimal", NUMERIC: "number", TEXT: "text", BLOB: "binary" };
 
@@ -23,13 +23,13 @@ const cell = (v: unknown, j: number) =>
   v === null ? <td key={j} className="null">NULL</td> : <td key={j} title={String(v)}>{String(v)}</td>;
 
 /** Tables as cards: each column header shows its name with its type underneath, then sample rows. */
-export function Tables({ tables, open = false, openTables, previews }: { tables: string[]; open?: boolean; /** Start these tables expanded. Other tables stay closed until the learner opens them. */ openTables?: string[]; previews: Record<string, Preview> }) {
+export function Tables({ tables, open = false, openTables, previews, usesAll = "your queries use all of them", shown = PREVIEW_ROWS }: { tables: string[]; open?: boolean; /** Start these tables expanded. Other tables stay closed until the learner opens them. */ openTables?: string[]; previews: Record<string, Preview>; /** Footer wording when only some rows are shown. */ usesAll?: string; /** Rows shown per table. */ shown?: number }) {
   return (
     <div className="rx-schema">
       {tables.map((t) => {
         const p = previews[t];
         const byName = new Map(p?.columns?.map((c) => [c.name, c]));
-        const rows = p?.result.values.slice(0, PREVIEW_ROWS) ?? [];
+        const rows = p?.result.values.slice(0, shown) ?? [];
         const label = (column: string) => describe(byName.get(column), p?.result.values.find((r) => r[p.result.columns.indexOf(column)] !== null)?.[p.result.columns.indexOf(column)]);
         return (
           <details key={t} className={`rx-schema-table${p && (p.columns?.length ?? 0) > 5 ? " rx-schema-dense" : ""}`} open={open || openTables?.includes(t) || false}>
@@ -63,7 +63,7 @@ export function Tables({ tables, open = false, openTables, previews }: { tables:
                   </dl>)}
                 </div>
                 <p className="rx-table-foot">
-                  {rows.length < p.total ? `first ${rows.length} of ${p.total.toLocaleString("en-US")} rows · your queries use all of them` : `all ${p.total} rows`}
+                  {rows.length < p.total ? `first ${rows.length} of ${p.total.toLocaleString("en-US")} rows · ${usesAll}` : `all ${p.total} rows`}
                 </p>
               </>
             )}
@@ -74,14 +74,11 @@ export function Tables({ tables, open = false, openTables, previews }: { tables:
   );
 }
 
-/** The result a task expects, in the same card style as the tables, marked so it is not mistaken for data. */
-export function ExpectedResult({ columns, rows, total, ordered }: { columns: string[]; rows: unknown[][]; total: number; ordered: boolean }) {
-  return (
-    <div className="rx-schema-table rx-expected">
-      <div className="rx-expected-head">
-        <b>expected result</b>
-        <span>{total} row{total === 1 ? "" : "s"} · {ordered ? "in this order" : "any order"}</span>
-      </div>
+/** The result a task expects, in the same card style as the tables, marked so it is not mistaken for data.
+ *  `collapsed` starts closed, like a dataset table: the summary shows the shape, and a click reveals the rows. */
+export function ExpectedResult({ columns, rows, total, ordered, collapsed = false }: { columns: string[]; rows: unknown[][]; total: number; ordered: boolean; collapsed?: boolean }) {
+  const body = (
+    <>
       <div className="rx-table-wrap" style={{ padding: "4px 0 0" }} tabIndex={0} role="region" aria-label="Expected result">
         <table className="rx-table rx-data">
           <thead><tr>{columns.map((c) => <th key={c} title={c}><span className="n">{c}</span></th>)}</tr></thead>
@@ -89,6 +86,24 @@ export function ExpectedResult({ columns, rows, total, ordered }: { columns: str
         </table>
       </div>
       <p className="rx-table-foot">{rows.length < total ? `first ${rows.length} of ${total} rows` : `all ${total} rows`}</p>
+    </>
+  );
+  const shape = `${columns.length} column${columns.length === 1 ? "" : "s"} · ${total.toLocaleString("en-US")} row${total === 1 ? "" : "s"} · ${ordered ? "in this order" : "any order"}`;
+  if (collapsed) {
+    return (
+      <details className="rx-schema-table rx-expected">
+        <summary><b>expected result</b><span>{shape}</span></summary>
+        {body}
+      </details>
+    );
+  }
+  return (
+    <div className="rx-schema-table rx-expected">
+      <div className="rx-expected-head">
+        <b>expected result</b>
+        <span>{total} row{total === 1 ? "" : "s"} · {ordered ? "in this order" : "any order"}</span>
+      </div>
+      {body}
     </div>
   );
 }

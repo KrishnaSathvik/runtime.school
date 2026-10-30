@@ -1,0 +1,71 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "event_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "shipment_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "event_time",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "window_start",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "window_end",
+     "type": "timestamp",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "E0000009",
+     "SH0003",
+     "2026-03-06T08:53:00",
+     "2026-03-06T08:00:00",
+     "2026-03-06T12:00:00"
+    ],
+    [
+     "E0000010",
+     "SH0002",
+     "2026-03-07T12:34:00",
+     "2026-03-07T12:00:00",
+     "2026-03-07T16:00:00"
+    ],
+    [
+     "E0000011",
+     "SH0001",
+     "2026-03-07T19:50:00",
+     "2026-03-07T16:00:00",
+     "2026-03-07T20:00:00"
+    ]
+   ],
+   "row_count": 3
+  }
+ },
+ "hidden": [
+  "the full practice events and deliveries",
+  "deliveries exactly at the window's start and end, and just outside it",
+  "other kinds of event that happen inside the window",
+  "deliveries whose status column disagrees with the times",
+  "the same delivered event loaded twice",
+  "no deliveries at all"
+ ]
+}

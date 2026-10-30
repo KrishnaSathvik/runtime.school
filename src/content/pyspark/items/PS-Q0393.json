@@ -1,0 +1,55 @@
+{
+  "id": "PS-Q0393",
+  "slug": "what-each-command-gives-its-job",
+  "lesson": "PS-L079",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "What each command gives its job",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "The scheduler's job commands arrive as text, one `spark-submit` command per line, in the `value` column of `application_logs_raw`. Write `solve(application_logs_raw)` so it returns one row per command: the script, the application name, the master and the shuffle partitions the job will get, and how many arguments the script receives.",
+  "rules": [
+    "Each line is `spark-submit`, then options, each option followed by exactly one value (`--master local[2]`, `--conf key=value`), then the script and its arguments. Words are separated by single spaces.",
+    "The script is the first word that is neither an option nor an option's value. Every word after it goes to the script, even one that looks like an option.",
+    "When an option is given twice, the last one wins; for `--conf`, the last value of the same key wins.",
+    "With no `--name`, the application is named after the script's file name (`jobs/report.py` gives `report.py`). With no `--master`, the master is `local[*]`. With no `spark.sql.shuffle.partitions`, it's `200`.",
+    "Columns, in order: `script`, `app_name`, `master`, `shuffle_partitions` (text) and `args` (a whole number of type `int`). Keep duplicate commands; an empty table gives no rows."
+  ],
+  "hints": [
+    "Walk the words after `spark-submit` two at a time while the word starts with `--`; the first word that doesn't is the script.",
+    "Keep the options in a dictionary as you go, so a later value replaces an earlier one. Split a `--conf` value at its first `=`.",
+    "A `.py` word can be an option's value (`--py-files libs/rules.py`), so don't look for the script by its extension."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "application_logs_raw"
+  ],
+  "starter": "def solve(application_logs_raw):\n    rows = []\n    # collect() brings the table's rows back to Python; each command is in row.value.\n    for row in application_logs_raw.collect():\n        words = row.value.split(\" \")\n        # Work out the script, the name, the master, the shuffle partitions and the argument count.\n    # spark.createDataFrame builds a DataFrame from a list of Python tuples, with these columns and types.\n    return spark.createDataFrame(rows, \"script STRING, app_name STRING, master STRING, shuffle_partitions STRING, args INT\")\n",
+  "output": {
+    "columns": [
+      "script",
+      "app_name",
+      "master",
+      "shuffle_partitions",
+      "args"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "This is how `spark-submit` itself reads a command: option and value pairs up to the first word that isn't an option, which is the script; the rest is `sys.argv[1:]`. In the sample, `jobs/errors.py --name late-errors --master yarn` runs as `errors.py` on `local[2]` with 4 arguments, because the options after the script belong to the script. A repeated option or `--conf` key simply overwrites the earlier one, so the 16 partitions and `local[3]` win. The defaults come from Spark when nothing sets them: the script's file name, `local[*]` and 200 shuffle partitions. Searching the whole line for `--master` or for the first `.py` word gets the fourth sample command wrong."
+}

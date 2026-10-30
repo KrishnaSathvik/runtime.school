@@ -1,0 +1,26 @@
+{
+  "id": "PS-L013-C2",
+  "slug": "triage-board-vitals",
+  "lesson": "PS-L013",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Triage board vitals",
+  "dataset": { "id": "PS-D04", "version": "1.0.0" },
+  "prompt": "The triage board shows one flat row per visit. Write `solve(encounters)` so it returns each visit's id, heart rate, temperature, first diagnosis code and number of codes.",
+  "rules": [
+    "Columns, in order: `encounter_id`, `heart_rate` and `temperature_c` (from `vitals`), `primary_code`, `code_count`.",
+    "`primary_code` is the first code in `diagnosis_codes` and `code_count` is how many codes there are.",
+    "Keep every visit. When vitals or codes are missing, those columns are missing too."
+  ],
+  "hints": [
+    "`\"vitals.heart_rate\"` in `select` reads one field and names the column after it.",
+    "Array positions start at 0.",
+    "`F.size(...)` counts the items of an array. Name new columns with `alias`."
+  ],
+  "entry": "solve",
+  "inputs": ["encounters"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(encounters):\n    # One flat row per visit: id, heart rate, temperature, first code, number of codes.\n    return encounters\n",
+  "output": { "columns": ["encounter_id", "heart_rate", "temperature_c", "primary_code", "code_count"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

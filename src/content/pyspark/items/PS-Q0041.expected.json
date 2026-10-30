@@ -1,0 +1,73 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "learner_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "plan",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "country",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "L001",
+     "Aiko M.",
+     "plus",
+     "JP"
+    ],
+    [
+     "L002",
+     "Bruno S.",
+     "free",
+     "BR"
+    ],
+    [
+     "L003",
+     "Chidi O.",
+     "free",
+     "NG"
+    ],
+    [
+     "L004",
+     "Dana K.",
+     "plus",
+     "CA"
+    ],
+    [
+     "L005",
+     "Elif T.",
+     "free",
+     "DE"
+    ]
+   ],
+   "row_count": 5
+  }
+ },
+ "hidden": [
+  "the full practice learners table",
+  "learners with a missing name, plan or country",
+  "the same learner row delivered twice",
+  "an empty learners table"
+ ]
+}

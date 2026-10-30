@@ -1,0 +1,135 @@
+{
+  "id": "PS-L008",
+  "minutes": 20,
+  "lede": "Before you change a table, look at it: which columns it has, what type each one is, how many rows there are and what the values look like. A DataFrame can tell you all of that in a line or two.",
+  "objectives": [
+    "Read a DataFrame's columns and types with `printSchema()`, `columns`, `dtypes` and `schema`",
+    "Print rows with `show(n)`, and in full with `truncate=False`",
+    "Count rows and fetch the first ones with `count()`, `first()` and `head(n)`",
+    "Get quick statistics with `describe()` and `summary()`"
+  ],
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0",
+    "edition": "lesson",
+    "tables": [
+      "orders"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "In every example on this page the shop's `orders` table is loaded as a DataFrame called `orders`.\n\n`printSchema()` prints the table's **schema**: every column, its type, and whether it may be missing (`nullable`). `columns` gives just the names, as a plain Python list."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Columns and their types",
+      "code": "orders.printSchema()\nprint(orders.columns)\n",
+      "note": "Six columns. `order_date` is a real date and `total` an exact amount with two decimal places, not text."
+    },
+    {
+      "kind": "text",
+      "md": "When your code needs the types, use `dtypes`: a list of `(name, type)` pairs, with the type written the way you'd write it in a schema string. `schema` is the full description, one `StructField` per column. Lesson 13 looks at it closely."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Types in code",
+      "code": "print(orders.dtypes)\n\ntypes = dict(orders.dtypes)\nprint(types[\"total\"])\n\nprint(orders.schema[\"order_date\"])\n",
+      "note": "`dict(orders.dtypes)` lets you look up a column's type by its name. `schema[\"order_date\"]` gives that column's name, type and whether it may be missing (`True`)."
+    },
+    {
+      "kind": "error-example",
+      "id": "e3",
+      "title": "Calling a property",
+      "code": "print(orders.columns())\n",
+      "error": "TypeError",
+      "note": "`columns`, `dtypes` and `schema` are properties: write them without brackets. `printSchema()`, `show()` and `count()` are methods, so they need the brackets."
+    },
+    {
+      "kind": "text",
+      "md": "`show()` prints the first 20 rows. Give it a number to print fewer. It also cuts any value longer than 20 characters and ends it with `...`, so the table stays narrow; `show(truncate=False)` prints every value in full."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "A few rows, and long text in full",
+      "code": "orders.show(3)\n\nnotes = spark.createDataFrame([(\"O00001\", \"Leave the parcel with the neighbour at number 12\")], \"order_id STRING, note STRING\")\nnotes.show()\nnotes.show(truncate=False)\n",
+      "note": "`show(3)` prints three rows and says it's only showing the top ones. The note is cut to 20 characters the first time and printed in full the second."
+    },
+    {
+      "kind": "text",
+      "md": "`count()` counts the rows and gives back a Python number. `first()` gives back the first row as a `Row`, and `head(n)` a list of up to `n` rows. You can read a value from a `Row` by its column name.\n\nThe tables haven't been sorted, so \"first\" just means the first row Spark comes to; for these small tables that's the first line of the file. Lesson 11 shows how to sort."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Count rows and look at the first ones",
+      "code": "print(orders.count())\n\nfirst = orders.first()\nprint(first)\nprint(first[\"status\"], first[\"total\"])\n\nprint(len(orders.head(5)))\n",
+      "note": "In Python, the date comes back as a `date` and the amount as a `Decimal`, the same kinds of value you used to build DataFrames in lesson 7."
+    },
+    {
+      "kind": "text",
+      "md": "For a quick feel of the numbers, `describe()` works out the count, mean, standard deviation, minimum and maximum of each column. `summary()` does the same and can add percentiles like `\"50%\"` (the median); you can name just the ones you want. Both give back a small DataFrame, so you `show()` it."
+    },
+    {
+      "kind": "example",
+      "id": "e6",
+      "title": "Quick statistics",
+      "code": "orders.describe(\"total\").show()\n\norders.summary(\"count\", \"min\", \"50%\", \"max\").show()\n",
+      "note": "Text columns get a count and their alphabetically first and last values, but no median, so that cell is `NULL`. Date columns like `order_date` are left out."
+    }
+  ],
+  "challenges": [
+    "PS-L008-C1",
+    "PS-L008-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "Which line prints how many rows `orders` has?",
+      "choices": [
+        "print(orders.count())",
+        "print(orders.count)",
+        "print(len(orders.columns))",
+        "orders.printSchema()"
+      ],
+      "answer": 0,
+      "why": "`count()` is a method: with the brackets it counts the rows. Without them you print the method itself, and `len(orders.columns)` counts columns."
+    },
+    {
+      "id": "k2",
+      "prompt": "What is `orders.dtypes`?",
+      "choices": [
+        "A list of (name, type) pairs, one per column",
+        "A list of the column names only",
+        "A DataFrame of statistics",
+        "A method you have to call: `orders.dtypes()`"
+      ],
+      "answer": 0,
+      "why": "`dtypes` is a property that holds a list like `[('order_id', 'string'), ...]`. `columns` has the names only, and `describe()` gives statistics."
+    },
+    {
+      "id": "k3",
+      "prompt": "A text value is 30 characters long. What does `df.show()` print for it?",
+      "choices": [
+        "Its first 17 characters followed by `...`",
+        "All 30 characters",
+        "Nothing: the cell is empty",
+        "An error"
+      ],
+      "answer": 0,
+      "why": "`show()` keeps each value to 20 characters: 17 of the text and `...`. Use `show(truncate=False)` to see it all."
+    }
+  ],
+  "review": [
+    "`printSchema()` prints each column, its type and whether it may be missing.",
+    "`columns` is a list of names and `dtypes` a list of `(name, type)` pairs. They're properties: no brackets.",
+    "`show(n)` prints the first `n` rows (20 by default) and cuts long values; `show(truncate=False)` prints them in full.",
+    "`count()` counts the rows. `first()` gives one `Row` and `head(n)` a list of up to `n` rows.",
+    "`describe()` and `summary()` give quick statistics as a small DataFrame; `summary` can add percentiles.",
+    "Without sorting, \"first\" just means the first row Spark comes to."
+  ],
+  "practice": ["PS-Q0036", "PS-Q0037", "PS-Q0038", "PS-Q0039", "PS-Q0040"]
+}

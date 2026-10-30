@@ -1,0 +1,47 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D11",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "learners"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "True\nTrue\n4.0.1\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "local[2]\nruntime-school\n2\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "4 str\nUTC\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "",
+   "error": {
+    "type": "SparkNoSuchElementException",
+    "message": "[SQL_CONF_NOT_FOUND] The SQL config \"spark.default.parallelism\" cannot be found. Please verify that the config exists. SQLSTATE: 42K0I",
+    "line": 1,
+    "condition": "SQL_CONF_NOT_FOUND"
+   }
+  },
+  "e5": {
+   "stdout": "not set\n2\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "+---+\n| id|\n+---+\n|  0|\n|  1|\n|  2|\n|  3|\n|  4|\n+---+\n\nroot\n |-- id: long (nullable = false)\n\n+---+\n| id|\n+---+\n|  2|\n|  4|\n|  6|\n+---+\n\n",
+   "error": null
+  }
+ }
+}

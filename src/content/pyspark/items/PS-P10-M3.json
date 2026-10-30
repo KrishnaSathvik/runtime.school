@@ -1,0 +1,71 @@
+{
+ "id": "PS-P10-M3",
+ "slug": "device-health-in-event-time-windows",
+ "project": "PS-P10",
+ "milestone": "PS-P10.m3",
+ "difficulty": "hard",
+ "minutes": 45,
+ "title": "Compute device health in event-time windows",
+ "dataset": {
+  "id": "PS-D09",
+  "version": "1.0.0"
+ },
+ "prompt": "The operations team wants a health table: for each sensor and each six hours of the day, how many readings came in, how many were incomplete or glitched, the hottest real temperature and the lowest battery. Readings arrive late and some are delivered twice, so the windows must follow when the sensor measured, not when the platform heard about it.\n\nWrite `device_health(sensor_readings, devices, device_locations)`. It streams `validate_readings`, keeps the usable readings and returns every window's final numbers once the stream has read every file.",
+ "rules": [
+  "Usable readings are those whose `issue` is `ok` or `missing_value`. Other readings don't count anywhere.",
+  "Each reading counts once: drop repeated deliveries by `reading_id`. A reading can arrive up to 12 hours late and must still count, so use a 12-hour watermark on `event_time`.",
+  "Windows are 6 hours of `event_time` (starting 00:00, 06:00, 12:00 and 18:00), one row per sensor and window that has readings.",
+  "Return `device_id`, `window_start`, `readings`, `missing` (readings with `missing_value`), `glitches`, `max_temp` (the highest `temperature_c` that isn't a glitch; null if there's none) and `min_battery`."
+ ],
+ "hints": [
+  "`withWatermark(\"event_time\", \"12 hours\")` then `dropDuplicatesWithinWatermark([\"reading_id\"])` removes copies on a stream.",
+  "`groupBy(\"device_id\", F.window(\"event_time\", \"6 hours\"))` with `F.count`, `F.max` and `F.min`. `F.count(F.when(cond, 1))` counts the rows where `cond` holds, and `F.when(~F.col(\"glitch\"), F.col(\"temperature_c\"))` is null for a glitch.",
+  "Output mode `complete` writes the whole result table in every micro-batch, so the memory table ends with every window's final numbers. Take `window.start` as `window_start`."
+ ],
+ "explanation": "Windows on `event_time` put a late reading where it belongs: a reading measured at 00:45 that arrives at 04:10 still counts in the midnight window. The watermark tells Spark how late a reading may be; with 12 hours, nothing in this data is too late, so every reading counts. A shorter watermark would drop the late ones. `dropDuplicatesWithinWatermark` removes a repeated delivery even when it arrives in a later micro-batch, because Spark keeps the reading ids it has seen in its state. The `complete` output mode rewrites the whole table each micro-batch, so the memory table holds the final value of every window when the stream stops, including windows the watermark hasn't closed yet.",
+ "entry": "device_health",
+ "inputs": [
+  "sensor_readings",
+  "devices",
+  "device_locations"
+ ],
+ "file": "pipeline.py",
+ "append": "\n\ndef device_health(sensor_readings, devices, device_locations):\n    # Step 3: usable readings, each counted once, in 6-hour event-time windows per sensor.\n    return validate_readings(sensor_readings, devices, device_locations)\n",
+ "prerequisites": [
+  "PS-L031",
+  "PS-L069",
+  "PS-L070"
+ ],
+ "output": {
+  "columns": [
+   "device_id",
+   "window_start",
+   "readings",
+   "missing",
+   "glitches",
+   "max_temp",
+   "min_battery"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "example",
+   "sample": true
+  },
+  {
+   "id": "project",
+   "edition": "project"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

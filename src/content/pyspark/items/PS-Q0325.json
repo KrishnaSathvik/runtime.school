@@ -1,0 +1,56 @@
+{
+  "id": "PS-Q0325",
+  "slug": "one-table-for-every-clinic",
+  "lesson": "PS-L065",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "One table for every clinic",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "prompt": "Since January, two clinics send claims, each in its own shape. Write one `fit(batch, path)` that appends a batch of either shape to the claims Delta table. `solve` is written for you: it builds the 2025 table and calls `fit` for each clinic.",
+  "rules": [
+    "Every claim from 2025 and from both clinics is in the table once, with its values.",
+    "A column the table already has keeps the table's type. A column the table doesn't have yet is added, with the batch's type.",
+    "A batch may lack some of the table's columns, or have them in another order. Its claims have those columns empty."
+  ],
+  "hints": [
+    "`dict(spark.read.format(\"delta\").load(path).dtypes)` maps each of the table's columns to its type, written as text such as `decimal(12,2)`.",
+    "Go through `batch.columns`: cast a column the table has to the table's type, keeping its name with `alias`, and leave the others as they are.",
+    "Casting doesn't add columns. The new ones still need the append option that merges them into the schema."
+  ],
+  "explanation": "Read the table's types with `types = dict(spark.read.format(\"delta\").load(path).dtypes)`. Then build one `select` from the batch's own columns: `F.col(c).cast(types[c]).alias(c)` when `c` is in `types`, and `F.col(c)` when it isn't. The cast fixes clinic A's text dates and double amounts and clinic B's `decimal(10,2)`, which Delta refuses even though it's a decimal. Append the result with `option(\"mergeSchema\", \"true\")` so `payer` and `submitted_date` are added at the end of the schema with their own types. Columns are matched by name, so clinic B's order doesn't matter, and its missing `paid_amount` reads as NULL. A `select` with a fixed list of columns works for one clinic and fails on the other, and casting without `mergeSchema` is refused because of the new columns.",
+  "entry": "solve",
+  "inputs": [
+    "claims"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef fit(batch, path):\n    # Append `batch` to the Delta table at `path`, whatever its shape.\n    batch.write.format(\"delta\").mode(\"append\").save(path)\n\n\ndef solve(claims):\n    import shutil\n    path = \"/tmp/clinic/claims\"\n    shutil.rmtree(path, ignore_errors=True)  # every run starts from an empty folder\n\n    cols = [\"claim_id\", \"patient_id\", \"service_date\", \"billed_amount\", \"paid_amount\", \"claim_status\"]\n    # filter keeps the rows where a condition is true: here, claims chosen by their service date.\n    claims.filter(F.col(\"service_date\") < \"2026-01-01\").select(cols).write.format(\"delta\").save(path)\n\n    # Clinic A, from 1 January: dates as text, amounts as doubles, and a new column, payer.\n    clinic_a = claims.filter((F.col(\"service_date\") >= \"2026-01-01\") & (F.col(\"service_date\") < \"2026-01-15\")).select(\n        \"claim_id\",\n        \"patient_id\",\n        F.col(\"service_date\").cast(\"string\").alias(\"service_date\"),\n        F.col(\"billed_amount\").cast(\"double\").alias(\"billed_amount\"),\n        F.col(\"paid_amount\").cast(\"double\").alias(\"paid_amount\"),\n        \"claim_status\",\n        \"payer\",\n    )\n    # Clinic B, from 15 January: its own column order, a smaller decimal, no paid amount, and the submitted date.\n    clinic_b = claims.filter(F.col(\"service_date\") >= \"2026-01-15\").select(\n        \"payer\",\n        \"claim_status\",\n        \"submitted_date\",\n        F.col(\"billed_amount\").cast(\"decimal(10,2)\").alias(\"billed_amount\"),\n        \"service_date\",\n        \"patient_id\",\n        \"claim_id\",\n    )\n\n    fit(clinic_a, path)\n    fit(clinic_b, path)\n    return spark.read.format(\"delta\").load(path)\n",
+  "output": {
+    "columns": [
+      "claim_id",
+      "patient_id",
+      "service_date",
+      "billed_amount",
+      "paid_amount",
+      "claim_status",
+      "payer",
+      "submitted_date"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

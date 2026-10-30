@@ -1,0 +1,134 @@
+{
+  "id": "PS-L025",
+  "minutes": 25,
+  "lede": "An order row says `C0001`; the customer's name lives in another table. A join puts the two side by side by matching a key, and the join type decides what happens to rows that have no match.",
+  "objectives": [
+    "Combine two DataFrames on a shared key with `join(other, on=..., how=...)`",
+    "Choose between inner, left, right and full joins by what should happen to unmatched rows",
+    "Read the NULLs an outer join adds, and know which side they came from",
+    "Avoid ambiguous column names when both sides have a column with the same name"
+  ],
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0",
+    "edition": "lesson",
+    "tables": [
+      "orders",
+      "customers",
+      "products",
+      "order_items"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`orders` has a `customer_id` and `customers` has one row per `customer_id` with a name and city. `orders.join(customers, on=\"customer_id\", how=\"inner\")` pairs each order with the customer row that has the same id.\n\nThe joined DataFrame has the columns of both sides, with the key just once. Join output has no fixed row order, so the examples end with `orderBy(...)`, which only sorts what's printed. The sorting lesson covers it."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Orders with the customer's name",
+      "code": "with_names = orders.join(customers, on=\"customer_id\", how=\"inner\")\nwith_names.printSchema()\n\nwith_names.select(\"order_id\", \"customer_id\", \"name\", \"city\", \"total\").orderBy(\"order_id\").show()\n",
+      "note": "Every order found its customer, so all 12 orders are here. `customer_id` appears once, first, followed by the rest of `orders` and then the rest of `customers`."
+    },
+    {
+      "kind": "text",
+      "md": "The join type matters when some rows have no partner. Here a small stock count from the warehouse covers two of the shop's products, plus `P009`, which isn't in the catalogue yet.\n\n- **inner** keeps only rows that match on both sides.\n- **left** keeps every row of the left DataFrame; where the right side has no match, its columns are NULL.\n- **right** is the mirror: every row of the right side.\n- **full** keeps every row of both, with NULLs wherever a side is missing."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Inner and left",
+      "code": "stock = spark.createDataFrame([(\"P001\", 14), (\"P004\", 0), (\"P009\", 30)], \"product_id STRING, in_stock INT\")\n\nproducts.join(stock, on=\"product_id\", how=\"inner\").select(\"product_id\", \"name\", \"in_stock\").orderBy(\"product_id\").show()\n\nproducts.join(stock, on=\"product_id\", how=\"left\").select(\"product_id\", \"name\", \"in_stock\").orderBy(\"product_id\").show()\n",
+      "note": "Inner gives two rows; P009 is dropped because no product matches it. Left keeps all eight products: the six that weren't counted get NULL, which is different from P004's real count of 0."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Right and full",
+      "code": "stock = spark.createDataFrame([(\"P001\", 14), (\"P004\", 0), (\"P009\", 30)], \"product_id STRING, in_stock INT\")\n\nproducts.join(stock, on=\"product_id\", how=\"right\").select(\"product_id\", \"name\", \"in_stock\").orderBy(\"product_id\").show()\n\nproducts.join(stock, on=\"product_id\", how=\"full\").select(\"product_id\", \"name\", \"in_stock\").orderBy(\"product_id\").show()\n",
+      "note": "Right keeps every stock row, so P009 appears with no name. Full keeps everything from both sides: nine rows. With `on=\"product_id\"`, the key column is filled from whichever side has it."
+    },
+    {
+      "kind": "text",
+      "md": "You can also join on a condition: `products.join(stock, products[\"product_id\"] == stock[\"product_id\"], \"inner\")`. That form is needed when the key columns have different names. But now both `product_id` columns are kept, and a plain `\"product_id\"` no longer says which one you mean."
+    },
+    {
+      "kind": "error-example",
+      "id": "e4",
+      "title": "Two columns with one name",
+      "code": "stock = spark.createDataFrame([(\"P001\", 14), (\"P004\", 0), (\"P009\", 30)], \"product_id STRING, in_stock INT\")\n\njoined = products.join(stock, products[\"product_id\"] == stock[\"product_id\"], \"inner\")\nprint(joined.columns)\njoined.select(\"product_id\", \"in_stock\").show()\n",
+      "error": "AnalysisException",
+      "note": "`columns` shows `product_id` twice. Either join with `on=\"product_id\"` so there's one key column, or say which side you mean: `products[\"product_id\"]`."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Which side a NULL came from",
+      "code": "stock = spark.createDataFrame([(\"P001\", 14), (\"P004\", 0), (\"P009\", 30)], \"product_id STRING, in_stock INT\")\n\nboth = products.join(stock, products[\"product_id\"] == stock[\"product_id\"], \"full\")\nboth.select(products[\"product_id\"].alias(\"catalogue_id\"), stock[\"product_id\"].alias(\"stock_id\"), \"name\", \"in_stock\").orderBy(\"catalogue_id\").show()\n",
+      "note": "Keeping both keys shows where each row came from: a NULL `catalogue_id` is a stock row with no product, and a NULL `stock_id` is a product nobody counted. A missing value sorts first."
+    },
+    {
+      "kind": "text",
+      "md": "Joins chain. An order line has an `order_id` and a `product_id`, so one join adds the order and the next adds the product. When both sides have a column with the same name that isn't the key, such as `unit_price` in `order_items` and `products`, pick the one you mean with `df[\"name\"]`."
+    },
+    {
+      "kind": "example",
+      "id": "e6",
+      "title": "Three tables in a row",
+      "code": "lines = order_items.join(orders, on=\"order_id\", how=\"inner\").join(products, on=\"product_id\", how=\"inner\")\n\nlines.select(\"order_id\", \"line_no\", \"name\", \"quantity\", order_items[\"unit_price\"], \"status\").orderBy(\"order_id\", \"line_no\").show(8)\n",
+      "note": "`order_items[\"unit_price\"]` is the price paid on the day; `products[\"unit_price\"]` is today's price. The first line of O00001 paid 19.99 for a lamp that the second line got for 17.99."
+    }
+  ],
+  "challenges": [
+    "PS-L025-C1",
+    "PS-L025-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "`products` has 8 rows and `stock` has 3, two of which match a product. How many rows does `products.join(stock, on=\"product_id\", how=\"left\")` have?",
+      "choices": [
+        "2",
+        "3",
+        "8",
+        "9"
+      ],
+      "answer": 2,
+      "why": "A left join keeps every row of the left side once when keys are unique: 8 products, with NULL stock for the six without a match. The unmatched stock row is dropped."
+    },
+    {
+      "id": "k2",
+      "prompt": "Which join keeps unmatched rows from both sides?",
+      "choices": [
+        "inner",
+        "left",
+        "right",
+        "full"
+      ],
+      "answer": 3,
+      "why": "A full join keeps every row of both DataFrames and fills the missing side with NULL."
+    },
+    {
+      "id": "k3",
+      "prompt": "After `products.join(stock, products[\"product_id\"] == stock[\"product_id\"])`, what does `.select(\"product_id\")` do?",
+      "choices": [
+        "Picks the left side's column",
+        "Raises an AnalysisException: the reference is ambiguous",
+        "Picks whichever column has no NULLs",
+        "Returns both columns"
+      ],
+      "answer": 1,
+      "why": "A join on a condition keeps both key columns. Name the side, as in `products[\"product_id\"]`, or join with `on=\"product_id\"` to keep one."
+    }
+  ],
+  "review": [
+    "`left.join(right, on=\"key\", how=...)` pairs rows whose key matches; the key appears once.",
+    "inner keeps matches only; left keeps every left row; right every right row; full every row of both.",
+    "An outer join puts NULL in the columns of the side that had no match. That NULL means \"no match\", not zero.",
+    "Join on a condition (`a[\"k\"] == b[\"k\"]`) when key names differ; both key columns are then kept.",
+    "When both sides share a column name, pick one with `df[\"name\"]` or Spark raises an ambiguity error.",
+    "Join output has no fixed order; sort it when the order matters."
+  ],
+  "practice": ["PS-Q0121", "PS-Q0122", "PS-Q0123", "PS-Q0124", "PS-Q0125"]
+}

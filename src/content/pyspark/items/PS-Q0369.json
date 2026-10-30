@@ -1,0 +1,57 @@
+{
+ "id": "PS-Q0369",
+ "slug": "the-mark-that-stayed-behind",
+ "lesson": "PS-L074",
+ "role": "debugging",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 12,
+ "title": "The mark that stayed behind",
+ "prompt": "This job copies new tracking loads into a Delta table with a high-water mark. It ran after three deliveries and once more as a rerun, and now some days are in the table twice. Fix it.",
+ "dataset": {
+  "id": "PS-D08",
+  "version": "1.0.0"
+ },
+ "rules": [
+  "Every landed row ends up in the table exactly once, however often `process()` runs. Rows that are the same in every column are separate rows: keep both.",
+  "Some events load days after they happened. Every landed event must be copied.",
+  "Don't change `deliver` or `solve`."
+ ],
+ "hints": [
+  "Print `high_water_mark()` before each run. Does it move forward?",
+  "`first()` returns the first row in the order you asked for. Which day comes first when you sort by `load_date`?",
+  "The mark is the newest day: sort descending, or use `select(F.max(\"load_date\")).first()[0]`."
+ ],
+ "entry": "solve",
+ "inputs": [
+  "shipment_events"
+ ],
+ "starter": "import shutil\n\nfrom pyspark.sql import functions as F\nfrom delta.tables import DeltaTable\n\nLANDING = \"/tmp/landing/shipment_events\"\nTARGET = \"/tmp/silver/shipment_events\"\n\n\ndef deliver(shipment_events, days):\n    # These load days land in the landing folder, one folder per day. Don't change this.\n    (shipment_events.filter(F.col(\"load_date\").isin(days))\n        .write.mode(\"append\").partitionBy(\"load_date\").parquet(LANDING))\n\n\ndef high_water_mark():\n    # The newest load day the target already has, or None before the first run.\n    if not DeltaTable.isDeltaTable(spark, TARGET):\n        return None\n    return spark.read.format(\"delta\").load(TARGET).orderBy(\"load_date\").first()[\"load_date\"]\n\n\ndef process():\n    mark = high_water_mark()\n    landing = spark.read.parquet(LANDING)\n    new = landing if mark is None else landing.filter(F.col(\"load_date\") > mark)\n    new.write.format(\"delta\").mode(\"append\").save(TARGET)\n\n\ndef solve(shipment_events):\n    shutil.rmtree(\"/tmp/landing\", ignore_errors=True)  # start from empty folders on every run\n    shutil.rmtree(\"/tmp/silver\", ignore_errors=True)\n    days = sorted(r.load_date for r in shipment_events.select(\"load_date\").distinct().collect())\n    for delivery in (days[:1], days[1:3], days[3:]):\n        deliver(shipment_events, delivery)\n        process()\n    process()  # a rerun: nothing new has landed\n    return spark.read.format(\"delta\").load(TARGET)\n",
+ "output": {
+  "columns": [
+   "event_id",
+   "shipment_id",
+   "warehouse_id",
+   "event_type",
+   "event_time",
+   "location",
+   "sequence",
+   "is_correction",
+   "load_date"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 180,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "explanation": "`orderBy(\"load_date\")` sorts oldest first, so `first()` gives the oldest load day, not the newest. The mark stays on the first day, and every later run copies again everything loaded after it: the second delivery is copied twice. Sort descending, `orderBy(F.col(\"load_date\").desc())`, or take `select(F.max(\"load_date\")).first()[0]`, which reads one value instead of sorting the table. Removing the doubles with `distinct()` afterwards hides the bug and also drops rows the feed really sent twice."
+}

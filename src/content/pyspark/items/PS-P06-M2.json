@@ -1,0 +1,68 @@
+{
+  "id": "PS-P06-M2",
+  "slug": "validate-fares-and-timestamps",
+  "project": "PS-P06",
+  "milestone": "PS-P06.m2",
+  "difficulty": "medium",
+  "minutes": 30,
+  "title": "Validate fares and timestamps",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "prompt": "Some trips in the export can't be right: a dropoff before the pickup, a trip that went nowhere, a fare that was reversed. Write `trip_metrics(trips)`. It starts from your `trip_times(trips)`, keeps only the trips that pass every check below, and gives each one its length in minutes.",
+  "rules": [
+    "`trip_seconds` is more than 0: the dropoff comes after the pickup. A missing time fails.",
+    "`trip_distance` is more than 0. A missing distance fails.",
+    "`fare` is more than 0. A missing, zero or negative fare fails, even when `total` is positive.",
+    "A zone id that isn't in the zone list doesn't fail a trip: the next step deals with zones.",
+    "Return `trip_id`, `pickup_utc`, `pickup_date`, `pickup_hour`, `pickup_zone_id`, `dropoff_zone_id`, `trip_distance`, `trip_minutes`, `fare` and `total`, in that order. `trip_minutes` is `trip_seconds` ÷ 60 as a `DECIMAL(8,2)`."
+  ],
+  "hints": [
+    "Call `trip_times(trips)` first, so `trip_seconds` is already there.",
+    "Three conditions joined with `&`, each in parentheses. A comparison with a missing value is never true, so missing values fail on their own.",
+    "`(F.col(\"trip_seconds\") / 60).cast(\"decimal(8,2)\")` gives minutes, rounded half up to two decimals."
+  ],
+  "explanation": "Every check is a strict `>`. A trip of zero seconds or zero miles is a meter that was started and stopped, not a ride, and a zero fare isn't a sale. Checking `fare` rather than `total` matters: a no-charge trip with a 0.50 surcharge has a positive total but earned nothing. A comparison with `NULL` is never true, so a trip with a missing time, distance or fare drops out without a separate `isNotNull`. Minutes are kept as an exact `DECIMAL`, so the averages built on them later come out the same on every run.",
+  "entry": "trip_metrics",
+  "inputs": [
+    "trips"
+  ],
+  "file": "pipeline.py",
+  "append": "\n\ndef trip_metrics(trips):\n    # Step 2: start from trip_times(trips) and keep only the trips that pass every check.\n    return trip_times(trips)\n",
+  "prerequisites": [
+    "PS-L010",
+    "PS-L014"
+  ],
+  "output": {
+    "columns": [
+      "trip_id",
+      "pickup_utc",
+      "pickup_date",
+      "pickup_hour",
+      "pickup_zone_id",
+      "dropoff_zone_id",
+      "trip_distance",
+      "trip_minutes",
+      "fare",
+      "total"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "example",
+      "sample": true
+    },
+    {
+      "id": "project",
+      "edition": "project"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 150,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

@@ -1,0 +1,49 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "order_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "customer_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "O00007",
+     "C0003",
+     "placed"
+    ],
+    [
+     "O00010",
+     "C0006",
+     "paid"
+    ]
+   ],
+   "row_count": 2
+  }
+ },
+ "hidden": [
+  "the full practice orders table",
+  "orders on and around 1 April",
+  "early orders in every other status",
+  "orders with a missing status, date or customer",
+  "an empty orders table"
+ ]
+}

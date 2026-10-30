@@ -1,0 +1,61 @@
+{
+ "id": "PS-Q0361",
+ "slug": "land-the-pharmacy-files",
+ "lesson": "PS-L073",
+ "role": "foundation",
+ "format": "dataframe_coding",
+ "difficulty": "easy",
+ "minutes": 6,
+ "title": "Land the pharmacy files",
+ "dataset": {
+  "id": "PS-D04",
+  "version": "1.0.0"
+ },
+ "prompt": "The pharmacy system sends prescriptions in two files, one per year. Write `land(load, source_file, batch_id)` so each file is added to the bronze Delta table with its lineage, and the table keeps both files.",
+ "rules": [
+  "Bronze keeps every row of every file exactly as it arrived: nothing is dropped, fixed or deduplicated, even rows that look wrong or repeat.",
+  "Each row gets `_source_file` and `_batch_id` from `land`'s arguments, after the columns of `medications`.",
+  "Don't change `solve`."
+ ],
+ "hints": [
+  "`load.select(\"*\", F.lit(...).alias(...), ...)` keeps every column and adds new ones at the end.",
+  "`land` runs once per file. Which write mode keeps the first file when the second one comes?",
+  "Bronze is the record of what arrived. Cleaning and removing repeats are silver's job, not bronze's."
+ ],
+ "entry": "solve",
+ "inputs": [
+  "medications"
+ ],
+ "starter": "import shutil\n\nfrom pyspark.sql import functions as F\n\nBRONZE = \"/tmp/pharmacy/bronze/medications\"\n\n\ndef land(load, source_file, batch_id):\n    # Add one load to the bronze Delta table at BRONZE, with its lineage columns.\n    pass\n\n\ndef solve(medications):\n    shutil.rmtree(\"/tmp/pharmacy\", ignore_errors=True)  # start from an empty folder on every run\n    land(medications.filter(F.col(\"prescribed_date\") < \"2026-01-01\"), \"rx_2025.csv\", 1)\n    land(medications.filter(F.col(\"prescribed_date\") >= \"2026-01-01\"), \"rx_2026.csv\", 2)\n    return spark.read.format(\"delta\").load(BRONZE)\n",
+ "output": {
+  "columns": [
+   "prescription_id",
+   "patient_id",
+   "encounter_id",
+   "pharmacy_id",
+   "drug_name",
+   "dose",
+   "quantity",
+   "days_supply",
+   "prescribed_date",
+   "filled_date",
+   "cost",
+   "_source_file",
+   "_batch_id"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 180,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "explanation": "Add the two lineage columns with `F.lit` in a `select(\"*\", ...)` and append: `load.select(\"*\", F.lit(source_file).alias(\"_source_file\"), F.lit(batch_id).alias(\"_batch_id\")).write.format(\"delta\").mode(\"append\").save(BRONZE)`. The first call creates the table and the second adds to it. `overwrite` would keep only the second file, and the default mode refuses to write to a table that already exists. Bronze is the raw record, so it keeps the prescription that was never picked up (its `filled_date` is empty) and the line the pharmacy sent twice: `dropna()` or `distinct()` here would lose data that silver may need to look at, and nobody could see later that it ever arrived."
+}

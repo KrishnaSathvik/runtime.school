@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0398",
+  "slug": "overrides-the-session-accepts",
+  "lesson": "PS-L080",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Overrides the session accepts",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "prompt": "A runbook keeps a table of setting overrides, `overrides`, to apply to a running session before a rerun. Some can't be applied. Write `solve(overrides)` so it applies every override the session accepts, skips the rest without stopping, and returns one row per override saying whether it was applied and what the session reports for that key afterwards.",
+  "rules": [
+    "Try the overrides in the table's order. An override is applied when `spark.conf.set` accepts it. A refused one leaves the session as it was.",
+    "`value` is what `spark.conf.get(key)` returns after all the overrides are tried, or NULL when the session has no value for the key and the call raises.",
+    "Columns, in order: `key` (text), `applied` (`boolean`) and `value` (text). One row per override, in any order."
+  ],
+  "hints": [
+    "Wrap each `spark.conf.set` in `try`/`except`, so a refused setting doesn't stop the rest.",
+    "`spark.conf.isModifiable` only knows Spark's own settings, and it doesn't check the value. What does it say about `spark.myteam.run_date`, and is `Lisbon` a time zone?",
+    "Read the values in a second loop, after every override has been tried, and catch the error `spark.conf.get` raises for a key the session has never had."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "overrides"
+  ],
+  "starter": "def solve(overrides):\n    rows = []\n    for key, value in overrides.collect():\n        spark.conf.set(key, value)\n        rows.append((key, True, spark.conf.get(key)))\n    # spark.createDataFrame builds a DataFrame from a list of Python tuples, with these columns and types.\n    return spark.createDataFrame(rows, \"key STRING, applied BOOLEAN, value STRING\")\n",
+  "output": {
+    "columns": [
+      "key",
+      "applied",
+      "value"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Try each `spark.conf.set` in its own `try`/`except`. The shuffle partitions and adaptive execution are query settings and change at once. Driver memory and executor cores size processes, and the catalog is a static SQL setting: all three raise `CANNOT_MODIFY_CONFIG`. The time zone can change, but `Lisbon` isn't a valid zone id (`Europe/Lisbon` is), so it's refused and stays `UTC`. `spark.myteam.run_date` isn't one of Spark's settings at all: `isModifiable` says `False`, yet the session stores it as given, which is why the question asks what `set` accepts, not what `isModifiable` predicts. Executor cores were never set in this local session, so `spark.conf.get` raises and the value is NULL. A key that appears twice reports its final value on both rows, which is why the values are read in a second loop, after every override has been tried.",
+  "own_tables": {
+    "overrides": "key STRING, value STRING"
+  }
+}

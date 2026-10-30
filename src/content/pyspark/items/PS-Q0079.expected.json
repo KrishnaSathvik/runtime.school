@@ -1,0 +1,99 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "trip_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "fare",
+     "type": "decimal(8,2)",
+     "nullable": true
+    },
+    {
+     "name": "charged",
+     "type": "decimal(9,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "T001",
+     "15.63",
+     "16.13"
+    ],
+    [
+     "T002",
+     "16.38",
+     "16.88"
+    ],
+    [
+     "T003",
+     "8.63",
+     "9.13"
+    ],
+    [
+     "T004",
+     "52.00",
+     "53.75"
+    ],
+    [
+     "T005",
+     "25.50",
+     "26.00"
+    ],
+    [
+     "T006",
+     "11.25",
+     "11.75"
+    ],
+    [
+     "T007",
+     "52.00",
+     "53.75"
+    ],
+    [
+     "T008",
+     "16.88",
+     "17.38"
+    ],
+    [
+     "T009",
+     "14.13",
+     "14.63"
+    ],
+    [
+     "T010",
+     "21.63",
+     "22.13"
+    ],
+    [
+     "T011",
+     "10.13",
+     "10.63"
+    ],
+    [
+     "T012",
+     "19.50",
+     "20.00"
+    ]
+   ],
+   "row_count": 12
+  }
+ },
+ "hidden": [
+  "the full practice trips table",
+  "fares just under, at and just over the minimum",
+  "a trip with no surcharge and a trip with no fare",
+  "the same trip delivered twice",
+  "an empty trips table"
+ ]
+}

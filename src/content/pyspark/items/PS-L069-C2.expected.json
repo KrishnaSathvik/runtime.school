@@ -1,0 +1,124 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "micro_batch",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "window_start",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "window_end",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "campaign_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "clicks",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     0,
+     "2026-03-02T09:00:00",
+     "2026-03-02T09:20:00",
+     "CMP-0001",
+     2
+    ],
+    [
+     0,
+     "2026-03-02T08:50:00",
+     "2026-03-02T09:10:00",
+     "CMP-0001",
+     1
+    ],
+    [
+     0,
+     "2026-03-02T09:10:00",
+     "2026-03-02T09:30:00",
+     "CMP-0001",
+     1
+    ],
+    [
+     0,
+     "2026-03-02T09:10:00",
+     "2026-03-02T09:30:00",
+     "CMP-0002",
+     1
+    ],
+    [
+     0,
+     "2026-03-02T09:00:00",
+     "2026-03-02T09:20:00",
+     "CMP-0002",
+     1
+    ],
+    [
+     1,
+     "2026-03-03T09:00:00",
+     "2026-03-03T09:20:00",
+     "CMP-0001",
+     1
+    ],
+    [
+     1,
+     "2026-03-03T08:50:00",
+     "2026-03-03T09:10:00",
+     "CMP-0001",
+     1
+    ],
+    [
+     1,
+     "2026-03-03T09:20:00",
+     "2026-03-03T09:40:00",
+     "CMP-0004",
+     1
+    ],
+    [
+     1,
+     "2026-03-03T09:10:00",
+     "2026-03-03T09:30:00",
+     "CMP-0004",
+     1
+    ],
+    [
+     2,
+     "2026-03-03T09:10:00",
+     "2026-03-03T09:30:00",
+     "CMP-0002",
+     1
+    ],
+    [
+     2,
+     "2026-03-03T09:00:00",
+     "2026-03-03T09:20:00",
+     "CMP-0002",
+     1
+    ]
+   ],
+   "row_count": 11
+  }
+ },
+ "hidden": [
+  "the full practice clicks",
+  "late clicks that add to windows counted earlier",
+  "clicks exactly on window boundaries"
+ ]
+}

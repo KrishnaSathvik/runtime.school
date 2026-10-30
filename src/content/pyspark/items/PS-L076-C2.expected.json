@@ -1,0 +1,248 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "transaction_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "route",
+     "type": "string",
+     "nullable": false
+    },
+    {
+     "name": "reason",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "T000001",
+     "load",
+     null
+    ],
+    [
+     "T000002",
+     "quarantine",
+     "missing_account_id"
+    ],
+    [
+     "T000003",
+     "load",
+     null
+    ],
+    [
+     "T000004",
+     "quarantine",
+     "missing_account_id"
+    ],
+    [
+     "T000005",
+     "quarantine",
+     "missing_amount"
+    ],
+    [
+     "T000006",
+     "load",
+     null
+    ],
+    [
+     "T000007",
+     "quarantine",
+     "bad_amount"
+    ],
+    [
+     "T000008",
+     "quarantine",
+     "bad_amount"
+    ],
+    [
+     "T000009",
+     "quarantine",
+     "unknown_currency"
+    ],
+    [
+     "T000010",
+     "quarantine",
+     "missing_currency"
+    ],
+    [
+     "T000011",
+     "quarantine",
+     "missing_direction"
+    ],
+    [
+     "T000012",
+     "quarantine",
+     "bad_amount"
+    ]
+   ],
+   "row_count": 12,
+   "inputs": {
+    "transactions": [
+     [
+      "T000001",
+      "A00006",
+      null,
+      "2026-01-05T10:51:19",
+      "deposit",
+      "branch",
+      "credit",
+      "800.00",
+      "GBP",
+      "posted"
+     ],
+     [
+      "T000002",
+      null,
+      "M004",
+      "2026-01-16T07:14:10",
+      "purchase",
+      "online",
+      "debit",
+      "60.53",
+      "GBP",
+      "posted"
+     ],
+     [
+      "T000003",
+      "A00001",
+      "M003",
+      "2026-01-26T16:39:39",
+      "purchase",
+      "card_present",
+      "debit",
+      "27.90",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000004",
+      null,
+      "M002",
+      "2026-01-27T09:12:40",
+      "purchase",
+      "online",
+      "debit",
+      "-5.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000005",
+      "A00008",
+      null,
+      "2026-01-31T06:31:56",
+      "deposit",
+      "branch",
+      "credit",
+      null,
+      "USD",
+      "posted"
+     ],
+     [
+      "T000006",
+      "A00001",
+      null,
+      "2026-02-08T14:02:36",
+      "interest",
+      "system",
+      "credit",
+      "21.91",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000007",
+      "A00001",
+      "M004",
+      "2026-02-21T13:36:29",
+      "purchase",
+      "card_present",
+      "debit",
+      "-19.23",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000008",
+      "A00008",
+      null,
+      "2026-02-22T08:00:00",
+      "fee",
+      "system",
+      "debit",
+      "0.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000009",
+      "A00006",
+      null,
+      "2026-02-23T10:15:00",
+      "deposit",
+      "branch",
+      "credit",
+      "250.00",
+      "ZZZ",
+      "posted"
+     ],
+     [
+      "T000010",
+      "A00008",
+      "M001",
+      "2026-02-24T12:49:59",
+      "refund",
+      "card_present",
+      "credit",
+      "43.95",
+      null,
+      "posted"
+     ],
+     [
+      "T000011",
+      "A00001",
+      "M002",
+      "2026-02-25T18:20:00",
+      "purchase",
+      "online",
+      null,
+      "12.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000012",
+      "A00006",
+      "M003",
+      "2026-02-26T11:05:00",
+      "purchase",
+      "card_present",
+      "debit",
+      "-3.00",
+      "US$",
+      "posted"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice transactions feed",
+  "a missing value in each column, required or not",
+  "transactions that break several rules at once",
+  "amounts just above, at and below zero",
+  "a load where every transaction is fine",
+  "an empty load"
+ ]
+}

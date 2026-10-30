@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0084",
+  "slug": "fix-the-cash-flow-categories",
+  "lesson": "PS-L017",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Fix the cash-flow categories",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "The budgeting app sorts each transaction into a cash-flow category, but refunds show up as income and transactions with no direction are counted as spending. Fix `solve(transactions)`.",
+  "rules": [
+    "A `credit` is `refund` when its `txn_type` is `refund`, and `income` otherwise.",
+    "A `debit` is `bank_fee` when its `txn_type` is `fee`, and `spending` otherwise.",
+    "A transaction whose `direction` is missing, or is anything but `debit` or `credit`, is `unknown`, whatever its type.",
+    "Return `transaction_id`, `txn_type`, `direction` and `category`, in that order, for every transaction."
+  ],
+  "hints": [
+    "Run the starter and find the refund in the sample: it says `income`. Which `when` does a refund pass first?",
+    "The first true condition wins, so a narrow case like a refund has to come before the broad `direction == \"credit\"`.",
+    "`otherwise` catches every row nothing else matched, including a missing direction. Give `spending` its own `when` on debits, and keep `otherwise` for `unknown`. Check the fee rule on a row with no direction too."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "transactions"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(transactions):\n    category = (\n        F.when(F.col(\"direction\") == \"credit\", \"income\")\n        .when(F.col(\"txn_type\") == \"refund\", \"refund\")\n        .when(F.col(\"txn_type\") == \"fee\", \"bank_fee\")\n        .otherwise(\"spending\")\n    )\n    return transactions.select(\"transaction_id\", \"txn_type\", \"direction\", category.alias(\"category\"))\n",
+  "output": {
+    "columns": [
+      "transaction_id",
+      "txn_type",
+      "direction",
+      "category"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Two bugs. First, the order: a refund is a credit, so it passes `direction == \"credit\"` and stops at `income` before the refund test is ever reached. The narrow case must come first. Second, `otherwise(\"spending\")` catches every row nothing matched, including a missing direction. The fix tests each case on its direction and leaves `otherwise` for `unknown`: `F.when((F.col(\"direction\") == \"credit\") & (F.col(\"txn_type\") == \"refund\"), \"refund\").when(F.col(\"direction\") == \"credit\", \"income\").when((F.col(\"direction\") == \"debit\") & (F.col(\"txn_type\") == \"fee\"), \"bank_fee\").when(F.col(\"direction\") == \"debit\", \"spending\").otherwise(\"unknown\")`. Testing the direction in the fee rule matters too: a fee with no direction is `unknown`, not `bank_fee`."
+}

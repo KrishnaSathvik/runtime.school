@@ -1,0 +1,49 @@
+{
+ "id": "PS-L009-C2",
+ "slug": "study-time-in-hours",
+ "lesson": "PS-L009",
+ "difficulty": "easy",
+ "minutes": 8,
+ "title": "Study time in hours",
+ "dataset": {
+  "id": "PS-D11",
+  "version": "1.0.0"
+ },
+ "prompt": "The weekly report shows study time in hours as well as minutes. Write `solve(attempts)` so it returns `attempt_id`, `learner_id`, `minutes` (the `minutes_spent` column renamed) and `hours`, which is the minutes divided by 60.",
+ "rules": [
+  "Return exactly four columns, in this order: `attempt_id`, `learner_id`, `minutes`, `hours`.",
+  "`minutes` holds `minutes_spent` unchanged. `hours` is `minutes_spent / 60`, not rounded.",
+  "When the minutes are missing, both `minutes` and `hours` are missing. Keep every attempt."
+ ],
+ "hints": [
+  "`F.col(\"minutes_spent\").alias(\"minutes\")` renames a column inside `select`.",
+  "Arithmetic on a column gives a new column: `F.col(\"minutes_spent\") / 60`.",
+  "A computed column gets an awkward name like `(minutes_spent / 60)` until you give it one with `.alias(\"hours\")`."
+ ],
+ "entry": "solve",
+ "inputs": [
+  "attempts"
+ ],
+ "starter": "from pyspark.sql import functions as F\n\n\ndef solve(attempts):\n    # Return attempt_id, learner_id, minutes and hours.\n    return attempts\n",
+ "output": {
+  "columns": [
+   "attempt_id",
+   "learner_id",
+   "minutes",
+   "hours"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 45,
+  "check_timeout_s": 90,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

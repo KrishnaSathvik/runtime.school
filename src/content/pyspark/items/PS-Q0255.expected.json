@@ -1,0 +1,177 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "product_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "sku",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "P001",
+     "Chef Knife",
+     "KIT-P0011"
+    ],
+    [
+     "P002",
+     "Pour-Over Kettle",
+     "KIT-P0022"
+    ],
+    [
+     "P003",
+     "Trail Bottle",
+     "OUT-P0033"
+    ],
+    [
+     "P004",
+     "Camp Lantern",
+     "OUT-P0044"
+    ],
+    [
+     "P005",
+     "Desk Lamp",
+     "OFF-P0055"
+    ],
+    [
+     "P006",
+     "Notebook Set",
+     "OFF-P0066"
+    ],
+    [
+     "P007",
+     "Linen Throw",
+     "HOM-P0077"
+    ],
+    [
+     "P008",
+     "Wall Clock",
+     "HOM-P0088"
+    ],
+    [
+     "P099",
+     "Bamboo Tray",
+     "KIT-P0998"
+    ],
+    [
+     null,
+     "Unlabelled Crate",
+     null
+    ]
+   ],
+   "row_count": 10,
+   "inputs": {
+    "products": [
+     [
+      "P001",
+      "Chef Knife",
+      "kitchen",
+      "19.99",
+      "true"
+     ],
+     [
+      "P002",
+      "Pour-Over Kettle",
+      "kitchen",
+      "32.50",
+      "true"
+     ],
+     [
+      "P003",
+      "Trail Bottle",
+      "outdoor",
+      "24.00",
+      "true"
+     ],
+     [
+      "P004",
+      "Camp Lantern",
+      "outdoor",
+      "4.50",
+      "true"
+     ],
+     [
+      "P005",
+      "Desk Lamp",
+      "office",
+      "19.99",
+      "true"
+     ],
+     [
+      "P006",
+      "Notebook Set",
+      "office",
+      "12.00",
+      "true"
+     ],
+     [
+      "P007",
+      "Linen Throw",
+      "home",
+      "59.99",
+      "true"
+     ],
+     [
+      "P008",
+      "Wall Clock",
+      "home",
+      "89.00",
+      "true"
+     ],
+     [
+      "P009",
+      "Picnic Blanket",
+      "outdoor",
+      "22.00",
+      "false"
+     ],
+     [
+      "P010",
+      "Gift Card",
+      "gifts",
+      "25.00",
+      null
+     ],
+     [
+      "P099",
+      "Bamboo Tray",
+      "kitchen",
+      "14.00",
+      "true"
+     ],
+     [
+      null,
+      "Unlabelled Crate",
+      "home",
+      "12.00",
+      "true"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice products",
+  "inactive products and a product with no active flag",
+  "ids whose digits add up to 10 or more, and an id with no digits",
+  "a two-letter category, a missing category and a missing id",
+  "an empty products table"
+ ]
+}

@@ -1,0 +1,64 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "order_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "total",
+     "type": "decimal(10,2)",
+     "nullable": true
+    },
+    {
+     "name": "customers_filters",
+     "type": "array<string>",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "O00004",
+     "Ines Costa",
+     "418.96",
+     [
+      "EqualTo(segment,business)",
+      "IsNotNull(customer_id)",
+      "IsNotNull(segment)"
+     ]
+    ],
+    [
+     "O00006",
+     "Ines Costa",
+     "39.98",
+     [
+      "EqualTo(segment,business)",
+      "IsNotNull(customer_id)",
+      "IsNotNull(segment)"
+     ]
+    ]
+   ],
+   "row_count": 2
+  }
+ },
+ "hidden": [
+  "the full practice orders and customers",
+  "customers with no segment",
+  "a business customer listed twice",
+  "orders with no customer or a customer that isn't listed",
+  "no orders at all"
+ ]
+}

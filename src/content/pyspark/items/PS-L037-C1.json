@@ -1,0 +1,27 @@
+{
+  "id": "PS-L037-C1",
+  "slug": "cart-changes-for-the-warehouse",
+  "lesson": "PS-L037",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Cart changes for the warehouse",
+  "dataset": { "id": "PS-D06", "version": "1.0.0" },
+  "prompt": "The warehouse system takes basket changes as flat rows, with the changed items sent as one piece of JSON text. Write `solve(cart_events)` to build that feed.",
+  "rules": [
+    "Return `event_id`, `user_id`, `action`, `lines` and `items_json`, in that order, one row per cart event.",
+    "`lines` is the number of entries in `items`: 0 for an empty list, missing when the list itself is missing.",
+    "`items_json` is the whole `items` list as JSON text, for example `[{\"sku\":\"SKU-1001\",\"qty\":1,\"price\":89.0}]`. A missing list gives a missing value.",
+    "Keep events from anonymous visitors, whose `user_id` is missing."
+  ],
+  "hints": [
+    "`cart_events.printSchema()` shows that `items` is an array of structs.",
+    "`F.size(...)` counts the entries of an array.",
+    "`F.to_json(\"items\")` writes the array as JSON text; name each new column with `.alias`."
+  ],
+  "entry": "solve",
+  "inputs": ["cart_events"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(cart_events):\n    # One flat row per cart event for the warehouse.\n    return cart_events\n",
+  "output": { "columns": ["event_id", "user_id", "action", "lines", "items_json"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

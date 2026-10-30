@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0237",
+  "slug": "publish-unpaid-invoices",
+  "lesson": "PS-L048",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Publish the unpaid invoices",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "Every night the collections team gets a fresh table of unpaid invoices in its own database. Write `publish()` so it copies today's open and overdue invoices from the billing database into the table `unpaid_invoices`. `solve` sets up both databases, runs `publish()` twice, as a rerun would, and reads the table back.",
+  "rules": [
+    "An invoice is unpaid when its status is `open` or `overdue`. Paid, draft and void invoices, and invoices with no status, are not.",
+    "Last night's table is still there. After `publish()` the table holds only today's unpaid invoices, however many times it runs.",
+    "Keep every unpaid invoice the billing database returns, repeats included.",
+    "The table has `invoice_id`, `account_id`, `status` and `total_amount` (decimal(12,2)), in that order."
+  ],
+  "hints": [
+    "Read the unpaid invoices from `BILLING` with a subquery as the table name, then write them to `COLLECTIONS` with `write.jdbc`.",
+    "Run the starter in your head: the table exists before the first `publish()`. What does each save mode do then?",
+    "`append` adds a second copy on the rerun and `ignore` keeps last night's rows. Which mode replaces the rows? SQLite needs `coalesce(1)` for the write."
+  ],
+  "explanation": "Read the rows from billing with the filter in the database, `spark.read.jdbc(BILLING, \"(SELECT invoice_id, account_id, status, total_amount FROM invoices WHERE status IN ('open', 'overdue')) AS unpaid\")`, and write them with `unpaid.coalesce(1).write.jdbc(COLLECTIONS, \"unpaid_invoices\", mode=\"overwrite\")`. The table already exists from last night, so the save mode decides the result. With no mode the write refuses, because the default is `error`. `append` keeps last night's invoice and adds today's twice, once per run. `ignore` leaves last night's table untouched. Only `overwrite` gives the same table however many times the job runs. Filtering with `status <> 'paid'` is too wide: it keeps draft and void invoices.",
+  "entry": "solve",
+  "inputs": [
+    "invoices"
+  ],
+  "starter": "import sqlite3\n\nBILLING = \"jdbc:sqlite:/tmp/billing.db\"\nCOLLECTIONS = \"jdbc:sqlite:/tmp/collections.db\"\n\n\ndef last_nights_table():\n    # Yesterday's run left its table in the collections database. Don't change this.\n    con = sqlite3.connect(\"/tmp/collections.db\")\n    con.execute(\"DROP TABLE IF EXISTS unpaid_invoices\")\n    con.execute(\"CREATE TABLE unpaid_invoices (invoice_id TEXT, account_id TEXT, status TEXT, total_amount DECIMAL(12,2))\")\n    con.execute(\"INSERT INTO unpaid_invoices VALUES ('INV-000099', 'ACC-0004', 'overdue', 120.00)\")\n    con.commit()\n    con.close()\n\n\ndef publish():\n    # Replace the collections table unpaid_invoices with the open and overdue invoices\n    # from the billing database: invoice_id, account_id, status and total_amount.\n    pass\n\n\ndef solve(invoices):\n    invoices.coalesce(1).write.jdbc(BILLING, \"invoices\", mode=\"overwrite\")\n    last_nights_table()\n    publish()\n    publish()  # the job is rerun after a network error\n    return spark.read.jdbc(COLLECTIONS, \"unpaid_invoices\")\n",
+  "output": {
+    "columns": [
+      "invoice_id",
+      "account_id",
+      "status",
+      "total_amount"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

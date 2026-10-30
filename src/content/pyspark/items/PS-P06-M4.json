@@ -1,0 +1,78 @@
+{
+  "id": "PS-P06-M4",
+  "slug": "join-trips-to-the-weather",
+  "project": "PS-P06",
+  "milestone": "PS-P06.m4",
+  "difficulty": "hard",
+  "minutes": 50,
+  "title": "Join each trip to the weather for its hour",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "also": [
+    {
+      "id": "PS-D13",
+      "version": "1.1.0",
+      "tables": [
+        "observations"
+      ]
+    }
+  ],
+  "prompt": "Does the weather change how people ride? The city's official weather station, `NYC-01`, reports in `observations` once an hour, in UTC. A reading describes the hour that ends at its `observed_at`: the 13:00 reading is the weather from 12:00 to 13:00 UTC.\n\nWrite `nyc_readings(observations)`, one clean reading per hour from that station. Then write `trip_weather(trips, observations)`: every valid trip with the reading for the hour it started in. The station has gaps and repeats, so expect some trips with no weather.",
+  "rules": [
+    "`nyc_readings` keeps only the `NYC-01` station (`CITY_STATION`) and one row per `observed_at`: the station sometimes sends the same reading twice. It returns `observed_at`, `temperature_c`, `precipitation_mm` and `wind_speed_kph`.",
+    "In those readings, -9999 means missing, a NaN rain value means the gauge failed, and a temperature above 60 is impossible. Each of these becomes NULL; every other value stays as it is.",
+    "A trip's reading is the one at its `weather_hour`: the start of the UTC hour of `pickup_utc`, plus one hour. A trip leaving at 08:15 New York time in May (12:15 UTC) takes the 13:00 UTC reading.",
+    "`trip_weather` returns every trip of `trip_metrics` once: `trip_id`, `pickup_date`, `pickup_hour`, `weather_hour`, `fare`, `trip_minutes`, `temperature_c`, `precipitation_mm` and `wind_speed_kph`. With no reading for its hour, the three readings are NULL."
+  ],
+  "hints": [
+    "After the station filter, `dropDuplicates([\"observed_at\"])` keeps one reading per hour. `F.when(condition, None).otherwise(F.col(...))` turns a bad value into NULL, and `F.isnan` finds NaN.",
+    "`F.date_trunc(\"hour\", \"pickup_utc\")` drops the minutes and seconds; add `F.expr(\"INTERVAL 1 HOUR\")` to it.",
+    "Join with `how=\"left\"` on `weather_hour == observed_at`, so trips in the station's gaps stay. Remove the repeats before joining, or those trips appear twice."
+  ],
+  "explanation": "Two clocks meet here. The trips run on New York's wall clock and the station on UTC, so the join key is built from `pickup_utc`, never from `pickup_at`: joined on local time, every trip would take the weather from four hours earlier. The station's hour-ending readings explain the `+ 1 hour`. Repeated readings go before the join, because a join matches every copy and turns one trip into two. Broken values become NULL so that no average later counts -9999 or NaN as weather. The left join keeps the trips that started in one of the station's missing hours, with NULL weather, so later counts still cover every valid trip: in this export 4,892 of the 5,044 valid trips find a reading.",
+  "entry": "trip_weather",
+  "inputs": [
+    "trips",
+    "observations"
+  ],
+  "file": "pipeline.py",
+  "append": "\n\nCITY_STATION = \"NYC-01\"\n\n\ndef nyc_readings(observations):\n    # Step 4: one clean reading per hour from the city's station.\n    return observations\n\n\ndef trip_weather(trips, observations):\n    # Step 4: every valid trip with the reading for the hour it started in.\n    return trip_metrics(trips)\n",
+  "prerequisites": [
+    "PS-L018",
+    "PS-L019",
+    "PS-L020",
+    "PS-L025"
+  ],
+  "output": {
+    "columns": [
+      "trip_id",
+      "pickup_date",
+      "pickup_hour",
+      "weather_hour",
+      "fare",
+      "trip_minutes",
+      "temperature_c",
+      "precipitation_mm",
+      "wind_speed_kph"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "example",
+      "sample": true
+    },
+    {
+      "id": "project",
+      "edition": "project"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 150,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "id": "PS-Q0295",
+  "slug": "service-health-from-window-totals",
+  "lesson": "PS-L059",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 17,
+  "title": "Service health from window totals",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "`service_metrics` already holds partial results: one row per service and 5-minute window. Combine them into one row per service, with how often it was deployed. Write `solve(service_metrics, deployments)` so it returns `service`, `requests`, `errors`, `error_rate`, `worst_p99_ms` and `deployments`.",
+  "rules": [
+    "`requests` and `errors` are the service's totals of `request_count` and `error_count`. `error_rate` is `errors` divided by `requests` over the whole period.",
+    "`worst_p99_ms` is the highest `p99_latency_ms` of any of its windows. `deployments` is how many rows `deployments` has for the service, 0 if none.",
+    "One row per service in `service_metrics`; deployed services with no metrics don't appear. Return only these six columns, in this order."
+  ],
+  "hints": [
+    "These windows are like the first step of a two-step aggregation. Which partials combine by summing, and which by taking the largest?",
+    "An average of the windows' rates gives a quiet window as much weight as a busy one. Divide the summed errors by the summed requests instead.",
+    "Total the metrics per service first, then left join `deployments` and count `deployment_id` per service: `F.count` skips the missing ids, so no deployments gives 0."
+  ],
+  "explanation": "Each window is a partial result, so combine it the way the second step of a salted aggregation does: sum the counts, take the maximum of the maximums, and compute the rate from the totals. Averaging the windows' rates is the average-of-averages mistake: a window with 1 request weighs as much as one with 100. Aggregate the metrics to one row per service before joining. Joining the windows to `deployments` first repeats every window once per deployment, so the totals of a service deployed three times triple. After a left join, `F.count(\"deployment_id\")` per service counts real deployments and gives 0 when the id is missing.",
+  "entry": "solve",
+  "inputs": [
+    "service_metrics",
+    "deployments"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(service_metrics, deployments):\n    # Return service, requests, errors, error_rate, worst_p99_ms and deployments: one row per service.\n    return service_metrics\n",
+  "output": {
+    "columns": [
+      "service",
+      "requests",
+      "errors",
+      "error_rate",
+      "worst_p99_ms",
+      "deployments"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

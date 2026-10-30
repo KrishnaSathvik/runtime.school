@@ -1,0 +1,135 @@
+{
+  "id": "PS-L047",
+  "minutes": 25,
+  "lede": "Real tables grow every day, and jobs get rerun. Partitioned folders let a reader skip the days it doesn't need, and the write mode decides whether a rerun replaces data, adds to it or doubles it.",
+  "objectives": [
+    "Write a table split into folders by a column with `partitionBy`",
+    "Read a partitioned folder back, whole or one partition at a time",
+    "Choose between the `overwrite`, `append`, `ignore` and `error` write modes",
+    "Replace only the partitions a write touches with dynamic partition overwrite"
+  ],
+  "dataset": {
+    "id": "PS-D13",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "observations"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`observations` holds weather readings from four stations over two days. `observation_date` is the UTC date of each reading, and it's the natural column to split the files by: most questions ask about particular days.\n\n`df.write.partitionBy(\"observation_date\").parquet(path)` writes one sub-folder per value, named `column=value`, and puts each row in its value's folder. The column itself isn't stored inside the files: its value lives in the folder name. The examples list the folders with plain Python's `os.listdir`, sorted, and leave out the files, whose names change on every run."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "One folder per day",
+      "code": "import os\n\n\ndef folders(path):\n    return sorted(d for d in os.listdir(path) if \"=\" in d)\n\nobservations.write.mode(\"overwrite\").partitionBy(\"observation_date\").parquet(\"/tmp/weather/obs\")\nprint(folders(\"/tmp/weather/obs\"))\n",
+      "note": "Two days, two folders. Every reading from 7 March is in the first and every reading from 8 March in the second."
+    },
+    {
+      "kind": "text",
+      "md": "Reading the top folder gives the whole table back. Spark finds the `column=value` folders, adds the partition column back, and works out its type from the values, here a `date`. It's added as the **last** column.\n\nA query that asks for one day only needs one folder, so Spark can skip the rest without opening them. You can also point a read straight at one partition's folder. Then the partition column isn't there, because it's not in the files; the `basePath` option tells Spark where the table starts, so it adds the column back."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Read all of it, or one day",
+      "code": "observations.write.mode(\"overwrite\").partitionBy(\"observation_date\").parquet(\"/tmp/weather/obs\")\n\nwhole = spark.read.parquet(\"/tmp/weather/obs\")\nprint(whole.columns)\nprint(dict(whole.dtypes)[\"observation_date\"], whole.count())\n\nday = spark.read.parquet(\"/tmp/weather/obs/observation_date=2026-03-08\")\nprint(day.count(), day.columns[-1])\n\nday = spark.read.option(\"basePath\", \"/tmp/weather/obs\").parquet(\"/tmp/weather/obs/observation_date=2026-03-08\")\nprint(day.count(), day.columns[-1])\n",
+      "note": "`observation_date` has moved to the end, typed as a date. The 8 March folder holds 7 readings; read on its own it has no date column, and with `basePath` it has it again."
+    },
+    {
+      "kind": "text",
+      "md": "Partition by a column with **few distinct values** that queries often pick out: a date, a country, a status. Partitioning by something like `observation_id` would make one tiny folder per row. You can give several columns; each becomes a level of folders."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Two levels of folders",
+      "code": "import os\n\n\ndef folders(path):\n    return sorted(d for d in os.listdir(path) if \"=\" in d)\n\nobservations.write.mode(\"overwrite\").partitionBy(\"observation_date\", \"station_id\").parquet(\"/tmp/weather/by_station\")\nfor day in folders(\"/tmp/weather/by_station\"):\n    print(day, folders(\"/tmp/weather/by_station/\" + day))\n",
+      "note": "Each day folder has one folder per station that reported that day. NYC-01 only reported on 8 March, so it appears only there."
+    },
+    {
+      "kind": "text",
+      "md": "The write **mode** decides what happens when the path already exists:\n\n- `error` (also `errorifexists`, the default) refuses and raises an error.\n- `overwrite` deletes what's there and writes the new data.\n- `append` adds new files next to the old ones. Run the same append twice and every row is there twice.\n- `ignore` does nothing at all if the path exists."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Append, ignore and overwrite",
+      "code": "path = \"/tmp/weather/modes\"\nobservations.write.mode(\"overwrite\").partitionBy(\"observation_date\").parquet(path)\nprint(\"overwrite:\", spark.read.parquet(path).count())\n\nobservations.write.mode(\"append\").partitionBy(\"observation_date\").parquet(path)\nprint(\"append:   \", spark.read.parquet(path).count())\n\nobservations.write.mode(\"ignore\").partitionBy(\"observation_date\").parquet(path)\nprint(\"ignore:   \", spark.read.parquet(path).count())\n\nobservations.write.mode(\"overwrite\").partitionBy(\"observation_date\").parquet(path)\nprint(\"overwrite:\", spark.read.parquet(path).count())\n",
+      "note": "Appending the same 12 readings again gives 24: nothing checks for repeats. `ignore` left the folder alone. `overwrite` put it back to 12, which is why a job that may be rerun usually overwrites."
+    },
+    {
+      "kind": "text",
+      "md": "A plain `overwrite` replaces the **whole** folder, every partition, even when the new data covers only one day. To fix one day, that's a disaster. With the option `partitionOverwriteMode` set to `dynamic`, an overwrite replaces only the partitions that appear in the new data and leaves the others alone."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Replace just one day",
+      "code": "import os\n\n\ndef folders(path):\n    return sorted(d for d in os.listdir(path) if \"=\" in d)\n\nfrom datetime import date, datetime\n\nfix = spark.createDataFrame(\n    [(\"OBS-000012\", \"NYC-01\", datetime(2026, 3, 8, 8, 0), date(2026, 3, 8), 0.7, 77, 0.4, 12.9, 1015.3, \"estimated\")],\n    observations.schema,\n)\n\npath = \"/tmp/weather/fixes\"\nobservations.write.mode(\"overwrite\").partitionBy(\"observation_date\").parquet(path)\n\nfix.write.mode(\"overwrite\").option(\"partitionOverwriteMode\", \"dynamic\").partitionBy(\"observation_date\").parquet(path)\nprint(folders(path), spark.read.parquet(path).count())\n\nfix.write.mode(\"overwrite\").partitionBy(\"observation_date\").parquet(path)\nprint(folders(path), spark.read.parquet(path).count())\n",
+      "note": "`fix` is one corrected reading for 8 March. The dynamic overwrite replaced the 8 March folder with it and kept 7 March: 5 + 1 = 6 readings. The plain overwrite wiped both days and left just the one reading."
+    },
+    {
+      "kind": "error-example",
+      "id": "e6",
+      "title": "Partitioning by a column that isn't there",
+      "code": "observations.write.mode(\"overwrite\").partitionBy(\"obs_date\").parquet(\"/tmp/weather/typo\")\n",
+      "error": "AnalysisException",
+      "note": "The column is `observation_date`, and Spark checks before writing anything. The error lists the columns the DataFrame does have."
+    }
+  ],
+  "challenges": [
+    "PS-L047-C1",
+    "PS-L047-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "You write with `partitionBy(\"observation_date\")` and read the top folder back. Where is `observation_date`?",
+      "choices": [
+        "Missing: it's only in the folder names",
+        "Back, as the last column, with its type worked out from the folder names",
+        "Back in its original position",
+        "Inside a struct called partition"
+      ],
+      "answer": 1,
+      "why": "Spark rebuilds the column from the `column=value` folders and adds it at the end; it infers a date from values like 2026-03-08."
+    },
+    {
+      "id": "k2",
+      "prompt": "A job appends the same day's readings twice by mistake. What happens?",
+      "choices": [
+        "The second append is ignored",
+        "The second append replaces the first",
+        "Every reading of that day is stored twice",
+        "It raises an error"
+      ],
+      "answer": 2,
+      "why": "`append` adds new files without looking at what's there, so the rows are duplicated. A rerunnable job overwrites."
+    },
+    {
+      "id": "k3",
+      "prompt": "A folder holds 14 days. You overwrite it with one corrected day, with `partitionOverwriteMode` set to `dynamic`. What's left?",
+      "choices": [
+        "Only the corrected day",
+        "All 14 days, with the corrected day replaced",
+        "15 days",
+        "Nothing: dynamic deletes the folder"
+      ],
+      "answer": 1,
+      "why": "Dynamic overwrite replaces only the partitions present in the new data. A plain overwrite would leave only the corrected day."
+    }
+  ],
+  "review": [
+    "`write.partitionBy(\"col\")` makes one `col=value` folder per value; the value lives in the folder name, not the files.",
+    "Reading the top folder adds the partition column back, last, with an inferred type. Queries for some values can skip the other folders.",
+    "Reading one partition's folder drops the column unless you set `basePath`.",
+    "Partition by a column with few values that queries pick out, such as a date.",
+    "Modes: `error` (default) refuses, `overwrite` replaces, `append` adds (and duplicates on a rerun), `ignore` does nothing if the path exists.",
+    "`option(\"partitionOverwriteMode\", \"dynamic\")` overwrites only the partitions in the new data."
+  ],
+  "practice": ["PS-Q0231", "PS-Q0232", "PS-Q0233", "PS-Q0234", "PS-Q0235"]
+}

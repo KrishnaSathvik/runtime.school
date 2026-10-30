@@ -1,0 +1,58 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "city",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "segment",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "Perth",
+     "consumer"
+    ],
+    [
+     "Denver",
+     "consumer"
+    ],
+    [
+     "Leeds",
+     "consumer"
+    ],
+    [
+     "Denver",
+     "business"
+    ],
+    [
+     "Osaka",
+     "consumer"
+    ],
+    [
+     "Lisbon",
+     "consumer"
+    ]
+   ],
+   "row_count": 6
+  }
+ },
+ "hidden": [
+  "the full practice customers table",
+  "a city with customers in every segment",
+  "customers with a missing city or segment",
+  "cities that differ only in case",
+  "an empty customers table"
+ ]
+}

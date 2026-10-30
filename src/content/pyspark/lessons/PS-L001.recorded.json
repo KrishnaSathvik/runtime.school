@@ -1,0 +1,44 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D11",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "learners",
+   "courses"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "+----------+------------+-------+-----------+----+\n|learner_id|display_name|country|signup_date|plan|\n+----------+------------+-------+-----------+----+\n|      L001|     Aiko M.|     JP| 2026-01-08|plus|\n|      L002|    Bruno S.|     BR| 2026-02-02|free|\n|      L003|    Chidi O.|     NG| 2026-02-17|free|\n|      L004|     Dana K.|     CA| 2026-03-09|plus|\n|      L005|     Elif T.|     DE| 2026-03-23|free|\n+----------+------------+-------+-----------+----+\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "+----------+------------+-------+-----------+----+\n|learner_id|display_name|country|signup_date|plan|\n+----------+------------+-------+-----------+----+\n|      L001|     Aiko M.|     JP| 2026-01-08|plus|\n|      L002|    Bruno S.|     BR| 2026-02-02|free|\n+----------+------------+-------+-----------+----+\nonly showing top 2 rows\n+---------+--------------------+----------------+------------+------------+--------------+\n|course_id|               title|           track|       level|lesson_count|published_date|\n+---------+--------------------+----------------+------------+------------+--------------+\n|      C01|     SQL Foundations|             sql|    beginner|           2|    2025-04-01|\n|      C02|     Python for Data|          python|    beginner|           2|    2025-06-01|\n|      C03|    Spark Essentials|data_engineering|intermediate|           2|    2025-08-01|\n|      C04|Data Modelling Ba...|data_engineering|    beginner|           2|    2025-10-01|\n+---------+--------------------+----------------+------------+------------+--------------+\n\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "5\n4 courses\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "['course_id', 'title', 'track', 'level', 'lesson_count', 'published_date']\n6\nroot\n |-- course_id: string (nullable = true)\n |-- title: string (nullable = true)\n |-- track: string (nullable = true)\n |-- level: string (nullable = true)\n |-- lesson_count: integer (nullable = true)\n |-- published_date: date (nullable = true)\n\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "",
+   "error": {
+    "type": "TypeError",
+    "message": "'list' object is not callable",
+    "line": 1,
+    "condition": null
+   }
+  }
+ }
+}

@@ -1,0 +1,1954 @@
+{
+ "id": "PS-D13",
+ "version": "1.1.0",
+ "title": "Weather & Climate",
+ "generated_by": "services/spark-runner/datasets/d13_weather.py",
+ "rules": [
+  "Every station, its name and its readings are invented for teaching; nothing is copied from NOAA.",
+  "All TIMESTAMP columns are UTC. A station's local time is observed_at converted with from_utc_timestamp(observed_at, timezone).",
+  "observation_date is the UTC calendar date of observed_at (not the local date) and is the column to partition by.",
+  "Lesson and practice: US clocks moved forward at 02:00 local time on 2026-03-08 (07:00 UTC in New York): NYC-01 jumps from 01:00 EST to 03:00 EDT, so there is no 02:00 local reading that day. Lisbon and Berlin change on 2026-03-29; Kolkata and Perth have no daylight-saving time.",
+  "Lesson edition: several readings sit just before and after local midnight, so their local date differs from observation_date (e.g. PNQ-01 at 18:45 UTC is 00:15 the next day in Kolkata).",
+  "temperature_c is empty (null) when the sensor sent nothing. Lesson edition: NYC-01 at 2026-03-08 08:00 UTC.",
+  "precipitation_mm is NaN (not a number \u2014 a real DOUBLE value, not null) when the heated rain gauge reported a fault. NaN is not null: isNull() is false and it must be found with isnan(). Lesson edition: LIS-01 at 2026-03-08 00:30 UTC.",
+  "-9999 in any numeric reading (wind_speed_kph, pressure_hpa, temperature_c, humidity_pct) is the station firmware's code for 'missing' and must be treated as null, never averaged. Lesson edition: PER-01 pressure at 2026-03-07 16:10 UTC.",
+  "precipitation_mm is the rain in the hour (or three hours, for 3-hourly stations) ending at observed_at; 0.0 means it was dry.",
+  "quality_flag is ok, estimated (filled in by the station from neighbours) or suspect (failed the station's own checks).",
+  "NYC-01 reports every hour on the hour; the other stations report every three hours (00:00, 03:00, \u2026 UTC). Practice covers 2026-03-01 to 2026-03-14 (UTC dates); project covers 2026-05-03 to 2026-05-25, the P06 taxi period (no clock change in it: New York is on EDT, UTC-4).",
+  "forecasts are issued at 00:00 UTC each day for 6, 12, 18 and 24 hours ahead; forecast_temp_c differs from what was later observed by a few degrees.",
+  "weather_alerts are raised from the readings: frost (temperature \u2264 -2 \u00b0C), heat (\u2265 32 \u00b0C), heavy_rain (\u2265 4 mm in a reading), high_wind (\u2265 55 km/h). ends_at is empty for an alert still in force at the end of the data.",
+  "Practice edition: about 1% of readings each have a null temperature, a NaN precipitation and a -9999 sentinel.",
+  "Project edition problem 1: missing values are more common (about 3% each of null temperature, NaN precipitation and -9999).",
+  "Project edition problem 2: about 1% of readings were delivered twice: same station, observed_at and values under a new observation_id.",
+  "Project edition problem 3: NYC-01 has gaps \u2014 a dozen hours inside the taxi period with no reading at all \u2014 so an hourly join to taxi trips finds no weather for those hours.",
+  "Project edition problem 4: a few readings are physically impossible (temperature above 60 \u00b0C or humidity above 100%) and are still flagged ok.",
+  "Project edition and PS-D07 (P06): PS-D07's pickup_at and dropoff_at are New York local wall-clock time, and every one of its taxi zones (airports and unknown zone ids included) takes its weather from NYC-01, Harbor Point Station, which stands in zone 10 Harbor Point. A trip's reading is the NYC-01 one at date_trunc('hour', to_utc_timestamp(pickup_at, 'America/New_York')) + 1 hour (the reading for the hour the trip started in).",
+  "Project edition and PS-D07 (P06): for every hour of the taxi period (2026-05-04 00:00 to 2026-05-24 23:00 New York time) NYC-01's temperature_c, precipitation_mm and wind_speed_kph equal PS-D07's project weather_enrichment for that local date and hour, except where a reading is missing, duplicated, null, NaN, -9999 or impossible as the problems above say."
+ ],
+ "relationships": [
+  {
+   "from": "observations.station_id",
+   "to": "stations.station_id"
+  },
+  {
+   "from": "forecasts.station_id",
+   "to": "stations.station_id"
+  },
+  {
+   "from": "weather_alerts.station_id",
+   "to": "stations.station_id"
+  }
+ ],
+ "tables": {
+  "stations": {
+   "note": "One row per weather station: where it is and the IANA time zone its local clock follows.",
+   "columns": [
+    {
+     "name": "station_id",
+     "type": "string"
+    },
+    {
+     "name": "station_name",
+     "type": "string"
+    },
+    {
+     "name": "city",
+     "type": "string"
+    },
+    {
+     "name": "country",
+     "type": "string"
+    },
+    {
+     "name": "latitude",
+     "type": "double"
+    },
+    {
+     "name": "longitude",
+     "type": "double"
+    },
+    {
+     "name": "elevation_m",
+     "type": "int"
+    },
+    {
+     "name": "timezone",
+     "type": "string"
+    },
+    {
+     "name": "active_since",
+     "type": "date"
+    }
+   ],
+   "key": [
+    "station_id"
+   ],
+   "rows": {
+    "lesson": 4,
+    "practice": 8,
+    "project": 8
+   },
+   "lesson": [
+    [
+     "NYC-01",
+     "Harbor Point Station",
+     "New York",
+     "US",
+     "40.7312",
+     "-73.9874",
+     "12",
+     "America/New_York",
+     "2019-01-01"
+    ],
+    [
+     "LIS-01",
+     "Alfama Hill Station",
+     "Lisbon",
+     "PT",
+     "38.7139",
+     "-9.1334",
+     "95",
+     "Europe/Lisbon",
+     "2020-02-01"
+    ],
+    [
+     "PNQ-01",
+     "Sinhagad Road Station",
+     "Pune",
+     "IN",
+     "18.4815",
+     "73.8262",
+     "560",
+     "Asia/Kolkata",
+     "2021-03-01"
+    ],
+    [
+     "PER-01",
+     "Swan Reach Station",
+     "Perth",
+     "AU",
+     "-31.9488",
+     "115.8563",
+     "24",
+     "Australia/Perth",
+     "2022-04-01"
+    ]
+   ],
+   "practice_head": [
+    [
+     "NYC-01",
+     "Harbor Point Station",
+     "New York",
+     "US",
+     "40.7312",
+     "-73.9874",
+     "12",
+     "America/New_York",
+     "2019-01-01"
+    ],
+    [
+     "LIS-01",
+     "Alfama Hill Station",
+     "Lisbon",
+     "PT",
+     "38.7139",
+     "-9.1334",
+     "95",
+     "Europe/Lisbon",
+     "2020-02-01"
+    ],
+    [
+     "PNQ-01",
+     "Sinhagad Road Station",
+     "Pune",
+     "IN",
+     "18.4815",
+     "73.8262",
+     "560",
+     "Asia/Kolkata",
+     "2021-03-01"
+    ],
+    [
+     "PER-01",
+     "Swan Reach Station",
+     "Perth",
+     "AU",
+     "-31.9488",
+     "115.8563",
+     "24",
+     "Australia/Perth",
+     "2022-04-01"
+    ],
+    [
+     "CHI-01",
+     "Lakefront Yard Station",
+     "Chicago",
+     "US",
+     "41.8902",
+     "-87.6081",
+     "180",
+     "America/Chicago",
+     "2023-05-01"
+    ],
+    [
+     "DEN-01",
+     "Foothill Ridge Station",
+     "Denver",
+     "US",
+     "39.742",
+     "-104.9915",
+     "1609",
+     "America/Denver",
+     "2019-06-01"
+    ],
+    [
+     "SEA-01",
+     "Sound View Station",
+     "Seattle",
+     "US",
+     "47.608",
+     "-122.3371",
+     "54",
+     "America/Los_Angeles",
+     "2020-07-01"
+    ],
+    [
+     "BER-01",
+     "Spreebogen Station",
+     "Berlin",
+     "DE",
+     "52.519",
+     "13.3761",
+     "34",
+     "Europe/Berlin",
+     "2021-08-01"
+    ]
+   ],
+   "project_head": [
+    [
+     "NYC-01",
+     "Harbor Point Station",
+     "New York",
+     "US",
+     "40.7312",
+     "-73.9874",
+     "12",
+     "America/New_York",
+     "2019-01-01"
+    ],
+    [
+     "LIS-01",
+     "Alfama Hill Station",
+     "Lisbon",
+     "PT",
+     "38.7139",
+     "-9.1334",
+     "95",
+     "Europe/Lisbon",
+     "2020-02-01"
+    ],
+    [
+     "PNQ-01",
+     "Sinhagad Road Station",
+     "Pune",
+     "IN",
+     "18.4815",
+     "73.8262",
+     "560",
+     "Asia/Kolkata",
+     "2021-03-01"
+    ],
+    [
+     "PER-01",
+     "Swan Reach Station",
+     "Perth",
+     "AU",
+     "-31.9488",
+     "115.8563",
+     "24",
+     "Australia/Perth",
+     "2022-04-01"
+    ],
+    [
+     "CHI-01",
+     "Lakefront Yard Station",
+     "Chicago",
+     "US",
+     "41.8902",
+     "-87.6081",
+     "180",
+     "America/Chicago",
+     "2023-05-01"
+    ],
+    [
+     "DEN-01",
+     "Foothill Ridge Station",
+     "Denver",
+     "US",
+     "39.742",
+     "-104.9915",
+     "1609",
+     "America/Denver",
+     "2019-06-01"
+    ],
+    [
+     "SEA-01",
+     "Sound View Station",
+     "Seattle",
+     "US",
+     "47.608",
+     "-122.3371",
+     "54",
+     "America/Los_Angeles",
+     "2020-07-01"
+    ],
+    [
+     "BER-01",
+     "Spreebogen Station",
+     "Berlin",
+     "DE",
+     "52.519",
+     "13.3761",
+     "34",
+     "Europe/Berlin",
+     "2021-08-01"
+    ]
+   ]
+  },
+  "observations": {
+   "note": "One row per reading a station sent: the UTC time, its UTC date for partitioning, and the measured values.",
+   "columns": [
+    {
+     "name": "observation_id",
+     "type": "string"
+    },
+    {
+     "name": "station_id",
+     "type": "string"
+    },
+    {
+     "name": "observed_at",
+     "type": "timestamp"
+    },
+    {
+     "name": "observation_date",
+     "type": "date"
+    },
+    {
+     "name": "temperature_c",
+     "type": "double"
+    },
+    {
+     "name": "humidity_pct",
+     "type": "int"
+    },
+    {
+     "name": "precipitation_mm",
+     "type": "double"
+    },
+    {
+     "name": "wind_speed_kph",
+     "type": "double"
+    },
+    {
+     "name": "pressure_hpa",
+     "type": "double"
+    },
+    {
+     "name": "quality_flag",
+     "type": "string"
+    }
+   ],
+   "key": [
+    "observation_id"
+   ],
+   "rows": {
+    "lesson": 12,
+    "practice": 1120,
+    "project": 1845
+   },
+   "lesson": [
+    [
+     "OBS-000001",
+     "PER-01",
+     "2026-03-07T15:50:00",
+     "2026-03-07",
+     "21.3",
+     "55",
+     "0.0",
+     "15.2",
+     "1012.7",
+     "ok"
+    ],
+    [
+     "OBS-000002",
+     "PER-01",
+     "2026-03-07T16:10:00",
+     "2026-03-07",
+     "21.0",
+     "56",
+     "0.0",
+     "14.6",
+     "-9999",
+     "ok"
+    ],
+    [
+     "OBS-000003",
+     "PNQ-01",
+     "2026-03-07T18:15:00",
+     "2026-03-07",
+     "24.8",
+     "31",
+     "0.0",
+     "6.1",
+     "1008.9",
+     "ok"
+    ],
+    [
+     "OBS-000004",
+     "PNQ-01",
+     "2026-03-07T18:45:00",
+     "2026-03-07",
+     "24.1",
+     "33",
+     "0.0",
+     "5.4",
+     "1009.1",
+     "ok"
+    ],
+    [
+     "OBS-000005",
+     "LIS-01",
+     "2026-03-07T23:30:00",
+     "2026-03-07",
+     "11.4",
+     "81",
+     "0.0",
+     "9.4",
+     "1019.0",
+     "ok"
+    ],
+    [
+     "OBS-000006",
+     "LIS-01",
+     "2026-03-08T00:30:00",
+     "2026-03-08",
+     "11.0",
+     "83",
+     "NaN",
+     "8.7",
+     "1018.6",
+     "ok"
+    ],
+    [
+     "OBS-000007",
+     "NYC-01",
+     "2026-03-08T04:00:00",
+     "2026-03-08",
+     "2.1",
+     "71",
+     "0.0",
+     "14.8",
+     "1016.2",
+     "ok"
+    ],
+    [
+     "OBS-000008",
+     "PER-01",
+     "2026-03-08T04:00:00",
+     "2026-03-08",
+     "33.4",
+     "24",
+     "0.0",
+     "22.8",
+     "1010.4",
+     "ok"
+    ],
+    [
+     "OBS-000009",
+     "NYC-01",
+     "2026-03-08T05:00:00",
+     "2026-03-08",
+     "1.6",
+     "73",
+     "0.0",
+     "13.0",
+     "1016.4",
+     "ok"
+    ],
+    [
+     "OBS-000010",
+     "NYC-01",
+     "2026-03-08T06:00:00",
+     "2026-03-08",
+     "1.2",
+     "74",
+     "0.0",
+     "12.2",
+     "1016.1",
+     "ok"
+    ],
+    [
+     "OBS-000011",
+     "NYC-01",
+     "2026-03-08T07:00:00",
+     "2026-03-08",
+     "0.9",
+     "76",
+     "0.2",
+     "11.5",
+     "1015.8",
+     "ok"
+    ],
+    [
+     "OBS-000012",
+     "NYC-01",
+     "2026-03-08T08:00:00",
+     "2026-03-08",
+     null,
+     "77",
+     "0.4",
+     "12.9",
+     "1015.3",
+     "ok"
+    ]
+   ],
+   "practice_head": [
+    [
+     "OBS-000001",
+     "BER-01",
+     "2026-03-01T00:00:00",
+     "2026-03-01",
+     "4.1",
+     "71",
+     "0.0",
+     "25.5",
+     "1012.7",
+     "ok"
+    ],
+    [
+     "OBS-000002",
+     "CHI-01",
+     "2026-03-01T00:00:00",
+     "2026-03-01",
+     "11.1",
+     "58",
+     "0.0",
+     "28.0",
+     "1018.5",
+     "ok"
+    ],
+    [
+     "OBS-000003",
+     "DEN-01",
+     "2026-03-01T00:00:00",
+     "2026-03-01",
+     "11.5",
+     "38",
+     "0.0",
+     "33.4",
+     "988.2",
+     "ok"
+    ],
+    [
+     "OBS-000004",
+     "LIS-01",
+     "2026-03-01T00:00:00",
+     "2026-03-01",
+     "9.9",
+     "76",
+     "0.0",
+     "12.5",
+     "1017.2",
+     "ok"
+    ],
+    [
+     "OBS-000005",
+     "NYC-01",
+     "2026-03-01T00:00:00",
+     "2026-03-01",
+     "7.5",
+     "64",
+     "0.0",
+     "15.6",
+     "1018.9",
+     "ok"
+    ],
+    [
+     "OBS-000006",
+     "PER-01",
+     "2026-03-01T00:00:00",
+     "2026-03-01",
+     "26.6",
+     "41",
+     "0.0",
+     "21.0",
+     "1001.5",
+     "ok"
+    ],
+    [
+     "OBS-000007",
+     "PNQ-01",
+     "2026-03-01T00:00:00",
+     "2026-03-01",
+     "21.4",
+     "46",
+     "0.0",
+     "14.4",
+     "1007.0",
+     "ok"
+    ],
+    [
+     "OBS-000008",
+     "SEA-01",
+     "2026-03-01T00:00:00",
+     "2026-03-01",
+     "15.4",
+     "68",
+     "0.0",
+     "51.7",
+     "995.6",
+     "ok"
+    ],
+    [
+     "OBS-000009",
+     "NYC-01",
+     "2026-03-01T01:00:00",
+     "2026-03-01",
+     "6.1",
+     "58",
+     "0.0",
+     "18.9",
+     "1013.1",
+     "ok"
+    ],
+    [
+     "OBS-000010",
+     "NYC-01",
+     "2026-03-01T02:00:00",
+     "2026-03-01",
+     "5.4",
+     "70",
+     "0.0",
+     "23.1",
+     "1010.3",
+     "ok"
+    ],
+    [
+     "OBS-000011",
+     "BER-01",
+     "2026-03-01T03:00:00",
+     "2026-03-01",
+     "3.0",
+     "69",
+     "0.0",
+     "21.9",
+     "1016.3",
+     "ok"
+    ],
+    [
+     "OBS-000012",
+     "CHI-01",
+     "2026-03-01T03:00:00",
+     "2026-03-01",
+     "7.1",
+     "65",
+     "0.0",
+     "17.1",
+     "1015.1",
+     "ok"
+    ],
+    [
+     "OBS-000013",
+     "DEN-01",
+     "2026-03-01T03:00:00",
+     "2026-03-01",
+     "6.7",
+     "31",
+     "0.0",
+     "32.6",
+     "1009.0",
+     "ok"
+    ],
+    [
+     "OBS-000014",
+     "LIS-01",
+     "2026-03-01T03:00:00",
+     "2026-03-01",
+     "9.5",
+     "81",
+     "0.0",
+     "15.3",
+     "1011.8",
+     "ok"
+    ],
+    [
+     "OBS-000015",
+     "NYC-01",
+     "2026-03-01T03:00:00",
+     "2026-03-01",
+     "3.3",
+     "71",
+     "0.0",
+     "15.5",
+     "1018.8",
+     "ok"
+    ],
+    [
+     "OBS-000016",
+     "PER-01",
+     "2026-03-01T03:00:00",
+     "2026-03-01",
+     "30.8",
+     "39",
+     "0.0",
+     "29.9",
+     "1023.6",
+     "ok"
+    ],
+    [
+     "OBS-000017",
+     "PNQ-01",
+     "2026-03-01T03:00:00",
+     "2026-03-01",
+     "26.4",
+     "36",
+     "0.0",
+     "8.5",
+     "1010.9",
+     "ok"
+    ],
+    [
+     "OBS-000018",
+     "SEA-01",
+     "2026-03-01T03:00:00",
+     "2026-03-01",
+     "16.2",
+     "84",
+     "0.3",
+     "11.3",
+     "1006.3",
+     "ok"
+    ],
+    [
+     "OBS-000019",
+     "NYC-01",
+     "2026-03-01T04:00:00",
+     "2026-03-01",
+     "3.5",
+     "67",
+     "0.0",
+     "21.6",
+     "1023.0",
+     "ok"
+    ],
+    [
+     "OBS-000020",
+     "NYC-01",
+     "2026-03-01T05:00:00",
+     "2026-03-01",
+     "2.6",
+     "67",
+     "0.0",
+     "14.0",
+     "1020.7",
+     "ok"
+    ]
+   ],
+   "project_head": [
+    [
+     "OBS-000001",
+     "BER-01",
+     "2026-05-03T00:00:00",
+     "2026-05-03",
+     "7.2",
+     "100",
+     "0.2",
+     "5.7",
+     "1008.4",
+     "ok"
+    ],
+    [
+     "OBS-000002",
+     "CHI-01",
+     "2026-05-03T00:00:00",
+     "2026-05-03",
+     "14.7",
+     "55",
+     "0.0",
+     "19.2",
+     "1021.8",
+     "ok"
+    ],
+    [
+     "OBS-000003",
+     "DEN-01",
+     "2026-05-03T00:00:00",
+     "2026-05-03",
+     "25.2",
+     "18",
+     "0.0",
+     "66.9",
+     "1001.0",
+     "ok"
+    ],
+    [
+     "OBS-000004",
+     "LIS-01",
+     "2026-05-03T00:00:00",
+     "2026-05-03",
+     "17.1",
+     "70",
+     "0.0",
+     "18.6",
+     "1013.7",
+     "ok"
+    ],
+    [
+     "OBS-000005",
+     "NYC-01",
+     "2026-05-03T00:00:00",
+     "2026-05-03",
+     "11.7",
+     "67",
+     "0.0",
+     "24.6",
+     "1009.3",
+     "ok"
+    ],
+    [
+     "OBS-000006",
+     "PER-01",
+     "2026-05-03T00:00:00",
+     "2026-05-03",
+     null,
+     "43",
+     "0.0",
+     "26.7",
+     "1017.3",
+     "ok"
+    ],
+    [
+     "OBS-000007",
+     "PNQ-01",
+     "2026-05-03T00:00:00",
+     "2026-05-03",
+     "32.6",
+     "26",
+     "0.0",
+     "11.0",
+     "999.1",
+     "ok"
+    ],
+    [
+     "OBS-000008",
+     "SEA-01",
+     "2026-05-03T00:00:00",
+     "2026-05-03",
+     "15.1",
+     "74",
+     "0.0",
+     "5.4",
+     "1008.9",
+     "ok"
+    ],
+    [
+     "OBS-000009",
+     "NYC-01",
+     "2026-05-03T01:00:00",
+     "2026-05-03",
+     "11.0",
+     "70",
+     "0.0",
+     "19.8",
+     "1010.7",
+     "ok"
+    ],
+    [
+     "OBS-000010",
+     "NYC-01",
+     "2026-05-03T02:00:00",
+     "2026-05-03",
+     "11.2",
+     "59",
+     "0.0",
+     "22.0",
+     "1016.2",
+     "ok"
+    ],
+    [
+     "OBS-000011",
+     "BER-01",
+     "2026-05-03T03:00:00",
+     "2026-05-03",
+     "9.3",
+     "78",
+     "0.0",
+     "26.1",
+     "1024.9",
+     "ok"
+    ],
+    [
+     "OBS-000012",
+     "CHI-01",
+     "2026-05-03T03:00:00",
+     "2026-05-03",
+     "11.7",
+     "79",
+     "0.0",
+     "29.3",
+     "1018.7",
+     "ok"
+    ],
+    [
+     "OBS-000013",
+     "DEN-01",
+     "2026-05-03T03:00:00",
+     "2026-05-03",
+     "18.5",
+     "27",
+     "0.0",
+     "22.7",
+     "995.7",
+     "ok"
+    ],
+    [
+     "OBS-000014",
+     "LIS-01",
+     "2026-05-03T03:00:00",
+     "2026-05-03",
+     "15.9",
+     "78",
+     "0.0",
+     "16.5",
+     "1021.8",
+     "ok"
+    ],
+    [
+     "OBS-000015",
+     "NYC-01",
+     "2026-05-03T03:00:00",
+     "2026-05-03",
+     "9.2",
+     "72",
+     "0.0",
+     "35.3",
+     "1009.6",
+     "ok"
+    ],
+    [
+     "OBS-000016",
+     "PER-01",
+     "2026-05-03T03:00:00",
+     "2026-05-03",
+     "21.4",
+     "34",
+     "0.0",
+     "14.5",
+     "1022.5",
+     "ok"
+    ],
+    [
+     "OBS-000017",
+     "PNQ-01",
+     "2026-05-03T03:00:00",
+     "2026-05-03",
+     "36.8",
+     "28",
+     "0.0",
+     "9.6",
+     "1011.9",
+     "ok"
+    ],
+    [
+     "OBS-000018",
+     "SEA-01",
+     "2026-05-03T03:00:00",
+     "2026-05-03",
+     "13.3",
+     "74",
+     "0.0",
+     "8.6",
+     "1021.0",
+     "ok"
+    ],
+    [
+     "OBS-000019",
+     "NYC-01",
+     "2026-05-03T04:00:00",
+     "2026-05-03",
+     "9.0",
+     "68",
+     "0.0",
+     "18.2",
+     "1004.2",
+     "ok"
+    ],
+    [
+     "OBS-000020",
+     "NYC-01",
+     "2026-05-03T05:00:00",
+     "2026-05-03",
+     "7.8",
+     "67",
+     "0.0",
+     "12.7",
+     "1006.1",
+     "ok"
+    ]
+   ]
+  },
+  "forecasts": {
+   "note": "One row per forecast: issued at midnight UTC for a station, predicting one later hour.",
+   "columns": [
+    {
+     "name": "forecast_id",
+     "type": "string"
+    },
+    {
+     "name": "station_id",
+     "type": "string"
+    },
+    {
+     "name": "issued_at",
+     "type": "timestamp"
+    },
+    {
+     "name": "valid_for",
+     "type": "timestamp"
+    },
+    {
+     "name": "forecast_temp_c",
+     "type": "double"
+    },
+    {
+     "name": "precip_probability_pct",
+     "type": "int"
+    },
+    {
+     "name": "forecast_precip_mm",
+     "type": "double"
+    }
+   ],
+   "key": [
+    "forecast_id"
+   ],
+   "rows": {
+    "lesson": 6,
+    "practice": 440,
+    "project": 728
+   },
+   "lesson": [
+    [
+     "FC-000001",
+     "NYC-01",
+     "2026-03-08T00:00:00",
+     "2026-03-08T06:00:00",
+     "1.0",
+     "20",
+     "0.0"
+    ],
+    [
+     "FC-000002",
+     "NYC-01",
+     "2026-03-08T00:00:00",
+     "2026-03-08T12:00:00",
+     "6.5",
+     "35",
+     "0.0"
+    ],
+    [
+     "FC-000003",
+     "LIS-01",
+     "2026-03-08T00:00:00",
+     "2026-03-08T06:00:00",
+     "10.2",
+     "60",
+     "1.2"
+    ],
+    [
+     "FC-000004",
+     "PNQ-01",
+     "2026-03-08T00:00:00",
+     "2026-03-08T06:00:00",
+     "31.5",
+     "0",
+     "0.0"
+    ],
+    [
+     "FC-000005",
+     "PER-01",
+     "2026-03-08T00:00:00",
+     "2026-03-08T06:00:00",
+     "32.1",
+     "5",
+     "0.0"
+    ],
+    [
+     "FC-000006",
+     "PER-01",
+     "2026-03-08T00:00:00",
+     "2026-03-08T12:00:00",
+     "26.0",
+     "0",
+     "0.0"
+    ]
+   ],
+   "practice_head": [
+    [
+     "FC-000001",
+     "BER-01",
+     "2026-03-01T00:00:00",
+     "2026-03-01T06:00:00",
+     "3.3",
+     "5",
+     "0.0"
+    ],
+    [
+     "FC-000002",
+     "BER-01",
+     "2026-03-01T00:00:00",
+     "2026-03-01T12:00:00",
+     "8.7",
+     "0",
+     "0.0"
+    ],
+    [
+     "FC-000003",
+     "BER-01",
+     "2026-03-01T00:00:00",
+     "2026-03-01T18:00:00",
+     "11.2",
+     "15",
+     "0.0"
+    ],
+    [
+     "FC-000004",
+     "BER-01",
+     "2026-03-01T00:00:00",
+     "2026-03-02T00:00:00",
+     "10.2",
+     "10",
+     "0.0"
+    ],
+    [
+     "FC-000005",
+     "CHI-01",
+     "2026-03-01T00:00:00",
+     "2026-03-01T06:00:00",
+     "8.4",
+     "10",
+     "0.0"
+    ],
+    [
+     "FC-000006",
+     "CHI-01",
+     "2026-03-01T00:00:00",
+     "2026-03-01T12:00:00",
+     "2.3",
+     "20",
+     "0.0"
+    ],
+    [
+     "FC-000007",
+     "CHI-01",
+     "2026-03-01T00:00:00",
+     "2026-03-01T18:00:00",
+     "12.1",
+     "35",
+     "0.0"
+    ],
+    [
+     "FC-000008",
+     "CHI-01",
+     "2026-03-01T00:00:00",
+     "2026-03-02T00:00:00",
+     "4.2",
+     "15",
+     "0.0"
+    ],
+    [
+     "FC-000009",
+     "DEN-01",
+     "2026-03-01T00:00:00",
+     "2026-03-01T06:00:00",
+     "3.1",
+     "20",
+     "0.0"
+    ],
+    [
+     "FC-000010",
+     "DEN-01",
+     "2026-03-01T00:00:00",
+     "2026-03-01T12:00:00",
+     "-2.9",
+     "5",
+     "0.0"
+    ],
+    [
+     "FC-000011",
+     "DEN-01",
+     "2026-03-01T00:00:00",
+     "2026-03-01T18:00:00",
+     "5.2",
+     "15",
+     "0.0"
+    ],
+    [
+     "FC-000012",
+     "DEN-01",
+     "2026-03-01T00:00:00",
+     "2026-03-02T00:00:00",
+     "8.7",
+     "25",
+     "0.0"
+    ],
+    [
+     "FC-000013",
+     "LIS-01",
+     "2026-03-01T00:00:00",
+     "2026-03-01T06:00:00",
+     "7.6",
+     "15",
+     "0.0"
+    ],
+    [
+     "FC-000014",
+     "LIS-01",
+     "2026-03-01T00:00:00",
+     "2026-03-01T12:00:00",
+     "12.3",
+     "30",
+     "0.0"
+    ],
+    [
+     "FC-000015",
+     "LIS-01",
+     "2026-03-01T00:00:00",
+     "2026-03-01T18:00:00",
+     "14.3",
+     "15",
+     "0.0"
+    ],
+    [
+     "FC-000016",
+     "LIS-01",
+     "2026-03-01T00:00:00",
+     "2026-03-02T00:00:00",
+     "5.5",
+     "20",
+     "0.0"
+    ],
+    [
+     "FC-000017",
+     "NYC-01",
+     "2026-03-01T00:00:00",
+     "2026-03-01T06:00:00",
+     "-0.3",
+     "20",
+     "0.0"
+    ],
+    [
+     "FC-000018",
+     "NYC-01",
+     "2026-03-01T00:00:00",
+     "2026-03-01T12:00:00",
+     "1.9",
+     "40",
+     "0.0"
+    ],
+    [
+     "FC-000019",
+     "NYC-01",
+     "2026-03-01T00:00:00",
+     "2026-03-01T18:00:00",
+     "7.3",
+     "0",
+     "0.0"
+    ],
+    [
+     "FC-000020",
+     "NYC-01",
+     "2026-03-01T00:00:00",
+     "2026-03-02T00:00:00",
+     "8.5",
+     "60",
+     "1.5"
+    ]
+   ],
+   "project_head": [
+    [
+     "FC-000001",
+     "BER-01",
+     "2026-05-03T00:00:00",
+     "2026-05-03T06:00:00",
+     "15.1",
+     "10",
+     "0.0"
+    ],
+    [
+     "FC-000002",
+     "BER-01",
+     "2026-05-03T00:00:00",
+     "2026-05-03T12:00:00",
+     "13.8",
+     "85",
+     "2.6"
+    ],
+    [
+     "FC-000003",
+     "BER-01",
+     "2026-05-03T00:00:00",
+     "2026-05-03T18:00:00",
+     "17.8",
+     "0",
+     "0.0"
+    ],
+    [
+     "FC-000004",
+     "BER-01",
+     "2026-05-03T00:00:00",
+     "2026-05-04T00:00:00",
+     "15.3",
+     "0",
+     "0.0"
+    ],
+    [
+     "FC-000005",
+     "CHI-01",
+     "2026-05-03T00:00:00",
+     "2026-05-03T06:00:00",
+     "12.8",
+     "25",
+     "0.0"
+    ],
+    [
+     "FC-000006",
+     "CHI-01",
+     "2026-05-03T00:00:00",
+     "2026-05-03T12:00:00",
+     "11.2",
+     "15",
+     "0.0"
+    ],
+    [
+     "FC-000007",
+     "CHI-01",
+     "2026-05-03T00:00:00",
+     "2026-05-03T18:00:00",
+     "15.1",
+     "0",
+     "0.0"
+    ],
+    [
+     "FC-000008",
+     "CHI-01",
+     "2026-05-03T00:00:00",
+     "2026-05-04T00:00:00",
+     "17.3",
+     "60",
+     "2.4"
+    ],
+    [
+     "FC-000009",
+     "DEN-01",
+     "2026-05-03T00:00:00",
+     "2026-05-03T06:00:00",
+     "11.8",
+     "15",
+     "0.0"
+    ],
+    [
+     "FC-000010",
+     "DEN-01",
+     "2026-05-03T00:00:00",
+     "2026-05-03T12:00:00",
+     "13.9",
+     "15",
+     "0.0"
+    ],
+    [
+     "FC-000011",
+     "DEN-01",
+     "2026-05-03T00:00:00",
+     "2026-05-03T18:00:00",
+     "25.6",
+     "25",
+     "0.0"
+    ],
+    [
+     "FC-000012",
+     "DEN-01",
+     "2026-05-03T00:00:00",
+     "2026-05-04T00:00:00",
+     "14.2",
+     "30",
+     "0.0"
+    ],
+    [
+     "FC-000013",
+     "LIS-01",
+     "2026-05-03T00:00:00",
+     "2026-05-03T06:00:00",
+     "16.5",
+     "5",
+     "0.0"
+    ],
+    [
+     "FC-000014",
+     "LIS-01",
+     "2026-05-03T00:00:00",
+     "2026-05-03T12:00:00",
+     "17.2",
+     "10",
+     "0.0"
+    ],
+    [
+     "FC-000015",
+     "LIS-01",
+     "2026-05-03T00:00:00",
+     "2026-05-03T18:00:00",
+     "18.5",
+     "20",
+     "0.0"
+    ],
+    [
+     "FC-000016",
+     "LIS-01",
+     "2026-05-03T00:00:00",
+     "2026-05-04T00:00:00",
+     "15.3",
+     "0",
+     "0.0"
+    ],
+    [
+     "FC-000017",
+     "NYC-01",
+     "2026-05-03T00:00:00",
+     "2026-05-03T06:00:00",
+     "9.3",
+     "0",
+     "0.0"
+    ],
+    [
+     "FC-000018",
+     "NYC-01",
+     "2026-05-03T00:00:00",
+     "2026-05-03T12:00:00",
+     "9.9",
+     "15",
+     "0.0"
+    ],
+    [
+     "FC-000019",
+     "NYC-01",
+     "2026-05-03T00:00:00",
+     "2026-05-03T18:00:00",
+     "10.3",
+     "10",
+     "0.0"
+    ],
+    [
+     "FC-000020",
+     "NYC-01",
+     "2026-05-03T00:00:00",
+     "2026-05-04T00:00:00",
+     "5.6",
+     "10",
+     "0.0"
+    ]
+   ]
+  },
+  "weather_alerts": {
+   "note": "One row per alert raised for a station, with when it starts and ends.",
+   "columns": [
+    {
+     "name": "alert_id",
+     "type": "string"
+    },
+    {
+     "name": "station_id",
+     "type": "string"
+    },
+    {
+     "name": "alert_type",
+     "type": "string"
+    },
+    {
+     "name": "severity",
+     "type": "string"
+    },
+    {
+     "name": "issued_at",
+     "type": "timestamp"
+    },
+    {
+     "name": "starts_at",
+     "type": "timestamp"
+    },
+    {
+     "name": "ends_at",
+     "type": "timestamp"
+    },
+    {
+     "name": "headline",
+     "type": "string"
+    }
+   ],
+   "key": [
+    "alert_id"
+   ],
+   "rows": {
+    "lesson": 4,
+    "practice": 64,
+    "project": 69
+   },
+   "lesson": [
+    [
+     "AL-0001",
+     "NYC-01",
+     "frost",
+     "watch",
+     "2026-03-09T06:00:00",
+     "2026-03-09T08:00:00",
+     "2026-03-09T12:00:00",
+     "Frost expected; protect exposed pipes and plants."
+    ],
+    [
+     "AL-0002",
+     "PER-01",
+     "heat",
+     "warning",
+     "2026-03-08T01:00:00",
+     "2026-03-08T03:00:00",
+     "2026-03-08T10:00:00",
+     "High temperatures; limit outdoor work in the afternoon."
+    ],
+    [
+     "AL-0003",
+     "LIS-01",
+     "heavy_rain",
+     "advisory",
+     "2026-03-08T09:00:00",
+     "2026-03-08T11:00:00",
+     "2026-03-08T13:00:00",
+     "Heavy rain; localized flooding possible."
+    ],
+    [
+     "AL-0004",
+     "NYC-01",
+     "high_wind",
+     "advisory",
+     "2026-03-08T16:00:00",
+     "2026-03-08T18:00:00",
+     null,
+     "Strong winds; secure loose objects."
+    ]
+   ],
+   "practice_head": [
+    [
+     "AL-0001",
+     "PER-01",
+     "heat",
+     "watch",
+     "2026-03-01T04:00:00",
+     "2026-03-01T06:00:00",
+     "2026-03-01T09:00:00",
+     "High temperatures; limit outdoor work in the afternoon."
+    ],
+    [
+     "AL-0002",
+     "CHI-01",
+     "high_wind",
+     "watch",
+     "2026-03-01T07:00:00",
+     "2026-03-01T09:00:00",
+     "2026-03-01T12:00:00",
+     "Strong winds; secure loose objects."
+    ],
+    [
+     "AL-0003",
+     "DEN-01",
+     "frost",
+     "warning",
+     "2026-03-01T07:00:00",
+     "2026-03-01T09:00:00",
+     "2026-03-01T15:00:00",
+     "Frost expected; protect exposed pipes and plants."
+    ],
+    [
+     "AL-0004",
+     "PNQ-01",
+     "heat",
+     "watch",
+     "2026-03-01T07:00:00",
+     "2026-03-01T09:00:00",
+     "2026-03-01T12:00:00",
+     "High temperatures; limit outdoor work in the afternoon."
+    ],
+    [
+     "AL-0005",
+     "NYC-01",
+     "high_wind",
+     "advisory",
+     "2026-03-01T19:00:00",
+     "2026-03-01T21:00:00",
+     "2026-03-01T22:00:00",
+     "Strong winds; secure loose objects."
+    ],
+    [
+     "AL-0006",
+     "DEN-01",
+     "frost",
+     "warning",
+     "2026-03-02T04:00:00",
+     "2026-03-02T06:00:00",
+     "2026-03-02T18:00:00",
+     "Frost expected; protect exposed pipes and plants."
+    ],
+    [
+     "AL-0007",
+     "PER-01",
+     "heat",
+     "warning",
+     "2026-03-02T04:00:00",
+     "2026-03-02T06:00:00",
+     "2026-03-02T12:00:00",
+     "High temperatures; limit outdoor work in the afternoon."
+    ],
+    [
+     "AL-0008",
+     "PNQ-01",
+     "heat",
+     "warning",
+     "2026-03-02T04:00:00",
+     "2026-03-02T06:00:00",
+     "2026-03-02T15:00:00",
+     "High temperatures; limit outdoor work in the afternoon."
+    ],
+    [
+     "AL-0009",
+     "LIS-01",
+     "heavy_rain",
+     "warning",
+     "2026-03-02T10:00:00",
+     "2026-03-02T12:00:00",
+     "2026-03-02T18:00:00",
+     "Heavy rain; localized flooding possible."
+    ],
+    [
+     "AL-0010",
+     "PER-01",
+     "high_wind",
+     "watch",
+     "2026-03-03T01:00:00",
+     "2026-03-03T03:00:00",
+     "2026-03-03T06:00:00",
+     "Strong winds; secure loose objects."
+    ],
+    [
+     "AL-0011",
+     "PNQ-01",
+     "heat",
+     "warning",
+     "2026-03-03T04:00:00",
+     "2026-03-03T06:00:00",
+     "2026-03-03T15:00:00",
+     "High temperatures; limit outdoor work in the afternoon."
+    ],
+    [
+     "AL-0012",
+     "DEN-01",
+     "frost",
+     "watch",
+     "2026-03-03T07:00:00",
+     "2026-03-03T09:00:00",
+     "2026-03-03T12:00:00",
+     "Frost expected; protect exposed pipes and plants."
+    ],
+    [
+     "AL-0013",
+     "BER-01",
+     "high_wind",
+     "watch",
+     "2026-03-03T19:00:00",
+     "2026-03-03T21:00:00",
+     "2026-03-04T00:00:00",
+     "Strong winds; secure loose objects."
+    ],
+    [
+     "AL-0014",
+     "PNQ-01",
+     "heat",
+     "warning",
+     "2026-03-04T01:00:00",
+     "2026-03-04T03:00:00",
+     "2026-03-04T18:00:00",
+     "High temperatures; limit outdoor work in the afternoon."
+    ],
+    [
+     "AL-0015",
+     "CHI-01",
+     "frost",
+     "warning",
+     "2026-03-04T07:00:00",
+     "2026-03-04T09:00:00",
+     "2026-03-04T15:00:00",
+     "Frost expected; protect exposed pipes and plants."
+    ],
+    [
+     "AL-0016",
+     "SEA-01",
+     "heavy_rain",
+     "watch",
+     "2026-03-04T22:00:00",
+     "2026-03-05T00:00:00",
+     "2026-03-05T03:00:00",
+     "Heavy rain; localized flooding possible."
+    ],
+    [
+     "AL-0017",
+     "CHI-01",
+     "frost",
+     "warning",
+     "2026-03-05T04:00:00",
+     "2026-03-05T06:00:00",
+     "2026-03-05T15:00:00",
+     "Frost expected; protect exposed pipes and plants."
+    ],
+    [
+     "AL-0018",
+     "PNQ-01",
+     "heat",
+     "warning",
+     "2026-03-05T04:00:00",
+     "2026-03-05T06:00:00",
+     "2026-03-05T15:00:00",
+     "High temperatures; limit outdoor work in the afternoon."
+    ],
+    [
+     "AL-0019",
+     "DEN-01",
+     "frost",
+     "watch",
+     "2026-03-05T07:00:00",
+     "2026-03-05T09:00:00",
+     "2026-03-05T12:00:00",
+     "Frost expected; protect exposed pipes and plants."
+    ],
+    [
+     "AL-0020",
+     "SEA-01",
+     "heavy_rain",
+     "watch",
+     "2026-03-05T07:00:00",
+     "2026-03-05T09:00:00",
+     "2026-03-05T12:00:00",
+     "Heavy rain; localized flooding possible."
+    ]
+   ],
+   "project_head": [
+    [
+     "AL-0001",
+     "DEN-01",
+     "high_wind",
+     "watch",
+     "2026-05-02T22:00:00",
+     "2026-05-03T00:00:00",
+     "2026-05-03T03:00:00",
+     "Strong winds; secure loose objects."
+    ],
+    [
+     "AL-0002",
+     "PNQ-01",
+     "heat",
+     "warning",
+     "2026-05-02T22:00:00",
+     "2026-05-03T00:00:00",
+     "2026-05-03T18:00:00",
+     "High temperatures; limit outdoor work in the afternoon."
+    ],
+    [
+     "AL-0003",
+     "PNQ-01",
+     "heat",
+     "warning",
+     "2026-05-04T01:00:00",
+     "2026-05-04T03:00:00",
+     "2026-05-04T21:00:00",
+     "High temperatures; limit outdoor work in the afternoon."
+    ],
+    [
+     "AL-0004",
+     "CHI-01",
+     "heavy_rain",
+     "watch",
+     "2026-05-04T19:00:00",
+     "2026-05-04T21:00:00",
+     "2026-05-05T00:00:00",
+     "Heavy rain; localized flooding possible."
+    ],
+    [
+     "AL-0005",
+     "PNQ-01",
+     "heat",
+     "warning",
+     "2026-05-05T01:00:00",
+     "2026-05-05T03:00:00",
+     "2026-05-05T18:00:00",
+     "High temperatures; limit outdoor work in the afternoon."
+    ],
+    [
+     "AL-0006",
+     "DEN-01",
+     "heavy_rain",
+     "watch",
+     "2026-05-05T04:00:00",
+     "2026-05-05T06:00:00",
+     "2026-05-05T09:00:00",
+     "Heavy rain; localized flooding possible."
+    ],
+    [
+     "AL-0007",
+     "SEA-01",
+     "heavy_rain",
+     "watch",
+     "2026-05-05T13:00:00",
+     "2026-05-05T15:00:00",
+     "2026-05-05T18:00:00",
+     "Heavy rain; localized flooding possible."
+    ],
+    [
+     "AL-0008",
+     "CHI-01",
+     "heavy_rain",
+     "watch",
+     "2026-05-05T22:00:00",
+     "2026-05-06T00:00:00",
+     "2026-05-06T03:00:00",
+     "Heavy rain; localized flooding possible."
+    ],
+    [
+     "AL-0009",
+     "PNQ-01",
+     "heat",
+     "warning",
+     "2026-05-06T01:00:00",
+     "2026-05-06T03:00:00",
+     "2026-05-06T18:00:00",
+     "High temperatures; limit outdoor work in the afternoon."
+    ],
+    [
+     "AL-0010",
+     "CHI-01",
+     "heavy_rain",
+     "watch",
+     "2026-05-06T07:00:00",
+     "2026-05-06T09:00:00",
+     "2026-05-06T12:00:00",
+     "Heavy rain; localized flooding possible."
+    ],
+    [
+     "AL-0011",
+     "SEA-01",
+     "heavy_rain",
+     "watch",
+     "2026-05-06T22:00:00",
+     "2026-05-07T00:00:00",
+     "2026-05-07T03:00:00",
+     "Heavy rain; localized flooding possible."
+    ],
+    [
+     "AL-0012",
+     "PNQ-01",
+     "heat",
+     "warning",
+     "2026-05-07T01:00:00",
+     "2026-05-07T03:00:00",
+     "2026-05-07T18:00:00",
+     "High temperatures; limit outdoor work in the afternoon."
+    ],
+    [
+     "AL-0013",
+     "SEA-01",
+     "heavy_rain",
+     "watch",
+     "2026-05-07T19:00:00",
+     "2026-05-07T21:00:00",
+     "2026-05-08T00:00:00",
+     "Heavy rain; localized flooding possible."
+    ],
+    [
+     "AL-0014",
+     "LIS-01",
+     "heavy_rain",
+     "watch",
+     "2026-05-07T22:00:00",
+     "2026-05-08T00:00:00",
+     "2026-05-08T03:00:00",
+     "Heavy rain; localized flooding possible."
+    ],
+    [
+     "AL-0015",
+     "PNQ-01",
+     "heat",
+     "warning",
+     "2026-05-08T01:00:00",
+     "2026-05-08T03:00:00",
+     "2026-05-08T21:00:00",
+     "High temperatures; limit outdoor work in the afternoon."
+    ],
+    [
+     "AL-0016",
+     "SEA-01",
+     "heavy_rain",
+     "watch",
+     "2026-05-08T04:00:00",
+     "2026-05-08T06:00:00",
+     "2026-05-08T09:00:00",
+     "Heavy rain; localized flooding possible."
+    ],
+    [
+     "AL-0017",
+     "CHI-01",
+     "high_wind",
+     "watch",
+     "2026-05-09T01:00:00",
+     "2026-05-09T03:00:00",
+     "2026-05-09T06:00:00",
+     "Strong winds; secure loose objects."
+    ],
+    [
+     "AL-0018",
+     "PNQ-01",
+     "heat",
+     "warning",
+     "2026-05-09T01:00:00",
+     "2026-05-09T03:00:00",
+     "2026-05-09T18:00:00",
+     "High temperatures; limit outdoor work in the afternoon."
+    ],
+    [
+     "AL-0019",
+     "PER-01",
+     "heavy_rain",
+     "watch",
+     "2026-05-09T22:00:00",
+     "2026-05-10T00:00:00",
+     "2026-05-10T03:00:00",
+     "Heavy rain; localized flooding possible."
+    ],
+    [
+     "AL-0020",
+     "PNQ-01",
+     "heat",
+     "warning",
+     "2026-05-10T01:00:00",
+     "2026-05-10T03:00:00",
+     "2026-05-10T09:00:00",
+     "High temperatures; limit outdoor work in the afternoon."
+    ]
+   ]
+  }
+ }
+}

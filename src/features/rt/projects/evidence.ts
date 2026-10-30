@@ -49,14 +49,25 @@ export function stageIsComplete(stage: ProjectStage, drafts: Record<string, stri
   const saved = savedFindings(drafts, prefix);
   if (stage.type === "exploration") return saved.length >= (stage.validation.kind === "exploration" ? stage.validation.minimumEvidence : 1);
   const evidence = currentEvidence(sql, drafts[`${prefix}-evidence`]);
-  return drafts[`${prefix}-check`] === "pass" && !!evidence?.checkPassed && !!finding && saved.some(s => fingerprint(s.query) === fingerprint(sql) && s.finding.trim() === finding && s.checkPassed);
+  // A passing check saves the step, the same way Python records a milestone. A written note is optional and does not gate it.
+  return drafts[`${prefix}-check`] === "pass" && !!evidence?.checkPassed && saved.some(s => fingerprint(s.query) === fingerprint(sql) && s.checkPassed);
+}
+/** The project's work: every stage but the conclusions and the report, which the Review page replaced. */
+export function workStages(project: Project) {
+  // Orientations (brief overview + understand-data) are not graded steps — data lives on the overview.
+  return project.stages.filter(s => s.type !== "synthesis" && s.type !== "report" && s.type !== "orientation");
 }
 export function completedStageCount(project: Project, drafts: Record<string, string>): number {
-  return project.stages.filter(s => stageIsComplete(s, drafts, draftPrefix(project, s.id), project)).length;
+  return workStages(project).filter(s => stageIsComplete(s, drafts, draftPrefix(project, s.id), project)).length;
 }
+/** Complete when every work stage is: the same rule as Python and PySpark (every step passes). */
 export function projectIsComplete(project: Project, drafts: Record<string, string>): boolean {
-  return completedStageCount(project, drafts) === project.stages.length;
+  return completedStageCount(project, drafts) === workStages(project).length;
 }
 export function allFindings(project: Project, drafts: Record<string, string>) {
-  return project.stages.flatMap((stage, index) => savedFindings(drafts, draftPrefix(project, stage.id)).map(f => ({ ...f, stage, stageNumber: index + 1 })));
+  return project.stages.flatMap((stage, index) => {
+    if (stage.type === "orientation") return [];
+    const step = project.stages.slice(0, index + 1).filter(s => s.type !== "orientation").length;
+    return savedFindings(drafts, draftPrefix(project, stage.id)).map(f => ({ ...f, stage, stageNumber: step }));
+  });
 }

@@ -1,0 +1,247 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "transaction_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "channel",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "channel_group",
+     "type": "string",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "T000001",
+     "branch",
+     "in_person"
+    ],
+    [
+     "T000002",
+     "online",
+     "digital"
+    ],
+    [
+     "T000003",
+     "card_present",
+     "in_person"
+    ],
+    [
+     "T000006",
+     "system",
+     "automatic"
+    ],
+    [
+     "T000008",
+     "card_present",
+     "in_person"
+    ],
+    [
+     "T000012",
+     "branch",
+     "in_person"
+    ],
+    [
+     "T000014",
+     "online",
+     "digital"
+    ],
+    [
+     "T000015",
+     "atm",
+     "in_person"
+    ],
+    [
+     "T000016",
+     "mobile",
+     "digital"
+    ],
+    [
+     "T000017",
+     "Online",
+     "unknown"
+    ],
+    [
+     "T000018",
+     null,
+     "unknown"
+    ],
+    [
+     "T000019",
+     "phone",
+     "unknown"
+    ]
+   ],
+   "row_count": 12,
+   "inputs": {
+    "transactions": [
+     [
+      "T000001",
+      "A00006",
+      null,
+      "2026-01-05T10:51:19",
+      "deposit",
+      "branch",
+      "credit",
+      "800.00",
+      "GBP",
+      "posted"
+     ],
+     [
+      "T000002",
+      null,
+      "M004",
+      "2026-01-16T07:14:10",
+      "purchase",
+      "online",
+      "debit",
+      "60.53",
+      "GBP",
+      "posted"
+     ],
+     [
+      "T000003",
+      "A00001",
+      "M003",
+      "2026-01-26T16:39:39",
+      "purchase",
+      "card_present",
+      "debit",
+      "27.90",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000006",
+      "A00001",
+      null,
+      "2026-02-08T14:02:36",
+      "interest",
+      "system",
+      "credit",
+      "21.91",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000008",
+      "A00001",
+      "M002",
+      "2026-02-19T10:23:22",
+      "purchase",
+      "card_present",
+      "debit",
+      "15.99",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000012",
+      "A00001",
+      null,
+      "2026-02-25T22:51:19",
+      "deposit",
+      "branch",
+      "credit",
+      "500.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000014",
+      "A00006",
+      "M004",
+      "2026-02-28T18:17:37",
+      "purchase",
+      "online",
+      "debit",
+      "60.53",
+      "GBP",
+      "posted"
+     ],
+     [
+      "T000015",
+      "A00006",
+      null,
+      "2026-03-01T09:12:40",
+      "withdrawal",
+      "atm",
+      "debit",
+      "100.00",
+      "GBP",
+      "posted"
+     ],
+     [
+      "T000016",
+      "A00001",
+      "M002",
+      "2026-03-02T19:05:11",
+      "purchase",
+      "mobile",
+      "debit",
+      "12.49",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000017",
+      "A00008",
+      "M004",
+      "2026-03-03T08:30:02",
+      "purchase",
+      "Online",
+      "debit",
+      "33.10",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000018",
+      "A00001",
+      null,
+      "2026-03-04T11:47:55",
+      "fee",
+      null,
+      "debit",
+      "5.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T000019",
+      "A00006",
+      "M003",
+      "2026-03-05T15:20:36",
+      "purchase",
+      "phone",
+      "debit",
+      "18.75",
+      "GBP",
+      "posted"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice transactions table",
+  "one transaction for each channel",
+  "channels with unexpected spelling, and missing channels",
+  "the same transaction delivered twice",
+  "an empty transactions table"
+ ]
+}

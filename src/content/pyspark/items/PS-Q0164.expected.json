@@ -1,0 +1,99 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "department_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "employee_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "salary",
+     "type": "decimal(10,2)",
+     "nullable": true
+    },
+    {
+     "name": "pay_step",
+     "type": "int",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "D01",
+     "E0001",
+     "260000.00",
+     1
+    ],
+    [
+     "D02",
+     "E0002",
+     "200000.00",
+     1
+    ],
+    [
+     "D02",
+     "E0003",
+     "75000.00",
+     2
+    ],
+    [
+     "D02",
+     "E0004",
+     "70000.00",
+     3
+    ],
+    [
+     "D02",
+     "E0005",
+     "70000.00",
+     3
+    ],
+    [
+     "D02",
+     "E0006",
+     "62500.00",
+     4
+    ],
+    [
+     "D03",
+     "E0007",
+     "150000.00",
+     1
+    ],
+    [
+     "D03",
+     "E0009",
+     "90000.00",
+     2
+    ],
+    [
+     "D03",
+     "E0008",
+     "75000.00",
+     3
+    ]
+   ],
+   "row_count": 9
+  }
+ },
+ "hidden": [
+  "the full practice employees table",
+  "several pairs of equal salaries in one department",
+  "the same salary at the top of one department and the bottom of another",
+  "a department with a single person",
+  "everyone in a department earns the same",
+  "an empty employees table"
+ ]
+}

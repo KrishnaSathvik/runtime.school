@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0251",
+  "slug": "letters-to-engrave",
+  "lesson": "PS-L051",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Letters to engrave",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "Gift cards are engraved with the customer's name, and the price depends on how many letters it has. Write `solve(customers)` so it returns `customer_id`, `name` and `letters`. A UDF is a fine way to do it.",
+  "rules": [
+    "`letters` counts the letters in `name`: `Ines Okafor` has 10. Accented letters such as `ë` count too.",
+    "Spaces, hyphens, apostrophes and any other characters don't count: `Anne-Marie O'Neil` has 14.",
+    "A missing name gives a missing count; a name made only of spaces gives 0.",
+    "Return `customer_id`, `name` (text) and `letters` (`int`), in that order. Keep every customer."
+  ],
+  "hints": [
+    "In plain Python, `ch.isalpha()` is true for a letter, accented ones included. Count the characters for which it holds.",
+    "Wrap the function with `@F.udf(\"int\")` and return a Python `int`.",
+    "A missing name arrives as `None`, and looping over `None` stops the job. Return `None` first."
+  ],
+  "explanation": "A UDF declared `\"int\"` that returns `None` for a missing name and `sum(1 for ch in name if ch.isalpha())` otherwise gives the count. `len(name)` counts spaces too, removing only spaces still counts hyphens and apostrophes, and a test like `\"a\" <= ch.lower() <= \"z\"` misses accented letters. A built-in version exists too: `F.length(F.regexp_replace(\"name\", r\"\\P{L}\", \"\"))` removes everything that isn't a letter and measures what's left.",
+  "entry": "solve",
+  "inputs": [
+    "customers"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(customers):\n    # Return customer_id, name and the number of letters in name.\n    return customers\n",
+  "output": {
+    "columns": [
+      "customer_id",
+      "name",
+      "letters"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

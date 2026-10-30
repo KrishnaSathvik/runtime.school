@@ -1,0 +1,141 @@
+{
+  "id": "PS-L061",
+  "minutes": 30,
+  "lede": "A folder of Parquet files can't tell you which files belong together or what it held yesterday. A Delta table adds a transaction log that records every change, so readers always see a whole table.",
+  "objectives": [
+    "Write and read a Delta table with `format(\"delta\")`",
+    "Read the `_delta_log` folder: one numbered commit per write, with `add` and `remove` actions",
+    "List a table's versions with `DeltaTable.history()` and `DESCRIBE HISTORY`",
+    "Explain why a Delta folder must be read through the log, not as plain Parquet"
+  ],
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "accounts"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "A Parquet folder is just files: whoever reads it takes every file that's there. That's why a job that dies halfway leaves a half-written folder, and why nobody can tell what the folder held yesterday.\n\nA **Delta table** is a folder of Parquet files plus a `_delta_log` folder: the **transaction log**. The log says which files make up the table. You write and read it with `format(\"delta\")`; everything else (`mode`, `partitionBy`, `save`, `load`) works as with other formats. `accounts` here is the CRM's five customer accounts."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Save a table as Delta",
+      "code": "import os\n\npath = \"/tmp/crm/accounts\"\naccounts.write.format(\"delta\").save(path)\n\ndata_files = [f for f in os.listdir(path) if f.endswith(\".parquet\")]\nprint(len(data_files), \"data file\")\nprint(sorted(f for f in os.listdir(path + \"/_delta_log\") if f.endswith(\".json\")))\n\nspark.read.format(\"delta\").load(path).show()\n",
+      "note": "One Parquet file holds the five rows, and the log has one entry, `00000000000000000000.json`. Its name is the table's **version** number, padded to 20 digits. Data file names are random, so the examples count them rather than print them."
+    },
+    {
+      "kind": "text",
+      "md": "Each log entry is a **commit**: a small JSON file with one action per line.\n\n- `commitInfo` says what ran: the operation, its mode and when.\n- `metaData` holds the table's schema and settings; it's written when they change.\n- `protocol` says which Delta features a reader needs.\n- `add` names a data file that's now part of the table, with row counts and min/max values per column.\n\nThe examples read the entry with plain Python's `json`, one line at a time."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Inside the first commit",
+      "code": "import json\n\npath = \"/tmp/crm/accounts\"\naccounts.write.format(\"delta\").save(path)\n\nwith open(path + \"/_delta_log/00000000000000000000.json\") as f:\n    actions = [json.loads(line) for line in f]\n\nfor action in actions:\n    print(list(action)[0])\n\ninfo = [a[\"commitInfo\"] for a in actions if \"commitInfo\" in a][0]\nprint(info[\"operation\"], info[\"operationParameters\"][\"mode\"])\n\nmeta = [a[\"metaData\"] for a in actions if \"metaData\" in a][0]\nprint([field[\"name\"] for field in json.loads(meta[\"schemaString\"])[\"fields\"]])\n\nadd = [a[\"add\"] for a in actions if \"add\" in a][0]\nprint(add[\"path\"].endswith(\".parquet\"), json.loads(add[\"stats\"])[\"numRecords\"])\n",
+      "note": "The first write used the default mode, which Delta records as `ErrorIfExists`. The schema is stored in the log, and the `add` action names the Parquet file and how many rows it has. Readers can skip a file using those min/max values without opening it."
+    },
+    {
+      "kind": "text",
+      "md": "Every write that changes the table adds the next commit; old ones are never edited. (`ignore` on an existing table changes nothing, so it adds no commit.) An `overwrite` doesn't delete files. It writes new ones, then commits `add` for them and `remove` for the files they replace. The removed files stay on disk, because older versions still use them.\n\nSo to know what the table holds, Spark has to read the log first. Reading the folder with `spark.read.parquet` skips the log and takes every file it finds."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Every write is a new commit",
+      "code": "import json\nimport os\n\npath = \"/tmp/crm/accounts\"\naccounts.write.format(\"delta\").save(path)\naccounts.write.format(\"delta\").mode(\"append\").save(path)\naccounts.write.format(\"delta\").mode(\"overwrite\").save(path)\n\nlog = sorted(f for f in os.listdir(path + \"/_delta_log\") if f.endswith(\".json\"))\nprint(log)\n\nwith open(path + \"/_delta_log/\" + log[-1]) as f:\n    print(sorted(list(json.loads(line))[0] for line in f))\n\nprint(\"data files on disk:\", len([f for f in os.listdir(path) if f.endswith(\".parquet\")]))\nprint(\"rows read as Delta:  \", spark.read.format(\"delta\").load(path).count())\nprint(\"rows read as Parquet:\", spark.read.parquet(path).count())\n",
+      "note": "Three writes, three commits. The overwrite's commit adds one file and removes the two before it, so Delta reads 5 rows. All three files are still on disk, and a plain Parquet read counts all of them: 15 rows, two of them out of date."
+    },
+    {
+      "kind": "text",
+      "md": "You don't have to open log files by hand. `DeltaTable.forPath(spark, path)` (from `delta.tables`) gives a handle on the table, and its `history()` is a DataFrame with one row per commit, newest first. In SQL it's `DESCRIBE HISTORY`, with the table named as `delta.` and its path in backticks, as in the example. `spark.sql(text)` runs a SQL statement and returns its result as a DataFrame.\n\nHistory also has a timestamp, the user and the operation's metrics. Timestamps change on every run, so the examples print only `version`, `operation` and the mode."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "The table's history",
+      "code": "from delta.tables import DeltaTable\n\npath = \"/tmp/crm/accounts\"\naccounts.write.format(\"delta\").save(path)\naccounts.write.format(\"delta\").mode(\"append\").save(path)\naccounts.write.format(\"delta\").mode(\"overwrite\").save(path)\n\ntable = DeltaTable.forPath(spark, path)\ntable.history().select(\"version\", \"operation\").show()\n\nfor row in table.history().collect():\n    print(row.version, row.operationParameters[\"mode\"])\n\nprint(spark.sql(\"DESCRIBE HISTORY delta.`/tmp/crm/accounts`\").select(\"version\", \"operation\").first())\n",
+      "note": "Versions count up from 0. All three are `WRITE`; the mode tells an append from an overwrite. In `collect()`ed rows, `operationParameters` is a Python dict."
+    },
+    {
+      "kind": "text",
+      "md": "`partitionBy` works as with Parquet: one `column=value` folder per value, next to `_delta_log`. The difference is in reading. The log records each file's partition value and the table's schema, so Spark doesn't have to work them out from folder names, and the column keeps its place."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "A partitioned Delta table",
+      "code": "import os\n\npath = \"/tmp/crm/accounts_by_country\"\naccounts.write.format(\"delta\").partitionBy(\"country\").save(path)\n\nprint(sorted(d for d in os.listdir(path) if not d.startswith(\".\")))\nprint(spark.read.format(\"delta\").load(path).columns)\n",
+      "note": "Four countries, four folders. `country` comes back in its own position, not last as with a partitioned Parquet folder, because the schema comes from the log."
+    },
+    {
+      "kind": "error-example",
+      "id": "e6",
+      "title": "Reading Parquet files as Delta",
+      "code": "path = \"/tmp/crm/accounts_parquet\"\naccounts.write.parquet(path)\n\nspark.read.format(\"delta\").load(path).show()\n",
+      "error": "AnalysisException",
+      "note": "The folder has Parquet files but no `_delta_log`, so as far as Delta is concerned there's no table there. Read it with `spark.read.parquet`, or write it with `format(\"delta\")` first."
+    }
+  ],
+  "challenges": [
+    "PS-L061-C1",
+    "PS-L061-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "A Delta table has been written three times. What's in its `_delta_log` folder?",
+      "choices": [
+        "One JSON file that's rewritten on every write",
+        "Three numbered JSON commits, 0 to 2",
+        "A copy of every row",
+        "Nothing until the table is closed"
+      ],
+      "answer": 1,
+      "why": "Every write adds the next commit file; earlier commits are never changed. The file name is the version number."
+    },
+    {
+      "id": "k2",
+      "prompt": "You overwrite a Delta table. What happens to the files of the old version?",
+      "choices": [
+        "They're deleted straight away",
+        "They're emptied",
+        "They stay on disk, and the new commit marks them as removed",
+        "They're merged into the new file"
+      ],
+      "answer": 2,
+      "why": "The commit has `remove` actions for them, so Delta reads skip them, but older versions still point at them. That's also why a plain Parquet read of the folder gets stale rows."
+    },
+    {
+      "id": "k3",
+      "prompt": "Which read gives exactly the current rows of a Delta table?",
+      "choices": [
+        "`spark.read.parquet(path)`",
+        "`spark.read.format(\"delta\").load(path)`",
+        "Reading the newest Parquet file",
+        "Either one: they're the same"
+      ],
+      "answer": 1,
+      "why": "Only the Delta reader follows the log to the files that make up the current version. Parquet reads every file in the folder."
+    }
+  ],
+  "review": [
+    "A Delta table is Parquet data files plus a `_delta_log` folder that says which files make up the table.",
+    "Write and read it with `format(\"delta\")`; modes and `partitionBy` work as usual.",
+    "Each write is a new commit, `00000000000000000000.json`, `...01.json` and so on: the table's version number.",
+    "A commit lists actions: `commitInfo`, `metaData`, `protocol`, `add` and `remove`. Overwritten files are removed in the log but stay on disk.",
+    "`DeltaTable.forPath(spark, path).history()` or `DESCRIBE HISTORY` lists the versions, newest first.",
+    "Never read a Delta folder as plain Parquet: it ignores the log and picks up removed files."
+  ],
+  "practice": [
+    "PS-Q0301",
+    "PS-Q0302",
+    "PS-Q0303",
+    "PS-Q0304",
+    "PS-Q0305"
+  ]
+}

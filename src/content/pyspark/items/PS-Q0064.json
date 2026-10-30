@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0064",
+  "slug": "fix-the-referral-list",
+  "lesson": "PS-L013",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 6,
+  "title": "Fix the referral list",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "prompt": "The referral list shows each visit's provider, its first diagnosis code and the patient's pulse. The function below was written for it, but it fails. Fix `solve(encounters)`.",
+  "rules": [
+    "Return four columns, in this order: `encounter_id`, `provider_id`, `first_code`, `heart_rate`.",
+    "`first_code` is the first item in `diagnosis_codes`. Every visit has at least one code.",
+    "`heart_rate` is the field inside `vitals`, missing when the visit has no vitals. Keep every visit, duplicates included."
+  ],
+  "hints": [
+    "Press Run and read the error: it names the position that doesn't exist.",
+    "Array positions start at 0, so the first code is at position 0.",
+    "When the error is gone, check the column names. A field picked with brackets is named `vitals.heart_rate` until you give it an `alias`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "encounters"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(encounters):\n    return encounters.select(\n        \"encounter_id\",\n        \"provider_id\",\n        F.col(\"diagnosis_codes\")[1].alias(\"first_code\"),\n        F.col(\"vitals\")[\"heart_rate\"],\n    )\n",
+  "output": {
+    "columns": [
+      "encounter_id",
+      "provider_id",
+      "first_code",
+      "heart_rate"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Two bugs. Array positions start at 0, so `[1]` is the second code; on a visit with a single code it doesn't exist and Spark 4 stops with an error. Use `F.col(\"diagnosis_codes\")[0]`. Then the pulse: a field picked with brackets is named `vitals.heart_rate`, so it needs `.alias(\"heart_rate\")`, or write it as `\"vitals.heart_rate\"`, which is named after the field. Fixed: `encounters.select(\"encounter_id\", \"provider_id\", F.col(\"diagnosis_codes\")[0].alias(\"first_code\"), F.col(\"vitals\")[\"heart_rate\"].alias(\"heart_rate\"))`."
+}

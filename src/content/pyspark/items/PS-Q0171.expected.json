@@ -1,0 +1,93 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "transfer_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "from_account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "sender_transfers",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "sender_largest",
+     "type": "decimal(12,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "TR00001",
+     "A00001",
+     "650.50",
+     3,
+     "650.50"
+    ],
+    [
+     "TR00004",
+     "A00001",
+     "52.99",
+     3,
+     "650.50"
+    ],
+    [
+     "TR00006",
+     "A00001",
+     "40.50",
+     3,
+     "650.50"
+    ],
+    [
+     "TR00002",
+     "A00008",
+     "75.00",
+     3,
+     "1500.00"
+    ],
+    [
+     "TR00003",
+     "A00008",
+     "1500.00",
+     3,
+     "1500.00"
+    ],
+    [
+     "TR00005",
+     "A00008",
+     "40.50",
+     3,
+     "1500.00"
+    ]
+   ],
+   "row_count": 6
+  }
+ },
+ "hidden": [
+  "the full practice transfers table",
+  "a sender with a single transfer",
+  "a sender's failed, pending and reversed transfers, the largest among them",
+  "transfers with no sending account",
+  "accounts that send and receive different numbers of transfers",
+  "two transfers share a sender's largest amount",
+  "an empty transfers table"
+ ]
+}

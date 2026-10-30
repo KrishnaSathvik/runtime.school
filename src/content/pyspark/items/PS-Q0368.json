@@ -1,0 +1,58 @@
+{
+ "id": "PS-Q0368",
+ "slug": "a-load-day-that-lands-late",
+ "lesson": "PS-L074",
+ "role": "edge",
+ "format": "dataframe_coding",
+ "difficulty": "hard",
+ "minutes": 14,
+ "title": "A load day that lands late",
+ "dataset": {
+  "id": "PS-D08",
+  "version": "1.0.0"
+ },
+ "prompt": "Tracking events land in a folder per `load_date`, but this carrier sometimes holds a whole day back and sends it after later days. Write `process()` so every landed day is copied into the Delta table, whatever order the days land in.",
+ "rules": [
+  "Every landed row ends up in the table exactly once, however often `process()` runs. Rows that are the same in every column are separate rows: keep both.",
+  "A load day can land after later load days. It must still be copied, once.",
+  "The first run finds no table at `TARGET` yet.",
+  "Don't change `deliver` or `solve`."
+ ],
+ "hints": [
+  "Try the high-water mark from the lesson on the sample. Which day never makes it, and why?",
+  "Instead of the newest day, ask which load days the table already has: `select(\"load_date\").distinct().collect()` gives them as a Python list.",
+  "`~F.col(\"load_date\").isin(days)` keeps the landed rows of every other day. Before the first run, take everything."
+ ],
+ "entry": "solve",
+ "inputs": [
+  "shipment_events"
+ ],
+ "starter": "import shutil\n\nfrom pyspark.sql import functions as F\nfrom delta.tables import DeltaTable\n\nLANDING = \"/tmp/landing/shipment_events\"\nTARGET = \"/tmp/silver/shipment_events\"\n\n\ndef deliver(shipment_events, days):\n    # These load days land in the landing folder, one folder per day. Don't change this.\n    (shipment_events.filter(F.col(\"load_date\").isin(days))\n        .write.mode(\"append\").partitionBy(\"load_date\").parquet(LANDING))\n\n\ndef process():\n    # Append the landed load days the table doesn't have yet to the Delta table at TARGET.\n    pass\n\ndef solve(shipment_events):\n    shutil.rmtree(\"/tmp/landing\", ignore_errors=True)  # start from empty folders on every run\n    shutil.rmtree(\"/tmp/silver\", ignore_errors=True)\n    days = sorted(r.load_date for r in shipment_events.select(\"load_date\").distinct().collect())\n    deliver(shipment_events, days[:1] + days[2:])  # the second load day is held up at the carrier\n    process()\n    deliver(shipment_events, days[1:2])  # ... and lands after the others\n    process()\n    process()  # a rerun: nothing new has landed\n    return spark.read.format(\"delta\").load(TARGET)\n",
+ "output": {
+  "columns": [
+   "event_id",
+   "shipment_id",
+   "warehouse_id",
+   "event_type",
+   "event_time",
+   "location",
+   "sequence",
+   "is_correction",
+   "load_date"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 180,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "explanation": "A high-water mark assumes load days land in order. Here 4 March lands after 8 March, so the mark is already 8 March and the day is never copied. Track the days instead: collect the table's distinct `load_date` values and append the landed rows of every other day, `landing.filter(~F.col(\"load_date\").isin(done))`, or everything before the first run. A rerun finds no missing day, the append is empty and nothing changes. Skipping events whose `event_id` is already in the table would drop the second delivery of E0000007, which is a row of its own in the feed, and appending the whole landing folder doubles every day that had already been copied."
+}

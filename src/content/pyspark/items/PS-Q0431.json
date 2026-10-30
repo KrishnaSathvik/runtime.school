@@ -1,0 +1,57 @@
+{
+ "id": "PS-Q0431",
+ "slug": "minutes-since-the-last-reading",
+ "lesson": "PS-L087",
+ "role": "foundation",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 12,
+ "title": "Minutes since the last reading",
+ "dataset": {
+  "id": "PS-D09",
+  "version": "1.0.0"
+ },
+ "prompt": "The network team checks how regularly each sensor reports. Write `solve(sensor_readings)` so it streams the readings and returns `reading_id`, `device_id`, `event_time` and `gap_minutes` for every reading it takes.",
+ "rules": [
+  "`gap_minutes` is the time since the same sensor's previous reading taken, in minutes, as a double. A sensor's first reading has no previous one, so its `gap_minutes` is null.",
+  "Take each sensor's new readings in `event_time` order. Leave out a reading that isn't newer than the newest one already taken for that sensor: it's a copy, or it came after a newer one.",
+  "`event_time` stays a timestamp.",
+  "The rows must come from a streaming query over the delivery files: working on `sensor_readings` itself doesn't count."
+ ],
+ "hints": [
+  "Spark keeps nothing between micro-batches for you here: keep the newest event time taken for each sensor in a `GroupState`.",
+  "Sort each pandas DataFrame by `event_time` before walking it. Subtracting two timestamps gives a time span; `.total_seconds() / 60` turns it into minutes.",
+  "Use `applyInPandasWithState` grouped by `device_id`, with output mode `\"append\"` and `GroupStateTimeout.NoTimeout`, write to a memory table with `run_stream`, and return `spark.table(name)`."
+ ],
+ "explanation": "The state holds one value per sensor: the newest event time taken. Each micro-batch, the function sorts the sensor's new rows, skips any that aren't newer, and measures each gap from the newest time before it, then saves the new newest time with `state.update`. Without the sort, two readings delivered out of order in one file come out as one long gap and a skipped reading. Without the newer-than check, a copy makes a gap of 0 and a late reading a negative one.",
+ "entry": "solve",
+ "inputs": [
+  "sensor_readings"
+ ],
+ "output": {
+  "columns": [
+   "reading_id",
+   "device_id",
+   "event_time",
+   "gap_minutes"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "starter": "import json, os, shutil\nimport pandas as pd\nfrom pyspark.sql import functions as F\nfrom pyspark.sql.streaming.state import GroupStateTimeout\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\ndef solve(sensor_readings):\n    spark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\n    make_batches(sensor_readings, \"/tmp/in\")         # one file per batch; clears the folder first\n    shutil.rmtree(\"/tmp/ck\", ignore_errors=True)     # a fresh checkpoint for every run\n    readings = spark.readStream.schema(sensor_readings.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\n    flat = readings.select(\"reading_id\", \"device_id\", \"event_time\")\n\n    # Keep the newest event time taken for each sensor in its state. Return one row per reading taken from a\n    # memory table: reading_id, device_id, event_time, gap_minutes.\n\n    return sensor_readings\n",
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

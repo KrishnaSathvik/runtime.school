@@ -1,0 +1,564 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "example": {
+   "schema": [
+    {
+     "name": "account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "currency",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "expected_balance",
+     "type": "decimal(14,2)",
+     "nullable": true
+    },
+    {
+     "name": "ledger_balance",
+     "type": "decimal(14,2)",
+     "nullable": true
+    },
+    {
+     "name": "difference",
+     "type": "decimal(14,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "A90001",
+     "USD",
+     "890.00",
+     "789.95",
+     "-100.05"
+    ],
+    [
+     "A90002",
+     "USD",
+     "550.00",
+     "650.00",
+     "100.00"
+    ],
+    [
+     "A90003",
+     "USD",
+     "320.00",
+     "289.99",
+     "-30.01"
+    ],
+    [
+     "A90004",
+     "USD",
+     "10.00",
+     "9.99",
+     "-0.01"
+    ],
+    [
+     "A90005",
+     "USD",
+     "40.00",
+     "40.00",
+     "0.00"
+    ]
+   ],
+   "row_count": 5,
+   "inputs": {
+    "accounts": [
+     [
+      "A90001",
+      "C0001",
+      "checking",
+      "USD",
+      "active",
+      "2025-06-01",
+      "0.00"
+     ],
+     [
+      "A90002",
+      "C0002",
+      "checking",
+      "USD",
+      "active",
+      "2025-06-01",
+      "0.00"
+     ],
+     [
+      "A90003",
+      "C0003",
+      "checking",
+      "USD",
+      "active",
+      "2025-06-01",
+      "0.00"
+     ],
+     [
+      "A90004",
+      "C0004",
+      "checking",
+      "USD",
+      "closed",
+      "2025-06-01",
+      "0.00"
+     ],
+     [
+      "A90005",
+      "C0005",
+      "savings",
+      "USD",
+      "active",
+      "2025-06-01",
+      null
+     ]
+    ],
+    "transactions": [
+     [
+      "T900001",
+      "A90001",
+      null,
+      "2026-01-05T09:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "1000.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T900002",
+      "A90001",
+      "M001",
+      "2026-01-06T09:00:00",
+      "purchase",
+      "card_present",
+      "debit",
+      "40.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T900002",
+      "A90001",
+      "M001",
+      "2026-01-06T09:00:00",
+      "purchase",
+      "card_present",
+      "debit",
+      "40.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T900003",
+      "A90002",
+      null,
+      "2026-01-05T10:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "500.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T900004",
+      "A90002",
+      "M001",
+      "2026-01-07T10:00:00",
+      "purchase",
+      "card_present",
+      "debit",
+      "20.00",
+      "USD",
+      "pending"
+     ],
+     [
+      "T900005",
+      "A90003",
+      null,
+      "2026-01-05T11:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "300.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T900006",
+      "A90003",
+      "M001",
+      "2026-01-08T11:00:00",
+      "purchase",
+      "card_present",
+      "debit",
+      "-10.00",
+      "USD",
+      "posted"
+     ],
+     [
+      "T900007",
+      "A90005",
+      null,
+      "2026-01-05T12:00:00",
+      "deposit",
+      "branch",
+      "credit",
+      "50.00",
+      "USD",
+      "posted"
+     ]
+    ],
+    "transfers": [
+     [
+      "TR90001",
+      "A90001",
+      "A90002",
+      "100.00",
+      "USD",
+      "2026-02-01T09:00:00",
+      "completed",
+      "Rent 101",
+      null
+     ],
+     [
+      "TR90002",
+      "A90001",
+      "A90002",
+      "100.00",
+      "USD",
+      "2026-02-01T09:00:05",
+      "completed",
+      "Rent 101",
+      null
+     ],
+     [
+      "TR90003",
+      "A90002",
+      "A90003",
+      "50.00",
+      "USD",
+      "2026-02-02T09:00:00",
+      "completed",
+      "Gift 202",
+      null
+     ],
+     [
+      "TR90004",
+      "A90003",
+      "A90001",
+      "30.00",
+      "USD",
+      "2026-02-03T09:00:00",
+      "completed",
+      "Invoice 303",
+      null
+     ],
+     [
+      "TR90005",
+      "A90001",
+      "A90003",
+      "70.00",
+      "USD",
+      "2026-02-04T09:00:00",
+      "failed",
+      "Holiday fund 404",
+      null
+     ],
+     [
+      "TR90006",
+      "A90005",
+      "A90004",
+      "10.00",
+      "USD",
+      "2026-02-05T09:00:00",
+      "completed",
+      "Savings top-up 505",
+      null
+     ]
+    ],
+    "ledger_entries": [
+     [
+      "LE90001",
+      "TR90001",
+      "A90001",
+      "debit",
+      "100.00",
+      "USD",
+      "2026-02-01T09:00:00"
+     ],
+     [
+      "LE90002",
+      "TR90001",
+      "A90002",
+      "credit",
+      "100.00",
+      "USD",
+      "2026-02-01T09:00:00"
+     ],
+     [
+      "LE90003",
+      "TR90002",
+      "A90001",
+      "debit",
+      "100.00",
+      "USD",
+      "2026-02-01T09:00:05"
+     ],
+     [
+      "LE90004",
+      "TR90002",
+      "A90002",
+      "credit",
+      "100.00",
+      "USD",
+      "2026-02-01T09:00:05"
+     ],
+     [
+      "LE90005",
+      "TR90003",
+      "A90002",
+      "debit",
+      "50.00",
+      "USD",
+      "2026-02-02T09:10:00"
+     ],
+     [
+      "LE90006",
+      "TR90004",
+      "A90003",
+      "debit",
+      "30.00",
+      "USD",
+      "2026-02-03T09:00:00"
+     ],
+     [
+      "LE90007",
+      "TR90004",
+      "A90001",
+      "credit",
+      "29.95",
+      "USD",
+      "2026-02-03T09:00:00"
+     ],
+     [
+      "LE90008",
+      "TR90009",
+      "A90003",
+      "credit",
+      "19.99",
+      "USD",
+      "2026-02-06T09:00:00"
+     ],
+     [
+      "LE90009",
+      "TR90006",
+      "A90005",
+      "debit",
+      "10.00",
+      "USD",
+      "2026-02-05T09:00:00"
+     ],
+     [
+      "LE90010",
+      "TR90006",
+      "A90004",
+      "credit",
+      "9.99",
+      "USD",
+      "2026-02-05T09:00:00"
+     ]
+    ]
+   }
+  },
+  "project": {
+   "schema": [
+    {
+     "name": "account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "currency",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "expected_balance",
+     "type": "decimal(14,2)",
+     "nullable": true
+    },
+    {
+     "name": "ledger_balance",
+     "type": "decimal(14,2)",
+     "nullable": true
+    },
+    {
+     "name": "difference",
+     "type": "decimal(14,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "A00001",
+     "USD",
+     "0.00",
+     "0.00",
+     "0.00"
+    ],
+    [
+     "A00002",
+     "USD",
+     "3765.91",
+     "3765.91",
+     "0.00"
+    ],
+    [
+     "A00003",
+     "USD",
+     "-5457.50",
+     "-5457.50",
+     "0.00"
+    ],
+    [
+     "A00004",
+     "USD",
+     "5069.02",
+     "5069.02",
+     "0.00"
+    ],
+    [
+     "A00005",
+     "USD",
+     "1037.59",
+     "137.09",
+     "-900.50"
+    ],
+    [
+     "A00006",
+     "USD",
+     "6499.85",
+     "6499.85",
+     "0.00"
+    ],
+    [
+     "A00007",
+     "USD",
+     "0.00",
+     "0.00",
+     "0.00"
+    ],
+    [
+     "A00008",
+     "USD",
+     "783.10",
+     "783.10",
+     "0.00"
+    ],
+    [
+     "A00009",
+     "EUR",
+     "-921.26",
+     "-921.26",
+     "0.00"
+    ],
+    [
+     "A00010",
+     "EUR",
+     "-839.41",
+     "-839.41",
+     "0.00"
+    ],
+    [
+     "A00011",
+     "EUR",
+     "3948.55",
+     "3948.55",
+     "0.00"
+    ],
+    [
+     "A00012",
+     "USD",
+     "7164.02",
+     "7164.02",
+     "0.00"
+    ],
+    [
+     "A00013",
+     "USD",
+     "5487.04",
+     "5487.04",
+     "0.00"
+    ],
+    [
+     "A00014",
+     "USD",
+     "884.71",
+     "884.71",
+     "0.00"
+    ],
+    [
+     "A00015",
+     "EUR",
+     "818.16",
+     "818.16",
+     "0.00"
+    ],
+    [
+     "A00016",
+     "EUR",
+     "-1359.52",
+     "-1359.52",
+     "0.00"
+    ],
+    [
+     "A00017",
+     "GBP",
+     "-1585.39",
+     "-1585.39",
+     "0.00"
+    ],
+    [
+     "A00018",
+     "GBP",
+     "1429.32",
+     "1429.32",
+     "0.00"
+    ],
+    [
+     "A00019",
+     "EUR",
+     "4282.42",
+     "4282.42",
+     "0.00"
+    ],
+    [
+     "A00020",
+     "EUR",
+     "5939.46",
+     "5939.46",
+     "0.00"
+    ]
+   ],
+   "row_count": 499
+  }
+ },
+ "hidden": [
+  "the full practice tables",
+  "accounts with no activity, closed, frozen and credit card accounts",
+  "invalid, repeated, pending and declined transactions, and transactions of unknown accounts",
+  "a reversal pair, a transfer booked three times, half-booked transfers, a bad reversal, and entries of unknown or missing transfers",
+  "transfers of a cent or two, and bookings one cent off",
+  "empty tables"
+ ]
+}

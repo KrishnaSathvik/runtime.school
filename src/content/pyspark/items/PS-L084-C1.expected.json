@@ -1,0 +1,236 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "service",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "requests",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "server_errors",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "p50_latency_ms",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "p95_latency_ms",
+     "type": "int",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "catalog-api",
+     6,
+     0,
+     40,
+     51
+    ],
+    [
+     "iot-gateway",
+     1,
+     0,
+     24,
+     24
+    ],
+    [
+     "checkout-api",
+     3,
+     2,
+     980,
+     1240
+    ],
+    [
+     "search-api",
+     2,
+     0,
+     118,
+     162
+    ]
+   ],
+   "row_count": 4,
+   "inputs": {
+    "api_requests": [
+     [
+      "REQ-000001",
+      "13b64b22ba0fbc6c",
+      "2026-04-14T10:00:02.100000",
+      "catalog-api",
+      "GET",
+      "/v1/catalog/items",
+      "200",
+      "42",
+      "17950",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36",
+      "us-east"
+     ],
+     [
+      "REQ-000002",
+      "a64fadafa3e59936",
+      "2026-04-14T10:00:05.400000",
+      "catalog-api",
+      "GET",
+      "/v1/catalog/items",
+      "200",
+      "38",
+      "18220",
+      "RuntimeShop-iOS/4.12.0 (iPhone; iOS 17.5)",
+      "eu-west"
+     ],
+     [
+      "REQ-000003",
+      "bee00ecb217ae5e3",
+      "2026-04-14T10:00:14.700000",
+      "checkout-api",
+      "POST",
+      "/v1/checkout",
+      "201",
+      "236",
+      "1580",
+      "RuntimeShop-iOS/4.12.0 (iPhone; iOS 17.5)",
+      "us-west"
+     ],
+     [
+      "REQ-000004",
+      "bae0b151a3d78dc9",
+      "2026-04-14T10:00:21.300000",
+      "search-api",
+      "GET",
+      "/v1/search",
+      "200",
+      "118",
+      "9410",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36",
+      "eu-west"
+     ],
+     [
+      "REQ-000005",
+      "cc2702f716e39bf2",
+      "2026-04-14T10:00:33.800000",
+      "catalog-api",
+      "GET",
+      "/v1/catalog/items/{sku}",
+      "404",
+      "12",
+      "0",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36",
+      "us-east"
+     ],
+     [
+      "REQ-000006",
+      "830a8c89a751c0b5",
+      "2026-04-14T10:00:47.200000",
+      "iot-gateway",
+      "POST",
+      "/v1/devices/{device_id}/telemetry",
+      "201",
+      "24",
+      "118",
+      "SensorHub-Agent/2.3 (firmware 1.8.4)",
+      "ap-south"
+     ],
+     [
+      "REQ-000007",
+      "c43d1a266b993fd1",
+      "2026-04-14T10:00:58.900000",
+      "checkout-api",
+      "POST",
+      "/v1/payments/authorize",
+      "500",
+      "1240",
+      "0",
+      "RuntimeShop-Android/4.11.2 (Android 14)",
+      "us-east"
+     ],
+     [
+      "REQ-000008",
+      "22bfa062eda1037e",
+      "2026-04-14T10:01:06",
+      "catalog-api",
+      "GET",
+      "/v1/catalog/items",
+      "200",
+      "51",
+      "18030",
+      "okhttp/4.12.0",
+      "us-west"
+     ],
+     [
+      "REQ-000009",
+      "6e956dfb98bbfb49",
+      "2026-04-14T10:01:21.400000",
+      "search-api",
+      "GET",
+      "/v1/search",
+      "200",
+      "162",
+      "10220",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36",
+      "us-east"
+     ],
+     [
+      "REQ-000010",
+      "591fa0b8bf211d90",
+      "2026-04-14T10:01:35.600000",
+      "catalog-api",
+      "GET",
+      "/v1/catalog/items",
+      "200",
+      "40",
+      "17780",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36",
+      "eu-west"
+     ],
+     [
+      "REQ-000011",
+      "0d2c7e1a9b3f4410",
+      "2026-04-14T10:01:41.200000",
+      "checkout-api",
+      "POST",
+      "/v1/payments/authorize",
+      "503",
+      "980",
+      "0",
+      "RuntimeShop-iOS/4.12.0 (iPhone; iOS 17.5)",
+      "us-west"
+     ],
+     [
+      "REQ-000012",
+      "7a1e55c03d9b2c61",
+      "2026-04-14T10:01:52.800000",
+      "catalog-api",
+      "GET",
+      "/v1/catalog/items",
+      "499",
+      null,
+      "0",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36",
+      "us-east"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice request log",
+  "requests the client abandoned, with no latency, including a service with nothing else",
+  "a mix of 4xx and 5xx codes, and repeated latencies",
+  "an empty log"
+ ]
+}

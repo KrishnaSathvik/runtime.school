@@ -1,0 +1,44 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D03",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "employees",
+   "departments"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "+-----------+----------+--------------------------+-------+-----------------------+\n|employee_id|first_name|job_title                 |manager|manager_title          |\n+-----------+----------+--------------------------+-------+-----------------------+\n|E0001      |Tomas     |Chief Executive Officer   |NULL   |NULL                   |\n|E0002      |Noor      |Head of Engineering       |Tomas  |Chief Executive Officer|\n|E0003      |Lena      |Software Engineer         |Noor   |Head of Engineering    |\n|E0004      |Anika     |  senior software engineer|Noor   |Head of Engineering    |\n|E0005      |Elif      |Senior Software Engineer  |Noor   |Head of Engineering    |\n|E0006      |Maya      |Senior Software Engineer  |Noor   |Head of Engineering    |\n|E0007      |Ines      |Head of Finance           |Tomas  |Chief Executive Officer|\n|E0008      |Elif      |Senior Financial Analyst  |Ines   |Head of Finance        |\n|E0009      |Anika     |Senior Financial Analyst  |Ines   |Head of Finance        |\n+-----------+----------+--------------------------+-------+-----------------------+\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "",
+   "error": {
+    "type": "AnalysisException",
+    "message": "[AMBIGUOUS_REFERENCE] Reference `employee_id` is ambiguous, could be: [`e`.`employee_id`, `m`.`employee_id`]. SQLSTATE: 42704",
+    "line": 7,
+    "condition": "AMBIGUOUS_REFERENCE"
+   }
+  },
+  "e3": {
+   "stdout": "+-----------+----------+-------+----------------+\n|employee_id|first_name|manager|managers_manager|\n+-----------+----------+-------+----------------+\n|      E0003|      Lena|   Noor|           Tomas|\n|      E0004|     Anika|   Noor|           Tomas|\n|      E0005|      Elif|   Noor|           Tomas|\n|      E0006|      Maya|   Noor|           Tomas|\n|      E0008|      Elif|   Ines|           Tomas|\n|      E0009|     Anika|   Ines|           Tomas|\n+-----------+----------+-------+----------------+\n\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "3 x 4 = 12\n+-------------+---------------+-------+\n|department_id|department_name|quarter|\n+-------------+---------------+-------+\n|          D01|      Executive|2026-Q1|\n|          D01|      Executive|2026-Q2|\n|          D01|      Executive|2026-Q3|\n|          D01|      Executive|2026-Q4|\n|          D02|    Engineering|2026-Q1|\n|          D02|    Engineering|2026-Q2|\n|          D02|    Engineering|2026-Q3|\n|          D02|    Engineering|2026-Q4|\n|          D03|        Finance|2026-Q1|\n|          D03|        Finance|2026-Q2|\n|          D03|        Finance|2026-Q3|\n|          D03|        Finance|2026-Q4|\n+-------------+---------------+-------+\n\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "9 employees\n81 pairs\n",
+   "error": null
+  }
+ }
+}

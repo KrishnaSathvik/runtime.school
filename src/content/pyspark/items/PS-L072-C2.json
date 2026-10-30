@@ -1,0 +1,53 @@
+{
+ "id": "PS-L072-C2",
+ "slug": "deliver-every-log-line-once",
+ "lesson": "PS-L072",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 10,
+ "title": "Deliver every log line once",
+ "dataset": {
+  "id": "PS-D15",
+  "version": "1.0.0"
+ },
+ "prompt": "A stream copies log lines into a warehouse folder, one micro-batch per hour of logs. The starter stops when the warehouse connection drops after micro-batch 2. Fix `solve(application_logs)` so every log line ends up in the warehouse exactly once, and return `log_id`, `level` and `batch_id` from it.",
+ "rules": [
+  "Keep the setup's outage: the connection drops once, right after micro-batch 2 is written. Restart the query from its checkpoint so every micro-batch is delivered.",
+  "Micro-batch 2 runs twice. Its log lines must still be in the warehouse only once.",
+  "`batch_id` is the micro-batch id Spark gave the lines, an int starting at 0, not the hour. Return the columns read back from the warehouse folder."
+ ],
+ "hints": [
+  "`run_stream(writer)` raises when the query stops with an error. Catch it and call `run_stream(writer)` again: the same checkpoint picks up micro-batch 2.",
+  "An append write adds micro-batch 2's rows a second time. Write each micro-batch to its own folder, `/tmp/warehouse/batch_id={batch_id}`, with `mode(\"overwrite\")`.",
+  "`spark.read.json(\"/tmp/warehouse\")` turns the `batch_id=` folders back into a `batch_id` column."
+ ],
+ "entry": "solve",
+ "inputs": [
+  "application_logs"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\ndef solve(application_logs):\n    spark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\n    logs = application_logs.withColumn(\"batch\", F.hour(\"logged_at\"))   # each hour of logs is one file\n    make_batches(logs, \"/tmp/in\")\n    for path in [\"/tmp/ck\", \"/tmp/warehouse\"]:\n        shutil.rmtree(path, ignore_errors=True)\n    outage = [2]   # setup: the connection drops once, right after micro-batch 2 is written\n\n    def save(batch_df, batch_id):\n        batch_df.select(\"log_id\", \"level\").write.mode(\"append\").json(\"/tmp/warehouse\")\n        if batch_id in outage:\n            outage.remove(batch_id)\n            raise ConnectionError(\"warehouse connection dropped\")\n\n    stream = spark.readStream.schema(logs.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\n    writer = stream.writeStream.foreachBatch(save).option(\"checkpointLocation\", \"/tmp/ck\")\n    run_stream(writer)\n    return spark.read.json(\"/tmp/warehouse\")\n",
+ "output": {
+  "columns": [
+   "log_id",
+   "level",
+   "batch_id"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

@@ -1,0 +1,53 @@
+{
+ "id": "PS-L068-C2",
+ "slug": "a-backlog-two-files-at-a-time",
+ "lesson": "PS-L068",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 10,
+ "title": "A backlog, two files at a time",
+ "dataset": {
+  "id": "PS-D09",
+  "version": "1.0.0"
+ },
+ "prompt": "The platform team caps the sensor stream at two files per micro-batch and wants to see how a backlog gets split. Write `solve(sensor_readings)` so a streaming query reads the delivery files with that cap, and return one row per micro-batch: `micro_batch` and `readings`, the number of readings it read.",
+ "rules": [
+  "Read at most two files per micro-batch, and process the whole backlog before returning.",
+  "`micro_batch` is Spark's id for the micro-batch, starting at 0.",
+  "`readings` counts every reading in the micro-batch, a repeated delivery included.",
+  "The counts must come from the streaming query's micro-batches, not from counting `sensor_readings` itself."
+ ],
+ "hints": [
+  "`option(\"maxFilesPerTrigger\", 2)` on the reader sets the cap.",
+  "Which trigger keeps the cap and stops when the backlog is done?",
+  "In `foreachBatch`, `batch_df.count()` counts that micro-batch's rows; add `(batch_id, count)` to `sizes`."
+ ],
+ "entry": "solve",
+ "inputs": [
+  "sensor_readings"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef solve(sensor_readings):\n    make_batches(sensor_readings, \"/tmp/readings\")\n    sizes = []\n    # Stream /tmp/readings with at most two files per micro-batch, process the whole backlog,\n    # and add (micro_batch, readings) to sizes for each micro-batch.\n\n    return spark.createDataFrame(sizes, \"micro_batch LONG, readings LONG\")\n",
+ "output": {
+  "columns": [
+   "micro_batch",
+   "readings"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

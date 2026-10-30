@@ -1,0 +1,118 @@
+{
+  "id": "PS-L002",
+  "minutes": 20,
+  "lede": "When a Spark job is slow, the first question is how the work was split up and who ran each piece. This lesson names the parts of a Spark application and lets you look at them on a real one.",
+  "objectives": [
+    "Describe what the driver, the executors and the tasks each do",
+    "Explain how partitions become tasks, and how many run at once",
+    "Check where Spark runs and how parallel it is with `master` and `defaultParallelism`",
+    "Count a DataFrame's partitions, and change them with `repartition`"
+  ],
+  "dataset": { "id": "PS-D15", "version": "1.0.0", "edition": "lesson", "tables": ["api_requests", "error_events"] },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "Every Spark application has one **driver** and one or more **executors**.\n\n- The **driver** runs your Python program. When you ask for a result, it plans the work, splits it into tasks, hands them out and gathers the answers.\n- **Executors** are worker processes that run those tasks, each on its own cores.\n- A **task** is the work for one partition. A step over a DataFrame with 6 partitions becomes 6 tasks. With 2 cores, 2 tasks run at a time and the rest wait their turn.\n\nOn a **cluster**, the executors live on many machines, and a cluster manager starts them for the driver."
+    },
+    {
+      "kind": "text",
+      "md": "Here there's no cluster. Spark runs in **local mode**: the driver and a single executor share one process on one machine, with 2 cores for tasks. The roles are the same, just in one place. `spark` is the session your program talks to (lesson 3 covers it), and `spark.sparkContext` tells you where Spark is running."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Where is Spark running?",
+      "code": "print(spark.sparkContext.master)\nprint(spark.sparkContext.defaultParallelism)\n",
+      "note": "`local[2]` means local mode with 2 cores. `defaultParallelism` is how many tasks Spark plans to run side by side when nothing else decides it: 2 here, one per core. On a cluster it's usually the total number of cores across the executors."
+    },
+    {
+      "kind": "text",
+      "md": "To see how a DataFrame is split, ask for its number of partitions with `df.rdd.getNumPartitions()`. `.rdd` is Spark's lower-level view of the same data (lesson 5 covers it); here it's only used to count partitions."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "How many partitions does a table have?",
+      "code": "print(api_requests.count(), \"requests\")\nprint(api_requests.rdd.getNumPartitions(), \"partition\")\n",
+      "note": "The 12 requests come from one small file, and Spark reads a small file as a single partition. So any step over `api_requests` runs as one task, and the second core has nothing to do."
+    },
+    {
+      "kind": "error-example",
+      "id": "e3",
+      "title": "Asking the DataFrame directly",
+      "code": "api_requests.getNumPartitions()\n",
+      "error": "PySparkAttributeError",
+      "note": "A DataFrame has no `getNumPartitions` method. The partition count belongs to its lower-level view, so write `api_requests.rdd.getNumPartitions()`."
+    },
+    {
+      "kind": "text",
+      "md": "`df.repartition(n)` gives back a **new** DataFrame with the same rows spread over `n` partitions. The original keeps its partitions. More partitions means more tasks, which lets more cores work at once."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Split a table into more partitions",
+      "code": "spread = api_requests.repartition(4)\nprint(spread.rdd.getNumPartitions(), \"partitions\")\nprint(spread.count(), \"requests\")\nprint(api_requests.rdd.getNumPartitions(), \"partition in api_requests\")\n",
+      "note": "`spread` has 4 partitions, so a step over it becomes 4 tasks, two at a time on 2 cores. It still holds the same 12 requests, and `api_requests` still has its single partition."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "More partitions than rows",
+      "code": "tiny = error_events.repartition(10)\nprint(tiny.count(), \"error events\")\nprint(tiny.rdd.getNumPartitions(), \"partitions\")\n",
+      "note": "Spark makes the 10 partitions you asked for even though there are only 4 rows, so at least 6 of them are empty. Each one is still a task to schedule, so more partitions isn't always faster."
+    },
+    {
+      "kind": "text",
+      "md": "Every application also gets an id, `spark.sparkContext.applicationId`. It's different on every run, so we don't print it here. On your own computer or a cluster, Spark also serves a web page (the Spark UI) that lists every job, its stages and their tasks; it's switched off in this environment."
+    }
+  ],
+  "challenges": ["PS-L002-C1", "PS-L002-C2"],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "Spark runs as `local[2]`. Where are the driver and the executor?",
+      "choices": [
+        "On two different machines, one for each",
+        "In one process on one machine, with 2 cores for tasks",
+        "There's no driver in local mode, only executors",
+        "On two executors, one per core"
+      ],
+      "answer": 1,
+      "why": "In local mode the driver and a single executor share one process on one machine. `[2]` is the number of cores, so 2 tasks can run at once."
+    },
+    {
+      "id": "k2",
+      "prompt": "A DataFrame has 6 partitions and Spark has 2 cores. How does one step over it run?",
+      "choices": [
+        "As 2 tasks, one per core",
+        "As 1 task, because there is one DataFrame",
+        "As 6 tasks, 2 at a time",
+        "As 12 tasks, 6 on each core"
+      ],
+      "answer": 2,
+      "why": "Each partition is one task, so there are 6. With 2 cores, 2 of them run at a time and the rest wait."
+    },
+    {
+      "id": "k3",
+      "prompt": "What does `api_requests.repartition(4)` do?",
+      "choices": [
+        "Keeps only 4 of the rows",
+        "Changes `api_requests` so that it has 4 partitions",
+        "Starts 4 more executors",
+        "Gives back a new DataFrame with the same rows in 4 partitions"
+      ],
+      "answer": 3,
+      "why": "`repartition` returns a new DataFrame with the same rows spread over 4 partitions. `api_requests` keeps its own partitions, and the number of executors doesn't change."
+    }
+  ],
+  "review": [
+    "The driver runs your program, plans the work and splits it into tasks; executors run the tasks on their cores.",
+    "A task is the work for one partition: 6 partitions make 6 tasks, and 2 cores run 2 of them at a time.",
+    "Here Spark runs as `local[2]`: the driver and one executor share one process with 2 cores. A cluster spreads executors over many machines.",
+    "`spark.sparkContext.master` says where Spark runs, and `spark.sparkContext.defaultParallelism` how many tasks it runs side by side by default.",
+    "`df.rdd.getNumPartitions()` counts a DataFrame's partitions; a small file is read as one.",
+    "`df.repartition(n)` gives back a new DataFrame with the same rows in `n` partitions, even when `n` is more than the number of rows."
+  ],
+  "practice": ["PS-Q0006", "PS-Q0007", "PS-Q0008", "PS-Q0009", "PS-Q0010"]
+}

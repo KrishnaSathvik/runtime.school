@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0286",
+  "kind": "predict",
+  "slug": "broadcast-hint-and-shuffle-count",
+  "lesson": "PS-L058",
+  "role": "foundation",
+  "format": "concept_or_trace",
+  "difficulty": "medium",
+  "minutes": 7,
+  "title": "The hint, the threshold and the shuffles",
+  "prompt": "What does this program print? `facts` prints whether the plan uses a broadcast hash join, and how many `Exchange hashpartitioning` steps (shuffles) it has. Adaptive execution is off, so the plan is the one that runs. Type each printed line on its own line.",
+  "program": "from pyspark.sql import functions as F\n\nspark.conf.set(\"spark.sql.adaptive.enabled\", False)\n\n\ndef facts(df):\n    plan = df._jdf.queryExecution().executedPlan().toString()\n    return \"BroadcastHashJoin\" in plan, plan.count(\"Exchange hashpartitioning\")\n\n\nprint(*facts(shipments.join(warehouses, \"warehouse_id\")))\n\nspark.conf.set(\"spark.sql.autoBroadcastJoinThreshold\", -1)\nprint(*facts(shipments.join(warehouses, \"warehouse_id\")))\nprint(*facts(shipments.join(F.broadcast(warehouses), \"warehouse_id\")))\nprint(*facts(shipments.join(F.broadcast(warehouses), \"warehouse_id\").groupBy(\"region\").count()))\nprint(*facts(shipments.join(warehouses, \"warehouse_id\").groupBy(\"region\").count()))\n",
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "`warehouses` is a tiny file, far below the default 10 MB threshold.",
+    "With the threshold at `-1` nothing is broadcast automatically, but `F.broadcast` still asks for it. A sort-merge join shuffles both sides.",
+    "A broadcast join removes the join's shuffles, not the grouping's: `groupBy` still shuffles by `region`."
+  ],
+  "explanation": "With the default threshold Spark broadcasts the tiny `warehouses` table by itself: `True 0`. At `-1` automatic broadcasting is off, so the join is a sort-merge join that shuffles both sides by `warehouse_id`: `False 2`. The hint asks for a broadcast whatever the threshold, so the shuffles are gone again: `True 0`. Grouping the joined rows by `region` adds one shuffle of its own, broadcast or not: `True 1` with the hint, and `False 3` without it (two for the join, one for the grouping). All five plans return the same rows for the same query; only the work differs."
+}

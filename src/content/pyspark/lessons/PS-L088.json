@@ -1,0 +1,156 @@
+{
+  "id": "PS-L088",
+  "minutes": 35,
+  "lede": "A model in Spark is one more pipeline stage: you fit it on training rows, and the fitted pipeline turns new rows into predictions. Knowing which objects learn and which only apply, how to keep a fitted pipeline, and how to measure it on rows it never saw is what makes the predictions worth trusting.",
+  "objectives": [
+    "Tell estimators, transformers and models apart, and fit a `Pipeline` that ends in `LinearRegression` or `LogisticRegression`",
+    "Read predictions and probabilities from a fitted model, and save and load a `PipelineModel`",
+    "Split data into training and test rows the same way on every run, by a hash of the key instead of `randomSplit`",
+    "Measure a model with `RegressionEvaluator` and `BinaryClassificationEvaluator`, rounding metrics before comparing them"
+  ],
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "movies"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "Feature preparation used two kinds of objects. An **estimator** has `fit(df)`: it learns from the data and returns a **model**. A **transformer** has `transform(df)`: it adds columns and keeps the rest. Every model is a transformer.\n\nA machine-learning algorithm is just another estimator. `LinearRegression` reads a vector column (`featuresCol`, by default `features`) and a number column to predict (`labelCol`, by default `label`). `fit` returns a `LinearRegressionModel`, whose `transform` adds a `prediction` column.\n\n`movies` has one row per film, with its `release_year` and `runtime_min`. Can the year predict the length?"
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "An estimator fits, its model transforms",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.ml.feature import VectorAssembler\nfrom pyspark.ml.regression import LinearRegression\n\nfilms = VectorAssembler(inputCols=[\"release_year\"], outputCol=\"features\").transform(movies)\n\nlr = LinearRegression(labelCol=\"runtime_min\")\nmodel = lr.fit(films)\nprint(type(lr).__name__, \"->\", type(model).__name__)\nprint(round(model.coefficients[0], 3), round(model.intercept, 1))\n\nmodel.transform(films).select(\n    \"movie_id\", \"release_year\", \"runtime_min\", F.round(\"prediction\", 1).alias(\"prediction\")\n).orderBy(\"movie_id\").show()\n",
+      "note": "The fitted line loses about 1.8 minutes per release year. Films from the same year all get the same prediction, and many are far from their real runtime: the year alone tells you little. The coefficients are rounded because the last digits of a fitted number can change when the data is split into partitions differently."
+    },
+    {
+      "kind": "text",
+      "md": "Even with one input, the model wants a **vector**. Passing the plain column is the most common first mistake."
+    },
+    {
+      "kind": "error-example",
+      "id": "e2",
+      "title": "A number column is not a features vector",
+      "code": "from pyspark.ml.regression import LinearRegression\n\nLinearRegression(featuresCol=\"release_year\", labelCol=\"runtime_min\").fit(movies)\n",
+      "error": "IllegalArgumentException",
+      "note": "The message says the column must be of type `VectorUDT` but was `int`. Put a `VectorAssembler` in front of the model, even for a single column."
+    },
+    {
+      "kind": "text",
+      "md": "In a `Pipeline`, the model is the last stage. `pipeline.fit(train)` fits each estimator in turn on the output of the stages before it, and returns a `PipelineModel` whose stages are all transformers. `model.stages[-1]` is the fitted model itself, with its coefficients.\n\n`LogisticRegression` predicts a yes/no label: 1.0 or 0.0. Its model adds three columns: `rawPrediction`, `probability` (a vector with the chance of 0.0, then of 1.0) and `prediction`, which is 1.0 when the chance of 1.0 is above one half.\n\nBelow, a small table of film features, as a `groupBy` over ratings would produce: each film's average rating in one year, and a label saying whether it stayed at 4.0 or more the next year."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "A pipeline that ends in a model",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.ml import Pipeline\nfrom pyspark.ml.feature import VectorAssembler\nfrom pyspark.ml.classification import LogisticRegression\nfrom pyspark.ml.functions import vector_to_array\n\nfilms = spark.createDataFrame(\n    [(\"M01\", 4.5, 1.0), (\"M02\", 4.0, 1.0), (\"M03\", 3.5, 0.0), (\"M04\", 3.0, 0.0), (\"M05\", 2.5, 0.0),\n     (\"M06\", 4.5, 0.0), (\"M07\", 3.5, 1.0), (\"M08\", 1.5, 0.0), (\"M09\", 4.0, 1.0), (\"M10\", 5.0, 1.0)],\n    \"movie_id STRING, avg_rating DOUBLE, label DOUBLE\",\n)\n\npipeline = Pipeline(stages=[\n    VectorAssembler(inputCols=[\"avg_rating\"], outputCol=\"features\"),\n    LogisticRegression(),\n])\nmodel = pipeline.fit(films)\nprint([type(s).__name__ for s in pipeline.getStages()])\nprint([type(s).__name__ for s in model.stages])\n\nlr = model.stages[-1]\nprint(round(float(lr.coefficients[0]), 2), round(lr.intercept, 2))\n\nscored = model.transform(films)\nprint(scored.columns)\nscored.select(\n    \"movie_id\", \"avg_rating\", \"label\",\n    F.round(vector_to_array(\"probability\")[1], 2).alias(\"p_high\"),\n    \"prediction\",\n).orderBy(\"movie_id\").show()\n",
+      "note": "The pipeline held a `LogisticRegression`; the fitted pipeline holds a `LogisticRegressionModel`. A higher average gives a higher chance, so films with the same average get the same `p_high`. M06 and M07 are predicted wrong: the model draws one line, and those films don't follow it."
+    },
+    {
+      "kind": "text",
+      "md": "Fitting can take a while on real data, and the rows you score later arrive in another job. `model.write().overwrite().save(path)` writes the fitted pipeline to a folder: its settings as JSON in `metadata`, each fitted stage under `stages`. `PipelineModel.load(path)` reads it back, ready to `transform`, with nothing fitted again. Here the folder is under `/tmp`, private to this run.\n\nAn **evaluator** turns predictions into one number. `BinaryClassificationEvaluator` reads `label` and `rawPrediction` and by default gives the **area under the ROC curve**: 1.0 when every film labelled 1.0 is ranked above every film labelled 0.0, 0.5 for a coin toss."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Save the fitted pipeline, load it back",
+      "code": "import os\nfrom pyspark.ml import Pipeline, PipelineModel\nfrom pyspark.ml.feature import VectorAssembler\nfrom pyspark.ml.classification import LogisticRegression\nfrom pyspark.ml.evaluation import BinaryClassificationEvaluator\n\nfilms = spark.createDataFrame(\n    [(\"M01\", 4.5, 1.0), (\"M02\", 4.0, 1.0), (\"M03\", 3.5, 0.0), (\"M04\", 3.0, 0.0), (\"M05\", 2.5, 0.0),\n     (\"M06\", 4.5, 0.0), (\"M07\", 3.5, 1.0), (\"M08\", 1.5, 0.0), (\"M09\", 4.0, 1.0), (\"M10\", 5.0, 1.0)],\n    \"movie_id STRING, avg_rating DOUBLE, label DOUBLE\",\n)\nmodel = Pipeline(stages=[\n    VectorAssembler(inputCols=[\"avg_rating\"], outputCol=\"features\"),\n    LogisticRegression(),\n]).fit(films)\n\nmodel.write().overwrite().save(\"/tmp/film_model\")\nprint(sorted(os.listdir(\"/tmp/film_model\")))\n\nloaded = PipelineModel.load(\"/tmp/film_model\")\nprint([type(s).__name__ for s in loaded.stages])\n\nbefore = model.transform(films).select(\"movie_id\", \"probability\").collect()\nafter = loaded.transform(films).select(\"movie_id\", \"probability\").collect()\nprint(before == after)\n\nauc = BinaryClassificationEvaluator().evaluate(loaded.transform(films))\nprint(round(auc, 3))\n",
+      "note": "The loaded pipeline gives exactly the same probabilities. The area under the curve is 0.84: mostly well ranked, with the two films that break the pattern pulling it below 1.0. It is measured on the rows the model was fitted on, which flatters it."
+    },
+    {
+      "kind": "text",
+      "md": "To measure honestly, hold some rows back: fit on the **training** rows and evaluate on the **test** rows.\n\n`df.randomSplit([0.7, 0.3], seed=7)` draws rows at random. The seed makes it repeat on the same data **with the same partitions**, because each partition draws its own random numbers. Read the same rows into a different number of partitions and other rows land in the test set. That happens whenever an upstream step, a file layout or a cluster size changes.\n\nA split by a **hash of the key** doesn't depend on partitions at all. `F.crc32(\"movie_id\")` turns the id into a whole number that is always the same for the same id, so `F.crc32(\"movie_id\") % 3 == 0` puts about a third of the films in the test set, and always the same ones."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "A random split moves with the partitions",
+      "code": "from pyspark.sql import functions as F\n\nfor n in [1, 2, 3]:\n    train, test = movies.repartition(n).randomSplit([0.7, 0.3], seed=7)\n    print(n, \"partitions:\", sorted(r.movie_id for r in test.collect()))\n\nfor n in [1, 2, 3]:\n    test = movies.repartition(n).filter(F.crc32(\"movie_id\") % 3 == 0)\n    print(n, \"partitions:\", sorted(r.movie_id for r in test.collect()))\n",
+      "note": "Same seed, three different test sets. The hash split picks M01, M03, M06, M07 and M08 every time. Choose the key the rows belong to: split films by `movie_id` so no film is in both sets."
+    },
+    {
+      "kind": "text",
+      "md": "`RegressionEvaluator` compares `label` (or your `labelCol`) with `prediction`. Its default metric is `rmse`, the root mean squared error, in the label's units: minutes here. Ask for another metric with `metricName`, or pass `{evaluator.metricName: \"mae\"}` to `evaluate` for one call.\n\nRound metrics before you print or compare them. The last digits can change with the partitioning, while the first few don't."
+    },
+    {
+      "kind": "example",
+      "id": "e6",
+      "title": "Measure on films the model never saw",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.ml.feature import VectorAssembler\nfrom pyspark.ml.regression import LinearRegression\nfrom pyspark.ml.evaluation import RegressionEvaluator\n\nfilms = VectorAssembler(inputCols=[\"release_year\"], outputCol=\"features\").transform(movies)\nheld_out = F.crc32(\"movie_id\") % 3 == 0\ntrain, test = films.filter(~held_out), films.filter(held_out)\n\nmodel = LinearRegression(labelCol=\"runtime_min\").fit(train)\nevaluator = RegressionEvaluator(labelCol=\"runtime_min\")\n\nprint(\"train rmse\", round(evaluator.evaluate(model.transform(train)), 2))\nprint(\"test rmse\", round(evaluator.evaluate(model.transform(test)), 2))\nprint(\"test mae\", round(evaluator.evaluate(model.transform(test), {evaluator.metricName: \"mae\"}), 2))\n",
+      "note": "The error on the five held-out films is almost three times the error on the training films. On training rows a model is marked on its own homework."
+    },
+    {
+      "kind": "text",
+      "md": "Choosing settings, such as `regParam` (how strongly the coefficients are held towards zero), is the same idea repeated. `ParamGridBuilder` lists the settings to try. `CrossValidator` splits the rows into `numFolds` folds, fits the estimator (a model or a whole pipeline) on all but one fold and scores the one left out, for every setting, and keeps the best average. Its folds are drawn at random with a `seed`, so like `randomSplit` it repeats only on the same data in the same partitions."
+    },
+    {
+      "kind": "example",
+      "id": "e7",
+      "title": "Try settings with CrossValidator",
+      "code": "from pyspark.sql import functions as F\nfrom pyspark.ml.feature import VectorAssembler\nfrom pyspark.ml.regression import LinearRegression\nfrom pyspark.ml.evaluation import RegressionEvaluator\nfrom pyspark.ml.tuning import CrossValidator, ParamGridBuilder\n\nfilms = VectorAssembler(inputCols=[\"release_year\"], outputCol=\"features\").transform(movies)\nfilms = films.withColumn(\"label\", F.col(\"runtime_min\").cast(\"double\"))\n\nlr = LinearRegression()\ngrid = ParamGridBuilder().addGrid(lr.regParam, [0.0, 100.0]).build()\ncv = CrossValidator(estimator=lr, estimatorParamMaps=grid, evaluator=RegressionEvaluator(), numFolds=2, seed=7)\nresult = cv.fit(films)\n\nprint([round(float(m), 2) for m in result.avgMetrics])\nprint(result.bestModel.getRegParam())\n",
+      "note": "One average RMSE per setting, in grid order. RMSE is better when lower, and the evaluator knows it, so the strong setting wins here: with a year that predicts little, holding the line flat does better. `bestModel` is the model refitted on all rows with the winning setting. Every setting is fitted once per fold, so a grid gets expensive fast."
+    }
+  ],
+  "challenges": [
+    "PS-L088-C1",
+    "PS-L088-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "`model = Pipeline(stages=[assembler, LogisticRegression()]).fit(train)`. What is `model.stages[-1]`?",
+      "choices": [
+        "A `LogisticRegression` estimator, ready to fit",
+        "A `LogisticRegressionModel`, a transformer that adds predictions",
+        "The training DataFrame with a `prediction` column",
+        "The pipeline's area under the ROC curve"
+      ],
+      "answer": 1,
+      "why": "Fitting a pipeline replaces every estimator with the model it fitted. The last stage is the fitted `LogisticRegressionModel`, which `transform` uses to add `rawPrediction`, `probability` and `prediction`."
+    },
+    {
+      "id": "k2",
+      "prompt": "A job splits its rows with `randomSplit([0.8, 0.2], seed=42)`. After an upstream change, the same rows arrive in more partitions. What happens to the test set?",
+      "choices": [
+        "It stays the same, because the seed is fixed",
+        "It can contain different rows, because each partition draws its own random numbers",
+        "It becomes empty",
+        "Spark raises an error about the partitions"
+      ],
+      "answer": 1,
+      "why": "The seed repeats the split only for the same data in the same partitions. A split by a hash of the key, such as `F.crc32(\"movie_id\") % 5 == 0`, puts the same rows in the test set whatever the partitioning."
+    },
+    {
+      "id": "k3",
+      "prompt": "A runtime model has an RMSE of 7 minutes on its training films and 19 on held-out films. Which number tells you how it will do on new films?",
+      "choices": [
+        "7, because it was measured on more films",
+        "19, because those films played no part in fitting",
+        "Their average, 13",
+        "Neither: RMSE only works on training rows"
+      ],
+      "answer": 1,
+      "why": "A model fits its training rows as closely as it can, so their error is too optimistic. Rows held out of fitting stand in for new data."
+    }
+  ],
+  "review": [
+    "An estimator's `fit` returns a model; a model is a transformer whose `transform` adds columns. Algorithms like `LinearRegression` are estimators too.",
+    "Models read one vector column, `features` by default, and a `label`: put a `VectorAssembler` in front even for one input.",
+    "A fitted `Pipeline` is a `PipelineModel`; `stages[-1]` is the fitted model. `write().overwrite().save(path)` and `PipelineModel.load(path)` keep it for later jobs.",
+    "`LogisticRegression` adds `probability` (chance of 0.0, then 1.0) and `prediction`; `vector_to_array(\"probability\")[1]` is the chance of 1.0.",
+    "`randomSplit` with a seed repeats only on the same partitions. Split by a hash of the key, like `F.crc32(\"movie_id\") % 3 == 0`, to get the same test rows every run.",
+    "Measure on held-out rows with `RegressionEvaluator` or `BinaryClassificationEvaluator`, and round coefficients and metrics: their last digits can vary."
+  ],
+  "practice": [
+    "PS-Q0436",
+    "PS-Q0437",
+    "PS-Q0438",
+    "PS-Q0439",
+    "PS-Q0440"
+  ]
+}

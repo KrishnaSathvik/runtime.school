@@ -1,0 +1,60 @@
+{
+  "id": "saas-activation-retention",
+  "task": "Signups at a collaboration product keep rising but revenue lags, and the growth team suspects new workspaces never reach a first meaningful action, users don't come back, and some channels bring accounts that never pay. The event pipeline also retries and delivers late, so raw counts may mislead. Find out whether the event data can be trusted, how many new workspaces activate, how many users return the next month, and which channels bring paying accounts.",
+  "produce": [
+    {
+      "name": "Event quality check",
+      "about": "Deliveries, unique events, retries and late arrivals in one row."
+    },
+    {
+      "name": "Activation by cohort",
+      "about": "Workspaces per signup month and the share that made a first report within 14 days."
+    },
+    {
+      "name": "Next-month retention",
+      "about": "Users per signup month and the share active in the following month."
+    },
+    {
+      "name": "Channel revenue",
+      "about": "Workspaces, paying workspaces and current monthly revenue per acquisition channel."
+    },
+    {
+      "name": "Growth diagnosis",
+      "about": "Three findings and two priority actions for the growth team."
+    }
+  ],
+  "labels": {
+    "understand-data": "Explore events",
+    "event-quality": "Event quality",
+    "activation": "Activation",
+    "retention": "Retention",
+    "channels": "Channels",
+    "synthesis": "Conclusions",
+    "report": "Report"
+  },
+  "summaries": {
+    "understand-data": "Follow one event through its repeated deliveries and see what changes.",
+    "event-quality": "Count deliveries, unique events, retries and late arrivals.",
+    "activation": "Measure which share of each month's new workspaces makes a first report within 14 days.",
+    "retention": "Measure which share of each month's new users comes back the next month.",
+    "channels": "Compare channels by paying workspaces and current monthly revenue.",
+    "synthesis": "Decide where growth leaks most: activation, retention or channel mix.",
+    "report": "Write three findings and two priority actions."
+  },
+  "problems": [
+    "Retries deliver the same event more than once, so counting rows overstates activity.",
+    "Some deliveries arrive more than a day after the event happened, which skews daily counts.",
+    "About a third of workspaces created before June 2025 never made a report at all.",
+    "Subscriptions keep every past plan, so summing every row overstates revenue; only the open plan is current.",
+    "Most workspaces are on the free plan today, so signups say little about revenue.",
+    "The newest workspaces and users have too little history to activate or return yet."
+  ],
+  "preparation": [
+    "readable-queries-with-ctes",
+    "window-functions-row-number",
+    "deduplicate-event-retries",
+    "cohorts-and-exact-day-retention",
+    "dates-and-monthly-analysis",
+    "date-boundaries-and-monthly-buckets"
+  ]
+}

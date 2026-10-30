@@ -1,0 +1,97 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "prescription_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "patient_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "drug_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "quantity",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "prescribed_date",
+     "type": "date",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "RX000003",
+     "PAT00002",
+     "omeprazole 20 mg capsule",
+     14,
+     "2026-01-13"
+    ],
+    [
+     "RX000004",
+     "PAT00005",
+     "nitrofurantoin 100 mg capsule",
+     30,
+     "2026-01-16"
+    ],
+    [
+     "RX000005",
+     "PAT00006",
+     "naproxen 500 mg tablet",
+     90,
+     "2026-01-17"
+    ],
+    [
+     "RX900001",
+     "PAT00005",
+     "saline 0.9% 10 ml flush",
+     3000000000,
+     "2026-02-02"
+    ],
+    [
+     "RX000001",
+     "PAT00003",
+     "albuterol 90 mcg inhaler",
+     1,
+     "2025-12-03"
+    ],
+    [
+     "RX000002",
+     "PAT00001",
+     "omeprazole 20 mg capsule",
+     60,
+     "2025-12-20"
+    ],
+    [
+     "RX900002",
+     "PAT00002",
+     "gauze swab 5 cm",
+     2147483648,
+     "2026-02-03"
+    ]
+   ],
+   "row_count": 7
+  }
+ },
+ "hidden": [
+  "the full practice prescriptions",
+  "the larger project prescriptions",
+  "only prescriptions from 2025",
+  "only prescriptions from 2026"
+ ]
+}

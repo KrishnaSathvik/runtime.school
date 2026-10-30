@@ -1,0 +1,99 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "transaction_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "band",
+     "type": "string",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "T000001",
+     "800.00",
+     "medium"
+    ],
+    [
+     "T000002",
+     "60.53",
+     "small"
+    ],
+    [
+     "T000003",
+     "27.90",
+     "small"
+    ],
+    [
+     "T000005",
+     "3100.00",
+     "large"
+    ],
+    [
+     "T000006",
+     "21.91",
+     "small"
+    ],
+    [
+     "T000007",
+     "10.01",
+     "small"
+    ],
+    [
+     "T000008",
+     "15.99",
+     "small"
+    ],
+    [
+     "T000009",
+     "43.95",
+     "small"
+    ],
+    [
+     "T000010",
+     "19.23",
+     "small"
+    ],
+    [
+     "T000011",
+     "7.60",
+     "small"
+    ],
+    [
+     "T000012",
+     "500.00",
+     "medium"
+    ],
+    [
+     "T000014",
+     "60.53",
+     "small"
+    ]
+   ],
+   "row_count": 12
+  }
+ },
+ "hidden": [
+  "the full practice transactions table",
+  "amounts just below, at and above each band limit",
+  "large transactions in other statuses",
+  "a posted transaction with no amount",
+  "an empty transactions table"
+ ]
+}

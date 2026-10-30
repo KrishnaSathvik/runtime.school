@@ -1,0 +1,21 @@
+{
+  "id": "PS-L066-C2",
+  "kind": "predict",
+  "slug": "what-vacuum-leaves",
+  "lesson": "PS-L066",
+  "difficulty": "medium",
+  "minutes": 6,
+  "title": "What VACUUM leaves",
+  "prompt": "`trips` has 12 rows. This program writes them to a new Delta table in files of at most 6 rows, appends them once more, compacts the table and vacuums it with 0 hours. What does it print? Type each line on its own line.",
+  "program": "import os\nfrom delta.tables import DeltaTable\n\n\ndef files_on_disk(path):\n    return len([f for f in os.listdir(path) if f.endswith(\".parquet\")])\n\nspark.conf.set(\"spark.sql.sources.parallelPartitionDiscovery.parallelism\", \"2\")\nspark.conf.set(\"spark.databricks.delta.retentionDurationCheck.enabled\", \"false\")\n\npath = \"/tmp/c2/trips\"\ntrips.write.format(\"delta\").option(\"maxRecordsPerFile\", 6).save(path)\ntrips.write.format(\"delta\").mode(\"append\").save(path)\ntable = DeltaTable.forPath(spark, path)\ntable.optimize().executeCompaction()\nprint(table.detail().first().numFiles, files_on_disk(path))\n\ntable.vacuum(0)\nprint(files_on_disk(path), spark.read.format(\"delta\").load(path).count())\nprint(table.history().first().version)\n\ntry:\n    spark.read.format(\"delta\").option(\"versionAsOf\", 1).load(path).collect()\n    print(\"version 1 read\")\nexcept Exception:\n    print(\"version 1 failed\")\n",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "Count the files each write makes. OPTIMIZE adds one file and marks the others removed, but deletes nothing.",
+    "`vacuum(0)` deletes every file the current version doesn't use. Every VACUUM writes two commits.",
+    "Which files did version 1 use, and are they still there?"
+  ]
+}

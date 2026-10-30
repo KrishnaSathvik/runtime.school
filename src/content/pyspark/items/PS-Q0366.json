@@ -1,0 +1,50 @@
+{
+ "id": "PS-Q0366",
+ "slug": "load-days-still-to-copy",
+ "lesson": "PS-L074",
+ "role": "foundation",
+ "format": "dataframe_coding",
+ "difficulty": "easy",
+ "minutes": 8,
+ "title": "Load days still to copy",
+ "dataset": {
+  "id": "PS-D08",
+  "version": "1.0.0"
+ },
+ "prompt": "Tracking events land in a folder per `load_date`, and a daily job copies them into a Delta table at `TARGET`. Write `days_to_load()` so it returns the load days the next run must copy: the ones after the newest load day the table already holds.",
+ "rules": [
+  "Return one row per load day, in a `load_date` column.",
+  "Some events load days after they happened, so a load day can hold only events older than anything in the table. It must still be copied.",
+  "Before the first run there's no table at `TARGET`: then every landed day must be copied.",
+  "Don't change `setup` or `solve`."
+ ],
+ "hints": [
+  "`spark.read.format(\"delta\").load(TARGET).select(F.max(\"load_date\")).first()[0]` is the newest load day in the table.",
+  "`DeltaTable.isDeltaTable(spark, TARGET)` tells you whether the table exists yet.",
+  "Keep the landed rows with a `load_date` after the mark, then `select(\"load_date\").distinct()`."
+ ],
+ "entry": "solve",
+ "inputs": [
+  "shipment_events"
+ ],
+ "starter": "import shutil\n\nfrom pyspark.sql import functions as F\nfrom delta.tables import DeltaTable\n\nLANDING = \"/tmp/landing/shipment_events\"\nTARGET = \"/tmp/silver/shipment_events\"\n\n\ndef setup(shipment_events):\n    # Every load day has landed, and the job has copied the older half of them so far\n    # (none at all, and no table yet, when only one day has landed). Don't change this.\n    shutil.rmtree(\"/tmp/landing\", ignore_errors=True)  # start from empty folders on every run\n    shutil.rmtree(\"/tmp/silver\", ignore_errors=True)\n    shipment_events.write.partitionBy(\"load_date\").parquet(LANDING)\n    days = sorted(r.load_date for r in shipment_events.select(\"load_date\").distinct().collect())\n    done = days[:len(days) // 2]\n    if done:\n        shipment_events.filter(F.col(\"load_date\").isin(done)).write.format(\"delta\").save(TARGET)\n\n\ndef days_to_load():\n    # The load days in LANDING that the next run must copy to TARGET, one row per day.\n    landing = spark.read.parquet(LANDING)\n    return landing.select(\"load_date\").distinct()\n\ndef solve(shipment_events):\n    setup(shipment_events)\n    return days_to_load()\n",
+ "output": {
+  "columns": [
+   "load_date"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 180,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "explanation": "The high-water mark is the newest `load_date` in the table: `select(F.max(\"load_date\")).first()[0]`, or `None` when `DeltaTable.isDeltaTable` says there's no table yet. The days to copy are the landed days after it: `landing.filter(F.col(\"load_date\") > mark).select(\"load_date\").distinct()`, or every landed day before the first run. The mark is on the load day, not on `event_time`: the scan from 5 March that loaded on 9 March is older than anything in the table, so a mark on event time would never copy that day. `>=` would copy the mark's own day a second time."
+}

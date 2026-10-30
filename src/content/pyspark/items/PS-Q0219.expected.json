@@ -1,0 +1,52 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "log_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "level",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "service",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "LOG-000007",
+     "WARN",
+     "iot-gateway"
+    ],
+    [
+     "LOG-000010",
+     "ERROR",
+     "notification-worker"
+    ]
+   ],
+   "row_count": 2
+  }
+ },
+ "hidden": [
+  "the full practice log file",
+  "records with a null or missing trace id",
+  "a cut-off line, a missing brace and a plain-text line",
+  "a file whose first line is broken",
+  "a record without a log id",
+  "a file with no broken lines",
+  "the same record shipped twice",
+  "an empty log file"
+ ]
+}

@@ -1,0 +1,58 @@
+{
+  "id": "PS-Q0258",
+  "slug": "range-per-million-shares",
+  "lesson": "PS-L052",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Closed at the high",
+  "dataset": {
+    "id": "PS-D10",
+    "version": "1.0.0"
+  },
+  "prompt": "A momentum screen flags the days a stock closed at its high. Write `solve(daily_prices)` with a pandas UDF so it returns `symbol`, `trade_date` and `closed_at_high`.",
+  "rules": [
+    "`closed_at_high` is true when `close` equals `high` and false otherwise, as a boolean.",
+    "A day with a missing `high` or `close` has a missing `closed_at_high`, not false.",
+    "Compute `closed_at_high` with a pandas UDF: the check looks for it in the plan Spark runs.",
+    "Return `symbol`, `trade_date` and `closed_at_high`, in that order. Keep every row."
+  ],
+  "hints": [
+    "Declare the UDF with `@F.pandas_udf(\"boolean\")` and pass it `high` and `close`, converted with `.astype(\"float64\")`.",
+    "Comparing with NaN in pandas gives `False`, not a missing value, so a missing price would come back as false.",
+    "`series.where(condition)` puts NaN where the condition is false, and NaN comes back as NULL. Use `h.notna() & c.notna()`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "daily_prices"
+  ],
+  "starter": "import pandas as pd\nfrom pyspark.sql import functions as F\n\n\ndef solve(daily_prices):\n    # Return symbol, trade_date and closed_at_high, computed with a pandas UDF.\n    return daily_prices\n",
+  "output": {
+    "columns": [
+      "symbol",
+      "trade_date",
+      "closed_at_high"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Convert both prices and compare: `(c == h)`. That alone is wrong on missing prices, because in pandas any comparison with NaN is `False`, and Spark would store `false` for a day whose high or close isn't known. Blank those rows out with `(c == h).where(h.notna() & c.notna())`: `where` puts NaN in the other rows, and NaN comes back as NULL. Both prices are `DECIMAL(10,2)` turned into floats the same way, so equal prices compare equal; rounding first, to one decimal place, would call a close one cent below the high a close at the high. Spark's own `F.col(\"close\") == F.col(\"high\")` gives the same rows, NULLs included; this question checks for the pandas UDF because that's what it teaches.",
+  "technique": {
+    "name": "a pandas UDF",
+    "plan": [
+      "ArrowEvalPython"
+    ]
+  }
+}

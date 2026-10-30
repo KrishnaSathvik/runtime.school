@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0087",
+  "slug": "alert-warning-time",
+  "lesson": "PS-L018",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Alert warning time",
+  "dataset": {
+    "id": "PS-D13",
+    "version": "1.0.0"
+  },
+  "prompt": "The alert service promises to warn people well before bad weather starts. Write `solve(weather_alerts)` so it returns `alert_id`, `alert_type`, `warning_minutes` and `start_weekday`.",
+  "rules": [
+    "`warning_minutes` is the time from `issued_at` to `starts_at` in whole minutes, as an int. A part minute is dropped: 119 minutes 30 seconds is 119.",
+    "`start_weekday` is the full English name of the day `starts_at` falls on, such as `Monday`. All times are UTC.",
+    "A missing time gives missing results. Return the four columns, in that order, for every alert."
+  ],
+  "hints": [
+    "Cast each timestamp to `long` to get seconds; their difference is the warning in seconds.",
+    "Divide by 60 for minutes, then cast to `int`: the cast drops the part minute.",
+    "`F.date_format(col, pattern)` writes a day's name. `EEE` gives the short name; `EEEE` gives the full one."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "weather_alerts"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(weather_alerts):\n    # Return alert_id, alert_type, warning_minutes and start_weekday.\n    return weather_alerts\n",
+  "output": {
+    "columns": [
+      "alert_id",
+      "alert_type",
+      "warning_minutes",
+      "start_weekday"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Casting a timestamp to `long` gives seconds since 1970, so `F.col(\"starts_at\").cast(\"long\") - F.col(\"issued_at\").cast(\"long\")` is the warning in seconds. `/ 60` gives minutes as a `double`, and `.cast(\"int\")` drops the part minute. The day name is `F.date_format(\"starts_at\", \"EEEE\")`. Together: `weather_alerts.select(\"alert_id\", \"alert_type\", ((seconds) / 60).cast(\"int\").alias(\"warning_minutes\"), F.date_format(\"starts_at\", \"EEEE\").alias(\"start_weekday\"))`. Working from the clock parts instead, such as `hour * 60 + minute` of each time, breaks as soon as an alert is issued before midnight and starts after it. `F.dayofweek` gives a number, not a name."
+}

@@ -1,0 +1,191 @@
+{
+ "id": "PS-P10",
+ "workspace": "guided",
+ "file": "pipeline.py",
+ "dataset": {
+  "id": "PS-D09",
+  "version": "1.0.0",
+  "edition": "project"
+ },
+ "also": [
+  {
+   "id": "PS-D15",
+   "version": "1.1.0",
+   "tables": [
+    "error_events"
+   ]
+  }
+ ],
+ "inputs": [
+  "sensor_readings",
+  "devices",
+  "device_locations",
+  "maintenance_events",
+  "alerts",
+  "error_events"
+ ],
+ "task": "Eighteen sensors in cold stores, greenhouses, offices and server rooms report every 15 minutes, and the readings reach the platform as a stream: some hours late, some twice, a few impossible. Build the streaming pipeline that checks each reading against the device registry, keeps a health table per sensor, raises one alert per episode, and explains each error the gateway logged. Then prove that when the alert sink fails mid-stream, a restart from the checkpoint delivers every alert exactly once.",
+ "skills": [
+  "file streams and micro-batches",
+  "event-time windows and watermarks",
+  "stream-static joins",
+  "stateful streaming with applyInPandasWithState",
+  "checkpoints and restart",
+  "correlating two datasets"
+ ],
+ "problems": [
+  "Readings arrive late, some by up to 12 hours.",
+  "Readings delivered two or three times with the same reading_id.",
+  "Payload values or the whole firmware record missing on some readings.",
+  "Sensor glitches: a temperature of 999.0 or a humidity of 255.0, which raised false alerts on the platform.",
+  "Temperature-only sensors never report humidity; that missing value is expected.",
+  "One sensor moved, so it has two location rows."
+ ],
+ "revenue": "A breach is a reading above or below a rule's threshold. The team wants one event per episode: a breach raises an event only when it is more than an hour newer than the newest breach already seen for that sensor and rule. A glitch is never a breach; each glitch raises its own sensor-fault event.",
+ "milestones": [
+  {
+   "step": 1,
+   "summary": "Stream the readings and flatten each one, with its delay and glitch flag.",
+   "label": "Parse readings"
+  },
+  {
+   "step": 2,
+   "summary": "Join each reading to its sensor and site, and label its first problem.",
+   "label": "Validate devices"
+  },
+  {
+   "step": 3,
+   "summary": "Count usable readings once per sensor in 6-hour event-time windows.",
+   "label": "Device health"
+  },
+  {
+   "step": 4,
+   "summary": "Find threshold breaches and raise one event per episode with streaming state.",
+   "label": "Anomalies"
+  },
+  {
+   "step": 5,
+   "summary": "Explain every gateway device error from the sensor side.",
+   "label": "Correlate errors"
+  },
+  {
+   "step": 6,
+   "summary": "Survive a sink outage: restart from the checkpoint and deliver each alert once.",
+   "label": "Restart"
+  },
+  {
+   "step": 7,
+   "summary": "Prove the recovered alerts, the state and the incidents match an uninterrupted run.",
+   "label": "Validate recovery"
+  }
+ ],
+ "artifacts": [
+  {
+   "name": "parse_readings",
+   "inputs": [
+    "sensor_readings"
+   ],
+   "step": 1,
+   "about": "One flat row per delivered reading, with its delay and the late and glitch flags."
+  },
+  {
+   "name": "stream_parsed",
+   "inputs": [
+    "sensor_readings"
+   ],
+   "step": 1,
+   "about": "What the stream wrote after reading every batch file."
+  },
+  {
+   "name": "validate_readings",
+   "inputs": [
+    "sensor_readings",
+    "devices",
+    "device_locations"
+   ],
+   "step": 2,
+   "about": "Each reading with its sensor type, its site on that date and its first problem."
+  },
+  {
+   "name": "stream_validated",
+   "inputs": [
+    "sensor_readings",
+    "devices",
+    "device_locations"
+   ],
+   "step": 2,
+   "about": "The validation, run on the stream."
+  },
+  {
+   "name": "device_health",
+   "inputs": [
+    "sensor_readings",
+    "devices",
+    "device_locations"
+   ],
+   "step": 3,
+   "about": "Readings, incomplete readings, glitches, hottest temperature and lowest battery per sensor and 6 hours.",
+   "deliverable": true
+  },
+  {
+   "name": "breaches",
+   "inputs": [
+    "sensor_readings",
+    "devices",
+    "device_locations"
+   ],
+   "step": 4,
+   "about": "One row per usable reading and rule it breaks."
+  },
+  {
+   "name": "anomaly_events",
+   "inputs": [
+    "sensor_readings",
+    "devices",
+    "device_locations"
+   ],
+   "step": 4,
+   "about": "One event per episode, and one per glitch, from the stateful stream.",
+   "deliverable": true
+  },
+  {
+   "name": "incident_summary",
+   "inputs": [
+    "sensor_readings",
+    "devices",
+    "device_locations",
+    "maintenance_events",
+    "alerts",
+    "error_events"
+   ],
+   "step": 5,
+   "about": "Every gateway device error with its cause, evidence and false alerts.",
+   "deliverable": true
+  },
+  {
+   "name": "recovery_run",
+   "inputs": [
+    "sensor_readings",
+    "devices",
+    "device_locations"
+   ],
+   "step": 6,
+   "about": "The alert stream through a failing sink: one row per run, before and after the restart."
+  },
+  {
+   "name": "recovery_report",
+   "inputs": [
+    "sensor_readings",
+    "devices",
+    "device_locations",
+    "maintenance_events",
+    "alerts",
+    "error_events"
+   ],
+   "step": 7,
+   "about": "Checks that the recovered alerts, the checkpoint's state and the incidents match an uninterrupted run.",
+   "deliverable": true
+  }
+ ],
+ "run_timeout_s": 300
+}

@@ -1,0 +1,120 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "reading_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "device_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "event_time",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "temperature_c",
+     "type": "double",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "R0011",
+     "DEV-003",
+     "2026-04-14T09:30:00",
+     31.4
+    ],
+    [
+     "R0012",
+     "DEV-004",
+     "2026-04-14T09:30:00",
+     26.0
+    ],
+    [
+     "R0010",
+     "DEV-002",
+     "2026-04-14T09:30:00",
+     21.9
+    ],
+    [
+     "R0009",
+     "DEV-001",
+     "2026-04-14T09:30:00",
+     3.3
+    ],
+    [
+     "R0011",
+     "DEV-003",
+     "2026-04-14T09:30:00",
+     31.4
+    ],
+    [
+     "R0001",
+     "DEV-001",
+     "2026-04-14T09:00:00",
+     3.2
+    ],
+    [
+     "R0004",
+     "DEV-004",
+     "2026-04-14T09:00:00",
+     25.1
+    ],
+    [
+     "R0002",
+     "DEV-002",
+     "2026-04-14T09:00:00",
+     21.4
+    ],
+    [
+     "R0003",
+     "DEV-003",
+     "2026-04-14T09:00:00",
+     28.7
+    ],
+    [
+     "R0007",
+     "DEV-003",
+     "2026-04-14T09:15:00",
+     29.6
+    ],
+    [
+     "R0005",
+     "DEV-001",
+     "2026-04-14T09:15:00",
+     3.4
+    ],
+    [
+     "R0008",
+     "DEV-004",
+     "2026-04-14T09:15:00",
+     41.2
+    ],
+    [
+     "R0006",
+     "DEV-002",
+     "2026-04-14T09:15:00",
+     21.6
+    ]
+   ],
+   "row_count": 13
+  }
+ },
+ "hidden": [
+  "the first five hourly deliveries of the practice readings",
+  "readings with a missing temperature, payload or firmware",
+  "readings delivered more than once"
+ ]
+}

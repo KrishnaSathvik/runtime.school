@@ -1,0 +1,27 @@
+{
+  "id": "PS-L019-C2",
+  "slug": "rain-gauge-status",
+  "lesson": "PS-L019",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Rain gauge status",
+  "dataset": { "id": "PS-D13", "version": "1.0.0" },
+  "prompt": "The station map colours each reading by what its rain gauge said. Write `solve(observations)` so it returns `observation_id`, `station_id` and a `rain_status` for every reading.",
+  "rules": [
+    "`fault` when `precipitation_mm` is NaN.",
+    "`no data` when it's empty (null) or the code -9999.",
+    "`dry` when it's exactly 0.0, and `wet` when it's more than 0.0.",
+    "Return the three columns, in that order, for every reading."
+  ],
+  "hints": [
+    "`F.isnan(col)` finds NaN; `isNull()` doesn't.",
+    "NaN counts as bigger than every number, so `> 0` is true for it. Check for NaN first.",
+    "Chain `F.when` calls; the first true one wins."
+  ],
+  "entry": "solve",
+  "inputs": ["observations"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(observations):\n    # Return observation_id, station_id and rain_status (fault, no data, dry or wet).\n    return observations\n",
+  "output": { "columns": ["observation_id", "station_id", "rain_status"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

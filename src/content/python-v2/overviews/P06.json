@@ -1,0 +1,21 @@
+{
+  "id": "P06",
+  "task": "A complaints team tracks each case from new, to assigned, to closed. Working on three simulated cases, build the code that finds a case, assigns it, closes it only when that move is allowed, keeps an audit line for every close, and counts cases by state.",
+  "produce": [
+    { "name": "board.py", "about": "Finds, assigns, closes and counts cases, and writes the audit log." },
+    { "name": "main.py", "about": "Moves the cases through their states and prints the results." }
+  ],
+  "steps": {
+    "P06.m1": "Find a case by its id, or nothing when it's missing.",
+    "P06.m2": "Assign a new case to an owner, and refuse any other.",
+    "P06.m3": "Close an assigned case, and refuse one that is still new.",
+    "P06.m4": "Write one audit line for each close that worked.",
+    "P06.m5": "Count how many cases are in each state."
+  },
+  "problems": [
+    "One case is already closed in the file, so it can't be assigned.",
+    "Two cases are still new, so neither can be closed until someone is assigned.",
+    "The file has no owner column, so every case starts with an empty owner."
+  ],
+  "preparation": ["PY-L30-05", "PY-L08-02", "PY-L04-02", "PY-L07-03", "PY-L14-05"]
+}

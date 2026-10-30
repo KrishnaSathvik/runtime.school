@@ -1,0 +1,60 @@
+{
+  "id": "grid-demand-generation",
+  "task": "You support a utility's resource-planning team, which relies on day-ahead demand forecasts and on neighbours for imports during peaks. Find out how accurate the forecasts are, when each region peaks, how much generation is renewable and which regions rely on imports.",
+  "produce": [
+    {
+      "name": "Forecast accuracy",
+      "about": "Hours and mean absolute percentage error for each balancing authority."
+    },
+    {
+      "name": "Peak hours",
+      "about": "Each authority's highest hourly demand and when it happened."
+    },
+    {
+      "name": "Renewable share",
+      "about": "Total and renewable generation per month, and the renewable share."
+    },
+    {
+      "name": "Import dependence",
+      "about": "Reported hours, import hours and their share for each authority."
+    },
+    {
+      "name": "Planning brief",
+      "about": "Three findings and one recommendation."
+    }
+  ],
+  "labels": {
+    "understand-data": "Explore the grid",
+    "forecast-error": "Forecasts",
+    "peaks": "Peaks",
+    "renewables": "Renewables",
+    "imports": "Imports",
+    "synthesis": "Conclusions",
+    "report": "Report"
+  },
+  "summaries": {
+    "understand-data": "Compare one authority's demand and forecast for a day and find the hours furthest off.",
+    "forecast-error": "Measure each authority's average forecast error.",
+    "peaks": "Find each authority's highest hour of demand and when it happened.",
+    "renewables": "Track the renewable share of generation month by month.",
+    "imports": "Count the hours each authority imported more than it exported.",
+    "synthesis": "Find the authority with the most planning risk, and what to check before acting.",
+    "report": "Write three findings and one recommendation."
+  },
+  "problems": [
+    "71 hours have no reported demand and 25 have no forecast.",
+    "One hour reports 39 MW of demand against a forecast of 19,467 MW, which alone lifts that authority's average error from about 3% to about 15%.",
+    "One hour reports zero demand against a forecast of 21,899 MW.",
+    "One winter hour jumps to 32,218 MW, almost 20,000 MW above the hour before, and becomes that authority's peak.",
+    "336 hours have no interchange figure, most of them for one authority.",
+    "Some daily fuel totals are negative, mostly hydropower with pumped storage, oil and other fuels."
+  ],
+  "preparation": [
+    "group-into-summaries",
+    "connect-tables-with-join",
+    "conditional-aggregation",
+    "window-functions-row-number",
+    "latest-row-per-group",
+    "ratios-round-and-nullif"
+  ]
+}

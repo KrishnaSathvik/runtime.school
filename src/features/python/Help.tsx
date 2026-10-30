@@ -31,11 +31,11 @@ export function HelpButtons({ hintsShown, hintCount, revealed, onHint, onAnswer 
   };
   return (
     <>
-      <button type="button" ref={trigger} className="p2-btn" onClick={() => reveal(onHint)} disabled={hintsShown >= hintCount}>
+      <button type="button" ref={trigger} className="rx-btn ghost" onClick={() => reveal(onHint)} disabled={hintsShown >= hintCount}>
         <Lightbulb size={14} aria-hidden="true" /> {hintLabel(hintsShown, hintCount)}
       </button>
       {onAnswer && !revealed && (
-        <button type="button" className="p2-btn" onClick={() => setConfirm(true)}>
+        <button type="button" className="rx-btn ghost" onClick={() => setConfirm(true)}>
           <Eye size={14} aria-hidden="true" /> Answer
         </button>
       )}

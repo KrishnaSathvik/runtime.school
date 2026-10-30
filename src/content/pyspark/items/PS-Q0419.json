@@ -1,0 +1,54 @@
+{
+ "id": "PS-Q0419",
+ "slug": "every-endpoint-is-failing",
+ "lesson": "PS-L084",
+ "role": "debugging",
+ "format": "dataframe_coding",
+ "difficulty": "easy",
+ "minutes": 8,
+ "title": "Every endpoint is failing",
+ "dataset": {
+  "id": "PS-D15",
+  "version": "1.0.0"
+ },
+ "prompt": "This check pages on-call when an endpoint's server error rate goes over 5%. Since it was deployed, it reports every endpoint at 100% and pages for all of them. Fix `solve(api_requests)`.",
+ "rules": [
+  "One row per `service` and `endpoint` with at least `MIN_REQUESTS` requests. Columns and types: `service STRING, endpoint STRING, requests BIGINT, server_errors BIGINT, error_pct DOUBLE, alert BOOLEAN`.",
+  "`server_errors` counts status codes from 500 to 599 (0 when there are none); 4xx codes are the caller's mistakes.",
+  "`error_pct` is `server_errors / requests × 100`, rounded to 2 decimals. `alert` is true when it's above `MAX_ERROR_PCT`; exactly 5.00 isn't."
+ ],
+ "hints": [
+  "Run the starter on the sample. `server_errors` equals `requests` on every row. What does `F.count` count?",
+  "`F.count` counts every value that isn't NULL, and `0` isn't NULL.",
+  "Leave out `otherwise`, so rows that aren't server errors give NULL. Or keep `otherwise(0)` and add the ones up with `F.sum` instead."
+ ],
+ "explanation": "`F.count(F.when(cond, 1))` counts matching rows only because `F.when` without `otherwise` gives NULL for the rest, and `count` skips NULLs. Adding `otherwise(0)` turns every non-error into a 0, which `count` counts like any other value, so every request became a server error and every endpoint 100%. Remove `otherwise`, or switch to `F.sum(F.when(cond, 1).otherwise(0))`. Switching to `F.sum` without `otherwise` gives NULL for an endpoint that never failed, so its `error_pct` and `alert` are NULL too, and `status_code >= 400` would page for 404s, which aren't the service's fault.",
+ "entry": "solve",
+ "inputs": [
+  "api_requests"
+ ],
+ "starter": "from pyspark.sql import functions as F\n\nMIN_REQUESTS = 3\nMAX_ERROR_PCT = 5.0\n\n\ndef solve(api_requests):\n    # One row per endpoint with enough traffic, and whether its server error rate is over the limit.\n    server_error = F.col(\"status_code\").between(500, 599)\n    per_endpoint = api_requests.groupBy(\"service\", \"endpoint\").agg(\n        F.count(\"*\").alias(\"requests\"),\n        F.count(F.when(server_error, 1).otherwise(0)).alias(\"server_errors\"),\n    )\n    error_pct = F.round(F.col(\"server_errors\") / F.col(\"requests\") * 100, 2)\n    return per_endpoint.filter(F.col(\"requests\") >= MIN_REQUESTS).select(\n        \"service\", \"endpoint\", \"requests\", \"server_errors\", error_pct.alias(\"error_pct\"), (error_pct > MAX_ERROR_PCT).alias(\"alert\")\n    )\n",
+ "output": {
+  "columns": [
+   "service",
+   "endpoint",
+   "requests",
+   "server_errors",
+   "error_pct",
+   "alert"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 45,
+  "check_timeout_s": 120,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

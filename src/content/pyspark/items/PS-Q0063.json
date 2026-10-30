@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0063",
+  "slug": "codes-and-pulse-with-gaps",
+  "lesson": "PS-L013",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Codes and pulse with gaps",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "prompt": "A data-quality report counts each visit's diagnosis codes next to its pulse. Some feeds send an empty list of codes, or no list at all. Write `solve(encounters)` so it returns `encounter_id`, `code_count` and `heart_rate`.",
+  "rules": [
+    "`code_count` is the number of items in `diagnosis_codes`. An empty list counts 0; a visit with no list at all has a missing count.",
+    "`heart_rate` is the field inside `vitals`. It is missing when the visit has no vitals, or when the pulse wasn't taken.",
+    "Return the three columns, in that order, for every visit, duplicates included."
+  ],
+  "hints": [
+    "`F.size(\"diagnosis_codes\")` counts the items of an array.",
+    "An empty list and a missing list are different things: one has no items, the other isn't there. Check what `F.size` gives for each.",
+    "Don't pick items out of the list: an empty list has no position 0, and asking for it stops the job."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "encounters"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(encounters):\n    # encounter_id, code_count, heart_rate\n    return encounters\n",
+  "output": {
+    "columns": [
+      "encounter_id",
+      "code_count",
+      "heart_rate"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`encounters.select(\"encounter_id\", F.size(\"diagnosis_codes\").alias(\"code_count\"), \"vitals.heart_rate\")`. `F.size` already treats the two gaps differently: an empty list has 0 items, and a missing list gives a missing count (with Spark 4's default settings). Reading `heart_rate` from a missing `vitals` gives a missing value, the same as a struct whose `heart_rate` is itself missing. Anything that picks `diagnosis_codes[0]` fails on an empty list, because Spark 4 stops when a position doesn't exist. Counting the last position (`size - 1`) is off by one."
+}

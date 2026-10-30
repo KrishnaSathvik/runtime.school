@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0236",
+  "slug": "discounted-lines-from-the-database",
+  "lesson": "PS-L048",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Discounted lines from the database",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "Pricing wants to review every invoice line that was sold at a discount. The lines are in the billing database, which can pick them out before anything reaches Spark. Write `solve(invoice_lines)` so it returns `invoice_id`, `line_no`, `product_id` and `discount_pct` for every discounted line.",
+  "rules": [
+    "The starter saves the lines to the database. Read them from there.",
+    "A line is discounted when `discount_pct` is above 0. A line with 0 or no discount recorded is not kept.",
+    "Return `invoice_id`, `line_no` (integer), `product_id` and `discount_pct` (decimal(5,2)), in that order."
+  ],
+  "hints": [
+    "The `query` option takes a SQL query in place of `dbtable`, and the database runs it.",
+    "Select only the four columns in the query, and add a `WHERE` on `discount_pct`.",
+    "Is a line with no discount above 0? Think about what a SQL comparison does with a missing value."
+  ],
+  "explanation": "Give the read a `query` instead of a table: `spark.read.format(\"jdbc\").option(\"url\", url).option(\"query\", \"SELECT invoice_id, line_no, product_id, discount_pct FROM invoice_lines WHERE discount_pct > 0\").load()`. The database runs the `WHERE`, so only discounted lines are sent to Spark, and the result has just the selected columns with the table's types. A subquery as the table name, `spark.read.jdbc(url, \"(SELECT ... WHERE discount_pct > 0) AS discounted\")`, does the same. A line with no discount drops out by itself, because comparing a missing value with 0 isn't true. Watch for `>= 0`, which keeps every line, and for a cut-off such as `>= 5` taken from the rows you happen to see: a 2.50% discount is still a discount.",
+  "entry": "solve",
+  "inputs": [
+    "invoice_lines"
+  ],
+  "starter": "def solve(invoice_lines):\n    url = \"jdbc:sqlite:/tmp/billing.db\"\n    invoice_lines.coalesce(1).write.jdbc(url, \"invoice_lines\", mode=\"overwrite\")\n    # Read the discounted lines from the database at `url`\n    # and return invoice_id, line_no, product_id and discount_pct.\n    return invoice_lines\n",
+  "output": {
+    "columns": [
+      "invoice_id",
+      "line_no",
+      "product_id",
+      "discount_pct"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

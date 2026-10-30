@@ -1,0 +1,158 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "order_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "orders",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "revenue",
+     "type": "decimal(20,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "2026-06-11",
+     1,
+     "117.99"
+    ],
+    [
+     "2026-01-23",
+     1,
+     "243.00"
+    ],
+    [
+     "2026-03-11",
+     1,
+     "79.96"
+    ],
+    [
+     "2026-03-23",
+     1,
+     "227.48"
+    ],
+    [
+     "2026-03-24",
+     1,
+     "418.96"
+    ],
+    [
+     "2026-03-03",
+     1,
+     "40.00"
+    ]
+   ],
+   "row_count": 6,
+   "inputs": {
+    "orders": [
+     [
+      "O00001",
+      "C0001",
+      "2026-06-11",
+      "paid",
+      "store",
+      "117.99"
+     ],
+     [
+      "O00002",
+      "C0001",
+      "2026-03-11",
+      "delivered",
+      "app",
+      "79.96"
+     ],
+     [
+      "O00003",
+      "C0002",
+      "2026-08-28",
+      "placed",
+      "app",
+      null
+     ],
+     [
+      "O00004",
+      "C0004",
+      "2026-03-24",
+      "shipped",
+      "app",
+      "418.96"
+     ],
+     [
+      "O00007",
+      "C0003",
+      "2026-03-23",
+      "paid",
+      "web",
+      "227.48"
+     ],
+     [
+      "O00010",
+      "C0006",
+      "2026-01-11",
+      "cancelled",
+      "app",
+      "299.91"
+     ],
+     [
+      "O00011",
+      "C0005",
+      "2026-01-23",
+      "delivered",
+      "web",
+      "243.00"
+     ],
+     [
+      "O00011",
+      "C0005",
+      "2026-01-23",
+      "delivered",
+      "web",
+      "243.00"
+     ],
+     [
+      "O00012",
+      "C0005",
+      "2026-03-03",
+      "refunded",
+      "app",
+      "57.00"
+     ],
+     [
+      "O00013",
+      "C0006",
+      null,
+      "paid",
+      "app",
+      "30.00"
+     ],
+     [
+      "O00050",
+      "C0002",
+      "2026-03-03",
+      "Delivered",
+      "store",
+      "40.00"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice orders, with some sent twice",
+  "a file where every row breaks a rule, some for orders already in the table"
+ ]
+}

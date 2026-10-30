@@ -1,0 +1,27 @@
+{
+  "id": "PS-L032-C1",
+  "slug": "overspend-by-campaign",
+  "lesson": "PS-L032",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Overspend by campaign",
+  "dataset": { "id": "PS-D12", "version": "1.0.0" },
+  "prompt": "Finance wants to see which campaigns spend more than planned. Write `solve(budgets)` so it returns, for every campaign, how many days it has, on how many of them it went over plan, and by how much in total.",
+  "rules": [
+    "A day is over plan when `actual_spend` is more than `planned_spend`. Spending exactly the plan isn't over.",
+    "`days` counts every row of the campaign; `days_over` counts the days over plan.",
+    "`overspend` adds up `actual_spend - planned_spend` on the days over plan only. A campaign never over plan has `overspend` 0.",
+    "Return one row for every campaign, even one that was never over: `campaign_id`, `days`, `days_over`, `overspend`."
+  ],
+  "hints": [
+    "Group by `campaign_id` and put the condition inside each aggregate, rather than filtering first.",
+    "A filter before `groupBy` would drop the campaigns that were never over.",
+    "For `overspend`, sum `F.when(over, F.col(\"actual_spend\") - F.col(\"planned_spend\")).otherwise(0)`: the `otherwise(0)` is what makes it 0 instead of NULL."
+  ],
+  "entry": "solve",
+  "inputs": ["budgets"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(budgets):\n    # One row per campaign: days, days_over and overspend.\n    return budgets\n",
+  "output": { "columns": ["campaign_id", "days", "days_over", "overspend"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

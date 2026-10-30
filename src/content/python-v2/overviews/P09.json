@@ -1,0 +1,22 @@
+{
+  "id": "P09",
+  "task": "A taxi operator wants its trip totals worked out with fast analytical tools. Using three trips, build the code that copies them into a Parquet file, totals the fares with pandas and with DuckDB, checks that both totals agree, and writes the result to a file.",
+  "produce": [
+    { "name": "trips.py", "about": "Writes and reads the Parquet copy, totals fares with both tools and writes the report." },
+    { "name": "main.py", "about": "Runs each step and prints its result." },
+    { "name": "trips.parquet", "about": "The trips copied from the CSV file." },
+    { "name": "report.txt", "about": "The fare total when both tools agree, or a note that they differ." }
+  ],
+  "steps": {
+    "P09.m1": "Copy the trips into a Parquet file and count them from it.",
+    "P09.m2": "Total the fares with pandas.",
+    "P09.m3": "Total the same fares with DuckDB and return both totals.",
+    "P09.m4": "Check that the two totals are equal.",
+    "P09.m5": "Write the total, or that the tools differ, to a file."
+  },
+  "problems": [
+    "Every trip has a fare, and the fares are whole numbers: 10, 4 and 6.",
+    "There are only three trips, so one run says nothing about which tool is faster."
+  ],
+  "preparation": ["PY-L45-05", "PY-L45-01", "PY-L45-03", "PY-L42-01", "PY-L42-05"]
+}

@@ -1,0 +1,21 @@
+{
+  "id": "PS-L085-C2",
+  "kind": "predict",
+  "slug": "count-before-or-after-the-join",
+  "lesson": "PS-L085",
+  "difficulty": "medium",
+  "minutes": 6,
+  "title": "Count before or after the join?",
+  "prompt": "What does this program print? Both versions count trips per pickup zone name. The 12 lesson trips start in 6 different zones, all of them in `taxi_zones`. `profile` is the lesson's helper; for each version the loop prints how many shuffles ran, the rows each one shuffled, and the rows the join produced. Type each printed line on its own line.",
+  "program": "from pyspark.sql import functions as F\n\nspark.conf.set(\"spark.sql.adaptive.enabled\", \"false\")\n\n\ndef profile(df):\n    \"\"\"Run df once, then list the plan steps Spark ran with the counts it kept.\"\"\"\n    df.collect()\n    labels = {\"numOutputRows\": \"rows\", \"shuffleRecordsWritten\": \"shuffled rows\", \"numFiles\": \"files\", \"filesSize\": \"bytes\"}\n    steps = []\n\n    def walk(node, depth):\n        name = node.nodeName().strip()\n        if name == \"AdaptiveSparkPlan\":\n            return walk(node.executedPlan(), depth)\n        if name.endswith(\"QueryStage\"):\n            return walk(node.plan(), depth)\n        metrics = node.metrics()\n        counts = {label: metrics.apply(key).value() for key, label in labels.items() if metrics.contains(key)}\n        if counts:\n            steps.append((\"  \" * depth + name, counts))\n            depth += 1\n        children = node.children()\n        for i in range(children.size()):\n            walk(children.apply(i), depth)\n\n    walk(df._jdf.queryExecution().executedPlan(), 0)\n    return steps\n\n\ndef join_first():\n    joined = trips.join(taxi_zones, trips.pickup_zone_id == taxi_zones.zone_id)\n    return joined.groupBy(\"zone_name\").count()\n\n\ndef count_first():\n    per_zone = trips.groupBy(\"pickup_zone_id\").count()\n    joined = per_zone.join(taxi_zones, per_zone.pickup_zone_id == taxi_zones.zone_id)\n    return joined.select(\"zone_name\", \"count\")\n\n\nprint(sorted(join_first().collect()) == sorted(count_first().collect()))\nfor version in (join_first, count_first):\n    steps = profile(version())\n    shuffles = [counts[\"shuffled rows\"] for step, counts in steps if step.strip() == \"Exchange\"]\n    joined = [counts[\"rows\"] for step, counts in steps if step.strip() == \"BroadcastHashJoin\"]\n    print(len(shuffles), shuffles, joined)\n",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "The first line checks the rows before any profile: do the two versions give the same counts per zone?",
+    "`join_first` joins every trip to its zone and then counts; `count_first` counts first, so its join sees one row per zone.",
+    "Each grouping adds up within the partition before its shuffle, and `trips` is one partition. The broadcast join adds no `Exchange`."
+  ]
+}

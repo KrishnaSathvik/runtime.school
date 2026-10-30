@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0134",
+  "slug": "fix-manager-title-lookup",
+  "lesson": "PS-L027",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 6,
+  "title": "Fix the manager title lookup",
+  "dataset": {
+    "id": "PS-D03",
+    "version": "1.0.0"
+  },
+  "prompt": "Each employee should appear once with their manager's job title, but heads show up several times and people with no reports get no manager. Find the bug and fix `solve(employees)`.",
+  "rules": [
+    "An employee's manager is the employee whose `employee_id` equals their `manager_id`.",
+    "Every employee appears exactly once. If `manager_id` is missing or names nobody in the table, `manager_title` is missing.",
+    "Return `employee_id`, `job_title` and `manager_title`, in that order. Titles are shown exactly as stored."
+  ],
+  "hints": [
+    "Look at who appears several times: the heads. What does the join match for them?",
+    "In the condition, `m` should be the manager. Which side's `manager_id` should point at which side's `employee_id`?",
+    "Swap the columns you compare: the employee's manager id should match the manager's own id. Keep the left join."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "employees"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(employees):\n    e = employees.alias(\"e\")\n    m = employees.alias(\"m\")\n    pairs = e.join(m, F.col(\"e.employee_id\") == F.col(\"m.manager_id\"), \"left\")\n    return pairs.select(\n        F.col(\"e.employee_id\").alias(\"employee_id\"),\n        F.col(\"e.job_title\").alias(\"job_title\"),\n        F.col(\"m.job_title\").alias(\"manager_title\"),\n    )\n",
+  "output": {
+    "columns": [
+      "employee_id",
+      "job_title",
+      "manager_title"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "The condition has the roles reversed. `F.col(\"e.employee_id\") == F.col(\"m.manager_id\")` matches `e` with everyone who reports to `e`, so a head with four reports appears four times with their reports' titles, and anyone with no reports gets NULL. The employee's `manager_id` must point at the manager's `employee_id`: `F.col(\"e.manager_id\") == F.col(\"m.employee_id\")`. Keep the left join so the chief executive, who has no manager, still appears with an empty `manager_title`."
+}

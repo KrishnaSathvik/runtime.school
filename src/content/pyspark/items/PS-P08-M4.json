@@ -1,0 +1,79 @@
+{
+ "id": "PS-P08-M4",
+ "slug": "merge-the-second-batch",
+ "project": "PS-P08",
+ "milestone": "PS-P08.m4",
+ "difficulty": "hard",
+ "minutes": 45,
+ "title": "Merge the second batch, late corrections included",
+ "dataset": {
+  "id": "PS-D08",
+  "version": "1.0.0"
+ },
+ "also": [
+  {
+   "id": "PS-D14",
+   "version": "1.0.0",
+   "tables": [
+    "accounts",
+    "customer_cdc"
+   ]
+  }
+ ],
+ "prompt": "Batch 2 brings later steps for many shipments, some new shipments, and late corrections, some of them for steps the fact has already moved past. A Delta MERGE applies it to the table in one commit.\n\nWrite `merge_into_fact(rows)`, which merges one batch's latest steps into the fact, and `shipment_fact(shipment_events, shipments)`, which builds the fact from batch 1, merges batch 2 and returns the table.",
+ "rules": [
+  "Batch 2 is the rows loaded on or after `SECOND_LOAD`, cleaned by `event_log` and cut to each shipment's latest step by `latest_steps`.",
+  "A batch row replaces the shipment's fact row when it's a later step (higher `sequence`), or a correction of the same step when the fact's row isn't a correction.",
+  "An older step, or the same step again without a correction, changes nothing: a late correction of a step the shipment has moved past never takes its status back.",
+  "A shipment the fact doesn't have yet is added.",
+  "`shipment_fact` calls `fact_after_batch_1`, merges batch 2 with `DeltaTable.forPath(spark, FACT_PATH)`, and returns the table read back."
+ ],
+ "hints": [
+  "`latest_steps(event_log(shipment_events.filter(F.col(\"load_date\") >= SECOND_LOAD), shipments))` is the batch to merge.",
+  "Read the fact, rename its `sequence` and `is_correction`, and `left` join it to the batch on `shipment_id`. Keep the rows with no fact row, a higher sequence, or the same sequence with a correction the fact doesn't have.",
+  "Merge what's left on `t.shipment_id = s.shipment_id` with `whenMatchedUpdateAll()` and `whenNotMatchedInsertAll()`. Filtering first, instead of putting the conditions in the MERGE, pays off in the replay step."
+ ],
+ "explanation": "The rule compares each batch row with the fact row it would replace. `sequence` decides between different steps, so `SH0003`'s corrected picked scan, which arrives after the shipment departed, can't take its status back. Within one step, only a correction may replace what the fact holds: that's `SH0002`'s fixed departure time. A plain `>=` on `sequence` looks close, but it lets a repeated delivery (`SH0004`'s created scan, sent again in batch 2) overwrite the row with a later `load_date`. Doing the comparison as a join before the MERGE means the MERGE only sees rows that change something; a MERGE whose source matches rows rewrites them even when every condition fails, which you'll see in the replay step.",
+ "entry": "shipment_fact",
+ "inputs": [
+  "shipment_events",
+  "shipments"
+ ],
+ "file": "pipeline.py",
+ "append": "\n\ndef merge_into_fact(rows):\n    # Step 4: merge one batch's latest steps (from latest_steps) into the Delta table at FACT_PATH.\n    pass\n\n\ndef shipment_fact(shipment_events, shipments):\n    # Step 4: the fact after batch 1, then batch 2 merged in.\n    fact_after_batch_1(shipment_events, shipments)\n    return spark.read.format(\"delta\").load(FACT_PATH)\n",
+ "prerequisites": [
+  "PS-L025",
+  "PS-L028",
+  "PS-L063",
+  "PS-L064"
+ ],
+ "output": {
+  "columns": [
+   "shipment_id",
+   "warehouse_id",
+   "status",
+   "sequence",
+   "event_time",
+   "location",
+   "load_date",
+   "is_correction"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "example",
+   "sample": true
+  },
+  {
+   "id": "project",
+   "edition": "project"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 120,
+  "check_timeout_s": 300,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

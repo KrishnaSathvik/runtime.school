@@ -1,0 +1,73 @@
+{
+ "id": "PS-P09-M2",
+ "slug": "define-the-session-rules",
+ "project": "PS-P09",
+ "milestone": "PS-P09.m2",
+ "difficulty": "hard",
+ "minutes": 40,
+ "title": "Define the session rules",
+ "dataset": {
+  "id": "PS-D06",
+  "version": "1.1.0"
+ },
+ "prompt": "Marketing wants one row per visit: how long it lasted, what the visitor did, and whether they left after one page. The feeds deliver some events twice, and a few sessions lost their page views upstream.\n\nWrite `session_metrics(sessions, page_views, cart_events, checkout_events)`. Start from `parse_events(...)`, remove repeated deliveries, and return one row for every session in `sessions`.",
+ "rules": [
+  "Two rows with the same `event_id` are one event. Count each event once.",
+  "Return `session_id`, `user_id`, `traffic_source`, `campaign_id`, `duration_s`, `page_views`, `cart_adds`, `orders`, `revenue` and `bounced`, one row per row of `sessions`. Events whose session isn't in `sessions` are left out.",
+  "`duration_s` is `ended_at` minus `started_at` in whole seconds. `page_views` counts page views, `cart_adds` cart events with action `add`, and `orders` checkout events with step `complete`.",
+  "`revenue` is the sum of those orders' `order_total`, each cast to DECIMAL(10,2), as DECIMAL(12,2): 0.00 when the session has no order. A session with no events has 0 in every count.",
+  "`bounced` is true when the session has exactly one page view. A session with no page views didn't bounce."
+ ],
+ "hints": [
+  "`parse_events(...).dropDuplicates([\"event_id\"])` gives each event once. Group it by `session_id` and count with `F.count(F.when(condition, 1))`, which counts only the rows where the condition holds.",
+  "Join the per-session numbers to `sessions` with a left join, so sessions without events stay, then `F.coalesce(col, F.lit(0))` turns their missing numbers into 0.",
+  "`F.unix_timestamp(\"ended_at\") - F.unix_timestamp(\"started_at\")` is the length in seconds. Work out `bounced` from the page views after the coalesce, so a missing count isn't compared."
+ ],
+ "explanation": "Removing repeats by `event_id` first means a page view delivered twice can't turn a bounce into a two-page visit, and an order delivered twice can't double the revenue. Conditional counts (`F.count(F.when(...))`) give every measure in one pass over the events. The left join from `sessions` keeps every visit, including those whose page views were lost and those with no events at all; `coalesce` gives them real zeros, so `bounced` is a clean true/false and revenue adds up as money. Casting each total to DECIMAL before summing keeps cents exact.",
+ "entry": "session_metrics",
+ "inputs": [
+  "sessions",
+  "page_views",
+  "cart_events",
+  "checkout_events"
+ ],
+ "file": "pipeline.py",
+ "append": "\n\ndef session_metrics(sessions, page_views, cart_events, checkout_events):\n    # Step 2: one row per session, from parse_events(...) with repeated deliveries removed.\n    return sessions\n",
+ "prerequisites": [
+  "PS-L020",
+  "PS-L025",
+  "PS-L031",
+  "PS-L018"
+ ],
+ "output": {
+  "columns": [
+   "session_id",
+   "user_id",
+   "traffic_source",
+   "campaign_id",
+   "duration_s",
+   "page_views",
+   "cart_adds",
+   "orders",
+   "revenue",
+   "bounced"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "example",
+   "sample": true
+  },
+  {
+   "id": "project",
+   "edition": "project"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 45,
+  "check_timeout_s": 120,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

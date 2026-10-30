@@ -1,0 +1,46 @@
+{
+ "id": "PS-L007-C1",
+ "slug": "sales-channels-table",
+ "lesson": "PS-L007",
+ "difficulty": "easy",
+ "minutes": 6,
+ "title": "A table of sales channels",
+ "dataset": {
+  "id": "PS-D01",
+  "version": "1.1.0"
+ },
+ "prompt": "Reports need a small table that explains each sales channel. Write `solve()` so it builds this table with `spark.createDataFrame` and returns it.",
+ "rules": [
+  "Three columns, in this order: `channel` (text), `label` (text) and `delivery_days` (a whole number of type `int`).",
+  "Three rows: `web`, `Website`, 3; `app`, `Mobile app`, 3; `store`, `In store`, 0.",
+  "Text is exact: `Mobile app`, not `mobile app`."
+ ],
+ "hints": [
+  "Write each row as a tuple, like `(\"web\", \"Website\", 3)`, and put the three tuples in a list.",
+  "The schema is one string that names each column and its type, separated by commas.",
+  "Without a schema Spark guesses `bigint` for whole numbers. Say `delivery_days INT` to get `int`."
+ ],
+ "entry": "solve",
+ "inputs": [],
+ "starter": "def solve():\n    # Build and return the channels table.\n    rows = []\n    return spark.createDataFrame(rows, \"channel STRING\")\n",
+ "output": {
+  "columns": [
+   "channel",
+   "label",
+   "delivery_days"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 45,
+  "check_timeout_s": 90,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

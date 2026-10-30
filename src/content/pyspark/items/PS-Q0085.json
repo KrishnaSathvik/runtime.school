@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0085",
+  "slug": "february-spending-lines",
+  "lesson": "PS-L017",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "February spending lines",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "The budgeting app's February screen lists every posted purchase and refund with its effect on spending. Write `solve(transactions)` so it returns `transaction_id`, `merchant_id`, `posted_at`, `spend_change` and `size`.",
+  "rules": [
+    "Keep transactions whose `status` is `posted`, whose `txn_type` is `purchase` or `refund`, and whose `posted_at` falls in February 2026: from 1 February 00:00:00 up to, but not including, 1 March 00:00:00.",
+    "`spend_change` is `amount` for a purchase and minus `amount` for a refund, as `decimal(12,2)`.",
+    "`size` is `big` when `amount` is 250.00 or more and `everyday` when it's less. A missing amount gives a missing `spend_change` and `size`."
+  ],
+  "hints": [
+    "Filter first. A timestamp compares with text like `\"2026-02-01\"`, which means midnight at the start of that day.",
+    "`posted_at <= \"2026-02-28\"` stops at midnight on the 28th and loses the rest of that day. Compare with `< \"2026-03-01\"` instead.",
+    "Base `size` on `amount`, not on `spend_change`: a refund's `spend_change` is negative. Give `everyday` its own `when` (`amount < 250`) so a missing amount stays `NULL`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "transactions"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(transactions):\n    # Return the February spending lines.\n    return transactions\n",
+  "output": {
+    "columns": [
+      "transaction_id",
+      "merchant_id",
+      "posted_at",
+      "spend_change",
+      "size"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "A filter picks the rows and two `when`s build the new columns. The filter: `(F.col(\"status\") == \"posted\") & F.col(\"txn_type\").isin(\"purchase\", \"refund\") & (F.col(\"posted_at\") >= \"2026-02-01\") & (F.col(\"posted_at\") < \"2026-03-01\")`. The half-open range is the safe way to take a month of timestamps: `<= \"2026-02-28\"` means up to midnight that morning and drops a purchase at 18:17 on the 28th. Then `F.when(F.col(\"txn_type\") == \"refund\", -F.col(\"amount\")).otherwise(F.col(\"amount\"))` gives `spend_change`, and `F.when(F.col(\"amount\") >= 250, \"big\").when(F.col(\"amount\") < 250, \"everyday\")` gives `size`, leaving a missing amount `NULL`. Testing `spend_change` for `size` would call every refund `everyday`, however large."
+}

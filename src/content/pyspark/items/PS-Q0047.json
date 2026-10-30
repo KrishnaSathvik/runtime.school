@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0047",
+  "slug": "first-year-thank-you",
+  "lesson": "PS-L010",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "First-year thank-you list",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "Marketing is thanking shoppers in Leeds, Lisbon and Osaka who joined during 2025. Write `solve(customers)` so it returns the `customer_id`, `name` and `city` of the consumer customers in those cities who signed up in 2025.",
+  "rules": [
+    "A customer is on the list when `segment` is exactly `consumer`, `city` is Leeds, Lisbon or Osaka, and `signup_date` is in 2025 (1 January and 31 December both count).",
+    "A customer with a missing segment, city or sign-up date isn't on the list.",
+    "Return `customer_id`, `name` and `city`, in that order.",
+    "Keep rows exactly as they appear, duplicates included."
+  ],
+  "hints": [
+    "Every rule must hold at once, so join the conditions with `&` and put each one in its own parentheses.",
+    "`F.col(\"city\").isin(\"Leeds\", \"Lisbon\", \"Osaka\")` checks the city against the whole list in one condition.",
+    "A year is a range of dates: from `\"2025-01-01\"` up to and including `\"2025-12-31\"`. Filter first, then `select` the three columns."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "customers"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(customers):\n    # Return customer_id, name and city of the customers to thank.\n    return customers\n",
+  "output": {
+    "columns": [
+      "customer_id",
+      "name",
+      "city"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Four checks must all pass: the segment, the city and the two ends of the year. `isin` covers the three cities in one condition, and the year is `signup_date >= \"2025-01-01\"` together with `signup_date <= \"2025-12-31\"`, all joined with `&`. Then `select` keeps the three columns: `customers.filter((F.col(\"segment\") == \"consumer\") & F.col(\"city\").isin(\"Leeds\", \"Lisbon\", \"Osaka\") & (F.col(\"signup_date\") >= \"2025-01-01\") & (F.col(\"signup_date\") <= \"2025-12-31\")).select(\"customer_id\", \"name\", \"city\")`. Missing values drop out by themselves, because a comparison with a missing value isn't true. The usual slips are `> \"2025-01-01\"`, which loses New Year's Day, and writing the cities as `==` checks joined with `|` without wrapping them in one pair of parentheses: `&` is worked out before `|`, so the segment and date checks end up applying to the last city only."
+}

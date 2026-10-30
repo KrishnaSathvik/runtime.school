@@ -1,0 +1,262 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "region",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "carrier",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "late_deliveries",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "late_units",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "north",
+     "Parcelway",
+     1,
+     24
+    ],
+    [
+     "north",
+     "SwiftFreight",
+     2,
+     12
+    ],
+    [
+     null,
+     "SwiftFreight",
+     1,
+     3
+    ]
+   ],
+   "row_count": 3,
+   "inputs": {
+    "deliveries": [
+     [
+      "DL00001",
+      "SH0001",
+      "2026-03-07T16:00:00",
+      "2026-03-07T20:00:00",
+      "2026-03-07T19:50:00",
+      "on_time"
+     ],
+     [
+      "DL00002",
+      "SH0002",
+      "2026-03-07T12:00:00",
+      "2026-03-07T16:00:00",
+      "2026-03-07T12:34:00",
+      "on_time"
+     ],
+     [
+      "DL00003",
+      "SH0003",
+      "2026-03-06T08:00:00",
+      "2026-03-06T12:00:00",
+      "2026-03-06T08:53:00",
+      "on_time"
+     ],
+     [
+      "DL00004",
+      "SH0004",
+      "2026-03-08T16:00:00",
+      "2026-03-08T20:00:00",
+      "2026-03-08T20:50:00",
+      "late"
+     ],
+     [
+      "DL00005",
+      "SH0005",
+      "2026-03-05T08:00:00",
+      "2026-03-05T12:00:00",
+      "2026-03-05T14:10:00",
+      "late"
+     ],
+     [
+      "DL00006",
+      "SH0006",
+      "2026-03-07T12:00:00",
+      "2026-03-07T16:00:00",
+      "2026-03-07T17:30:00",
+      "late"
+     ],
+     [
+      "DL00007",
+      "SH0007",
+      "2026-03-07T08:00:00",
+      "2026-03-07T12:00:00",
+      "2026-03-07T09:15:00",
+      "on_time"
+     ],
+     [
+      "DL00008",
+      "SH9999",
+      "2026-03-07T08:00:00",
+      "2026-03-07T12:00:00",
+      "2026-03-07T13:05:00",
+      "late"
+     ],
+     [
+      "DL00009",
+      "SH0003",
+      "2026-03-07T08:00:00",
+      "2026-03-07T12:00:00",
+      null,
+      "failed"
+     ],
+     [
+      "DL00010",
+      "SH0008",
+      "2026-03-07T16:00:00",
+      "2026-03-07T20:00:00",
+      "2026-03-07T21:40:00",
+      "late"
+     ]
+    ],
+    "shipments": [
+     [
+      "SH0001",
+      "WH03",
+      "SKU-1003",
+      "1",
+      "SwiftFreight",
+      "standard",
+      "Wroc\u0142aw",
+      "2026-03-03T12:24:00",
+      "2026-03-06"
+     ],
+     [
+      "SH0002",
+      "WH01",
+      "SKU-1003",
+      "2",
+      "Parcelway",
+      "standard",
+      "Malm\u00f6",
+      "2026-03-03T08:03:00",
+      "2026-03-07"
+     ],
+     [
+      "SH0003",
+      "WH02",
+      "SKU-1014",
+      "24",
+      "Parcelway",
+      "standard",
+      "Turin",
+      "2026-03-03T12:17:00",
+      "2026-03-06"
+     ],
+     [
+      "SH0004",
+      "WH02",
+      "SKU-1014",
+      "24",
+      "Parcelway",
+      "standard",
+      "Graz",
+      "2026-03-03T09:30:00",
+      "2026-03-07"
+     ],
+     [
+      "SH0005",
+      "WH07",
+      "SKU-1009",
+      "3",
+      "SwiftFreight",
+      "express",
+      "Ghent",
+      "2026-03-04T10:12:00",
+      "2026-03-05"
+     ],
+     [
+      "SH0006",
+      "WH01",
+      "SKU-1012",
+      "5",
+      "SwiftFreight",
+      "standard",
+      "Bremen",
+      "2026-03-04T11:20:00",
+      "2026-03-07"
+     ],
+     [
+      "SH0007",
+      "WH03",
+      "SKU-1029",
+      "2",
+      "Parcelway",
+      "standard",
+      "Murcia",
+      "2026-03-04T12:00:00",
+      "2026-03-07"
+     ],
+     [
+      "SH0008",
+      "WH01",
+      "SKU-1019",
+      "7",
+      "SwiftFreight",
+      "standard",
+      "Utrecht",
+      "2026-03-04T13:45:00",
+      "2026-03-07"
+     ]
+    ],
+    "warehouses": [
+     [
+      "WH01",
+      "Harbor Point DC",
+      "Rotterdam",
+      "north",
+      "6500",
+      "2025-10-11"
+     ],
+     [
+      "WH02",
+      "Ridgeway Fulfilment",
+      "Leeds",
+      "north",
+      "12000",
+      "2025-03-03"
+     ],
+     [
+      "WH03",
+      "Sunbelt Cross-Dock",
+      "Valencia",
+      "south",
+      "4000",
+      "2025-07-28"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice deliveries, shipments and warehouses",
+  "late deliveries from unlisted warehouses and from a shipment with no warehouse",
+  "late deliveries for shipments that aren't in shipments, one with no shipment id",
+  "no late deliveries at all",
+  "no deliveries at all"
+ ]
+}

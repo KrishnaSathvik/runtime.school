@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0036",
+  "slug": "products-at-a-glance",
+  "lesson": "PS-L008",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Products at a glance",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "Before a new delivery of `products` is used, someone checks it at a glance. Write `solve(products)` so it returns, for each column, how many values it has and its smallest and largest value.",
+  "rules": [
+    "Return the small table that Spark's `summary` gives for the statistics `count`, `min` and `max`, and no others.",
+    "It has a `summary` column naming each statistic, then one column per text or number column of `products`. Spark leaves out `active`, because it's true or false.",
+    "`count` doesn't count missing values. Every value in the result is text, as `summary` writes it."
+  ],
+  "hints": [
+    "`summary` can take the names of the statistics you want, as strings.",
+    "`describe()` and `summary()` with no arguments both add statistics the rules don't ask for, such as the mean.",
+    "`summary` gives back a DataFrame, so you can return it as it is."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "products"
+  ],
+  "starter": "def solve(products):\n    # Return the count, min and max of each column.\n    return products\n",
+  "output": {
+    "columns": [
+      "summary",
+      "product_id",
+      "name",
+      "category",
+      "unit_price"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`products.summary(\"count\", \"min\", \"max\")` is the whole answer: it works out the three statistics for every text and number column and returns them as a small DataFrame, with the name of each statistic in the `summary` column. `active` is true or false, so `summary` leaves it out. `count` skips missing values, and `min` and `max` compare prices as numbers (9.99 is smaller than 10.00) and names as text. `describe()` gives the mean and standard deviation instead of only these three, and `summary()` with no arguments adds those and the percentiles too."
+}

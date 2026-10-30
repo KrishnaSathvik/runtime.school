@@ -1,0 +1,91 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "column",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "found_type",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "empty",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "passes",
+     "type": "boolean",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "transaction_id",
+     "string",
+     0,
+     true
+    ],
+    [
+     "account_id",
+     "string",
+     1,
+     false
+    ],
+    [
+     "merchant_id",
+     "string",
+     7,
+     true
+    ],
+    [
+     "posted_at",
+     "timestamp",
+     0,
+     false
+    ],
+    [
+     "amount",
+     "decimal(12,2)",
+     0,
+     true
+    ],
+    [
+     "currency",
+     "string",
+     0,
+     true
+    ],
+    [
+     "status",
+     "string",
+     0,
+     true
+    ],
+    [
+     "settled_at",
+     null,
+     null,
+     false
+    ]
+   ],
+   "row_count": 8
+  }
+ },
+ "hidden": [
+  "the full practice transactions feed",
+  "empty values in several required columns and in the optional one",
+  "a feed with a value in every column",
+  "an empty feed"
+ ]
+}

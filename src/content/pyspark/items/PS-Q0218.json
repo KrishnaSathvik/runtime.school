@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0218",
+  "slug": "every-line-with-its-time-checked",
+  "lesson": "PS-L044",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Every line with its time checked",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "An audit needs every line of the log file, with broken lines and impossible times flagged rather than lost. Write `solve(application_logs_raw)` so it returns each line's id, time and level, and the raw text of every line that didn't fit.",
+  "rules": [
+    "The starter saves the log file. Return `log_id`, `logged_at` (a timestamp), `level` and `bad_record` (text), in that order.",
+    "One row per line that has text on it; empty or blank lines give no row. Keep repeated lines.",
+    "A line that isn't a valid JSON record has NULL fields and the line exactly as it arrived in `bad_record`. A record whose `logged_at` isn't a valid timestamp is flagged the same way, but its `log_id` and `level` are still read.",
+    "A missing field is just NULL, and the record isn't flagged. A good record has a NULL `bad_record`."
+  ],
+  "hints": [
+    "Keep every line with the default mode, add `bad_record STRING` to the schema and name it in `columnNameOfCorruptRecord`.",
+    "With `logged_at TIMESTAMP` in the schema, a time that doesn't parse makes the record malformed.",
+    "Try the starter's file with a record like `{}` or one without `level` before deciding they're bad."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "application_logs_raw"
+  ],
+  "starter": "def solve(application_logs_raw):\n    path = \"/tmp/logs/export\"\n    application_logs_raw.write.mode(\"overwrite\").text(path)\n    # Read the file at `path` and return every line with log_id, logged_at, level and bad_record.\n    return application_logs_raw\n",
+  "output": {
+    "columns": [
+      "log_id",
+      "logged_at",
+      "level",
+      "bad_record"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "This is the flagging read from the lesson with a typed time: `spark.read.json(path, schema=\"log_id STRING, logged_at TIMESTAMP, level STRING, bad_record STRING\", columnNameOfCorruptRecord=\"bad_record\")`. In the default `PERMISSIVE` mode every non-blank line becomes a row. A line that isn't JSON, or is JSON but not a record, such as `null`, keeps its text in `bad_record` and NULL everywhere else. A record whose time is `yesterday` or 31 April is valid JSON but doesn't fit the schema: Spark still reads its `log_id` and `level`, sets `logged_at` to NULL and keeps the raw line. A record with no `level`, or even `{}`, fits the schema, so it isn't flagged. Blank lines are skipped. Reading `logged_at` as text would miss the impossible times, and `DROPMALFORMED` would lose exactly the lines the audit wants."
+}

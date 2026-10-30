@@ -1,0 +1,48 @@
+{
+  "id": "PS-L057-C2",
+  "slug": "zones-and-partitions",
+  "lesson": "PS-L057",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Zones and partitions",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "prompt": "A nightly job splits trips into 3 partitions by pickup zone. Before it runs, the team wants to see how the work divides. Write `solve(trips)` so it returns one row per pickup zone: `pickup_zone_id`, the `partition` its trips land in, and `trips`, how many trips start there.",
+  "rules": [
+    "Split the trips the way `repartition(3, \"pickup_zone_id\")` does: hash partitioning on the pickup zone into exactly 3 partitions, numbered 0 to 2.",
+    "`trips` counts the zone's trips. Trips with no pickup zone are counted together, as one row with a missing `pickup_zone_id`.",
+    "Return `pickup_zone_id`, `partition` and `trips`, in that order, one row per zone."
+  ],
+  "hints": [
+    "`F.spark_partition_id()` gives the partition a row is in at the point where you use it.",
+    "Add the partition as a column straight after `repartition`, before anything that shuffles again.",
+    "Then group by the zone and the partition column, and count."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "trips"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(trips):\n    # Return pickup_zone_id, partition (0 to 2) and trips for each pickup zone.\n    return trips\n",
+  "output": {
+    "columns": [
+      "pickup_zone_id",
+      "partition",
+      "trips"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

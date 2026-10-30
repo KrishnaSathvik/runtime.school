@@ -1,0 +1,48 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "task",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "rows",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "clean_events",
+     13
+    ],
+    [
+     "known_events",
+     12
+    ],
+    [
+     "delivered",
+     4
+    ],
+    [
+     "in_flight",
+     0
+    ]
+   ],
+   "row_count": 4
+  }
+ },
+ "hidden": [
+  "the full practice tables",
+  "events that arrive a few days late, and copies re-sent today",
+  "empty tables"
+ ]
+}

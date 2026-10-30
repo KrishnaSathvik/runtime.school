@@ -1,0 +1,60 @@
+{
+  "id": "PS-Q0119",
+  "slug": "fix-purchase-order-load",
+  "lesson": "PS-L024",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Fix the purchase order load",
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0"
+  },
+  "prompt": "This function should return the purchase order rows that are safe to load, but it returns no rows at all. Fix `solve(purchase_orders, suppliers, warehouses)`, and make sure a row with a missing value is never treated as clean.",
+  "rules": [
+    "A row is clean when `supplier_id` is in `suppliers`, `warehouse_id` is in `warehouses`, `quantity` is more than 0, and `status` is one of open, confirmed, shipped, received, cancelled.",
+    "A row with a missing supplier, warehouse, quantity or status is not clean.",
+    "Return the clean rows with every column of `purchase_orders` unchanged and no `reason` column. Keep every version of an order as its own row."
+  ],
+  "hints": [
+    "Compare with `== None` and Spark gives NULL for every row, so `filter` keeps nothing. Missing values have their own test.",
+    "`F.col(\"reason\").isNull()` finds the rows with no reason. Then check what reason a row with a missing `supplier_id` gets.",
+    "`~isin(...)` and `<= 0` are NULL on a missing value, so the chain skips them. Add `isNull() |` to each check."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "purchase_orders",
+    "suppliers",
+    "warehouses"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\nSTATUSES = [\"open\", \"confirmed\", \"shipped\", \"received\", \"cancelled\"]\n\n\ndef solve(purchase_orders, suppliers, warehouses):\n    known_suppliers = [row[\"supplier_id\"] for row in suppliers.select(\"supplier_id\").collect()]\n    known_warehouses = [row[\"warehouse_id\"] for row in warehouses.select(\"warehouse_id\").collect()]\n    reason = (\n        F.when(~F.col(\"supplier_id\").isin(known_suppliers), \"unknown supplier\")\n        .when(~F.col(\"warehouse_id\").isin(known_warehouses), \"unknown warehouse\")\n        .when(F.col(\"quantity\") <= 0, \"bad quantity\")\n        .when(~F.col(\"status\").isin(STATUSES), \"unknown status\")\n    )\n    tagged = purchase_orders.select(\"*\", reason.alias(\"reason\"))\n    return tagged.filter(F.col(\"reason\") == None).select(purchase_orders.columns)\n",
+  "output": {
+    "columns": [
+      "po_id",
+      "version",
+      "supplier_id",
+      "warehouse_id",
+      "sku",
+      "quantity",
+      "unit_cost",
+      "status",
+      "expected_date",
+      "updated_at"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Two bugs. `F.col(\"reason\") == None` is never true: any comparison with NULL is NULL, so the filter keeps nothing. The test for a missing value is `F.col(\"reason\").isNull()`. Once that's fixed, a second problem shows on rows with missing values: `~F.col(\"supplier_id\").isin(...)` and `F.col(\"quantity\") <= 0` are NULL when the value is missing, a `F.when` treats NULL as not true, and the row ends with no reason, so it looks clean. Adding `F.col(...).isNull() |` to each check sends those rows to quarantine."
+}

@@ -1,0 +1,315 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "department_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "employee_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "salary",
+     "type": "decimal(10,2)",
+     "nullable": true
+    },
+    {
+     "name": "hire_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "rank",
+     "type": "int",
+     "nullable": false
+    },
+    {
+     "name": "dense_rank",
+     "type": "int",
+     "nullable": false
+    },
+    {
+     "name": "row_number",
+     "type": "int",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "D01",
+     "E0001",
+     "260000.00",
+     "2025-01-06",
+     1,
+     1,
+     1
+    ],
+    [
+     "D02",
+     "E0002",
+     "200000.00",
+     "2025-05-26",
+     1,
+     1,
+     1
+    ],
+    [
+     "D02",
+     "E0003",
+     "75000.00",
+     "2025-07-15",
+     2,
+     2,
+     2
+    ],
+    [
+     "D02",
+     "E0005",
+     "70000.00",
+     "2025-07-07",
+     3,
+     3,
+     3
+    ],
+    [
+     "D02",
+     "E0004",
+     "70000.00",
+     "2025-08-15",
+     3,
+     3,
+     4
+    ],
+    [
+     "D02",
+     "E0006",
+     "62500.00",
+     "2025-08-10",
+     5,
+     4,
+     5
+    ],
+    [
+     "D03",
+     "E0007",
+     "150000.00",
+     "2025-01-06",
+     1,
+     1,
+     1
+    ],
+    [
+     "D03",
+     "E0009",
+     "90000.00",
+     "2025-05-08",
+     2,
+     2,
+     2
+    ],
+    [
+     "D03",
+     "E0008",
+     "75000.00",
+     "2025-05-20",
+     3,
+     3,
+     3
+    ],
+    [
+     "D03",
+     "E0010",
+     "75000.00",
+     "2025-05-20",
+     3,
+     3,
+     4
+    ]
+   ],
+   "row_count": 10,
+   "inputs": {
+    "employees": [
+     [
+      "E0001",
+      "Tomas",
+      "Haddad",
+      "tomas.haddad@corp.example",
+      "555-490-5027",
+      "Chief Executive Officer",
+      "5",
+      "D01",
+      null,
+      "2025-01-06",
+      "full_time",
+      "260000.00",
+      "active",
+      null
+     ],
+     [
+      "E0002",
+      "Noor",
+      "Novak",
+      "noor.novak@corp.example",
+      "555-919-2731",
+      "Head of Engineering",
+      "4",
+      "D02",
+      "E0001",
+      "2025-05-26",
+      "full_time",
+      "200000.00",
+      "active",
+      null
+     ],
+     [
+      "E0003",
+      "Lena",
+      "Duarte",
+      "lena.duarte@corp.example",
+      "555-831-2628",
+      "Software Engineer",
+      "1",
+      "D02",
+      "E0002",
+      "2025-07-15",
+      "full_time",
+      "75000.00",
+      "active",
+      null
+     ],
+     [
+      "E0004",
+      "Anika",
+      "Silva",
+      "anika.silva@corp.example",
+      "555-574-7551",
+      "  senior software engineer",
+      "2",
+      "D02",
+      "E0002",
+      "2025-08-15",
+      "full_time",
+      "70000.00",
+      "active",
+      null
+     ],
+     [
+      "E0005",
+      "Elif",
+      "Rao",
+      "elif.rao@corp.example",
+      "555-717-5507",
+      "Senior Software Engineer",
+      "2",
+      "D02",
+      "E0002",
+      "2025-07-07",
+      "full_time",
+      "70000.00",
+      "active",
+      null
+     ],
+     [
+      "E0006",
+      "Maya",
+      "Rao",
+      "maya.rao@corp.example",
+      "555-528-4265",
+      "Senior Software Engineer",
+      "2",
+      "D02",
+      "E0002",
+      "2025-08-10",
+      "full_time",
+      "62500.00",
+      "active",
+      null
+     ],
+     [
+      "E0007",
+      "Ines",
+      "Novak",
+      "Ines.novak@Corp.Example",
+      "555-507-4003",
+      "Head of Finance",
+      "4",
+      "D03",
+      "E0001",
+      "2025-01-06",
+      "full_time",
+      "150000.00",
+      "active",
+      null
+     ],
+     [
+      "E0010",
+      "Ravi",
+      "Lind",
+      "ravi.lind@corp.example",
+      "555-310-4421",
+      "Senior Financial Analyst",
+      "2",
+      "D03",
+      "E0007",
+      "2025-05-20",
+      "full_time",
+      "75000.00",
+      "active",
+      null
+     ],
+     [
+      "E0008",
+      "Elif",
+      "Weber",
+      "elif.weber@corp.example",
+      "555-849-0611",
+      "Senior Financial Analyst",
+      "2",
+      "D03",
+      "E0007",
+      "2025-05-20",
+      "full_time",
+      "75000.00",
+      "active",
+      null
+     ],
+     [
+      "E0009",
+      "Anika",
+      "Grant",
+      "anika.grant@corp.example",
+      "555-993-9407",
+      "Senior Financial Analyst",
+      "2",
+      "D03",
+      "E0007",
+      "2025-05-08",
+      "full_time",
+      "90000.00",
+      "active",
+      null
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice employees table",
+  "equal salaries hired on the same day",
+  "equal salaries hired on different days",
+  "several ties in one department",
+  "two people tie for the highest salary",
+  "a department with a single person",
+  "an empty employees table"
+ ]
+}

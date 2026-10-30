@@ -1,0 +1,135 @@
+{
+  "id": "PS-L049",
+  "minutes": 25,
+  "lede": "Some data isn't ready for a schema yet: raw log lines, mixed records, text that needs real Python to parse. RDD `map`, `filter` and `flatMap` let you run any Python function on each item, and turn the result into a DataFrame when it's clean.",
+  "objectives": [
+    "Turn a text table into an RDD of plain strings and work on it with Python functions",
+    "Keep items with `filter` and change each one with `map`, using named functions as well as lambdas",
+    "Use `flatMap` when one item gives zero, one or many results",
+    "Explain why a bad item only fails when an action runs, and build a DataFrame from the clean result"
+  ],
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "application_logs_raw"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`application_logs_raw` is a log file as text: one line per row, in a `value` column. Most lines are JSON records; three are broken. In the RDD lesson you met `map`, `filter` and `collect` on rows. Here the goal is to clean messy text with Python, step by step.\n\n`application_logs_raw.rdd` is an RDD of `Row` objects. One `map` turns it into an RDD of plain strings, which is easier to work with."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "From rows to plain lines",
+      "code": "lines = application_logs_raw.rdd.map(lambda r: r[\"value\"])\nprint(lines.count(), \"lines\")\nprint(lines.first()[:60])\nprint(type(lines.first()).__name__)\n",
+      "note": "Each item is now a Python `str`. `first()` brings back one item; the slice only shortens what's printed."
+    },
+    {
+      "kind": "text",
+      "md": "`filter` and `map` take any Python function, not only a lambda. For anything longer than one expression, write a normal `def` and pass its name. Here `looks_like_json` tries to parse a line and says whether that worked; `map(json.loads)` then turns each good line into a Python dict.\n\nFunctions run on the items one at a time, in whatever process holds them, so they must not depend on anything outside the item and the function itself."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Filter with a named function, then map",
+      "code": "import json\n\n\ndef looks_like_json(line):\n    try:\n        json.loads(line)\n        return True\n    except ValueError:\n        return False\n\n\nlines = application_logs_raw.rdd.map(lambda r: r[\"value\"])\ngood = lines.filter(looks_like_json)\nprint(good.count(), \"good,\", lines.filter(lambda l: not looks_like_json(l)).count(), \"bad\")\n\nrecords = good.map(json.loads)\nprint(records.map(lambda rec: (rec[\"log_id\"], rec[\"level\"])).take(3))\n",
+      "note": "Ten lines parse and three don't. Each record is a dict, so `rec[\"level\"]` reads a field. `take(3)` keeps the order of the file."
+    },
+    {
+      "kind": "text",
+      "md": "`map` always gives **exactly one** result per item. `flatMap` takes a function that returns a list (or any iterable), and puts each element in the result separately: an item can give zero, one or many results.\n\nCompare the two on each record's `attributes`, a dict of extra fields whose keys differ from line to line."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "map gives lists, flatMap flattens them",
+      "code": "import json\n\n\ndef looks_like_json(line):\n    try:\n        json.loads(line)\n        return True\n    except ValueError:\n        return False\n\n\nlines = application_logs_raw.rdd.map(lambda r: r[\"value\"])\nrecords = lines.filter(looks_like_json).map(json.loads)\n\nas_lists = records.map(lambda rec: sorted(rec[\"attributes\"]))\nprint(as_lists.take(2))\n\nkeys = records.flatMap(lambda rec: sorted(rec[\"attributes\"]))\nprint(keys.take(6))\nprint(as_lists.count(), \"lists,\", keys.count(), \"keys\")\n",
+      "note": "With `map`, each record gives one list. With `flatMap`, the lists are opened up into one key per item, so the count goes up from 10 to 43."
+    },
+    {
+      "kind": "text",
+      "md": "Because `flatMap` allows **zero** results, it can filter and map in one step: return `[record]` for an item you keep and `[]` for one you drop. A small `parse` function that never raises is the safest way to clean raw lines: it decides per line, and a bad line can't stop the job."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Parse safely with flatMap",
+      "code": "import json\n\n\ndef parse(line):\n    \"\"\"[record] for a line that is a JSON object, [] for anything else.\"\"\"\n    try:\n        record = json.loads(line)\n    except ValueError:\n        return []\n    return [record] if isinstance(record, dict) else []\n\n\nlines = application_logs_raw.rdd.map(lambda r: r[\"value\"])\nrecords = lines.flatMap(parse)\nprint(records.count(), \"records\")\nprint(sorted(rec[\"service\"] for rec in records.collect()))\n",
+      "note": "`parse` returns an empty list for the three broken lines, so they simply disappear. `collect()` returns the records in file order; `sorted` makes the printed list easy to scan."
+    },
+    {
+      "kind": "text",
+      "md": "When the items are clean, turn them into a DataFrame for everything that comes next: map each record to a tuple and call `toDF` with a schema string. With a schema, it works even if no line survived."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Back to a DataFrame",
+      "code": "import json\n\n\ndef parse(line):\n    \"\"\"[record] for a line that is a JSON object, [] for anything else.\"\"\"\n    try:\n        record = json.loads(line)\n    except ValueError:\n        return []\n    return [record] if isinstance(record, dict) else []\n\n\nlines = application_logs_raw.rdd.map(lambda r: r[\"value\"])\nrows = lines.flatMap(parse).map(lambda rec: (rec[\"log_id\"], rec[\"level\"], rec[\"service\"]))\nlogs = rows.toDF(\"log_id string, level string, service string\")\nlogs.show()\n",
+      "note": "Ten clean rows with a real schema. From here, filters, joins and aggregations are DataFrame work again."
+    },
+    {
+      "kind": "error-example",
+      "id": "e6",
+      "title": "A bad line fails at the action, not at the map",
+      "code": "import json\n\nlines = application_logs_raw.rdd.map(lambda r: r[\"value\"])\nrecords = lines.map(json.loads)\nprint(\"map defined, nothing has run yet\")\nprint(records.count())\n",
+      "error": "Py4JJavaError",
+      "note": "`map` is lazy, so the first line prints. `count()` runs the plan, `json.loads` meets the plain-text line, and the whole job fails. The real error, a `JSONDecodeError`, is buried inside the long Spark message. One unparseable item is enough to stop everything, which is why `parse` above catches the error itself."
+    }
+  ],
+  "challenges": [
+    "PS-L049-C1",
+    "PS-L049-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "An RDD has 3 records with 2, 0 and 4 attribute keys. How many items do `map(lambda r: list(r[\"attributes\"]))` and `flatMap(lambda r: list(r[\"attributes\"]))` give?",
+      "choices": [
+        "3 and 3",
+        "3 and 6",
+        "6 and 6",
+        "6 and 3"
+      ],
+      "answer": 1,
+      "why": "`map` gives one result per item, here a list each: 3. `flatMap` puts each list element in separately: 2 + 0 + 4 = 6."
+    },
+    {
+      "id": "k2",
+      "prompt": "`records = lines.map(json.loads)` runs without error, but one line isn't JSON. When does it fail?",
+      "choices": [
+        "Never: bad lines are skipped",
+        "On the `map` line",
+        "When an action such as `count()` or `collect()` runs",
+        "Only if you call `first()`"
+      ],
+      "answer": 2,
+      "why": "`map` is a lazy transformation. The function only runs when an action runs the plan, and then the bad line fails the job."
+    },
+    {
+      "id": "k3",
+      "prompt": "How can one `flatMap` both drop bad lines and parse good ones?",
+      "choices": [
+        "Return `None` for bad lines",
+        "Return `[record]` for good lines and `[]` for bad ones",
+        "Raise an error for bad lines",
+        "Return `True` or `False`"
+      ],
+      "answer": 1,
+      "why": "`flatMap` adds every element of what the function returns, so an empty list adds nothing and a one-item list adds that item."
+    }
+  ],
+  "review": [
+    "`df.rdd.map(lambda r: r[\"value\"])` turns a text table into an RDD of plain strings.",
+    "`filter`, `map` and `flatMap` take any Python function: a lambda or a named `def`.",
+    "`map` gives exactly one result per item; `flatMap` adds each element of the returned list, so zero, one or many.",
+    "Returning `[item]` or `[]` from `flatMap` filters and transforms in one pass.",
+    "Functions run only when an action runs, and one item that raises fails the whole job; catch errors inside the function.",
+    "Finish with `toDF(\"name type, ...\")` to get back to a DataFrame with a real schema."
+  ],
+  "practice": ["PS-Q0241", "PS-Q0242", "PS-Q0243", "PS-Q0244", "PS-Q0245"]
+}

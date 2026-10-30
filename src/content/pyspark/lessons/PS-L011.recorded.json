@@ -1,0 +1,48 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D05",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "movies",
+   "ratings"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "+------------------+-----------+\n|             title|runtime_min|\n+------------------+-----------+\n|     Little Parade|         88|\n|       Paper Comet|         92|\n|The Hidden Archive|         97|\n+------------------+-----------+\nonly showing top 3 rows\n+-----------------+-----------+\n|            title|runtime_min|\n+-----------------+-----------+\n|      Iron Meadow|        131|\n|     Quiet Signal|        126|\n|The Glass Orchard|        118|\n+-----------------+-----------+\nonly showing top 3 rows\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "+------------------+------------+\n|             title|release_year|\n+------------------+------------+\n|The Hidden Archive|        2025|\n|       Copper Tide|        2024|\n|    Midnight Ferry|        2024|\n|      Salt Harbour|        2024|\n|      Quiet Signal|        2023|\n|     Velvet Season|        2022|\n|     Little Parade|        2021|\n|       Paper Comet|        2021|\n|       Iron Meadow|        2019|\n| The Glass Orchard|        2019|\n+------------------+------------+\n\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "+-------------+\n|primary_genre|\n+-------------+\n|       Action|\n|    Animation|\n|       Comedy|\n|  Documentary|\n|        Drama|\n|      Romance|\n|       Sci-Fi|\n|     Thriller|\n+-------------+\n\n8 genres\n10 genre and language pairs\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "+-------+--------+------+-------------------+\n|user_id|movie_id|rating|           rated_at|\n+-------+--------+------+-------------------+\n|    U02|     M02|   5.0|2025-04-01 19:22:00|\n|    U04|     M10|   5.0|2026-04-16 21:05:00|\n|    U01|     M02|   4.5|2025-06-11 22:40:00|\n+-------+--------+------+-------------------+\n\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "+--------+-----------+\n|movie_id|runtime_min|\n+--------+-----------+\n|     M02|       NULL|\n|     M03|         92|\n|     M01|        118|\n+--------+-----------+\n\n+--------+-----------+\n|movie_id|runtime_min|\n+--------+-----------+\n|     M03|         92|\n|     M01|        118|\n|     M02|       NULL|\n+--------+-----------+\n\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "",
+   "error": {
+    "type": "PySparkTypeError",
+    "message": "[NOT_COLUMN_OR_INT_OR_STR] Argument `col` should be a Column, int or str, got method.",
+    "line": 3,
+    "condition": "NOT_COLUMN_OR_INT_OR_STR"
+   }
+  }
+ }
+}

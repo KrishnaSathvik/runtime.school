@@ -1,0 +1,52 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "version",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "mode",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "rows_written",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     2,
+     "Overwrite",
+     5
+    ],
+    [
+     1,
+     "Append",
+     5
+    ],
+    [
+     0,
+     "ErrorIfExists",
+     5
+    ]
+   ],
+   "row_count": 3
+  }
+ },
+ "hidden": [
+  "the full practice accounts",
+  "a single account",
+  "no accounts at all, so the later writes change nothing"
+ ]
+}

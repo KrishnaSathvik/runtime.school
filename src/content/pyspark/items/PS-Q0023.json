@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0023",
+  "kind": "predict",
+  "slug": "missing-device-ids",
+  "lesson": "PS-L005",
+  "role": "edge",
+  "format": "concept_or_trace",
+  "difficulty": "easy",
+  "minutes": 4,
+  "title": "Missing device ids",
+  "prompt": "Not every error comes from a device, so `device_id` is empty on some `error_events` rows. What does this program print? Type each line on its own line.",
+  "program": "devices = error_events.rdd.map(lambda r: r[\"device_id\"])\nprint(devices.collect())\nprint(devices.filter(lambda d: d is not None).count())\nprint(api_requests.rdd.filter(lambda r: r[\"status_code\"] > 500).count())\n",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "An empty value in a row comes back to Python as `None`, and `map` keeps it.",
+    "Count the items that are not `None`.",
+    "`> 500` is not the same as `>= 500`. Look at the highest status code in `api_requests`."
+  ],
+  "explanation": "`map` keeps one item per row, and an empty `device_id` arrives in Python as `None`, so the list has four items, two of them `None`. Two errors have a device. The only failed request with a 5xx code is exactly 500, and `500 > 500` is `False`, so the last count is 0."
+}

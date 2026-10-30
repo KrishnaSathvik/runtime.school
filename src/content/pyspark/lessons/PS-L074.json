@@ -1,0 +1,144 @@
+{
+ "id": "PS-L074",
+ "minutes": 30,
+ "lede": "A daily job that reads everything every day gets slower each day, and one that blindly appends doubles its data when it's rerun. An incremental job remembers how far it got, reads only what's new, and gives the same table however often it runs.",
+ "objectives": [
+  "Keep a high-water mark: the newest load day the target already holds",
+  "Process only the loads after the mark, so a rerun adds nothing",
+  "Explain why the mark must be on the load day, not on the event time, when data arrives late",
+  "Reprocess chosen days safely with a dynamic partition overwrite on a Delta table"
+ ],
+ "dataset": {
+  "id": "PS-D08",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "shipment_events"
+  ]
+ },
+ "blocks": [
+  {
+   "kind": "text",
+   "md": "`shipment_events` is the tracking feed of a logistics company: one row per scan, with `event_time` (when it happened) and `load_date` (the day it reached the platform). Most events load the day they happen; some load days later. Each day's load lands in a folder of its own, partitioned by `load_date` as in lesson 47.\n\nThe job that copies the feed into a Delta table runs every day. Reading every folder every day works at first, but the work grows with the history, and an append of everything doubles the table on the second run. The fix is to process **incrementally**: only the loads the table doesn't have yet.\n\n`F.max(\"load_date\")` inside `select` gives the largest value of the column over the whole table, as a one-row DataFrame; `.first()[0]` takes the value out."
+  },
+  {
+   "kind": "example",
+   "id": "e1",
+   "title": "The landing folders",
+   "code": "import os\nfrom pyspark.sql import functions as F\n\nlanding = \"/tmp/landing/shipment_events\"\nshipment_events.write.partitionBy(\"load_date\").parquet(landing)\n\nprint(sorted(d for d in os.listdir(landing) if \"=\" in d))\nprint(spark.read.parquet(landing).select(F.max(\"load_date\")).first()[0])\n",
+   "note": "Five load days, one folder each. 5 March has no folder: nothing was loaded that day. The newest load day is 8 March."
+  },
+  {
+   "kind": "text",
+   "md": "The job remembers how far it got with a **high-water mark**: the newest `load_date` already in the target. On each run it reads the landing folders, keeps the rows loaded after the mark and appends them.\n\nBefore the first run there's no target yet. `DeltaTable.isDeltaTable(spark, path)` says whether a path holds a Delta table, so the mark is `None` then and the first run takes everything.\n\nThe mark comes from the target itself, not from a note kept somewhere else. If a run fails before its append commits, the target is unchanged, the mark is too, and the next run picks up the same loads."
+  },
+  {
+   "kind": "example",
+   "id": "e2",
+   "title": "Run it twice",
+   "code": "from pyspark.sql import functions as F\nfrom delta.tables import DeltaTable\n\nLANDING = \"/tmp/landing/shipment_events\"\nTARGET = \"/tmp/silver/shipment_events\"\n\n\ndef high_water_mark():\n    # The newest load day the target already has, or None before the first run.\n    if not DeltaTable.isDeltaTable(spark, TARGET):\n        return None\n    return spark.read.format(\"delta\").load(TARGET).select(F.max(\"load_date\")).first()[0]\n\n\ndef process():\n    mark = high_water_mark()\n    landing = spark.read.parquet(LANDING)\n    new = landing if mark is None else landing.filter(F.col(\"load_date\") > mark)\n    print(\"mark:\", mark, \"| new rows:\", new.count())\n    new.write.format(\"delta\").mode(\"append\").save(TARGET)\n\n\nshipment_events.write.partitionBy(\"load_date\").parquet(LANDING)\n\nprocess()\nprocess()  # a rerun: nothing new has landed\n\nprint(spark.read.format(\"delta\").load(TARGET).count(), \"rows in the target\")\nprint(\"versions:\", [h.version for h in DeltaTable.forPath(spark, TARGET).history().collect()])\n",
+   "note": "The first run finds no target and takes all 14 rows. The rerun's mark is 8 March, nothing is newer, and the append is empty. An append that adds nothing commits nothing on Delta, so the table is still at version 0."
+  },
+  {
+   "kind": "text",
+   "md": "In real life the loads arrive one day at a time. Each run then reads only the one new day: the landing folder still holds every day, but the filter on `load_date` keeps one, and on a partitioned folder Spark skips the other folders without opening them."
+  },
+  {
+   "kind": "example",
+   "id": "e3",
+   "title": "One day at a time",
+   "code": "from pyspark.sql import functions as F\nfrom delta.tables import DeltaTable\n\nLANDING = \"/tmp/landing/shipment_events\"\nTARGET = \"/tmp/silver/shipment_events\"\n\n\ndef high_water_mark():\n    # The newest load day the target already has, or None before the first run.\n    if not DeltaTable.isDeltaTable(spark, TARGET):\n        return None\n    return spark.read.format(\"delta\").load(TARGET).select(F.max(\"load_date\")).first()[0]\n\n\ndef process():\n    mark = high_water_mark()\n    landing = spark.read.parquet(LANDING)\n    new = landing if mark is None else landing.filter(F.col(\"load_date\") > mark)\n    print(\"mark:\", mark, \"| new rows:\", new.count())\n    new.write.format(\"delta\").mode(\"append\").save(TARGET)\n\n\n\ndef deliver(day):\n    # One day's load lands in its own folder.\n    shipment_events.filter(F.col(\"load_date\") == day).write.mode(\"append\").partitionBy(\"load_date\").parquet(LANDING)\n\n\ndays = sorted(r.load_date for r in shipment_events.select(\"load_date\").distinct().collect())\nfor day in days:\n    deliver(day)\n    process()\n\nprint(spark.read.format(\"delta\").load(TARGET).count(), \"rows in the target\")\nprint(\"versions:\", [h.version for h in DeltaTable.forPath(spark, TARGET).history().orderBy(\"version\").collect()])\n",
+   "note": "Every run picks up exactly the day that just landed: 8 rows, then 1, 1, 2 and 2. The target ends with the same 14 rows as one big run, and one version per day."
+  },
+  {
+   "kind": "text",
+   "md": "Why `load_date` and not `event_time`? Because a late event has an old `event_time` but a new `load_date`. A mark on the newest event time skips any event that happened before it, even one that has only just arrived. It never gets processed.\n\nThe next example adds a scan from 5 March that loaded on 7 March, after the job had already seen events from 6 March."
+  },
+  {
+   "kind": "example",
+   "id": "e4",
+   "title": "A late event and the wrong mark",
+   "code": "from datetime import date, datetime\nfrom pyspark.sql import functions as F\n\nLANDING = \"/tmp/landing/shipment_events\"\n\n# A hub scan from 5 March that only reached the platform on 7 March.\nlate_scan = spark.createDataFrame(\n    [(\"E0000014\", \"SH0004\", \"WH02\", \"in_transit\", datetime(2026, 3, 5, 6, 10), \"HUB-VIE\", 100014, date(2026, 3, 7), False)],\n    shipment_events.schema,\n)\nfirst = shipment_events.filter(F.col(\"load_date\") <= \"2026-03-06\")\nlater = shipment_events.filter(F.col(\"load_date\") > \"2026-03-06\")\nfirst.write.partitionBy(\"load_date\").parquet(LANDING)\nlater.write.mode(\"append\").partitionBy(\"load_date\").parquet(LANDING)\nlate_scan.write.mode(\"append\").partitionBy(\"load_date\").parquet(LANDING)\nlanding = spark.read.parquet(LANDING)\n\nby_event_time = first.select(F.max(\"event_time\")).first()[0]\nby_load_date = first.select(F.max(\"load_date\")).first()[0]\nprint(\"mark on event_time:\", by_event_time)\nprint(\"mark on load_date: \", by_load_date)\n\nprint(\"found by event_time:\", sorted(r.event_id for r in landing.filter(F.col(\"event_time\") > by_event_time).collect()))\nprint(\"found by load_date: \", sorted(r.event_id for r in landing.filter(F.col(\"load_date\") > by_load_date).collect()))\n",
+   "note": "The mark on event time is 6 March 08:53, and the late scan happened before that, so it's lost. The mark on load day finds it, along with everything else loaded after 6 March."
+  },
+  {
+   "kind": "text",
+   "md": "Sometimes you need to run days again: a load was re-sent, or a bug was fixed. Appending them again doubles them. On a target partitioned by `load_date`, a **dynamic partition overwrite** (lesson 47) replaces just the days in the new data and leaves the others alone. It works on Delta tables too, as one commit, and running it twice gives the same table."
+  },
+  {
+   "kind": "example",
+   "id": "e5",
+   "title": "Reprocess two days, twice",
+   "code": "from pyspark.sql import functions as F\n\nTARGET = \"/tmp/silver/events_by_load\"\nshipment_events.write.format(\"delta\").partitionBy(\"load_date\").save(TARGET)\n\n# The 7 and 8 March loads are processed again, twice: once appended, once replaced.\nrecent = shipment_events.filter(F.col(\"load_date\") >= \"2026-03-07\")\nprint(\"before:\", spark.read.format(\"delta\").load(TARGET).count())\n\nrecent.write.format(\"delta\").mode(\"append\").save(TARGET)\nprint(\"after an append:\", spark.read.format(\"delta\").load(TARGET).count())\n\nshipment_events.write.format(\"delta\").mode(\"overwrite\").save(TARGET)  # back to one copy\nfor run in (1, 2):\n    recent.write.format(\"delta\").mode(\"overwrite\").option(\"partitionOverwriteMode\", \"dynamic\").save(TARGET)\n    print(\"after dynamic overwrite\", run, \":\", spark.read.format(\"delta\").load(TARGET).count())\n",
+   "note": "The append adds the four rows of 7 and 8 March a second time: 18. The dynamic overwrite replaces those two days and keeps the rest: 14 after the first run and 14 after the second."
+  },
+  {
+   "kind": "text",
+   "md": "Delta also has `option(\"replaceWhere\", condition)`: an overwrite that replaces only the rows matching the condition. It checks that every new row matches it, so a job can't write outside the days it says it's replacing."
+  },
+  {
+   "kind": "error-example",
+   "id": "e6",
+   "title": "Rows outside replaceWhere",
+   "code": "from pyspark.sql import functions as F\n\nTARGET = \"/tmp/silver/events_by_load\"\nshipment_events.write.format(\"delta\").partitionBy(\"load_date\").save(TARGET)\n\nrecent = shipment_events.filter(F.col(\"load_date\") >= \"2026-03-07\")\nrecent.write.format(\"delta\").mode(\"overwrite\").option(\"replaceWhere\", \"load_date = '2026-03-08'\").save(TARGET)\n",
+   "error": "AnalysisException",
+   "note": "The data holds 7 and 8 March, but the condition names only 8 March. Delta refuses the whole write and the table is unchanged."
+  }
+ ],
+ "challenges": [
+  "PS-L074-C1",
+  "PS-L074-C2"
+ ],
+ "concept": [
+  {
+   "id": "k1",
+   "prompt": "The target holds loads up to 8 March and nothing new has landed. The job filters `load_date > mark` and appends. What does a rerun do?",
+   "choices": [
+    "Adds the 8 March load again",
+    "Adds nothing, and Delta records no new version",
+    "Fails, because the append is empty",
+    "Replaces the table"
+   ],
+   "answer": 1,
+   "why": "No row is newer than the mark, so the append is empty, and an empty append commits nothing."
+  },
+  {
+   "id": "k2",
+   "prompt": "An event from 5 March reaches the platform on 7 March. The job's mark is the newest `event_time` it has seen, 6 March. What happens to the event?",
+   "choices": [
+    "It's picked up on the next run",
+    "It's never processed",
+    "It replaces the 6 March events",
+    "It raises an error"
+   ],
+   "answer": 1,
+   "why": "Its event time is before the mark, so `event_time > mark` never keeps it. A mark on `load_date` catches it, because its load day is new."
+  },
+  {
+   "id": "k3",
+   "prompt": "A Delta table is partitioned by `load_date`. You write two days with `mode(\"overwrite\")` and `partitionOverwriteMode` set to `dynamic`, twice. What's in the table?",
+   "choices": [
+    "Only those two days",
+    "Every day, with those two days twice",
+    "Every day once, with those two days replaced",
+    "Nothing: the second write deletes them"
+   ],
+   "answer": 2,
+   "why": "A dynamic overwrite replaces only the partitions in the new data, so other days stay and a second run replaces the same two days again."
+  }
+ ],
+ "review": [
+  "An incremental job processes only what's new, so its work doesn't grow with the history.",
+  "The high-water mark is the newest `load_date` in the target; `select(F.max(...)).first()[0]` reads it, and `None` before the first run.",
+  "Filter `load_date > mark` and append: a rerun finds nothing new, and an empty append commits nothing.",
+  "Mark on the day data arrived, not when it happened: late events have old event times.",
+  "Reprocess days with a dynamic partition overwrite, or `replaceWhere`; running it again gives the same table."
+ ],
+ "practice": [
+  "PS-Q0366",
+  "PS-Q0367",
+  "PS-Q0368",
+  "PS-Q0369",
+  "PS-Q0370"
+ ]
+}

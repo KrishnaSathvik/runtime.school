@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0202",
+  "slug": "low-price-and-big-ticket-value",
+  "lesson": "PS-L041",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Low-price and big-ticket value",
+  "dataset": {
+    "id": "PS-D06",
+    "version": "1.0.0"
+  },
+  "prompt": "Finance wants to know how much of each basket is low-price add-ons and how much is big-ticket products. Write `solve(checkout_events)` so it returns both values for every checkout step.",
+  "rules": [
+    "Return `event_id`, `step`, `value_under_50` and `value_50_plus`, in that order.",
+    "An item's value is `qty` × `price`. `value_under_50` adds up the items whose unit `price` is below 50.00; `value_50_plus` the items priced 50.00 or more. Add the values in basket order, starting from 0.0.",
+    "Both are doubles. A group with no items is 0.0. An item with a missing `price` is in neither group; a missing `qty` makes its group's value missing.",
+    "A missing `items` gives missing values. Keep one row per checkout step."
+  ],
+  "hints": [
+    "Split the basket first: `F.filter(\"items\", lambda x: ...)` keeps the items of one group.",
+    "Then fold what's left with `F.aggregate(..., start, lambda acc, x: acc + ...)`.",
+    "`price` is a double, so the start value has to be a double too: `F.lit(0.0)`, not `F.lit(0)`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "checkout_events"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(checkout_events):\n    # Return event_id, step, value_under_50 and value_50_plus for each checkout step.\n    return checkout_events\n",
+  "output": {
+    "columns": [
+      "event_id",
+      "step",
+      "value_under_50",
+      "value_50_plus"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Each column is a filter followed by a fold: `F.aggregate(F.filter(\"items\", lambda x: x[\"price\"] < 50), F.lit(0.0), lambda acc, x: acc + x[\"qty\"] * x[\"price\"])`, and the same with `x[\"price\"] >= 50` for the other group. The filter decides the group by the unit price, not the line value, so two items at 34.99 stay low-price even though together they're worth 69.98. Starting from `F.lit(0.0)` matters twice: it makes the sum a double, and it gives 0.0 when a group is empty. An item with a missing price drops out of both filters, because its comparison isn't true. `F.lit(0)` fails, as the lesson showed, because the accumulator can't turn into a double halfway."
+}

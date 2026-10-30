@@ -1,0 +1,145 @@
+{
+ "id": "PS-L076",
+ "minutes": 30,
+ "lede": "A contract check that stops on every broken row stops too often, and one that never stops lets a broken feed through. A quality gate gives each rule an action and a limit, so a few bad rows are set aside while a broken load is stopped.",
+ "objectives": [
+  "Write a contract as data: each column's type and whether it may be empty, and check a table against it",
+  "Give every rule an action (stop the run, quarantine the row or only warn) and build a quality report",
+  "Decide per rule with a threshold: quarantine a few bad rows, stop when there are too many",
+  "Split a load into rows that go on and quarantined rows that carry their reason"
+ ],
+ "dataset": {
+  "id": "PS-D02",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "transactions"
+  ]
+ },
+ "blocks": [
+  {
+   "kind": "text",
+   "md": "`transactions` is a bank's card and account feed, loaded every day. Payments, fraud checks and statements all read it, so it has a contract. A contract written as data is easy to check in a loop and easy to change: here each column has its type and a flag that says whether it may be empty (`True`) or must always have a value (`False`).\n\nThe shape check compares types, as before. Columns the contract doesn't mention are worth a look but don't break anything: readers ask for the columns they know."
+  },
+  {
+   "kind": "example",
+   "id": "e1",
+   "title": "Check the shape",
+   "code": "contract = {\n    \"transaction_id\": (\"string\", False),\n    \"account_id\": (\"string\", False),\n    \"merchant_id\": (\"string\", True),\n    \"posted_at\": (\"timestamp\", False),\n    \"txn_type\": (\"string\", False),\n    \"direction\": (\"string\", False),\n    \"amount\": (\"decimal(12,2)\", False),\n    \"currency\": (\"string\", False),\n    \"status\": (\"string\", False),\n}\n\nactual = dict(transactions.dtypes)\nfor name, (wanted, nullable) in contract.items():\n    found = actual.get(name)\n    if found != wanted:\n        print(f\"{name}: expected {wanted}, found {found}\")\n\nextra = [name for name in transactions.columns if name not in contract]\nprint(\"not in the contract:\", extra)\n",
+   "note": "Every contract column is there with the right type. `channel` is extra: someone added it to the feed. Readers that ask for their own columns aren't affected, so it's reported, not rejected."
+  },
+  {
+   "kind": "text",
+   "md": "The `False` flags are the second part of the shape: **required** columns. You might expect the schema to enforce them, but it doesn't. When Spark reads a file with a schema, it marks every column as nullable, whatever you asked for, so a missing value comes through without a complaint. A contract has to check the data itself."
+  },
+  {
+   "kind": "example",
+   "id": "e2",
+   "title": "Required columns",
+   "code": "from pyspark.sql import functions as F\n\ncontract = {\n    \"transaction_id\": (\"string\", False),\n    \"account_id\": (\"string\", False),\n    \"merchant_id\": (\"string\", True),\n    \"posted_at\": (\"timestamp\", False),\n    \"txn_type\": (\"string\", False),\n    \"direction\": (\"string\", False),\n    \"amount\": (\"decimal(12,2)\", False),\n    \"currency\": (\"string\", False),\n    \"status\": (\"string\", False),\n}\n\nprint(\"schema says account_id may be empty:\", transactions.schema[\"account_id\"].nullable)\n\nfor name, (wanted, nullable) in contract.items():\n    if not nullable:\n        empty = transactions.filter(F.col(name).isNull()).count()\n        if empty > 0:\n            print(f\"{name}: {empty} empty, but the contract requires a value\")\n",
+   "note": "The schema says `account_id` may be empty, and one row is. The contract says it must not be. Only counting the empty values finds that."
+  },
+  {
+   "kind": "text",
+   "md": "Not every broken rule means the same thing. A quality gate gives each rule an **action**:\n\n- `fail`: the problem means the whole load can't be trusted, so the run stops. A negative amount suggests the feed changed its sign convention, so every row is suspect.\n- `quarantine`: the row is bad but the others are fine. Set the row aside for someone to fix and load the rest.\n- `warn`: the row is unusual but valid. Load it and report it.\n\nKeep the action next to each rule, and the report gets one more column."
+  },
+  {
+   "kind": "example",
+   "id": "e3",
+   "title": "Rules with actions",
+   "code": "from pyspark.sql import functions as F\n\nrules = [\n    (\"has_account\", \"quarantine\", F.col(\"account_id\").isNotNull()),\n    (\"known_currency\", \"quarantine\", F.col(\"currency\").isin(\"USD\", \"EUR\", \"GBP\")),\n    (\"positive_amount\", \"fail\", F.col(\"amount\") > 0),\n    (\"within_review_limit\", \"warn\", F.col(\"amount\") <= 2500),\n]\n\nchecked = transactions.count()\nresults = []\nfor name, action, passes in rules:\n    failed = transactions.filter(~F.coalesce(passes, F.lit(False))).count()\n    results.append((name, action, failed, checked))\n\nreport = spark.createDataFrame(results, \"rule STRING, action STRING, failed BIGINT, checked BIGINT\")\nreport.show(truncate=False)\n",
+   "note": "One transaction has no account and one is a 3,100.00 deposit above the review limit. Nothing broke a `fail` rule. As in a contract check, `F.coalesce(passes, F.lit(False))` makes a rule that comes out NULL count as failed."
+  },
+  {
+   "kind": "text",
+   "md": "Quarantine is right for a few bad rows. If a third of the feed has no account, the source system is broken, and quietly loading the other two thirds hides that. So quarantine rules get a **threshold**: the largest share of rows they may set aside. Above it, the gate stops the run.\n\nThe decision is plain Python on the report's numbers. Compare `failed * 100` with `limit * checked` instead of dividing: the arithmetic stays in whole numbers, a rule that is exactly at the limit passes, and an empty load can't divide by zero."
+  },
+  {
+   "kind": "example",
+   "id": "e4",
+   "title": "The gate decision",
+   "code": "max_quarantine_pct = 10\n\nreport = [\n    (\"has_account\", \"quarantine\", 1, 14),\n    (\"known_currency\", \"quarantine\", 0, 14),\n    (\"positive_amount\", \"fail\", 0, 14),\n    (\"within_review_limit\", \"warn\", 1, 14),\n]\n\n\ndef decide(action, failed, checked):\n    if failed == 0:\n        return \"pass\"\n    if action == \"warn\":\n        return \"warn\"\n    if action == \"quarantine\" and failed * 100 <= max_quarantine_pct * checked:\n        return \"quarantine\"\n    return \"stop\"\n\n\nfor name, action, failed, checked in report:\n    print(f\"{name}: {failed} of {checked} failed -> {decide(action, failed, checked)}\")\n\nprint(\"2 of 20 ->\", decide(\"quarantine\", 2, 20))\nprint(\"3 of 20 ->\", decide(\"quarantine\", 3, 20))\n",
+   "note": "The report's numbers come from the previous example. 1 of 14 is about 7%, inside the 10% limit, so that row is quarantined. 2 of 20 is exactly 10% and still allowed; 3 of 20 is 15% and stops the run."
+  },
+  {
+   "kind": "text",
+   "md": "When the gate allows quarantine, split the load. Build the reason from the quarantine rules with a loop: start a `F.when` with the first rule and add one `.when` per rule after it. Each row gets the name of the first rule it breaks, or NULL when it passes them all. The two parts must add up to the whole load."
+  },
+  {
+   "kind": "example",
+   "id": "e5",
+   "title": "Split the load",
+   "code": "from pyspark.sql import functions as F\n\nquarantine_rules = [\n    (\"has_account\", F.col(\"account_id\").isNotNull()),\n    (\"known_currency\", F.col(\"currency\").isin(\"USD\", \"EUR\", \"GBP\")),\n]\n\nname, passes = quarantine_rules[0]\nreason = F.when(~F.coalesce(passes, F.lit(False)), name)\nfor name, passes in quarantine_rules[1:]:\n    reason = reason.when(~F.coalesce(passes, F.lit(False)), name)\n\nchecked = transactions.select(\"transaction_id\", \"account_id\", \"amount\", \"currency\", reason.alias(\"reason\"))\ngood = checked.filter(F.col(\"reason\").isNull())\nquarantined = checked.filter(F.col(\"reason\").isNotNull())\n\nquarantined.show()\nprint(transactions.count(), \"rows:\", good.count(), \"load +\", quarantined.count(), \"quarantined\")\n",
+   "note": "Adding a quarantine rule is one more line in the list. The quarantined rows keep their reason, so whoever fixes them knows what to look at."
+  },
+  {
+   "kind": "text",
+   "md": "When the gate decides `stop`, raise an error. The run ends before anything is written, and the message says which rule stopped it and by how much."
+  },
+  {
+   "kind": "error-example",
+   "id": "e6",
+   "title": "Too many to quarantine",
+   "code": "from decimal import Decimal\nfrom pyspark.sql import functions as F\n\nfeed = spark.createDataFrame(\n    [\n        (\"X01\", \"A00001\", Decimal(\"27.90\"), \"USD\"),\n        (\"X02\", None, Decimal(\"15.00\"), \"USD\"),\n        (\"X03\", \"A00008\", Decimal(\"800.00\"), \"USD\"),\n        (\"X04\", None, Decimal(\"60.53\"), \"GBP\"),\n        (\"X05\", \"A00006\", Decimal(\"10.01\"), \"GBP\"),\n        (\"X06\", None, Decimal(\"43.95\"), \"USD\"),\n    ],\n    \"transaction_id STRING, account_id STRING, amount DECIMAL(12,2), currency STRING\",\n)\n\nmax_quarantine_pct = 10\nchecked = feed.count()\nfailed = feed.filter(F.col(\"account_id\").isNull()).count()\n\nif failed * 100 > max_quarantine_pct * checked:\n    raise ValueError(f\"has_account: {failed} of {checked} rows failed, more than the {max_quarantine_pct}% a load may quarantine\")\nprint(\"load continues\")\n",
+   "error": "ValueError",
+   "note": "Half the rows have no account. That's not a few bad rows to set aside: the feed lost its account ids, so the load stops and nothing half-done reaches the tables people read."
+  }
+ ],
+ "challenges": [
+  "PS-L076-C1",
+  "PS-L076-C2"
+ ],
+ "concept": [
+  {
+   "id": "k1",
+   "prompt": "A quarantine rule may set aside at most 10% of a load. It fails for 2 of 20 rows. What does the gate decide?",
+   "choices": [
+    "Stop the run, because a rule failed",
+    "Quarantine the 2 rows and load the other 18",
+    "Load all 20 rows with a warning",
+    "Quarantine all 20 rows"
+   ],
+   "answer": 1,
+   "why": "2 of 20 is exactly 10%, and the limit includes it: `2 * 100 <= 10 * 20`. The 2 rows are set aside and the rest load."
+  },
+  {
+   "id": "k2",
+   "prompt": "The schema used to read a CSV file says `account_id` is not nullable. A row has no `account_id`. What happens?",
+   "choices": [
+    "The read fails",
+    "Spark drops the row",
+    "The row is read with a NULL `account_id`, and the column is marked nullable",
+    "Spark fills in an empty string"
+   ],
+   "answer": 2,
+   "why": "Spark marks every column of a file it reads as nullable and doesn't check. A required column is a rule the contract checks by counting NULLs."
+  },
+  {
+   "id": "k3",
+   "prompt": "Which problem should stop the run instead of quarantining rows?",
+   "choices": [
+    "One purchase has an unknown currency code",
+    "A required column is missing from the table",
+    "A deposit is larger than the review limit",
+    "One transaction has no account"
+   ],
+   "answer": 1,
+   "why": "When the shape is broken there is no good row to keep: every row lacks the column. Quarantine is for a few bad rows in an otherwise good load."
+  }
+ ],
+ "review": [
+  "Write a contract as data: each column's type and whether it must have a value.",
+  "Spark doesn't enforce a file's nullable flags; count the empty values in required columns.",
+  "Give each rule an action: `fail` stops the run, `quarantine` sets the row aside, `warn` loads it and reports it.",
+  "A quarantine rule has a limit. Compare `failed * 100 <= limit * checked` so the limit is included and an empty load is safe.",
+  "Build the quarantine reason with a `F.when` chain in a loop; the first broken rule wins.",
+  "Rows that load plus rows quarantined must equal the whole load."
+ ],
+ "practice": [
+  "PS-Q0376",
+  "PS-Q0377",
+  "PS-Q0378",
+  "PS-Q0379",
+  "PS-Q0380"
+ ]
+}

@@ -1,0 +1,61 @@
+{
+  "id": "delivery-network-reliability",
+  "task": "Customers of a parcel carrier network complain that premium services arrive late, yet several carriers report hitting their targets. Scans arrive late and out of order, so tracking data needs care before it is trusted. Find out whether the scans can be trusted, which services and carriers miss their delivery promises, and where first delivery attempts fail.",
+  "produce": [
+    {
+      "name": "Scan quality check",
+      "about": "Scans, late and early-recorded scans, and packages with no delivery scan."
+    },
+    {
+      "name": "On-time by service",
+      "about": "Complete shipments and the on-time share for each service level."
+    },
+    {
+      "name": "Carriers against targets",
+      "about": "Each carrier's on-time rate next to its contractual target."
+    },
+    {
+      "name": "First-attempt failures",
+      "about": "The ten busiest-enough states with the lowest first-attempt success."
+    },
+    {
+      "name": "Reliability report",
+      "about": "Three findings and two priority actions for network operations."
+    }
+  ],
+  "labels": {
+    "understand-data": "Follow a shipment",
+    "scan-quality": "Scan quality",
+    "service-levels": "Services",
+    "carriers": "Carriers",
+    "first-attempts": "First attempts",
+    "synthesis": "Conclusions",
+    "report": "Report"
+  },
+  "summaries": {
+    "understand-data": "Follow one shipment's packages through their scans in the order they happened.",
+    "scan-quality": "Count late scans, scans recorded before they happened, and undelivered packages.",
+    "service-levels": "Measure the on-time share of complete shipments for each service level.",
+    "carriers": "Compare each carrier's on-time rate with its target.",
+    "first-attempts": "Find the states where the first delivery attempt fails most often.",
+    "synthesis": "Decide whether the problem is services, carriers or the last mile.",
+    "report": "Write three findings and two priority actions."
+  },
+  "problems": [
+    "Some scans were recorded more than an hour after they happened.",
+    "Some scans were recorded before they happened, so ordering by recorded time puts them in the wrong order.",
+    "Some packages have no delivered scan, and some shipments are only partly delivered.",
+    "Many shipments have several packages, so a shipment is delivered only when its last package is.",
+    "Promises are dates but deliveries are timestamps, so comparing them directly marks same-day deliveries as late.",
+    "Some packages need more than one attempt, so only attempt number one counts as a first attempt."
+  ],
+  "preparation": [
+    "readable-queries-with-ctes",
+    "subqueries",
+    "ask-whether-a-row-exists",
+    "group-into-summaries",
+    "filter-groups-with-having",
+    "dates-and-monthly-analysis",
+    "ratios-round-and-nullif"
+  ]
+}

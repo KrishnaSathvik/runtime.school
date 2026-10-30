@@ -1,0 +1,184 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "dispute_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "quality",
+     "type": "string",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "D0001",
+     "open",
+     "valid"
+    ],
+    [
+     "D0002",
+     "open",
+     "valid"
+    ],
+    [
+     "D0003",
+     "won",
+     "valid"
+    ],
+    [
+     "D0004",
+     "won",
+     "valid"
+    ],
+    [
+     "D0005",
+     "open",
+     "bad amount"
+    ],
+    [
+     "D0006",
+     "pending",
+     "bad status"
+    ],
+    [
+     "D0007",
+     null,
+     "bad status"
+    ],
+    [
+     "D0008",
+     "open",
+     "open but resolved"
+    ],
+    [
+     "D0009",
+     "won",
+     "missing resolution"
+    ],
+    [
+     "D0010",
+     "lost",
+     "resolved too early"
+    ]
+   ],
+   "row_count": 10,
+   "inputs": {
+    "disputes": [
+     [
+      "D0001",
+      "T000003",
+      "2026-02-11",
+      "cancelled_subscription",
+      "6.97",
+      "open",
+      null
+     ],
+     [
+      "D0002",
+      "T000008",
+      "2026-02-21",
+      "wrong_amount",
+      "15.99",
+      "open",
+      null
+     ],
+     [
+      "D0003",
+      "T000010",
+      "2026-03-03",
+      "fraud",
+      "19.23",
+      "won",
+      "2026-03-15"
+     ],
+     [
+      "D0004",
+      "T000014",
+      "2026-03-17",
+      "fraud",
+      "60.53",
+      "won",
+      "2026-04-14"
+     ],
+     [
+      "D0005",
+      "T000011",
+      "2026-03-02",
+      "fraud",
+      null,
+      "open",
+      null
+     ],
+     [
+      "D0006",
+      "T000002",
+      "2026-03-04",
+      "wrong_amount",
+      "60.53",
+      "pending",
+      null
+     ],
+     [
+      "D0007",
+      "T000009",
+      "2026-03-05",
+      "not_received",
+      "43.95",
+      null,
+      null
+     ],
+     [
+      "D0008",
+      "T000003",
+      "2026-03-10",
+      "fraud",
+      "27.90",
+      "open",
+      "2026-03-01"
+     ],
+     [
+      "D0009",
+      "T000014",
+      "2026-03-12",
+      "wrong_amount",
+      "60.53",
+      "won",
+      null
+     ],
+     [
+      "D0010",
+      "T000008",
+      "2026-03-20",
+      "fraud",
+      "15.99",
+      "lost",
+      "2026-03-18"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice disputes table",
+  "disputed amounts of zero, negative and missing",
+  "unknown, upper-case and missing statuses",
+  "open disputes with a date and closed ones without",
+  "disputes resolved before, on and after the day they opened",
+  "an empty disputes table"
+ ]
+}

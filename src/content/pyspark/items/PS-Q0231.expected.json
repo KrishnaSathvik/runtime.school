@@ -1,0 +1,104 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "alert_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "station_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "severity",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "issued_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "starts_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "ends_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "headline",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "alert_type",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "AL-0002",
+     "PER-01",
+     "warning",
+     "2026-03-08T01:00:00",
+     "2026-03-08T03:00:00",
+     "2026-03-08T10:00:00",
+     "High temperatures; limit outdoor work in the afternoon.",
+     "heat"
+    ],
+    [
+     "AL-0001",
+     "NYC-01",
+     "watch",
+     "2026-03-09T06:00:00",
+     "2026-03-09T08:00:00",
+     "2026-03-09T12:00:00",
+     "Frost expected; protect exposed pipes and plants.",
+     "frost"
+    ],
+    [
+     "AL-0003",
+     "LIS-01",
+     "advisory",
+     "2026-03-08T09:00:00",
+     "2026-03-08T11:00:00",
+     "2026-03-08T13:00:00",
+     "Heavy rain; localized flooding possible.",
+     "heavy_rain"
+    ],
+    [
+     "AL-0004",
+     "NYC-01",
+     "advisory",
+     "2026-03-08T16:00:00",
+     "2026-03-08T18:00:00",
+     null,
+     "Strong winds; secure loose objects.",
+     "high_wind"
+    ]
+   ],
+   "row_count": 4
+  }
+ },
+ "hidden": [
+  "the full practice alerts",
+  "a batch where every alert has the same type",
+  "an alert with no type next to typed ones",
+  "the same alert listed twice",
+  "alerts still in force, and headlines with commas"
+ ]
+}

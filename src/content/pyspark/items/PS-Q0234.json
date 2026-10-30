@@ -1,0 +1,59 @@
+{
+  "id": "PS-Q0234",
+  "slug": "fixes-wipe-the-archive",
+  "lesson": "PS-L047",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Corrections that wipe the archive",
+  "dataset": {
+    "id": "PS-D13",
+    "version": "1.0.0"
+  },
+  "prompt": "Each batch of corrected readings should replace the archive's days it covers and leave every other day alone. Since `apply_fixes` went live, older days keep disappearing. Fix `apply_fixes(fixes, path)`; `solve` builds a small archive, applies the batch and reads the archive back.",
+  "rules": [
+    "The archive at `path` is Parquet with one folder per `observation_date`.",
+    "Every day that appears in `fixes` is replaced by the batch's readings for that day.",
+    "Days the batch doesn't mention keep their readings, and a day that is new to the archive is added.",
+    "An empty batch changes nothing. Keep repeated rows that are in the batch."
+  ],
+  "hints": [
+    "Run the starter on the sample: which archive reading has gone, and which day was it on?",
+    "A plain `overwrite` replaces the whole folder, every partition, not just the days in the new data.",
+    "The option `partitionOverwriteMode` set to `dynamic` makes an overwrite replace only the partitions it writes."
+  ],
+  "explanation": "The starter's plain `overwrite` deletes the whole archive before writing the batch, so every day the batch doesn't cover is lost. Adding `.option(\"partitionOverwriteMode\", \"dynamic\")` (keeping `mode(\"overwrite\")` and `partitionBy(\"observation_date\")`) replaces only the day folders the batch writes, so untouched days survive, new days are added and an empty batch changes nothing. `append` keeps the old readings of the corrected days next to the new ones, and `ignore` writes nothing because the folder exists.",
+  "entry": "solve",
+  "inputs": [
+    "observations"
+  ],
+  "starter": "from datetime import date, datetime\n\n\ndef apply_fixes(fixes, path):\n    fixes.write.mode(\"overwrite\").partitionBy(\"observation_date\").parquet(path)\n\n\ndef solve(observations):\n    path = \"/tmp/weather/archive\"\n    # Last week's archive, written for you: one reading on each of three days.\n    archive = spark.createDataFrame(\n        [\n            (\"OLD-000001\", \"NYC-01\", datetime(2026, 3, 6, 12, 0), date(2026, 3, 6), 3.5, 70, 0.0, 10.0, 1016.0, \"ok\"),\n            (\"OLD-000002\", \"NYC-01\", datetime(2026, 3, 7, 12, 0), date(2026, 3, 7), 4.0, 68, 0.0, 11.0, 1015.0, \"ok\"),\n            (\"OLD-000003\", \"NYC-01\", datetime(2026, 3, 8, 12, 0), date(2026, 3, 8), 4.5, 66, 0.0, 12.0, 1014.0, \"ok\"),\n        ],\n        observations.schema,\n    )\n    archive.write.mode(\"overwrite\").partitionBy(\"observation_date\").parquet(path)\n    apply_fixes(observations, path)\n    return spark.read.parquet(path)\n",
+  "output": {
+    "columns": [
+      "observation_id",
+      "station_id",
+      "observed_at",
+      "temperature_c",
+      "humidity_pct",
+      "precipitation_mm",
+      "wind_speed_kph",
+      "pressure_hpa",
+      "quality_flag",
+      "observation_date"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

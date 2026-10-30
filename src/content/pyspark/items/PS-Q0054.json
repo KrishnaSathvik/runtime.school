@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0054",
+  "slug": "fix-the-recent-ratings-strip",
+  "lesson": "PS-L011",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 6,
+  "title": "Fix the recent ratings strip",
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0"
+  },
+  "prompt": "The home page shows the eight newest ratings, newest first. The function below was written for it, but it shows old ratings in the wrong order. Fix `solve(ratings)`.",
+  "rules": [
+    "Return every column of `ratings`, unchanged, for the eight ratings with the latest `rated_at`.",
+    "Newest first. Ratings made at the same moment are sorted by `user_id`, then by `movie_id`, both from A to Z.",
+    "Keep rows exactly as they are, duplicates included. A table with fewer than eight ratings returns all of them."
+  ],
+  "hints": [
+    "Press Run: the rows come from the top of the table, not the newest ones. Look at what runs first.",
+    "`limit(8)` keeps the first eight rows it comes to. Sort first, then limit.",
+    "`orderBy(\"rated_at\")` sorts oldest first. Use `F.col(\"rated_at\").desc()`, and add the two tie-breaking columns."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "ratings"
+  ],
+  "starter": "def solve(ratings):\n    # The 8 newest ratings, newest first.\n    return ratings.limit(8).orderBy(\"rated_at\")\n",
+  "output": {
+    "columns": [
+      "user_id",
+      "movie_id",
+      "rating",
+      "rated_at"
+    ],
+    "order_sensitive": true
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "The starter limits before it sorts, so it takes eight rows from wherever they happen to be, then sorts those eight; and it sorts oldest first. Swap the steps and reverse the order: `ratings.orderBy(F.col(\"rated_at\").desc(), \"user_id\", \"movie_id\").limit(8)`. The tie-breakers make the order unique when two ratings share a moment. `orderBy(\"rated_at\", \"user_id\", \"movie_id\", ascending=False)` looks close but sorts the tie-breakers Z to A as well. Each column can get its own direction with `F.col(...).desc()` or `.asc()`."
+}

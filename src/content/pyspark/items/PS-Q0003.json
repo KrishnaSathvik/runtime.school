@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0003",
+  "kind": "predict",
+  "slug": "unfinished-course-rows",
+  "lesson": "PS-L001",
+  "role": "edge",
+  "format": "concept_or_trace",
+  "difficulty": "easy",
+  "minutes": 4,
+  "title": "An unfinished course",
+  "prompt": "In the `completions` table, one learner hasn't finished their course, so their `completed_date` is empty. What does this program print? Type each line on its own line.",
+  "program": "print(completions.count(), \"snapshot rows\")\nprint(completions.columns[-1])\nprint(courses.count() - completions.count())\n",
+  "dataset": {
+    "id": "PS-D11",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "A missing value is still part of its row. Does an empty cell change how many rows there are?",
+    "`columns` is a Python list, so `[-1]` is its last name.",
+    "Count the rows of `courses` and of `completions`; the result can be negative."
+  ],
+  "explanation": "`count()` counts rows, and a row with an empty `completed_date` is still a row, so there are 6. `columns[-1]` is the last column name, `completed_date`. There are 4 courses, so `4 - 6` is `-2`."
+}

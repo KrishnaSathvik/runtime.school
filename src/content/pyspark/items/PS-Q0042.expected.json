@@ -1,0 +1,84 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "assessment_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "learner_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "course_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "score",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "margin",
+     "type": "double",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "AS001",
+     "L001",
+     "C01",
+     86.0,
+     16.0
+    ],
+    [
+     "AS002",
+     "L002",
+     "C02",
+     76.0,
+     6.0
+    ],
+    [
+     "AS003",
+     "L003",
+     "C01",
+     76.0,
+     6.0
+    ],
+    [
+     "AS004",
+     "L004",
+     "C03",
+     84.0,
+     14.0
+    ],
+    [
+     "AS005",
+     "L001",
+     "C02",
+     74.0,
+     4.0
+    ]
+   ],
+   "row_count": 5
+  }
+ },
+ "hidden": [
+  "the full practice assessments table",
+  "scores just below, on and above the pass mark, and the lowest and highest possible",
+  "assessments with a missing score or ids",
+  "the same assessment row delivered twice",
+  "an empty assessments table"
+ ]
+}

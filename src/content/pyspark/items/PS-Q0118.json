@@ -1,0 +1,58 @@
+{
+  "id": "PS-Q0118",
+  "slug": "events-held-back",
+  "lesson": "PS-L024",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Events held back, NULLs included",
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0"
+  },
+  "prompt": "Every tracking event that isn't clean must be held back, including events where a check can't be answered. Write `solve(shipment_events, shipments)` so it returns the events held back.",
+  "rules": [
+    "An event is clean only when its `shipment_id` is in `shipments`, its `event_type` is exactly one of created, picked, departed, in_transit, out_for_delivery, delivered, exception, and `is_correction` is `false`.",
+    "Every other event is held back, including events where a value in a check is missing. `shipments` itself may contain a row with no `shipment_id`; that never makes an event clean.",
+    "Return the held-back events with every column of `shipment_events` unchanged. Keep duplicate rows. Clean plus held back must equal every event received."
+  ],
+  "hints": [
+    "Write one condition that is true for a clean event, then hold back the events where it isn't true.",
+    "`filter(~clean)` keeps rows where `clean` is false, but drops rows where it is NULL: a missing type or flag makes the condition NULL.",
+    "`isin` with a list that contains `None` gives NULL, not false, for an id that isn't in the list. `F.coalesce(clean, F.lit(False))` sends every NULL to the held-back side."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "shipment_events",
+    "shipments"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\nEVENT_TYPES = [\"created\", \"picked\", \"departed\", \"in_transit\", \"out_for_delivery\", \"delivered\", \"exception\"]\n\n\ndef solve(shipment_events, shipments):\n    # The events that are not clean, with every column.\n    return shipment_events\n",
+  "output": {
+    "columns": [
+      "event_id",
+      "shipment_id",
+      "warehouse_id",
+      "event_type",
+      "event_time",
+      "location",
+      "sequence",
+      "load_date",
+      "is_correction"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Write the clean condition once, `F.col(\"shipment_id\").isin(known) & F.col(\"event_type\").isin(EVENT_TYPES) & ~F.col(\"is_correction\")`, make it NULL-safe with `ok = F.coalesce(clean, F.lit(False))`, and return `shipment_events.filter(~ok)`. Three NULLs hide here. A missing `event_type` or `is_correction` makes the condition NULL, and `filter(~clean)` would drop the row from both sides. A `None` in the list of known shipments makes `isin` NULL for every id that isn't in the list, so an unknown shipment would vanish too, and even `isNull() | ~isin(...)` doesn't catch that. `coalesce` turns every NULL into \"not clean\", so the clean and held-back counts always add up."
+}

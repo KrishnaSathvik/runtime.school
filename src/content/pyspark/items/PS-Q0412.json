@@ -1,0 +1,59 @@
+{
+ "id": "PS-Q0412",
+ "slug": "a-late-retry-must-not-undo",
+ "lesson": "PS-L083",
+ "role": "business",
+ "format": "dataframe_coding",
+ "difficulty": "hard",
+ "minutes": 14,
+ "title": "A late retry must not undo",
+ "dataset": {
+  "id": "PS-D02",
+  "version": "1.0.0"
+ },
+ "prompt": "The card system sends each transaction's state as it changes: `pending` first, then `posted` or `declined`. Deliveries are retried, and a retry can arrive after a newer state was applied. Write `apply_feed` so the Delta table keeps each transaction's latest state, however many times and in whatever order deliveries arrive. `solve` applies this one twice.",
+ "rules": [
+  "The table has one row per `transaction_id`. A new transaction is added as sent.",
+  "A transaction that is `pending` in the table takes the feed's row, every column, including a corrected pending row.",
+  "`posted` and `declined` are final: the feed never changes those rows, even when it re-sends an older state. Transactions the feed doesn't mention stay as they are.",
+  "The feed may send a row more than once, as an identical copy. Don't change `start_table` or `solve`."
+ ],
+ "hints": [
+  "Run the starter on the sample, then compare T000004 and T000008 in the table before and after.",
+  "A MERGE on `transaction_id` updates matches and inserts the rest. Which matches should it update?",
+  "`whenMatchedUpdateAll` takes a `condition`, and it can look at the table's row as `t`. Remove repeated rows from the feed before merging."
+ ],
+ "explanation": "A plain upsert makes the last delivery win, so a late retry carrying `pending` puts a posted transaction back to pending. Order-safe updates need a rule about which state is newer, and here the table can tell: only a pending row can still change. `whenMatchedUpdateAll(condition=\"t.status = 'pending'\")` updates those and leaves posted and declined rows alone, and `whenNotMatchedInsertAll()` adds new transactions. Testing the feed's status instead (`s.status != 'pending'`) blocks the old states but also blocks a corrected pending row. `dropDuplicates([\"transaction_id\"])` first, because a merge inserts both copies of a new row sent twice. Applied a second time, the merge finds nothing left to change, so the table is the same.",
+ "entry": "solve",
+ "inputs": [
+  "transactions"
+ ],
+ "starter": "import shutil\nfrom datetime import datetime\nfrom decimal import Decimal\n\nfrom delta.tables import DeltaTable\nfrom pyspark.sql import functions as F\n\n\ndef start_table(transactions, path):\n    # The table before this delivery. Don't change this.\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty folder on every run\n    before = spark.createDataFrame(\n        [\n            (\"T000003\", \"A00001\", \"M003\", datetime(2026, 1, 26, 16, 39, 39), \"purchase\", \"card_present\", \"debit\", Decimal(\"27.90\"), \"USD\", \"pending\"),\n            (\"T000004\", \"A00008\", None, datetime(2026, 1, 27, 8, 46, 16), \"deposit\", \"branch\", \"credit\", Decimal(\"800.00\"), \"USD\", \"declined\"),\n            (\"T000008\", \"A00001\", \"M002\", datetime(2026, 2, 19, 10, 23, 22), \"purchase\", \"card_present\", \"debit\", Decimal(\"15.99\"), \"USD\", \"posted\"),\n            (\"T000011\", \"A00008\", \"M003\", datetime(2026, 2, 24, 12, 49, 59), \"purchase\", \"card_present\", \"debit\", Decimal(\"7.60\"), \"USD\", \"pending\"),\n            (\"T000060\", \"A00003\", None, datetime(2026, 1, 2, 9, 0, 0), \"deposit\", \"branch\", \"credit\", Decimal(\"120.00\"), \"USD\", \"posted\"),\n        ],\n        transactions.schema,\n    )\n    before.write.format(\"delta\").save(path)\n\n\ndef apply_feed(feed, path):\n    # Apply one delivery of the status feed to the table.\n    feed.write.format(\"delta\").mode(\"append\").save(path)\n\n\ndef solve(transactions):\n    path = \"/tmp/bank/transactions\"\n    start_table(transactions, path)\n    apply_feed(transactions, path)\n    apply_feed(transactions, path)  # the delivery is retried\n    return spark.read.format(\"delta\").load(path)\n",
+ "output": {
+  "columns": [
+   "transaction_id",
+   "account_id",
+   "merchant_id",
+   "posted_at",
+   "txn_type",
+   "channel",
+   "direction",
+   "amount",
+   "currency",
+   "status"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 180,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

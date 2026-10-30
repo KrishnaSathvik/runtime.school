@@ -1,0 +1,43 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D02",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "transactions"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "+-------+---------+\n|version|operation|\n+-------+---------+\n|      2|   UPDATE|\n|      1|   DELETE|\n|      0|    WRITE|\n+-------+---------+\n\n12\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "0 14 posted declined\n1 12 posted None\n2 12 held None\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "AnalysisException DELTA_FAILED_TO_MERGE_FIELDS\n[0]\n14\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "+-------+---------+\n|version|operation|\n+-------+---------+\n|      3|  RESTORE|\n|      2|   UPDATE|\n|      1|   DELETE|\n|      0|    WRITE|\n+-------+---------+\n\n12 ['GBP', 'USD']\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "",
+   "error": {
+    "type": "AnalysisException",
+    "message": "Cannot time travel Delta table to version 3. Available versions: [0, 0].",
+    "line": 4,
+    "condition": null
+   }
+  }
+ }
+}

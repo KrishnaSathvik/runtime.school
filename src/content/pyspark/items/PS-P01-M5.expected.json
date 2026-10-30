@@ -1,0 +1,331 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "example": {
+   "schema": [
+    {
+     "name": "rows_in",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "duplicates",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "bad_status",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "bad_total",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "bad_date",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "clean_orders",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "sales_days",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "sales_orders",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "sales_units",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "daily_net_sales",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "category_net_sales",
+     "type": "decimal(12,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     11,
+     2,
+     2,
+     1,
+     1,
+     5,
+     2,
+     3,
+     7,
+     "185.99",
+     "185.99"
+    ]
+   ],
+   "row_count": 1,
+   "inputs": {
+    "orders": [
+     [
+      "O90001",
+      "C0101",
+      "2026-01-15",
+      "paid",
+      "web",
+      "59.00"
+     ],
+     [
+      "O90001",
+      "C0101",
+      "2026-01-15",
+      "paid",
+      "web",
+      "59.00"
+     ],
+     [
+      "O90002",
+      "C0102",
+      "2026-01-15",
+      "shipped",
+      "web",
+      "31.00"
+     ],
+     [
+      "O90002",
+      "C0102",
+      "2026-01-15",
+      "shipped",
+      "app",
+      "31.00"
+     ],
+     [
+      "O90003",
+      "C0103",
+      "2026-01-16",
+      "PAID",
+      "web",
+      "-5.00"
+     ],
+     [
+      "O90004",
+      "C0104",
+      null,
+      "paid",
+      "store",
+      null
+     ],
+     [
+      "O90004",
+      "C0104",
+      null,
+      "paid",
+      "store",
+      null
+     ],
+     [
+      "O90005",
+      "C0105",
+      "2025-11-30",
+      "pending",
+      "web",
+      "12.00"
+     ],
+     [
+      "O90006",
+      "C0106",
+      "2025-12-31",
+      "delivered",
+      "app",
+      "20.00"
+     ],
+     [
+      "O90007",
+      "C0107",
+      "2026-01-16",
+      "refunded",
+      "web",
+      "59.99"
+     ],
+     [
+      "O90008",
+      "C0108",
+      "2026-01-17",
+      "delivered",
+      "store",
+      "64.99"
+     ]
+    ],
+    "order_items": [
+     [
+      "O90001",
+      "1",
+      "P001",
+      "1",
+      "59.00"
+     ],
+     [
+      "O90002",
+      "1",
+      "P002",
+      "2",
+      "15.50"
+     ],
+     [
+      "O90003",
+      "1",
+      "P001",
+      "1",
+      "59.99"
+     ],
+     [
+      "O90006",
+      "1",
+      "P002",
+      "1",
+      "20.00"
+     ],
+     [
+      "O90007",
+      "1",
+      "P003",
+      "1",
+      "59.99"
+     ],
+     [
+      "O90008",
+      "1",
+      "P003",
+      "1",
+      "59.99"
+     ],
+     [
+      "O90008",
+      "2",
+      "P099",
+      "1",
+      "5.00"
+     ]
+    ],
+    "products": [
+     [
+      "P001",
+      "Chef Knife",
+      "kitchen",
+      "59.99",
+      "true"
+     ],
+     [
+      "P002",
+      "Trail Bottle",
+      "outdoor",
+      "15.50",
+      "true"
+     ],
+     [
+      "P003",
+      "Desk Lamp",
+      "office",
+      "59.99",
+      "true"
+     ]
+    ]
+   }
+  },
+  "project": {
+   "schema": [
+    {
+     "name": "rows_in",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "duplicates",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "bad_status",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "bad_total",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "bad_date",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "clean_orders",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "sales_days",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "sales_orders",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "sales_units",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "daily_net_sales",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "category_net_sales",
+     "type": "decimal(12,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     3012,
+     10,
+     28,
+     144,
+     97,
+     2733,
+     271,
+     2242,
+     11157,
+     "376043.37",
+     "376043.37"
+    ]
+   ],
+   "row_count": 1
+  }
+ },
+ "hidden": [
+  "the full practice tables",
+  "exact copies and near-copies, rows failing one, two or all three checks, refunds, and lines with no known product",
+  "empty tables"
+ ]
+}

@@ -1,0 +1,114 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "column_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "parquet_type",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "csv_type",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "trip_id",
+     "string",
+     "string"
+    ],
+    [
+     "driver_id",
+     "string",
+     "string"
+    ],
+    [
+     "pickup_at",
+     "timestamp",
+     "timestamp"
+    ],
+    [
+     "dropoff_at",
+     "timestamp",
+     "timestamp"
+    ],
+    [
+     "pickup_zone_id",
+     "int",
+     "int"
+    ],
+    [
+     "dropoff_zone_id",
+     "int",
+     "int"
+    ],
+    [
+     "passenger_count",
+     "int",
+     "int"
+    ],
+    [
+     "trip_distance",
+     "double",
+     "double"
+    ],
+    [
+     "rate_code",
+     "string",
+     "string"
+    ],
+    [
+     "fare",
+     "decimal(8,2)",
+     "double"
+    ],
+    [
+     "tip",
+     "decimal(8,2)",
+     "double"
+    ],
+    [
+     "tolls",
+     "decimal(8,2)",
+     "double"
+    ],
+    [
+     "surcharge",
+     "decimal(8,2)",
+     "double"
+    ],
+    [
+     "total",
+     "decimal(8,2)",
+     "double"
+    ],
+    [
+     "payment_type",
+     "string",
+     "string"
+    ]
+   ],
+   "row_count": 15
+  }
+ },
+ "hidden": [
+  "the full practice trips",
+  "trips where one column is missing on every row",
+  "distances and money that are all whole amounts",
+  "a single trip",
+  "no trips"
+ ]
+}

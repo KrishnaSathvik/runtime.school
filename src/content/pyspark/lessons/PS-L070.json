@@ -1,0 +1,126 @@
+{
+ "id": "PS-L070",
+ "minutes": 30,
+ "lede": "A stream never ends, so Spark can't keep every window open forever, and sensors don't always report on time. A watermark tells Spark how long to wait for late readings, which lets it close windows, forget old state and drop what comes too late.",
+ "objectives": [
+  "Add a watermark with `withWatermark` and read where it stands after each micro-batch",
+  "Predict whether a late reading still counts or is dropped, and check it with `numRowsDroppedByWatermark`",
+  "Use append mode for windowed counts, which needs a watermark and writes each window once, when it closes",
+  "Remove repeated deliveries with `dropDuplicatesWithinWatermark`"
+ ],
+ "dataset": {
+  "id": "PS-D09",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "sensor_readings"
+  ]
+ },
+ "blocks": [
+  {
+   "kind": "text",
+   "md": "`sensor_readings` has 13 readings from four sensors, one every 15 minutes from 09:00 to 09:30. `event_time` is when the sensor measured and `arrival_time` is when the platform got the reading. `batch` is the micro-batch that delivered it, so in these examples `make_batches` from the micro-batch lesson writes each value of `batch` as one file, and each file becomes one micro-batch. A second small helper, `run_stream(writer)`, starts a query with `trigger(availableNow=True)`, waits until it has read every file, and returns the stopped query, so you can read its progress reports.\n\nTwo readings are awkward on purpose. **R0006** was measured at 09:15 but arrived at 09:52, in the last batch. **R0011** was delivered twice: the copy arrived six minutes after the first.\n\nIn the windows lesson, a streaming count kept every window in its state, in case another row turned up for it. That state only grows. `withWatermark(\"event_time\", \"10 minutes\")` changes that. It says: \"readings can be up to 10 minutes behind the newest reading we've seen\". After each micro-batch Spark works out the **watermark**: the latest `event_time` seen so far, minus the delay. A window that ends at or before the watermark is finished, and Spark can close it and forget it."
+  },
+  {
+   "kind": "example",
+   "id": "e1",
+   "title": "Watch the watermark move",
+   "code": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\nspark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\nshutil.rmtree(\"/tmp/ck\", ignore_errors=True)\nmake_batches(sensor_readings, \"/tmp/in\")\nreadings = spark.readStream.schema(sensor_readings.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\n\ncounts = (readings.withWatermark(\"event_time\", \"10 minutes\")\n          .groupBy(F.window(\"event_time\", \"15 minutes\")).count())\n\n\ndef show(batch_df, batch_id):\n    rows = sorted((r.window.start.strftime(\"%H:%M\"), r[\"count\"]) for r in batch_df.collect())\n    print(\"micro-batch\", batch_id, rows)\n\n\nq = run_stream(counts.writeStream.outputMode(\"update\").foreachBatch(show)\n               .option(\"checkpointLocation\", \"/tmp/ck\"))\nfor p in q.recentProgress:\n    print(\"micro-batch\", p[\"batchId\"], \"ran with watermark\", p[\"eventTime\"][\"watermark\"])\n",
+   "note": "The first micro-batch has no watermark yet (the 1970 value means \"none\"). After it, the newest reading is 09:00, so the watermark is 09:00 minus 10 minutes, 08:50. After the 09:30 readings it is 09:20. R0006 arrived in micro-batch 3 and still counted: the 09:15 window went from 3 to 4. The watermark is measured in event time, not on the clock, and R0006 was only 15 minutes behind the newest reading, while its window ended after 09:20. The watermark times are in UTC, so they end in `Z`."
+  },
+  {
+   "kind": "text",
+   "md": "So when is a reading too late? Each micro-batch closes the windows that end at or before its watermark, then forgets them. A reading for a window that's already closed comes **too late**: Spark drops it without an error and counts it in the progress report as `numRowsDroppedByWatermark`.\n\nA longer delay keeps more late readings, but windows stay open longer and the state holds more rows. A shorter delay closes windows sooner and drops more. It's a trade-off you choose from how late your data really arrives."
+  },
+  {
+   "kind": "example",
+   "id": "e2",
+   "title": "Too late: a dropped reading",
+   "code": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\nspark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\nshutil.rmtree(\"/tmp/ck\", ignore_errors=True)\n# The last file holds one more copy of DEV-002's 09:00 reading, re-sent by a gateway that was offline.\nresent = sensor_readings.filter(F.col(\"reading_id\") == \"R0002\").withColumn(\"batch\", F.lit(4))\nmake_batches(sensor_readings.unionByName(resent), \"/tmp/in\")\nreadings = spark.readStream.schema(sensor_readings.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\n\ncounts = (readings.withWatermark(\"event_time\", \"10 minutes\")\n          .groupBy(F.window(\"event_time\", \"15 minutes\")).count())\n\n\ndef show(batch_df, batch_id):\n    rows = sorted((r.window.start.strftime(\"%H:%M\"), r[\"count\"]) for r in batch_df.collect())\n    print(\"micro-batch\", batch_id, rows)\n\n\nq = run_stream(counts.writeStream.outputMode(\"update\").foreachBatch(show)\n               .option(\"checkpointLocation\", \"/tmp/ck\"))\nfor p in q.recentProgress:\n    print(\"micro-batch\", p[\"batchId\"], \"watermark\", p[\"eventTime\"][\"watermark\"],\n          \"dropped\", p[\"stateOperators\"][0][\"numRowsDroppedByWatermark\"])\n",
+   "note": "The 09:00 window closed in micro-batch 3, when the watermark reached 09:20. The resent reading arrived after that, so Spark dropped it: micro-batch 4 updated nothing and its report shows one dropped row. With a 30-minute delay the watermark would only have reached 09:00, the window would still be open, and the copy would have counted, making 5. That count would be wrong too, because it's a duplicate. The last example deals with copies."
+  },
+  {
+   "kind": "text",
+   "md": "The watermark also unlocks **append mode** for aggregations. In update mode every micro-batch writes the windows that changed, so a window can be written several times as its count grows. Append mode writes each window **once**, when the watermark closes it, with its final count. Files and most tables want exactly that.\n\nWithout a watermark Spark can never tell when a window is finished, which is why the windows lesson's append query refused to start. With one, it runs."
+  },
+  {
+   "kind": "example",
+   "id": "e3",
+   "title": "Append mode writes closed windows only",
+   "code": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\nspark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\nshutil.rmtree(\"/tmp/ck\", ignore_errors=True)\nmake_batches(sensor_readings, \"/tmp/in\")\nreadings = spark.readStream.schema(sensor_readings.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\n\ncounts = (readings.withWatermark(\"event_time\", \"10 minutes\")\n          .groupBy(F.window(\"event_time\", \"15 minutes\")).count())\n\n\ndef show(batch_df, batch_id):\n    rows = sorted((r.window.start.strftime(\"%H:%M\"), r[\"count\"]) for r in batch_df.collect())\n    print(\"micro-batch\", batch_id, rows)\n\n\nq = run_stream(counts.writeStream.outputMode(\"append\").foreachBatch(show)\n               .option(\"checkpointLocation\", \"/tmp/ck\"))\nprint(\"windows still open:\", q.lastProgress[\"stateOperators\"][0][\"numRowsTotal\"])\n",
+   "note": "Nothing came out until micro-batch 3, when the watermark passed 09:15 and closed the 09:00 window with its final count, 4. The 09:15 and 09:30 windows are still open in the state: the newest reading is 09:30, and the watermark can't pass their ends until later readings arrive."
+  },
+  {
+   "kind": "text",
+   "md": "Under `availableNow`, Spark sometimes adds one more micro-batch with no data at the end. It does that when the last file moved the watermark forward, so that append mode can write the windows the new watermark just closed. Here the last file holds only R0006, which is older than 09:30, so the watermark didn't move and no extra micro-batch ran.\n\nNow the copies. A plain `dropDuplicates([\"reading_id\"])` on a stream must remember every id it has ever seen, forever. `dropDuplicatesWithinWatermark([\"reading_id\"])` remembers each id only until the watermark has passed its `event_time` by the delay, which is fine when copies arrive soon after the original. It needs `withWatermark` first. Give it the key columns: the two copies of R0011 differ in `arrival_time`, so a `dropDuplicates()` over whole rows would keep both."
+  },
+  {
+   "kind": "example",
+   "id": "e4",
+   "title": "Count each reading once",
+   "code": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\nspark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\nshutil.rmtree(\"/tmp/ck\", ignore_errors=True)\nmake_batches(sensor_readings, \"/tmp/in\")\nreadings = spark.readStream.schema(sensor_readings.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\n\nonce = (readings.withWatermark(\"event_time\", \"10 minutes\")\n        .dropDuplicatesWithinWatermark([\"reading_id\"]))\ncounts = once.groupBy(F.window(\"event_time\", \"15 minutes\")).count()\n\n\ndef show(batch_df, batch_id):\n    rows = sorted((r.window.start.strftime(\"%H:%M\"), r[\"count\"]) for r in batch_df.collect())\n    print(\"micro-batch\", batch_id, rows)\n\n\nq = run_stream(counts.writeStream.outputMode(\"update\").foreachBatch(show)\n               .option(\"checkpointLocation\", \"/tmp/ck\"))\nprint([op[\"operatorName\"] for op in q.lastProgress[\"stateOperators\"]])\n",
+   "note": "The 09:30 window counts 4, not 5: the copy of R0011 was removed before the count. The progress report lists two stateful steps: `stateStoreSave` is the count and `dedupeWithinWatermark` the duplicate check. Both use the same watermark, so both forget old state."
+  },
+  {
+   "kind": "text",
+   "md": "Real sensors also send **glitches**: impossible values such as a temperature of 999.0. Watermarks don't help with those. Filter them out with a plain `filter` before the stateful steps, so they never reach a window.\n\nThis environment is one machine, and these streams read small files, but the rules are the same on a cluster: the watermark, the closed windows and the dropped rows depend only on the data, so the output is the same every time you run it."
+  }
+ ],
+ "challenges": [
+  "PS-L070-C1",
+  "PS-L070-C2"
+ ],
+ "concept": [
+  {
+   "id": "k1",
+   "prompt": "A query uses `withWatermark(\"event_time\", \"10 minutes\")`. The newest `event_time` seen so far is 09:30. Where does the watermark stand?",
+   "choices": [
+    "09:40",
+    "09:20",
+    "10 minutes after the last file arrived",
+    "09:30"
+   ],
+   "answer": 1,
+   "why": "The watermark is the latest event time seen minus the delay: 09:30 minus 10 minutes is 09:20. It follows the data's event times, not the clock."
+  },
+  {
+   "id": "k2",
+   "prompt": "You start a windowed `groupBy(...).count()` in append mode without `withWatermark`. What happens?",
+   "choices": [
+    "Each window is written when the stream stops",
+    "It runs, but writes nothing",
+    "Spark refuses to start the query with an AnalysisException",
+    "It runs in update mode instead"
+   ],
+   "answer": 2,
+   "why": "Append mode writes a window once it's final, and without a watermark Spark can never know that. So `start()` raises an AnalysisException."
+  },
+  {
+   "id": "k3",
+   "prompt": "Two copies of a reading have the same `reading_id` but different `arrival_time`. Which line removes the copy on a stream with a watermark?",
+   "choices": [
+    "`readings.dropDuplicates()`",
+    "`readings.dropDuplicatesWithinWatermark([\"reading_id\"])`",
+    "`readings.distinct()`",
+    "`readings.withWatermark(\"arrival_time\", \"10 minutes\")`"
+   ],
+   "answer": 1,
+   "why": "The copies differ in `arrival_time`, so whole-row duplicate checks keep both. Checking `reading_id` within the watermark removes the copy and lets Spark forget old ids."
+  }
+ ],
+ "review": [
+  "`withWatermark(\"event_time\", delay)` sets how far behind the newest event time a row may be. The watermark is the latest event time seen minus the delay.",
+  "Each micro-batch closes the windows that end at or before its watermark and forgets their state.",
+  "A row for a window that's already closed is dropped without an error. `numRowsDroppedByWatermark` in the progress report counts those rows.",
+  "Append mode writes each window once, with its final count, and needs a watermark. Update mode writes a window every time it changes.",
+  "`dropDuplicatesWithinWatermark([key])` removes repeated deliveries and remembers each key only for the watermark's delay.",
+  "Filter out glitch values before the stateful steps."
+ ],
+ "practice": [
+  "PS-Q0346",
+  "PS-Q0347",
+  "PS-Q0348",
+  "PS-Q0349",
+  "PS-Q0350"
+ ]
+}

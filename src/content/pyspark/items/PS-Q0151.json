@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0151",
+  "slug": "customers-by-city",
+  "lesson": "PS-L031",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Customers by city",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "The store team is planning pop-up events and wants to know where customers live. Write `solve(customers)` so it returns, for each `city`, how many customers live there and when the first and the latest of them signed up.",
+  "rules": [
+    "`customers` counts every row of the city.",
+    "`first_signup` is the earliest `signup_date` in the city and `last_signup` the latest. A missing date is skipped.",
+    "Customers with a missing `city` form their own row.",
+    "Return `city`, `customers`, `first_signup` and `last_signup`, one row per city."
+  ],
+  "hints": [
+    "Group by `city` and finish with `agg(...)`.",
+    "`F.count(\"*\")` counts rows; `F.min` and `F.max` work on dates too.",
+    "Name each aggregate with `.alias(...)` so the columns come out as `customers`, `first_signup` and `last_signup`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "customers"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(customers):\n    # Return one row per city with the number of customers and the first and latest signup.\n    return customers\n",
+  "output": {
+    "columns": [
+      "city",
+      "customers",
+      "first_signup",
+      "last_signup"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "One row per city is a `groupBy(\"city\")`, and the three numbers are aggregates: `customers.groupBy(\"city\").agg(F.count(\"*\").alias(\"customers\"), F.min(\"signup_date\").alias(\"first_signup\"), F.max(\"signup_date\").alias(\"last_signup\"))`. `F.count(\"*\")` counts every row, while `F.count(\"signup_date\")` would skip customers with no date. `min` and `max` skip missing dates, and customers with no city become their own group with a missing `city`."
+}

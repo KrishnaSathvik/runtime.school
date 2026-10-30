@@ -1,0 +1,57 @@
+{
+ "id": "PS-Q0434",
+ "slug": "fix-the-low-battery-episodes",
+ "lesson": "PS-L087",
+ "role": "debugging",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 10,
+ "title": "Fix the low-battery episodes",
+ "dataset": {
+  "id": "PS-D09",
+  "version": "1.0.0"
+ },
+ "prompt": "Maintenance wants every stretch a sensor ran on a low battery. A colleague's stream misses episodes that span more than one delivery, and some counts are too high. Fix `solve(sensor_readings)` so it returns `device_id`, `low_from`, `back_at` and `low_readings` for every finished episode.",
+ "rules": [
+  "A reading is low when `payload.battery_v` is below 3.4. An episode starts at a sensor's first low reading and ends at its next reading that isn't low. `low_from` and `back_at` are the event times of those two readings (timestamps), and `low_readings` (a long) counts the episode's low readings.",
+  "Readings with no battery value are skipped: they don't count and don't end an episode.",
+  "Take each sensor's new readings in `event_time` order and ignore a reading that isn't newer than the newest taken. Episodes still open when the stream stops are left out.",
+  "The rows must come from a streaming query over the delivery files: working on `sensor_readings` itself doesn't count."
+ ],
+ "hints": [
+  "Run it on the sample. Which episode is missing, and in how many micro-batches did its readings arrive?",
+  "Spark only keeps what the function saves. Look for where the state is written back.",
+  "After an episode is written, everything that described it has to start over for the next one."
+ ],
+ "explanation": "The function read its state but never saved it, so every micro-batch started from nothing: an episode whose low readings and recovery came in different deliveries was lost, and a sensor's newest time was forgotten. `state.update((low_from, low_readings, newest))` at the end of the function fixes that. The second bug shows when one sensor has two episodes: after writing the first, the count wasn't set back to 0, so the next episode counted the earlier low readings too.",
+ "entry": "solve",
+ "inputs": [
+  "sensor_readings"
+ ],
+ "output": {
+  "columns": [
+   "device_id",
+   "low_from",
+   "back_at",
+   "low_readings"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "starter": "import json, os, shutil\nimport pandas as pd\nfrom pyspark.sql import functions as F\nfrom pyspark.sql.streaming.state import GroupStateTimeout\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\ndef solve(sensor_readings):\n    spark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\n    make_batches(sensor_readings, \"/tmp/in\")         # one file per batch; clears the folder first\n    shutil.rmtree(\"/tmp/ck\", ignore_errors=True)     # a fresh checkpoint for every run\n    readings = spark.readStream.schema(sensor_readings.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\n    flat = readings.select(\"device_id\", \"event_time\", F.col(\"payload.battery_v\").alias(\"battery_v\"))\n\n    def episodes(key, batches, state):\n        low_from, low_readings, newest = state.get if state.exists else (None, 0, None)\n        out = []\n        for pdf in batches:\n            for r in pdf.sort_values(\"event_time\").itertuples():\n                if pd.isna(r.battery_v):\n                    continue\n                if newest is not None and r.event_time <= newest:\n                    continue\n                newest = r.event_time\n                if r.battery_v < 3.4:\n                    if low_from is None:\n                        low_from = r.event_time\n                    low_readings += 1\n                elif low_from is not None:\n                    out.append((key[0], low_from, r.event_time, low_readings))\n                    low_from = None\n        yield pd.DataFrame(out, columns=[\"device_id\", \"low_from\", \"back_at\", \"low_readings\"])\n\n    out = flat.groupBy(\"device_id\").applyInPandasWithState(\n        episodes, \"device_id STRING, low_from TIMESTAMP, back_at TIMESTAMP, low_readings LONG\",\n        \"low_from TIMESTAMP, low_readings LONG, newest TIMESTAMP\", \"append\", GroupStateTimeout.NoTimeout)\n    run_stream(out.writeStream.outputMode(\"append\").format(\"memory\").queryName(\"low_battery\")\n               .option(\"checkpointLocation\", \"/tmp/ck\"))\n    return spark.table(\"low_battery\")\n",
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

@@ -1,0 +1,27 @@
+{
+  "id": "PS-L023-C2",
+  "slug": "claims-quality-report",
+  "lesson": "PS-L023",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Claims quality report",
+  "dataset": { "id": "PS-D04", "version": "1.0.0" },
+  "prompt": "Every claims load ends with a quality report. Write `solve(claims)` so it returns one row per rule below, with the rule's name in `rule` and the number of claims that break it in `failed`.",
+  "rules": [
+    "`dates_in_order`: both dates are present and `service_date` is not after `submitted_date`.",
+    "`allowed_within_billed`: `allowed_amount` is missing, or `billed_amount` is present and at least as large.",
+    "`paid_amount_matches_status`: `paid` and `denied` claims have a `paid_amount`; claims with any other status don't.",
+    "Return all three rules, even when nothing fails. `failed` is a whole number of type bigint."
+  ],
+  "hints": [
+    "Keep the rules as a list of `(name, condition)` pairs, each true for a good claim, and loop over them.",
+    "Count failures with `claims.filter(~F.coalesce(passes, F.lit(False))).count()`, so a NULL rule counts as a failure.",
+    "Collect `(name, failed)` tuples in a list and build the result with `spark.createDataFrame(results, \"rule STRING, failed BIGINT\")`."
+  ],
+  "entry": "solve",
+  "inputs": ["claims"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(claims):\n    # Return one row per rule: its name and how many claims break it.\n    results = []\n    return spark.createDataFrame(results, \"rule STRING, failed BIGINT\")\n",
+  "output": { "columns": ["rule", "failed"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

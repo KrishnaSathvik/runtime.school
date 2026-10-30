@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0004",
+  "kind": "predict",
+  "slug": "label-the-course-count",
+  "lesson": "PS-L001",
+  "role": "debugging",
+  "format": "concept_or_trace",
+  "difficulty": "medium",
+  "minutes": 6,
+  "title": "Label the course count",
+  "prompt": "Someone wanted the line `courses: 4` and wrote the first attempt below, then a second one. What does the program print? Type each line on its own line.",
+  "program": "try:\n    print(\"courses: \" + courses.count())\nexcept Exception as e:\n    print(type(e).__name__)\nprint(\"courses:\", courses.count())\n",
+  "dataset": {
+    "id": "PS-D11",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "`count()` gives back a Python number, not text.",
+    "In Python, can you join text and a number with `+`? If not, which kind of error is it?",
+    "`print` with a comma puts a space between its values and turns each one into text for you."
+  ],
+  "explanation": "`courses.count()` is the Python number 4, and `\"courses: \" + 4` tries to add text to a number, which Python refuses with a `TypeError`. The second `print` gets two separate values and joins them with a space, so it prints `courses: 4`. To build one string, write `\"courses: \" + str(courses.count())`."
+}

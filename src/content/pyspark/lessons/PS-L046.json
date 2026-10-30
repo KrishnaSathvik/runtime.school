@@ -1,0 +1,136 @@
+{
+  "id": "PS-L046",
+  "minutes": 25,
+  "lede": "Enterprise systems still trade XML, and event platforms favour Avro. Both carry structure, and the real work is getting that structure into a schema you control.",
+  "objectives": [
+    "Read and write XML with the `rowTag` option, and see how attributes, nested and repeated elements map to columns",
+    "Write and read Avro, a row-based format that stores its schema with the data",
+    "Give a read an explicit schema instead of relying on inference",
+    "Combine files whose schemas differ with `mergeSchema`"
+  ],
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "suppliers",
+      "invoices"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`suppliers` lists the companies the business buys from, as two internal systems know them, and `invoices` has five customer invoices with exact amounts and dates.\n\nXML support is built into Spark 4. An XML file is one big document, so Spark needs to know which element is one row: that's the `rowTag` option, and it's required for both reading and writing. Writing also takes `rootTag`, the element that wraps them all."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Write XML, look at it, read it back",
+      "code": "suppliers.write.mode(\"overwrite\").option(\"rowTag\", \"supplier\").option(\"rootTag\", \"suppliers\").xml(\"/tmp/crm/suppliers_xml\")\nspark.read.text(\"/tmp/crm/suppliers_xml\").show(10, truncate=False)\n\nback = spark.read.option(\"rowTag\", \"supplier\").xml(\"/tmp/crm/suppliers_xml\")\nback.printSchema()\nback.select(\"supplier_id\", \"supplier_name\", \"payment_terms_days\").show(3)\n",
+      "note": "Read as plain text, the folder shows what was written: a `<suppliers>` root and one `<supplier>` element per row, one child element per column. Read with the same `rowTag`, it's a DataFrame again. Without a schema Spark infers types, and the columns come out in alphabetical order, not the file's order. `payment_terms_days` was an `int` and comes back as a `long`: XML is text, and inference picks the widest whole-number type."
+    },
+    {
+      "kind": "text",
+      "md": "XML from other systems is rarely that flat. Three things to know:\n\n- An **attribute** like `id=\"SUP-001\"` becomes a column named with a leading underscore: `_id`.\n- A **nested element** with children, like `<address>`, becomes a struct.\n- An element that **repeats** inside one row, like `<phone>`, becomes an array, for every row, even rows where it appears once.\n\nHere a small XML file is written with plain Python to show all three."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Attributes, nested and repeated elements",
+      "code": "xml = \"\"\"<suppliers>\n  <supplier id=\"SUP-001\" active=\"true\">\n    <name>Pellacott Fasteners</name>\n    <address><city>Leeds</city><country>GB</country></address>\n    <phone>555-0101</phone>\n    <phone>555-0102</phone>\n  </supplier>\n  <supplier id=\"SUP-002\">\n    <name>Rindell Tooling</name>\n    <address><city>Kassel</city><country>DE</country></address>\n    <phone>555-0110</phone>\n  </supplier>\n</suppliers>\n\"\"\"\nwith open(\"/tmp/crm_suppliers.xml\", \"w\") as f:\n    f.write(xml)\n\ns = spark.read.option(\"rowTag\", \"supplier\").xml(\"/tmp/crm_suppliers.xml\")\ns.printSchema()\ns.show(truncate=False)\n",
+      "note": "`_id` and `_active` come from attributes; SUP-002 has no `active` attribute, so it's NULL. `address` is a struct with `city` and `country`, and `phone` is an array because SUP-001 has two."
+    },
+    {
+      "kind": "text",
+      "md": "Inference reads the data an extra time and guesses. For a feed you depend on, pass a schema, as with CSV and JSON. With an explicit schema you can also take just the fields you need: elements and attributes not in it are skipped. Use the same names inference would: `_id` for the attribute."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "XML with a schema",
+      "code": "xml = \"\"\"<suppliers>\n  <supplier id=\"SUP-001\" active=\"true\">\n    <name>Pellacott Fasteners</name>\n    <address><city>Leeds</city><country>GB</country></address>\n    <phone>555-0101</phone>\n    <phone>555-0102</phone>\n  </supplier>\n  <supplier id=\"SUP-002\">\n    <name>Rindell Tooling</name>\n    <address><city>Kassel</city><country>DE</country></address>\n    <phone>555-0110</phone>\n  </supplier>\n</suppliers>\n\"\"\"\nwith open(\"/tmp/crm_suppliers.xml\", \"w\") as f:\n    f.write(xml)\n\npicked = spark.read.option(\"rowTag\", \"supplier\").schema(\"_id STRING, name STRING, address STRUCT<country: STRING>\").xml(\"/tmp/crm_suppliers.xml\")\npicked.printSchema()\npicked.show()\n",
+      "note": "Only three columns, in the schema's order, and `address` keeps only `country`."
+    },
+    {
+      "kind": "text",
+      "md": "**Avro** is a row-based binary format, common for messages and event streams. Like Parquet, it stores its schema inside the file, so types survive a round trip; unlike Parquet, it stores whole rows together, which suits writing one record at a time. In Spark it's an add-on module (`spark-avro`), installed here, used through `format(\"avro\")`."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "An Avro round trip",
+      "code": "import os\n\ninvoices.write.mode(\"overwrite\").format(\"avro\").save(\"/tmp/crm/invoices_avro\")\navro = spark.read.format(\"avro\").load(\"/tmp/crm/invoices_avro\")\nprint(avro.dtypes)\nprint(sorted({f.split(\"c000\")[-1] for f in os.listdir(\"/tmp/crm/invoices_avro\") if f.startswith(\"part-\")}))\navro.show()\n",
+      "note": "Dates stay dates and `total_amount` stays `decimal(12,2)`. The part file ends in `.snappy.avro`: Avro is compressed with snappy here too."
+    },
+    {
+      "kind": "text",
+      "md": "Files written at different times often have different columns: a field gets added, and new files carry it while old ones don't. Reading several Parquet folders together normally takes the schema from just one of them. `mergeSchema` tells Spark to read every file's schema and combine them; rows from files without a column get NULL in it."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Merge schemas that differ",
+      "code": "invoices.select(\"invoice_id\", \"status\").write.mode(\"overwrite\").parquet(\"/tmp/crm/inv_old\")\ninvoices.select(\"invoice_id\", \"status\", \"total_amount\").write.mode(\"overwrite\").parquet(\"/tmp/crm/inv_new\")\n\nmerged = spark.read.option(\"mergeSchema\", \"true\").parquet(\"/tmp/crm/inv_old\", \"/tmp/crm/inv_new\")\nprint(merged.columns, merged.count())\nmerged.select(\"invoice_id\", \"total_amount\").show()\n",
+      "note": "Ten rows: five from each folder. The old files have no `total_amount`, so their rows show NULL; the new ones keep their amounts."
+    },
+    {
+      "kind": "error-example",
+      "id": "e6",
+      "title": "Reading XML without a row tag",
+      "code": "xml = \"\"\"<suppliers>\n  <supplier id=\"SUP-001\" active=\"true\">\n    <name>Pellacott Fasteners</name>\n    <address><city>Leeds</city><country>GB</country></address>\n    <phone>555-0101</phone>\n    <phone>555-0102</phone>\n  </supplier>\n  <supplier id=\"SUP-002\">\n    <name>Rindell Tooling</name>\n    <address><city>Kassel</city><country>DE</country></address>\n    <phone>555-0110</phone>\n  </supplier>\n</suppliers>\n\"\"\"\nwith open(\"/tmp/crm_suppliers.xml\", \"w\") as f:\n    f.write(xml)\n\nspark.read.xml(\"/tmp/crm_suppliers.xml\").show()\n",
+      "error": "AnalysisException",
+      "note": "Spark can't guess which element is a row, so `rowTag` is required. Pass `.option(\"rowTag\", \"supplier\")`."
+    }
+  ],
+  "challenges": [
+    "PS-L046-C1",
+    "PS-L046-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "An XML row element is `<supplier id=\"SUP-001\">`. Which column holds the id after reading with `rowTag` set to `supplier`?",
+      "choices": [
+        "`id`",
+        "`_id`",
+        "`supplier.id`",
+        "`@id`"
+      ],
+      "answer": 1,
+      "why": "Attributes become columns with a leading underscore, so `id` is read as `_id`."
+    },
+    {
+      "id": "k2",
+      "prompt": "One supplier has two `<phone>` elements and the others have one. What is the type of `phone`?",
+      "choices": [
+        "string for everyone, with the second phone dropped",
+        "array<string> for every row",
+        "array<string> for that supplier only",
+        "struct<phone: string>"
+      ],
+      "answer": 1,
+      "why": "A column has one type for every row. Because one row repeats the element, `phone` is an array, and rows with one phone get a one-item array."
+    },
+    {
+      "id": "k3",
+      "prompt": "What does `mergeSchema` do when reading several Parquet folders?",
+      "choices": [
+        "Removes rows that differ between folders",
+        "Combines every file's columns, with NULL where a file lacks a column",
+        "Converts the files to one format",
+        "Keeps only the columns every file has"
+      ],
+      "answer": 1,
+      "why": "It reads the schema of every file and takes the union of their columns; rows from files without a column get NULL in it."
+    }
+  ],
+  "review": [
+    "XML needs `rowTag`, the element that is one row; writing also takes `rootTag`.",
+    "Attributes become `_name` columns, nested elements become structs, and repeated elements become arrays.",
+    "Inferred XML columns come out in alphabetical order with wide types; an explicit `schema(...)` fixes names, types and order.",
+    "Avro is a row-based format with its schema in the file: `format(\"avro\")` to write and read.",
+    "Parquet, ORC and Avro keep types; CSV, JSON and XML are text and need a schema or inference.",
+    "`option(\"mergeSchema\", \"true\")` combines files whose columns differ, with NULL where a file lacks a column."
+  ],
+  "practice": ["PS-Q0226", "PS-Q0227", "PS-Q0228", "PS-Q0229", "PS-Q0230"]
+}

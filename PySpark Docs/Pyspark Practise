@@ -1,0 +1,312 @@
+# runtime.school — How We'll Create All 450 PySpark Practice Questions
+
+We already have the curriculum structure: 90 lessons, 450 planned questions, and 15 datasets. Now we need a repeatable process for turning those question ideas into real, executable, automatically graded PySpark challenges.
+
+My recommendation is to build a question-authoring system, not manually write 450 disconnected exercises or ask AI to generate all of them at once.
+
+## 1. The complete question creation pipeline
+
+1
+
+Select lesson and concept
+
+Example: L026 — Left Semi and Left Anti Joins
+
+2
+
+Load assigned dataset
+
+D02 — Banking, with accounts and transactions
+
+3
+
+Define a unique problem
+
+Find accounts with no posted transactions
+
+4
+
+Write the question specification
+
+Business rules, input schema, output schema, edge cases
+
+5
+
+Create test fixtures
+
+Visible sample plus several hidden datasets
+
+6
+
+Implement reference solution
+
+Working PySpark code with verified expected results
+
+7
+
+Run automated validation
+
+Test the solution, schema, nulls, duplicates, determinism
+
+8
+
+Publish the challenge
+
+Editor, Run, Submit, hints, feedback, explanation
+
+## 2. Every lesson produces five different question types
+
+Our five-question-per-lesson rule is a useful starting allocation, but we shouldn't force every concept into the same kind of exercise.
+
+Here is how L026 would work.
+
+L026 — Left Semi & Left Anti Joins
+
+Dataset D02 · Banking & Payments
+
+5 questions
+
+Q0126 — Find accounts with at least one posted transaction
+
+Foundation
+
+Easy
+
+Q0127 — Find accounts without transaction activity
+
+Business task
+
+Easy
+
+Q0128 — Identify transactions with missing account references
+
+Edge cases
+
+Medium
+
+Q0129 — Repair a broken anti-join that removes valid rows
+
+Debugging
+
+Medium
+
+Q0130 — Reconcile unmatched transfer records across systems
+
+Integration
+
+Hard
+
+This makes the five questions progressively harder while still testing one central lesson.
+
+For performance lessons, the five slots might instead be execution-plan reading, diagnosing skew, correcting a configuration, comparing two strategies, and optimizing a reproducible benchmark.
+
+## 3. What a finished question should look like
+
+Here's an example of the actual experience we'd publish.
+
+## Q0127 — Accounts Without Transactions
+
+D02 Banking & Payments · L026 Semi & Anti Joins
+
+Easy
+
+A bank wants to identify accounts that have never recorded a transaction. Write a PySpark transformation that returns those accounts.
+
+Input: accounts
+
+| account_id | customer_id | status |
+| ---------- | ----------- | ------ |
+| A101       | C01         | active |
+| A102       | C02         | active |
+| A103       | C03         | closed |
+| A104       | C04         | active |
+
+Input: transactions
+
+| transaction_id | account_id | amount |
+| -------------- | ---------- | ------ |
+| T01            | A101       | 100.00 |
+| T02            | A101       | 50.00  |
+| T03            | A103       | 75.00  |
+
+Expected output
+
+| account_id | customer_id | status |
+| ---------- | ----------- | ------ |
+| A102       | C02         | active |
+| A104       | C04         | active |
+
+Business rule: Include accounts of every status. An account counts as having activity if its ID appears in transactions, regardless of transaction amount.
+
+Starter code
+
+```
+from pyspark.sql import functions as Fdef solve(accounts, transactions):    # Return a PySpark DataFrame    # containing accounts with no transactions.    pass  
+```
+
+The learner writes the transformation, clicks Run to test the visible sample, and clicks Submit for hidden tests.
+
+The reference solution is kept out of the initial question interface:
+
+```
+def solve(accounts, transactions):    return accounts.join(        transactions.select("account_id"),        on="account_id",        how="left_anti"    )
+```
+
+The grader should compare rows as a multiset, not assume Spark produces a stable row order unless ordering is explicitly required.
+
+## 4. How we'll create hidden tests
+
+This is the most important part of making our questions reliable.
+
+For Q0127, I would create the following test scenarios:
+
+| Test | What it checks                                              |
+| ---- | ----------------------------------------------------------- |
+| T01  | Normal matching and unmatched accounts                      |
+| T02  | Empty transactions DataFrame                                |
+| T03  | Multiple transactions for one account                       |
+| T04  | All accounts have transactions                              |
+| T05  | No accounts have transactions                               |
+| T06  | Null transaction account IDs                                |
+| T07  | Duplicate account rows, preserving defined row multiplicity |
+| T08  | Large fixture with many accounts and transactions           |
+
+We shouldn't generate random hidden tests without knowing the expected answer. Each fixture needs a deterministic reference result.
+
+The grading engine must validate output columns, data types, values, duplicate counts, and applicable ordering rules. It should also distinguish incorrect output from runtime errors and timeouts.
+
+## 5. How we'll create the 450 questions efficiently
+
+I'd build them in batches of 25–30 rather than generating everything together.
+
+Proposed production batches
+
+Batch 1
+
+## 25
+
+Foundations
+
+Batch 2–4
+
+## 75
+
+Core DataFrames
+
+Batch 5–8
+
+## 100
+
+Joins & analytics
+
+Batch 9–12
+
+## 100
+
+ETL & advanced APIs
+
+Batch 13–16
+
+## 100
+
+Delta & streaming
+
+Batch 17–18
+
+## 50
+
+Production & optimization
+
+18 batches × 25 questions = 450 total. Batch allocations are proposed; we can keep the permanent question IDs from v3.
+
+For every batch, the process would be:
+
+1. Select the lesson IDs and assigned datasets from our mapping.
+2. Write distinct problem specifications and expected outputs.
+3. Generate fixtures and independent reference solutions.
+4. Execute tests against a pinned PySpark version.
+5. Review ambiguous wording, difficulty, duplication, and hints.
+6. Publish only questions that pass validation.
+
+AI can help draft business scenarios, generate candidate edge cases, and explain failed solutions. But the answer key must come from executed, verified reference code, not from trusting AI-generated expected rows.
+
+## 6. Question storage format
+
+I would store each challenge as structured content, with its data and test fixtures referenced separately.
+
+```
+pyspark/
+  datasets/
+    D02-banking/
+      manifest.yaml
+      schemas/
+      fixtures/
+        lesson/
+        practice/
+        hidden/
+  questions/
+    Q0127/
+      question.yaml
+      starter.py
+      reference.py
+      tests/
+        test_01.py
+        test_02.py
+        ...
+      hints.yaml
+      explanation.md
+```
+
+The question specification would include:
+
+```
+id: Q0127
+title: Accounts Without Transactions
+lesson_id: L026
+dataset_id: D02
+dataset_version: "1.0.0"
+difficulty: easy
+type: dataframe_coding
+
+inputs:
+  - accounts
+  - transactions
+
+entrypoint: solve
+
+output:
+  columns:
+    - account_id
+    - customer_id
+    - status
+  order_sensitive: false
+
+grading:
+  mode: dataframe_multiset
+  require_schema: true
+  hidden_tests: 8
+```
+
+The runtime loads the referenced dataset fixtures, executes the submitted function inside an isolated Spark environment, and evaluates the returned DataFrame.
+
+For security and reliability, submitted code should run in sandboxed containers with CPU, memory, time, and filesystem limits. We should never execute arbitrary learner code directly in the main web application process.
+
+## 7. Three grading systems, not one
+
+| Mode               | Used for                              | What gets checked                               |
+| ------------------ | ------------------------------------- | ----------------------------------------------- |
+| DataFrame grader   | Filters, joins, windows, cleaning     | Schema, rows, duplicates, nulls                 |
+| Pipeline grader    | Delta, CDC, batch ETL, streaming      | Output tables, state, reruns, recovery          |
+| Engineering grader | Optimization, partitioning, debugging | Execution plans, correctness, resource behavior |
+
+A particularly important design rule: do not require one specific PySpark implementation when multiple correct approaches exist. For example, an anti join and a carefully constructed alternative may both be valid. Unless the lesson explicitly assesses a particular API, grade the result and relevant constraints rather than matching source code.
+
+## 8. What we should build first
+
+I would start with a 25-question pilot covering five lessons from different modules: basic filtering, null handling, joins, window functions, and nested JSON.
+
+That pilot should use D01 Retail, D02 Banking, D03 HR, and D06 Clickstream. It will test whether our dataset loader, editor, reference solutions, hidden fixtures, and grader work across genuinely different question types.
+
+Once the pilot is reliable, we can expand to the full 450-question inventory without repeatedly redesigning the platform.
+
+The next implementation milestone is not writing 450 questions. It's proving that one complete question can be authored, tested, graded, explained, versioned, and published correctly—then automating that process for the remaining 449.

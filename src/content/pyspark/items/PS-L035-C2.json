@@ -1,0 +1,26 @@
+{
+  "id": "PS-L035-C2",
+  "slug": "busy-streaks-in-the-ledger",
+  "lesson": "PS-L035",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Busy streaks in the ledger",
+  "dataset": { "id": "PS-D02", "version": "1.0.0" },
+  "prompt": "Risk reviews accounts where a short run of ledger entries moves a lot of money. Write `solve(ledger_entries)` so it returns every entry where that entry and the account's two entries before it add up to 1,000.00 or more.",
+  "rules": [
+    "Work per `account_id`, in `booked_at` order, then `entry_id` order for entries booked at the same moment.",
+    "`last3_total` is the sum of `amount` over the entry and up to two entries before it on the same account, whatever their `entry_type`. An account's first entries have fewer before them.",
+    "Keep the entries whose `last3_total` is 1,000.00 or more. Return `account_id`, `entry_id`, `booked_at`, `amount` and `last3_total`."
+  ],
+  "hints": [
+    "A moving frame of three rows is `rowsBetween(-2, Window.currentRow)`.",
+    "Add `last3_total` to every row first, then filter on it.",
+    "Partition by `account_id` and order by `booked_at`, `entry_id`. A frame of `-3` would take four rows."
+  ],
+  "entry": "solve",
+  "inputs": ["ledger_entries"],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(ledger_entries):\n    # Entries where the last three on the account total 1,000.00 or more.\n    return ledger_entries\n",
+  "output": { "columns": ["account_id", "entry_id", "booked_at", "amount", "last3_total"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

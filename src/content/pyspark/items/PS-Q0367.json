@@ -1,0 +1,52 @@
+{
+ "id": "PS-Q0367",
+ "slug": "the-run-log",
+ "lesson": "PS-L074",
+ "role": "business",
+ "format": "dataframe_coding",
+ "difficulty": "hard",
+ "minutes": 14,
+ "title": "The run log",
+ "dataset": {
+  "id": "PS-D08",
+  "version": "1.0.0"
+ },
+ "prompt": "Operations wants a log line from every run of the job that copies tracking events into a Delta table. Write `process()` so it copies only the loads the table doesn't have yet and returns the run's mark, the rows it added and the table's version after it.",
+ "rules": [
+  "Each run copies the landed rows with a `load_date` after the newest load day in the table, or every landed row when there's no table yet. Repeated rows are separate rows.",
+  "Return `(mark, new_rows, version)`: the mark before the run (`None` on the first run), the number of rows the run added, and the table's newest version after the run.",
+  "Don't change `deliver` or `solve`."
+ ],
+ "hints": [
+  "Read the mark with `select(F.max(\"load_date\")).first()[0]`, and check `DeltaTable.isDeltaTable(spark, TARGET)` first.",
+  "Count the new rows before you append them.",
+  "Does an append with no rows make a new version? Read the version from the table's history: `history().select(F.max(\"version\")).first()[0]`."
+ ],
+ "entry": "solve",
+ "inputs": [
+  "shipment_events"
+ ],
+ "starter": "import shutil\n\nfrom pyspark.sql import functions as F\nfrom delta.tables import DeltaTable\n\nLANDING = \"/tmp/landing/shipment_events\"\nTARGET = \"/tmp/silver/shipment_events\"\n\n\ndef deliver(shipment_events, days):\n    # These load days land in the landing folder, one folder per day. Don't change this.\n    (shipment_events.filter(F.col(\"load_date\").isin(days))\n        .write.mode(\"append\").partitionBy(\"load_date\").parquet(LANDING))\n\n\ndef process():\n    # Copy the loads after the mark to TARGET, and return this run's log line:\n    # (the mark before the run, the rows it added, the table's newest version after it).\n    return None, 0, 0\n\ndef solve(shipment_events):\n    shutil.rmtree(\"/tmp/landing\", ignore_errors=True)  # start from empty folders on every run\n    shutil.rmtree(\"/tmp/silver\", ignore_errors=True)\n    days = sorted(r.load_date for r in shipment_events.select(\"load_date\").distinct().collect())\n    log = []\n    deliver(shipment_events, days[:1])\n    log.append(process())\n    deliver(shipment_events, days[1:])\n    log.append(process())\n    log.append(process())  # a rerun: nothing new has landed\n    rows = [(run, *line) for run, line in enumerate(log, start=1)]\n    return spark.createDataFrame(rows, \"run INT, mark DATE, new_rows BIGINT, version BIGINT\")\n",
+ "output": {
+  "columns": [
+   "run",
+   "mark",
+   "new_rows",
+   "version"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 180,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "explanation": "Take the mark from the table before writing (`None` when `DeltaTable.isDeltaTable` is false), keep the landed rows after it, count them, append them, and read the newest version from `DeltaTable.forPath(spark, TARGET).history()`. The rerun finds nothing after the mark, so it adds 0 rows, and because an append with no rows commits nothing on Delta, the version stays at 1: a log that counts runs instead of reading the history would say 2. `history().count()` is one more than the newest version, since versions start at 0. Reading the mark after the append, or counting the whole landing folder, gives a log that doesn't describe what the run did."
+}

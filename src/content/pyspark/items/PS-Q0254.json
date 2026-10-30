@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0254",
+  "slug": "fix-prices-in-cents",
+  "lesson": "PS-L051",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Fix the prices in cents",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "The payments service wants prices as whole cents. This UDF gives NULL for every product, and it stops the job on products with no price yet. Fix `solve(products)` so `price_cents` is the price in cents.",
+  "rules": [
+    "`price_cents` is `unit_price` × 100 as a whole number: 19.99 gives 1999, 0.00 gives 0. Prices are below 100,000.00.",
+    "A product with a missing `unit_price` has a missing `price_cents`.",
+    "Return `product_id`, `name` and `price_cents` (`int`), in that order. Keep every product."
+  ],
+  "hints": [
+    "What type does `unit_price` have in Python inside the UDF, and what type does `price * 100` give?",
+    "A value that doesn't match the declared return type becomes NULL. `int(...)` turns a `Decimal` into a Python `int`.",
+    "Don't go through `float`: `float(19.99) * 100` is 1998.9999999999998. And return `None` for a missing price."
+  ],
+  "explanation": "`unit_price` reaches the UDF as a `Decimal`, so `price * 100` is a `Decimal` too, and Spark turns a value that isn't an `int` into NULL for an `\"int\"` UDF. A missing price arrives as `None`, and `None * 100` raises. The fix: return `None` for a missing price and `int(price * 100)` otherwise; the `Decimal` product is exact, so nothing is lost. Converting to `float` first truncates 19.99 to 1998. The built-in `(F.col(\"unit_price\") * 100).cast(\"int\")` gives the same result without Python.",
+  "entry": "solve",
+  "inputs": [
+    "products"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\nprice_cents = F.udf(lambda price: price * 100, \"int\")\n\n\ndef solve(products):\n    return products.select(\"product_id\", \"name\", price_cents(\"unit_price\").alias(\"price_cents\"))\n",
+  "output": {
+    "columns": [
+      "product_id",
+      "name",
+      "price_cents"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

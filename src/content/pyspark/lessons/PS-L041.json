@@ -1,0 +1,141 @@
+{
+  "id": "PS-L041",
+  "minutes": 25,
+  "lede": "Exploding an array to work on each item gives you more rows than you started with. Higher-order functions work on every item of an array in place, so each row stays one row.",
+  "objectives": [
+    "Change every item of an array with `F.transform`",
+    "Keep only some items of an array with `F.filter`",
+    "Ask whether any or every item passes a test with `F.exists` and `F.forall`",
+    "Fold an array into one value with `F.aggregate`, starting from the right type"
+  ],
+  "dataset": {
+    "id": "PS-D06",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "cart_events",
+      "checkout_events",
+      "searches"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "The shop's event tables keep lists inside a row. In `cart_events` and `checkout_events`, `items` is an array of structs, one per product, each with a `sku`, a `qty` and a `price`. In `searches`, `filters` is an array of text.\n\nA **higher-order function** takes an array column and a Python function, written as a `lambda`, and applies the function to the items for you. Inside the lambda, `x` stands for one item, so `x[\"sku\"]` is that item's `sku` field. The lambda doesn't run in Python: Spark turns it into a column expression and runs it on every row.\n\n`F.transform(array, lambda x: ...)` gives a new array with one result per item, in the same order."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "One value from each item",
+      "code": "from pyspark.sql import functions as F\n\nskus = cart_events.select(\"event_id\", \"action\", F.transform(\"items\", lambda x: x[\"sku\"]).alias(\"skus\"))\nskus.show(truncate=False)\n",
+      "note": "Each row still has one array; it just holds the `sku` of each item instead of the whole struct. CA-0003 had two items, so it has two skus."
+    },
+    {
+      "kind": "text",
+      "md": "The lambda can work out anything a column can: arithmetic, other functions, struct fields. Multiplying an item's `qty` by its `price` gives the value of that line of the basket."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Arithmetic on every item",
+      "code": "from pyspark.sql import functions as F\n\nlines = cart_events.select(\n    \"event_id\",\n    F.transform(\"items\", lambda x: x[\"qty\"] * x[\"price\"]).alias(\"line_values\"),\n)\nlines.show(truncate=False)\n",
+      "note": "CA-0002 added two items at 11.99, so its line is worth 23.98. `qty` is a whole number and `price` a `double`, so the result is a `double`."
+    },
+    {
+      "kind": "text",
+      "md": "`F.filter(array, lambda x: condition)` keeps the items where the condition is true, in their order. It's the array version of filtering rows: the row stays, only its array gets shorter. A condition is a comparison such as `x[\"qty\"] > 1` or `f != \"in_stock\"`.\n\nFunctions chain: filter first, then transform what's left."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Keep some items",
+      "code": "from pyspark.sql import functions as F\n\nsearches.select(\"event_id\", \"filters\", F.filter(\"filters\", lambda f: f != \"in_stock\").alias(\"other_filters\")).show(truncate=False)\n\nmulti = F.filter(\"items\", lambda x: x[\"qty\"] > 1)\ncheckout_events.select(\"event_id\", F.transform(multi, lambda x: x[\"sku\"]).alias(\"multi_skus\")).show()\n",
+      "note": "SR-0002's only filter was `in_stock`, so nothing is left: an empty array, not a missing one. In each checkout of CO-0001 to CO-0003, only SKU-1013 was bought more than once."
+    },
+    {
+      "kind": "text",
+      "md": "Sometimes you want one yes-or-no answer per row:\n\n- `F.exists(array, lambda x: condition)` is true when **at least one** item passes.\n- `F.forall(array, lambda x: condition)` is true when **every** item passes.\n\nAn empty array has no item that fails, so `forall` is true for it, and no item that passes, so `exists` is false."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Any item, every item",
+      "code": "from pyspark.sql import functions as F\n\ncheckout_events.select(\n    \"event_id\",\n    F.exists(\"items\", lambda x: x[\"qty\"] > 1).alias(\"any_multiple\"),\n    F.forall(\"items\", lambda x: x[\"price\"] < 100).alias(\"all_under_100\"),\n).show()\n\nsearches.select(\n    \"event_id\",\n    \"filters\",\n    F.exists(\"filters\", lambda f: f == \"in_stock\").alias(\"has_in_stock\"),\n    F.forall(\"filters\", lambda f: f != \"in_stock\").alias(\"no_in_stock\"),\n).show(truncate=False)\n",
+      "note": "CO-0004's single item costs 119.95, so not every price is under 100. SR-0003 and SR-0005 have no filters: `exists` is false and `forall` is true."
+    },
+    {
+      "kind": "text",
+      "md": "`F.aggregate(array, start, lambda acc, x: ...)` folds an array into one value. It starts with `start`, then for each item works out a new `acc` (short for accumulator) from the old one and the item. Adding up a field is the most common use.\n\nThe start value sets the type of the answer. `F.lit(0)` is a whole number, which is right for adding `qty`; to add `double` prices, start from `F.lit(0.0)`. The same functions exist in SQL text, with `x -> ...` for the lambda."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Fold the basket into totals",
+      "code": "from pyspark.sql import functions as F\n\ncheckout_events.select(\n    \"event_id\",\n    F.aggregate(\"items\", F.lit(0), lambda acc, x: acc + x[\"qty\"]).alias(\"units\"),\n    F.aggregate(\"items\", F.lit(0.0), lambda acc, x: acc + x[\"qty\"] * x[\"price\"]).alias(\"basket_value\"),\n).show()\n\ncheckout_events.selectExpr(\"event_id\", \"aggregate(items, 0, (acc, x) -> acc + x.qty) AS units\").show()\n",
+      "note": "CO-0001 has one item at 89.00 and two at 11.99: 3 units worth 112.98, the same as its `order_total`. The SQL line gives the same `units`."
+    },
+    {
+      "kind": "error-example",
+      "id": "e6",
+      "title": "A whole-number start for a double sum",
+      "code": "from pyspark.sql import functions as F\n\ncheckout_events.select(F.aggregate(\"items\", F.lit(0), lambda acc, x: acc + x[\"price\"]).alias(\"total\")).show()\n",
+      "error": "AnalysisException",
+      "note": "`F.lit(0)` makes the accumulator a whole number, but adding a `double` price gives a `double`, and the accumulator can't change type halfway. Start from `F.lit(0.0)` instead."
+    },
+    {
+      "kind": "text",
+      "md": "One more thing to know with real data: a missing value inside the lambda behaves as it does anywhere else. If an item's `qty` is missing, `acc + x[\"qty\"]` is missing, and so is the final total. If the whole array is missing, every one of these functions returns a missing value too."
+    }
+  ],
+  "challenges": [
+    "PS-L041-C1",
+    "PS-L041-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "What does `F.transform(\"items\", lambda x: x[\"sku\"])` give for a row whose `items` holds three structs?",
+      "choices": [
+        "Three rows, one per sku",
+        "One array of three skus, in the items' order",
+        "The first item's sku",
+        "A struct with a `sku` field"
+      ],
+      "answer": 1,
+      "why": "`transform` keeps one row and returns an array with one result per item, in order. Exploding is what turns items into rows."
+    },
+    {
+      "id": "k2",
+      "prompt": "A search has an empty `filters` array. What do `F.exists(\"filters\", lambda f: f == \"in_stock\")` and `F.forall(\"filters\", lambda f: f == \"in_stock\")` give?",
+      "choices": [
+        "false and true",
+        "true and false",
+        "both false",
+        "both missing"
+      ],
+      "answer": 0,
+      "why": "An empty array has no item that passes, so `exists` is false, and no item that fails, so `forall` is true."
+    },
+    {
+      "id": "k3",
+      "prompt": "Why does `F.aggregate(\"items\", F.lit(0), lambda acc, x: acc + x[\"price\"])` fail when `price` is a `double`?",
+      "choices": [
+        "`aggregate` only works on whole numbers",
+        "The start value makes the accumulator a whole number, and adding a double changes its type",
+        "`price` can't be read inside a lambda",
+        "The lambda needs three arguments"
+      ],
+      "answer": 1,
+      "why": "The start value fixes the accumulator's type. `F.lit(0)` is a whole number; adding a `double` gives a `double`, so Spark refuses. Start from `F.lit(0.0)`."
+    }
+  ],
+  "review": [
+    "Higher-order functions take an array column and a `lambda`, and work on each item without adding rows.",
+    "`F.transform(arr, lambda x: ...)` returns one result per item, in order. `x[\"field\"]` reads a field of a struct item.",
+    "`F.filter(arr, lambda x: cond)` keeps the items where the condition is true. An array with nothing left is empty, not missing.",
+    "`F.exists` is true when at least one item passes; `F.forall` when every item does. On an empty array they give false and true.",
+    "`F.aggregate(arr, start, lambda acc, x: ...)` folds an array into one value. The start value sets the type: `F.lit(0)` for whole numbers, `F.lit(0.0)` for doubles.",
+    "A missing value inside the lambda makes the result missing, and a missing array gives a missing answer."
+  ],
+  "practice": ["PS-Q0201", "PS-Q0202", "PS-Q0203", "PS-Q0204", "PS-Q0205"]
+}

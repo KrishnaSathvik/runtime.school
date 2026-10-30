@@ -1,0 +1,26 @@
+{
+  "id": "PS-L038-C2",
+  "slug": "group-the-blood-pressure",
+  "lesson": "PS-L038",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Group the blood pressure",
+  "dataset": { "id": "PS-D04", "version": "1.0.0" },
+  "prompt": "The new vitals format keeps the two blood pressure readings together in a struct of their own. Write `solve(encounters)` so it returns each visit's `vitals` in that shape.",
+  "rules": [
+    "Return `encounter_id` and `vitals`.",
+    "`vitals` keeps `heart_rate` and `temperature_c` as they are, then has `blood_pressure`: a struct of `systolic` and `diastolic`, in that order. The old top-level `systolic` and `diastolic` fields are gone.",
+    "A visit with no vitals keeps a missing `vitals`, not a struct of missing values. A single missing reading inside stays missing."
+  ],
+  "hints": [
+    "Change the existing struct instead of building a new one, so a missing `vitals` stays missing.",
+    "`withField` adds a field at the end, and its value can itself be an `F.struct(...)` built from `vitals.systolic` and `vitals.diastolic`.",
+    "Chain `.dropFields(\"systolic\", \"diastolic\")` after the `withField`, then `.alias(\"vitals\")`."
+  ],
+  "entry": "solve",
+  "inputs": ["encounters"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(encounters):\n    # Each visit's vitals with a nested blood_pressure struct.\n    return encounters\n",
+  "output": { "columns": ["encounter_id", "vitals"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

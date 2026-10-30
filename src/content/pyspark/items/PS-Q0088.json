@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0088",
+  "slug": "chicago-clock-and-offset",
+  "lesson": "PS-L018",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Chicago clock and offset",
+  "dataset": {
+    "id": "PS-D13",
+    "version": "1.0.0"
+  },
+  "prompt": "The Chicago operations centre files every station's readings by its own local day and hour, and wants to see how far its clock is from UTC. Write `solve(observations)` so it returns `observation_id`, `observed_at`, `chicago_date`, `chicago_hour` and `utc_offset_hours`.",
+  "rules": [
+    "`observed_at` is UTC. Chicago's clock is the `America/Chicago` zone, daylight saving included.",
+    "`chicago_date` is the local date, as a date, and `chicago_hour` the local hour, 0 to 23.",
+    "`utc_offset_hours` is the local clock time minus the UTC time, in hours, as a double: -6.0 in winter and -5.0 in summer.",
+    "A missing `observed_at` gives missing results. Return the five columns, in that order, for every reading."
+  ],
+  "hints": [
+    "`F.from_utc_timestamp(\"observed_at\", \"America/Chicago\")` gives the local clock time. Take the date and hour from that, not from `observed_at`.",
+    "A zone name follows the clock changes; a fixed offset such as `-06:00` never does.",
+    "For the offset, cast the local time and `observed_at` to `long` and divide the difference by 3600. Subtracting the two hours of the day goes wrong when the dates differ."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "observations"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(observations):\n    # Return observation_id, observed_at, chicago_date, chicago_hour and utc_offset_hours.\n    return observations\n",
+  "output": {
+    "columns": [
+      "observation_id",
+      "observed_at",
+      "chicago_date",
+      "chicago_hour",
+      "utc_offset_hours"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Convert once and take everything from the local time: `local = F.from_utc_timestamp(\"observed_at\", \"America/Chicago\")`, then `F.to_date(local)`, `F.hour(local)` and `((local.cast(\"long\") - F.col(\"observed_at\").cast(\"long\")) / 3600)` for the offset, a `double` because `/` always gives one. The zone name matters: on 8 March 2026 at 08:00 UTC Chicago jumped from 01:59 to 03:00, so the offset changes from -6.0 to -5.0, and on 1 November it changes back. A fixed `-06:00` never moves. Near midnight the local date is the day before the UTC date: 03:00 UTC on 1 January 2027 is 21:00 on 31 December 2026 in Chicago. That's also why `hour(local) - hour(observed_at)` fails as an offset: 21 - 3 is 18, not -6."
+}

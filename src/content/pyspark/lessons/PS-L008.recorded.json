@@ -1,0 +1,47 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D01",
+  "version": "1.1.0",
+  "edition": "lesson",
+  "tables": [
+   "orders"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "root\n |-- order_id: string (nullable = true)\n |-- customer_id: string (nullable = true)\n |-- order_date: date (nullable = true)\n |-- status: string (nullable = true)\n |-- channel: string (nullable = true)\n |-- total: decimal(10,2) (nullable = true)\n\n['order_id', 'customer_id', 'order_date', 'status', 'channel', 'total']\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "[('order_id', 'string'), ('customer_id', 'string'), ('order_date', 'date'), ('status', 'string'), ('channel', 'string'), ('total', 'decimal(10,2)')]\ndecimal(10,2)\nStructField('order_date', DateType(), True)\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "",
+   "error": {
+    "type": "TypeError",
+    "message": "'list' object is not callable",
+    "line": 1,
+    "condition": null
+   }
+  },
+  "e4": {
+   "stdout": "+--------+-----------+----------+---------+-------+------+\n|order_id|customer_id|order_date|   status|channel| total|\n+--------+-----------+----------+---------+-------+------+\n|  O00001|      C0001|2026-06-11|     paid|  store|117.99|\n|  O00002|      C0001|2026-03-11|delivered|    app| 79.96|\n|  O00003|      C0002|2026-08-28|     paid|    app|291.95|\n+--------+-----------+----------+---------+-------+------+\nonly showing top 3 rows\n+--------+--------------------+\n|order_id|                note|\n+--------+--------------------+\n|  O00001|Leave the parcel ...|\n+--------+--------------------+\n\n+--------+------------------------------------------------+\n|order_id|note                                            |\n+--------+------------------------------------------------+\n|O00001  |Leave the parcel with the neighbour at number 12|\n+--------+------------------------------------------------+\n\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "12\nRow(order_id='O00001', customer_id='C0001', order_date=datetime.date(2026, 6, 11), status='paid', channel='store', total=Decimal('117.99'))\npaid 117.99\n5\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "+-------+------------------+\n|summary|             total|\n+-------+------------------+\n|  count|                12|\n|   mean|        167.765833|\n| stddev|123.86600446804921|\n|    min|             39.98|\n|    max|            418.96|\n+-------+------------------+\n\n+-------+--------+-----------+---------+-------+------+\n|summary|order_id|customer_id|   status|channel| total|\n+-------+--------+-----------+---------+-------+------+\n|  count|      12|         12|       12|     12|    12|\n|    min|  O00001|      C0001|delivered|    app| 39.98|\n|    50%|    NULL|       NULL|     NULL|   NULL|105.49|\n|    max|  O00012|      C0006|  shipped|    web|418.96|\n+-------+--------+-----------+---------+-------+------+\n\n",
+   "error": null
+  }
+ }
+}

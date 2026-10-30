@@ -1,0 +1,406 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "example": {
+   "schema": [
+    {
+     "name": "check",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "value",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "passed",
+     "type": "boolean",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "bronze_rows",
+     12,
+     true
+    ],
+    [
+     "rejected_rows",
+     5,
+     false
+    ],
+    [
+     "exact_copies",
+     1,
+     false
+    ],
+    [
+     "superseded_claims",
+     1,
+     false
+    ],
+    [
+     "silver_rows",
+     5,
+     true
+    ],
+    [
+     "gold_claims",
+     5,
+     true
+    ],
+    [
+     "gold_paid_cents",
+     40000,
+     true
+    ],
+    [
+     "gold_versions",
+     1,
+     true
+    ]
+   ],
+   "row_count": 8,
+   "inputs": {
+    "claims": [
+     [
+      "CLM900001",
+      "ENC900001",
+      "PAT90001",
+      "PRV0001",
+      "Bluebird Health",
+      "2025-11-03",
+      "2025-11-10",
+      "200.00",
+      "150.00",
+      "150.00",
+      "paid",
+      null
+     ],
+     [
+      "CLM900001",
+      "ENC900001",
+      "PAT90001",
+      "PRV0001",
+      "Bluebird Health",
+      "2025-11-03",
+      "2025-11-10",
+      "200.00",
+      "150.00",
+      "150.00",
+      "paid",
+      null
+     ],
+     [
+      "CLM900002",
+      "ENC900002",
+      "PAT90002",
+      "PRV0002",
+      "Summit Senior Advantage",
+      "2026-01-05",
+      "2026-01-20",
+      "480.00",
+      null,
+      null,
+      "submitted",
+      null
+     ],
+     [
+      "CLM900012",
+      "ENC900002",
+      "PAT90002",
+      "PRV0002",
+      "Summit Senior Advantage",
+      "2026-01-05",
+      "2026-02-15",
+      "480.00",
+      null,
+      null,
+      "submitted",
+      null
+     ],
+     [
+      "CLM900003",
+      "ENC900003",
+      "PAT90003",
+      null,
+      "Cedar State Medicaid",
+      "2026-02-01",
+      "2026-02-03",
+      "95.00",
+      "0.00",
+      "0.00",
+      "denied",
+      "not_covered"
+     ],
+     [
+      "CLM900004",
+      "ENC900004",
+      "PAT90004",
+      "PRV9123",
+      "Bluebird Health",
+      "2026-02-11",
+      "2026-02-20",
+      "130.00",
+      null,
+      null,
+      "submitted",
+      null
+     ],
+     [
+      "CLM900005",
+      "ENC900005",
+      "PAT90005",
+      "PRV9001",
+      "Bluebird Health",
+      "2026-03-10",
+      "2026-03-02",
+      "75.00",
+      null,
+      null,
+      "submitted",
+      null
+     ],
+     [
+      "CLM900006",
+      "ENC900006",
+      null,
+      "PRV0001",
+      "Cedar State Medicaid",
+      "2026-03-12",
+      null,
+      "60.00",
+      null,
+      null,
+      "submitted",
+      null
+     ],
+     [
+      "CLM900007",
+      "ENC900007",
+      "PAT90007",
+      "PRV0002",
+      "Summit Senior Advantage",
+      "2026-03-20",
+      "2026-03-28",
+      "100.00",
+      "120.00",
+      null,
+      "approved",
+      null
+     ],
+     [
+      "CLM900008",
+      "ENC900008",
+      "PAT90008",
+      "PRV0001",
+      "Bluebird Health",
+      "2026-04-02",
+      "2026-04-09",
+      "88.00",
+      null,
+      null,
+      "pending",
+      null
+     ],
+     [
+      "CLM900009",
+      "ENC900009",
+      "PAT90009",
+      "PRV0004",
+      "Bluebird Health",
+      "2026-04-15",
+      "2026-04-29",
+      "900.00",
+      "640.00",
+      null,
+      "approved",
+      null
+     ],
+     [
+      "CLM900010",
+      "ENC900010",
+      "PAT90010",
+      "PRV0002",
+      "Summit Senior Advantage",
+      "2026-05-06",
+      "2026-05-06",
+      "310.00",
+      "250.00",
+      "250.00",
+      "paid",
+      null
+     ]
+    ],
+    "encounters": [
+     [
+      "ENC900001",
+      "PAT90001",
+      "PRV0001",
+      "ambulatory",
+      "2025-11-03T09:00:00",
+      "2025-11-03T09:40:00",
+      "Visit",
+      "{\"heart_rate\":72,\"systolic\":120,\"diastolic\":78,\"temperature_c\":99.5}",
+      "[\"J06.9\"]",
+      null
+     ],
+     [
+      "ENC900002",
+      "PAT90002",
+      "PRV0002",
+      "ambulatory",
+      "2026-01-05T10:00:00",
+      "2026-01-05T10:30:00",
+      "Visit",
+      "{\"heart_rate\":72,\"systolic\":120,\"diastolic\":78,\"temperature_c\":36.8}",
+      "[\"I10\",\"E78.5\"]",
+      "home"
+     ],
+     [
+      "ENC900003",
+      "PAT90003",
+      "PRV0003",
+      "telehealth",
+      "2026-02-01T15:00:00",
+      "2026-02-01T15:20:00",
+      "Visit",
+      null,
+      "[\"F41.1\"]",
+      null
+     ],
+     [
+      "ENC900004",
+      "PAT90004",
+      "PRV0001",
+      "wellness",
+      "2026-02-11T08:30:00",
+      "2026-02-11T09:00:00",
+      "Visit",
+      "{\"heart_rate\":72,\"systolic\":120,\"diastolic\":78,\"temperature_c\":36.6}",
+      "[\"Z00.00\"]",
+      null
+     ],
+     [
+      "ENC900009",
+      "PAT90009",
+      "PRV0004",
+      "emergency",
+      "2026-04-15T22:10:00",
+      "2026-04-16T03:00:00",
+      "Visit",
+      "{\"heart_rate\":72,\"systolic\":120,\"diastolic\":78,\"temperature_c\":38.4}",
+      "[\"S52.501A\",\"W19\"]",
+      "home_with_care"
+     ]
+    ],
+    "providers": [
+     [
+      "PRV0001",
+      "Dr. Lena Okafor",
+      "family_medicine",
+      "Northfield Medical Group",
+      "Millbrook",
+      "true"
+     ],
+     [
+      "PRV0002",
+      "Dr. Tomas Varga",
+      "cardiology",
+      "Riverbend Heart Center",
+      "Riverton",
+      "true"
+     ],
+     [
+      "PRV0003",
+      "Dr. Priya Lund",
+      "pediatrics",
+      "Northfield Medical Group",
+      "Millbrook",
+      "false"
+     ],
+     [
+      "PRV0004",
+      "Dr. Owen Hale",
+      "emergency_medicine",
+      "Cedar Falls General",
+      "Cedar Falls",
+      "true"
+     ]
+    ]
+   }
+  },
+  "project": {
+   "schema": [
+    {
+     "name": "check",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "value",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "passed",
+     "type": "boolean",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "bronze_rows",
+     2425,
+     true
+    ],
+    [
+     "rejected_rows",
+     51,
+     true
+    ],
+    [
+     "exact_copies",
+     19,
+     true
+    ],
+    [
+     "superseded_claims",
+     25,
+     true
+    ],
+    [
+     "silver_rows",
+     2330,
+     true
+    ],
+    [
+     "gold_claims",
+     2330,
+     true
+    ],
+    [
+     "gold_paid_cents",
+     97742600,
+     true
+    ],
+    [
+     "gold_versions",
+     1,
+     true
+    ]
+   ],
+   "row_count": 8
+  }
+ },
+ "hidden": [
+  "more than 5% of rows rejected, copied and resubmitted, a copy of a rejected claim, and a claim with no visit",
+  "an empty claims table"
+ ]
+}

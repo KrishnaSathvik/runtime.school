@@ -1,0 +1,4241 @@
+{
+ "id": "PS-D14",
+ "version": "1.0.0",
+ "title": "Enterprise CRM & ERP",
+ "generated_by": "services/spark-runner/datasets/d14_erp.py",
+ "rules": [
+  "Every company, person, email domain (.example) and phone number (555-01xx) is invented.",
+  "accounts is the CRM snapshot taken at 2026-01-01 00:00 UTC. customer_cdc holds every change after it; applying the feed in sequence order to the snapshot gives today's accounts. Accounts inserted by the feed are not in the snapshot.",
+  "product_cdc is the full history of the catalogue from its first insert in 2025; there is no product snapshot table \u2014 today's products are the feed's latest row per product_id, unless that row is a delete.",
+  "op is I (insert), U (update) or D (delete). Every row carries the full row image: for I and U the row after the change, for D the last row before the delete.",
+  "sequence is the change's position in the source log: it increases strictly with every change, so per key it is strictly increasing and it decides the order of changes. changed_at (UTC) is when the change was committed and follows the same order.",
+  "A key can change many times; the lesson edition's ACC-0001 is updated three times, ACC-0003 is deleted and ACC-0006 is inserted and then updated.",
+  "suppliers comes from two systems: source_system erp and procurement. The same supplier has the same supplier_id in both. Most suppliers are in both lists, some only in one.",
+  "A few suppliers appear in both systems with a small difference (the name spelled with a legal suffix, or different payment terms), so comparing whole rows (intersect, exceptAll) does not match them while comparing supplier_id does. Lesson edition: SUP-003.",
+  "purchase_orders are raised in the ERP, so supplier_id always refers to a supplier in the erp list.",
+  "invoice_lines.unit_price is the product's list_price on the invoice date (from product_cdc history); line_amount = quantity \u00d7 unit_price \u00d7 (1 \u2212 discount_pct / 100), rounded to cents; an invoice's total_amount is the sum of its line_amount.",
+  "All invoice amounts are in USD. Invoice status is draft, open, paid, overdue or void; due_date is 30 days after invoice_date.",
+  "Each account has one primary contact (is_primary true); phone is empty (null) for some contacts.",
+  "Practice edition: the change feeds are clean \u2014 one row per change, in sequence order.",
+  "Project edition problem 1 (out-of-order arrivals): about 5% of feed rows arrived late, after rows with a higher sequence; the file is in arrival order, so the last row in the file for a key is not always its latest change. Order by sequence.",
+  "Project edition problem 2 (duplicate changes): a few changes were delivered twice \u2014 identical rows with the same key and sequence. Deduplicate on (key, sequence) before applying."
+ ],
+ "relationships": [
+  {
+   "from": "contacts.account_id",
+   "to": "accounts.account_id"
+  },
+  {
+   "from": "invoices.account_id",
+   "to": "accounts.account_id"
+  },
+  {
+   "from": "invoice_lines.invoice_id",
+   "to": "invoices.invoice_id"
+  },
+  {
+   "from": "invoice_lines.product_id",
+   "to": "product_cdc.product_id"
+  },
+  {
+   "from": "purchase_orders.supplier_id",
+   "to": "suppliers.supplier_id"
+  }
+ ],
+ "tables": {
+  "accounts": {
+   "note": "One row per customer account as the CRM held it at the 2026-01-01 snapshot.",
+   "columns": [
+    {
+     "name": "account_id",
+     "type": "string"
+    },
+    {
+     "name": "account_name",
+     "type": "string"
+    },
+    {
+     "name": "industry",
+     "type": "string"
+    },
+    {
+     "name": "country",
+     "type": "string"
+    },
+    {
+     "name": "segment",
+     "type": "string"
+    },
+    {
+     "name": "account_owner",
+     "type": "string"
+    },
+    {
+     "name": "credit_limit",
+     "type": "decimal(12,2)"
+    },
+    {
+     "name": "created_on",
+     "type": "date"
+    },
+    {
+     "name": "is_active",
+     "type": "boolean"
+    }
+   ],
+   "key": [
+    "account_id"
+   ],
+   "rows": {
+    "lesson": 5,
+    "practice": 150,
+    "project": 220
+   },
+   "lesson": [
+    [
+     "ACC-0001",
+     "Quillfen Analytics Inc",
+     "technology",
+     "US",
+     "mid_market",
+     "Dana Whitlock",
+     "75000.00",
+     "2022-03-14",
+     "true"
+    ],
+    [
+     "ACC-0002",
+     "Brackenmoor Foods Ltd",
+     "consumer goods",
+     "GB",
+     "smb",
+     "Jonas Ekberg",
+     "15000.00",
+     "2023-06-02",
+     "true"
+    ],
+    [
+     "ACC-0003",
+     "Tamsley Logistics GmbH",
+     "transport",
+     "DE",
+     "enterprise",
+     "Mei Lindqvist",
+     "250000.00",
+     "2021-09-20",
+     "true"
+    ],
+    [
+     "ACC-0004",
+     "Corvane Health Pty Ltd",
+     "healthcare",
+     "AU",
+     "mid_market",
+     "Rafael Ibarra",
+     "75000.00",
+     "2024-01-08",
+     "true"
+    ],
+    [
+     "ACC-0005",
+     "Ellowby Energy Inc",
+     "energy",
+     "US",
+     "smb",
+     "Dana Whitlock",
+     "15000.00",
+     "2025-04-30",
+     "true"
+    ]
+   ],
+   "practice_head": [
+    [
+     "ACC-0001",
+     "Larchmere Labs Lda",
+     "technology",
+     "PT",
+     "mid_market",
+     "Priya Venkat",
+     "150000.00",
+     "2025-08-17",
+     "true"
+    ],
+    [
+     "ACC-0002",
+     "Vantor Systems Inc",
+     "technology",
+     "US",
+     "mid_market",
+     "Priya Venkat",
+     "150000.00",
+     "2023-01-20",
+     "true"
+    ],
+    [
+     "ACC-0003",
+     "Ostley Analytics Lda",
+     "technology",
+     "PT",
+     "smb",
+     "Tobias Achterberg",
+     "15000.00",
+     "2022-12-13",
+     "true"
+    ],
+    [
+     "ACC-0004",
+     "Yarrowby Marine B.V.",
+     "transport",
+     "NL",
+     "smb",
+     "Rafael Ibarra",
+     "30000.00",
+     "2024-02-18",
+     "true"
+    ],
+    [
+     "ACC-0005",
+     "Wrenfield Partners Ltd",
+     "professional services",
+     "GB",
+     "mid_market",
+     "Tobias Achterberg",
+     "75000.00",
+     "2023-09-19",
+     "true"
+    ],
+    [
+     "ACC-0006",
+     "Fennick Manufacturing Lda",
+     "manufacturing",
+     "PT",
+     "enterprise",
+     "Mei Lindqvist",
+     "500000.00",
+     "2022-11-18",
+     "true"
+    ],
+    [
+     "ACC-0007",
+     "Pellacott Retail Ltd",
+     "consumer goods",
+     "GB",
+     "mid_market",
+     "Mei Lindqvist",
+     "75000.00",
+     "2021-12-23",
+     "true"
+    ],
+    [
+     "ACC-0008",
+     "Thornvale Logistics Pty Ltd",
+     "transport",
+     "AU",
+     "mid_market",
+     "Jonas Ekberg",
+     "75000.00",
+     "2024-10-06",
+     "true"
+    ],
+    [
+     "ACC-0009",
+     "Pellacott Partners Pty Ltd",
+     "professional services",
+     "AU",
+     "mid_market",
+     "Tobias Achterberg",
+     "75000.00",
+     "2022-04-14",
+     "true"
+    ],
+    [
+     "ACC-0010",
+     "Nettlecombe Analytics Inc",
+     "technology",
+     "CA",
+     "smb",
+     "Rafael Ibarra",
+     "15000.00",
+     "2024-10-01",
+     "true"
+    ],
+    [
+     "ACC-0011",
+     "Brackenmoor Energy Lda",
+     "energy",
+     "PT",
+     "smb",
+     "Rafael Ibarra",
+     "15000.00",
+     "2025-07-17",
+     "true"
+    ],
+    [
+     "ACC-0012",
+     "Vantor Energy Pvt Ltd",
+     "energy",
+     "IN",
+     "smb",
+     "Mei Lindqvist",
+     "7500.00",
+     "2025-07-24",
+     "true"
+    ],
+    [
+     "ACC-0013",
+     "Corvane Energy Pvt Ltd",
+     "energy",
+     "IN",
+     "smb",
+     "Mei Lindqvist",
+     "15000.00",
+     "2024-01-01",
+     "true"
+    ],
+    [
+     "ACC-0014",
+     "Larchmere Energy Inc",
+     "energy",
+     "US",
+     "mid_market",
+     "Dana Whitlock",
+     "75000.00",
+     "2021-05-03",
+     "true"
+    ],
+    [
+     "ACC-0015",
+     "Marrowind Partners Inc",
+     "professional services",
+     "US",
+     "enterprise",
+     "Priya Venkat",
+     "250000.00",
+     "2024-12-31",
+     "true"
+    ],
+    [
+     "ACC-0016",
+     "Brackenmoor Textiles B.V.",
+     "consumer goods",
+     "NL",
+     "smb",
+     "Rafael Ibarra",
+     "15000.00",
+     "2024-12-27",
+     "true"
+    ],
+    [
+     "ACC-0017",
+     "Tamsley Manufacturing Inc",
+     "manufacturing",
+     "US",
+     "smb",
+     "Rafael Ibarra",
+     "30000.00",
+     "2024-07-25",
+     "true"
+    ],
+    [
+     "ACC-0018",
+     "Hesketh Vale Analytics Lda",
+     "technology",
+     "PT",
+     "smb",
+     "Tobias Achterberg",
+     "7500.00",
+     "2024-08-30",
+     "true"
+    ],
+    [
+     "ACC-0019",
+     "Vantor Health Pvt Ltd",
+     "healthcare",
+     "IN",
+     "mid_market",
+     "Priya Venkat",
+     "75000.00",
+     "2023-03-12",
+     "true"
+    ],
+    [
+     "ACC-0020",
+     "Kelderby Manufacturing B.V.",
+     "manufacturing",
+     "NL",
+     "mid_market",
+     "Jonas Ekberg",
+     "150000.00",
+     "2023-06-10",
+     "true"
+    ]
+   ],
+   "project_head": [
+    [
+     "ACC-0001",
+     "Kelderby Energy Inc",
+     "energy",
+     "CA",
+     "smb",
+     "Priya Venkat",
+     "15000.00",
+     "2022-09-18",
+     "true"
+    ],
+    [
+     "ACC-0002",
+     "Nettlecombe Manufacturing Inc",
+     "manufacturing",
+     "US",
+     "smb",
+     "Jonas Ekberg",
+     "15000.00",
+     "2025-08-24",
+     "true"
+    ],
+    [
+     "ACC-0003",
+     "Ostley Logistics Ltd",
+     "transport",
+     "GB",
+     "smb",
+     "Mei Lindqvist",
+     "15000.00",
+     "2021-12-07",
+     "true"
+    ],
+    [
+     "ACC-0004",
+     "Ellowby Energy B.V.",
+     "energy",
+     "NL",
+     "smb",
+     "Jonas Ekberg",
+     "15000.00",
+     "2023-02-23",
+     "true"
+    ],
+    [
+     "ACC-0005",
+     "Nettlecombe Systems Inc",
+     "technology",
+     "US",
+     "smb",
+     "Jonas Ekberg",
+     "7500.00",
+     "2024-01-16",
+     "true"
+    ],
+    [
+     "ACC-0006",
+     "Corvane Retail GmbH",
+     "consumer goods",
+     "DE",
+     "mid_market",
+     "Dana Whitlock",
+     "150000.00",
+     "2021-02-25",
+     "true"
+    ],
+    [
+     "ACC-0007",
+     "Fennick Energy Ltd",
+     "energy",
+     "GB",
+     "smb",
+     "Priya Venkat",
+     "15000.00",
+     "2021-04-13",
+     "true"
+    ],
+    [
+     "ACC-0008",
+     "Yarrowby Analytics Pvt Ltd",
+     "technology",
+     "IN",
+     "enterprise",
+     "Rafael Ibarra",
+     "250000.00",
+     "2021-02-03",
+     "true"
+    ],
+    [
+     "ACC-0009",
+     "Larchmere Manufacturing Pvt Ltd",
+     "manufacturing",
+     "IN",
+     "mid_market",
+     "Rafael Ibarra",
+     "75000.00",
+     "2025-01-13",
+     "true"
+    ],
+    [
+     "ACC-0010",
+     "Corvane Marine Inc",
+     "transport",
+     "CA",
+     "mid_market",
+     "Tobias Achterberg",
+     "37500.00",
+     "2022-09-01",
+     "true"
+    ],
+    [
+     "ACC-0011",
+     "Sablewick Systems Inc",
+     "technology",
+     "CA",
+     "enterprise",
+     "Priya Venkat",
+     "250000.00",
+     "2023-02-22",
+     "true"
+    ],
+    [
+     "ACC-0012",
+     "Calloway Bend Marine Inc",
+     "transport",
+     "CA",
+     "mid_market",
+     "Jonas Ekberg",
+     "75000.00",
+     "2025-04-05",
+     "true"
+    ],
+    [
+     "ACC-0013",
+     "Larchmere Systems Pty Ltd",
+     "technology",
+     "AU",
+     "smb",
+     "Dana Whitlock",
+     "7500.00",
+     "2022-03-26",
+     "true"
+    ],
+    [
+     "ACC-0014",
+     "Brackenmoor Foods GmbH",
+     "consumer goods",
+     "DE",
+     "smb",
+     "Rafael Ibarra",
+     "7500.00",
+     "2023-12-03",
+     "true"
+    ],
+    [
+     "ACC-0015",
+     "Thornvale Manufacturing B.V.",
+     "manufacturing",
+     "NL",
+     "enterprise",
+     "Rafael Ibarra",
+     "250000.00",
+     "2025-01-02",
+     "true"
+    ],
+    [
+     "ACC-0016",
+     "Quillfen Retail Ltd",
+     "consumer goods",
+     "GB",
+     "smb",
+     "Tobias Achterberg",
+     "15000.00",
+     "2025-05-17",
+     "true"
+    ],
+    [
+     "ACC-0017",
+     "Yarrowby Manufacturing B.V.",
+     "manufacturing",
+     "NL",
+     "smb",
+     "Dana Whitlock",
+     "30000.00",
+     "2024-12-30",
+     "true"
+    ],
+    [
+     "ACC-0018",
+     "Calloway Bend Energy Pty Ltd",
+     "energy",
+     "AU",
+     "enterprise",
+     "Mei Lindqvist",
+     "250000.00",
+     "2022-04-03",
+     "true"
+    ],
+    [
+     "ACC-0019",
+     "Pemberlin Partners GmbH",
+     "professional services",
+     "DE",
+     "mid_market",
+     "Mei Lindqvist",
+     "75000.00",
+     "2024-08-30",
+     "true"
+    ],
+    [
+     "ACC-0020",
+     "Grisford Energy Inc",
+     "energy",
+     "US",
+     "mid_market",
+     "Priya Venkat",
+     "75000.00",
+     "2022-05-06",
+     "true"
+    ]
+   ]
+  },
+  "contacts": {
+   "note": "One row per person the business deals with at a customer account.",
+   "columns": [
+    {
+     "name": "contact_id",
+     "type": "string"
+    },
+    {
+     "name": "account_id",
+     "type": "string"
+    },
+    {
+     "name": "first_name",
+     "type": "string"
+    },
+    {
+     "name": "last_name",
+     "type": "string"
+    },
+    {
+     "name": "job_title",
+     "type": "string"
+    },
+    {
+     "name": "email",
+     "type": "string"
+    },
+    {
+     "name": "phone",
+     "type": "string"
+    },
+    {
+     "name": "is_primary",
+     "type": "boolean"
+    }
+   ],
+   "key": [
+    "contact_id"
+   ],
+   "rows": {
+    "lesson": 6,
+    "practice": 259,
+    "project": 395
+   },
+   "lesson": [
+    [
+     "CON-00001",
+     "ACC-0001",
+     "Alina",
+     "Castellan",
+     "Procurement Manager",
+     "alina.castellan@quillfenanalytics.example",
+     "+1-202-555-0114",
+     "true"
+    ],
+    [
+     "CON-00002",
+     "ACC-0001",
+     "Hugo",
+     "Eklund",
+     "Finance Director",
+     "hugo.eklund@quillfenanalytics.example",
+     null,
+     "false"
+    ],
+    [
+     "CON-00003",
+     "ACC-0002",
+     "Rosa",
+     "Marchetti",
+     "Buyer",
+     "rosa.marchetti@brackenmoorfoods.example",
+     "+1-202-555-0162",
+     "true"
+    ],
+    [
+     "CON-00004",
+     "ACC-0003",
+     "Oskar",
+     "Rasmussen",
+     "Operations Lead",
+     "oskar.rasmussen@tamsleylogistics.example",
+     "+1-202-555-0127",
+     "true"
+    ],
+    [
+     "CON-00005",
+     "ACC-0004",
+     "Nadia",
+     "Goswami",
+     "IT Manager",
+     "nadia.goswami@corvanehealth.example",
+     "+1-202-555-0145",
+     "true"
+    ],
+    [
+     "CON-00006",
+     "ACC-0005",
+     "Wes",
+     "Okonjo",
+     "COO",
+     "wes.okonjo@ellowbyenergy.example",
+     null,
+     "true"
+    ]
+   ],
+   "practice_head": [
+    [
+     "CON-00001",
+     "ACC-0001",
+     "Yusuf",
+     "Dorsey",
+     "Buyer",
+     "yusuf.dorsey@larchmerelabs.example",
+     "+1-202-555-0109",
+     "true"
+    ],
+    [
+     "CON-00002",
+     "ACC-0001",
+     "Lucia",
+     "Lindqvist",
+     "Finance Director",
+     "lucia.lindqvist@larchmerelabs.example",
+     null,
+     "false"
+    ],
+    [
+     "CON-00003",
+     "ACC-0002",
+     "Hugo",
+     "Dorsey",
+     "Accounts Payable Clerk",
+     "hugo.dorsey@vantorsystems.example",
+     "+1-202-555-0148",
+     "true"
+    ],
+    [
+     "CON-00004",
+     "ACC-0002",
+     "Farid",
+     "Underhill",
+     "Accounts Payable Clerk",
+     "farid.underhill@vantorsystems.example",
+     "+1-202-555-0107",
+     "false"
+    ],
+    [
+     "CON-00005",
+     "ACC-0003",
+     "Dev",
+     "Halloran",
+     "Operations Lead",
+     "dev.halloran@ostleyanalytics.example",
+     "+1-202-555-0194",
+     "true"
+    ],
+    [
+     "CON-00006",
+     "ACC-0003",
+     "Kaito",
+     "Thorne",
+     "COO",
+     "kaito.thorne@ostleyanalytics.example",
+     "+1-202-555-0176",
+     "false"
+    ],
+    [
+     "CON-00007",
+     "ACC-0004",
+     "Farid",
+     "Okonjo",
+     "Operations Lead",
+     "farid.okonjo@yarrowbymarine.example",
+     "+1-202-555-0169",
+     "true"
+    ],
+    [
+     "CON-00008",
+     "ACC-0004",
+     "Umar",
+     "Goswami",
+     "Operations Lead",
+     "umar.goswami@yarrowbymarine.example",
+     null,
+     "false"
+    ],
+    [
+     "CON-00009",
+     "ACC-0005",
+     "Yusuf",
+     "Ivers",
+     "IT Manager",
+     "yusuf.ivers@wrenfieldpartners.example",
+     null,
+     "true"
+    ],
+    [
+     "CON-00010",
+     "ACC-0006",
+     "Oskar",
+     "Marchetti",
+     "Finance Director",
+     "oskar.marchetti@fennickmanufacturing.example",
+     "+1-202-555-0167",
+     "true"
+    ],
+    [
+     "CON-00011",
+     "ACC-0007",
+     "Lucia",
+     "Prescott",
+     "Procurement Manager",
+     "lucia.prescott@pellacottretail.example",
+     "+1-202-555-0102",
+     "true"
+    ],
+    [
+     "CON-00012",
+     "ACC-0007",
+     "Hugo",
+     "Valdez",
+     "IT Manager",
+     "hugo.valdez@pellacottretail.example",
+     "+1-202-555-0147",
+     "false"
+    ],
+    [
+     "CON-00013",
+     "ACC-0008",
+     "Tess",
+     "Ivers",
+     "Buyer",
+     "tess.ivers@thornvalelogistics.example",
+     null,
+     "true"
+    ],
+    [
+     "CON-00014",
+     "ACC-0009",
+     "Greta",
+     "Kowalczyk",
+     "Buyer",
+     "greta.kowalczyk@pellacottpartners.example",
+     "+1-202-555-0192",
+     "true"
+    ],
+    [
+     "CON-00015",
+     "ACC-0010",
+     "Pia",
+     "Lindqvist",
+     "Operations Lead",
+     "pia.lindqvist@nettlecombeanalytics.example",
+     null,
+     "true"
+    ],
+    [
+     "CON-00016",
+     "ACC-0010",
+     "Elif",
+     "Okonjo",
+     "IT Manager",
+     "elif.okonjo@nettlecombeanalytics.example",
+     null,
+     "false"
+    ],
+    [
+     "CON-00017",
+     "ACC-0011",
+     "Tess",
+     "Nakashima",
+     "Operations Lead",
+     "tess.nakashima@brackenmoorenergy.example",
+     "+1-202-555-0110",
+     "true"
+    ],
+    [
+     "CON-00018",
+     "ACC-0011",
+     "Dev",
+     "Ivers",
+     "Finance Director",
+     "dev.ivers@brackenmoorenergy.example",
+     "+1-202-555-0112",
+     "false"
+    ],
+    [
+     "CON-00019",
+     "ACC-0012",
+     "Ines",
+     "Goswami",
+     "Operations Lead",
+     "ines.goswami@vantorenergy.example",
+     "+1-202-555-0113",
+     "true"
+    ],
+    [
+     "CON-00020",
+     "ACC-0012",
+     "Yusuf",
+     "Dorsey",
+     "IT Manager",
+     "yusuf.dorsey@vantorenergy.example",
+     "+1-202-555-0102",
+     "false"
+    ]
+   ],
+   "project_head": [
+    [
+     "CON-00001",
+     "ACC-0001",
+     "Vera",
+     "Jaramillo",
+     "COO",
+     "vera.jaramillo@kelderbyenergy.example",
+     "+1-202-555-0138",
+     "true"
+    ],
+    [
+     "CON-00002",
+     "ACC-0002",
+     "Greta",
+     "Prescott",
+     "Operations Lead",
+     "greta.prescott@nettlecombemanufacturing.example",
+     null,
+     "true"
+    ],
+    [
+     "CON-00003",
+     "ACC-0003",
+     "Rosa",
+     "Okonjo",
+     "Finance Director",
+     "rosa.okonjo@ostleylogistics.example",
+     "+1-202-555-0156",
+     "true"
+    ],
+    [
+     "CON-00004",
+     "ACC-0003",
+     "Umar",
+     "Kowalczyk",
+     "Buyer",
+     "umar.kowalczyk@ostleylogistics.example",
+     "+1-202-555-0146",
+     "false"
+    ],
+    [
+     "CON-00005",
+     "ACC-0004",
+     "Jae",
+     "Quaid",
+     "IT Manager",
+     "jae.quaid@ellowbyenergy.example",
+     null,
+     "true"
+    ],
+    [
+     "CON-00006",
+     "ACC-0004",
+     "Alina",
+     "Kowalczyk",
+     "Accounts Payable Clerk",
+     "alina.kowalczyk@ellowbyenergy.example",
+     "+1-202-555-0122",
+     "false"
+    ],
+    [
+     "CON-00007",
+     "ACC-0005",
+     "Kaito",
+     "Ivers",
+     "Buyer",
+     "kaito.ivers@nettlecombesystems.example",
+     null,
+     "true"
+    ],
+    [
+     "CON-00008",
+     "ACC-0005",
+     "Quentin",
+     "Brightwater",
+     "Operations Lead",
+     "quentin.brightwater@nettlecombesystems.example",
+     "+1-202-555-0148",
+     "false"
+    ],
+    [
+     "CON-00009",
+     "ACC-0005",
+     "Greta",
+     "Dorsey",
+     "Category Manager",
+     "greta.dorsey@nettlecombesystems.example",
+     "+1-202-555-0131",
+     "false"
+    ],
+    [
+     "CON-00010",
+     "ACC-0006",
+     "Tess",
+     "Lindqvist",
+     "COO",
+     "tess.lindqvist@corvaneretail.example",
+     null,
+     "true"
+    ],
+    [
+     "CON-00011",
+     "ACC-0006",
+     "Rosa",
+     "Halloran",
+     "Procurement Manager",
+     "rosa.halloran@corvaneretail.example",
+     "+1-202-555-0146",
+     "false"
+    ],
+    [
+     "CON-00012",
+     "ACC-0007",
+     "Quentin",
+     "Eklund",
+     "COO",
+     "quentin.eklund@fennickenergy.example",
+     "+1-202-555-0140",
+     "true"
+    ],
+    [
+     "CON-00013",
+     "ACC-0007",
+     "Jae",
+     "Abernathy",
+     "Finance Director",
+     "jae.abernathy@fennickenergy.example",
+     null,
+     "false"
+    ],
+    [
+     "CON-00014",
+     "ACC-0007",
+     "Lucia",
+     "Okonjo",
+     "Buyer",
+     "lucia.okonjo@fennickenergy.example",
+     "+1-202-555-0196",
+     "false"
+    ],
+    [
+     "CON-00015",
+     "ACC-0008",
+     "Chiara",
+     "Thorne",
+     "Finance Director",
+     "chiara.thorne@yarrowbyanalytics.example",
+     null,
+     "true"
+    ],
+    [
+     "CON-00016",
+     "ACC-0008",
+     "Pia",
+     "Dorsey",
+     "Buyer",
+     "pia.dorsey@yarrowbyanalytics.example",
+     "+1-202-555-0168",
+     "false"
+    ],
+    [
+     "CON-00017",
+     "ACC-0009",
+     "Dev",
+     "Marchetti",
+     "Buyer",
+     "dev.marchetti@larchmeremanufacturing.example",
+     "+1-202-555-0142",
+     "true"
+    ],
+    [
+     "CON-00018",
+     "ACC-0009",
+     "Bram",
+     "Abernathy",
+     "Category Manager",
+     "bram.abernathy@larchmeremanufacturing.example",
+     null,
+     "false"
+    ],
+    [
+     "CON-00019",
+     "ACC-0010",
+     "Umar",
+     "Fairbanks",
+     "Operations Lead",
+     "umar.fairbanks@corvanemarine.example",
+     null,
+     "true"
+    ],
+    [
+     "CON-00020",
+     "ACC-0010",
+     "Chiara",
+     "Goswami",
+     "IT Manager",
+     "chiara.goswami@corvanemarine.example",
+     "+1-202-555-0185",
+     "false"
+    ]
+   ]
+  },
+  "invoices": {
+   "note": "One row per invoice sent to an account, with its status and total.",
+   "columns": [
+    {
+     "name": "invoice_id",
+     "type": "string"
+    },
+    {
+     "name": "account_id",
+     "type": "string"
+    },
+    {
+     "name": "invoice_date",
+     "type": "date"
+    },
+    {
+     "name": "due_date",
+     "type": "date"
+    },
+    {
+     "name": "status",
+     "type": "string"
+    },
+    {
+     "name": "total_amount",
+     "type": "decimal(12,2)"
+    }
+   ],
+   "key": [
+    "invoice_id"
+   ],
+   "rows": {
+    "lesson": 5,
+    "practice": 831,
+    "project": 1619
+   },
+   "lesson": [
+    [
+     "INV-000001",
+     "ACC-0001",
+     "2025-10-14",
+     "2025-11-13",
+     "paid",
+     "244.00"
+    ],
+    [
+     "INV-000002",
+     "ACC-0002",
+     "2025-11-20",
+     "2025-12-20",
+     "paid",
+     "232.00"
+    ],
+    [
+     "INV-000003",
+     "ACC-0003",
+     "2025-12-09",
+     "2026-01-08",
+     "overdue",
+     "469.50"
+    ],
+    [
+     "INV-000004",
+     "ACC-0001",
+     "2026-02-05",
+     "2026-03-07",
+     "open",
+     "283.50"
+    ],
+    [
+     "INV-000005",
+     "ACC-0005",
+     "2026-03-04",
+     "2026-04-03",
+     "draft",
+     "245.00"
+    ]
+   ],
+   "practice_head": [
+    [
+     "INV-000001",
+     "ACC-0144",
+     "2025-10-01",
+     "2025-10-31",
+     "paid",
+     "828.00"
+    ],
+    [
+     "INV-000002",
+     "ACC-0034",
+     "2025-10-01",
+     "2025-10-31",
+     "open",
+     "205.73"
+    ],
+    [
+     "INV-000003",
+     "ACC-0112",
+     "2025-10-01",
+     "2025-10-31",
+     "overdue",
+     "694.70"
+    ],
+    [
+     "INV-000004",
+     "ACC-0064",
+     "2025-10-01",
+     "2025-10-31",
+     "paid",
+     "932.57"
+    ],
+    [
+     "INV-000005",
+     "ACC-0121",
+     "2025-10-02",
+     "2025-11-01",
+     "paid",
+     "540.00"
+    ],
+    [
+     "INV-000006",
+     "ACC-0111",
+     "2025-10-02",
+     "2025-11-01",
+     "paid",
+     "8619.00"
+    ],
+    [
+     "INV-000007",
+     "ACC-0114",
+     "2025-10-02",
+     "2025-11-01",
+     "overdue",
+     "1392.29"
+    ],
+    [
+     "INV-000008",
+     "ACC-0131",
+     "2025-10-02",
+     "2025-11-01",
+     "paid",
+     "216.28"
+    ],
+    [
+     "INV-000009",
+     "ACC-0065",
+     "2025-10-02",
+     "2025-11-01",
+     "paid",
+     "175.50"
+    ],
+    [
+     "INV-000010",
+     "ACC-0029",
+     "2025-10-02",
+     "2025-11-01",
+     "paid",
+     "3214.98"
+    ],
+    [
+     "INV-000011",
+     "ACC-0087",
+     "2025-10-02",
+     "2025-11-01",
+     "open",
+     "574.60"
+    ],
+    [
+     "INV-000012",
+     "ACC-0045",
+     "2025-10-02",
+     "2025-11-01",
+     "paid",
+     "321.50"
+    ],
+    [
+     "INV-000013",
+     "ACC-0119",
+     "2025-10-02",
+     "2025-11-01",
+     "open",
+     "45.60"
+    ],
+    [
+     "INV-000014",
+     "ACC-0034",
+     "2025-10-02",
+     "2025-11-01",
+     "paid",
+     "135.60"
+    ],
+    [
+     "INV-000015",
+     "ACC-0028",
+     "2025-10-02",
+     "2025-11-01",
+     "paid",
+     "3557.13"
+    ],
+    [
+     "INV-000016",
+     "ACC-0069",
+     "2025-10-02",
+     "2025-11-01",
+     "open",
+     "327.08"
+    ],
+    [
+     "INV-000017",
+     "ACC-0075",
+     "2025-10-02",
+     "2025-11-01",
+     "paid",
+     "13017.38"
+    ],
+    [
+     "INV-000018",
+     "ACC-0026",
+     "2025-10-02",
+     "2025-11-01",
+     "overdue",
+     "410.10"
+    ],
+    [
+     "INV-000019",
+     "ACC-0080",
+     "2025-10-02",
+     "2025-11-01",
+     "paid",
+     "85.05"
+    ],
+    [
+     "INV-000020",
+     "ACC-0007",
+     "2025-10-03",
+     "2025-11-02",
+     "paid",
+     "2018.25"
+    ]
+   ],
+   "project_head": [
+    [
+     "INV-000001",
+     "ACC-0071",
+     "2025-10-01",
+     "2025-10-31",
+     "open",
+     "8512.13"
+    ],
+    [
+     "INV-000002",
+     "ACC-0115",
+     "2025-10-01",
+     "2025-10-31",
+     "open",
+     "187.00"
+    ],
+    [
+     "INV-000004",
+     "ACC-0198",
+     "2025-10-01",
+     "2025-10-31",
+     "paid",
+     "1140.00"
+    ],
+    [
+     "INV-000005",
+     "ACC-0094",
+     "2025-10-01",
+     "2025-10-31",
+     "paid",
+     "8.42"
+    ],
+    [
+     "INV-000006",
+     "ACC-0031",
+     "2025-10-01",
+     "2025-10-31",
+     "paid",
+     "1161.00"
+    ],
+    [
+     "INV-000007",
+     "ACC-0016",
+     "2025-10-01",
+     "2025-10-31",
+     "paid",
+     "10754.10"
+    ],
+    [
+     "INV-000009",
+     "ACC-0217",
+     "2025-10-01",
+     "2025-10-31",
+     "paid",
+     "646.29"
+    ],
+    [
+     "INV-000010",
+     "ACC-0018",
+     "2025-10-01",
+     "2025-10-31",
+     "paid",
+     "224.40"
+    ],
+    [
+     "INV-000011",
+     "ACC-0080",
+     "2025-10-01",
+     "2025-10-31",
+     "overdue",
+     "774.42"
+    ],
+    [
+     "INV-000012",
+     "ACC-0217",
+     "2025-10-01",
+     "2025-10-31",
+     "overdue",
+     "1869.15"
+    ],
+    [
+     "INV-000013",
+     "ACC-0129",
+     "2025-10-02",
+     "2025-11-01",
+     "overdue",
+     "213.75"
+    ],
+    [
+     "INV-000014",
+     "ACC-0089",
+     "2025-10-02",
+     "2025-11-01",
+     "open",
+     "554.10"
+    ],
+    [
+     "INV-000015",
+     "ACC-0167",
+     "2025-10-02",
+     "2025-11-01",
+     "paid",
+     "116.64"
+    ],
+    [
+     "INV-000016",
+     "ACC-0131",
+     "2025-10-02",
+     "2025-11-01",
+     "open",
+     "116.03"
+    ],
+    [
+     "INV-000017",
+     "ACC-0019",
+     "2025-10-02",
+     "2025-11-01",
+     "open",
+     "99.90"
+    ],
+    [
+     "INV-000018",
+     "ACC-0184",
+     "2025-10-02",
+     "2025-11-01",
+     "void",
+     "216.00"
+    ],
+    [
+     "INV-000020",
+     "ACC-0120",
+     "2025-10-03",
+     "2025-11-02",
+     "paid",
+     "348.70"
+    ],
+    [
+     "INV-000021",
+     "ACC-0159",
+     "2025-10-03",
+     "2025-11-02",
+     "overdue",
+     "315.90"
+    ],
+    [
+     "INV-000022",
+     "ACC-0154",
+     "2025-10-03",
+     "2025-11-02",
+     "paid",
+     "90.00"
+    ],
+    [
+     "INV-000023",
+     "ACC-0149",
+     "2025-10-03",
+     "2025-11-02",
+     "open",
+     "119.34"
+    ]
+   ]
+  },
+  "invoice_lines": {
+   "note": "One row per line of an invoice: which product, how many, at what price and discount.",
+   "columns": [
+    {
+     "name": "invoice_id",
+     "type": "string"
+    },
+    {
+     "name": "line_no",
+     "type": "int"
+    },
+    {
+     "name": "product_id",
+     "type": "string"
+    },
+    {
+     "name": "quantity",
+     "type": "int"
+    },
+    {
+     "name": "unit_price",
+     "type": "decimal(10,2)"
+    },
+    {
+     "name": "discount_pct",
+     "type": "decimal(5,2)"
+    },
+    {
+     "name": "line_amount",
+     "type": "decimal(12,2)"
+    }
+   ],
+   "key": [
+    "invoice_id",
+    "line_no"
+   ],
+   "rows": {
+    "lesson": 10,
+    "practice": 1767,
+    "project": 3128
+   },
+   "lesson": [
+    [
+     "INV-000001",
+     "1",
+     "PRD-002",
+     "2",
+     "65.00",
+     "0.00",
+     "130.00"
+    ],
+    [
+     "INV-000001",
+     "2",
+     "PRD-001",
+     "10",
+     "12.00",
+     "5.00",
+     "114.00"
+    ],
+    [
+     "INV-000002",
+     "1",
+     "PRD-003",
+     "20",
+     "8.90",
+     "0.00",
+     "178.00"
+    ],
+    [
+     "INV-000002",
+     "2",
+     "PRD-004",
+     "12",
+     "4.50",
+     "0.00",
+     "54.00"
+    ],
+    [
+     "INV-000003",
+     "1",
+     "PRD-002",
+     "1",
+     "69.00",
+     "0.00",
+     "69.00"
+    ],
+    [
+     "INV-000003",
+     "2",
+     "PRD-003",
+     "50",
+     "8.90",
+     "10.00",
+     "400.50"
+    ],
+    [
+     "INV-000004",
+     "1",
+     "PRD-002",
+     "3",
+     "74.50",
+     "0.00",
+     "223.50"
+    ],
+    [
+     "INV-000004",
+     "2",
+     "PRD-001",
+     "5",
+     "12.00",
+     "0.00",
+     "60.00"
+    ],
+    [
+     "INV-000005",
+     "1",
+     "PRD-005",
+     "4",
+     "39.00",
+     "0.00",
+     "156.00"
+    ],
+    [
+     "INV-000005",
+     "2",
+     "PRD-003",
+     "10",
+     "8.90",
+     "0.00",
+     "89.00"
+    ]
+   ],
+   "practice_head": [
+    [
+     "INV-000001",
+     "1",
+     "PRD-022",
+     "5",
+     "120.00",
+     "0.00",
+     "600.00"
+    ],
+    [
+     "INV-000001",
+     "2",
+     "PRD-012",
+     "10",
+     "24.00",
+     "5.00",
+     "228.00"
+    ],
+    [
+     "INV-000002",
+     "1",
+     "PRD-058",
+     "1",
+     "12.00",
+     "0.00",
+     "12.00"
+    ],
+    [
+     "INV-000002",
+     "2",
+     "PRD-050",
+     "1",
+     "189.00",
+     "0.00",
+     "189.00"
+    ],
+    [
+     "INV-000002",
+     "3",
+     "PRD-033",
+     "1",
+     "4.73",
+     "0.00",
+     "4.73"
+    ],
+    [
+     "INV-000003",
+     "1",
+     "PRD-040",
+     "2",
+     "65.00",
+     "5.00",
+     "123.50"
+    ],
+    [
+     "INV-000003",
+     "2",
+     "PRD-038",
+     "2",
+     "68.25",
+     "0.00",
+     "136.50"
+    ],
+    [
+     "INV-000003",
+     "3",
+     "PRD-043",
+     "2",
+     "217.35",
+     "0.00",
+     "434.70"
+    ],
+    [
+     "INV-000004",
+     "1",
+     "PRD-005",
+     "1",
+     "8.90",
+     "15.00",
+     "7.57"
+    ],
+    [
+     "INV-000004",
+     "2",
+     "PRD-002",
+     "50",
+     "18.50",
+     "0.00",
+     "925.00"
+    ],
+    [
+     "INV-000005",
+     "1",
+     "PRD-059",
+     "50",
+     "12.00",
+     "10.00",
+     "540.00"
+    ],
+    [
+     "INV-000006",
+     "1",
+     "PRD-025",
+     "50",
+     "189.00",
+     "10.00",
+     "8505.00"
+    ],
+    [
+     "INV-000006",
+     "2",
+     "PRD-003",
+     "5",
+     "24.00",
+     "5.00",
+     "114.00"
+    ],
+    [
+     "INV-000007",
+     "1",
+     "PRD-051",
+     "20",
+     "24.00",
+     "0.00",
+     "480.00"
+    ],
+    [
+     "INV-000007",
+     "2",
+     "PRD-023",
+     "5",
+     "178.61",
+     "0.00",
+     "893.05"
+    ],
+    [
+     "INV-000007",
+     "3",
+     "PRD-018",
+     "5",
+     "4.05",
+     "5.00",
+     "19.24"
+    ],
+    [
+     "INV-000008",
+     "1",
+     "PRD-003",
+     "1",
+     "24.00",
+     "15.00",
+     "20.40"
+    ],
+    [
+     "INV-000008",
+     "2",
+     "PRD-049",
+     "10",
+     "12.00",
+     "10.00",
+     "108.00"
+    ],
+    [
+     "INV-000008",
+     "3",
+     "PRD-017",
+     "5",
+     "18.50",
+     "5.00",
+     "87.88"
+    ],
+    [
+     "INV-000009",
+     "1",
+     "PRD-057",
+     "5",
+     "35.10",
+     "0.00",
+     "175.50"
+    ]
+   ],
+   "project_head": [
+    [
+     "INV-000001",
+     "1",
+     "PRD-086",
+     "2",
+     "39.00",
+     "0.00",
+     "78.00"
+    ],
+    [
+     "INV-000001",
+     "2",
+     "PRD-078",
+     "50",
+     "198.45",
+     "15.00",
+     "8434.13"
+    ],
+    [
+     "INV-000002",
+     "1",
+     "PRD-077",
+     "20",
+     "9.35",
+     "0.00",
+     "187.00"
+    ],
+    [
+     "INV-000004",
+     "1",
+     "PRD-084",
+     "50",
+     "24.00",
+     "5.00",
+     "1140.00"
+    ],
+    [
+     "INV-000005",
+     "1",
+     "PRD-077",
+     "1",
+     "9.35",
+     "10.00",
+     "8.42"
+    ],
+    [
+     "INV-000006",
+     "1",
+     "PRD-011",
+     "50",
+     "13.20",
+     "15.00",
+     "561.00"
+    ],
+    [
+     "INV-000006",
+     "2",
+     "PRD-025",
+     "5",
+     "120.00",
+     "0.00",
+     "600.00"
+    ],
+    [
+     "INV-000007",
+     "1",
+     "PRD-001",
+     "10",
+     "12.96",
+     "0.00",
+     "129.60"
+    ],
+    [
+     "INV-000007",
+     "2",
+     "PRD-078",
+     "50",
+     "198.45",
+     "0.00",
+     "9922.50"
+    ],
+    [
+     "INV-000007",
+     "3",
+     "PRD-069",
+     "10",
+     "70.20",
+     "0.00",
+     "702.00"
+    ],
+    [
+     "INV-000009",
+     "1",
+     "PRD-074",
+     "1",
+     "149.04",
+     "0.00",
+     "149.04"
+    ],
+    [
+     "INV-000009",
+     "2",
+     "PRD-024",
+     "10",
+     "58.50",
+     "15.00",
+     "497.25"
+    ],
+    [
+     "INV-000010",
+     "1",
+     "PRD-082",
+     "2",
+     "132.00",
+     "15.00",
+     "224.40"
+    ],
+    [
+     "INV-000011",
+     "1",
+     "PRD-043",
+     "2",
+     "39.00",
+     "5.00",
+     "74.10"
+    ],
+    [
+     "INV-000011",
+     "2",
+     "PRD-034",
+     "2",
+     "129.60",
+     "15.00",
+     "220.32"
+    ],
+    [
+     "INV-000011",
+     "3",
+     "PRD-084",
+     "20",
+     "24.00",
+     "0.00",
+     "480.00"
+    ],
+    [
+     "INV-000012",
+     "1",
+     "PRD-040",
+     "1",
+     "26.40",
+     "0.00",
+     "26.40"
+    ],
+    [
+     "INV-000012",
+     "2",
+     "PRD-080",
+     "50",
+     "40.95",
+     "10.00",
+     "1842.75"
+    ],
+    [
+     "INV-000013",
+     "1",
+     "PRD-044",
+     "50",
+     "4.50",
+     "5.00",
+     "213.75"
+    ],
+    [
+     "INV-000014",
+     "1",
+     "PRD-052",
+     "1",
+     "21.60",
+     "0.00",
+     "21.60"
+    ]
+   ]
+  },
+  "purchase_orders": {
+   "note": "One row per purchase order raised in the ERP to a supplier.",
+   "columns": [
+    {
+     "name": "po_id",
+     "type": "string"
+    },
+    {
+     "name": "supplier_id",
+     "type": "string"
+    },
+    {
+     "name": "order_date",
+     "type": "date"
+    },
+    {
+     "name": "expected_date",
+     "type": "date"
+    },
+    {
+     "name": "status",
+     "type": "string"
+    },
+    {
+     "name": "currency",
+     "type": "string"
+    },
+    {
+     "name": "total_amount",
+     "type": "decimal(12,2)"
+    }
+   ],
+   "key": [
+    "po_id"
+   ],
+   "rows": {
+    "lesson": 5,
+    "practice": 320,
+    "project": 600
+   },
+   "lesson": [
+    [
+     "PO-00001",
+     "SUP-001",
+     "2025-11-04",
+     "2025-11-18",
+     "received",
+     "GBP",
+     "2480.00"
+    ],
+    [
+     "PO-00002",
+     "SUP-002",
+     "2025-12-01",
+     "2025-12-22",
+     "received",
+     "EUR",
+     "9150.50"
+    ],
+    [
+     "PO-00003",
+     "SUP-004",
+     "2026-01-15",
+     "2026-02-14",
+     "cancelled",
+     "EUR",
+     "1320.00"
+    ],
+    [
+     "PO-00004",
+     "SUP-003",
+     "2026-02-10",
+     "2026-02-24",
+     "partially_received",
+     "GBP",
+     "5640.75"
+    ],
+    [
+     "PO-00005",
+     "SUP-001",
+     "2026-03-09",
+     "2026-03-23",
+     "open",
+     "GBP",
+     "3075.20"
+    ]
+   ],
+   "practice_head": [
+    [
+     "PO-00001",
+     "SUP-054",
+     "2025-11-01",
+     "2025-11-08",
+     "received",
+     "EUR",
+     "3437.24"
+    ],
+    [
+     "PO-00002",
+     "SUP-045",
+     "2025-11-02",
+     "2025-12-02",
+     "open",
+     "USD",
+     "17462.03"
+    ],
+    [
+     "PO-00003",
+     "SUP-059",
+     "2025-11-03",
+     "2025-11-24",
+     "open",
+     "EUR",
+     "5723.12"
+    ],
+    [
+     "PO-00004",
+     "SUP-039",
+     "2025-11-03",
+     "2025-11-10",
+     "received",
+     "USD",
+     "22557.64"
+    ],
+    [
+     "PO-00005",
+     "SUP-059",
+     "2025-11-03",
+     "2025-11-24",
+     "received",
+     "EUR",
+     "28347.26"
+    ],
+    [
+     "PO-00006",
+     "SUP-038",
+     "2025-11-04",
+     "2025-11-11",
+     "received",
+     "USD",
+     "27557.21"
+    ],
+    [
+     "PO-00007",
+     "SUP-002",
+     "2025-11-04",
+     "2025-12-04",
+     "received",
+     "GBP",
+     "14272.82"
+    ],
+    [
+     "PO-00008",
+     "SUP-008",
+     "2025-11-04",
+     "2025-11-11",
+     "cancelled",
+     "EUR",
+     "37653.62"
+    ],
+    [
+     "PO-00009",
+     "SUP-032",
+     "2025-11-04",
+     "2025-12-04",
+     "received",
+     "GBP",
+     "17958.81"
+    ],
+    [
+     "PO-00010",
+     "SUP-005",
+     "2025-11-04",
+     "2025-11-11",
+     "received",
+     "USD",
+     "11188.49"
+    ],
+    [
+     "PO-00011",
+     "SUP-046",
+     "2025-11-06",
+     "2025-11-13",
+     "received",
+     "EUR",
+     "41635.37"
+    ],
+    [
+     "PO-00012",
+     "SUP-020",
+     "2025-11-07",
+     "2025-12-07",
+     "received",
+     "CAD",
+     "9907.55"
+    ],
+    [
+     "PO-00013",
+     "SUP-018",
+     "2025-11-08",
+     "2025-12-08",
+     "received",
+     "INR",
+     "17459.11"
+    ],
+    [
+     "PO-00014",
+     "SUP-035",
+     "2025-11-08",
+     "2025-11-15",
+     "received",
+     "CAD",
+     "47349.76"
+    ],
+    [
+     "PO-00015",
+     "SUP-029",
+     "2025-11-09",
+     "2025-11-16",
+     "open",
+     "USD",
+     "40287.12"
+    ],
+    [
+     "PO-00016",
+     "SUP-045",
+     "2025-11-09",
+     "2025-11-30",
+     "partially_received",
+     "USD",
+     "22642.48"
+    ],
+    [
+     "PO-00017",
+     "SUP-027",
+     "2025-11-11",
+     "2025-11-25",
+     "received",
+     "USD",
+     "15981.86"
+    ],
+    [
+     "PO-00018",
+     "SUP-043",
+     "2025-11-11",
+     "2025-12-02",
+     "received",
+     "EUR",
+     "39437.08"
+    ],
+    [
+     "PO-00019",
+     "SUP-019",
+     "2025-11-11",
+     "2025-12-11",
+     "received",
+     "EUR",
+     "25547.48"
+    ],
+    [
+     "PO-00020",
+     "SUP-042",
+     "2025-11-12",
+     "2025-11-19",
+     "open",
+     "EUR",
+     "45664.08"
+    ]
+   ],
+   "project_head": [
+    [
+     "PO-00001",
+     "SUP-077",
+     "2025-11-01",
+     "2025-11-22",
+     "received",
+     "INR",
+     "5141.73"
+    ],
+    [
+     "PO-00002",
+     "SUP-048",
+     "2025-11-01",
+     "2025-11-22",
+     "partially_received",
+     "USD",
+     "2071.78"
+    ],
+    [
+     "PO-00003",
+     "SUP-020",
+     "2025-11-01",
+     "2025-12-01",
+     "received",
+     "INR",
+     "3597.45"
+    ],
+    [
+     "PO-00004",
+     "SUP-027",
+     "2025-11-01",
+     "2025-11-08",
+     "received",
+     "CAD",
+     "35385.86"
+    ],
+    [
+     "PO-00005",
+     "SUP-035",
+     "2025-11-01",
+     "2025-11-15",
+     "partially_received",
+     "USD",
+     "27463.02"
+    ],
+    [
+     "PO-00006",
+     "SUP-018",
+     "2025-11-01",
+     "2025-12-01",
+     "received",
+     "USD",
+     "25602.76"
+    ],
+    [
+     "PO-00007",
+     "SUP-025",
+     "2025-11-02",
+     "2025-11-23",
+     "partially_received",
+     "USD",
+     "37864.97"
+    ],
+    [
+     "PO-00008",
+     "SUP-062",
+     "2025-11-02",
+     "2025-11-16",
+     "received",
+     "USD",
+     "9347.17"
+    ],
+    [
+     "PO-00009",
+     "SUP-067",
+     "2025-11-02",
+     "2025-11-16",
+     "received",
+     "AUD",
+     "24050.08"
+    ],
+    [
+     "PO-00010",
+     "SUP-019",
+     "2025-11-02",
+     "2025-11-09",
+     "open",
+     "EUR",
+     "37159.85"
+    ],
+    [
+     "PO-00011",
+     "SUP-068",
+     "2025-11-02",
+     "2025-11-23",
+     "open",
+     "USD",
+     "3677.17"
+    ],
+    [
+     "PO-00012",
+     "SUP-076",
+     "2025-11-03",
+     "2025-11-10",
+     "received",
+     "AUD",
+     "2901.39"
+    ],
+    [
+     "PO-00013",
+     "SUP-058",
+     "2025-11-03",
+     "2025-12-03",
+     "open",
+     "EUR",
+     "44592.37"
+    ],
+    [
+     "PO-00014",
+     "SUP-043",
+     "2025-11-03",
+     "2025-11-24",
+     "received",
+     "USD",
+     "27926.17"
+    ],
+    [
+     "PO-00015",
+     "SUP-031",
+     "2025-11-03",
+     "2025-11-17",
+     "partially_received",
+     "CAD",
+     "20159.42"
+    ],
+    [
+     "PO-00016",
+     "SUP-038",
+     "2025-11-04",
+     "2025-12-04",
+     "received",
+     "EUR",
+     "29717.32"
+    ],
+    [
+     "PO-00017",
+     "SUP-016",
+     "2025-11-04",
+     "2025-12-04",
+     "received",
+     "USD",
+     "13640.52"
+    ],
+    [
+     "PO-00018",
+     "SUP-016",
+     "2025-11-05",
+     "2025-11-26",
+     "open",
+     "USD",
+     "38871.65"
+    ],
+    [
+     "PO-00019",
+     "SUP-056",
+     "2025-11-05",
+     "2025-12-05",
+     "received",
+     "GBP",
+     "47906.01"
+    ],
+    [
+     "PO-00020",
+     "SUP-013",
+     "2025-11-05",
+     "2025-12-05",
+     "open",
+     "CAD",
+     "42820.70"
+    ]
+   ]
+  },
+  "suppliers": {
+   "note": "One row per supplier per source system: the ERP and the procurement tool each keep their own list.",
+   "columns": [
+    {
+     "name": "source_system",
+     "type": "string"
+    },
+    {
+     "name": "supplier_id",
+     "type": "string"
+    },
+    {
+     "name": "supplier_name",
+     "type": "string"
+    },
+    {
+     "name": "country",
+     "type": "string"
+    },
+    {
+     "name": "payment_terms_days",
+     "type": "int"
+    },
+    {
+     "name": "contact_email",
+     "type": "string"
+    }
+   ],
+   "key": [
+    "source_system",
+    "supplier_id"
+   ],
+   "rows": {
+    "lesson": 8,
+    "practice": 103,
+    "project": 133
+   },
+   "lesson": [
+    [
+     "erp",
+     "SUP-001",
+     "Pellacott Fasteners",
+     "GB",
+     "30",
+     "orders@pellacottfasteners.example"
+    ],
+    [
+     "erp",
+     "SUP-002",
+     "Rindell Tooling",
+     "DE",
+     "45",
+     "orders@rindelltooling.example"
+    ],
+    [
+     "erp",
+     "SUP-003",
+     "Ostley Safety Supply",
+     "GB",
+     "30",
+     "orders@ostleysafetysupply.example"
+    ],
+    [
+     "erp",
+     "SUP-004",
+     "Vantor Packaging",
+     "NL",
+     "60",
+     "orders@vantorpackaging.example"
+    ],
+    [
+     "procurement",
+     "SUP-001",
+     "Pellacott Fasteners",
+     "GB",
+     "30",
+     "orders@pellacottfasteners.example"
+    ],
+    [
+     "procurement",
+     "SUP-002",
+     "Rindell Tooling",
+     "DE",
+     "45",
+     "orders@rindelltooling.example"
+    ],
+    [
+     "procurement",
+     "SUP-003",
+     "Ostley Safety Supply Ltd",
+     "GB",
+     "30",
+     "orders@ostleysafetysupply.example"
+    ],
+    [
+     "procurement",
+     "SUP-005",
+     "Larchmere Electrical",
+     "US",
+     "30",
+     "orders@larchmereelectrical.example"
+    ]
+   ],
+   "practice_head": [
+    [
+     "erp",
+     "SUP-001",
+     "Pemberlin Logistics Supply",
+     "DE",
+     "60",
+     "orders@pemberlinlogisticssupply.example"
+    ],
+    [
+     "erp",
+     "SUP-002",
+     "Calloway Bend Health Supply",
+     "GB",
+     "15",
+     "orders@callowaybendhealthsupply.example"
+    ],
+    [
+     "erp",
+     "SUP-003",
+     "Hesketh Vale Logistics Supply",
+     "CA",
+     "60",
+     "orders@heskethvalelogisticssupply.example"
+    ],
+    [
+     "erp",
+     "SUP-004",
+     "Wrenfield Analytics Supply",
+     "US",
+     "60",
+     "orders@wrenfieldanalyticssupply.example"
+    ],
+    [
+     "erp",
+     "SUP-005",
+     "Marrowind Foods Supply",
+     "US",
+     "30",
+     "orders@marrowindfoodssupply.example"
+    ],
+    [
+     "erp",
+     "SUP-006",
+     "Thornvale Energy Supply",
+     "PT",
+     "30",
+     "orders@thornvaleenergysupply.example"
+    ],
+    [
+     "erp",
+     "SUP-007",
+     "Pemberlin Analytics Supply",
+     "CA",
+     "60",
+     "orders@pemberlinanalyticssupply.example"
+    ],
+    [
+     "erp",
+     "SUP-008",
+     "Calloway Bend Energy Supply",
+     "DE",
+     "30",
+     "orders@callowaybendenergysupply.example"
+    ],
+    [
+     "erp",
+     "SUP-009",
+     "Thornvale Labs Supply",
+     "CA",
+     "30",
+     "orders@thornvalelabssupply.example"
+    ],
+    [
+     "erp",
+     "SUP-010",
+     "Quillfen Partners Supply",
+     "CA",
+     "15",
+     "orders@quillfenpartnerssupply.example"
+    ],
+    [
+     "erp",
+     "SUP-011",
+     "Tamsley Systems Supply",
+     "PT",
+     "30",
+     "orders@tamsleysystemssupply.example"
+    ],
+    [
+     "erp",
+     "SUP-012",
+     "Kelderby Energy Supply",
+     "US",
+     "45",
+     "orders@kelderbyenergysupply.example"
+    ],
+    [
+     "erp",
+     "SUP-014",
+     "Rindell Partners Supply",
+     "US",
+     "30",
+     "orders@rindellpartnerssupply.example"
+    ],
+    [
+     "erp",
+     "SUP-015",
+     "Vantor Labs Supply",
+     "US",
+     "60",
+     "orders@vantorlabssupply.example"
+    ],
+    [
+     "erp",
+     "SUP-017",
+     "Nettlecombe Systems Supply",
+     "US",
+     "15",
+     "orders@nettlecombesystemssupply.example"
+    ],
+    [
+     "erp",
+     "SUP-018",
+     "Pellacott Logistics Supply",
+     "IN",
+     "15",
+     "orders@pellacottlogisticssupply.example"
+    ],
+    [
+     "erp",
+     "SUP-019",
+     "Brackenmoor Logistics Supply",
+     "DE",
+     "45",
+     "orders@brackenmoorlogisticssupply.example"
+    ],
+    [
+     "erp",
+     "SUP-020",
+     "Ellowby Textiles Supply",
+     "CA",
+     "15",
+     "orders@ellowbytextilessupply.example"
+    ],
+    [
+     "erp",
+     "SUP-021",
+     "Quillfen Retail Supply",
+     "DE",
+     "45",
+     "orders@quillfenretailsupply.example"
+    ],
+    [
+     "erp",
+     "SUP-022",
+     "Amberloch Textiles Supply",
+     "US",
+     "60",
+     "orders@amberlochtextilessupply.example"
+    ]
+   ],
+   "project_head": [
+    [
+     "erp",
+     "SUP-001",
+     "Calloway Bend Partners Supply",
+     "CA",
+     "60",
+     "orders@callowaybendpartnerssupply.example"
+    ],
+    [
+     "erp",
+     "SUP-002",
+     "Hesketh Vale Logistics Supply",
+     "NL",
+     "30",
+     "orders@heskethvalelogisticssupply.example"
+    ],
+    [
+     "erp",
+     "SUP-003",
+     "Vantor Retail Supply",
+     "US",
+     "15",
+     "orders@vantorretailsupply.example"
+    ],
+    [
+     "erp",
+     "SUP-004",
+     "Hesketh Vale Textiles Supply",
+     "US",
+     "30",
+     "orders@heskethvaletextilessupply.example"
+    ],
+    [
+     "erp",
+     "SUP-005",
+     "Ellowby Labs Supply",
+     "US",
+     "45",
+     "orders@ellowbylabssupply.example"
+    ],
+    [
+     "erp",
+     "SUP-006",
+     "Fennick Retail Supply",
+     "GB",
+     "45",
+     "orders@fennickretailsupply.example"
+    ],
+    [
+     "erp",
+     "SUP-007",
+     "Calloway Bend Manufacturing Supply",
+     "CA",
+     "45",
+     "orders@callowaybendmanufacturingsupply.example"
+    ],
+    [
+     "erp",
+     "SUP-008",
+     "Hesketh Vale Energy Supply",
+     "CA",
+     "30",
+     "orders@heskethvaleenergysupply.example"
+    ],
+    [
+     "erp",
+     "SUP-009",
+     "Nettlecombe Textiles Supply",
+     "US",
+     "30",
+     "orders@nettlecombetextilessupply.example"
+    ],
+    [
+     "erp",
+     "SUP-010",
+     "Sablewick Energy Supply",
+     "IN",
+     "30",
+     "orders@sablewickenergysupply.example"
+    ],
+    [
+     "erp",
+     "SUP-011",
+     "Sablewick Labs Supply",
+     "PT",
+     "60",
+     "orders@sablewicklabssupply.example"
+    ],
+    [
+     "erp",
+     "SUP-012",
+     "Kelderby Retail Supply",
+     "IN",
+     "60",
+     "orders@kelderbyretailsupply.example"
+    ],
+    [
+     "erp",
+     "SUP-013",
+     "Amberloch Health Supply",
+     "CA",
+     "30",
+     "orders@amberlochhealthsupply.example"
+    ],
+    [
+     "erp",
+     "SUP-014",
+     "Thornvale Partners Supply",
+     "NL",
+     "30",
+     "orders@thornvalepartnerssupply.example"
+    ],
+    [
+     "erp",
+     "SUP-015",
+     "Larchmere Retail Supply",
+     "US",
+     "60",
+     "orders@larchmereretailsupply.example"
+    ],
+    [
+     "erp",
+     "SUP-016",
+     "Quillfen Textiles Supply",
+     "US",
+     "60",
+     "orders@quillfentextilessupply.example"
+    ],
+    [
+     "erp",
+     "SUP-017",
+     "Larchmere Logistics Supply",
+     "NL",
+     "30",
+     "orders@larchmerelogisticssupply.example"
+    ],
+    [
+     "erp",
+     "SUP-018",
+     "Thornvale Retail Supply",
+     "US",
+     "60",
+     "orders@thornvaleretailsupply.example"
+    ],
+    [
+     "erp",
+     "SUP-019",
+     "Dunmarrow Foods Supply",
+     "DE",
+     "15",
+     "orders@dunmarrowfoodssupply.example"
+    ],
+    [
+     "erp",
+     "SUP-020",
+     "Ashbury Row Analytics Supply",
+     "IN",
+     "30",
+     "orders@ashburyrowanalyticssupply.example"
+    ]
+   ]
+  },
+  "customer_cdc": {
+   "note": "One row per change to an account after the snapshot: insert, update or delete, with the whole row as it stood after the change.",
+   "columns": [
+    {
+     "name": "op",
+     "type": "string"
+    },
+    {
+     "name": "sequence",
+     "type": "bigint"
+    },
+    {
+     "name": "changed_at",
+     "type": "timestamp"
+    },
+    {
+     "name": "account_id",
+     "type": "string"
+    },
+    {
+     "name": "account_name",
+     "type": "string"
+    },
+    {
+     "name": "industry",
+     "type": "string"
+    },
+    {
+     "name": "country",
+     "type": "string"
+    },
+    {
+     "name": "segment",
+     "type": "string"
+    },
+    {
+     "name": "account_owner",
+     "type": "string"
+    },
+    {
+     "name": "credit_limit",
+     "type": "decimal(12,2)"
+    },
+    {
+     "name": "created_on",
+     "type": "date"
+    },
+    {
+     "name": "is_active",
+     "type": "boolean"
+    }
+   ],
+   "key": [
+    "account_id",
+    "sequence"
+   ],
+   "rows": {
+    "lesson": 10,
+    "practice": 420,
+    "project": 1206
+   },
+   "lesson": [
+    [
+     "U",
+     "200001",
+     "2026-01-06T10:15:00",
+     "ACC-0001",
+     "Quillfen Analytics Inc",
+     "technology",
+     "US",
+     "mid_market",
+     "Dana Whitlock",
+     "100000.00",
+     "2022-03-14",
+     "true"
+    ],
+    [
+     "U",
+     "200004",
+     "2026-01-12T14:02:00",
+     "ACC-0002",
+     "Brackenmoor Foods Ltd",
+     "consumer goods",
+     "GB",
+     "smb",
+     "Priya Venkat",
+     "15000.00",
+     "2023-06-02",
+     "true"
+    ],
+    [
+     "I",
+     "200007",
+     "2026-01-19T09:40:00",
+     "ACC-0006",
+     "Fennick Labs B.V.",
+     "technology",
+     "NL",
+     "smb",
+     "Priya Venkat",
+     "15000.00",
+     "2026-01-19",
+     "true"
+    ],
+    [
+     "U",
+     "200009",
+     "2026-01-27T16:05:00",
+     "ACC-0001",
+     "Quillfen Analytics Inc",
+     "technology",
+     "US",
+     "enterprise",
+     "Dana Whitlock",
+     "100000.00",
+     "2022-03-14",
+     "true"
+    ],
+    [
+     "D",
+     "200012",
+     "2026-02-03T11:30:00",
+     "ACC-0003",
+     "Tamsley Logistics GmbH",
+     "transport",
+     "DE",
+     "enterprise",
+     "Mei Lindqvist",
+     "250000.00",
+     "2021-09-20",
+     "true"
+    ],
+    [
+     "I",
+     "200015",
+     "2026-02-09T08:55:00",
+     "ACC-0007",
+     "Marrowind Retail Lda",
+     "consumer goods",
+     "PT",
+     "smb",
+     "Tobias Achterberg",
+     "15000.00",
+     "2026-02-09",
+     "true"
+    ],
+    [
+     "U",
+     "200016",
+     "2026-02-17T13:20:00",
+     "ACC-0006",
+     "Fennick Labs B.V.",
+     "technology",
+     "NL",
+     "smb",
+     "Priya Venkat",
+     "30000.00",
+     "2026-01-19",
+     "true"
+    ],
+    [
+     "U",
+     "200019",
+     "2026-03-02T10:00:00",
+     "ACC-0004",
+     "Corvane Health Pty Ltd",
+     "healthcare",
+     "AU",
+     "mid_market",
+     "Rafael Ibarra",
+     "75000.00",
+     "2024-01-08",
+     "false"
+    ],
+    [
+     "U",
+     "200023",
+     "2026-03-10T15:45:00",
+     "ACC-0001",
+     "Quillfen Analytics Inc",
+     "technology",
+     "US",
+     "enterprise",
+     "Mei Lindqvist",
+     "100000.00",
+     "2022-03-14",
+     "true"
+    ],
+    [
+     "U",
+     "200026",
+     "2026-03-18T09:10:00",
+     "ACC-0007",
+     "Marrowind Retail Group Lda",
+     "consumer goods",
+     "PT",
+     "smb",
+     "Tobias Achterberg",
+     "15000.00",
+     "2026-02-09",
+     "true"
+    ]
+   ],
+   "practice_head": [
+    [
+     "U",
+     "200001",
+     "2026-01-01T15:16:37",
+     "ACC-0044",
+     "Corvane Textiles Inc",
+     "consumer goods",
+     "US",
+     "enterprise",
+     "Tobias Achterberg",
+     "30000.00",
+     "2024-12-30",
+     "true"
+    ],
+    [
+     "U",
+     "200003",
+     "2026-01-01T20:46:27",
+     "ACC-0062",
+     "Vantor Partners Pvt Ltd",
+     "professional services",
+     "IN",
+     "enterprise",
+     "Tobias Achterberg",
+     "250000.00",
+     "2024-09-05",
+     "true"
+    ],
+    [
+     "U",
+     "200005",
+     "2026-01-01T23:38:16",
+     "ACC-0081",
+     "Calloway Bend Analytics Inc",
+     "technology",
+     "CA",
+     "mid_market",
+     "Tobias Achterberg",
+     "37500.00",
+     "2025-04-07",
+     "false"
+    ],
+    [
+     "U",
+     "200008",
+     "2026-01-02T01:24:30",
+     "ACC-0105",
+     "Rindell Labs Group GmbH",
+     "technology",
+     "DE",
+     "mid_market",
+     "Dana Whitlock",
+     "37500.00",
+     "2022-08-09",
+     "true"
+    ],
+    [
+     "U",
+     "200011",
+     "2026-01-02T02:31:39",
+     "ACC-0004",
+     "Yarrowby Marine B.V.",
+     "transport",
+     "NL",
+     "smb",
+     "Rafael Ibarra",
+     "30000.00",
+     "2024-02-18",
+     "false"
+    ],
+    [
+     "I",
+     "200014",
+     "2026-01-02T06:28:57",
+     "ACC-0151",
+     "Quillfen Labs Ltd",
+     "technology",
+     "GB",
+     "smb",
+     "Mei Lindqvist",
+     "15000.00",
+     "2026-01-02",
+     "true"
+    ],
+    [
+     "U",
+     "200015",
+     "2026-01-02T21:35:05",
+     "ACC-0040",
+     "Ellowby Logistics Pvt Ltd",
+     "transport",
+     "IN",
+     "smb",
+     "Tobias Achterberg",
+     "15000.00",
+     "2024-07-25",
+     "false"
+    ],
+    [
+     "D",
+     "200016",
+     "2026-01-02T22:32:01",
+     "ACC-0007",
+     "Pellacott Retail Ltd",
+     "consumer goods",
+     "GB",
+     "mid_market",
+     "Mei Lindqvist",
+     "75000.00",
+     "2021-12-23",
+     "true"
+    ],
+    [
+     "I",
+     "200017",
+     "2026-01-03T12:39:15",
+     "ACC-0152",
+     "Hesketh Vale Marine Inc",
+     "transport",
+     "US",
+     "smb",
+     "Rafael Ibarra",
+     "30000.00",
+     "2026-01-03",
+     "true"
+    ],
+    [
+     "U",
+     "200020",
+     "2026-01-04T06:32:29",
+     "ACC-0126",
+     "Dunmarrow Analytics Inc",
+     "technology",
+     "CA",
+     "smb",
+     "Rafael Ibarra",
+     "30000.00",
+     "2022-12-18",
+     "true"
+    ],
+    [
+     "I",
+     "200021",
+     "2026-01-04T15:23:24",
+     "ACC-0153",
+     "Marrowind Labs Inc",
+     "technology",
+     "US",
+     "smb",
+     "Tobias Achterberg",
+     "15000.00",
+     "2026-01-04",
+     "true"
+    ],
+    [
+     "I",
+     "200022",
+     "2026-01-04T15:24:21",
+     "ACC-0154",
+     "Sablewick Manufacturing Ltd",
+     "manufacturing",
+     "GB",
+     "smb",
+     "Jonas Ekberg",
+     "15000.00",
+     "2026-01-04",
+     "true"
+    ],
+    [
+     "I",
+     "200023",
+     "2026-01-04T16:18:30",
+     "ACC-0155",
+     "Marrowind Textiles Inc",
+     "consumer goods",
+     "US",
+     "mid_market",
+     "Tobias Achterberg",
+     "150000.00",
+     "2026-01-04",
+     "true"
+    ],
+    [
+     "U",
+     "200025",
+     "2026-01-04T17:26:38",
+     "ACC-0069",
+     "Amberloch Partners Inc",
+     "professional services",
+     "US",
+     "mid_market",
+     "Rafael Ibarra",
+     "60000.00",
+     "2025-07-31",
+     "true"
+    ],
+    [
+     "U",
+     "200027",
+     "2026-01-04T19:10:42",
+     "ACC-0116",
+     "Corvane Foods Inc",
+     "consumer goods",
+     "US",
+     "smb",
+     "Dana Whitlock",
+     "15000.00",
+     "2022-09-03",
+     "true"
+    ],
+    [
+     "U",
+     "200030",
+     "2026-01-05T07:38:38",
+     "ACC-0070",
+     "Brackenmoor Foods Inc",
+     "consumer goods",
+     "US",
+     "mid_market",
+     "Priya Venkat",
+     "46875.00",
+     "2024-09-25",
+     "true"
+    ],
+    [
+     "U",
+     "200031",
+     "2026-01-05T13:43:23",
+     "ACC-0044",
+     "Corvane Textiles Inc",
+     "consumer goods",
+     "US",
+     "enterprise",
+     "Tobias Achterberg",
+     "30000.00",
+     "2024-12-30",
+     "false"
+    ],
+    [
+     "I",
+     "200033",
+     "2026-01-05T15:56:14",
+     "ACC-0156",
+     "Larchmere Textiles GmbH",
+     "consumer goods",
+     "DE",
+     "smb",
+     "Priya Venkat",
+     "15000.00",
+     "2026-01-05",
+     "true"
+    ],
+    [
+     "I",
+     "200035",
+     "2026-01-05T17:25:48",
+     "ACC-0157",
+     "Thornvale Marine Pvt Ltd",
+     "transport",
+     "IN",
+     "mid_market",
+     "Rafael Ibarra",
+     "37500.00",
+     "2026-01-05",
+     "true"
+    ],
+    [
+     "U",
+     "200037",
+     "2026-01-06T00:06:16",
+     "ACC-0039",
+     "Ashbury Row Systems B.V.",
+     "technology",
+     "NL",
+     "enterprise",
+     "Priya Venkat",
+     "312500.00",
+     "2025-05-27",
+     "true"
+    ]
+   ],
+   "project_head": [
+    [
+     "U",
+     "200001",
+     "2026-01-01T02:19:55",
+     "ACC-0032",
+     "Ellowby Textiles Inc",
+     "consumer goods",
+     "US",
+     "smb",
+     "Jonas Ekberg",
+     "3750.00",
+     "2024-05-17",
+     "true"
+    ],
+    [
+     "U",
+     "200004",
+     "2026-01-01T02:24:49",
+     "ACC-0201",
+     "Amberloch Logistics Pvt Ltd",
+     "transport",
+     "IN",
+     "mid_market",
+     "Rafael Ibarra",
+     "120000.00",
+     "2025-02-21",
+     "true"
+    ],
+    [
+     "U",
+     "200005",
+     "2026-01-01T03:47:37",
+     "ACC-0220",
+     "Grisford Marine Pty Ltd",
+     "transport",
+     "AU",
+     "mid_market",
+     "Rafael Ibarra",
+     "30000.00",
+     "2021-12-10",
+     "true"
+    ],
+    [
+     "D",
+     "200006",
+     "2026-01-01T03:51:41",
+     "ACC-0041",
+     "Hesketh Vale Labs GmbH",
+     "technology",
+     "DE",
+     "enterprise",
+     "Rafael Ibarra",
+     "250000.00",
+     "2022-01-12",
+     "true"
+    ],
+    [
+     "U",
+     "200007",
+     "2026-01-01T05:35:24",
+     "ACC-0038",
+     "Kelderby Foods Lda",
+     "consumer goods",
+     "PT",
+     "enterprise",
+     "Rafael Ibarra",
+     "125000.00",
+     "2023-11-24",
+     "true"
+    ],
+    [
+     "D",
+     "200010",
+     "2026-01-01T05:46:55",
+     "ACC-0220",
+     "Grisford Marine Pty Ltd",
+     "transport",
+     "AU",
+     "mid_market",
+     "Rafael Ibarra",
+     "30000.00",
+     "2021-12-10",
+     "true"
+    ],
+    [
+     "D",
+     "200013",
+     "2026-01-01T06:15:33",
+     "ACC-0065",
+     "Fennick Analytics Pty Ltd",
+     "technology",
+     "AU",
+     "smb",
+     "Tobias Achterberg",
+     "7500.00",
+     "2024-01-05",
+     "true"
+    ],
+    [
+     "U",
+     "200016",
+     "2026-01-01T08:56:51",
+     "ACC-0100",
+     "Wrenfield Manufacturing Inc",
+     "manufacturing",
+     "AU",
+     "smb",
+     "Mei Lindqvist",
+     "30000.00",
+     "2022-05-05",
+     "true"
+    ],
+    [
+     "I",
+     "200018",
+     "2026-01-01T12:15:00",
+     "ACC-0221",
+     "Calloway Bend Partners B.V.",
+     "professional services",
+     "NL",
+     "enterprise",
+     "Mei Lindqvist",
+     "250000.00",
+     "2026-01-01",
+     "true"
+    ],
+    [
+     "U",
+     "200021",
+     "2026-01-01T14:29:20",
+     "ACC-0202",
+     "Dunmarrow Health Pvt Ltd",
+     "healthcare",
+     "IN",
+     "enterprise",
+     "Dana Whitlock",
+     "500000.00",
+     "2021-04-18",
+     "true"
+    ],
+    [
+     "U",
+     "200022",
+     "2026-01-01T14:42:06",
+     "ACC-0172",
+     "Wrenfield Logistics Group Inc",
+     "transport",
+     "US",
+     "smb",
+     "Mei Lindqvist",
+     "30000.00",
+     "2021-12-02",
+     "true"
+    ],
+    [
+     "U",
+     "200025",
+     "2026-01-01T15:00:59",
+     "ACC-0018",
+     "Calloway Bend Energy Pty Ltd",
+     "energy",
+     "AU",
+     "enterprise",
+     "Mei Lindqvist",
+     "250000.00",
+     "2022-04-03",
+     "false"
+    ],
+    [
+     "U",
+     "200028",
+     "2026-01-01T15:32:56",
+     "ACC-0219",
+     "Calloway Bend Textiles Group Pty Ltd",
+     "consumer goods",
+     "AU",
+     "smb",
+     "Tobias Achterberg",
+     "7500.00",
+     "2024-08-28",
+     "true"
+    ],
+    [
+     "I",
+     "200032",
+     "2026-01-01T19:15:56",
+     "ACC-0222",
+     "Hesketh Vale Logistics Pvt Ltd",
+     "transport",
+     "IN",
+     "mid_market",
+     "Priya Venkat",
+     "75000.00",
+     "2026-01-01",
+     "true"
+    ],
+    [
+     "U",
+     "200035",
+     "2026-01-01T19:38:24",
+     "ACC-0025",
+     "Tamsley Partners Pvt Ltd",
+     "professional services",
+     "IN",
+     "enterprise",
+     "Mei Lindqvist",
+     "37500.00",
+     "2023-07-17",
+     "true"
+    ],
+    [
+     "I",
+     "200036",
+     "2026-01-02T01:14:30",
+     "ACC-0223",
+     "Vantor Retail Inc",
+     "consumer goods",
+     "CA",
+     "smb",
+     "Dana Whitlock",
+     "15000.00",
+     "2026-01-02",
+     "true"
+    ],
+    [
+     "U",
+     "200037",
+     "2026-01-02T03:34:10",
+     "ACC-0209",
+     "Pellacott Retail Pvt Ltd",
+     "consumer goods",
+     "IN",
+     "smb",
+     "Priya Venkat",
+     "15000.00",
+     "2022-07-08",
+     "true"
+    ],
+    [
+     "U",
+     "200038",
+     "2026-01-02T08:26:50",
+     "ACC-0076",
+     "Fennick Manufacturing Inc",
+     "manufacturing",
+     "US",
+     "mid_market",
+     "Mei Lindqvist",
+     "15000.00",
+     "2024-10-25",
+     "true"
+    ],
+    [
+     "U",
+     "200040",
+     "2026-01-02T10:13:07",
+     "ACC-0077",
+     "Thornvale Energy Inc",
+     "energy",
+     "CA",
+     "mid_market",
+     "Dana Whitlock",
+     "75000.00",
+     "2024-09-18",
+     "false"
+    ],
+    [
+     "U",
+     "200042",
+     "2026-01-02T12:18:42",
+     "ACC-0125",
+     "Yarrowby Foods Pty Ltd",
+     "consumer goods",
+     "AU",
+     "smb",
+     "Jonas Ekberg",
+     "30000.00",
+     "2022-04-08",
+     "true"
+    ]
+   ]
+  },
+  "product_cdc": {
+   "note": "One row per change to a product since the catalogue began: insert, update or delete, with the whole row.",
+   "columns": [
+    {
+     "name": "op",
+     "type": "string"
+    },
+    {
+     "name": "sequence",
+     "type": "bigint"
+    },
+    {
+     "name": "changed_at",
+     "type": "timestamp"
+    },
+    {
+     "name": "product_id",
+     "type": "string"
+    },
+    {
+     "name": "product_name",
+     "type": "string"
+    },
+    {
+     "name": "category",
+     "type": "string"
+    },
+    {
+     "name": "list_price",
+     "type": "decimal(10,2)"
+    },
+    {
+     "name": "unit_of_measure",
+     "type": "string"
+    },
+    {
+     "name": "is_active",
+     "type": "boolean"
+    }
+   ],
+   "key": [
+    "product_id",
+    "sequence"
+   ],
+   "rows": {
+    "lesson": 8,
+    "practice": 170,
+    "project": 313
+   },
+   "lesson": [
+    [
+     "I",
+     "1001",
+     "2025-06-02T09:01:00",
+     "PRD-001",
+     "Hex Bolt M8",
+     "fasteners",
+     "12.00",
+     "box",
+     "true"
+    ],
+    [
+     "I",
+     "1002",
+     "2025-06-02T09:02:00",
+     "PRD-002",
+     "Torque Wrench",
+     "tools",
+     "65.00",
+     "each",
+     "true"
+    ],
+    [
+     "I",
+     "1003",
+     "2025-06-02T09:03:00",
+     "PRD-003",
+     "Safety Glasses",
+     "safety",
+     "8.90",
+     "pair",
+     "true"
+    ],
+    [
+     "I",
+     "1004",
+     "2025-06-02T09:04:00",
+     "PRD-004",
+     "Packing Tape",
+     "packaging",
+     "4.50",
+     "roll",
+     "true"
+    ],
+    [
+     "U",
+     "5002",
+     "2025-11-03T08:00:00",
+     "PRD-002",
+     "Torque Wrench",
+     "tools",
+     "69.00",
+     "each",
+     "true"
+    ],
+    [
+     "U",
+     "5007",
+     "2026-02-02T08:00:00",
+     "PRD-002",
+     "Torque Wrench",
+     "tools",
+     "74.50",
+     "each",
+     "true"
+    ],
+    [
+     "D",
+     "5011",
+     "2026-02-20T17:30:00",
+     "PRD-004",
+     "Packing Tape",
+     "packaging",
+     "4.50",
+     "roll",
+     "true"
+    ],
+    [
+     "I",
+     "5013",
+     "2026-03-01T09:00:00",
+     "PRD-005",
+     "LED Panel 600",
+     "electrical",
+     "39.00",
+     "each",
+     "true"
+    ]
+   ],
+   "practice_head": [
+    [
+     "I",
+     "1001",
+     "2025-06-02T09:01:00",
+     "PRD-001",
+     "Cable Tie Pack",
+     "electrical",
+     "24.00",
+     "each",
+     "true"
+    ],
+    [
+     "I",
+     "1002",
+     "2025-06-02T09:02:00",
+     "PRD-002",
+     "Extension Reel 25m",
+     "electrical",
+     "18.50",
+     "each",
+     "true"
+    ],
+    [
+     "I",
+     "1003",
+     "2025-06-02T09:03:00",
+     "PRD-003",
+     "LED Panel 600",
+     "electrical",
+     "24.00",
+     "each",
+     "true"
+    ],
+    [
+     "I",
+     "1004",
+     "2025-06-02T09:04:00",
+     "PRD-004",
+     "Junction Box",
+     "electrical",
+     "120.00",
+     "each",
+     "true"
+    ],
+    [
+     "I",
+     "1005",
+     "2025-06-02T09:05:00",
+     "PRD-005",
+     "Fuse Kit",
+     "electrical",
+     "8.90",
+     "each",
+     "true"
+    ],
+    [
+     "I",
+     "1006",
+     "2025-06-02T09:06:00",
+     "PRD-006",
+     "Hex Bolt M8",
+     "fasteners",
+     "8.90",
+     "box",
+     "true"
+    ],
+    [
+     "I",
+     "1007",
+     "2025-06-02T09:07:00",
+     "PRD-007",
+     "Hex Nut M8",
+     "fasteners",
+     "18.50",
+     "box",
+     "true"
+    ],
+    [
+     "I",
+     "1008",
+     "2025-06-02T09:08:00",
+     "PRD-008",
+     "Wood Screw 40mm",
+     "fasteners",
+     "65.00",
+     "box",
+     "true"
+    ],
+    [
+     "I",
+     "1009",
+     "2025-06-02T09:09:00",
+     "PRD-009",
+     "Rivet 4mm",
+     "fasteners",
+     "24.00",
+     "box",
+     "true"
+    ],
+    [
+     "I",
+     "1010",
+     "2025-06-02T09:10:00",
+     "PRD-010",
+     "Anchor Plug 6mm",
+     "fasteners",
+     "39.00",
+     "box",
+     "true"
+    ],
+    [
+     "I",
+     "1011",
+     "2025-06-02T09:11:00",
+     "PRD-011",
+     "Stretch Film Roll",
+     "packaging",
+     "12.00",
+     "roll",
+     "true"
+    ],
+    [
+     "I",
+     "1012",
+     "2025-06-02T09:12:00",
+     "PRD-012",
+     "Carton 40x30x30",
+     "packaging",
+     "24.00",
+     "roll",
+     "true"
+    ],
+    [
+     "I",
+     "1013",
+     "2025-06-02T09:13:00",
+     "PRD-013",
+     "Packing Tape",
+     "packaging",
+     "4.50",
+     "roll",
+     "true"
+    ],
+    [
+     "I",
+     "1014",
+     "2025-06-02T09:14:00",
+     "PRD-014",
+     "Pallet Wrap",
+     "packaging",
+     "18.50",
+     "roll",
+     "true"
+    ],
+    [
+     "I",
+     "1015",
+     "2025-06-02T09:15:00",
+     "PRD-015",
+     "Bubble Roll",
+     "packaging",
+     "4.50",
+     "roll",
+     "true"
+    ],
+    [
+     "I",
+     "1016",
+     "2025-06-02T09:16:00",
+     "PRD-016",
+     "Safety Glasses",
+     "safety",
+     "18.50",
+     "pair",
+     "true"
+    ],
+    [
+     "I",
+     "1017",
+     "2025-06-02T09:17:00",
+     "PRD-017",
+     "Nitrile Gloves",
+     "safety",
+     "18.50",
+     "pair",
+     "true"
+    ],
+    [
+     "I",
+     "1018",
+     "2025-06-02T09:18:00",
+     "PRD-018",
+     "Hi-Vis Vest",
+     "safety",
+     "4.50",
+     "pair",
+     "true"
+    ],
+    [
+     "I",
+     "1019",
+     "2025-06-02T09:19:00",
+     "PRD-019",
+     "Ear Defenders",
+     "safety",
+     "189.00",
+     "pair",
+     "true"
+    ],
+    [
+     "I",
+     "1020",
+     "2025-06-02T09:20:00",
+     "PRD-020",
+     "Hard Hat",
+     "safety",
+     "18.50",
+     "pair",
+     "true"
+    ]
+   ],
+   "project_head": [
+    [
+     "I",
+     "1001",
+     "2025-06-02T09:01:00",
+     "PRD-001",
+     "Cable Tie Pack",
+     "electrical",
+     "12.00",
+     "each",
+     "true"
+    ],
+    [
+     "I",
+     "1004",
+     "2025-06-02T09:04:00",
+     "PRD-004",
+     "Junction Box",
+     "electrical",
+     "65.00",
+     "each",
+     "true"
+    ],
+    [
+     "I",
+     "1005",
+     "2025-06-02T09:05:00",
+     "PRD-005",
+     "Fuse Kit",
+     "electrical",
+     "4.50",
+     "each",
+     "true"
+    ],
+    [
+     "I",
+     "1006",
+     "2025-06-02T09:06:00",
+     "PRD-006",
+     "Hex Bolt M8",
+     "fasteners",
+     "12.00",
+     "box",
+     "true"
+    ],
+    [
+     "I",
+     "1002",
+     "2025-06-02T09:02:00",
+     "PRD-002",
+     "Extension Reel 25m",
+     "electrical",
+     "18.50",
+     "each",
+     "true"
+    ],
+    [
+     "I",
+     "1007",
+     "2025-06-02T09:07:00",
+     "PRD-007",
+     "Hex Nut M8",
+     "fasteners",
+     "39.00",
+     "box",
+     "true"
+    ],
+    [
+     "I",
+     "1008",
+     "2025-06-02T09:08:00",
+     "PRD-008",
+     "Wood Screw 40mm",
+     "fasteners",
+     "8.90",
+     "box",
+     "true"
+    ],
+    [
+     "I",
+     "1009",
+     "2025-06-02T09:09:00",
+     "PRD-009",
+     "Rivet 4mm",
+     "fasteners",
+     "120.00",
+     "box",
+     "true"
+    ],
+    [
+     "I",
+     "1010",
+     "2025-06-02T09:10:00",
+     "PRD-010",
+     "Anchor Plug 6mm",
+     "fasteners",
+     "24.00",
+     "box",
+     "true"
+    ],
+    [
+     "I",
+     "1011",
+     "2025-06-02T09:11:00",
+     "PRD-011",
+     "Stretch Film Roll",
+     "packaging",
+     "12.00",
+     "roll",
+     "true"
+    ],
+    [
+     "I",
+     "1002",
+     "2025-06-02T09:02:00",
+     "PRD-002",
+     "Extension Reel 25m",
+     "electrical",
+     "18.50",
+     "each",
+     "true"
+    ],
+    [
+     "I",
+     "1003",
+     "2025-06-02T09:03:00",
+     "PRD-003",
+     "LED Panel 600",
+     "electrical",
+     "24.00",
+     "each",
+     "true"
+    ],
+    [
+     "I",
+     "1013",
+     "2025-06-02T09:13:00",
+     "PRD-013",
+     "Packing Tape",
+     "packaging",
+     "12.00",
+     "roll",
+     "true"
+    ],
+    [
+     "I",
+     "1014",
+     "2025-06-02T09:14:00",
+     "PRD-014",
+     "Pallet Wrap",
+     "packaging",
+     "65.00",
+     "roll",
+     "true"
+    ],
+    [
+     "I",
+     "1015",
+     "2025-06-02T09:15:00",
+     "PRD-015",
+     "Bubble Roll",
+     "packaging",
+     "24.00",
+     "roll",
+     "true"
+    ],
+    [
+     "I",
+     "1016",
+     "2025-06-02T09:16:00",
+     "PRD-016",
+     "Safety Glasses",
+     "safety",
+     "4.50",
+     "pair",
+     "true"
+    ],
+    [
+     "I",
+     "1017",
+     "2025-06-02T09:17:00",
+     "PRD-017",
+     "Nitrile Gloves",
+     "safety",
+     "18.50",
+     "pair",
+     "true"
+    ],
+    [
+     "I",
+     "1018",
+     "2025-06-02T09:18:00",
+     "PRD-018",
+     "Hi-Vis Vest",
+     "safety",
+     "65.00",
+     "pair",
+     "true"
+    ],
+    [
+     "I",
+     "1012",
+     "2025-06-02T09:12:00",
+     "PRD-012",
+     "Carton 40x30x30",
+     "packaging",
+     "18.50",
+     "roll",
+     "true"
+    ],
+    [
+     "I",
+     "1019",
+     "2025-06-02T09:19:00",
+     "PRD-019",
+     "Ear Defenders",
+     "safety",
+     "18.50",
+     "pair",
+     "true"
+    ]
+   ]
+  }
+ }
+}

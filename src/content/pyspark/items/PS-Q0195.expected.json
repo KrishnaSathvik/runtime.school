@@ -1,0 +1,164 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "order_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "line_no",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "unit_no",
+     "type": "int",
+     "nullable": false
+    },
+    {
+     "name": "label",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "O00001",
+     1,
+     1,
+     "{\"sku\":\"P005\",\"unit\":1,\"of\":3}"
+    ],
+    [
+     "O00001",
+     1,
+     2,
+     "{\"sku\":\"P005\",\"unit\":2,\"of\":3}"
+    ],
+    [
+     "O00001",
+     1,
+     3,
+     "{\"sku\":\"P005\",\"unit\":3,\"of\":3}"
+    ],
+    [
+     "O00001",
+     2,
+     1,
+     "{\"sku\":\"P005\",\"unit\":1,\"of\":3}"
+    ],
+    [
+     "O00001",
+     2,
+     2,
+     "{\"sku\":\"P005\",\"unit\":2,\"of\":3}"
+    ],
+    [
+     "O00001",
+     2,
+     3,
+     "{\"sku\":\"P005\",\"unit\":3,\"of\":3}"
+    ],
+    [
+     "O00001",
+     3,
+     1,
+     "{\"sku\":\"P004\",\"unit\":1,\"of\":1}"
+    ],
+    [
+     "O00002",
+     1,
+     1,
+     "{\"sku\":\"P001\",\"unit\":1,\"of\":3}"
+    ],
+    [
+     "O00002",
+     1,
+     2,
+     "{\"sku\":\"P001\",\"unit\":2,\"of\":3}"
+    ],
+    [
+     "O00002",
+     1,
+     3,
+     "{\"sku\":\"P001\",\"unit\":3,\"of\":3}"
+    ],
+    [
+     "O00002",
+     2,
+     1,
+     "{\"sku\":\"P001\",\"unit\":1,\"of\":1}"
+    ],
+    [
+     "O00003",
+     1,
+     1,
+     "{\"sku\":\"P001\",\"unit\":1,\"of\":2}"
+    ],
+    [
+     "O00003",
+     1,
+     2,
+     "{\"sku\":\"P001\",\"unit\":2,\"of\":2}"
+    ],
+    [
+     "O00003",
+     2,
+     1,
+     "{\"sku\":\"P007\",\"unit\":1,\"of\":3}"
+    ],
+    [
+     "O00003",
+     2,
+     2,
+     "{\"sku\":\"P007\",\"unit\":2,\"of\":3}"
+    ],
+    [
+     "O00003",
+     2,
+     3,
+     "{\"sku\":\"P007\",\"unit\":3,\"of\":3}"
+    ],
+    [
+     "O00003",
+     3,
+     1,
+     "{\"sku\":\"P003\",\"unit\":1,\"of\":3}"
+    ],
+    [
+     "O00003",
+     3,
+     2,
+     "{\"sku\":\"P003\",\"unit\":2,\"of\":3}"
+    ],
+    [
+     "O00003",
+     3,
+     3,
+     "{\"sku\":\"P003\",\"unit\":3,\"of\":3}"
+    ],
+    [
+     "O00004",
+     1,
+     1,
+     "{\"sku\":\"P001\",\"unit\":1,\"of\":3}"
+    ]
+   ],
+   "row_count": 75
+  }
+ },
+ "hidden": [
+  "the full practice order lines",
+  "lines with a zero, negative or missing quantity",
+  "a line with units but no product",
+  "the same line delivered twice",
+  "an empty order lines table"
+ ]
+}

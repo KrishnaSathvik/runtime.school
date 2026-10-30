@@ -1,0 +1,214 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "transfer_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "reference",
+     "type": "string",
+     "nullable": false
+    },
+    {
+     "name": "check",
+     "type": "string",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "TR00001",
+     "failed",
+     "Rent 274",
+     "ok"
+    ],
+    [
+     "TR00002",
+     "completed",
+     "Gift 901",
+     "ok"
+    ],
+    [
+     "TR00003",
+     "completed",
+     "Loan repayment 782",
+     "ok"
+    ],
+    [
+     "TR00004",
+     "completed",
+     "Car repair 626",
+     "ok"
+    ],
+    [
+     "TR00005",
+     "reversed",
+     "Gift 143",
+     "ok"
+    ],
+    [
+     "TR00006",
+     "completed",
+     "Reversal: Gift 143",
+     "ok"
+    ],
+    [
+     "TR00007",
+     "completed",
+     "(none)",
+     "ok"
+    ],
+    [
+     "TR00008",
+     null,
+     "Reversal: Gift 143",
+     "bad reversal"
+    ],
+    [
+     "TR00009",
+     "pending",
+     "Gift 144",
+     "missing account"
+    ]
+   ],
+   "row_count": 9,
+   "inputs": {
+    "transfers": [
+     [
+      "TR00000",
+      "A00001",
+      "A00008",
+      "120.00",
+      "USD",
+      "2025-12-31T23:59:59",
+      "completed",
+      "Rent 273",
+      null
+     ],
+     [
+      "TR00001",
+      "A00001",
+      "A00008",
+      "650.50",
+      "USD",
+      "2026-01-11T13:09:57",
+      "failed",
+      "Rent 274",
+      null
+     ],
+     [
+      "TR00002",
+      "A00008",
+      "A00001",
+      "75.00",
+      "USD",
+      "2026-01-23T07:26:55",
+      "completed",
+      "Gift 901",
+      null
+     ],
+     [
+      "TR00003",
+      "A00008",
+      "A00001",
+      "1500.00",
+      "USD",
+      "2026-01-29T11:47:57",
+      "completed",
+      "Loan repayment 782",
+      null
+     ],
+     [
+      "TR00004",
+      "A00001",
+      "A00008",
+      "52.99",
+      "USD",
+      "2026-02-01T18:48:37",
+      "completed",
+      "Car repair 626",
+      null
+     ],
+     [
+      "TR00005",
+      "A00008",
+      "A00001",
+      "40.50",
+      "USD",
+      "2026-02-19T16:12:11",
+      "reversed",
+      "Gift 143",
+      null
+     ],
+     [
+      "TR00006",
+      "A00001",
+      "A00008",
+      "40.50",
+      "USD",
+      "2026-02-20T18:12:11",
+      "completed",
+      "Reversal: Gift 143",
+      "TR00005"
+     ],
+     [
+      "TR00007",
+      "A00008",
+      "A00001",
+      "30.00",
+      "USD",
+      "2026-01-01T00:00:00",
+      "completed",
+      null,
+      null
+     ],
+     [
+      "TR00008",
+      "A00008",
+      "A00001",
+      "40.50",
+      "USD",
+      "2026-02-21T10:00:00",
+      null,
+      "Reversal: Gift 143",
+      "TR00005"
+     ],
+     [
+      "TR00009",
+      "A00001",
+      null,
+      "0.00",
+      "USD",
+      "2026-02-22T10:00:00",
+      "pending",
+      "Gift 144",
+      null
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice transfers table",
+  "transfers just before and after the start of 2026, and one with no time",
+  "one transfer for each problem, and some with two",
+  "reversals with every status, and with none",
+  "transfers with and without a reference",
+  "the same transfer delivered twice",
+  "an empty transfers table"
+ ]
+}

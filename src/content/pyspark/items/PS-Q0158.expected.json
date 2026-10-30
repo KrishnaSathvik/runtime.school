@@ -1,0 +1,63 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "campaign_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "purchases",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "other",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "purchase_revenue",
+     "type": "decimal(20,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "CMP-0003",
+     0,
+     1,
+     null
+    ],
+    [
+     "CMP-0002",
+     1,
+     0,
+     "49.99"
+    ],
+    [
+     "CMP-0001",
+     2,
+     0,
+     "190.00"
+    ]
+   ],
+   "row_count": 3
+  }
+ },
+ "hidden": [
+  "the full practice conversions",
+  "conversions with a missing or differently written type",
+  "purchases with a missing revenue",
+  "non-purchase conversions that carry a revenue",
+  "a campaign with sign-ups and leads only",
+  "no conversions"
+ ]
+}

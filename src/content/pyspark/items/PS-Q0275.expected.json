@@ -1,0 +1,80 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "trip_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "tip",
+     "type": "decimal(8,2)",
+     "nullable": true
+    },
+    {
+     "name": "stages",
+     "type": "int",
+     "nullable": false
+    },
+    {
+     "name": "tasks",
+     "type": "int",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "T004",
+     "7.80",
+     2,
+     4
+    ],
+    [
+     "T007",
+     "10.40",
+     2,
+     4
+    ],
+    [
+     "T012",
+     "3.51",
+     2,
+     4
+    ],
+    [
+     "T009",
+     "2.12",
+     2,
+     4
+    ],
+    [
+     "T001",
+     "2.81",
+     2,
+     4
+    ],
+    [
+     "T002",
+     "3.28",
+     2,
+     4
+    ]
+   ],
+   "row_count": 6
+  }
+ },
+ "hidden": [
+  "the full practice trips table",
+  "card trips of exactly 2 miles and just over",
+  "trips with no distance or no payment type",
+  "no card trips at all",
+  "an empty trips table"
+ ]
+}

@@ -1,0 +1,48 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D08",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "shipments",
+   "shipment_events"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "['clean_events', 'unknown_events', 'known_events', 'delivered', 'in_flight']\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "clean_events 13\nunknown_events 1\nknown_events 12\ndelivered 4\nin_flight 0\n+--------+-----------+----------+\n|event_id|shipment_id|event_type|\n+--------+-----------+----------+\n|E0000013|     SH9999|  departed|\n+--------+-----------+----------+\n\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "",
+   "error": {
+    "type": "ValueError",
+    "message": "these tasks wait on each other: known_events, delivered, in_flight",
+    "line": 7,
+    "condition": null
+   }
+  },
+  "e4": {
+   "stdout": "known_events failed: 1 events for unknown shipments\n{'clean_events': 'ok', 'unknown_events': 'ok', 'known_events': 'failed', 'delivered': 'skipped', 'in_flight': 'skipped'}\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "a change to clean_events affects: ['unknown_events', 'known_events', 'delivered', 'in_flight']\na change to delivered affects: ['in_flight']\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "first run\n  ran clean_events\n  ran unknown_events\n  ran known_events\n{'clean_events': 'ok', 'unknown_events': 'ok', 'known_events': 'ok', 'delivered': 'failed', 'in_flight': 'skipped'}\nrerun\n  ran delivered\n  ran in_flight\n{'clean_events': 'ok', 'unknown_events': 'ok', 'known_events': 'ok', 'delivered': 'ok', 'in_flight': 'ok'}\n0 shipments in flight\n",
+   "error": null
+  }
+ }
+}

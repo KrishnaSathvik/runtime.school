@@ -1,0 +1,27 @@
+{
+  "id": "PS-L031-C1",
+  "slug": "sales-by-channel",
+  "lesson": "PS-L031",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Sales by channel",
+  "dataset": { "id": "PS-D01", "version": "1.1.0" },
+  "prompt": "The weekly report needs one line per sales channel. Write `solve(orders)` so it returns, for each `channel`, how many orders there are, how many of them have a total, and the revenue.",
+  "rules": [
+    "`orders` counts every row of the channel, including orders with a missing total.",
+    "`priced` counts only the rows whose `total` isn't missing.",
+    "`revenue` is the sum of `total`. Missing totals add nothing.",
+    "Orders with a missing `channel` form their own line. Return `channel`, `orders`, `priced` and `revenue`, in that order."
+  ],
+  "hints": [
+    "Group by `channel`, then list three aggregates inside `agg`, each with `.alias`.",
+    "One kind of count counts rows, the other counts the values in a column.",
+    "`F.count(\"*\")` for `orders`, `F.count(\"total\")` for `priced`, `F.sum(\"total\")` for `revenue`."
+  ],
+  "entry": "solve",
+  "inputs": ["orders"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(orders):\n    # One row per channel: orders, priced and revenue.\n    return orders\n",
+  "output": { "columns": ["channel", "orders", "priced", "revenue"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

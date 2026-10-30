@@ -1,0 +1,83 @@
+{
+ "id": "PS-P08-M5",
+ "slug": "keep-account-history",
+ "project": "PS-P08",
+ "milestone": "PS-P08.m5",
+ "difficulty": "hard",
+ "minutes": 50,
+ "title": "Keep every version of every account",
+ "dataset": {
+  "id": "PS-D08",
+  "version": "1.0.0"
+ },
+ "also": [
+  {
+   "id": "PS-D14",
+   "version": "1.0.0",
+   "tables": [
+    "accounts",
+    "customer_cdc"
+   ]
+  }
+ ],
+ "prompt": "Shipments are billed to customer accounts, and accounts change: owner, segment, credit limit. Finance needs to know what an account looked like on any day, so the account table is a type 2 history: every version is a row, valid from one time until the next change.\n\n`accounts` is the CRM snapshot taken at `SNAPSHOT_AT`, and `customer_cdc` holds every change since. It arrives in two batches. Write `apply_account_batch(changes)`, `history_after_batch_1(accounts, customer_cdc)` and `account_history(accounts, customer_cdc)`.",
+ "rules": [
+  "The history starts with every snapshot account, `valid_from` = `SNAPSHOT_AT`, `valid_to` missing and `is_current` true, saved as a new Delta table at `HISTORY_PATH`.",
+  "Batch 1 is the changes with `changed_at` before `SECOND_BATCH`, batch 2 the rest. `history_after_batch_1` applies batch 1; `account_history` calls it, then applies batch 2.",
+  "Within a batch, exact copies count once and only each account's newest change (highest `sequence`) applies. The rows aren't in sequence order.",
+  "A change closes the account's current version: `valid_to` = its `changed_at`, `is_current` false. Closed versions never change.",
+  "Then the change adds a new current version from its `changed_at`, with `valid_to` missing, unless it's a delete (`op` `D`). A deleted account has no current version.",
+  "Return the `ACCOUNT_COLUMNS`, then `valid_from`, `valid_to` and `is_current`."
+ ],
+ "hints": [
+  "`changes.distinct()`, then `row_number` over `account_id` ordered by `sequence` descending: one row per account, its newest change.",
+  "Close with a MERGE on `t.account_id = s.account_id AND t.is_current` and `whenMatchedUpdate(set={\"valid_to\": \"s.changed_at\", \"is_current\": \"false\"})`. Without `t.is_current`, batch 2 closes old versions again.",
+  "Add the new versions with an append: the changes that aren't deletes, `select(*ACCOUNT_COLUMNS, ...)` with `changed_at` as `valid_from`, a missing `valid_to` cast to timestamp, and `F.lit(True)`."
+ ],
+ "explanation": "Each batch is two writes: a MERGE that closes current versions and an append that opens new ones. Matching on `t.is_current` as well as the account keeps closed versions untouched, so `ACC-0001`'s snapshot row keeps the `valid_to` batch 1 gave it. The boundaries meet exactly: a version ends at the `changed_at` where the next one starts, and the times come from the data, never the clock, so a rerun gives the same history. A delete only closes, which is how `ACC-0002` and `ACC-0003` end with no current version. Cutting each batch to its newest change per account (after `distinct()`, so two copies of one change can't both rank first) is what the MERGE needs, and it means the history is as detailed as the batches: `ACC-0006`, inserted and deleted inside batch 2, never appears.",
+ "entry": "account_history",
+ "inputs": [
+  "accounts",
+  "customer_cdc"
+ ],
+ "file": "pipeline.py",
+ "append": "\n\nHISTORY_PATH = \"/tmp/p08/account_history\"\nSNAPSHOT_AT = \"2026-01-01 00:00:00\"  # when the accounts snapshot was taken\nSECOND_BATCH = \"2026-02-01 00:00:00\"  # changes at or after this time are batch 2\nACCOUNT_COLUMNS = [\"account_id\", \"account_name\", \"industry\", \"country\", \"segment\", \"account_owner\",\n                   \"credit_limit\", \"created_on\", \"is_active\"]\n\n\ndef apply_account_batch(changes):\n    # Step 5: close the current version of each changed account, then add its new version.\n    pass\n\n\ndef history_after_batch_1(accounts, customer_cdc):\n    # Step 5: the snapshot as each account's first version, saved at HISTORY_PATH, then batch 1 applied.\n    shutil.rmtree(HISTORY_PATH, ignore_errors=True)  # start from an empty folder on every run\n    return accounts\n\n\ndef account_history(accounts, customer_cdc):\n    # Step 5: the history after batch 1, then batch 2 applied.\n    history_after_batch_1(accounts, customer_cdc)\n    return spark.read.format(\"delta\").load(HISTORY_PATH)\n",
+ "prerequisites": [
+  "PS-L063",
+  "PS-L064",
+  "PS-L075"
+ ],
+ "output": {
+  "columns": [
+   "account_id",
+   "account_name",
+   "industry",
+   "country",
+   "segment",
+   "account_owner",
+   "credit_limit",
+   "created_on",
+   "is_active",
+   "valid_from",
+   "valid_to",
+   "is_current"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "example",
+   "sample": true
+  },
+  {
+   "id": "project",
+   "edition": "project"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 150,
+  "check_timeout_s": 360,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

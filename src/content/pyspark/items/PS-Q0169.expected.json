@@ -1,0 +1,148 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "symbol",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "trade_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "close",
+     "type": "decimal(10,2)",
+     "nullable": true
+    },
+    {
+     "name": "prev_close",
+     "type": "decimal(10,2)",
+     "nullable": true
+    },
+    {
+     "name": "pct_change",
+     "type": "decimal(10,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "ALDR.SX",
+     "2026-01-15",
+     "191.95",
+     null,
+     null
+    ],
+    [
+     "ALDR.SX",
+     "2026-01-16",
+     "192.94",
+     "191.95",
+     "0.52"
+    ],
+    [
+     "ALDR.SX",
+     "2026-01-20",
+     "197.36",
+     "192.94",
+     "2.29"
+    ],
+    [
+     "ALDR.SX",
+     "2026-01-21",
+     "98.47",
+     "197.36",
+     "-50.11"
+    ],
+    [
+     "ALDR.SX",
+     "2026-01-22",
+     "101.22",
+     "98.47",
+     "2.79"
+    ],
+    [
+     "BRVO.SX",
+     "2026-01-15",
+     "54.62",
+     null,
+     null
+    ],
+    [
+     "BRVO.SX",
+     "2026-01-16",
+     "55.34",
+     "54.62",
+     "1.32"
+    ],
+    [
+     "BRVO.SX",
+     "2026-01-21",
+     "56.05",
+     "55.34",
+     "1.28"
+    ],
+    [
+     "BRVO.SX",
+     "2026-01-22",
+     "56.40",
+     "56.05",
+     "0.62"
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-15",
+     "122.58",
+     null,
+     null
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-16",
+     "121.62",
+     "122.58",
+     "-0.78"
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-20",
+     "124.71",
+     "121.62",
+     "2.54"
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-21",
+     "125.51",
+     "124.71",
+     "0.64"
+    ],
+    [
+     "CYPH.SX",
+     "2026-01-22",
+     "126.25",
+     "125.51",
+     "0.59"
+    ]
+   ],
+   "row_count": 14
+  }
+ },
+ "hidden": [
+  "the full practice prices",
+  "several stocks whose rows arrive mixed and out of order",
+  "a stock with a single trading day",
+  "changes that round at the half cent",
+  "a day with a missing close",
+  "no prices"
+ ]
+}

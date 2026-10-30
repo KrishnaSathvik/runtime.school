@@ -1,0 +1,83 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "employee_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "job_title",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "manager_title",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "E0001",
+     "Chief Executive Officer",
+     null
+    ],
+    [
+     "E0002",
+     "Head of Engineering",
+     "Chief Executive Officer"
+    ],
+    [
+     "E0003",
+     "Software Engineer",
+     "Head of Engineering"
+    ],
+    [
+     "E0004",
+     "  senior software engineer",
+     "Head of Engineering"
+    ],
+    [
+     "E0005",
+     "Senior Software Engineer",
+     "Head of Engineering"
+    ],
+    [
+     "E0006",
+     "Senior Software Engineer",
+     "Head of Engineering"
+    ],
+    [
+     "E0007",
+     "Head of Finance",
+     "Chief Executive Officer"
+    ],
+    [
+     "E0008",
+     "Senior Financial Analyst",
+     "Head of Finance"
+    ],
+    [
+     "E0009",
+     "Senior Financial Analyst",
+     "Head of Finance"
+    ]
+   ],
+   "row_count": 9
+  }
+ },
+ "hidden": [
+  "the full practice employees",
+  "a three-level chain with several reports",
+  "an employee whose manager isn't in the table",
+  "an empty employees table"
+ ]
+}

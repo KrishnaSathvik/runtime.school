@@ -1,0 +1,26 @@
+{
+  "id": "PS-L003-C2",
+  "slug": "number-the-learners",
+  "lesson": "PS-L003",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Number the learners",
+  "dataset": { "id": "PS-D11", "version": "1.0.0" },
+  "prompt": "Every learner gets a badge number, starting from 1. Write `solve(learners)` so it returns a DataFrame with one column, `id`, holding 1, 2, 3 … up to the number of learners.",
+  "rules": [
+    "One number for each row of `learners`: with 5 learners, the ids are 1 to 5.",
+    "The only column is `id`.",
+    "With no learners, return no rows."
+  ],
+  "hints": [
+    "`learners.count()` tells you how many numbers you need.",
+    "`spark.range(start, end)` makes a DataFrame with an `id` column, and like Python's `range` it leaves out `end`.",
+    "Start at 1, and make the end one more than the count."
+  ],
+  "entry": "solve",
+  "inputs": ["learners"],
+  "starter": "def solve(learners):\n    # Return a DataFrame with one column, id: 1, 2, 3 ... up to the number of learners.\n    return learners\n",
+  "output": { "columns": ["id"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

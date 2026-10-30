@@ -1,0 +1,124 @@
+{
+  "id": "PS-L005",
+  "minutes": 20,
+  "lede": "Underneath every DataFrame is an RDD, Spark's older and lower-level way to hold data. You'll meet RDDs in older code and in a few jobs DataFrames can't do. Knowing both explains why most PySpark today is written with DataFrames.",
+  "objectives": [
+    "Describe an RDD as a distributed collection of plain Python objects",
+    "Get an RDD from a DataFrame with `df.rdd`, or from a Python list with `spark.sparkContext.parallelize`",
+    "Use `map`, `filter`, `take`, `count` and `collect` on a small RDD",
+    "Turn an RDD back into a DataFrame with `toDF`, and say why DataFrames are usually the better choice"
+  ],
+  "dataset": { "id": "PS-D15", "version": "1.0.0", "edition": "lesson", "tables": ["api_requests"] },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "The `api_requests` table above has one row per web request a service answered. In every example it's already loaded as a DataFrame called `api_requests`, and `spark` is the SparkSession.\n\nAn **RDD** (resilient distributed dataset) is a collection of Python objects split into partitions, like a list Spark can spread over many machines. Unlike a DataFrame, an RDD has no columns or schema: Spark doesn't know what's inside each item. Every DataFrame can hand you its rows as an RDD with `.rdd`."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "A DataFrame's rows as an RDD",
+      "code": "rdd = api_requests.rdd\nprint(type(rdd).__name__, rdd.count())\n\nrow = rdd.first()\nprint(row[\"service\"], row[\"status_code\"])\n",
+      "note": "`count()` and `first()` are actions here too. Each item of `api_requests.rdd` is a `Row`, read with `row[\"column\"]` just like the rows `collect()` gives you."
+    },
+    {
+      "kind": "text",
+      "md": "RDDs have their own transformations, and they take **Python functions**. `rdd.map(f)` calls `f` on every item and keeps what it returns. `rdd.filter(f)` keeps the items where `f` returns `True`. A short function written in place, `lambda r: ...`, is the usual way to pass one.\n\nThey're lazy, just like DataFrame transformations: nothing runs until an action such as `take`, `count` or `collect`."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "map: one value per row",
+      "code": "services = api_requests.rdd.map(lambda r: r[\"service\"])\nprint(services.take(4))\n",
+      "note": "`map` turned each `Row` into a plain string, so `take(4)` returns a list of four strings, not rows."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "filter with a Python function",
+      "code": "failed = api_requests.rdd.filter(lambda r: r[\"status_code\"] >= 400)\npairs = failed.map(lambda r: (r[\"request_id\"], r[\"status_code\"]))\nprint(pairs.collect())\n",
+      "note": "Two of the twelve requests failed: a 404 (the caller asked for something that doesn't exist) and a 500 (the server broke). `map` can return any Python object; here each item becomes a tuple."
+    },
+    {
+      "kind": "text",
+      "md": "You can also make an RDD straight from a Python list with `spark.sparkContext.parallelize(list)`. Spark splits it into partitions. Here Spark has two cores, so it makes two; `getNumPartitions()` counts them."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "An RDD from a Python list",
+      "code": "nums = spark.sparkContext.parallelize([3, 1, 4, 1, 5, 9, 2, 6])\nprint(nums.getNumPartitions(), \"partitions\")\nprint(nums.map(lambda n: n * 10).collect())\nprint(nums.filter(lambda n: n % 2 == 0).count(), \"even numbers\")\n",
+      "note": "`collect()` keeps the original order, even though the numbers were split over two partitions."
+    },
+    {
+      "kind": "text",
+      "md": "When your RDD holds tuples, `toDF` turns it back into a DataFrame. Give it the column names, and Spark looks at the values to guess each column's type. Or give it the names **and** types as one string, such as `\"request_id string, latency_ms int\"`, and Spark uses exactly those."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Back to a DataFrame with toDF",
+      "code": "pairs = api_requests.rdd.map(lambda r: (r[\"request_id\"], r[\"latency_ms\"]))\n\nguessed = pairs.toDF([\"request_id\", \"latency_ms\"])\nguessed.printSchema()\n\ntyped = pairs.toDF(\"request_id string, latency_ms int\")\ntyped.printSchema()\ntyped.show(3)\n",
+      "note": "With names only, Spark saw Python whole numbers and chose `long`, a wider type than the table's `integer` column. Spelling out `int` keeps it an `integer`."
+    },
+    {
+      "kind": "error-example",
+      "id": "e6",
+      "title": "Guessing types from an empty RDD",
+      "code": "none = api_requests.rdd.filter(lambda r: r[\"status_code\"] == 999)\nnone.map(lambda r: (r[\"request_id\"], r[\"status_code\"])).toDF([\"request_id\", \"status_code\"]).show()\n",
+      "error": "ValueError",
+      "note": "No request has status 999, so there's no row to guess types from. Give the types instead, `toDF(\"request_id string, status_code int\")`, and you get an empty DataFrame with the right columns."
+    },
+    {
+      "kind": "text",
+      "md": "So why not use RDDs everywhere? A DataFrame has a **schema**: Spark knows every column's name and type. Your `filter` and `select` are steps Spark understands, so it can read only the columns you use, run steps together and choose a fast way to run them. The plan from `explain()` in lesson 4 is that work.\n\nAn RDD function is a black box. Spark can't see inside `lambda r: r[\"status_code\"] >= 400`, so it can't skip anything. It also has to send every row from Spark to Python and back to run it. Use DataFrames by default, and reach for an RDD only when you need plain Python on each item. Lessons 49 and 50 go further with RDDs."
+    }
+  ],
+  "challenges": ["PS-L005-C1", "PS-L005-C2"],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "What does `api_requests.rdd.map(lambda r: r[\"service\"])` give back?",
+      "choices": [
+        "A list of service names, read straight away",
+        "A new RDD whose items will be plain strings, with nothing run yet",
+        "A DataFrame with one column called service",
+        "The same RDD, with every row changed in place"
+      ],
+      "answer": 1,
+      "why": "`map` is a transformation: it returns a new RDD and runs nothing. Each item will be what the function returns, here a string. An action such as `collect()` runs it."
+    },
+    {
+      "id": "k2",
+      "prompt": "Why are DataFrames usually a better choice than RDDs?",
+      "choices": [
+        "RDDs can't hold more than a few thousand items",
+        "DataFrames keep all the data on one machine",
+        "Spark knows a DataFrame's columns and steps, so it can optimise the plan; it can't see inside an RDD's Python functions",
+        "RDD transformations run straight away, so they're slower"
+      ],
+      "answer": 2,
+      "why": "With a schema and steps it understands, Spark can skip columns, combine steps and pick a fast plan. An RDD's lambdas are opaque Python, and every item has to travel to Python to run them. Both are lazy, and both are spread over partitions."
+    },
+    {
+      "id": "k3",
+      "prompt": "`rdd.toDF([\"request_id\", \"status_code\"])` runs on an RDD with no items. What happens?",
+      "choices": [
+        "You get an empty DataFrame with two string columns",
+        "A `ValueError`: there's no item to guess the types from",
+        "You get a DataFrame with one empty row",
+        "Spark waits until an action to decide"
+      ],
+      "answer": 1,
+      "why": "With names only, Spark guesses types from the values, and an empty RDD has none, so it raises `ValueError: RDD is empty`. Passing names and types, `\"request_id string, status_code int\"`, works."
+    }
+  ],
+  "review": [
+    "An RDD is a distributed collection of plain Python objects, with no schema. Every DataFrame has one underneath: `df.rdd`.",
+    "`spark.sparkContext.parallelize(list)` makes an RDD from a Python list, split into partitions.",
+    "`rdd.map(f)` and `rdd.filter(f)` take Python functions and are lazy; `take`, `count`, `collect` and `first` are actions.",
+    "`rdd.toDF([names])` guesses types from the values and fails on an empty RDD; `rdd.toDF(\"name type, ...\")` sets them exactly.",
+    "Prefer DataFrames: Spark knows their schema and steps and can optimise them, while RDD functions are a black box."
+  ],
+  "practice": ["PS-Q0021", "PS-Q0022", "PS-Q0023", "PS-Q0024", "PS-Q0025"]
+}

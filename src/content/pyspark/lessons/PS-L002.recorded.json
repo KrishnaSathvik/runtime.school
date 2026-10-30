@@ -1,0 +1,44 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D15",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "api_requests",
+   "error_events"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "local[2]\n2\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "12 requests\n1 partition\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "",
+   "error": {
+    "type": "PySparkAttributeError",
+    "message": "[ATTRIBUTE_NOT_SUPPORTED] Attribute `getNumPartitions` is not supported.",
+    "line": 1,
+    "condition": "ATTRIBUTE_NOT_SUPPORTED"
+   }
+  },
+  "e4": {
+   "stdout": "4 partitions\n12 requests\n1 partition in api_requests\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "4 error events\n10 partitions\n",
+   "error": null
+  }
+ }
+}

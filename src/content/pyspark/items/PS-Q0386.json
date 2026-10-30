@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0386",
+  "slug": "build-the-boundary-test-input",
+  "lesson": "PS-L078",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Build the boundary test input",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "prompt": "Before the HbA1c step goes into the pipeline, it needs a unit test input that sits on every edge. Each lab sets its own cut-offs, given in the one-row table `cutoffs`. Build the input in `solve(cutoffs)` with `spark.createDataFrame` and return what the starter's `hba1c_band` step gives for it with those cut-offs.",
+  "rules": [
+    "The input has the columns `observation_id` (text), `code` (text) and `value` (double), the ones the step reads.",
+    "Six HBA1C results, with ids `T1` to `T6`: 0.1 below `prediabetes_from`, exactly `prediabetes_from`, 0.1 below `diabetes_from` and exactly `diabetes_from` (each side of both cut-offs, to one decimal), a result with no value, and a result whose value is not a number."
+  ],
+  "hints": [
+    "`spark.createDataFrame(rows, \"observation_id STRING, code STRING, value DOUBLE\")` takes a list of tuples and the schema as text; `cutoffs.first()` gives the cut-offs as a Row.",
+    "A missing value is `None`. A value that isn't a number is `float(\"nan\")`: Spark keeps it as NaN, which is not the same as NULL.",
+    "`5.7 - 0.1` in Python is `5.6000000000000005`: `round(..., 1)` gives 5.6. And `FLOAT` is a smaller type than `DOUBLE`: 5.7 stored as a float isn't exactly 5.7."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "cutoffs"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef hba1c_band(observations, prediabetes_from, diabetes_from):\n    value = F.col(\"value\")\n    band = (\n        F.when(F.isnan(value), None)\n        .when(value < prediabetes_from, \"normal\")\n        .when(value < diabetes_from, \"prediabetes\")\n        .when(value >= diabetes_from, \"diabetes\")\n    )\n    return observations.filter(F.col(\"code\") == \"HBA1C\").select(\"observation_id\", \"value\", band.alias(\"band\"))\n\n\ndef solve(cutoffs):\n    c = cutoffs.first()\n    # Build the test input the rules describe and return what the step gives for it.\n    test_input = spark.createDataFrame([], \"observation_id STRING, code STRING, value DOUBLE\")\n    return hba1c_band(test_input, c.prediabetes_from, c.diabetes_from)\n",
+  "output": {
+    "columns": [
+      "observation_id",
+      "value",
+      "band"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "A test input is a small DataFrame you choose: `spark.createDataFrame(rows, \"observation_id STRING, code STRING, value DOUBLE\")` with one tuple per result. The boundary values sit on each side of both cut-offs, so a `<` written as `<=` would show up; they come from `cutoffs`, so the same test works for every lab, and `round(c.prediabetes_from - 0.1, 1)` keeps 5.6 from becoming 5.6000000000000005. `None` gives the missing value and `float(\"nan\")` gives NaN; they are different values and the step must handle both, so each needs its own row. The schema matters too: as `FLOAT`, 5.7 becomes 5.69999980926…, which is a different test, and as a decimal the step's output no longer has a double `value`. The step gives no band to T5 and T6.",
+  "own_tables": {
+    "cutoffs": "prediabetes_from DOUBLE, diabetes_from DOUBLE"
+  }
+}

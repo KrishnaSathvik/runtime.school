@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Gauge, Play, Square } from "lucide-react";
+import { Gauge, Play, Square, X } from "lucide-react";
 import { EXPERIMENTS, PERF_CATEGORIES, experimentById, paramLines, type PyExperiment } from "@/content/python-v2/tools/performance";
 import { mountsFor } from "@/content/python-v2/datasets";
 import { PY_COMPARE_HREF, PY_PERF_HREF } from "@/content/python-v2/paths";
@@ -69,7 +69,8 @@ export function PerformanceLab() {
   const key = `${e.id}|${JSON.stringify(chosen)}|${a.value}|${b.value}`;
 
   const [run, setRun] = useState<{ key: string; result?: PyRunResult; report?: BenchReport | null } | null>(null);
-  const [profile, setProfile] = useState<{ key: string; report?: ProfileReport | null; error?: string } | null>(null);
+  const [profile, setProfile] = useState<{ key: string; inputs: string; report?: ProfileReport | null; error?: string } | null>(null);
+  const [breakdownNote, setBreakdownNote] = useState<string | null>(null);
   // Each side keeps its own "Try it" answer, tied to its own code and the inputs, so running B leaves A's in place.
   const [single, setSingle] = useState<Partial<Record<"a" | "b", { key: string; result: PyRunResult | null }>>>({});
   const sideKey = (side: "a" | "b") => `${e.id}|${JSON.stringify(chosen)}|${drafts[side].value}`;
@@ -101,6 +102,12 @@ export function PerformanceLab() {
 
   async function compare() {
     if (busy) return;
+    if (profile) {
+      setBreakdownNote(profile.key === key
+        ? "Running again closed the time breakdown."
+        : `Closed the breakdown for ${profile.inputs}. These numbers are different.`);
+      setProfile(null);
+    }
     setBusy("bench");
     setRun({ key });
     const res = await runPython(benchProgram(setup, a.value, b.value, REPEATS), { packages: e.packages, mounts, timeoutMs: BENCH_TIMEOUT_MS, outputLimit: 100000 });
@@ -127,13 +134,19 @@ export function PerformanceLab() {
     setBusy(null);
   }
 
+  function closeBreakdown() {
+    setProfile(null);
+    setBreakdownNote(null);
+  }
+
   async function runProfile() {
     if (busy) return;
+    setBreakdownNote(null);
     setBusy("profile");
-    setProfile({ key });
+    setProfile({ key, inputs: inputLabel });
     const res = await runPython(profileProgram(setup, a.value, b.value), { packages: e.packages, mounts, timeoutMs: BENCH_TIMEOUT_MS, outputLimit: 100000 });
     if (res.status === "superseded") return;
-    setProfile({ key, report: res.status === "ok" ? readBench<ProfileReport>(res.stdout).report : null, error: res.status !== "ok" ? "The profile run didn't finish." : undefined });
+    setProfile({ key, inputs: inputLabel, report: res.status === "ok" ? readBench<ProfileReport>(res.stdout).report : null, error: res.status !== "ok" ? "The profile run didn't finish." : undefined });
     setBusy(null);
   }
 
@@ -220,15 +233,26 @@ export function PerformanceLab() {
             </div>
 
             {timed && rep && rep.same !== false && (
-              <>
-                <p className="rx-label sec">where the time goes</p>
-                {prof ? <ProfileView p={prof.report ?? null} error={prof.error} busy={busy === "profile"} labels={{ a: e.a.label, b: e.b.label }} /> : (
+              <section className="pl-where" aria-labelledby="perf-where">
+                <div className="pl-where-bar">
+                  <p id="perf-where" className="rx-label sec">where the time goes</p>
+                  {prof ? (
+                    <button type="button" className="rx-btn line" aria-expanded="true" aria-controls="perf-breakdown" onClick={closeBreakdown} disabled={busy === "profile"}><X size={13} aria-hidden="true" /> Hide breakdown</button>
+                  ) : (
+                    <button type="button" className="rx-btn line" aria-expanded="false" onClick={runProfile} disabled={!!busy}><Gauge size={13} aria-hidden="true" /> Break down the time</button>
+                  )}
+                </div>
+                {prof ? (
+                  <div id="perf-breakdown" className="pl-where-open">
+                    <ProfileView p={prof.report ?? null} error={prof.error} busy={busy === "profile"} labels={{ a: e.a.label, b: e.b.label }} />
+                  </div>
+                ) : (
                   <>
-                    <p className="rx-small" style={{ marginTop: 0 }}>See which steps each version spends its time in, and how often they run.</p>
-                    <p className="py-row"><button type="button" className="rx-btn" onClick={runProfile} disabled={!!busy}><Gauge size={13} /> Break down the time</button></p>
+                    <p className="rx-small">See which steps each version spends its time in, and how often they run.</p>
+                    {breakdownNote && <p className="rx-small" role="status">{breakdownNote}</p>}
                   </>
                 )}
-              </>
+              </section>
             )}
 
             <p className="rx-note" style={{ fontSize: 15 }}><strong>What to notice:</strong> <Inline text={e.takeaway} /></p>
@@ -253,28 +277,31 @@ export function PerformanceLab() {
             <Code code={setup.replace(/^\n+/, "")} label="The input" className="p2-readonly" />
           </article>
 
-          <section className="rx-work rx-lesson-work py-stack" aria-label="Implementations A and B">
-            {SIDES.map((s) => {
-              const err = rep?.[s].error;
-              const own = single[s]?.key === sideKey(s) ? single[s] : null;
-              return (
-                <PyCell
-                  key={`${e.id}-${s}`}
-                  name={`${s.toUpperCase()} · ${e[s].label}`}
-                  value={drafts[s].value}
-                  onChange={drafts[s].set}
-                  onRun={() => runOne(s)}
-                  busy={busy === s}
-                  result={own?.result ?? null}
-                  minHeight="140px"
-                  runLabel="Try it"
-                  errorLine={ownErrorLine(own?.result ?? null) ?? (err?.line ? { line: err.line, token: 1 } : null)}
-                  onCloseOutput={() => setSingle((prev) => ({ ...prev, [s]: undefined }))}
-                  footer={drafts[s].edited ? <button type="button" className="rx-btn ghost" onClick={drafts[s].reset}>Reset</button> : undefined}
-                />
-              );
-            })}
-            <p className="rx-small">Try it runs one version and shows its answer. Run comparison times both. Each version keeps its answer in <code>result</code>, so the lab can check they agree.</p>
+          <section className="rx-work rx-lesson-work rx-stack-work py-stack" aria-label="Implementations A and B">
+            <div className="rx-equal-rows" style={{ marginTop: 0 }}>
+              {SIDES.map((s) => {
+                const err = rep?.[s].error;
+                const own = single[s]?.key === sideKey(s) ? single[s] : null;
+                return (
+                  <div key={`${e.id}-${s}`} className="rx-approach" aria-label={`Approach ${s.toUpperCase()}`}>
+                    <PyCell
+                      name={`${s.toUpperCase()} · ${e[s].label}`}
+                      value={drafts[s].value}
+                      onChange={drafts[s].set}
+                      onRun={() => runOne(s)}
+                      busy={busy === s}
+                      result={own?.result ?? null}
+                      minHeight="140px"
+                      runLabel="Try it"
+                      resultsBar
+                      errorLine={ownErrorLine(own?.result ?? null) ?? (err?.line ? { line: err.line, token: 1 } : null)}
+                      onCloseOutput={() => setSingle((prev) => ({ ...prev, [s]: undefined }))}
+                      footer={drafts[s].edited ? <button type="button" className="rx-btn ghost" onClick={drafts[s].reset}>Reset</button> : undefined}
+                    />
+                  </div>
+                );
+              })}
+            </div>
           </section>
         </div>
       </div>

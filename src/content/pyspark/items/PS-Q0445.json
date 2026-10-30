@@ -1,0 +1,55 @@
+{
+  "id": "PS-Q0445",
+  "slug": "returns-that-survive-a-split",
+  "lesson": "PS-L089",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 26,
+  "title": "Returns that survive a split",
+  "dataset": {
+    "id": "PS-D10",
+    "version": "1.0.0"
+  },
+  "prompt": "On a split's ex-date the price drops by the split ratio, and a raw return calls that a crash. Write `solve(daily_prices, corporate_actions)` so every price row gets a split-adjusted daily return and its direction.",
+  "rules": [
+    "Work on each `symbol` on its own, in `trade_date` order; the previous row is the previous trading day the symbol has a price.",
+    "`ret_1d` is `close` times the split ratio, divided by the previous row's `close`, minus 1, rounded to 3 decimal places. The ratio is the `split_ratio` of a `split` whose `ex_date` is that row's date, and 1 on every other day. Dividends change nothing.",
+    "`direction` buckets `ret_1d`: 0.0 below -0.01, 1.0 from -0.01 up to just under 0.01, 2.0 from 0.01 up. Both are NULL on a symbol's first row.",
+    "Return `symbol`, `trade_date`, `close`, `ret_1d` and `direction`, in that order. Keep every row."
+  ],
+  "hints": [
+    "Join the splits onto the prices by `symbol` and date (the `ex_date`), keeping every price row, and use `F.coalesce` to make the ratio 1.0 where there is none.",
+    "Then `F.lag` over each symbol's rows in date order gives the previous close. Cast `close` to double before dividing.",
+    "`Bucketizer(splits=[float(\"-inf\"), -0.01, 0.01, float(\"inf\")], ...)` puts a value equal to a split in the upper bucket and leaves NULL as NULL."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "daily_prices",
+    "corporate_actions"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\nfrom pyspark.ml.feature import Bucketizer\n\n\ndef solve(daily_prices, corporate_actions):\n    # Scale the close by the split ratio on ex-dates, then return and direction.\n    return daily_prices\n",
+  "output": {
+    "columns": [
+      "symbol",
+      "trade_date",
+      "close",
+      "ret_1d",
+      "direction"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "A 2-for-1 split halves the price without anyone losing money, so on the ex-date the close is multiplied back by the ratio before it's compared with the previous close. Keep only `split` actions, join them on `symbol` and `trade_date` = `ex_date` with a left join so every price row stays, and `F.coalesce(split_ratio, 1.0)` everywhere else. Then `F.lag` of the double close over each symbol in date order gives the return, and `Bucketizer` turns it into a direction. In the sample, ALDR.SX's raw return on 2026-01-21 is -0.501; adjusted it is -0.002, a flat day. Joining every corporate action would also match dividends, and a symbol with a split and a dividend on the same day would get two rows. A return of exactly -0.010 is flat and 0.010 is up, because each bucket includes its lower split."
+}

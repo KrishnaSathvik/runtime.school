@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { allSqlProjectStaticParams, resolveSqlProjectSlug } from "@/content/projects/paths";
 import { ProjectWorkspace } from "@/features/rt/projects/ProjectWorkspace";
 import { sqlProjectMetadata } from "@/platform/seo";
+// The project frame (overview, step bar, review) is shared with Python and PySpark and styled in p2.css.
+import "../../../python/p2.css";
 
 type Props = { params: Promise<{ id: string }> };
 

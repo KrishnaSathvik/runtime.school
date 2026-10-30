@@ -1,0 +1,39 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D05",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "ratings",
+   "movies"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "False []\nTrue Disk Memory Deserialized 1x Replicated\nbefore an action: []\n10 ratings of 4 or more\nafter an action: [(1, 1)]\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "10\nTrue\nTrue\nFalse\nFalse\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "Memory Serialized 1x Replicated\nDisk Serialized 1x Replicated\n10 films kept on disk\nDisk Memory Deserialized 1x Replicated\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "Disk Serialized 1x Replicated\nDisk Serialized 1x Replicated True\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "7 [(1, 1)]\nFalse Serialized 1x Replicated []\nFalse\n",
+   "error": null
+  }
+ }
+}

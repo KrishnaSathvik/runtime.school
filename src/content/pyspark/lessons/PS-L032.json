@@ -1,0 +1,129 @@
+{
+  "id": "PS-L032",
+  "minutes": 22,
+  "lede": "A report often needs several counts side by side: mobile and desktop, purchases and sign-ups, days over and under budget. Putting a condition inside the aggregate gives them in one pass, and `pivot` turns the values of a column into columns of their own.",
+  "objectives": [
+    "Count and sum only the rows that match a condition with `F.when` inside an aggregate",
+    "Explain why filtering first loses groups that a conditional aggregate keeps",
+    "Turn the values of a column into columns with `groupBy(...).pivot(...)`",
+    "List the pivot values yourself so the columns are fixed, and predict where a pivot gives NULL"
+  ],
+  "dataset": {
+    "id": "PS-D12",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "impressions",
+      "conversions",
+      "budgets"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "The tables come from an advertising platform. `impressions` has one row per ad shown, with the campaign and the `device` it was shown on; `conversions` one row per purchase, sign-up or lead; `budgets` one row per campaign per day. Each is loaded as a DataFrame with its own name, and `F` is `pyspark.sql.functions`.\n\nAn aggregate works on whatever column you give it, including one built by `F.when`. `F.when(F.col(\"device\") == \"mobile\", 1).otherwise(0)` is 1 on mobile rows and 0 on the rest, so its sum counts the mobile rows.\n\nGrouped output has no fixed row order, so the examples end with `orderBy(...)`, which only sorts what's printed."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Count the mobile impressions per campaign",
+      "code": "from pyspark.sql import functions as F\n\nper_campaign = impressions.groupBy(\"campaign_id\").agg(\n    F.count(\"*\").alias(\"impressions\"),\n    F.sum(F.when(F.col(\"device\") == \"mobile\", 1).otherwise(0)).alias(\"mobile\"),\n    F.sum(F.when(F.col(\"device\") == \"desktop\", 1).otherwise(0)).alias(\"desktop\"),\n)\nper_campaign.orderBy(\"campaign_id\").show()\n",
+      "note": "Each campaign gets one row with three counts. CMP-0003 had no mobile impressions, so its mobile count is 0."
+    },
+    {
+      "kind": "text",
+      "md": "Why not filter first? `filter` removes rows **before** grouping, so a campaign with no matching rows has nothing left to group and disappears from the result. A conditional aggregate keeps every group, with 0 where nothing matched."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Filtering first loses campaigns",
+      "code": "from pyspark.sql import functions as F\n\nimpressions.filter(F.col(\"device\") == \"tablet\").groupBy(\"campaign_id\").count().orderBy(\"campaign_id\").show()\n\nimpressions.groupBy(\"campaign_id\").agg(\n    F.sum(F.when(F.col(\"device\") == \"tablet\", 1).otherwise(0)).alias(\"tablet\")\n).orderBy(\"campaign_id\").show()\n",
+      "note": "Only two campaigns had a tablet impression, so the filtered version has two rows. The conditional version has all four, with 0 for the other two."
+    },
+    {
+      "kind": "text",
+      "md": "Two more patterns:\n\n- **Sum a value only where a condition holds.** `F.when(cond, F.col(\"revenue\"))` with no `otherwise` is NULL on the other rows, and `F.sum` skips NULLs. If no row in a group matches, the sum is NULL.\n- **Count matches with `F.count`.** `F.count` skips NULLs too, so `F.count(F.when(cond, True))` counts the rows where the condition is true, and gives 0 when there are none."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Purchase revenue and days over budget",
+      "code": "from pyspark.sql import functions as F\n\nconversions.groupBy(\"campaign_id\").agg(\n    F.count(\"*\").alias(\"conversions\"),\n    F.count(F.when(F.col(\"conversion_type\") == \"purchase\", True)).alias(\"purchases\"),\n    F.sum(F.when(F.col(\"conversion_type\") == \"purchase\", F.col(\"revenue\"))).alias(\"purchase_revenue\"),\n).orderBy(\"campaign_id\").show()\n\nbudgets.groupBy(\"campaign_id\").agg(\n    F.count(\"*\").alias(\"days\"),\n    F.count(F.when(F.col(\"actual_spend\") > F.col(\"planned_spend\"), True)).alias(\"days_over\"),\n).orderBy(\"campaign_id\").show()\n",
+      "note": "CMP-0003's only conversion is a sign-up, so it has 0 purchases and no purchase revenue. Only CMP-0001 went over its plan, on one day; spending exactly the plan isn't over."
+    },
+    {
+      "kind": "text",
+      "md": "When the values you're splitting on are themselves the column names you want, use `pivot`. `groupBy(\"campaign_id\").pivot(\"device\")` makes one row per campaign and one column per device, and the aggregate you finish with (`.count()`, `.agg(...)`) fills each cell.\n\nA combination with no rows gets NULL, not 0: there was nothing to count."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "One column per device",
+      "code": "by_device = impressions.groupBy(\"campaign_id\").pivot(\"device\").count()\nby_device.orderBy(\"campaign_id\").show()\nprint(by_device.columns)\n",
+      "note": "Spark found three devices and made a column for each, in alphabetical order. CMP-0001 had no tablet impressions, so that cell is NULL."
+    },
+    {
+      "kind": "text",
+      "md": "Without a list, Spark first has to scan the data to find the values, and the columns depend on what this particular data happens to contain: a device nobody used has no column at all. Pass the values yourself, `pivot(\"device\", [\"mobile\", \"desktop\", \"tablet\"])`, to fix the columns and their order. Rows whose value isn't in the list are left out, and so are rows where it's missing.\n\nAny aggregate works inside a pivot, not just a count."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Listed values and a sum",
+      "code": "from pyspark.sql import functions as F\n\nspend = impressions.groupBy(\"campaign_id\").pivot(\"device\", [\"mobile\", \"desktop\", \"tablet\", \"tv\"]).agg(F.sum(\"cost\"))\nspend.orderBy(\"campaign_id\").show()\n",
+      "note": "The columns follow the list, including `tv`, which no impression has, so it's NULL everywhere. Each cell is the cost of that campaign's impressions on that device."
+    }
+  ],
+  "challenges": [
+    "PS-L032-C1",
+    "PS-L032-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "A campaign has no tablet impressions. What does `F.sum(F.when(F.col(\"device\") == \"tablet\", 1).otherwise(0))` give for it?",
+      "choices": [
+        "0",
+        "NULL",
+        "The campaign has no row",
+        "An error"
+      ],
+      "answer": 0,
+      "why": "Every row gets 0 from `otherwise`, so the sum is 0. Without `otherwise` the values would all be NULL and the sum would be NULL."
+    },
+    {
+      "id": "k2",
+      "prompt": "Why can `df.filter(cond).groupBy(\"campaign_id\").count()` have fewer rows than `df.groupBy(\"campaign_id\").agg(F.count(F.when(cond, True)))`?",
+      "choices": [
+        "Because `filter` removes duplicate rows",
+        "Because a campaign with no matching rows has nothing left to group after the filter",
+        "Because `F.count` counts NULLs",
+        "They always have the same number of rows"
+      ],
+      "answer": 1,
+      "why": "Filtering happens before grouping, so groups with no matching rows vanish. The conditional count keeps them with 0."
+    },
+    {
+      "id": "k3",
+      "prompt": "`impressions.groupBy(\"campaign_id\").pivot(\"device\").count()`: what is in the cell for a campaign that had no tablet impressions?",
+      "choices": [
+        "0",
+        "NULL",
+        "The text \"tablet\"",
+        "There's no tablet column at all, ever"
+      ],
+      "answer": 1,
+      "why": "A pivot cell with no rows behind it is NULL. The tablet column itself exists as long as some campaign had a tablet impression, or the value is in the list you pass."
+    }
+  ],
+  "review": [
+    "Put `F.when` inside an aggregate to count or sum only the rows that match: `F.sum(F.when(cond, 1).otherwise(0))`.",
+    "`F.count(F.when(cond, True))` also counts matches, because `F.count` skips NULLs.",
+    "`F.when(cond, value)` without `otherwise` is NULL elsewhere, so a sum with no matches is NULL.",
+    "Filtering before grouping drops groups with no matches; a conditional aggregate keeps them.",
+    "`groupBy(key).pivot(col)` makes one column per value; empty cells are NULL.",
+    "Pass the values to `pivot(col, [...])` to fix the columns and their order."
+  ],
+  "practice": ["PS-Q0156", "PS-Q0157", "PS-Q0158", "PS-Q0159", "PS-Q0160"]
+}

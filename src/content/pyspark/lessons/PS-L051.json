@@ -1,0 +1,128 @@
+{
+  "id": "PS-L051",
+  "minutes": 25,
+  "lede": "Sometimes the logic you need is easiest to write in plain Python. A UDF lets you run a Python function on a column, at a price: Spark can't see inside it, and every value makes a trip to a Python process and back.",
+  "objectives": [
+    "Wrap a Python function as a UDF with `F.udf` and a return type, and use it in `select`",
+    "Handle missing values inside a UDF, and spot the silent NULLs a wrong return type gives",
+    "Register a UDF for SQL text with `spark.udf.register`",
+    "Rewrite a UDF with built-in functions, and say why built-ins are usually the better choice"
+  ],
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0",
+    "edition": "lesson",
+    "tables": [
+      "customers",
+      "products"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`customers` has a name per customer and `products` a price per product. Suppose a label needs each customer's initials: \"Ines Okafor\" becomes \"IO\". In Python that's one line.\n\n`F.udf(function, returnType)` turns a Python function into a **user-defined function** (UDF): something you call on a column, like a built-in. Spark calls the function once per row, with that row's value as a normal Python value, and turns what it returns into a column of `returnType`."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "A Python function as a column",
+      "code": "from pyspark.sql import functions as F\n\n\ndef initials(name):\n    return \"\".join(part[0] for part in name.split())\n\ninitials_udf = F.udf(initials, \"string\")\ncustomers.select(\"customer_id\", \"name\", initials_udf(\"name\").alias(\"initials\")).show()\n",
+      "note": "Each name was passed to `initials` as a Python `str`, and each result came back as text."
+    },
+    {
+      "kind": "text",
+      "md": "The return type is a promise. Spark doesn't convert what the function returns to fit it: if the Python value doesn't match the declared type, the result is **NULL**, silently.\n\nWatch the input types too. A `DECIMAL` column arrives in Python as a `Decimal`, and dividing a `Decimal` gives a `Decimal`, not a `float`."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "A wrong return type gives NULL",
+      "code": "from pyspark.sql import functions as F\n\nas_int = F.udf(lambda s: len(s), \"int\")\nhalf_as_int = F.udf(lambda s: len(s) / 2, \"int\")\ncustomers.select(\"name\", as_int(\"name\").alias(\"length\"), half_as_int(\"name\").alias(\"half\")).show(3)\n\nhalf_price = F.udf(lambda p: p / 2, \"double\")\nproducts.select(\"name\", \"unit_price\", half_price(\"unit_price\").alias(\"half_price\")).show(3)\n",
+      "note": "`len(s) / 2` is a Python `float`, which doesn't fit `int`, so every value is NULL. `p / 2` on a `Decimal` gives a `Decimal`, which doesn't fit `double`. No error in either case: check UDF output, don't assume it."
+    },
+    {
+      "kind": "text",
+      "md": "A missing value arrives in your function as `None`. Code that assumes a string, like `name.split()`, then fails, and because it fails inside the Python worker, the whole job stops."
+    },
+    {
+      "kind": "error-example",
+      "id": "e3",
+      "title": "A UDF that meets a missing value",
+      "code": "from pyspark.sql import functions as F\n\n\ndef initials(name):\n    return \"\".join(part[0] for part in name.split())\n\ninitials_udf = F.udf(initials, \"string\")\npeople = spark.createDataFrame([(\"C9001\", \"Ana Ruiz\"), (\"C9002\", None)], \"customer_id STRING, name STRING\")\npeople.select(\"customer_id\", initials_udf(\"name\")).show()\n",
+      "error": "PythonException",
+      "note": "The second name is missing, so `initials` gets `None`, and `None.split()` raises an `AttributeError` in the Python worker. Spark reports it as a `PythonException` with the Python traceback inside."
+    },
+    {
+      "kind": "text",
+      "md": "Handle `None` first in every UDF. Returning `None` gives NULL, the same as a built-in function would.\n\nYou can also write the UDF with a decorator, `@F.udf(\"string\")` above the `def`, and register it with `spark.udf.register(name, function, returnType)` to call it in SQL text, such as `selectExpr`."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Handle None, use a decorator, register for SQL",
+      "code": "from pyspark.sql import functions as F\n\n\n@F.udf(\"string\")\ndef initials(name):\n    if name is None:\n        return None\n    return \"\".join(part[0] for part in name.split()).upper()\n\n\npeople = spark.createDataFrame([(\"C9001\", \"ana ruiz\"), (\"C9002\", None)], \"customer_id STRING, name STRING\")\npeople.select(\"customer_id\", initials(\"name\").alias(\"initials\")).show()\n\nspark.udf.register(\"initials\", initials)\ncustomers.selectExpr(\"customer_id\", \"initials(name) AS initials\").show(3)\n",
+      "note": "The missing name gives NULL instead of an error, and lowercase names still give capital initials. After `register`, SQL text can call it by name."
+    },
+    {
+      "kind": "text",
+      "md": "So why not write everything as a UDF? Because built-in functions are better in three ways:\n\n- **Speed.** A UDF sends every value from the JVM to a Python process and back. Built-ins run inside the JVM.\n- **Optimisation.** Spark can reorder, combine and push down built-in expressions. A UDF is a black box it can only call.\n- **Missing values.** Built-ins already return NULL for a missing input; a UDF has to remember to.\n\nBefore writing a UDF, look for a built-in that does it. Most string, date and conditional logic has one. Here are the initials with `regexp_replace`, and a price band written both ways."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "The same results with built-ins",
+      "code": "from pyspark.sql import functions as F\n\ncustomers.select(\n    \"name\",\n    F.upper(F.regexp_replace(F.trim(\"name\"), r\"(\\S)\\S*\\s*\", \"$1\")).alias(\"initials\"),\n).show(3)\n\n\n@F.udf(\"string\")\ndef band(price):\n    if price is None:\n        return None\n    return \"premium\" if price >= 50 else \"standard\" if price >= 15 else \"budget\"\n\n\nbuilt_in = F.when(F.col(\"unit_price\") >= 50, \"premium\").when(F.col(\"unit_price\") >= 15, \"standard\").otherwise(\"budget\")\nproducts.select(\"name\", \"unit_price\", band(\"unit_price\").alias(\"with_udf\"), built_in.alias(\"built_in\")).show()\n",
+      "note": "The regular expression keeps the first character of each word and drops the rest. The two price-band columns agree on every product; only the second one runs without Python."
+    }
+  ],
+  "challenges": [
+    "PS-L051-C1",
+    "PS-L051-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "A UDF is declared with return type `\"int\"` but its function returns `3.5`. What does the column hold?",
+      "choices": [
+        "3",
+        "4",
+        "NULL",
+        "An error stops the job"
+      ],
+      "answer": 2,
+      "why": "Spark doesn't convert a Python value that doesn't match the declared type; the result is NULL, with no error."
+    },
+    {
+      "id": "k2",
+      "prompt": "Why is a built-in function usually faster than a UDF that does the same thing?",
+      "choices": [
+        "Built-ins skip missing values",
+        "A UDF sends every value to a Python process and back, and Spark can't optimise inside it",
+        "UDFs only run on one row at a time on the driver",
+        "Built-ins use more memory"
+      ],
+      "answer": 1,
+      "why": "Built-ins run inside the JVM and are visible to the optimiser. A UDF is a black box that costs a round trip to Python per value."
+    },
+    {
+      "id": "k3",
+      "prompt": "A UDF calls `name.upper()` and the column has a missing name. What happens?",
+      "choices": [
+        "The row is skipped",
+        "The result is NULL for that row",
+        "The job fails with a `PythonException`",
+        "The name becomes \"NONE\""
+      ],
+      "answer": 2,
+      "why": "The function gets `None`, and `None.upper()` raises inside the Python worker, which stops the job. Check for `None` first."
+    }
+  ],
+  "review": [
+    "`F.udf(function, \"type\")` turns a Python function into a column function; Spark calls it once per row.",
+    "If a returned value doesn't match the declared type, the result is NULL, silently. `DECIMAL` values arrive as `Decimal`.",
+    "Missing values arrive as `None`; handle them first or the job fails with a `PythonException`.",
+    "`@F.udf(\"type\")` is the decorator form; `spark.udf.register(name, f)` makes a UDF callable from SQL text.",
+    "Built-ins are faster, optimisable and NULL-safe. Reach for a UDF only when no built-in does the job."
+  ],
+  "practice": ["PS-Q0251", "PS-Q0252", "PS-Q0253", "PS-Q0254", "PS-Q0255"]
+}

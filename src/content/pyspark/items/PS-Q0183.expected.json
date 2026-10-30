@@ -1,0 +1,86 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "event_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "user_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "query",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "filters_ticked",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "products_listed",
+     "type": "int",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "SR-0001",
+     "CU-001",
+     "trail runner",
+     2,
+     3
+    ],
+    [
+     "SR-0002",
+     null,
+     "2 person tent",
+     1,
+     2
+    ],
+    [
+     "SR-0003",
+     "CU-002",
+     "rain jacket",
+     0,
+     4
+    ],
+    [
+     "SR-0004",
+     "CU-003",
+     "headlamp",
+     3,
+     1
+    ],
+    [
+     "SR-0005",
+     null,
+     "solar kettle",
+     0,
+     0
+    ]
+   ],
+   "row_count": 5
+  }
+ },
+ "hidden": [
+  "the full practice searches",
+  "searches with no filters ticked and nothing found",
+  "searches whose filter or product list is missing",
+  "searches where the engine's count and the list differ",
+  "the same filter ticked twice in one search",
+  "searches by anonymous visitors",
+  "no searches"
+ ]
+}

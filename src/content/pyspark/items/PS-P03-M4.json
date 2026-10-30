@@ -1,0 +1,70 @@
+{
+  "id": "PS-P03-M4",
+  "slug": "measure-course-completion",
+  "project": "PS-P03",
+  "milestone": "PS-P03.m4",
+  "difficulty": "medium",
+  "minutes": 40,
+  "title": "Measure course completion and engagement",
+  "dataset": {
+    "id": "PS-D11",
+    "version": "1.0.0"
+  },
+  "prompt": "A completion rate means nothing until everyone agrees who it's out of. The rules below fix both halves: who has completed a course, and who counts in the denominator.\n\nWrite `course_completion(attempts, lessons, courses)`. It builds on your `learner_progress(attempts, lessons)` and returns one row for every course in `courses`, even one nobody has started.",
+  "rules": [
+    "Return `course_id`, `title`, `lesson_count`, `enrolled_learners`, `completed_learners`, `completion_pct` and `attempts`, in that order.",
+    "The denominator is the course's enrolled learners: everyone with at least one clean attempt in it, which is its rows in `learner_progress`. Learners who never started the course don't count.",
+    "A learner has completed a course when their `lessons_passed` equals the course's `lesson_count`, by the as-of date.",
+    "`completion_pct` is `completed_learners` × 100 / `enrolled_learners`, rounded to one decimal place. A course with no enrolled learners has 0 enrolled, 0 completed, 0 attempts and a missing `completion_pct`, not an error.",
+    "`attempts` is the sum of its learners' clean attempts: the course's engagement."
+  ],
+  "hints": [
+    "Join `learner_progress(...)` with `courses.select(\"course_id\", \"lesson_count\")`, then `groupBy(\"course_id\")`. `F.count(F.when(cond, True))` counts the rows where `cond` holds.",
+    "To keep courses nobody started, start from `courses` and `left` join the per-course numbers onto it. Their counts come back missing: `F.coalesce(col, F.lit(0))` turns them into 0.",
+    "Spark refuses to divide by zero. Divide the counts before filling in the zeros: a missing count gives a missing rate. Then `F.round(..., 1)`."
+  ],
+  "explanation": "Every number here comes from `learner_progress`, so a learner's retries and the export's copies were settled before anything is counted: each enrolled learner is one row per course. The denominator is stated, not implied: learners with at least one clean attempt in the course. Completion compares lessons passed with the course's `lesson_count`, so trying every lesson isn't enough. Starting the final table from `courses` with a `left` join keeps a course nobody started, and dividing the raw counts before `coalesce` gives that course a missing rate instead of a division by zero.",
+  "entry": "course_completion",
+  "inputs": [
+    "attempts",
+    "lessons",
+    "courses"
+  ],
+  "file": "pipeline.py",
+  "append": "\n\ndef course_completion(attempts, lessons, courses):\n    # Step 4: one row per course, built from learner_progress(...) and each course's lesson_count.\n    return courses\n",
+  "prerequisites": [
+    "PS-L016",
+    "PS-L017",
+    "PS-L019",
+    "PS-L025",
+    "PS-L031"
+  ],
+  "output": {
+    "columns": [
+      "course_id",
+      "title",
+      "lesson_count",
+      "enrolled_learners",
+      "completed_learners",
+      "completion_pct",
+      "attempts"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "example",
+      "sample": true
+    },
+    {
+      "id": "project",
+      "edition": "project"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

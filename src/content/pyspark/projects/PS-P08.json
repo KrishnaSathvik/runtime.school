@@ -1,0 +1,165 @@
+{
+ "id": "PS-P08",
+ "workspace": "guided",
+ "file": "pipeline.py",
+ "dataset": {
+  "id": "PS-D08",
+  "version": "1.0.0",
+  "edition": "project"
+ },
+ "also": [
+  {
+   "id": "PS-D14",
+   "version": "1.0.0",
+   "tables": [
+    "accounts",
+    "customer_cdc"
+   ]
+  }
+ ],
+ "inputs": [
+  "shipment_events",
+  "shipments",
+  "accounts",
+  "customer_cdc"
+ ],
+ "run_timeout_s": 300,
+ "task": "A logistics company's warehouse platform is fed by two change streams: every tracking scan from the shipment system, loaded day by day, and every change to customer accounts from the CRM. Neither arrives clean: scans come out of order, twice, or corrected days later, and account changes are repeated and out of sequence. Build Delta tables that hold each shipment's current status and every version of every account, applied in batches, and prove in numbers that running a batch again changes nothing.",
+ "skills": [
+  "ordering changes by sequence",
+  "late corrections",
+  "Delta MERGE",
+  "type 2 history",
+  "safe retries",
+  "Delta history and time travel"
+ ],
+ "problems": [
+  "Scans aren't in event order, and some load days after they happened.",
+  "Some scans are delivered twice with the same event_id, sometimes on a later day.",
+  "Some steps get a late correction: a new row for the same shipment and sequence, loaded after later steps.",
+  "A few scans are for shipments the shipment system doesn't have.",
+  "Account changes arrive out of sequence order, and a few were delivered twice.",
+  "Accounts are inserted, updated and deleted after the snapshot."
+ ],
+ "revenue": "A shipment's status is its latest step: the scan with the highest sequence, never the latest event_time or load. A correction replaces the scan it corrects, but only a later step can move a shipment on. An account change carries the whole account: per account and batch, the change with the highest sequence wins, and it closes the version before it at its changed_at.",
+ "milestones": [
+  {
+   "step": 1,
+   "summary": "Count what's in both change feeds.",
+   "label": "Inspect feeds"
+  },
+  {
+   "step": 2,
+   "summary": "Clean the scans: one row per shipment step, corrections winning.",
+   "label": "Order changes"
+  },
+  {
+   "step": 3,
+   "summary": "Save batch 1's latest step per shipment as a Delta table.",
+   "label": "First batch"
+  },
+  {
+   "step": 4,
+   "summary": "MERGE batch 2 into the fact, late corrections included.",
+   "label": "Merge batch 2"
+  },
+  {
+   "step": 5,
+   "summary": "Build the accounts' type 2 history from the snapshot and two batches.",
+   "label": "Account history"
+  },
+  {
+   "step": 6,
+   "summary": "Make a retried batch commit nothing, and audit every commit.",
+   "label": "Safe retry"
+  },
+  {
+   "step": 7,
+   "summary": "Report versions, counts and checks before and after a replay.",
+   "label": "Verify replay"
+  }
+ ],
+ "artifacts": [
+  {
+   "name": "feed_profile",
+   "inputs": [
+    "shipment_events",
+    "shipments",
+    "customer_cdc"
+   ],
+   "step": 1,
+   "about": "Rows, repeats, corrections and changes counted in both feeds."
+  },
+  {
+   "name": "event_log",
+   "inputs": [
+    "shipment_events",
+    "shipments"
+   ],
+   "step": 2,
+   "about": "One trusted row per shipment step."
+  },
+  {
+   "name": "fact_after_batch_1",
+   "inputs": [
+    "shipment_events",
+    "shipments"
+   ],
+   "step": 3,
+   "about": "The shipment fact after batch 1: the state before the update."
+  },
+  {
+   "name": "shipment_fact",
+   "inputs": [
+    "shipment_events",
+    "shipments"
+   ],
+   "step": 4,
+   "about": "Each shipment's current status after batch 2 is merged in.",
+   "deliverable": true
+  },
+  {
+   "name": "history_after_batch_1",
+   "inputs": [
+    "accounts",
+    "customer_cdc"
+   ],
+   "step": 5,
+   "about": "The account history after the snapshot and batch 1."
+  },
+  {
+   "name": "account_history",
+   "inputs": [
+    "accounts",
+    "customer_cdc"
+   ],
+   "step": 5,
+   "about": "Every version of every account after batch 2, with valid_from, valid_to and is_current.",
+   "deliverable": true
+  },
+  {
+   "name": "cdc_audit",
+   "inputs": [
+    "accounts",
+    "customer_cdc",
+    "shipment_events",
+    "shipments"
+   ],
+   "step": 6,
+   "about": "Every commit of both Delta tables after batch 2 was retried.",
+   "deliverable": true
+  },
+  {
+   "name": "replay_report",
+   "inputs": [
+    "accounts",
+    "customer_cdc",
+    "shipment_events",
+    "shipments"
+   ],
+   "step": 7,
+   "about": "Versions, rows and checks per table, before and after a replay.",
+   "deliverable": true
+  }
+ ]
+}

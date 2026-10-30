@@ -1,0 +1,119 @@
+{
+  "id": "PS-L016",
+  "minutes": 20,
+  "lede": "Fares, tips and distances need rounding, ratios and the odd bit of maths. Spark has a function for each, and the details matter: which way a half rounds, and what happens when you divide by zero.",
+  "objectives": [
+    "Round with `round` (half up) and `bround` (half to even), and know when they differ",
+    "Go to whole numbers with `ceil` and `floor`, and use `abs`, `pow`, `sqrt`, `%`, `greatest` and `least`",
+    "Work out ratios like a tip percentage, and predict the type of the result",
+    "Divide safely with `try_divide` when the divisor can be zero"
+  ],
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "trips"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "The `trips` table above has one row per taxi ride. On this page it's loaded as a DataFrame called `trips`, and `F` is `pyspark.sql.functions`. `trip_distance` is a `double` in miles; the money columns are `decimal(8,2)`.\n\n`F.round(col, n)` rounds to `n` decimal places, and a half goes **up** (away from zero): 2.25 becomes 2.3. `F.bround(col, n)` sends a half to the nearest **even** digit instead: 2.25 becomes 2.2 but 2.35 becomes 2.4. This \"banker's rounding\" doesn't push totals upwards when many halves are rounded. The two only differ on an exact half."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "round and bround on halves",
+      "code": "from pyspark.sql import functions as F\n\ntrips.select(\n    \"trip_id\",\n    \"trip_distance\",\n    F.round(\"trip_distance\", 1).alias(\"half_up\"),\n    F.bround(\"trip_distance\", 1).alias(\"half_even\"),\n).show(6)\n",
+      "note": "They disagree on T001 (2.25) and T004 (10.05): the digit before the 5 is even, so `bround` leaves it. For 2.35 and 0.95 that digit is odd, so both go up. 4.6 and 1.5 have nothing to round."
+    },
+    {
+      "kind": "text",
+      "md": "`F.ceil` rounds up to a whole number and `F.floor` rounds down; both give a `bigint`. `F.abs` drops the sign, `F.pow(col, 2)` raises to a power and `F.sqrt` takes the square root. `%` gives the remainder after dividing. `F.greatest` and `F.least` pick the biggest or smallest of several columns on each row, which is handy for a minimum or a cap."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Whole numbers, caps and remainders",
+      "code": "from pyspark.sql import functions as F\n\ntrips.select(\n    \"trip_id\",\n    \"trip_distance\",\n    F.ceil(\"trip_distance\").alias(\"miles_up\"),\n    F.floor(\"trip_distance\").alias(\"miles_down\"),\n    F.least(\"fare\", F.lit(20)).alias(\"capped_fare\"),\n    (F.col(\"passenger_count\") % 2).alias(\"odd_group\"),\n).show(5)\n",
+      "note": "`least(\"fare\", 20)` keeps the fare unless it's over 20. An odd number of passengers leaves a remainder of 1."
+    },
+    {
+      "kind": "text",
+      "md": "With decimals, Spark keeps the result exact and chooses its precision for you, so dividing two `decimal(8,2)` columns gives a decimal with many more places. `round` on a decimal stays a decimal, with the places you asked for. Mixing a decimal and a `double` gives a `double`."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Tip as a percentage of the fare",
+      "code": "from pyspark.sql import functions as F\n\npct = trips.select(\n    \"trip_id\",\n    \"tip\",\n    \"fare\",\n    (F.col(\"tip\") / F.col(\"fare\") * 100).alias(\"tip_pct\"),\n    F.round(F.col(\"tip\") / F.col(\"fare\") * 100, 1).alias(\"tip_pct_1dp\"),\n)\npct.show(4)\npct.printSchema()\n",
+      "note": "Tips are close to 15, 18, 20 or 25% of the fare, but rounded to the cent, so the percentages are a little off. The unrounded column is `decimal(23,11)`; the rounded one keeps one place."
+    },
+    {
+      "kind": "error-example",
+      "id": "e4",
+      "title": "Dividing by zero",
+      "code": "from pyspark.sql import functions as F\n\ntrips.select(\"trip_id\", (F.col(\"tip\") / F.col(\"tolls\")).alias(\"tip_per_toll\")).show()\n",
+      "error": "ArithmeticException",
+      "note": "Most trips paid no tolls, and in Spark 4 dividing by zero stops the job. The message names `try_divide`."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "try_divide gives missing instead",
+      "code": "from pyspark.sql import functions as F\n\ntrips.select(\"trip_id\", \"tip\", \"tolls\", F.try_divide(\"tip\", \"tolls\").alias(\"tip_per_toll\")).show(5)\n",
+      "note": "Where `tolls` is 0.00 the result is `NULL`; the airport trip T004 paid tolls and gets a real number."
+    }
+  ],
+  "challenges": [
+    "PS-L016-C1",
+    "PS-L016-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "What do `F.round(x, 1)` and `F.bround(x, 1)` give for x = 2.25?",
+      "choices": [
+        "2.3 and 2.3",
+        "2.2 and 2.3",
+        "2.3 and 2.2",
+        "2.2 and 2.2"
+      ],
+      "answer": 2,
+      "why": "`round` sends a half up, to 2.3. `bround` sends it to the even digit, and 2 is even, so 2.2."
+    },
+    {
+      "id": "k2",
+      "prompt": "`tolls` is 0.00 on a row. What does `F.col(\"tip\") / F.col(\"tolls\")` do in Spark 4?",
+      "choices": [
+        "Gives NULL for that row",
+        "Gives 0 for that row",
+        "Gives Infinity for that row",
+        "Stops the job with a division by zero error"
+      ],
+      "answer": 3,
+      "why": "Dividing by zero is an error in Spark 4. `F.try_divide(\"tip\", \"tolls\")` gives `NULL` instead."
+    },
+    {
+      "id": "k3",
+      "prompt": "What type does `F.ceil(\"trip_distance\")` give?",
+      "choices": [
+        "double",
+        "bigint",
+        "decimal(8,2)",
+        "int"
+      ],
+      "answer": 1,
+      "why": "`ceil` and `floor` give whole numbers as `bigint`."
+    }
+  ],
+  "review": [
+    "`round(col, n)` sends a half up; `bround(col, n)` sends it to the even digit. They differ only on exact halves.",
+    "`ceil` and `floor` round to whole numbers (`bigint`); `abs`, `pow`, `sqrt` and `%` do what you'd expect.",
+    "`greatest` and `least` pick the biggest or smallest value across columns on each row.",
+    "Decimal arithmetic stays exact and Spark widens the type; decimal with double gives a double.",
+    "Dividing by zero stops the job in Spark 4; `try_divide` gives `NULL` instead."
+  ],
+  "practice": ["PS-Q0076", "PS-Q0077", "PS-Q0078", "PS-Q0079", "PS-Q0080"]
+}

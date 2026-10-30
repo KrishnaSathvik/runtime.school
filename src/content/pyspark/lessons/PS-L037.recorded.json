@@ -1,0 +1,44 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D06",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "page_views",
+   "searches",
+   "checkout_events"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "root\n |-- event_id: string (nullable = true)\n |-- session_id: string (nullable = true)\n |-- user_id: string (nullable = true)\n |-- event_time: timestamp (nullable = true)\n |-- arrival_time: timestamp (nullable = true)\n |-- batch: integer (nullable = true)\n |-- page: string (nullable = true)\n |-- page_type: string (nullable = true)\n |-- device: struct (nullable = true)\n |    |-- type: string (nullable = true)\n |    |-- os: string (nullable = true)\n |-- context: struct (nullable = true)\n |    |-- referrer: string (nullable = true)\n |    |-- utm: struct (nullable = true)\n |    |    |-- source: string (nullable = true)\n |    |    |-- campaign: string (nullable = true)\n |-- time_on_page_s: integer (nullable = true)\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "+--------+-----------+--------------+--------+\n|event_id|device_type|      referrer|campaign|\n+--------+-----------+--------------+--------+\n| PV-0001|     mobile|social.example|CMP-0007|\n| PV-0002|     mobile|             /|CMP-0007|\n| PV-0003|     mobile|      /c/shoes|CMP-0007|\n| PV-0004|    desktop|search.example|    NULL|\n| PV-0005|    desktop|      /c/tents|    NULL|\n| PV-0006|    desktop|  mail.example|CMP-0012|\n| PV-0007|    desktop|    /c/jackets|CMP-0012|\n| PV-0008|    desktop|   /p/SKU-1002|CMP-0012|\n| PV-0009|     tablet|          NULL|    NULL|\n| PV-0010|     tablet|             /|    NULL|\n| PV-0011|     mobile|social.example|CMP-0007|\n| PV-0012|     mobile|   /p/SKU-1007|CMP-0007|\n+--------+-----------+--------------+--------+\n\n+--------+-------+-------+------+--------+\n|event_id|   type|     os|source|campaign|\n+--------+-------+-------+------+--------+\n| PV-0001| mobile|    iOS|social|CMP-0007|\n| PV-0002| mobile|    iOS|social|CMP-0007|\n| PV-0003| mobile|    iOS|social|CMP-0007|\n| PV-0004|desktop|Windows|  NULL|    NULL|\n+--------+-------+-------+------+--------+\nonly showing top 4 rows\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "+-------------+-------------------------------------+------------+------------+\n|query        |filters                              |filter_count|result_count|\n+-------------+-------------------------------------+------------+------------+\n|trail runner |[size:M, color:black]                |2           |3           |\n|2 person tent|[in_stock]                           |1           |2           |\n|rain jacket  |[]                                   |0           |4           |\n|headlamp     |[price:<50, brand:fernway, rating:4+]|3           |1           |\n|solar kettle |[]                                   |0           |0           |\n+-------------+-------------------------------------+------------+------------+\n\n+---+------+----+\n| id|  tags|size|\n+---+------+----+\n|  a|[x, y]|   2|\n|  b|    []|   0|\n|  c|  NULL|NULL|\n+---+------+----+\n\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "+--------+-----------------------------------------+\n|event_id|utm_json                                 |\n+--------+-----------------------------------------+\n|PV-0001 |{\"source\":\"social\",\"campaign\":\"CMP-0007\"}|\n|PV-0002 |{\"source\":\"social\",\"campaign\":\"CMP-0007\"}|\n|PV-0003 |{\"source\":\"social\",\"campaign\":\"CMP-0007\"}|\n|PV-0004 |NULL                                     |\n|PV-0005 |NULL                                     |\n+--------+-----------------------------------------+\nonly showing top 5 rows\n+--------+--------+--------------------------------------+---------------------+\n|event_id|step    |payment_json                          |attributes_json      |\n+--------+--------+--------------------------------------+---------------------+\n|CO-0001 |begin   |NULL                                  |{}                   |\n|CO-0002 |payment |{\"method\":\"card\",\"provider\":\"paycore\"}|{\"coupon\":\"SPRING10\"}|\n|CO-0003 |complete|{\"method\":\"card\",\"provider\":\"paycore\"}|{\"coupon\":\"SPRING10\"}|\n|CO-0004 |begin   |NULL                                  |{\"gift_wrap\":\"true\"} |\n+--------+--------+--------------------------------------+---------------------+\n\nmap<string,string>\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "root\n |-- event_id: string (nullable = true)\n |-- payment: struct (nullable = true)\n |    |-- method: string (nullable = true)\n |    |-- provider: string (nullable = true)\n\n+--------+------+--------+\n|event_id|method|provider|\n+--------+------+--------+\n|      E1|  card| paycore|\n|      E2|wallet|    NULL|\n|      E3|  NULL|    NULL|\n+--------+------+--------+\n\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "+--------+--------+--------+---------+\n|event_id|    step|  coupon|gift_wrap|\n+--------+--------+--------+---------+\n| CO-0001|   begin|    NULL|     NULL|\n| CO-0002| payment|SPRING10|     NULL|\n| CO-0003|complete|SPRING10|     NULL|\n| CO-0004|   begin|    NULL|     true|\n+--------+--------+--------+---------+\n\n",
+   "error": null
+  }
+ }
+}

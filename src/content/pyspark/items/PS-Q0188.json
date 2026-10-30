@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0188",
+  "slug": "visit-json-payload",
+  "lesson": "PS-L038",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Visit payload for a partner",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "prompt": "A partner API takes each visit as one line of JSON. Write `solve(encounters)` so every visit comes back with that JSON text.",
+  "rules": [
+    "The JSON object has the keys `class` (from `encounter_class`), `vitals` and `codes`, in that order.",
+    "`vitals` holds `heart_rate`, `systolic` and `diastolic` only, in that order. A visit with no vitals has no `vitals` key at all. A visit with vitals keeps the key even when every reading in it is missing.",
+    "`codes` is the number of entries in `diagnosis_codes`: 0 for an empty list, and no `codes` key when the list itself is missing. Missing readings have no key either.",
+    "Return `encounter_id` and `payload`."
+  ],
+  "hints": [
+    "`F.to_json` writes a struct as JSON text and leaves out every field that is missing.",
+    "So the difference between no `vitals` key and `\"vitals\":{}` is the difference between a missing struct and a struct of missing values.",
+    "Keep the existing struct and remove the temperature with `F.col(\"vitals\").dropFields(\"temperature_c\")`; rebuilding it with `F.struct` turns a missing struct into an empty one."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "encounters"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(encounters):\n    # Return encounter_id and the visit as JSON text.\n    return encounters\n",
+  "output": {
+    "columns": [
+      "encounter_id",
+      "payload"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Build one struct and write it with `to_json`: `F.to_json(F.struct(F.col(\"encounter_class\").alias(\"class\"), F.col(\"vitals\").dropFields(\"temperature_c\").alias(\"vitals\"), F.size(\"diagnosis_codes\").alias(\"codes\")))`. `to_json` leaves out missing fields, so the result depends on what is missing. `dropFields` keeps a missing `vitals` missing, so a telehealth visit has no `vitals` key, while a struct whose readings are all missing still prints as `{}`. `F.struct(\"vitals.heart_rate\", ...)` would build a struct for every visit and print `\"vitals\":{}` for telehealth. `F.size` of a missing list is missing, so that key disappears too, while an empty list gives `0`."
+}

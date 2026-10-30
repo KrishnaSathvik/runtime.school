@@ -1,0 +1,26 @@
+{
+  "id": "PS-L030-C2",
+  "slug": "one-row-per-order",
+  "lesson": "PS-L030",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "One row per order",
+  "dataset": { "id": "PS-D01", "version": "1.1.0" },
+  "prompt": "The ingestion job sometimes delivers the same order or the same customer twice. Finance needs each order exactly once, with its customer's name. Write `solve(orders, customers)` so it returns `order_id`, `customer_id`, `name` and `total`.",
+  "rules": [
+    "A row delivered twice is an exact copy of another row in the same table. Remove copies from both tables.",
+    "Different orders can share a customer and have the same total; they are not copies. Each distinct order row appears once.",
+    "An order whose customer isn't in `customers` stays, with a missing `name`. Return only these four columns, in this order."
+  ],
+  "hints": [
+    "Copies on either side multiply rows. Check each input before joining.",
+    "`dropDuplicates()` with no arguments removes exact copies only. Deduplicating on `customer_id` would remove real orders.",
+    "Use a join that keeps every order, then select the four columns."
+  ],
+  "entry": "solve",
+  "inputs": ["orders", "customers"],
+  "starter": "def solve(orders, customers):\n    # Return each order once, with its customer's name.\n    return orders.select(\"order_id\", \"customer_id\", \"total\")\n",
+  "output": { "columns": ["order_id", "customer_id", "name", "total"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

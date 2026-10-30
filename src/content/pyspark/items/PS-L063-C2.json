@@ -1,0 +1,57 @@
+{
+  "id": "PS-L063-C2",
+  "slug": "late-order-versions",
+  "lesson": "PS-L063",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Late order versions",
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0"
+  },
+  "prompt": "The ERP sends purchase order changes in batches, one per version, and the version 2 batch arrived after versions 3 and 4. Fix `upsert(batch, path)` so the orders table ends with each order's newest version, whatever order the batches come in. `solve` is written for you.",
+  "rules": [
+    "The table has one row per `po_id`: the order's highest version, with all its columns.",
+    "A batch row replaces the table's row only if its `version` is higher. An older version that arrives late changes nothing.",
+    "An order can first appear in a later batch, if its first version never arrived: add it.",
+    "Don't change `start_table` or `solve`."
+  ],
+  "hints": [
+    "Run the starter on the sample and look at PO00001: which version did it end on, and why?",
+    "A matched clause can take a condition that compares the batch row (`s`) with the table row (`t`).",
+    "Keep the clause for orders the table doesn't have yet."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "purchase_orders"
+  ],
+  "starter": "import shutil\n\nfrom delta.tables import DeltaTable\n\n\ndef start_table(purchase_orders, path):\n    # The orders table starts with each order's first version. Don't change this.\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty folder on every run\n    # `where` keeps the rows that match a SQL condition.\n    purchase_orders.where(\"version = 1\").write.format(\"delta\").save(path)\n\n\ndef upsert(batch, path):\n    # Apply one batch of order changes.\n    table = DeltaTable.forPath(spark, path)\n    (\n        table.alias(\"t\")\n        .merge(batch.alias(\"s\"), \"t.po_id = s.po_id\")\n        .whenMatchedUpdateAll()\n        .whenNotMatchedInsertAll()\n        .execute()\n    )\n\n\ndef solve(purchase_orders):\n    path = \"/tmp/buying/purchase_orders\"\n    start_table(purchase_orders, path)\n    for version in (3, 4, 2):  # the ERP's batches, in the order they arrived\n        upsert(purchase_orders.where(f\"version = {version}\"), path)\n    return spark.read.format(\"delta\").load(path)\n",
+  "output": {
+    "columns": [
+      "po_id",
+      "version",
+      "supplier_id",
+      "warehouse_id",
+      "sku",
+      "quantity",
+      "unit_cost",
+      "status",
+      "expected_date",
+      "updated_at"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 240,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

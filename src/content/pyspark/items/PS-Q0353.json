@@ -1,0 +1,58 @@
+{
+ "id": "PS-Q0353",
+ "slug": "cart-events-with-repeated-visits",
+ "lesson": "PS-L071",
+ "role": "edge",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 12,
+ "title": "Cart events with repeated visits",
+ "dataset": {
+  "id": "PS-D06",
+  "version": "1.0.0"
+ },
+ "prompt": "Support tags every cart event with the visitor's country and device as the events stream in. Since a re-import, `sessions` lists some visits twice. Write `solve(cart_events, sessions)` so it streams `cart_events`, joins `sessions` as a static table, and returns `event_id`, `action`, `country` and `device_type`.",
+ "rules": [
+  "Every cart event appears exactly once, even when `sessions` lists its visit more than once (the repeated rows are identical).",
+  "An event with no `session_id`, or whose visit isn't in `sessions`, still appears, with `country` and `device_type` missing. A missing id never matches anything, not even another missing id.",
+  "Return these four columns.",
+  "The rows must come from a streaming query over the delivery files: working on `cart_events` itself doesn't count."
+ ],
+ "hints": [
+  "A join returns one row per matching pair, so a visit listed twice doubles its events.",
+  "The static side can be any DataFrame: remove the repeated visits from `sessions` before the join.",
+  "Keep every event of the stream with a left join, stream on the left."
+ ],
+ "explanation": "In a stream-static join each micro-batch is joined with the static table as it is, so a visit listed twice gives each of its events twice. The static side can be any DataFrame, so `sessions.dropDuplicates([\"session_id\"])` before the join fixes it at the source. A left join with the stream on the left keeps events whose visit is missing. Join keys that are missing never match, so CA-0006, with no `session_id`, keeps empty details even though `sessions` has a row with no id too. Filling the missing ids with the same value would wrongly pair them.",
+ "entry": "solve",
+ "inputs": [
+  "cart_events",
+  "sessions"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\ndef solve(cart_events, sessions):\n    make_batches(cart_events, \"/tmp/carts\")          # one file per batch; clears the folder first\n    shutil.rmtree(\"/tmp/ck\", ignore_errors=True)     # a fresh checkpoint for every run\n    carts = spark.readStream.schema(cart_events.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/carts\")\n    # Join each cart event with its visit's country and device type, write the result to a memory table,\n    # run the stream, and return the four columns from that table.\n\n    return cart_events\n",
+ "output": {
+  "columns": [
+   "event_id",
+   "action",
+   "country",
+   "device_type"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

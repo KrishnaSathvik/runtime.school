@@ -1,0 +1,56 @@
+{
+ "id": "PS-L074-C1",
+ "slug": "only-the-new-loads",
+ "lesson": "PS-L074",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 10,
+ "title": "Only the new loads",
+ "dataset": {
+  "id": "PS-D08",
+  "version": "1.0.0"
+ },
+ "prompt": "Tracking events land in a folder per `load_date`, and `process()` copies them into a Delta table. It's run after each delivery and sometimes rerun. Fix `process()` so it adds only the loads the table doesn't have yet.",
+ "rules": [
+  "Every landed row ends up in the table exactly once, however often `process()` runs. Rows that are the same in every column are separate rows: keep both.",
+  "Load days land in order, but some events load days after they happened. Every landed event must be processed.",
+  "The first run finds no table at `TARGET` yet.",
+  "Don't change `deliver` or `solve`."
+ ],
+ "hints": [
+  "Before reading the landing folder, find the newest `load_date` already in the target: `select(F.max(\"load_date\")).first()[0]`.",
+  "`DeltaTable.isDeltaTable(spark, TARGET)` is false before the first run; then there's no mark and every landed row is new.",
+  "Keep only the landed rows with `load_date` after the mark, and append them. Why not compare `event_time`?"
+ ],
+ "entry": "solve",
+ "inputs": [
+  "shipment_events"
+ ],
+ "starter": "import shutil\n\nfrom pyspark.sql import functions as F\nfrom delta.tables import DeltaTable\n\nLANDING = \"/tmp/landing/shipment_events\"\nTARGET = \"/tmp/silver/shipment_events\"\n\n\ndef deliver(shipment_events, days):\n    # These load days land in the landing folder, one folder per day. Don't change this.\n    (shipment_events.filter(F.col(\"load_date\").isin(days))\n        .write.mode(\"append\").partitionBy(\"load_date\").parquet(LANDING))\n\n\ndef process():\n    # Append the landed rows to the Delta table at TARGET.\n    landing = spark.read.parquet(LANDING)\n    landing.write.format(\"delta\").mode(\"append\").save(TARGET)\n\n\ndef solve(shipment_events):\n    shutil.rmtree(\"/tmp/landing\", ignore_errors=True)  # start from empty folders on every run\n    shutil.rmtree(\"/tmp/silver\", ignore_errors=True)\n    days = sorted(r.load_date for r in shipment_events.select(\"load_date\").distinct().collect())\n    deliver(shipment_events, days[:1])\n    process()\n    deliver(shipment_events, days[1:])\n    process()\n    process()  # a rerun: nothing new has landed\n    return spark.read.format(\"delta\").load(TARGET)\n",
+ "output": {
+  "columns": [
+   "event_id",
+   "shipment_id",
+   "warehouse_id",
+   "event_type",
+   "event_time",
+   "location",
+   "sequence",
+   "is_correction",
+   "load_date"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 120,
+  "check_timeout_s": 300,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

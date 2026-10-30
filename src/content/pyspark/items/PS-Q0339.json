@@ -1,0 +1,56 @@
+{
+ "id": "PS-Q0339",
+ "slug": "fix-the-cold-chain-schema",
+ "lesson": "PS-L068",
+ "role": "debugging",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 12,
+ "title": "Fix the cold-chain schema",
+ "dataset": {
+  "id": "PS-D09",
+  "version": "1.0.0"
+ },
+ "prompt": "Cold-chain sensors must stay below 8 °C. A colleague's stream reads the delivery files with a hand-written schema, but its memory table comes back empty. Fix `solve(sensor_readings)` so it returns `reading_id`, `device_id`, `event_time` and `temperature_c` for every reading below 8 °C.",
+ "rules": [
+  "A reading counts when `temperature_c`, in the `payload` struct, is below 8; exactly 8.0 doesn't, and a missing temperature doesn't.",
+  "Keep every delivery: a reading delivered twice appears twice.",
+  "The rows must come from the streaming query's memory table, not from `sensor_readings` itself."
+ ],
+ "hints": [
+  "Run the starter, then drop the filter for a moment: which columns come back empty?",
+  "A JSON stream matches schema fields to keys by name. A name that isn't in the files doesn't raise an error; it just reads as missing.",
+  "Compare the schema's names with `sensor_readings.printSchema()`. Both the top level and the struct have a wrong name."
+ ],
+ "explanation": "A file stream takes the schema you give it and never checks it against the files. JSON keys are matched by name, so `device` and `payload.temperature` match nothing in files whose keys are `device_id` and `temperature_c`: both read as missing, every comparison with a missing temperature is false, and the table stays empty. Renaming them to `device_id` and `temperature_c` fixes it; so does `sensor_readings.schema`. Fixing only one of the two still gives an empty table or missing device ids. A hand-written schema with only the needed fields is a fine idea; the names just have to match.",
+ "entry": "solve",
+ "inputs": [
+  "sensor_readings"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef solve(sensor_readings):\n    make_batches(sensor_readings, \"/tmp/readings\")\n    # Only the fields this job needs.\n    schema = \"reading_id STRING, device STRING, event_time TIMESTAMP, payload STRUCT<temperature: DOUBLE, battery_v: DOUBLE>\"\n    stream = spark.readStream.schema(schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/readings\")\n    cold = (stream.select(\"reading_id\", F.col(\"device\").alias(\"device_id\"), \"event_time\",\n                          F.col(\"payload.temperature\").alias(\"temperature_c\"))\n            .filter(F.col(\"temperature_c\") < 8))\n    q = cold.writeStream.format(\"memory\").queryName(\"cold_chain\").trigger(availableNow=True).start()\n    q.awaitTermination()\n    return spark.table(\"cold_chain\")\n",
+ "output": {
+  "columns": [
+   "reading_id",
+   "device_id",
+   "event_time",
+   "temperature_c"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

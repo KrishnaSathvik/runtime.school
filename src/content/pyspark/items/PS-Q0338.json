@@ -1,0 +1,63 @@
+{
+  "id": "PS-Q0338",
+  "slug": "open-alerts-from-a-csv-feed",
+  "lesson": "PS-L068",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Open alerts from a CSV feed",
+  "dataset": {
+    "id": "PS-D09",
+    "version": "1.0.0"
+  },
+  "prompt": "The alerting service drops its alerts as CSV files, each starting with a header row. Write `solve(alerts)` so a streaming query reads those files into a memory table, and return `alert_id`, `device_id`, `rule_id` and `observed_value` for every alert nobody has acknowledged yet.",
+  "rules": [
+    "An alert is open when `acknowledged` is false or missing: an empty value means nobody has looked at it.",
+    "Each file's first line names the columns; it isn't an alert.",
+    "Empty values in the files are missing values. Keep open alerts even when other fields are missing.",
+    "The rows must come from a streaming query: write it to a memory table and read that back with `spark.table`."
+  ],
+  "hints": [
+    "A CSV stream needs the schema too: `spark.readStream.schema(alerts.schema)`, then `.csv(folder)`.",
+    "Run it without any options and look at the sample: what is the extra row? `option(\"header\", True)` tells Spark the first line holds names.",
+    "`F.col(\"acknowledged\") == False` is never true for a missing value. Add `F.col(\"acknowledged\").isNull()` with `|`."
+  ],
+  "explanation": "Read the folder with `spark.readStream.schema(alerts.schema).option(\"header\", True).csv(folder)`. Without the header option, each file's header line is read as data: its text columns get the column names and the rest can't be parsed, so they're missing, and with `acknowledged` missing it looks like an open alert. The filter is `F.col(\"acknowledged\").isNull() | (F.col(\"acknowledged\") == False)`: a comparison with a missing value is never true, so `== False` or `~F.col(\"acknowledged\")` alone loses the alerts nobody has touched, which are the ones that matter most. Empty values in a CSV file are read as missing, for text columns as well as numbers.",
+  "entry": "solve",
+  "inputs": [
+    "alerts"
+  ],
+  "starter": "import csv, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_csv_batches(df, folder):\n    \"\"\"Write one CSV file (with a header row) per 6 hours of `triggered_at`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for r in df.collect():\n        t = r[\"triggered_at\"]\n        files.setdefault((t.date(), t.hour // 6), []).append(r)\n    text = lambda v: \"\" if v is None else str(v).lower() if isinstance(v, bool) else v.isoformat() if hasattr(v, \"isoformat\") else v\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.csv\"\n        with open(path, \"w\", newline=\"\") as f:\n            w = csv.writer(f)\n            w.writerow(df.columns)\n            w.writerows([text(v) for v in r] for r in files[key])\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef solve(alerts):\n    make_csv_batches(alerts, \"/tmp/alerts\")\n    # Stream the CSV files in /tmp/alerts into a memory table, keep the open alerts,\n    # wait for the stream to finish, and return the table.\n    return alerts\n",
+  "output": {
+    "columns": [
+      "alert_id",
+      "device_id",
+      "rule_id",
+      "observed_value"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 150,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "technique": {
+    "name": "a streaming query's memory table",
+    "streams": true,
+    "plan": [
+      "LocalTableScan"
+    ],
+    "source": [
+      "writeStream"
+    ]
+  }
+}

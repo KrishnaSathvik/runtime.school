@@ -1,0 +1,26 @@
+{
+  "id": "PS-L022-C1",
+  "slug": "transactions-to-hold-back",
+  "lesson": "PS-L022",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Transactions to hold back",
+  "dataset": { "id": "PS-D02", "version": "1.0.0" },
+  "prompt": "Before the nightly load, the bank holds back transactions that break a basic rule. Write `solve(transactions)` so it returns every transaction that breaks at least one of the rules below.",
+  "rules": [
+    "A transaction breaks a rule if its `account_id` is missing, its `amount` is missing or not more than 0, or its `currency` is missing or not `USD`, `EUR` or `GBP`.",
+    "Currency codes are exact: `usd` is not `USD`.",
+    "Return every column of `transactions`, unchanged. Keep duplicate rows."
+  ],
+  "hints": [
+    "Write one condition per problem, and join them with `|`, each in its own parentheses.",
+    "A comparison with a missing value isn't true, so ask for missing values with `isNull()` in each rule.",
+    "\"Not more than 0\" includes 0 itself: `F.col(\"amount\") <= 0`."
+  ],
+  "entry": "solve",
+  "inputs": ["transactions"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(transactions):\n    # Return the transactions that break at least one rule.\n    return transactions\n",
+  "output": { "columns": ["transaction_id", "account_id", "merchant_id", "posted_at", "txn_type", "channel", "direction", "amount", "currency", "status"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

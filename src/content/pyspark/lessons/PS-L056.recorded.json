@@ -1,0 +1,48 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D01",
+  "version": "1.1.0",
+  "edition": "lesson",
+  "tables": [
+   "orders",
+   "customers"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "== Parsed Logical Plan ==\n'Project ['order_id, 'total]\n+- Filter (status#13 = paid)\n   +- Project [order_id#10, status#13, channel#14, total#15]\n      +- Relation [order_id#10,customer_id#11,order_date#12,status#13,channel#14,total#15] csv\n\n== Analyzed Logical Plan ==\norder_id: string, total: decimal(10,2)\nProject [order_id#10, total#15]\n+- Filter (status#13 = paid)\n   +- Project [order_id#10, status#13, channel#14, total#15]\n      +- Relation [order_id#10,customer_id#11,order_date#12,status#13,channel#14,total#15] csv\n\n== Optimized Logical Plan ==\nProject [order_id#10, total#15]\n+- Filter (isnotnull(status#13) AND (status#13 = paid))\n   +- Relation [order_id#10,customer_id#11,order_date#12,status#13,channel#14,total#15] csv\n\n== Physical Plan ==\n*(1) Project [order_id#10, total#15]\n+- *(1) Filter (isnotnull(status#13) AND (status#13 = paid))\n   +- FileScan csv [order_id#10,status#13,total#15] Batched: false, DataFilters: [isnotnull(status#13), (status#13 = paid)], Format: CSV, Location: InMemoryFileIndex(1 paths)[file:/data/playground/orders.csv], PartitionFilters: [], PushedFilters: [IsNotNull(status), EqualTo(status,paid)], ReadSchema: struct<order_id:string,status:string,total:decimal(10,2)>\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "struct<order_id:string,status:string,total:decimal(10,2)>\n[IsNotNull(status), EqualTo(status,paid)]\n['order_id', 'total']\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "Project [order_id#10, name#1]\n+- Filter (city#2 = Leeds)\n   +- Project [customer_id#11, order_id#10, order_date#12, status#13, channel#14, total#15, name#1, city#2, segment#3, signup_date#4]\n      +- Join Inner, (customer_id#11 = customer_id#0)\n         :- Relation [order_id#10,customer_id#11,order_date#12,status#13,channel#14,total#15] csv\n         +- Relation [customer_id#0,name#1,city#2,segment#3,signup_date#4] csv\n\nProject [order_id#10, name#1]\n+- Join Inner, (customer_id#11 = customer_id#0)\n   :- Project [order_id#10, customer_id#11]\n   :  +- Filter isnotnull(customer_id#11)\n   :     +- Relation [order_id#10,customer_id#11,order_date#12,status#13,channel#14,total#15] csv\n   +- Project [customer_id#0, name#1]\n      +- Filter ((isnotnull(city#2) AND (city#2 = Leeds)) AND isnotnull(customer_id#0))\n         +- Relation [customer_id#0,name#1,city#2,segment#3,signup_date#4] csv\n\n+--------+-----------+\n|order_id|       name|\n+--------+-----------+\n|  O00001|Ines Okafor|\n|  O00002|Ines Okafor|\n|  O00008|Ines Okafor|\n|  O00009|Ines Okafor|\n+--------+-----------+\n\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "True\nFilter ((isnotnull(status#13) AND isnotnull(channel#14)) AND ((status#13 = paid) AND (channel#14 = app)))\n+- Relation [order_id#10,customer_id#11,order_date#12,status#13,channel#14,total#15] csv\n\n2 paid app orders\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "== Physical Plan ==\nAdaptiveSparkPlan (9)\n+- Project (8)\n   +- BroadcastHashJoin Inner BuildRight (7)\n      :- Filter (2)\n      :  +- Scan csv  (1)\n      +- BroadcastExchange (6)\n         +- Project (5)\n            +- Filter (4)\n               +- Scan csv  (3)\n\n\n(1) Scan csv \nOutput [2]: [order_id#10, customer_id#11]\nBatched: false\nLocation: InMemoryFileIndex [file:/data/playground/orders.csv]\nPushedFilters: [IsNotNull(customer_id)]\nReadSchema: struct<order_id:string,customer_id:string>\n\n(2) Filter\nInput [2]: [order_id#10, customer_id#11]\nCondition : isnotnull(customer_id#11)\n\n(3) Scan csv \nOutput [3]: [customer_id#0, name#1, city#2]\nBatched: false\nLocation: InMemoryFileIndex [file:/data/playground/customers.csv]\nPushedFilters: [IsNotNull(city), EqualTo(city,Leeds), IsNotNull(customer_id)]\nReadSchema: struct<customer_id:string,name:string,city:string>\n\n(4) Filter\nInput [3]: [customer_id#0, name#1, city#2]\nCondition : ((isnotnull(city#2) AND (city#2 = Leeds)) AND isnotnull(customer_id#0))\n\n(5) Project\nOutput [2]: [customer_id#0, name#1]\nInput [3]: [customer_id#0, name#1, city#2]\n\n(6) BroadcastExchange\nInput [2]: [customer_id#0, name#1]\nArguments: HashedRelationBroadcastMode(List(input[0, string, true]),false), [plan_id=26]\n\n(7) BroadcastHashJoin\nLeft keys [1]: [customer_id#11]\nRight keys [1]: [customer_id#0]\nJoin type: Inner\nJoin condition: None\n\n(8) Project\nOutput [2]: [order_id#10, name#1]\nInput [4]: [order_id#10, customer_id#11, customer_id#0, name#1]\n\n(9) AdaptiveSparkPlan\nOutput [2]: [order_id#10, name#1]\nArguments: isFinalPlan=false\n\n\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "",
+   "error": {
+    "type": "IllegalArgumentException",
+    "message": "Unknown explain mode: full. Accepted explain modes are 'simple', 'extended', 'codegen', 'cost', 'formatted'.",
+    "line": 1,
+    "condition": null
+   }
+  }
+ }
+}

@@ -1,0 +1,26 @@
+{
+  "id": "PS-L010-C2",
+  "slug": "orders-to-chase",
+  "lesson": "PS-L010",
+  "difficulty": "easy",
+  "minutes": 6,
+  "title": "Orders to chase",
+  "dataset": { "id": "PS-D01", "version": "1.1.0" },
+  "prompt": "Customer service follows up on orders that are still `placed` or `paid` (so not shipped yet) and were ordered before 1 April 2026. Write `solve(orders)` so it returns `order_id`, `customer_id` and `status` for those orders.",
+  "rules": [
+    "`status` is `placed` or `paid`.",
+    "`order_date` is before 2026-04-01. An order from 1 April itself doesn't count.",
+    "Return only `order_id`, `customer_id` and `status`, in that order."
+  ],
+  "hints": [
+    "`F.col(\"status\").isin(\"placed\", \"paid\")` covers both statuses in one condition.",
+    "Compare the date with text: `F.col(\"order_date\") < \"2026-04-01\"`.",
+    "Filter first, then `select` the three columns."
+  ],
+  "entry": "solve",
+  "inputs": ["orders"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(orders):\n    # Return order_id, customer_id and status of the orders to chase.\n    return orders\n",
+  "output": { "columns": ["order_id", "customer_id", "status"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0292",
+  "slug": "which-endpoints-need-a-salt",
+  "lesson": "PS-L059",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Which endpoints need a salt?",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "Before salting anything, the platform team wants the hot keys: endpoints holding at least a quarter of all requests. Write `solve(api_requests)` so it returns `endpoint`, `requests` and `share` for those endpoints.",
+  "rules": [
+    "`requests` counts the endpoint's requests. `share` is that count divided by the number of all requests, a fraction from 0 to 1.",
+    "Keep an endpoint when `share` is at least 0.25 (exactly a quarter counts).",
+    "Requests with no endpoint count in the total, and together they're one key that can be hot too. Return only these three columns, in this order."
+  ],
+  "hints": [
+    "`api_requests.count()` gives the total as a Python number you can use in a column expression.",
+    "Group by `endpoint` and count with `F.count(\"*\")`; then `F.col(\"requests\") / total` is the share.",
+    "`filter` on the share with `>=`. A missing endpoint is a group of its own in `groupBy`, so it needs no special handling."
+  ],
+  "explanation": "Count the whole table once, `total = api_requests.count()`, then `groupBy(\"endpoint\").agg(F.count(\"*\").alias(\"requests\"))`, add `F.col(\"requests\") / total` as `share` and keep `share >= 0.25`. Requests with no endpoint are real traffic: they all hash to the same partition, so they're a hot key like any other, and dropping them from the total makes every share too big. These counts are exactly what to measure before salting: a key that holds a large share of the rows keeps one task busy, however many partitions you ask for.",
+  "entry": "solve",
+  "inputs": [
+    "api_requests"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(api_requests):\n    # Return endpoint, requests and share for endpoints with at least a quarter of all requests.\n    return api_requests\n",
+  "output": {
+    "columns": [
+      "endpoint",
+      "requests",
+      "share"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

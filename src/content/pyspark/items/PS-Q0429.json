@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0429",
+  "slug": "compact-the-closed-months",
+  "lesson": "PS-L086",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Compact the closed months",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "The invoice archive is partitioned by month, and the job that compacts the closed months fails before it compacts anything. Fix `compact_closed_months` so it compacts every month before 2026 and leaves the rest alone.",
+  "rules": [
+    "Compact every month before January 2026 into as few files as OPTIMIZE makes.",
+    "Leave the 2026 months as they are, and the invoices with no date too.",
+    "Don't change `layout`, `build_table` or `solve`."
+  ],
+  "hints": [
+    "Run the starter and read the error: which column does it say the condition may use?",
+    "OPTIMIZE picks whole partitions, so its condition can only use the partition column, `invoice_month`.",
+    "`invoice_month` is text like `2025-12`. Compare it with text of the same shape: is `'2026-01' < '2026-01-01'` true?"
+  ],
+  "explanation": "OPTIMIZE compacts whole partitions, so `where` may only use partition columns, and `invoice_date` isn't one: Delta stops with an error that names it. The same months are `invoice_month < '2026-01'`, because months written as `yyyy-MM` sort as text in date order. Comparing with `'2026-01-01'` looks right but isn't: `'2026-01'` is a prefix of it, so it sorts before it and January 2026 would be compacted too. A missing date gives a NULL month, and a comparison with NULL is never true, so that partition is left alone.",
+  "entry": "solve",
+  "inputs": [
+    "invoices"
+  ],
+  "starter": "import json\nimport os\nimport shutil\n\nfrom pyspark.sql import functions as F\nfrom delta.tables import DeltaTable\n\n\ndef layout(path):\n    # One row per month: the table's data files and their invoices, from the log. Don't change this.\n    files = {}\n    log = path + \"/_delta_log/\"\n    for name in sorted(f for f in os.listdir(log) if f.endswith(\".json\")):\n        with open(log + name) as f:\n            for line in f:\n                action = json.loads(line)\n                if \"add\" in action:\n                    add = action[\"add\"]\n                    files[add[\"path\"]] = (add[\"partitionValues\"].get(\"invoice_month\"), json.loads(add[\"stats\"])[\"numRecords\"])\n                if \"remove\" in action:\n                    files.pop(action[\"remove\"][\"path\"], None)\n    by_value = {}\n    for value, rows in files.values():\n        by_value.setdefault(value, []).append(rows)\n    return spark.createDataFrame(\n        [(value, len(rows), sum(rows)) for value, rows in by_value.items()],\n        \"invoice_month STRING, files INT, invoices INT\",\n    )\n\n\ndef build_table(invoices, path):\n    # Two loads, replayed on a fresh table: each writes one file per month. Don't change this.\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty folder on every run\n    monthly = invoices.select(\"*\", F.date_format(\"invoice_date\", \"yyyy-MM\").alias(\"invoice_month\"))\n    for load in range(2):\n        monthly.coalesce(1).write.format(\"delta\").mode(\"append\").partitionBy(\"invoice_month\").save(path)\n\n\ndef compact_closed_months(path):\n    # Months before 2026 are closed: compact them, and leave 2026 alone.\n    DeltaTable.forPath(spark, path).optimize().where(\"invoice_date < '2026-01-01'\").executeCompaction()\n\n\ndef solve(invoices):\n    path = \"/tmp/billing/archive\"\n    build_table(invoices, path)\n    compact_closed_months(path)\n    return layout(path)\n",
+  "output": {
+    "columns": [
+      "invoice_month",
+      "files",
+      "invoices"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

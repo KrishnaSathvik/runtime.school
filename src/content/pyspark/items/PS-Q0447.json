@@ -1,0 +1,54 @@
+{
+ "id": "PS-Q0447",
+ "slug": "morning-checks-before-finance-reads-gold",
+ "lesson": "PS-L090",
+ "role": "business",
+ "format": "dataframe_coding",
+ "difficulty": "hard",
+ "minutes": 20,
+ "title": "Morning checks before finance reads gold",
+ "dataset": {
+  "id": "PS-D01",
+  "version": "1.1.0"
+ },
+ "prompt": "Before finance opens the revenue report, the platform checks that the shop's tables agree with each other. Write `solve(orders, order_items)` so it returns one row per check in `CHECKS`: the check's name in `check`, what it found in `failures`, and `passed`.",
+ "rules": [
+  "`lines with no order`: lines whose `order_id` is missing or isn't in `orders`. Count lines.",
+  "`orders with no lines`: order ids that have no line. `orders sent twice`: order ids on more than one row. Count each order id once.",
+  "`totals that differ from their lines`: order ids that have lines and a `total`, where the total isn't the sum of `quantity` \u00d7 `unit_price` over the order's lines.",
+  "`channels gone quiet`: channels whose newest `order_date` is more than 3 days before the newest `order_date` in `orders`. Rows without a `channel` make no channel. Take the dates from the data, not from today.",
+  "`passed` is true when `failures` is 0. Return all five checks."
+ ],
+ "hints": [
+  "Each check is one number: build it with lesson 31's `groupBy` and a left join (lesson 25), then `.count()`.",
+  "A left join leaves NULL where nothing matched. Order ids sent twice appear more than once in the join, so count distinct order ids, not rows.",
+  "Read the newest date with `select(F.max(\"order_date\")).first()[0]`, then compare each channel's newest date to it with `F.datediff`."
+ ],
+ "explanation": "Each check is a count. Orphan lines: left-join the lines to the distinct order ids with a marker column and count the lines where it's NULL; a missing `order_id` matches nothing, so it counts. Orders with no lines are the same join the other way round. For the totals, join one row per order (`select(\"order_id\", \"total\").distinct()`) to the line sums: O00102 was sent twice, and counting rows would report it twice. The inner join leaves out orders without lines, and `!=` is NULL for a missing total, so neither counts. `groupBy(\"order_id\").count()` finds ids with more than one row: O00106 came three times but is one id. Freshness compares each channel's newest date with the newest date in the file: `store` stopped on 16 March, four days before 20 March, and `app` is exactly three days behind, so it isn't quiet. With `current_date()` every channel would look quiet, and the answer would change from day to day.",
+ "entry": "solve",
+ "inputs": [
+  "orders",
+  "order_items"
+ ],
+ "starter": "from pyspark.sql import functions as F\n\nCHECKS = [\n    \"lines with no order\",\n    \"orders with no lines\",\n    \"totals that differ from their lines\",\n    \"orders sent twice\",\n    \"channels gone quiet\",\n]\n\n\ndef solve(orders, order_items):\n    # Count what each check finds, then return one row per check.\n    found = [0, 0, 0, 0, 0]\n    rows = [(name, n, n == 0) for name, n in zip(CHECKS, found)]\n    return spark.createDataFrame(rows, \"check STRING, failures BIGINT, passed BOOLEAN\")\n",
+ "output": {
+  "columns": [
+   "check",
+   "failures",
+   "passed"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 180,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

@@ -1,0 +1,75 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "event_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "step",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "repeat_skus",
+     "type": "array<string>",
+     "nullable": true
+    },
+    {
+     "name": "has_premium",
+     "type": "boolean",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "CO-0001",
+     "begin",
+     [
+      "SKU-1013"
+     ],
+     false
+    ],
+    [
+     "CO-0002",
+     "payment",
+     [
+      "SKU-1013"
+     ],
+     false
+    ],
+    [
+     "CO-0003",
+     "complete",
+     [
+      "SKU-1013"
+     ],
+     false
+    ],
+    [
+     "CO-0004",
+     "begin",
+     [],
+     false
+    ]
+   ],
+   "row_count": 4
+  }
+ },
+ "hidden": [
+  "the full practice checkout steps",
+  "quantities of 1, 2 and 3, and prices just below and at 150.00",
+  "baskets mixing premium and cheaper items",
+  "an empty basket",
+  "the same checkout step delivered twice",
+  "no checkout steps"
+ ]
+}

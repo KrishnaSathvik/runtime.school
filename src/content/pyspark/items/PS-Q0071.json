@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0071",
+  "slug": "order-reference-codes",
+  "lesson": "PS-L015",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Order reference codes",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "Invoices quote an order reference like `ORD-00001` instead of the order id `O00001`. Write `solve(orders)` so it returns `order_id`, `customer_id` and that `reference`.",
+  "rules": [
+    "`reference` is `ORD-` followed by the order id without its leading `O`: `O00001` gives `ORD-00001`. Keep every digit, however many there are.",
+    "A missing order id gives a missing reference.",
+    "Return the three columns, in that order, for every order, duplicates included."
+  ],
+  "hints": [
+    "`F.concat` joins text; a fixed piece of text needs `F.lit(\"ORD-\")`.",
+    "`F.substring(col, pos, len)` counts positions from 1, so the digits start at position 2.",
+    "Some order numbers are longer than five digits. Either give `substring` a length that's long enough, or replace the leading `O` with `F.regexp_replace(\"order_id\", \"^O\", \"ORD-\")`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "orders"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(orders):\n    # order_id, customer_id, reference\n    return orders\n",
+  "output": {
+    "columns": [
+      "order_id",
+      "customer_id",
+      "reference"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Replace the leading `O`: `F.regexp_replace(\"order_id\", \"^O\", \"ORD-\")`, where `^` ties the match to the start, so an `O` elsewhere is left alone. `F.concat(F.lit(\"ORD-\"), F.substring(\"order_id\", 2, 100))` works too, as long as the length covers every digit: `substring(\"order_id\", 2, 5)` happens to fit today's ids and cuts a longer one short. Both give a missing reference for a missing id. `F.concat_ws(\"\", ...)` doesn't, because it skips the missing part and returns just `ORD-`."
+}

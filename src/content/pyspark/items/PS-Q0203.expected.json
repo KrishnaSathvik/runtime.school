@@ -1,0 +1,234 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "event_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "step",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "all_valid",
+     "type": "boolean",
+     "nullable": true
+    },
+    {
+     "name": "invalid_skus",
+     "type": "array<string>",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "CO-0001",
+     "begin",
+     true,
+     []
+    ],
+    [
+     "CO-0002",
+     "payment",
+     true,
+     []
+    ],
+    [
+     "CO-0003",
+     "complete",
+     true,
+     []
+    ],
+    [
+     "CO-0004",
+     "begin",
+     true,
+     []
+    ],
+    [
+     "CO-0005",
+     "begin",
+     false,
+     [
+      "SKU-1020"
+     ]
+    ],
+    [
+     "CO-0006",
+     "begin",
+     false,
+     [
+      "SKU-1005",
+      "SKU-1005"
+     ]
+    ],
+    [
+     "CO-0007",
+     "begin",
+     true,
+     []
+    ],
+    [
+     "CO-0008",
+     "payment",
+     null,
+     null
+    ],
+    [
+     "CO-0009",
+     "begin",
+     null,
+     []
+    ]
+   ],
+   "row_count": 9,
+   "inputs": {
+    "checkout_events": [
+     [
+      "CO-0001",
+      "SES-0001",
+      "CU-001",
+      "2026-03-14T10:06:00",
+      "2026-03-14T10:06:02",
+      "1",
+      "begin",
+      null,
+      null,
+      "[{\"sku\":\"SKU-1001\",\"qty\":1,\"price\":89.0},{\"sku\":\"SKU-1013\",\"qty\":2,\"price\":11.99}]",
+      "112.98",
+      "{}"
+     ],
+     [
+      "CO-0002",
+      "SES-0001",
+      "CU-001",
+      "2026-03-14T10:08:30",
+      "2026-03-14T10:08:33",
+      "1",
+      "payment",
+      null,
+      "{\"method\":\"card\",\"provider\":\"paycore\"}",
+      "[{\"sku\":\"SKU-1001\",\"qty\":1,\"price\":89.0},{\"sku\":\"SKU-1013\",\"qty\":2,\"price\":11.99}]",
+      "112.98",
+      "{\"coupon\":\"SPRING10\"}"
+     ],
+     [
+      "CO-0003",
+      "SES-0001",
+      "CU-001",
+      "2026-03-14T10:09:40",
+      "2026-03-14T10:09:42",
+      "1",
+      "complete",
+      "ORD-0001",
+      "{\"method\":\"card\",\"provider\":\"paycore\"}",
+      "[{\"sku\":\"SKU-1001\",\"qty\":1,\"price\":89.0},{\"sku\":\"SKU-1013\",\"qty\":2,\"price\":11.99}]",
+      "112.98",
+      "{\"coupon\":\"SPRING10\"}"
+     ],
+     [
+      "CO-0004",
+      "SES-0003",
+      "CU-002",
+      "2026-03-14T10:19:55",
+      "2026-03-14T10:19:59",
+      "2",
+      "begin",
+      null,
+      null,
+      "[{\"sku\":\"SKU-1002\",\"qty\":1,\"price\":119.95}]",
+      "119.95",
+      "{\"gift_wrap\":\"true\"}"
+     ],
+     [
+      "CO-0005",
+      "SES-0004",
+      "CU-003",
+      "2026-03-14T10:31:10",
+      "2026-03-14T10:31:12",
+      "2",
+      "begin",
+      null,
+      null,
+      "[{\"sku\":\"SKU-1002\",\"qty\":1,\"price\":119.95},{\"sku\":\"SKU-1020\",\"qty\":1,\"price\":0.0}]",
+      "119.95",
+      "{}"
+     ],
+     [
+      "CO-0006",
+      "SES-0005",
+      "CU-004",
+      "2026-03-14T10:40:05",
+      "2026-03-14T10:40:06",
+      "2",
+      "begin",
+      null,
+      null,
+      "[{\"sku\":\"SKU-1005\",\"qty\":0,\"price\":24.5},{\"sku\":\"SKU-1001\",\"qty\":1,\"price\":89.0},{\"sku\":\"SKU-1005\",\"qty\":0,\"price\":24.5}]",
+      "89.0",
+      "{}"
+     ],
+     [
+      "CO-0007",
+      "SES-0006",
+      "CU-005",
+      "2026-03-14T10:44:30",
+      "2026-03-14T10:44:31",
+      "2",
+      "begin",
+      null,
+      null,
+      "[]",
+      "0.0",
+      "{}"
+     ],
+     [
+      "CO-0008",
+      "SES-0006",
+      "CU-005",
+      "2026-03-14T10:45:02",
+      "2026-03-14T10:45:04",
+      "2",
+      "payment",
+      null,
+      "{\"method\":\"card\",\"provider\":\"paycore\"}",
+      null,
+      null,
+      "{}"
+     ],
+     [
+      "CO-0009",
+      "SES-0007",
+      "CU-006",
+      "2026-03-14T10:50:40",
+      "2026-03-14T10:50:41",
+      "3",
+      "begin",
+      null,
+      null,
+      "[{\"sku\":\"SKU-1013\",\"qty\":null,\"price\":11.99},{\"sku\":\"SKU-1001\",\"qty\":1,\"price\":89.0}]",
+      "89.0",
+      "{}"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice checkout steps",
+  "quantities of 0 and 1, and prices of 0.00, 0.01 and below zero",
+  "lines with a missing quantity or price, alone and next to a bad line",
+  "an empty basket and a step with no items list",
+  "the same bad sku twice in one basket, and a step delivered twice",
+  "no checkout steps"
+ ]
+}

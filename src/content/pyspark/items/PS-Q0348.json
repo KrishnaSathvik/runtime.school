@@ -1,0 +1,55 @@
+{
+ "id": "PS-Q0348",
+ "slug": "rolling-counts-with-a-late-reading",
+ "lesson": "PS-L070",
+ "role": "edge",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 10,
+ "title": "Rolling counts with a late reading",
+ "dataset": {
+  "id": "PS-D09",
+  "version": "1.0.0"
+ },
+ "prompt": "The operations screen shows a rolling count: how many readings came in each 30 minutes of event time, refreshed every 15 minutes. Write `solve(sensor_readings)` so it streams the readings and returns `window_start` and `readings` for every closed window.",
+ "rules": [
+  "Windows are 30 minutes of `event_time` and start every 15 minutes (09:00, 09:15, ...), so each reading counts in two windows. A window includes its start and excludes its end.",
+  "Use a 10-minute watermark on `event_time`. A late reading isn't counted in a window that has already closed, but it still counts in its other window if that one is open.",
+  "Return each closed window once, with its final count.",
+  "The rows must come from a streaming query over the delivery files: working on `sensor_readings` itself doesn't count."
+ ],
+ "hints": [
+  "`F.window(\"event_time\", \"30 minutes\", \"15 minutes\")` makes the overlapping windows: the third argument is how often a new one starts.",
+  "Spark checks each of a reading's windows on its own: the earlier one may be closed while the later one is still open.",
+  "Use append mode, so each window is written once, when the watermark passes its end."
+ ],
+ "explanation": "A sliding window puts each reading in two windows. The watermark closes windows one at a time, by their end, so a late reading can miss one and still count in the other. In the sample, R0707 (09:20) arrived after the watermark had reached 09:35: the 09:00 to 09:30 window was already closed and kept its count of 3, but the 09:15 to 09:45 window was still open and counted it. A 30-minute watermark would have counted it in both. Append mode writes each window once, with its final count. The 09:30 window closes in one last micro-batch with no data, which availableNow adds because the last file moved the watermark; the 09:45 window is still open when the stream stops.",
+ "entry": "solve",
+ "inputs": [
+  "sensor_readings"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\ndef solve(sensor_readings):\n    spark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\n    make_batches(sensor_readings, \"/tmp/in\")         # one file per batch; clears the folder first\n    shutil.rmtree(\"/tmp/ck\", ignore_errors=True)     # a fresh checkpoint for every run\n    readings = spark.readStream.schema(sensor_readings.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\n    # Count readings in 30-minute windows that start every 15 minutes, write only closed windows\n    # to a memory table, run the stream, and return window_start and readings from that table.\n\n    return sensor_readings\n",
+ "output": {
+  "columns": [
+   "window_start",
+   "readings"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

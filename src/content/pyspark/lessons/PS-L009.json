@@ -1,0 +1,126 @@
+{
+  "id": "PS-L009",
+  "minutes": 20,
+  "lede": "Real tables have more columns than any one question needs. `select` keeps the ones you ask for, in the order you want, and can rename them or work out new values on the way.",
+  "objectives": [
+    "Pick columns by name or with `F.col` using `select`",
+    "Rename a column in the result with `alias`",
+    "Work out new columns with arithmetic such as `F.col(\"minutes_spent\") / 60`",
+    "Write the same thing as SQL text with `selectExpr`"
+  ],
+  "dataset": {
+    "id": "PS-D11",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "learners",
+      "lessons",
+      "attempts"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "The tables above come from a small learning platform: `learners`, the `lessons` of each course, and `attempts`, one row per try at a lesson. On this page they're loaded as DataFrames with those names, and `F` is `pyspark.sql.functions`.\n\n`df.select(...)` gives back a **new** DataFrame with only the columns you list, in the order you list them. Every row stays, and `df` itself doesn't change."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Pick columns by name",
+      "code": "learners.select(\"display_name\", \"country\").show()\n\nlearners.select(\"plan\", \"learner_id\").show()\n",
+      "note": "The second result has `plan` first, because that's the order it was asked for, not the order in the table."
+    },
+    {
+      "kind": "text",
+      "md": "Instead of a name you can pass a column, written `F.col(\"name\")`. A column can do more than a name can. `.alias(\"new_name\")` gives it a new name in the result, and you can mix plain names and `F.col` in the same `select`."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Rename with alias",
+      "code": "from pyspark.sql import functions as F\n\nscores = attempts.select(\"attempt_id\", \"learner_id\", F.col(\"score_pct\").alias(\"score\"))\nscores.show()\n",
+      "note": "Only the result has the new name. `attempts` still has its `score_pct` column."
+    },
+    {
+      "kind": "text",
+      "md": "Columns work with `+`, `-`, `*` and `/`, against a number or another column. The result is a new column, worked out for every row. Give it a name with `alias`, and put the arithmetic in brackets first so `alias` names the whole calculation.\n\nIf a value is missing, a calculation with it is missing too."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Work out a new column",
+      "code": "from pyspark.sql import functions as F\n\nlessons.select(\"title\", F.col(\"estimated_minutes\") / 60).show(3)\n\nlessons.select(\"title\", \"estimated_minutes\", (F.col(\"estimated_minutes\") / 60).alias(\"hours\")).show(3)\n",
+      "note": "Without `alias`, the new column is named after the calculation: `(estimated_minutes / 60)`. Dividing with `/` always gives a `double`, even when both sides are whole numbers."
+    },
+    {
+      "kind": "error-example",
+      "id": "e4",
+      "title": "A column that isn't there",
+      "code": "attempts.select(\"attempt_id\", \"score\").show()\n",
+      "error": "AnalysisException",
+      "note": "The column is called `score_pct`. Spark stops before running anything and suggests names that do exist, so the error message is worth reading."
+    },
+    {
+      "kind": "text",
+      "md": "`selectExpr` does the same job with SQL text: each argument is a column name or a small SQL expression, and `AS` does what `alias` does. It's handy for a quick calculation; `F.col` is easier to build up in Python as expressions grow."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "The same with selectExpr",
+      "code": "attempts.selectExpr(\"attempt_id\", \"minutes_spent / 60 AS hours\", \"score_pct / 100 AS score\").show(4)\n",
+      "note": "`selectExpr` gives the same result you'd get from `select` with `F.col`, `/` and `alias`."
+    }
+  ],
+  "challenges": [
+    "PS-L009-C1",
+    "PS-L009-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "What are the columns of `attempts.select(\"lesson_id\", \"learner_id\")`?",
+      "choices": [
+        "`lesson_id`, then `learner_id`",
+        "`learner_id`, then `lesson_id`, as in the table",
+        "All of `attempts`' columns",
+        "Just `lesson_id`"
+      ],
+      "answer": 0,
+      "why": "`select` returns exactly the columns you list, in the order you list them."
+    },
+    {
+      "id": "k2",
+      "prompt": "Which line gives a column called `hours`?",
+      "choices": [
+        "attempts.select(F.col(\"minutes_spent\") / 60)",
+        "attempts.select((F.col(\"minutes_spent\") / 60).alias(\"hours\"))",
+        "attempts.select(\"minutes_spent / 60 AS hours\")",
+        "attempts.select(F.col(\"hours\"))"
+      ],
+      "answer": 1,
+      "why": "The calculation in brackets, then `.alias(\"hours\")`. Without `alias` the column is called `(minutes_spent / 60)`; `select` treats text as a column name, so SQL text needs `selectExpr`; and there is no `hours` column to pick."
+    },
+    {
+      "id": "k3",
+      "prompt": "An attempt's `minutes_spent` is missing. What is `F.col(\"minutes_spent\") / 60` for that row?",
+      "choices": [
+        "Missing (NULL)",
+        "0",
+        "An error stops the job",
+        "0.0"
+      ],
+      "answer": 0,
+      "why": "A calculation with a missing value is missing too. The row stays; only its value is NULL."
+    }
+  ],
+  "review": [
+    "`df.select(...)` returns a new DataFrame with the columns you list, in that order. Every row stays.",
+    "Pass names like `\"learner_id\"` or columns like `F.col(\"learner_id\")`, mixed as you like.",
+    "`.alias(\"new_name\")` renames a column in the result; the original DataFrame keeps its names.",
+    "Arithmetic on columns makes a new column. Wrap it in brackets before `.alias`. `/` always gives a `double`.",
+    "A calculation with a missing value is missing.",
+    "`selectExpr` takes SQL text, with `AS` for a new name."
+  ],
+  "practice": ["PS-Q0041", "PS-Q0042", "PS-Q0043", "PS-Q0044", "PS-Q0045"]
+}

@@ -1,0 +1,73 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "position",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "step",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "rows",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "files",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     1,
+     "HashAggregate",
+     2,
+     null
+    ],
+    [
+     2,
+     "Exchange",
+     2,
+     null
+    ],
+    [
+     3,
+     "HashAggregate",
+     2,
+     null
+    ],
+    [
+     4,
+     "Filter",
+     5,
+     null
+    ],
+    [
+     5,
+     "Scan csv",
+     5,
+     1
+    ]
+   ],
+   "row_count": 5
+  }
+ },
+ "hidden": [
+  "the full practice trips table",
+  "trips with no passenger count, and shared rides with no rate code",
+  "every shared ride on the same rate code",
+  "no trips at all"
+ ]
+}

@@ -1,0 +1,58 @@
+{
+ "id": "PS-Q0335",
+ "slug": "coupons-at-checkout-as-they-stream",
+ "lesson": "PS-L067",
+ "role": "integration",
+ "format": "dataframe_coding",
+ "difficulty": "hard",
+ "minutes": 20,
+ "title": "Coupons at checkout, as they stream",
+ "dataset": {
+  "id": "PS-D06",
+  "version": "1.0.0"
+ },
+ "prompt": "Marketing tracks coupon use at every checkout step, delivery by delivery. Write `solve(checkout_events)` so a streaming query reads one delivery file per micro-batch and returns `micro_batch`, `event_id`, `step`, `payment_method` and `coupon` for every checkout step that carries a coupon.",
+ "rules": [
+  "A step carries a coupon when its `attributes` map has a `coupon` key; `coupon` is that key's value. Other flags such as `gift_wrap` don't count.",
+  "`payment_method` is the payment's `method`, missing on steps before payment.",
+  "Each delivery file is its own micro-batch; `micro_batch` is Spark's id for it, from 0.",
+  "The rows must come from the streaming query's micro-batches, not from working them out on `checkout_events` itself."
+ ],
+ "hints": [
+  "Write the map as JSON with `F.to_json`, then parse it with `F.from_json` and a schema that names only `coupon`.",
+  "Do the select and the filter on the stream. A step before payment has no `payment`, so its method is simply missing.",
+  "`option(\"maxFilesPerTrigger\", 1)` and `batch_id` in `foreachBatch` give the micro-batch ids."
+ ],
+ "explanation": "`F.from_json(F.to_json(\"attributes\"), \"coupon STRING\")` turns the map into a struct with one field, missing when the map has no coupon key; filter on it being set. (`F.col(\"attributes\")[\"coupon\"]` reads the same value.) Checking only that the map isn't empty also keeps steps with just `gift_wrap`. `payment.method` is missing on a begin step, and that step still carries the coupon, so don't filter on payment. With one file per micro-batch, `batch_id` numbers the deliveries from 0 in order even when a delivery number is skipped, which the `batch` column doesn't.",
+ "entry": "solve",
+ "inputs": [
+  "checkout_events"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef solve(checkout_events):\n    make_batches(checkout_events, \"/tmp/checkout\")\n    rows = []\n    # Stream /tmp/checkout one file per micro-batch, keep the steps that carry a coupon, and add\n    # (micro_batch, event_id, step, payment_method, coupon) to rows from each micro-batch.\n\n    return spark.createDataFrame(rows, \"micro_batch LONG, event_id STRING, step STRING, payment_method STRING, coupon STRING\")\n",
+ "output": {
+  "columns": [
+   "micro_batch",
+   "event_id",
+   "step",
+   "payment_method",
+   "coupon"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

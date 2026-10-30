@@ -1,0 +1,57 @@
+{
+  "id": "PS-Q0045",
+  "slug": "assessments-export-for-a-partner",
+  "lesson": "PS-L009",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Assessments export for a partner",
+  "dataset": {
+    "id": "PS-D11",
+    "version": "1.0.0"
+  },
+  "prompt": "A partner university loads our assessments into a system that wants every column name in capitals, plus one extra column with the points each learner missed. Write `solve(assessments)` so it returns that export.",
+  "rules": [
+    "Every column of `assessments`, in the same order and unchanged, renamed to capitals: `assessment_id` becomes `ASSESSMENT_ID`, and so on.",
+    "Then one more column at the end, `POINTS_MISSED`: `max_points` minus `points`, a whole number.",
+    "A missing value stays missing, and a missing `points` or `max_points` gives a missing `POINTS_MISSED`. Keep every row, duplicates included."
+  ],
+  "hints": [
+    "`assessments.columns` is a Python list of the names, so you can build the renamed columns with a loop or a list comprehension.",
+    "Python's `\"points\".upper()` gives `\"POINTS\"`. Each column becomes `F.col(name).alias(name.upper())`.",
+    "`select` accepts a list of columns unpacked with `*`, followed by more columns: `df.select(*cols, extra)`."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "assessments"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(assessments):\n    # Return every column renamed to capitals, then POINTS_MISSED.\n    return assessments\n",
+  "output": {
+    "columns": [
+      "ASSESSMENT_ID",
+      "LEARNER_ID",
+      "COURSE_ID",
+      "TAKEN_AT",
+      "POINTS",
+      "MAX_POINTS",
+      "SCORE_PCT",
+      "PASSED",
+      "POINTS_MISSED"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Build the renamed columns from the table's own list of names, so none is forgotten and the order stays the same: `renamed = [F.col(c).alias(c.upper()) for c in assessments.columns]`. Then add the calculation at the end: `assessments.select(*renamed, (F.col(\"max_points\") - F.col(\"points\")).alias(\"POINTS_MISSED\"))`. `alias` only changes the name, so every value and type stays as it was, and the subtraction of two whole numbers is a whole number. Typing the eight names by hand works too, as long as none is misspelt. The usual slips are the subtraction the wrong way round, `.title()` instead of `.upper()`, and putting the extra column first."
+}

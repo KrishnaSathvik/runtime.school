@@ -1,0 +1,163 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "order_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "line_no",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "product_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "unit_no",
+     "type": "int",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "O00001",
+     1,
+     "P005",
+     1
+    ],
+    [
+     "O00001",
+     1,
+     "P005",
+     2
+    ],
+    [
+     "O00001",
+     1,
+     "P005",
+     3
+    ],
+    [
+     "O00001",
+     2,
+     "P005",
+     1
+    ],
+    [
+     "O00001",
+     2,
+     "P005",
+     2
+    ],
+    [
+     "O00001",
+     2,
+     "P005",
+     3
+    ],
+    [
+     "O00001",
+     3,
+     "P004",
+     1
+    ],
+    [
+     "O00002",
+     1,
+     "P001",
+     1
+    ],
+    [
+     "O00002",
+     1,
+     "P001",
+     2
+    ],
+    [
+     "O00002",
+     1,
+     "P001",
+     3
+    ],
+    [
+     "O00002",
+     2,
+     "P001",
+     1
+    ],
+    [
+     "O00003",
+     1,
+     "P001",
+     1
+    ],
+    [
+     "O00003",
+     1,
+     "P001",
+     2
+    ],
+    [
+     "O00003",
+     2,
+     "P007",
+     1
+    ],
+    [
+     "O00003",
+     2,
+     "P007",
+     2
+    ],
+    [
+     "O00003",
+     2,
+     "P007",
+     3
+    ],
+    [
+     "O00003",
+     3,
+     "P003",
+     1
+    ],
+    [
+     "O00003",
+     3,
+     "P003",
+     2
+    ],
+    [
+     "O00003",
+     3,
+     "P003",
+     3
+    ],
+    [
+     "O00004",
+     1,
+     "P001",
+     1
+    ]
+   ],
+   "row_count": 75
+  }
+ },
+ "hidden": [
+  "the full practice order lines",
+  "lines with a zero, missing or negative quantity",
+  "two lines of one unit each for the same product",
+  "an empty order lines table"
+ ]
+}

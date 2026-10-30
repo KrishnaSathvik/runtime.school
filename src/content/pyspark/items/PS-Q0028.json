@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0028",
+  "kind": "predict",
+  "slug": "jobs-for-nothing-and-a-typo",
+  "lesson": "PS-L006",
+  "role": "edge",
+  "format": "concept_or_trace",
+  "difficulty": "medium",
+  "minutes": 7,
+  "title": "A job for nothing, none for a typo",
+  "prompt": "No trip in the lesson's table has a fare above 500, and `trips` has a `tip` column but no `tips`. What does this program print?",
+  "program": "from pyspark.sql import functions as F\n\nsc = spark.sparkContext\ntracker = sc.statusTracker()\n\nsc.setJobGroup(\"none\", \"a filter nothing matches\")\nhuge = trips.filter(F.col(\"fare\") > 500).select(\"trip_id\")\nrows = huge.collect()\nprint(len(tracker.getJobIdsForGroup(\"none\")), len(rows))\n\nsc.setJobGroup(\"typo\", \"a misspelt column\")\ntry:\n    tips = trips.select(\"trip_id\", \"tips\")\n    print(\"built\")\nexcept Exception as e:\n    print(type(e).__name__)\nprint(len(tracker.getJobIdsForGroup(\"typo\")))\n",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "`collect()` is an action. Does Spark know no row matches before it has read the file?",
+    "Spark analyzes a plan as you build it: every column name is checked against the table straight away.",
+    "A name that doesn't exist fails during analysis, on the line where you wrote it. Analysis reads no rows, so it starts no job."
+  ],
+  "explanation": "`collect()` is an action, so it starts one job. Spark can't know that no fare is above 500 without reading the rows, so the job runs and returns an empty list: `1 0`. In the second group, `select(\"trip_id\", \"tips\")` fails while Spark analyzes the plan, before any data is read, so `built` is never printed and the exception's name, `AnalysisException`, is printed instead. Analysis only looks at the schema, so that group ran 0 jobs."
+}

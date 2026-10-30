@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0080",
+  "slug": "split-the-fare",
+  "lesson": "PS-L016",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Split the fare",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "prompt": "Riders can split a trip's total evenly, with each share rounded up to the cent so the driver is never short. Write `solve(trips)` so it returns `trip_id`, `total`, `passenger_count`, each rider's `share` and the `leftover` the riders overpay together.",
+  "rules": [
+    "`share` is `total` divided by `passenger_count`, rounded **up** to the next cent, as a `decimal(8,2)`: 10.00 split three ways is 3.34 each.",
+    "`leftover` is `share` times `passenger_count`, minus `total`, as a `decimal(8,2)`: 0.02 in that example, 0.00 when the split is even.",
+    "A trip with a missing or zero passenger count has a missing `share` and `leftover`, and the job must not stop. Return the five columns, in that order, for every trip, duplicates included."
+  ],
+  "hints": [
+    "Rounding up to the cent is rounding up a number of cents: work in cents (`total * 100`), use `F.ceil`, then divide by 100.",
+    "`F.try_divide(a, b)` gives a missing value where `b` is zero, instead of stopping the job.",
+    "Cast `share` to `\"decimal(8,2)\"` before you use it for `leftover`, and cast `leftover` too."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "trips"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(trips):\n    # trip_id, total, passenger_count, share, leftover\n    return trips\n",
+  "output": {
+    "columns": [
+      "trip_id",
+      "total",
+      "passenger_count",
+      "share",
+      "leftover"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Work in cents so `ceil` rounds up to a cent: `share = (F.ceil(F.try_divide(F.col(\"total\") * 100, F.col(\"passenger_count\"))) / 100).cast(\"decimal(8,2)\")`. Everything stays in decimals, so 1000 cents over 3 riders is 333.33…, which `ceil` makes 334, which is 3.34. `try_divide` gives a missing share for zero riders, and a missing count makes it missing on its own. Then `leftover = (share * F.col(\"passenger_count\") - F.col(\"total\")).cast(\"decimal(8,2)\")`. A plain `/` stops the job on the first trip with zero passengers. Casting the division straight to `decimal(8,2)` rounds to the nearest cent, so 3.333… becomes 3.33 and the driver is 0.01 short."
+}

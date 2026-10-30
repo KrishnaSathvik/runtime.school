@@ -1,0 +1,65 @@
+{
+  "id": "PS-P07-M6",
+  "slug": "test-the-lakehouse",
+  "project": "PS-P07",
+  "milestone": "PS-P07.m6",
+  "difficulty": "hard",
+  "minutes": 45,
+  "title": "Test every layer and publish the quality report",
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0"
+  },
+  "prompt": "Before finance trusts Gold, the pipeline has to prove itself: every raw row accounted for, the quarantine small, Silver unique, Gold equal to Silver, and the Delta table safe from a bad write.\n\nWrite `quality_report(claims, encounters, providers)`. It runs the layers on its inputs, tests them, and returns one row per check, in `REPORT_SCHEMA`: the check's name, a whole number, and whether it passed.",
+  "rules": [
+    "`bronze_rows`: Bronze's rows; passes when it equals the rows of `claims`.",
+    "`rejected_rows`: rows quarantined. `exact_copies`: rows that passed the checks minus the different rows among them. `superseded_claims`: those different rows minus Silver's rows (older submissions). Each passes when it is at most 5% of Bronze's rows.",
+    "`silver_rows`: Silver's rows; passes when no `claim_id` appears twice in Silver.",
+    "`gold_claims`: the sum of Gold's `claims`; passes when it equals Silver's rows. `gold_paid_cents`: Gold's total `paid_amount` × 100; passes when that total equals Silver's.",
+    "`gold_versions`: after `gold_payer_summary` has published, try to append one row in `BAD_BATCH_SCHEMA` (`claims` as text) to `GOLD_PATH`. The value is the table's number of versions after that; it passes when Delta refused the append and there is still one version.",
+    "With no claims, every count is 0 and every check passes."
+  ],
+  "hints": [
+    "`checked_claims(...).agg(F.count(\"*\"), F.count(\"_reason\")).first()` gives Bronze's rows and the rejected rows in one job: `F.count` of a column skips missing values.",
+    "Silver's `submissions` already counts each visit's different claims, so its sum is the number of different rows that passed. One `agg` on Silver gives its rows, `F.countDistinct(\"claim_id\")`, that sum and the paid total.",
+    "Wrap the bad append in `try` / `except Exception`: a refused write raises before anything is committed. `DeltaTable.forPath(spark, GOLD_PATH).history().count()` counts the versions. With no rows `F.sum` gives `None`, so use `or 0`."
+  ],
+  "explanation": "A quality report is a set of tests whose results are data, so it can be stored, compared between runs and read by people who never see the code. Every value is computed by Spark from the same inputs, never a time or an id, so the report is the same on every run. Few jobs do the work: one aggregation per layer gives several numbers at once, and Silver's `submissions` column already holds the count of different rows, so copies and older submissions fall out by subtraction and every Bronze row is accounted for. The tests compare layers: Silver must be unique, and Gold must add up to Silver, so no claim and no cent is lost on the way. The 5% gates turn counts into decisions: a few bad rows go to quarantine, but a flood means the source is broken. Finally, the Delta test shows what a transaction buys: an append with the wrong schema is refused before it commits, so the table still has one version and finance never sees a broken Gold table.",
+  "entry": "quality_report",
+  "inputs": [
+    "claims",
+    "encounters",
+    "providers"
+  ],
+  "file": "pipeline.py",
+  "append": "\n\nREPORT_SCHEMA = \"check STRING, value BIGINT, passed BOOLEAN\"\nBAD_BATCH_SCHEMA = \"payer STRING, encounter_class STRING, claims STRING\"\n\n\ndef quality_report(claims, encounters, providers):\n    # Step 6: test every layer and return one row per check: (check, value, passed).\n    rows = []\n    return spark.createDataFrame(rows, REPORT_SCHEMA)\n",
+  "prerequisites": [
+    "PS-L062",
+    "PS-L076",
+    "PS-L078"
+  ],
+  "output": {
+    "columns": [
+      "check",
+      "value",
+      "passed"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "example",
+      "sample": true
+    },
+    {
+      "id": "project",
+      "edition": "project"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 120,
+    "check_timeout_s": 300,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

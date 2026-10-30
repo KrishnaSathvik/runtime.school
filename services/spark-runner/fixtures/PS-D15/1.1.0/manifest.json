@@ -1,0 +1,182 @@
+{
+  "dataset_id": "PS-D15",
+  "version": "1.1.0",
+  "title": "Application Logs",
+  "source": "synthetic",
+  "licence": {
+    "status": "ours",
+    "note": "Runtime-owned deterministic synthetic data."
+  },
+  "seed": 2015,
+  "schemas": {
+    "api_requests": "request_id STRING, trace_id STRING, requested_at TIMESTAMP, service STRING, method STRING, endpoint STRING, status_code INT, latency_ms INT, bytes_sent BIGINT, user_agent STRING, client_region STRING",
+    "application_logs": "log_id STRING, logged_at TIMESTAMP, level STRING, service STRING, message STRING, trace_id STRING, attributes MAP<STRING,STRING>",
+    "application_logs_raw": "value STRING",
+    "traces": "span_id STRING, trace_id STRING, parent_span_id STRING, service STRING, operation STRING, started_at TIMESTAMP, duration_ms INT, status STRING",
+    "deployments": "deployment_id STRING, service STRING, version STRING, environment STRING, deployed_at TIMESTAMP, deployed_by STRING, outcome STRING",
+    "service_metrics": "service STRING, window_start TIMESTAMP, request_count INT, error_count INT, p50_latency_ms INT, p95_latency_ms INT, p99_latency_ms INT, cpu_pct DOUBLE, memory_mb INT",
+    "error_events": "error_id STRING, occurred_at TIMESTAMP, service STRING, error_type STRING, error_message STRING, severity STRING, request_id STRING, device_id STRING"
+  },
+  "keys": {
+    "primary": {
+      "api_requests": [
+        "request_id"
+      ],
+      "application_logs": [
+        "log_id"
+      ],
+      "traces": [
+        "span_id"
+      ],
+      "deployments": [
+        "deployment_id"
+      ],
+      "service_metrics": [
+        "service",
+        "window_start"
+      ],
+      "error_events": [
+        "error_id"
+      ]
+    },
+    "foreign": {
+      "traces.trace_id": "api_requests.trace_id",
+      "traces.parent_span_id": "traces.span_id",
+      "application_logs.trace_id": "api_requests.trace_id",
+      "error_events.request_id": "api_requests.request_id"
+    }
+  },
+  "rules": [
+    "Every service, host, user agent and identifier is invented; logs contain no real users, IP addresses, secrets or tokens.",
+    "All times are UTC. endpoint is the route template (e.g. GET /v1/catalog/items/{sku}), never a path with real ids in it.",
+    "status_code is an HTTP status; 5xx is a server error and counts in error_count, 4xx is the caller's mistake and does not.",
+    "latency_ms is the time from receiving the request to sending the last byte.",
+    "application_logs.attributes is a map whose keys depend on the line: host and region are on every line; checkout lines add order_ref and payment_provider, iot-gateway lines add device_id and firmware, search lines add result_count, and so on. A missing key is simply absent from the map.",
+    "application_logs_raw is the log file before parsing: every application_logs record as one JSON line, plus a few malformed lines \u2014 a line cut off mid-record (the shipper resent it whole), a record missing its closing brace, and plain-text lines that are not JSON at all. Dropping the malformed lines leaves exactly the records in application_logs.",
+    "Lesson edition: application_logs_raw lines 4, 8 and 12 are the malformed ones (truncated, missing brace, plain text).",
+    "traces: the root span (parent_span_id empty) is the request itself; child spans start inside their parent and end before it.",
+    "service_metrics is computed from api_requests: requests and 5xx errors per service in each 5-minute window, latency percentiles by nearest rank. Windows with no requests have no row.",
+    "error_events.request_id is set when the error happened while answering a request; device_id is set for iot-gateway device errors. Lesson and practice device ids (DEV-0001 \u2026) are stand-alone and are not PS-D09 devices; in the project edition device_id is always a PS-D09 project device (DEV-001 \u2026 DEV-018), in error_events and in application_logs attributes alike.",
+    "Deployment incident in practice and project: checkout-api 2.14.0 raised 5xx errors and latency until it was rolled back about 35 minutes later (outcome rolled_back), then 2.13.2 was redeployed.",
+    "Data skew: in practice about 55% of requests are GET /v1/catalog/items on catalog-api; in project about 70%. Grouping or joining by endpoint puts most rows in one partition.",
+    "Practice edition: user_agent is missing (null) on about 1% of requests.",
+    "Project edition problem 1: about 1% of application_logs records were shipped twice (same log_id, identical row), and they appear twice in application_logs_raw too.",
+    "Project edition problem 2: about 2% of application_logs_raw lines are malformed.",
+    "Project edition problem 3: requests the client abandoned have status_code 499 and an empty (null) latency_ms; they are not server errors.",
+    "Project edition and PS-D09 (P10): it covers 2026-05-12 00:00 to 24:00 UTC, inside PS-D09's project days (2026-05-11 to 05-13, also UTC). Every sensor talks to the platform only through iot-gateway, and no iot-gateway request names a device while that device is under maintenance in PS-D09.",
+    "Project edition and PS-D09 (P10): each PS-D09 maintenance visit that starts that day has one HeartbeatMissed error (no request) for its device 10 minutes after started_at, and each PS-D09 glitch reading (temperature_c 999.0 or humidity_pct 255.0) that first arrived that day has one OutOfRangeReading error (no request) for its device at that arrival_time. Other devices' errors are tied to iot-gateway requests."
+  ],
+  "editions": {
+    "lesson": {
+      "api_requests": {
+        "file": "lesson/api_requests.csv",
+        "rows": 12,
+        "sha256": "9a845092ee8d316d695a1794dfcfe0873379f99015bce303435c06a8c27a191f"
+      },
+      "application_logs": {
+        "file": "lesson/application_logs.jsonl",
+        "rows": 10,
+        "sha256": "cf9d154a26f451800ee42fb3b3bf1a9ff3d4697affde1bce904a53718c60b0f8"
+      },
+      "application_logs_raw": {
+        "file": "lesson/application_logs_raw.txt",
+        "rows": 13,
+        "sha256": "35ff53b41dc066797f4bdbb990e62fe48ace1120cba4dbc263c41ccebb075ef0"
+      },
+      "traces": {
+        "file": "lesson/traces.csv",
+        "rows": 8,
+        "sha256": "6680a0109c257991d4b53cf494858cc30537468438b80ac3e76c1cd0a53f1a79"
+      },
+      "deployments": {
+        "file": "lesson/deployments.csv",
+        "rows": 4,
+        "sha256": "290aeb4759573b0acb5ca15bf90f82fa426afc7a15a91fc9765d67154a3b1f44"
+      },
+      "service_metrics": {
+        "file": "lesson/service_metrics.csv",
+        "rows": 5,
+        "sha256": "6f4545a946ea8e8bddbea83c6eb604d2e06500d183289eb8cd8beac8022f7be0"
+      },
+      "error_events": {
+        "file": "lesson/error_events.csv",
+        "rows": 4,
+        "sha256": "1d085130c43882259e3e17159dd31a85a406c03f26fd67610f7bcdb15a933c8c"
+      }
+    },
+    "practice": {
+      "api_requests": {
+        "file": "practice/api_requests.csv",
+        "rows": 2500,
+        "sha256": "4528fa001a62f1308d49a548eccdde72b37dfd177d2c479a6e8bc7ddc2f94e5c"
+      },
+      "application_logs": {
+        "file": "practice/application_logs.jsonl",
+        "rows": 569,
+        "sha256": "f5ca4555d116671abf2f828bb72d11d684041aa83a5514cdd14ce85804cb3e71"
+      },
+      "application_logs_raw": {
+        "file": "practice/application_logs_raw.txt",
+        "rows": 572,
+        "sha256": "5e3317282153b6569405bc93b2dc89202e8e59b07ceb068fefc910e32b41fdf6"
+      },
+      "traces": {
+        "file": "practice/traces.csv",
+        "rows": 684,
+        "sha256": "ff324369b6327e735fcf02bce9da514c93e1939b1bf9beda6a4272db02bfb9d2"
+      },
+      "deployments": {
+        "file": "practice/deployments.csv",
+        "rows": 8,
+        "sha256": "f012193259fe3eb41052af481f8e6fc0a9f26e6ac875fe49a06f74f0d0b26236"
+      },
+      "service_metrics": {
+        "file": "practice/service_metrics.csv",
+        "rows": 397,
+        "sha256": "1336a7f185500a93424d3248612d3b9cbfe79dc49622b3a847a9f7dfa541b965"
+      },
+      "error_events": {
+        "file": "practice/error_events.csv",
+        "rows": 55,
+        "sha256": "9a19bb3bb99a052b85461893fcd86e958385e61c2c9c8856b354757bd7f8f8e3"
+      }
+    },
+    "project": {
+      "api_requests": {
+        "file": "project/api_requests.csv",
+        "rows": 5000,
+        "sha256": "bd816e069479d32e3326c3fc7a2a58f8384a599e65b283f119c164966ba8832a"
+      },
+      "application_logs": {
+        "file": "project/application_logs.jsonl",
+        "rows": 1200,
+        "sha256": "0201ee0db4f747eeefe052c321a48e6f14a9fdf469496a074d7bfbd960e47c77"
+      },
+      "application_logs_raw": {
+        "file": "project/application_logs_raw.txt",
+        "rows": 1217,
+        "sha256": "87fbd0eeb91334213061af6b3e1ebe8af12f25f8f2967125a2a89fc0cdc96756"
+      },
+      "traces": {
+        "file": "project/traces.csv",
+        "rows": 756,
+        "sha256": "0b611abac1727c43cda407504b7f686b0273b25c48a0532f00c7af43c66b68ac"
+      },
+      "deployments": {
+        "file": "project/deployments.csv",
+        "rows": 8,
+        "sha256": "5074c23dcb9a35694c176ad1535fa9dc341a7b4789e0862cf6cbe52601fe3d0c"
+      },
+      "service_metrics": {
+        "file": "project/service_metrics.csv",
+        "rows": 1108,
+        "sha256": "4f44e36fa3a4c295fb6ea3528f67028218446f2f9e9b7972bf524d0ae7a8261e"
+      },
+      "error_events": {
+        "file": "project/error_events.csv",
+        "rows": 72,
+        "sha256": "061d30306a0ec4f9dd59bc10174bee283c1dd9c4a36525c555586bc7d1d5a005"
+      }
+    }
+  }
+}

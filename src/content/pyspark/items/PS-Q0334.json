@@ -1,0 +1,56 @@
+{
+ "id": "PS-Q0334",
+ "slug": "fix-the-cart-removals-feed",
+ "lesson": "PS-L067",
+ "role": "debugging",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 10,
+ "title": "Fix the cart removals feed",
+ "dataset": {
+  "id": "PS-D06",
+  "version": "1.0.0"
+ },
+ "prompt": "Merchandising wants each cart removal tagged with the micro-batch that delivered it. The starter is a colleague's attempt: it stops with an error, and the micro-batch ids are wrong once that's fixed. Fix `solve(cart_events)` so it returns `micro_batch`, `event_id`, `session_id` and `lines` for every `remove` event.",
+ "rules": [
+  "Each delivery file is its own micro-batch, read in order; `micro_batch` is Spark's id for it, from 0.",
+  "`lines` is the number of items the removal changed.",
+  "The rows must come from the streaming query's micro-batches, not from working them out on `cart_events` itself."
+ ],
+ "hints": [
+  "Run the starter. Which line raises the error, and what is `removals`?",
+  "On a stream, the only way to look at rows is to start the query; count inside `foreachBatch` if you need a count.",
+  "Once it runs, look at `micro_batch` in the sample. What makes each file its own micro-batch?"
+ ],
+ "explanation": "`removals` is a streaming DataFrame, so `removals.count()` raises an `AnalysisException`: a stream has no end, so an action can't give an answer. Remove the line (or count inside `foreachBatch`). The second bug is quieter: without `option(\"maxFilesPerTrigger\", 1)` the first micro-batch takes every waiting file, so every removal reports micro-batch 0. With the cap, each delivery is its own micro-batch. Using `batch - 1` instead of `batch_id` happens to match when deliveries are numbered 1, 2, 3 without gaps, but breaks as soon as a number is skipped.",
+ "entry": "solve",
+ "inputs": [
+  "cart_events"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef solve(cart_events):\n    make_batches(cart_events, \"/tmp/carts\")\n    rows = []\n    carts = spark.readStream.schema(cart_events.schema).json(\"/tmp/carts\")\n    removals = carts.filter(F.col(\"action\") == \"remove\").select(\"batch\", \"event_id\", \"session_id\", F.size(\"items\").alias(\"lines\"))\n    print(\"removals so far:\", removals.count())\n\n    def keep(batch_df, batch_id):\n        rows.extend((batch_id, r[\"event_id\"], r[\"session_id\"], r[\"lines\"]) for r in batch_df.collect())\n\n    q = removals.writeStream.foreachBatch(keep).trigger(availableNow=True).start()\n    q.awaitTermination()\n    return spark.createDataFrame(rows, \"micro_batch LONG, event_id STRING, session_id STRING, lines INT\")\n",
+ "output": {
+  "columns": [
+   "micro_batch",
+   "event_id",
+   "session_id",
+   "lines"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

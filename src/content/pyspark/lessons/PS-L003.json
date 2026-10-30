@@ -1,0 +1,121 @@
+{
+  "id": "PS-L003",
+  "minutes": 15,
+  "lede": "Everything you do in PySpark goes through one object, the SparkSession. Knowing what it is, and what sits inside it, tells you where your program's data, settings and cores come from.",
+  "objectives": [
+    "Explain what the SparkSession is and why every PySpark program has one",
+    "Get the running session with `SparkSession.builder.getOrCreate()`",
+    "Reach the lower-level SparkContext through `spark.sparkContext`, and read settings with `spark.conf.get`",
+    "Make a small DataFrame of numbers with `spark.range`"
+  ],
+  "dataset": { "id": "PS-D11", "version": "1.0.0", "edition": "lesson", "tables": ["learners"] },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "The **SparkSession** is the entry point to Spark. Reading files, making DataFrames, running SQL and changing settings all go through it. A script on your own computer usually starts by making one:\n\n```python\nfrom pyspark.sql import SparkSession\n\nspark = SparkSession.builder.master(\"local[2]\").appName(\"my-app\").getOrCreate()\n```\n\nHere, as in notebooks and the `pyspark` shell, the session already exists and is called `spark`. The `learners` table above was loaded through it."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "The session is already running",
+      "code": "from pyspark.sql import SparkSession\n\ns = SparkSession.builder.getOrCreate()\nprint(s is spark)\nprint(learners.sparkSession is spark)\nprint(spark.version)\n",
+      "note": "`getOrCreate()` gives back the session that's already running instead of starting a second one, so `s` and `spark` are the same object. Every DataFrame remembers the session that made it, and here that's `spark` too. This is Spark 4.0.1."
+    },
+    {
+      "kind": "text",
+      "md": "Inside the session is the **SparkContext**, Spark's older, lower-level connection to the driver and executors. There's exactly one per application, and you reach it with `spark.sparkContext`. Use `spark` for DataFrames; use the context for facts about where Spark runs, and later for RDDs."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "The context inside the session",
+      "code": "sc = spark.sparkContext\nprint(sc.master)\nprint(sc.appName)\nprint(sc.defaultParallelism)\n",
+      "note": "`local[2]` is local mode with 2 cores, and `defaultParallelism` is 2 to match. `appName` is the name this environment gave the application when it started the session."
+    },
+    {
+      "kind": "text",
+      "md": "Settings live in `spark.conf`. `spark.conf.get(\"name\")` reads one, and it always comes back as **text**, even when it looks like a number."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Read a setting",
+      "code": "parts = spark.conf.get(\"spark.sql.shuffle.partitions\")\nprint(parts, type(parts).__name__)\nprint(spark.conf.get(\"spark.sql.session.timeZone\"))\n",
+      "note": "`spark.sql.shuffle.partitions` is how many partitions Spark uses when it reshuffles rows, which a later lesson covers. Spark's default is 200; this environment sets it to `4` to suit its small tables and 2 cores, and it comes back as the text `\"4\"` (`str`). Times are shown in UTC."
+    },
+    {
+      "kind": "error-example",
+      "id": "e4",
+      "title": "Reading a setting nobody set",
+      "code": "print(spark.conf.get(\"spark.default.parallelism\"))\n",
+      "error": "SparkNoSuchElementException",
+      "note": "This setting was never set and has no default that `spark.conf` knows, so asking for it raises an error."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "A setting with a fallback",
+      "code": "print(spark.conf.get(\"spark.default.parallelism\", \"not set\"))\nprint(spark.sparkContext.defaultParallelism)\n",
+      "note": "A second argument is the fallback, given back when the setting isn't there. The context still knows the answer, 2, because it works it out from `local[2]`."
+    },
+    {
+      "kind": "text",
+      "md": "The session can also make DataFrames. The simplest is `spark.range`: a DataFrame with one column, `id`, of whole numbers. `spark.range(5)` holds 0 to 4, and `spark.range(start, end, step)` works like Python's `range`, leaving out `end`. Lesson 7 shows `spark.createDataFrame`, which builds a DataFrame from your own Python rows."
+    },
+    {
+      "kind": "example",
+      "id": "e6",
+      "title": "Numbers from spark.range",
+      "code": "nums = spark.range(5)\nnums.show()\nnums.printSchema()\nspark.range(2, 8, 2).show()\n",
+      "note": "`spark.range(5)` counts from 0, so its last `id` is 4. The column is a `long` (a large whole number) and `nullable = false`, because a range never has a missing value. `spark.range(2, 8, 2)` gives 2, 4 and 6: the end, 8, is left out."
+    }
+  ],
+  "challenges": ["PS-L003-C1", "PS-L003-C2"],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "A session is already running. What does `SparkSession.builder.getOrCreate()` do?",
+      "choices": [
+        "Starts a second, separate session",
+        "Gives back the session that's already running",
+        "Raises an error, because only one session is allowed",
+        "Restarts Spark with the default settings"
+      ],
+      "answer": 1,
+      "why": "`getOrCreate()` reuses the running session and only builds a new one when none exists. Here it returns the same object as `spark`."
+    },
+    {
+      "id": "k2",
+      "prompt": "What does `spark.conf.get(\"spark.sql.shuffle.partitions\")` give back in this environment?",
+      "choices": [
+        "The number 4",
+        "The number 200",
+        "The text \"4\"",
+        "The text \"200\""
+      ],
+      "answer": 2,
+      "why": "Settings always come back as text. Spark's default is 200, but this environment sets it to 4."
+    },
+    {
+      "id": "k3",
+      "prompt": "Which numbers are in `spark.range(1, 4)`?",
+      "choices": [
+        "1, 2, 3",
+        "1, 2, 3, 4",
+        "0, 1, 2, 3",
+        "4 rows of 1"
+      ],
+      "answer": 0,
+      "why": "Like Python's `range`, `spark.range` starts at the first number and leaves out the end, so it holds 1, 2 and 3 in a column called `id`."
+    }
+  ],
+  "review": [
+    "The SparkSession is the entry point to Spark; here it's already running as `spark`.",
+    "`SparkSession.builder.getOrCreate()` gives back the running session instead of making a second one.",
+    "`spark.sparkContext` is the lower-level SparkContext, one per application, with facts like `master` and `defaultParallelism`.",
+    "`spark.conf.get(\"name\")` reads a setting as text; add a second argument as a fallback for a setting that may not be there.",
+    "`spark.version` is the Spark version: 4.0.1 here.",
+    "`spark.range(start, end, step)` makes a DataFrame with one `id` column, leaving out `end` like Python's `range`."
+  ],
+  "practice": ["PS-Q0011", "PS-Q0012", "PS-Q0013", "PS-Q0014", "PS-Q0015"]
+}

@@ -1,0 +1,26 @@
+{
+  "id": "PS-L014-C1",
+  "slug": "merchant-codes-as-numbers",
+  "lesson": "PS-L014",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Merchant codes as numbers",
+  "dataset": { "id": "PS-D02", "version": "1.0.0" },
+  "prompt": "A risk model wants merchant category codes as whole numbers, but the feed sometimes sends junk instead of a code. Write `solve(merchants)` so it returns `merchant_id`, the original `mcc_code` and the code as a number in `mcc_number`.",
+  "rules": [
+    "`mcc_number` is `mcc_code` as an int. `0742` becomes 742.",
+    "A code that is missing or isn't a whole number gives a missing `mcc_number`. The job must not stop.",
+    "Keep `mcc_code` unchanged as text. Return `merchant_id`, `mcc_code`, `mcc_number`, in that order, for every merchant."
+  ],
+  "hints": [
+    "`.cast(\"int\")` stops the job on text like `N/A`.",
+    "`.try_cast(\"int\")` gives `NULL` instead.",
+    "Name the new column with `alias(\"mcc_number\")`."
+  ],
+  "entry": "solve",
+  "inputs": ["merchants"],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(merchants):\n    # Return merchant_id, mcc_code and mcc_number (the code as an int).\n    return merchants\n",
+  "output": { "columns": ["merchant_id", "mcc_code", "mcc_number"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "edition": "lesson" }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

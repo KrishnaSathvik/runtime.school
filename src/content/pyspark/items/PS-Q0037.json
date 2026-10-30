@@ -1,0 +1,50 @@
+{
+  "id": "PS-Q0037",
+  "slug": "missing-values-in-order-lines",
+  "lesson": "PS-L008",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Missing values in order lines",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "The data team's morning report says how many values are missing in each column of `order_items`. Write `solve(order_items)` so it returns one row per column with that number.",
+  "rules": [
+    "Return two columns: `column_name` (text) and `missing` (bigint).",
+    "One row for every column of `order_items`, even when nothing is missing in it: then `missing` is 0.",
+    "Count every row of the table, duplicates included. An empty table has 0 missing values in every column."
+  ],
+  "hints": [
+    "Missing values in a column = all the rows minus the values that are there. `count()` gives the first number.",
+    "The `count` statistic of `summary` counts only the values that are there, one column at a time. It comes back as text, so turn it into a number with `int(...)`.",
+    "Loop over `order_items.columns` to build one `(name, missing)` tuple per column, then make the DataFrame with a schema string."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "order_items"
+  ],
+  "starter": "def solve(order_items):\n    # Return column_name and missing for every column of order_items.\n    return order_items\n",
+  "output": {
+    "columns": [
+      "column_name",
+      "missing"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`order_items.count()` counts every row, while the `count` statistic of `summary` counts only the values that are there. The difference is what's missing: `filled = order_items.summary(\"count\").first()`, then `[(c, total - int(filled[c])) for c in order_items.columns]`, built with the schema `\"column_name STRING, missing BIGINT\"`. Each statistic is text, so it needs `int(...)` before the subtraction. Keep columns where nothing is missing: a 0 is part of the report. Looking only at the first few rows with `head` misses gaps further down."
+}

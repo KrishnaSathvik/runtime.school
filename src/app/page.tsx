@@ -3,6 +3,7 @@ import { Landing } from "@/features/rt/pages/Landing";
 import { BRAND_DESCRIPTION, BRAND_NAME, BRAND_TAGLINE } from "@/platform/brand";
 import { siteJsonLd } from "@/platform/seo";
 import { pythonRunnerEnabled } from "@/platform/python-runner";
+import { pysparkEnabled } from "@/platform/pyspark-flag";
 import "./sql/rt.css";
 
 export const metadata: Metadata = {
@@ -30,7 +31,7 @@ export default function HomePage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd()) }} />
-      <Landing pythonAvailable={pythonRunnerEnabled()} />
+      <Landing pythonAvailable={pythonRunnerEnabled()} pysparkAvailable={pysparkEnabled()} />
     </>
   );
 }

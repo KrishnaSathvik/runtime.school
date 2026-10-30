@@ -1,0 +1,18 @@
+{
+  "id": "PS-L001-C2",
+  "kind": "predict",
+  "slug": "column-names-and-count",
+  "lesson": "PS-L001",
+  "difficulty": "easy",
+  "minutes": 4,
+  "title": "Column names and a count",
+  "prompt": "This program looks at the column names of `learners` and compares them with its rows. What does it print? Type each line on its own line.",
+  "program": "names = learners.columns\nprint(names)\nprint(len(names) == learners.count())\n",
+  "dataset": { "id": "PS-D11", "version": "1.0.0" },
+  "edition": "lesson",
+  "hints": [
+    "`columns` is a plain Python list of names, so Python prints it the way it prints any list of text.",
+    "The names come in the table's column order, from `learner_id` to `plan`.",
+    "Count the columns of `learners`, then its rows, and compare the two numbers."
+  ]
+}

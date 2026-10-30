@@ -1,0 +1,134 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "warehouse_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "sku",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "sku_name",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "on_hand",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "shipment_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "quantity",
+     "type": "int",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "WH01",
+     "SKU-1003",
+     "Packing tape 48mm",
+     560,
+     "SH0002",
+     2
+    ],
+    [
+     "WH01",
+     "SKU-1012",
+     "Bath mat",
+     279,
+     null,
+     null
+    ],
+    [
+     "WH01",
+     "SKU-1019",
+     "Notebook A5",
+     160,
+     null,
+     null
+    ],
+    [
+     "WH02",
+     "SKU-1003",
+     "Packing tape 48mm",
+     265,
+     null,
+     null
+    ],
+    [
+     "WH02",
+     "SKU-1014",
+     "Extension lead",
+     266,
+     "SH0004",
+     24
+    ],
+    [
+     "WH02",
+     "SKU-1014",
+     "Extension lead",
+     266,
+     "SH0003",
+     24
+    ],
+    [
+     "WH02",
+     "SKU-1021",
+     "Water bottle",
+     620,
+     null,
+     null
+    ],
+    [
+     "WH03",
+     "SKU-1003",
+     "Packing tape 48mm",
+     388,
+     "SH0001",
+     1
+    ],
+    [
+     "WH03",
+     "SKU-1009",
+     "Ceramic mug",
+     131,
+     null,
+     null
+    ],
+    [
+     "WH03",
+     "SKU-1029",
+     "Step stool",
+     436,
+     null,
+     null
+    ]
+   ],
+   "row_count": 10
+  }
+ },
+ "hidden": [
+  "the full practice stock and shipments",
+  "one SKU stocked in several warehouses",
+  "a stock line with several shipments",
+  "shipments with a missing warehouse or SKU, and shipments with no stock line",
+  "an empty shipments table"
+ ]
+}

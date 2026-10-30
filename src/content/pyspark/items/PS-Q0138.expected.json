@@ -1,0 +1,143 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "warehouse_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "sku",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "as_of_date",
+     "type": "date",
+     "nullable": true
+    },
+    {
+     "name": "po_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "version",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "expected_date",
+     "type": "date",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "WH01",
+     "SKU-1003",
+     "2026-03-10",
+     null,
+     null,
+     null
+    ],
+    [
+     "WH01",
+     "SKU-1012",
+     "2026-03-10",
+     "PO00004",
+     1,
+     "2026-03-10"
+    ],
+    [
+     "WH01",
+     "SKU-1019",
+     "2026-03-10",
+     null,
+     null,
+     null
+    ],
+    [
+     "WH02",
+     "SKU-1003",
+     "2026-03-10",
+     null,
+     null,
+     null
+    ],
+    [
+     "WH02",
+     "SKU-1014",
+     "2026-03-10",
+     "PO00005",
+     1,
+     "2026-03-09"
+    ],
+    [
+     "WH02",
+     "SKU-1021",
+     "2026-03-10",
+     null,
+     null,
+     null
+    ],
+    [
+     "WH03",
+     "SKU-1003",
+     "2026-03-10",
+     "PO00003",
+     2,
+     "2026-03-08"
+    ],
+    [
+     "WH03",
+     "SKU-1003",
+     "2026-03-10",
+     "PO00003",
+     1,
+     "2026-03-07"
+    ],
+    [
+     "WH03",
+     "SKU-1003",
+     "2026-03-10",
+     "PO00002",
+     1,
+     "2026-03-10"
+    ],
+    [
+     "WH03",
+     "SKU-1009",
+     "2026-03-10",
+     null,
+     null,
+     null
+    ],
+    [
+     "WH03",
+     "SKU-1029",
+     "2026-03-10",
+     null,
+     null,
+     null
+    ]
+   ],
+   "row_count": 11
+  }
+ },
+ "hidden": [
+  "the full practice stock and purchase orders",
+  "orders due the day before, on and after the count date, and one with no date",
+  "a stock line whose orders are all late",
+  "orders for the same SKU in another warehouse",
+  "an order with several versions, some due in time",
+  "an empty purchase orders table"
+ ]
+}

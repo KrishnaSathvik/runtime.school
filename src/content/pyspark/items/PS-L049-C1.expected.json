@@ -1,0 +1,89 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "log_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "level",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "service",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "LOG-000001",
+     "INFO",
+     "catalog-api"
+    ],
+    [
+     "LOG-000002",
+     "INFO",
+     "auth-service"
+    ],
+    [
+     "LOG-000003",
+     "INFO",
+     "checkout-api"
+    ],
+    [
+     "LOG-000004",
+     "INFO",
+     "search-api"
+    ],
+    [
+     "LOG-000005",
+     "INFO",
+     "iot-gateway"
+    ],
+    [
+     "LOG-000006",
+     "ERROR",
+     "checkout-api"
+    ],
+    [
+     "LOG-000007",
+     "WARN",
+     "iot-gateway"
+    ],
+    [
+     "LOG-000008",
+     "INFO",
+     "iot-gateway"
+    ],
+    [
+     "LOG-000009",
+     "INFO",
+     "search-api"
+    ],
+    [
+     "LOG-000010",
+     "ERROR",
+     "notification-worker"
+    ]
+   ],
+   "row_count": 10
+  }
+ },
+ "hidden": [
+  "the full practice log file",
+  "cut-off records, a missing brace, plain text, and JSON that isn't an object",
+  "records without a service or level",
+  "the same record shipped twice",
+  "an empty log file"
+ ]
+}

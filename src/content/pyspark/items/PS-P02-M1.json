@@ -1,0 +1,65 @@
+{
+ "id": "PS-P02-M1",
+ "slug": "explore-the-employees",
+ "project": "PS-P02",
+ "milestone": "PS-P02.m1",
+ "difficulty": "easy",
+ "minutes": 20,
+ "title": "Explore the employee export and build the employee view",
+ "dataset": {
+  "id": "PS-D03",
+  "version": "1.0.0"
+ },
+ "prompt": "The people team wants payroll and reporting-line numbers from the HR system. Everything starts from the `employees` table: 221 people, typed in by hand over the years. Look at it first: inside your function, add `employees.printSchema()` and `print(employees.count())`, then press Run.\n\nThen write `employee_view(employees)`. It returns the columns the pipeline uses, in order, with one `full_name` in place of the two name columns. Every row stays, messy values and all: this step only shapes the columns.",
+ "rules": [
+  "Return `employee_id`, `full_name`, `email`, `phone`, `job_title`, `level`, `department_id`, `manager_id`, `hire_date`, `status` and `termination_date`, in that order.",
+  "`full_name` is `first_name`, one space, then `last_name`.",
+  "Leave the salary out: pay comes from the salary history in a later step.",
+  "Every row of `employees` is still there, unchanged, even repeated or odd ones."
+ ],
+ "hints": [
+  "`select` picks columns in the order you list them.",
+  "`F.concat_ws(\" \", \"first_name\", \"last_name\")` joins the two names with a space. Give it a name with `.alias(\"full_name\")`.",
+  "Don't clean or filter anything yet. The text is fixed in the next step."
+ ],
+ "explanation": "`select` both picks and orders the columns, and `F.concat_ws(\" \", \"first_name\", \"last_name\").alias(\"full_name\")` builds the name the reports show. The `salary` column is left out on purpose: it's only the latest salary the system knows, while payroll needs the salary in force on a given date, which comes from the history. Nothing is filtered yet, so later checks can count every problem row.",
+ "entry": "employee_view",
+ "inputs": [
+  "employees"
+ ],
+ "file": "pipeline.py",
+ "starter": "from pyspark.sql import functions as F\n\n\ndef employee_view(employees):\n    # Step 1: the pipeline's columns, with one full_name.\n    return employees\n",
+ "prerequisites": [
+  "PS-L008",
+  "PS-L009",
+  "PS-L015"
+ ],
+ "output": {
+  "columns": [
+   "employee_id",
+   "full_name",
+   "email",
+   "phone",
+   "job_title",
+   "level",
+   "department_id",
+   "manager_id",
+   "hire_date",
+   "status",
+   "termination_date"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "project",
+   "edition": "project"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 45,
+  "check_timeout_s": 90,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

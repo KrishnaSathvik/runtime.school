@@ -1,0 +1,49 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D14",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "invoices",
+   "invoice_lines",
+   "accounts"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "root\n |-- payment_id: string (nullable = true)\n |-- invoice_id: string (nullable = true)\n |-- amount: decimal(12,2) (nullable = true)\n |-- paid_on: string (nullable = true)\n\n+----------+----------+------+----------+\n|payment_id|invoice_id|amount|   paid_on|\n+----------+----------+------+----------+\n|   PAY-001|INV-000001|244.00|2025-11-02|\n|   PAY-002|INV-000002|100.00|2025-12-01|\n|   PAY-003|INV-000002|132.00|2025-12-15|\n+----------+----------+------+----------+\n\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "+----------+----------+-------+------------+\n|invoice_id|account_id| status|total_amount|\n+----------+----------+-------+------------+\n|INV-000003|  ACC-0003|overdue|      469.50|\n|INV-000004|  ACC-0001|   open|      283.50|\n+----------+----------+-------+------------+\n\n+----------+------------+\n|invoice_id|total_amount|\n+----------+------------+\n|INV-000001|      244.00|\n|INV-000002|      232.00|\n+----------+------------+\n\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "3 partitions, 10 lines\n+----------+-------+--------+\n|invoice_id|line_no|quantity|\n+----------+-------+--------+\n|INV-000003|      1|       1|\n|INV-000001|      1|       2|\n|INV-000004|      1|       3|\n|INV-000005|      1|       4|\n|INV-000004|      2|       5|\n|INV-000001|      2|      10|\n|INV-000005|      2|      10|\n|INV-000002|      2|      12|\n|INV-000002|      1|      20|\n|INV-000003|      2|      50|\n+----------+-------+--------+\n\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "+----------+----------------------+-------+-------+------------+\n|invoice_id|account_name          |country|status |total_amount|\n+----------+----------------------+-------+-------+------------+\n|INV-000003|Tamsley Logistics GmbH|DE     |overdue|469.50      |\n|INV-000004|Quillfen Analytics Inc|US     |open   |283.50      |\n|INV-000005|Ellowby Energy Inc    |US     |draft  |245.00      |\n+----------+----------------------+-------+-------+------------+\n\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "overwrite: 5\nappend:    10\nignore:    10\noverwrite: 5\n(5, 1474.0)\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "",
+   "error": {
+    "type": "AnalysisException",
+    "message": "Table or view 'invoice_summary' already exists. SaveMode: ErrorIfExists.",
+    "line": 5,
+    "condition": "_LEGACY_ERROR_TEMP_1288"
+   }
+  }
+ }
+}

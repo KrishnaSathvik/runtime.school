@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0055",
+  "slug": "plan-price-list",
+  "lesson": "PS-L011",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "The plan price list",
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0"
+  },
+  "prompt": "The pricing page lists every plan at every monthly price members have paid, with what that comes to in a year. Write `solve(subscriptions)` so it returns that list, dearest first.",
+  "rules": [
+    "Return three columns, in this order: `plan`, `monthly_price` and `yearly_price`, which is `monthly_price` times 12, still an exact decimal.",
+    "Each combination of plan and monthly price appears once, however many subscriptions it has. A plan that changed price appears once per price.",
+    "Sort by `monthly_price`, dearest first, then by `plan` from A to Z. A missing price goes last, with a missing yearly price."
+  ],
+  "hints": [
+    "Work out `yearly_price` in the `select` with `(F.col(\"monthly_price\") * 12).alias(\"yearly_price\")`. Multiplying a decimal by a whole number keeps it exact.",
+    "Remove repeats after selecting the three columns: `distinct()` on the whole table would compare ids and dates too.",
+    "Give each sort column its own direction: price with `.desc()`, plan A to Z. A descending sort already puts missing values last."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "subscriptions"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(subscriptions):\n    # Return plan, monthly_price and yearly_price, dearest first.\n    return subscriptions\n",
+  "output": {
+    "columns": [
+      "plan",
+      "monthly_price",
+      "yearly_price"
+    ],
+    "order_sensitive": true
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Select and calculate first, then remove repeats, then sort: `subscriptions.select(\"plan\", \"monthly_price\", (F.col(\"monthly_price\") * 12).alias(\"yearly_price\")).distinct().orderBy(F.col(\"monthly_price\").desc(), \"plan\")`. `distinct()` has to come after the `select`, because on the whole table every subscription is different and nothing would be removed. A decimal times a whole number stays an exact decimal (`* 12.0` would turn it into a `double`), and a missing price gives a missing yearly price. `plan` breaks ties between plans with the same price, so the order is unique. `selectExpr(\"plan\", \"monthly_price\", \"monthly_price * 12 AS yearly_price\")` works the same."
+}

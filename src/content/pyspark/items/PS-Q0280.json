@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0280",
+  "kind": "predict",
+  "slug": "the-top-orders-plan",
+  "lesson": "PS-L056",
+  "role": "integration",
+  "format": "concept_or_trace",
+  "difficulty": "hard",
+  "minutes": 8,
+  "title": "The plan of a top-orders query",
+  "prompt": "What does this program print? Two lesson customers live in Denver: Tomas Okafor with one order of 227.48, and Ines Costa with orders of 418.96 and 39.98. Type each printed line on its own line.",
+  "program": "from pyspark.sql import functions as F\n\ntop = (\n    orders.join(customers, \"customer_id\")\n    .select(\"order_id\", F.col(\"name\").alias(\"customer\"), \"total\", \"city\")\n    .filter(F.col(\"city\") == \"Denver\")\n    .orderBy(F.desc(\"total\"))\n    .limit(2)\n)\nplan = top._jdf.queryExecution().executedPlan().toString()\nscans = [line for line in plan.splitlines() if \"FileScan\" in line]\ncustomers_scan = [line for line in scans if \"city\" in line][0]\n\nprint(len(scans), \"BroadcastHashJoin\" in plan)\nprint(customers_scan.split(\"ReadSchema: \")[1])\nprint(\"EqualTo(city,Denver)\" in customers_scan)\nprint([(row[\"customer\"], str(row[\"total\"])) for row in top.collect()])\n",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "Each table is read by one scan. The small `customers` side of the join is broadcast.",
+    "The customers scan reads only the columns the query needs: the join key, the name (renamed later) and the city used by the filter.",
+    "The `city` filter is written after the join and the `select`, but Catalyst pushes it into the customers reader. Then sort by total, largest first, and keep 2."
+  ],
+  "explanation": "There are two scans, one per table, and the small customers side is broadcast, so the plan has a `BroadcastHashJoin`. The customers scan reads `customer_id`, `name` and `city`: `segment` and `signup_date` are pruned, and renaming `name` to `customer` happens later, in a `Project`, so the reader still sees `name`. The city filter, written after the join and the `select`, is pushed into that reader as `EqualTo(city,Denver)`. Denver has three orders; sorted by total, largest first, the top two are Ines Costa's 418.96 and Tomas Okafor's 227.48."
+}

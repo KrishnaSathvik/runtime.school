@@ -1,0 +1,141 @@
+{
+ "id": "PS-P04",
+ "workspace": "guided",
+ "file": "pipeline.py",
+ "dataset": {
+  "id": "PS-D02",
+  "version": "1.0.0",
+  "edition": "project"
+ },
+ "inputs": [
+  "accounts",
+  "transactions",
+  "transfers",
+  "ledger_entries"
+ ],
+ "run_timeout_s": 180,
+ "task": "The bank's finance team closes its books every month by checking that every account holds what it should. The transaction feed has broken and repeated rows, some transfers were booked twice or only half booked, and a few entries are a cent or two off. Build a pipeline that cleans the transactions, matches every transfer to its ledger entries, compares each account's expected and booked balance, and lists every discrepancy, to the cent.",
+ "skills": [
+  "exact decimal money",
+  "semi and anti joins",
+  "removing duplicates",
+  "running totals",
+  "conditional aggregation",
+  "reconciliation"
+ ],
+ "problems": [
+  "Transactions with a negative amount, an unknown currency (ZZZ, US$ or none), an account the bank doesn't have, or no account.",
+  "Transactions the feed delivered twice (exact copies).",
+  "Pending and declined transactions, which move no money.",
+  "Transfers booked twice: a copy with the same accounts, amount and reference a few seconds after the original.",
+  "Completed transfers whose credit entry is missing.",
+  "Credit entries a few cents different from the debit.",
+  "Ledger entries for transfers that don't exist."
+ ],
+ "revenue": "Money is exact: every amount is a decimal with two places, and the reconciliation never rounds or allows a tolerance, so a one-cent gap is a discrepancy. A debit takes money out of an account and a credit puts it in. Each completed or reversed transfer is booked once, as a debit on the sender and a credit on the receiver for the same amount; a reversal sends the same amount back the other way, so the pair nets to zero.",
+ "milestones": [
+  {
+   "step": 1,
+   "summary": "Look at the accounts and the transaction feed, and give every amount its sign.",
+   "label": "Load transactions"
+  },
+  {
+   "step": 2,
+   "summary": "Keep only transactions with a positive amount, a known account and that account's currency.",
+   "label": "Validate"
+  },
+  {
+   "step": 3,
+   "summary": "Remove repeated rows, keep posted transactions, and run each account's balance.",
+   "label": "Remove repeats"
+  },
+  {
+   "step": 4,
+   "summary": "Match every transfer to its ledger entries and check duplicates and reversals.",
+   "label": "Match ledger"
+  },
+  {
+   "step": 5,
+   "summary": "Work out each account's expected and ledger balance side by side.",
+   "label": "Balances"
+  },
+  {
+   "step": 6,
+   "summary": "List every discrepancy and summarise the reconciliation.",
+   "label": "Publish exceptions"
+  }
+ ],
+ "artifacts": [
+  {
+   "name": "transaction_view",
+   "inputs": [
+    "transactions"
+   ],
+   "step": 1,
+   "about": "Every transaction with the columns the reconciliation uses and a signed amount."
+  },
+  {
+   "name": "valid_transactions",
+   "inputs": [
+    "transactions",
+    "accounts"
+   ],
+   "step": 2,
+   "about": "Transactions with a positive amount, a known account and that account's currency."
+  },
+  {
+   "name": "reconciled_transactions",
+   "inputs": [
+    "transactions",
+    "accounts"
+   ],
+   "step": 3,
+   "about": "Valid, posted transactions without copies, with each account's running balance.",
+   "deliverable": true
+  },
+  {
+   "name": "transfer_matches",
+   "inputs": [
+    "transfers",
+    "ledger_entries"
+   ],
+   "step": 4,
+   "about": "Every completed or reversed transfer, what the ledger booked for it, and its match status."
+  },
+  {
+   "name": "account_balances",
+   "inputs": [
+    "accounts",
+    "transactions",
+    "transfers",
+    "ledger_entries"
+   ],
+   "step": 5,
+   "about": "Each account's expected and ledger balance side by side, and the difference.",
+   "deliverable": true
+  },
+  {
+   "name": "reconciliation_exceptions",
+   "inputs": [
+    "accounts",
+    "transactions",
+    "transfers",
+    "ledger_entries"
+   ],
+   "step": 6,
+   "about": "One row per discrepancy: unmatched transfers, unknown entries and unequal balances.",
+   "deliverable": true
+  },
+  {
+   "name": "reconciliation_summary",
+   "inputs": [
+    "accounts",
+    "transactions",
+    "transfers",
+    "ledger_entries"
+   ],
+   "step": 6,
+   "about": "How many exceptions of each kind, and the money they add up to."
+  }
+ ]
+}

@@ -1,0 +1,129 @@
+{
+  "id": "PS-L015",
+  "minutes": 25,
+  "lede": "Text columns are rarely in the shape a report needs: names to split, labels to build, ids with a number inside. Spark's string functions clean and reshape text on every row, and regular expressions handle the patterns plain functions can't.",
+  "objectives": [
+    "Change case, trim spaces and measure text with `upper`, `lower`, `initcap`, `trim` and `length`",
+    "Join text with `concat` and `concat_ws`, and know how each treats a missing value",
+    "Cut text apart with `substring` and `split`",
+    "Find and replace patterns with `regexp_extract`, `regexp_replace` and `rlike`"
+  ],
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0",
+    "edition": "lesson",
+    "tables": [
+      "customers",
+      "products",
+      "orders"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "The shop's `customers`, `products` and `orders` are loaded as DataFrames with those names, and `F` is `pyspark.sql.functions`.\n\nEach string function takes a column (or a column name) and gives back a new column, worked out row by row. You use them inside `select`, like the arithmetic in lesson 9, and name the result with `alias`. `F.upper`, `F.lower` and `F.initcap` change the case, and `F.length` counts the characters."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Case and length",
+      "code": "from pyspark.sql import functions as F\n\nproducts.select(\n    \"name\",\n    F.upper(\"name\").alias(\"shouting\"),\n    F.lower(\"name\").alias(\"quiet\"),\n    F.length(\"name\").alias(\"chars\"),\n).show(4)\n",
+      "note": "The space and the hyphen count as characters, so `Pour-Over Kettle` is 16 long."
+    },
+    {
+      "kind": "text",
+      "md": "Text typed by people often has stray spaces and mixed case, so the same city can be written three ways. `F.trim` removes spaces at both ends (`ltrim` and `rtrim` do one end), and `F.initcap` writes each word with a capital first letter. Together they make the values match."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Tidy messy text",
+      "code": "from pyspark.sql import functions as F\n\nmessy = spark.createDataFrame([(\"  Leeds \",), (\"LEEDS\",), (\"leeds\",)], \"city STRING\")\nmessy.select(\"city\", F.length(\"city\").alias(\"chars\"), F.initcap(F.trim(\"city\")).alias(\"clean\")).show()\n",
+      "note": "Functions nest: `trim` runs first, then `initcap` works on its result. All three rows end up as `Leeds`."
+    },
+    {
+      "kind": "text",
+      "md": "To join text, `F.concat(a, b, ...)` puts the values side by side; a fixed piece of text needs `F.lit`. `F.concat_ws(sep, a, b, ...)` puts `sep` between them.\n\nThey differ on missing values: **`concat` gives a missing result if any part is missing**, while `concat_ws` just skips the missing parts."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Join text, with and without a missing part",
+      "code": "from pyspark.sql import functions as F\n\npeople = spark.createDataFrame([(\"Ines\", \"Okafor\"), (\"Kofi\", None)], \"first STRING, last STRING\")\npeople.select(\n    F.concat(\"first\", F.lit(\" \"), \"last\").alias(\"with_concat\"),\n    F.concat_ws(\" \", \"first\", \"last\").alias(\"with_concat_ws\"),\n).show()\n",
+      "note": "Kofi has no last name: `concat` gives `NULL`, `concat_ws` gives just `Kofi`. Pick the one whose behaviour you want."
+    },
+    {
+      "kind": "text",
+      "md": "`F.substring(col, pos, len)` takes `len` characters starting at position `pos`. Here positions start at **1**, not 0. `F.split(col, pattern)` cuts text into an array at every match of `pattern`, and you pick a piece with `[0]`, `[1]` and so on. Array positions start at **0**, so `[0]` is the first piece."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Cut text apart",
+      "code": "from pyspark.sql import functions as F\n\ncustomers.select(\n    \"name\",\n    F.split(\"name\", \" \")[0].alias(\"first\"),\n    F.split(\"name\", \" \")[1].alias(\"last\"),\n    F.substring(\"name\", 1, 1).alias(\"initial\"),\n).show(3)\n",
+      "note": "`split` makes `[\"Ines\", \"Okafor\"]`, so `[0]` is the first name. `substring(\"name\", 1, 1)` is the first character."
+    },
+    {
+      "kind": "text",
+      "md": "A **regular expression** describes a pattern: `\\d+` is one or more digits, `[^a-z0-9]+` is a run of characters that aren't lower-case letters or digits, `^` is the start and `$` the end. Write patterns as raw strings, `r\"\\d+\"`, so Python leaves the backslashes alone.\n\n- `F.regexp_extract(col, pattern, 0)` gives the part that matches (or `\"\"` if nothing does). With a group in brackets, `1` gives the first group.\n- `F.regexp_replace(col, pattern, new)` replaces every match.\n- `F.col(\"x\").rlike(pattern)` is a true or false column: true when the pattern is found somewhere in the text."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Patterns: extract, replace, test",
+      "code": "from pyspark.sql import functions as F\n\norders.select(\"order_id\", F.regexp_extract(\"order_id\", r\"\\d+\", 0).alias(\"number\")).show(3)\n\nproducts.select(\n    \"name\",\n    F.regexp_replace(F.lower(\"name\"), r\"[^a-z0-9]+\", \"-\").alias(\"slug\"),\n    F.col(\"name\").rlike(r\"^(Camp|Trail) \").alias(\"outdoor_word\"),\n).show()\n",
+      "note": "The number keeps its leading zeros because it's still text. In the slug, the space in `Chef Knife` and the hyphen and space in `Pour-Over Kettle` each become one `-`."
+    }
+  ],
+  "challenges": [
+    "PS-L015-C1",
+    "PS-L015-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "`first` is `\"Kofi\"` and `last` is missing. What does `F.concat_ws(\" \", \"first\", \"last\")` give?",
+      "choices": [
+        "NULL",
+        "\"Kofi \"",
+        "\"Kofi\"",
+        "\"Kofi NULL\""
+      ],
+      "answer": 2,
+      "why": "`concat_ws` skips missing parts. `concat` would give `NULL`, because one part is missing."
+    },
+    {
+      "id": "k2",
+      "prompt": "What does `F.substring(\"order_id\", 2, 3)` give for `\"O00123\"`?",
+      "choices": [
+        "\"001\"",
+        "\"000\"",
+        "\"O00\"",
+        "\"012\""
+      ],
+      "answer": 0,
+      "why": "`substring` counts from 1, so position 2 is the first `0`, and it takes three characters: `001`."
+    },
+    {
+      "id": "k3",
+      "prompt": "Which expression turns `\"Pour-Over Kettle\"` into `\"pour-over-kettle\"`?",
+      "choices": [
+        "F.regexp_replace(\"name\", r\"[^a-z0-9]+\", \"-\")",
+        "F.regexp_replace(F.lower(\"name\"), r\"[^a-z0-9]+\", \"-\")",
+        "F.lower(F.regexp_extract(\"name\", r\"[^a-z0-9]+\", 0))",
+        "F.split(F.lower(\"name\"), \" \")[0]"
+      ],
+      "answer": 1,
+      "why": "Lower-case first, then replace each run of other characters with `-`. Without `lower`, the capitals would be replaced too."
+    }
+  ],
+  "review": [
+    "String functions take a column and return a new one; use them in `select` with `alias`.",
+    "`upper`, `lower`, `initcap`, `trim` and `length` change case, remove outer spaces and count characters.",
+    "`concat` gives `NULL` if any part is missing; `concat_ws(sep, ...)` skips missing parts.",
+    "`substring(col, pos, len)` counts from 1. `split(col, pattern)` makes an array you index from 0.",
+    "`regexp_extract` pulls out a match (`\"\"` if none), `regexp_replace` replaces every match and `rlike` tests for one.",
+    "Write regular expressions as raw strings: `r\"\\d+\"`."
+  ],
+  "practice": ["PS-Q0071", "PS-Q0072", "PS-Q0073", "PS-Q0074", "PS-Q0075"]
+}

@@ -1,0 +1,58 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "key",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "value",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "exit code",
+     "0"
+    ],
+    [
+     "heap MiB",
+     "1200"
+    ],
+    [
+     "pool MiB",
+     "675"
+    ],
+    [
+     "cores",
+     "3"
+    ]
+   ],
+   "row_count": 4,
+   "inputs": {
+    "size_targets": [
+     [
+      "1200",
+      "675",
+      "3"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "a pool that Spark's default fraction gives",
+  "a smaller heap and pool",
+  "a single core",
+  "four cores"
+ ]
+}

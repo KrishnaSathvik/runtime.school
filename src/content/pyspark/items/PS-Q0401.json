@@ -1,0 +1,50 @@
+{
+  "id": "PS-Q0401",
+  "slug": "the-stages-page-from-an-event-log",
+  "lesson": "PS-L081",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "The Stages page from an event log",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "There's no Spark UI here, but an event log holds what its Stages page would show. The starter's `nightly_event_log(api_requests)` stages the night's requests, submits the nightly job with event logging on and returns the log's folder. Write `solve(api_requests)` so it reads the log and returns one row per stage that ended, with the stage's id and its number of tasks.",
+  "rules": [
+    "Use the `SparkListenerStageCompleted` events: one per stage, whether it succeeded or failed.",
+    "Columns, in order: `Stage ID` and `Number of Tasks`, the two fields of the event's `Stage Info`.",
+    "The job runs with `local[2,2]`: 2 cores, and each task may be tried twice, as a cluster retries. A task tried twice is still one task."
+  ],
+  "hints": [
+    "`spark.read.json(folder)` reads the log; every event has an `Event` field naming it.",
+    "Keep the events whose `Event` is `SparkListenerStageCompleted` with `filter`, then `select` the nested fields with a dot: `\"Stage Info.Stage ID\"`.",
+    "Counting `SparkListenerTaskEnd` events per stage counts attempts, not tasks: the failed stage's task ended twice."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "api_requests"
+  ],
+  "starter": "import os, shutil, subprocess\nfrom pyspark.sql import functions as F\n\nopen(\"/tmp/nightly.py\", \"w\").write(\"\"\"\nfrom pyspark.sql import SparkSession\n\nspark = SparkSession.builder.getOrCreate()\ncodes = [(int(c),) for c in open(\"/tmp/nightly-codes.txt\").read().split()]\n# One partition per 3 requests.\nreqs = spark.createDataFrame(spark.sparkContext.parallelize(codes, max(1, (len(codes) + 2) // 3)), \"status_code INT\")\nprint(\"app: rows\", len(reqs.collect()))\nprint(\"app: classes\", len(reqs.selectExpr(\"status_code div 100 AS class\").groupBy(\"class\").count().collect()))\ntry:\n    spark.range(0, 4, 1, 1).selectExpr(\"30 div (id - 3) AS x\").collect()\nexcept Exception as e:\n    print(\"app: failed with\", type(e).__name__)\nspark.stop()\n\"\"\")\n\n\ndef nightly_event_log(api_requests):\n    # Stages the night's status codes for the job, submits it with event logging on, and returns the folder its\n    # event log is written to.\n    codes = [str(r.status_code) for r in api_requests.select(\"status_code\").collect()]\n    open(\"/tmp/nightly-codes.txt\", \"w\").write(\"\".join(c + \"\\n\" for c in codes))\n    shutil.rmtree(\"/tmp/nightly-events\", ignore_errors=True)\n    os.makedirs(\"/tmp/nightly-events\")\n    env = {**os.environ, \"SPARK_LOCAL_IP\": \"127.0.0.1\"}\n    subprocess.run([\"spark-submit\", \"--master\", \"local[2,2]\",\n                    \"--conf\", \"spark.sql.adaptive.enabled=false\", \"--conf\", \"spark.sql.shuffle.partitions=3\",\n                    \"--conf\", \"spark.eventLog.enabled=true\", \"--conf\", \"spark.eventLog.dir=/tmp/nightly-events\",\n                    \"--conf\", \"spark.eventLog.rolling.enabled=false\", \"--conf\", \"spark.eventLog.compress=false\",\n                    \"/tmp/nightly.py\"], capture_output=True, text=True, env=env)\n    return \"/tmp/nightly-events\"\n\n\ndef solve(api_requests):\n    events = spark.read.json(nightly_event_log(api_requests))\n    # Keep one row per stage that ended, with its id and its number of tasks.\n    return events\n",
+  "output": {
+    "columns": [
+      "Stage ID",
+      "Number of Tasks"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 240,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`events.filter(F.col(\"Event\") == \"SparkListenerStageCompleted\").select(\"Stage Info.Stage ID\", \"Stage Info.Number of Tasks\")`. The job puts 3 requests in each partition, so for the sample's 12 requests the first `collect()` is stage 0 with 4 tasks, one per partition. The `groupBy` count is two stages (lesson 55): the same 4 tasks over the input, then 3, one per shuffle partition. The failing `collect()` is stage 3 with 1 task. That task was tried twice, so the log has two task-end events for it, but the stage still has one task: the Stages page shows the same split between tasks and failed attempts. A different night has a different number of partitions, which only the log can tell you. Without the filter, every other event adds a row of NULLs."
+}

@@ -1,0 +1,50 @@
+{
+  "id": "PS-Q0104",
+  "slug": "fix-the-employment-types",
+  "lesson": "PS-L021",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Fix the employment types",
+  "dataset": {
+    "id": "PS-D03",
+    "version": "1.0.0"
+  },
+  "prompt": "Payroll needs every employment type as `full_time`, `part_time` or `contractor`. The function below leaves short forms like ` FT` unmapped and turns `Full  Time` into `full__time`. Fix `solve(employees)`.",
+  "rules": [
+    "Standardize `employment_type`: no spaces at the start or end, all lower case, and each run of spaces or hyphens between words becomes one underscore.",
+    "After that, the short forms `ft`, `pt` and `contract` become `full_time`, `part_time` and `contractor`. Other values stay as they are.",
+    "A missing type stays missing. Return `employee_id` and `employment_type`, one row per employee."
+  ],
+  "hints": [
+    "Feed the starter ` FT` in your head: `replace` runs first, on the raw value, and ` FT` isn't exactly `ft`.",
+    "`replace` matches whole values, so standardize first and map afterwards, on the tidied column.",
+    "`[ -]` matches one character at a time, so two spaces become two underscores. Add `+` to match a whole run."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "employees"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(employees):\n    mapped = employees.replace({\"ft\": \"full_time\", \"pt\": \"part_time\", \"contract\": \"contractor\"}, subset=[\"employment_type\"])\n    tidy = F.regexp_replace(F.lower(F.trim(\"employment_type\")), \"[ -]\", \"_\")\n    return mapped.select(\"employee_id\", tidy.alias(\"employment_type\"))\n",
+  "output": {
+    "columns": [
+      "employee_id",
+      "employment_type"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Two bugs. `replace` matches whole values, and the starter runs it on the raw column, so ` FT` or `Contract` never equals a key in the dict; standardize first, then map. And `[ -]` matches a single character, so a run of two spaces becomes two underscores; `[ -]+` (or `[\\\\s-]+`) turns each run into one. The fixed version: `tidy = F.regexp_replace(F.lower(F.trim(\"employment_type\")), \"[ -]+\", \"_\")`, then `employees.select(\"employee_id\", tidy.alias(\"employment_type\")).replace({\"ft\": \"full_time\", \"pt\": \"part_time\", \"contract\": \"contractor\"}, subset=[\"employment_type\"])`. The `replace` now sees `ft`, `pt` and `contract` exactly, and leaves `full_time` and anything else alone."
+}

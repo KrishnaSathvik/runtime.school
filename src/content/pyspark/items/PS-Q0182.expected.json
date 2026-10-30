@@ -1,0 +1,151 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "event_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "user_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "page_type",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "device_type",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "referrer",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "campaign_tag",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "PV-0001",
+     "CU-001",
+     "home",
+     "mobile",
+     "social.example",
+     "{\"source\":\"social\",\"campaign\":\"CMP-0007\"}"
+    ],
+    [
+     "PV-0002",
+     "CU-001",
+     "category",
+     "mobile",
+     "/",
+     "{\"source\":\"social\",\"campaign\":\"CMP-0007\"}"
+    ],
+    [
+     "PV-0003",
+     "CU-001",
+     "product",
+     "mobile",
+     "/c/shoes",
+     "{\"source\":\"social\",\"campaign\":\"CMP-0007\"}"
+    ],
+    [
+     "PV-0004",
+     null,
+     "category",
+     "desktop",
+     "search.example",
+     null
+    ],
+    [
+     "PV-0005",
+     null,
+     "product",
+     "desktop",
+     "/c/tents",
+     null
+    ],
+    [
+     "PV-0006",
+     "CU-002",
+     "category",
+     "desktop",
+     "mail.example",
+     "{\"source\":\"email\",\"campaign\":\"CMP-0012\"}"
+    ],
+    [
+     "PV-0007",
+     "CU-002",
+     "product",
+     "desktop",
+     "/c/jackets",
+     "{\"source\":\"email\",\"campaign\":\"CMP-0012\"}"
+    ],
+    [
+     "PV-0008",
+     "CU-002",
+     "cart",
+     "desktop",
+     "/p/SKU-1002",
+     "{\"source\":\"email\",\"campaign\":\"CMP-0012\"}"
+    ],
+    [
+     "PV-0009",
+     "CU-003",
+     "home",
+     "tablet",
+     null,
+     null
+    ],
+    [
+     "PV-0010",
+     "CU-003",
+     "product",
+     "tablet",
+     "/",
+     null
+    ],
+    [
+     "PV-0011",
+     null,
+     "product",
+     "mobile",
+     "social.example",
+     "{\"source\":\"social\",\"campaign\":\"CMP-0007\"}"
+    ],
+    [
+     "PV-0012",
+     null,
+     "search",
+     "mobile",
+     "/p/SKU-1007",
+     "{\"source\":\"social\",\"campaign\":\"CMP-0007\"}"
+    ]
+   ],
+   "row_count": 12
+  }
+ },
+ "hidden": [
+  "the full practice page views",
+  "page views from anonymous visitors only",
+  "direct and search visits without a campaign tag",
+  "campaign tags with one of their two fields missing",
+  "page views with no context or no device",
+  "no page views"
+ ]
+}

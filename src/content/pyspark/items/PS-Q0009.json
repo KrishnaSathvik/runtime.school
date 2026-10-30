@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0009",
+  "kind": "predict",
+  "slug": "repartition-without-keeping",
+  "lesson": "PS-L002",
+  "role": "debugging",
+  "format": "concept_or_trace",
+  "difficulty": "easy",
+  "minutes": 4,
+  "title": "A repartition that didn't stick",
+  "prompt": "Someone wants both cores to work on `api_requests`, so they wrote this. What does it actually print? Type each line on its own line.",
+  "program": "# Spread the requests over 4 partitions so both cores get work\napi_requests.repartition(4)\nprint(api_requests.rdd.getNumPartitions())\nprint(api_requests.count())\n",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "Does `repartition` change the DataFrame you call it on, or give back a new one?",
+    "The new DataFrame isn't stored in any variable here.",
+    "`api_requests` was read from one small file, and that hasn't changed."
+  ],
+  "explanation": "`repartition(4)` gives back a new DataFrame, but the program throws it away. `api_requests` itself still has the single partition it was read with, and still 12 rows. The fix is to keep the result: `spread = api_requests.repartition(4)`."
+}

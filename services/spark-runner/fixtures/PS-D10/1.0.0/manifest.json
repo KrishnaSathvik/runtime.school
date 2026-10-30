@@ -1,0 +1,112 @@
+{
+  "dataset_id": "PS-D10",
+  "version": "1.0.0",
+  "title": "Financial Markets",
+  "source": "synthetic",
+  "licence": {
+    "status": "ours",
+    "note": "Runtime-owned deterministic synthetic data."
+  },
+  "seed": 2010,
+  "schemas": {
+    "securities": "symbol STRING, company_name STRING, sector STRING, exchange STRING, currency STRING, listed_date DATE, shares_outstanding BIGINT",
+    "daily_prices": "symbol STRING, trade_date DATE, open DECIMAL(10,2), high DECIMAL(10,2), low DECIMAL(10,2), close DECIMAL(10,2), volume BIGINT",
+    "trades": "trade_id STRING, account_id STRING, symbol STRING, executed_at TIMESTAMP, side STRING, quantity INT, price DECIMAL(10,2), fee DECIMAL(8,2)",
+    "corporate_actions": "action_id STRING, symbol STRING, action_type STRING, announced_date DATE, ex_date DATE, split_ratio DOUBLE, dividend_per_share DECIMAL(8,4)",
+    "market_calendar": "cal_date DATE, day_of_week STRING, is_trading_day BOOLEAN, holiday_name STRING"
+  },
+  "keys": {
+    "primary": {
+      "securities": [
+        "symbol"
+      ],
+      "daily_prices": [
+        "symbol",
+        "trade_date"
+      ],
+      "trades": [
+        "trade_id"
+      ],
+      "corporate_actions": [
+        "action_id"
+      ],
+      "market_calendar": [
+        "cal_date"
+      ]
+    },
+    "foreign": {
+      "daily_prices.symbol": "securities.symbol",
+      "daily_prices.trade_date": "market_calendar.cal_date",
+      "trades.symbol": "securities.symbol",
+      "corporate_actions.symbol": "securities.symbol"
+    }
+  },
+  "rules": [
+    "All companies, symbols and prices are invented; symbols end in .SX (the made-up Sandbox Exchange). Prices are in USD.",
+    "market_calendar has every calendar day of the period; weekends and exchange holidays have is_trading_day false, and holiday_name is set only for weekday holidays.",
+    "daily_prices has rows only for trading days, so lag() over trade_date per symbol steps over weekends and holidays; the previous row is the previous trading day.",
+    "A few trading days are missing for some symbols (a data gap, not a closed market): BRVO.SX on 2026-01-20 in the lesson edition; in practice eight isolated days (ALDR.SX 2026-06-01, CYPH.SX 2026-03-27, FERN.SX 2025-07-22, FERN.SX 2026-05-01, KORA.SX 2025-07-17, KORA.SX 2026-05-18, PIKE.SX 2025-12-19, PIKE.SX 2026-05-14) plus a three-day trading halt for KORA.SX (2026-02-10 to 2026-02-12). Compare with market_calendar to find them.",
+    "Prices are not adjusted for splits: on a split's ex_date the price drops by the split ratio (ALDR.SX 2-for-1 on 2026-01-21 in the lesson edition; ALDR.SX 2-for-1 and NIMB.SX 3-for-1 in practice). Divide earlier prices by split_ratio (and multiply volume) to compare across the split.",
+    "corporate_actions: split_ratio is set for splits (2.0 means 2-for-1) and dividend_per_share for dividends; the other is null.",
+    "low <= open, close <= high on every row; volume is shares traded that day.",
+    "A security listed during the period has no prices before its listed_date (DUNE.SX lists on 2026-02-02, so it has no prices in the lesson week; in practice LUMA.SX starts in November 2025 and DUNE.SX in February 2026).",
+    "trades happen only on trading days the symbol has a price, between 14:30 and 21:00 UTC, at a price between that day's low and high; fee is 0.05% of quantity \u00d7 price with a 1.00 minimum, rounded half up to cents.",
+    "The lesson and practice editions have no other deliberate problems; there is no project edition."
+  ],
+  "editions": {
+    "lesson": {
+      "securities": {
+        "file": "lesson/securities.csv",
+        "rows": 4,
+        "sha256": "fcb241926a20f93ddd5739dfb1a6d23f76a0a637062aeb08ecd685c2b882ad7c"
+      },
+      "daily_prices": {
+        "file": "lesson/daily_prices.csv",
+        "rows": 14,
+        "sha256": "54adf98061a0c3d692176d6e3289d53a0d2278b58265846d68bf20791e8ac257"
+      },
+      "trades": {
+        "file": "lesson/trades.csv",
+        "rows": 10,
+        "sha256": "afd3d54c54adc84abcf4ecf5fc3479f0740df0002f2e54ad967d9270be060f62"
+      },
+      "corporate_actions": {
+        "file": "lesson/corporate_actions.csv",
+        "rows": 4,
+        "sha256": "9435a95df94e3c8b3953ea827d7b74b9178b4a57de3abd00a43d9d21a9eaa701"
+      },
+      "market_calendar": {
+        "file": "lesson/market_calendar.csv",
+        "rows": 8,
+        "sha256": "08bda75f9163f3a5d90df9d90a352ddb29c138f9180904c002867bca116740c3"
+      }
+    },
+    "practice": {
+      "securities": {
+        "file": "practice/securities.csv",
+        "rows": 11,
+        "sha256": "cf7d9091675c245935e6eeff54f673fb927c779ce40208044873d205bf9807ff"
+      },
+      "daily_prices": {
+        "file": "practice/daily_prices.csv",
+        "rows": 2515,
+        "sha256": "7fa2b990ef3e1ecefc73ab190c3ba74122bb32491a138b0c829dadd41e7a02c6"
+      },
+      "trades": {
+        "file": "practice/trades.csv",
+        "rows": 1500,
+        "sha256": "e59444fbe50076cf6e392394ed6d05fb1caf8ca166fe69de1a09ff16efb60a56"
+      },
+      "corporate_actions": {
+        "file": "practice/corporate_actions.csv",
+        "rows": 22,
+        "sha256": "c13f00d38eb9f45b7717475e0cc684a6489b1f9809c7f157f559589c219d7bb8"
+      },
+      "market_calendar": {
+        "file": "practice/market_calendar.csv",
+        "rows": 365,
+        "sha256": "f6964a4393cb21a04c1ff42dcb8f4f80fe151f3d7d3064fc593354f44cc904f7"
+      }
+    }
+  }
+}

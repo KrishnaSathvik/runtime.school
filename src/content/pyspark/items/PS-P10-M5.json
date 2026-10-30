@@ -1,0 +1,85 @@
+{
+ "id": "PS-P10-M5",
+ "slug": "correlate-gateway-errors",
+ "project": "PS-P10",
+ "milestone": "PS-P10.m5",
+ "difficulty": "hard",
+ "minutes": 45,
+ "title": "Correlate the gateway's errors with the sensors",
+ "dataset": {
+  "id": "PS-D09",
+  "version": "1.0.0"
+ },
+ "also": [
+  {
+   "id": "PS-D15",
+   "version": "1.1.0",
+   "tables": [
+    "error_events"
+   ]
+  }
+ ],
+ "prompt": "Every sensor talks to the platform through the `iot-gateway` service, and its error log (`error_events`) names the sensor in `device_id`. Before anyone is paged, the incident desk wants each device error explained from the sensor side: was the sensor being serviced, did it send a glitch, or was it online and the gateway at fault?\n\nWrite `correlate(events, sensor_readings, maintenance_events, alerts, error_events)`, one row per device error, and use it in `incident_summary(...)` with the events from `anomaly_events`. Both datasets use UTC.",
+ "rules": [
+  "Only device errors count: rows of `error_events` with a `device_id`.",
+  "`cause` is the first that applies: `maintenance` (a visit of that sensor with `started_at` ≤ `occurred_at` ≤ `ended_at`), `sensor_glitch` (the message names a reading, `reading R…`, that is one of that sensor's `SENSOR_GLITCH` events), `gateway` (the sensor has a delivered reading whose `event_time` is at most 15 minutes from `occurred_at`, in whole seconds), otherwise `unexplained`.",
+  "`evidence` is the visit's `maintenance_id` or the glitch's `reading_id`; null for the other causes.",
+  "`false_alerts` is how many rows of the platform's `alerts` were raised on that glitch reading; 0 for the other causes.",
+  "Return `error_id`, `device_id`, `error_type`, `occurred_at`, `cause`, `evidence` and `false_alerts` (a long)."
+ ],
+ "hints": [
+  "`F.regexp_extract(\"error_message\", r\"reading (R\\d+)\", 1)` pulls the reading id out of a message, or `\"\"` when there is none.",
+  "Left-join the visits (device and time range) and the glitch events (device and reading id), then count `alerts` per `reading_id` and left-join that too. Rename join keys so the columns don't clash.",
+  "For `gateway`, a `left_semi` join of the errors to the readings on device and `F.abs(occurred.cast(\"long\") - event.cast(\"long\")) <= 900` gives the errors with a reading nearby; mark them and join back."
+ ],
+ "explanation": "The two datasets share the sensor id and the clock, so correlation is a set of joins on device plus time. The order of the causes matters: a sensor being serviced is silent, so a missed heartbeat during a visit is expected, not an incident. A glitch is matched through the reading the gateway names in its message, which is exact even when the glitch arrived hours late; a 15-minute window around `event_time` would miss those. Counting the platform's alerts on each glitch reading shows how many pages were false. Errors that pass the first two tests but have a reading nearby were raised while the sensor was online, which points at the gateway. Taking `events` as an argument means the same function can check the alerts from any run, which the last step uses.",
+ "entry": "incident_summary",
+ "inputs": [
+  "sensor_readings",
+  "devices",
+  "device_locations",
+  "maintenance_events",
+  "alerts",
+  "error_events"
+ ],
+ "file": "pipeline.py",
+ "append": "\n\ndef correlate(events, sensor_readings, maintenance_events, alerts, error_events):\n    # Step 5: one row per device error, with its cause, evidence and false alerts. Step 7 reuses it.\n    return error_events\n\n\ndef incident_summary(sensor_readings, devices, device_locations, maintenance_events, alerts, error_events):\n    # Step 5: correlate the anomaly events with the gateway's errors.\n    events = anomaly_events(sensor_readings, devices, device_locations)\n    return correlate(events, sensor_readings, maintenance_events, alerts, error_events)\n",
+ "prerequisites": [
+  "PS-L015",
+  "PS-L025",
+  "PS-L026",
+  "PS-L084"
+ ],
+ "output": {
+  "columns": [
+   "error_id",
+   "device_id",
+   "error_type",
+   "occurred_at",
+   "cause",
+   "evidence",
+   "false_alerts"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "example",
+   "sample": true
+  },
+  {
+   "id": "project",
+   "edition": "project"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

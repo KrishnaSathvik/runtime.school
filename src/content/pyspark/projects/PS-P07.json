@@ -1,0 +1,146 @@
+{
+ "id": "PS-P07",
+ "workspace": "guided",
+ "file": "pipeline.py",
+ "dataset": {
+  "id": "PS-D04",
+  "version": "1.0.0",
+  "edition": "project"
+ },
+ "inputs": [
+  "claims",
+  "encounters",
+  "providers"
+ ],
+ "task": "A group of clinics sends its insurance claims to finance as one raw export, and finance keeps finding claims counted twice, money that doesn't add up and visits that can't be traced. Build a small lakehouse: land the raw claims in Bronze with their provenance, quarantine the ones that break the contract, clean them into Silver, enrich them with the visits and providers, and publish a Gold summary as a Delta table, with a quality report that proves every layer adds up.",
+ "skills": [
+  "Bronze, Silver and Gold layers",
+  "data contracts and quarantine",
+  "windows for the latest record",
+  "nested structs and arrays",
+  "Delta tables and transactions",
+  "pipeline tests"
+ ],
+ "problems": [
+  "Claims repeated exactly by the export.",
+  "Claims resubmitted under a new claim id for the same visit, later.",
+  "Claims whose provider isn't in the providers table, and claims with no provider at all.",
+  "Claims whose service date is after the date they were submitted.",
+  "Visit temperatures sent in Fahrenheit instead of Celsius.",
+  "A column added to the visits feed on 1 January 2026: older visits have nothing in it."
+ ],
+ "revenue": "Each visit has one claim that counts: the one submitted last. A claim's money is billed (what the clinic asked for), allowed (what the payer agreed, missing until it decides) and paid (what arrived, 0.00 until then). Gold adds up the counting claims only, so its totals must equal Silver's.",
+ "milestones": [
+  {
+   "step": 1,
+   "summary": "Land the raw claims in Bronze with their source and load month.",
+   "label": "Bronze"
+  },
+  {
+   "step": 2,
+   "summary": "Check each claim against the contract and quarantine the bad ones with a reason.",
+   "label": "Quarantine"
+  },
+  {
+   "step": 3,
+   "summary": "Remove copies, keep the latest submission per visit and tidy the Silver columns.",
+   "label": "Silver"
+  },
+  {
+   "step": 4,
+   "summary": "Flatten the visits and enrich each claim with its visit and provider.",
+   "label": "Enrich"
+  },
+  {
+   "step": 5,
+   "summary": "Publish the Gold payer summary as a Delta table.",
+   "label": "Gold"
+  },
+  {
+   "step": 6,
+   "summary": "Test every layer and the Delta table, and publish the quality report.",
+   "label": "Quality tests"
+  }
+ ],
+ "artifacts": [
+  {
+   "name": "bronze_claims",
+   "inputs": [
+    "claims"
+   ],
+   "step": 1,
+   "about": "Bronze: every raw claim as it arrived, with its source file and load month.",
+   "deliverable": true
+  },
+  {
+   "name": "checked_claims",
+   "inputs": [
+    "claims",
+    "providers"
+   ],
+   "step": 2,
+   "about": "Bronze checked against the contract: each claim with the first rule it breaks."
+  },
+  {
+   "name": "rejected_claims",
+   "inputs": [
+    "claims",
+    "providers"
+   ],
+   "step": 2,
+   "about": "Quarantine: the claims that break a rule, with the reason.",
+   "deliverable": true
+  },
+  {
+   "name": "silver_claims",
+   "inputs": [
+    "claims",
+    "providers"
+   ],
+   "step": 3,
+   "about": "Silver: valid claims, each once, the latest submission per visit.",
+   "deliverable": true
+  },
+  {
+   "name": "silver_encounters",
+   "inputs": [
+    "encounters"
+   ],
+   "step": 4,
+   "about": "Silver: one flat row per visit, temperatures in Celsius, discharge filled in."
+  },
+  {
+   "name": "enriched_claims",
+   "inputs": [
+    "claims",
+    "encounters",
+    "providers"
+   ],
+   "step": 4,
+   "about": "Silver: each claim with its visit and its provider's specialty."
+  },
+  {
+   "name": "gold_payer_summary",
+   "inputs": [
+    "claims",
+    "encounters",
+    "providers"
+   ],
+   "step": 5,
+   "about": "Gold: claims and money per payer and visit type, read back from its Delta table.",
+   "deliverable": true
+  },
+  {
+   "name": "quality_report",
+   "inputs": [
+    "claims",
+    "encounters",
+    "providers"
+   ],
+   "step": 6,
+   "about": "Tests: every layer reconciled, Gold equal to Silver, and a bad write refused by Delta.",
+   "deliverable": true
+  }
+ ],
+ "run_timeout_s": 180
+}

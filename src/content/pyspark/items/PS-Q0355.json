@@ -1,0 +1,59 @@
+{
+ "id": "PS-Q0355",
+ "slug": "checkouts-that-completed",
+ "lesson": "PS-L071",
+ "role": "integration",
+ "format": "dataframe_coding",
+ "difficulty": "hard",
+ "minutes": 26,
+ "title": "Checkouts that completed",
+ "dataset": {
+  "id": "PS-D06",
+  "version": "1.0.0"
+ },
+ "prompt": "The payments team tracks every checkout that was begun: where the visitor was, and whether, how and how fast it completed. Write `solve(checkout_events, sessions)` so it streams `checkout_events` and returns `begin_id`, `country`, `order_id`, `payment_method` and `seconds_to_complete` for every begun checkout.",
+ "rules": [
+  "A checkout begins with a `begin` step and completes with a `complete` step in the same session, at the begin's `event_time` or up to 30 minutes after it. Each begin gets one row per completion that matches it, or one row with `order_id`, `payment_method` and `seconds_to_complete` missing if none does.",
+  "`country` comes from the visit in `sessions` (missing if the visit isn't there). `payment_method` is the completion's `payment.method`; `seconds_to_complete` is the whole seconds from begin to completion, a long.",
+  "Use 15-minute watermarks on both steps' event times. A begin with no completion comes out once the watermark shows none can still arrive; begins still waiting when the stream stops are left out.",
+  "The rows must come from a streaming query over the delivery files: working on `checkout_events` itself doesn't count."
+ ],
+ "hints": [
+  "Read the stream once and split it with two filters, one per step. Rename each side's columns so they don't clash, and give each its own watermark.",
+  "Join `sessions` to the begins as a static table, then join the completions with a left outer join, a matching session and a 30-minute time bound.",
+  "Timestamps cast to `long` are seconds, so their difference is the seconds between them."
+ ],
+ "explanation": "Both sides of the join come from one stream: the begins and the completions, each renamed and with its own watermark. The left outer join with a 30-minute bound pairs each begin with its completion as soon as both are there; a begin with no completion comes out with empty columns only once the watermark, the lower of the two sides, passes 30 minutes after it. In the sample, CO-0004 and CO-0008 come out that way (CO-0008's completion came after 32 minutes), while CO-0012, begun at 11:25, is still waiting when the stream stops. The static join with `sessions` adds the country, the nested `payment.method` gives the method, and casting both timestamps to `long` gives the seconds between them.",
+ "entry": "solve",
+ "inputs": [
+  "checkout_events",
+  "sessions"
+ ],
+ "starter": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\ndef solve(checkout_events, sessions):\n    spark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\n    make_batches(checkout_events, \"/tmp/checkouts\")  # one file per batch; clears the folder first\n    shutil.rmtree(\"/tmp/ck\", ignore_errors=True)     # a fresh checkpoint for every run\n    steps = spark.readStream.schema(checkout_events.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/checkouts\")\n    # Split the stream into begins and completions, join them with watermarks and a 30-minute bound,\n    # add each visit's country, write the result to a memory table, run the stream, and return the five columns.\n\n    return checkout_events\n",
+ "output": {
+  "columns": [
+   "begin_id",
+   "country",
+   "order_id",
+   "payment_method",
+   "seconds_to_complete"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0404",
+  "slug": "failed-attempts-that-never-show",
+  "lesson": "PS-L081",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Failed attempts that never show",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "The nightly job works out each request's milliseconds per KiB, `latency_ms * 1024 div bytes_sent`, over 3 partitions, and each task may be tried 3 times (`local[1,3]`). Some nights it fails. The on-call script reads the job's event log to list every failed task attempt, but it returns nothing. Fix `solve(api_requests)` so it returns one row per failed attempt: the stage, the task's partition and the attempt number.",
+  "rules": [
+    "A failed attempt is a `SparkListenerTaskEnd` event whose task didn't end in success.",
+    "Columns, in order: `Stage ID`, `Index` (the partition the task works on) and `Attempt` (0 for the first try), as the event names them.",
+    "Leave `nightly_event_log(api_requests)` and the job as they are."
+  ],
+  "hints": [
+    "Look at the reasons the log really holds: select `\"Task End Reason.Reason\"` from the task-end events and look at the values.",
+    "A task's `Task ID` is numbered across the whole application. Which field of `Task Info` is the partition?",
+    "`Attempt` is in `Task Info` too; `Stage Attempt ID` is about the stage, not the task."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "api_requests"
+  ],
+  "starter": "import os, shutil, subprocess\nfrom pyspark.sql import functions as F\n\nopen(\"/tmp/nightly.py\", \"w\").write(\"\"\"\nfrom pyspark.sql import SparkSession\n\nspark = SparkSession.builder.getOrCreate()\nnight = [tuple(int(x) for x in line.split(\",\")) for line in open(\"/tmp/nightly-requests.csv\").read().split()]\nreqs = spark.createDataFrame(spark.sparkContext.parallelize(night, 3), \"latency_ms INT, bytes_sent BIGINT\")\nprint(\"app: rows\", len(reqs.collect()))\ntry:\n    reqs.selectExpr(\"latency_ms * 1024 div bytes_sent AS ms_per_kib\").collect()\nexcept Exception as e:\n    print(\"app: failed with\", type(e).__name__)\nspark.stop()\n\"\"\")\n\n\ndef nightly_event_log(api_requests):\n    # Stages the night's requests for the job (latency and bytes sent, in request order), submits it with event\n    # logging on, and returns the folder its event log is written to.\n    night = api_requests.orderBy(\"request_id\").select(\"latency_ms\", \"bytes_sent\").collect()\n    open(\"/tmp/nightly-requests.csv\", \"w\").write(\"\".join(f\"{r.latency_ms},{r.bytes_sent}\\n\" for r in night))\n    shutil.rmtree(\"/tmp/nightly-events\", ignore_errors=True)\n    os.makedirs(\"/tmp/nightly-events\")\n    env = {**os.environ, \"SPARK_LOCAL_IP\": \"127.0.0.1\"}\n    subprocess.run([\"spark-submit\", \"--master\", \"local[1,3]\",\n                    \"--conf\", \"spark.eventLog.enabled=true\", \"--conf\", \"spark.eventLog.dir=/tmp/nightly-events\",\n                    \"--conf\", \"spark.eventLog.rolling.enabled=false\", \"--conf\", \"spark.eventLog.compress=false\",\n                    \"/tmp/nightly.py\"], capture_output=True, text=True, env=env)\n    return \"/tmp/nightly-events\"\n\n\ndef solve(api_requests):\n    events = spark.read.json(nightly_event_log(api_requests))\n    task_ends = events.filter(F.col(\"Event\") == \"SparkListenerTaskEnd\")\n    failed = task_ends.filter(F.col(\"Task End Reason.Reason\") == \"Failed\")\n    return failed.select(\"Stage ID\", \"Task Info.Task ID\", \"Task Info.Attempt\")\n",
+  "output": {
+    "columns": [
+      "Stage ID",
+      "Index",
+      "Attempt"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 240,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Two guesses were wrong. A failed task's reason in the event log is `ExceptionFailure` (its exception's class is next to it, in `Class Name`), never `Failed`, so the filter matched nothing; `!= \"Success\"` works too. And `Task Info.Task ID` numbers tasks across the whole application, while `Task Info.Index` is the partition, the number the driver log's \"Task 1 in stage 1.0\" uses. In the sample, two requests that sent 0 bytes sit in partition 1, and the fixed script shows its task in stage 1 tried three times, attempts 0, 1 and 2, before Spark gave up. Reading the field values a log really contains, before filtering on them, avoids the first bug."
+}

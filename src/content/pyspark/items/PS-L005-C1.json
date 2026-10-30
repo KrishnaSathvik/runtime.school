@@ -1,0 +1,18 @@
+{
+  "id": "PS-L005-C1",
+  "kind": "predict",
+  "slug": "slow-requests-rdd",
+  "lesson": "PS-L005",
+  "difficulty": "easy",
+  "minutes": 4,
+  "title": "Slow requests, the RDD way",
+  "prompt": "What does this program print? In the lesson's 12 requests, four took more than 100 ms: REQ-000004 (checkout-api), REQ-000005 (search-api), REQ-000008 (checkout-api) and REQ-000011 (search-api).",
+  "program": "slow = api_requests.rdd.filter(lambda r: r[\"latency_ms\"] > 100)\nnames = slow.map(lambda r: r[\"service\"])\nprint(slow.count(), api_requests.count())\nprint(names.collect())\n",
+  "dataset": { "id": "PS-D15", "version": "1.0.0" },
+  "edition": "lesson",
+  "hints": [
+    "`rdd.filter` keeps the rows where the Python function returns `True`. Like a DataFrame transformation, it doesn't change what it started from.",
+    "`map` turns each row into whatever the function returns: here, one string per row.",
+    "`collect()` returns a Python list, in the same order as the rows. It doesn't remove repeats."
+  ]
+}

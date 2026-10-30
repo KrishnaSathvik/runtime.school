@@ -1,0 +1,55 @@
+{
+  "id": "PS-Q0185",
+  "slug": "checkout-coupon-and-gift-wrap",
+  "lesson": "PS-L037",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Coupon and gift wrap per checkout step",
+  "dataset": {
+    "id": "PS-D06",
+    "version": "1.0.0"
+  },
+  "prompt": "Checkout flags such as a coupon or gift wrap arrive in `attributes`, and finance wants them as their own columns. Write `solve(checkout_events)` so it returns each checkout step with its coupon and gift wrap flag.",
+  "rules": [
+    "Return `event_id`, `step`, `order_id`, `coupon`, `gift_wrap` and `order_total`, in that order.",
+    "`coupon` and `gift_wrap` are text, exactly as stored under those keys. A flag that isn't set is missing.",
+    "Ignore any other key in `attributes`.",
+    "Keep every checkout step, one row each."
+  ],
+  "hints": [
+    "`printSchema()` shows `attributes` as a map of text to text, not a struct, so it has no fixed fields.",
+    "Write the map out with `F.to_json(...)`, then read that text back with `F.from_json(...)` and a schema naming the two keys you want.",
+    "The schema can be a string such as `\"coupon STRING, gift_wrap STRING\"` or a `StructType`. Select the two fields of the parsed struct with dot paths and aliases."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "checkout_events"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(checkout_events):\n    # Return each checkout step with its coupon and gift wrap flag.\n    return checkout_events\n",
+  "output": {
+    "columns": [
+      "event_id",
+      "step",
+      "order_id",
+      "coupon",
+      "gift_wrap",
+      "order_total"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`attributes` is a map, so its keys aren't fixed fields. A schema gives them a fixed shape: `flags = F.from_json(F.to_json(\"attributes\"), \"coupon STRING, gift_wrap STRING\")`, then `checkout_events.select(\"event_id\", \"step\", \"order_id\", flags.coupon.alias(\"coupon\"), flags.gift_wrap.alias(\"gift_wrap\"), \"order_total\")`. A `StructType` with two `StringType` fields works the same as the schema string. Keys the schema doesn't name are dropped, and a key that isn't there comes back missing. The flags are stored as text (`\"true\"`), so a schema that says `gift_wrap BOOLEAN` loses them. `F.from_json` reads text only: passing it the map itself fails."
+}

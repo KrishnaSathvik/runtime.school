@@ -1,0 +1,272 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "warehouse_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "sku",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "on_hand",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "reserved",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "available",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "reason",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "WH01",
+     "SKU-1003",
+     560,
+     100,
+     460,
+     null
+    ],
+    [
+     "WH01",
+     "SKU-1012",
+     279,
+     19,
+     260,
+     null
+    ],
+    [
+     "WH01",
+     "SKU-1019",
+     160,
+     72,
+     88,
+     null
+    ],
+    [
+     "WH02",
+     "SKU-1003",
+     265,
+     117,
+     148,
+     null
+    ],
+    [
+     "WH02",
+     "SKU-1014",
+     266,
+     80,
+     186,
+     null
+    ],
+    [
+     "WH09",
+     "SKU-1003",
+     120,
+     10,
+     null,
+     "unknown warehouse"
+    ],
+    [
+     null,
+     "SKU-1012",
+     80,
+     5,
+     null,
+     "unknown warehouse"
+    ],
+    [
+     "WH03",
+     "SKU-1009",
+     45,
+     45,
+     0,
+     null
+    ],
+    [
+     "WH03",
+     "SKU-1029",
+     -3,
+     0,
+     null,
+     "negative count"
+    ],
+    [
+     "WH02",
+     "SKU-1014",
+     -5,
+     null,
+     null,
+     "missing count"
+    ],
+    [
+     "WH01",
+     "SKU-1019",
+     40,
+     52,
+     null,
+     "over-reserved"
+    ]
+   ],
+   "row_count": 11,
+   "inputs": {
+    "inventory": [
+     [
+      "WH01",
+      "SKU-1003",
+      "Packing tape 48mm",
+      "560",
+      "100",
+      "100",
+      "2026-03-10"
+     ],
+     [
+      "WH01",
+      "SKU-1012",
+      "Bath mat",
+      "279",
+      "19",
+      "200",
+      "2026-03-10"
+     ],
+     [
+      "WH01",
+      "SKU-1019",
+      "Notebook A5",
+      "160",
+      "72",
+      "100",
+      "2026-03-10"
+     ],
+     [
+      "WH02",
+      "SKU-1003",
+      "Packing tape 48mm",
+      "265",
+      "117",
+      "200",
+      "2026-03-10"
+     ],
+     [
+      "WH02",
+      "SKU-1014",
+      "Extension lead",
+      "266",
+      "80",
+      "50",
+      "2026-03-10"
+     ],
+     [
+      "WH09",
+      "SKU-1003",
+      "Packing tape 48mm",
+      "120",
+      "10",
+      "100",
+      "2026-03-10"
+     ],
+     [
+      null,
+      "SKU-1012",
+      "Bath mat",
+      "80",
+      "5",
+      "200",
+      "2026-03-10"
+     ],
+     [
+      "WH03",
+      "SKU-1009",
+      "Ceramic mug",
+      "45",
+      "45",
+      "50",
+      "2026-03-10"
+     ],
+     [
+      "WH03",
+      "SKU-1029",
+      "Step stool",
+      "-3",
+      "0",
+      "50",
+      "2026-03-10"
+     ],
+     [
+      "WH02",
+      "SKU-1014",
+      "Extension lead",
+      "-5",
+      null,
+      "50",
+      "2026-03-10"
+     ],
+     [
+      "WH01",
+      "SKU-1019",
+      "Notebook A5",
+      "40",
+      "52",
+      "100",
+      "2026-03-10"
+     ]
+    ],
+    "warehouses": [
+     [
+      "WH01",
+      "Harbor Point DC",
+      "Rotterdam",
+      "north",
+      "6500",
+      "2025-10-11"
+     ],
+     [
+      "WH02",
+      "Ridgeway Fulfilment",
+      "Leeds",
+      "north",
+      "12000",
+      "2025-03-03"
+     ],
+     [
+      "WH03",
+      "Sunbelt Cross-Dock",
+      "Valencia",
+      "south",
+      "4000",
+      "2025-07-28"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice stock count",
+  "rows for unknown and missing warehouses",
+  "rows with a missing on-hand or reserved count",
+  "negative counts, and reserved below, equal to and above on hand",
+  "rows with more than one problem",
+  "an empty stock count"
+ ]
+}

@@ -1,0 +1,139 @@
+{
+  "id": "PS-L063",
+  "minutes": 30,
+  "lede": "Daily feeds rarely replace a whole table: they change some rows and add a few. MERGE applies them in one commit, updating rows that match and inserting the rest, and it only works if the match covers the whole key.",
+  "objectives": [
+    "Upsert a source into a Delta table with `merge`, `whenMatchedUpdateAll` and `whenNotMatchedInsertAll`",
+    "Write a merge condition that covers the whole key, and explain what a partial key does",
+    "Update chosen columns, delete matched rows and add conditions to clauses",
+    "Keep late, older versions from overwriting newer ones"
+  ],
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "inventory",
+      "purchase_orders"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`inventory` holds stock per warehouse: one row per SKU **in one warehouse**, so the key is `warehouse_id` and `sku` together. Packing tape (`SKU-1003`) is stocked in all three warehouses.\n\nEach day a stock count arrives with new numbers for some rows, and sometimes a SKU a warehouse didn't stock before. Appending it would give two rows for the same key. Overwriting with it would lose every row it doesn't mention. What you want is an **upsert**: update the rows that match, insert the ones that don't.\n\nOn a Delta table that's `MERGE`. You start from the table (`t`), merge in a source DataFrame (`s`) on a condition that pairs their rows, and say what to do in each case:\n\n- `whenMatchedUpdateAll()` copies every column of the source row onto the table row it matched.\n- `whenNotMatchedInsertAll()` adds a source row that matched nothing.\n- `execute()` runs it, as one commit."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Upsert a stock count",
+      "code": "from datetime import date\nfrom delta.tables import DeltaTable\n\npath = \"/tmp/stock/inventory\"\ninventory.write.format(\"delta\").save(path)\n\ncount = spark.createDataFrame(\n    [\n        (\"WH01\", \"SKU-1003\", \"Packing tape 48mm\", 540, 90, 100, date(2026, 3, 11)),\n        (\"WH02\", \"SKU-1014\", \"Extension lead\", 250, 80, 50, date(2026, 3, 11)),\n        (\"WH01\", \"SKU-1029\", \"Step stool\", 40, 0, 20, date(2026, 3, 11)),\n    ],\n    inventory.schema,\n)\n\ntable = DeltaTable.forPath(spark, path)\n(\n    table.alias(\"t\")\n    .merge(count.alias(\"s\"), \"t.warehouse_id = s.warehouse_id AND t.sku = s.sku\")\n    .whenMatchedUpdateAll()\n    .whenNotMatchedInsertAll()\n    .execute()\n)\n\nspark.read.format(\"delta\").load(path).orderBy(\"warehouse_id\", \"sku\").show()\n\nlast = table.history(1).collect()[0]\nprint(last.version, last.operation)\nprint({k: last.operationMetrics[k] for k in (\"numSourceRows\", \"numTargetRowsUpdated\", \"numTargetRowsInserted\")})\n",
+      "note": "Two counted rows matched and were updated; `WH01` had no step stools before, so that row was inserted. The other seven rows are untouched. `history(1)` returns just the latest commit, a `MERGE`, and its `operationMetrics` count what it did."
+    },
+    {
+      "kind": "text",
+      "md": "The condition decides which rows are \"the same\". It has to cover the whole key. With `sku` alone, one counted row for packing tape in `WH01` matches packing tape in every warehouse."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Matching on part of the key",
+      "code": "from datetime import date\nfrom delta.tables import DeltaTable\n\npath = \"/tmp/stock/inventory\"\ninventory.write.format(\"delta\").save(path)\n\ncount = spark.createDataFrame([(\"WH01\", \"SKU-1003\", \"Packing tape 48mm\", 540, 90, 100, date(2026, 3, 11))], inventory.schema)\n\ntable = DeltaTable.forPath(spark, path)\ntable.alias(\"t\").merge(count.alias(\"s\"), \"t.sku = s.sku\").whenMatchedUpdateAll().whenNotMatchedInsertAll().execute()\n\nspark.read.format(\"delta\").load(path).orderBy(\"warehouse_id\", \"sku\").select(\"warehouse_id\", \"sku\", \"on_hand\", \"reserved\").show()\n",
+      "note": "Three different rows became copies of the `WH01` count, `warehouse_id` included: there's now no packing tape in `WH02` or `WH03` at all. No error, no warning; the merge did exactly what the condition said."
+    },
+    {
+      "kind": "text",
+      "md": "The other direction is checked. If two source rows match the **same** table row, Delta can't know which one should win, so it refuses the whole merge and commits nothing. A source must have at most one row per key."
+    },
+    {
+      "kind": "error-example",
+      "id": "e3",
+      "title": "Two counts for one row",
+      "code": "from datetime import date\nfrom delta.tables import DeltaTable\n\npath = \"/tmp/stock/inventory\"\ninventory.write.format(\"delta\").save(path)\n\ncount = spark.createDataFrame(\n    [\n        (\"WH01\", \"SKU-1003\", \"Packing tape 48mm\", 540, 90, 100, date(2026, 3, 11)),\n        (\"WH01\", \"SKU-1003\", \"Packing tape 48mm\", 535, 90, 100, date(2026, 3, 11)),\n    ],\n    inventory.schema,\n)\n\ntable = DeltaTable.forPath(spark, path)\ntable.alias(\"t\").merge(count.alias(\"s\"), \"t.warehouse_id = s.warehouse_id AND t.sku = s.sku\").whenMatchedUpdateAll().execute()\n",
+      "error": "UnsupportedOperationException",
+      "note": "Two rows for `WH01` / `SKU-1003` in one source. Remove the duplicates before merging, for example by keeping only the latest count per key."
+    },
+    {
+      "kind": "text",
+      "md": "Clauses can do more:\n\n- `whenMatchedUpdate(set={...})` changes only the columns you name. Values are SQL expressions such as `\"s.on_hand\"`.\n- `whenMatchedDelete()` deletes the matched table row.\n- Every clause can take a `condition`. The first matched clause whose condition holds is the one that runs; a row no clause applies to is left alone.\n\nHere a count of 0 on hand and 0 reserved means the warehouse no longer stocks the SKU."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Update some columns, delete others",
+      "code": "from datetime import date\nfrom delta.tables import DeltaTable\n\npath = \"/tmp/stock/inventory\"\ninventory.write.format(\"delta\").save(path)\n\ncount = spark.createDataFrame(\n    [\n        (\"WH01\", \"SKU-1003\", \"Packing tape 48mm\", 540, 90, 999, date(2026, 3, 11)),\n        (\"WH03\", \"SKU-1009\", \"Ceramic mug\", 0, 0, 50, date(2026, 3, 11)),\n        (\"WH03\", \"SKU-1040\", \"Desk lamp\", 0, 0, 10, date(2026, 3, 11)),\n    ],\n    inventory.schema,\n)\n\ntable = DeltaTable.forPath(spark, path)\n(\n    table.alias(\"t\")\n    .merge(count.alias(\"s\"), \"t.warehouse_id = s.warehouse_id AND t.sku = s.sku\")\n    .whenMatchedDelete(condition=\"s.on_hand = 0 AND s.reserved = 0\")\n    .whenMatchedUpdate(set={\"on_hand\": \"s.on_hand\", \"reserved\": \"s.reserved\", \"as_of_date\": \"s.as_of_date\"})\n    .whenNotMatchedInsertAll(condition=\"s.on_hand > 0\")\n    .execute()\n)\n\nspark.read.format(\"delta\").load(path).orderBy(\"warehouse_id\", \"sku\").show()\n",
+      "note": "`WH03` mugs were counted at 0 and 0, so that row was deleted. The desk lamp wasn't in the table, and the insert's condition skipped it. `WH01` tape got its new counts but kept its `reorder_point` of 100: the update names only three columns."
+    },
+    {
+      "kind": "text",
+      "md": "`purchase_orders` keeps every version of an order: version 1 is the original, and higher versions change its status or date. Here the table starts with each order's first version. `where(\"version = 1\")` keeps the rows that match a SQL condition; the filtering lesson covers it.\n\nChanges arrive in batches, and batches can arrive late. A condition on the update, `s.version > t.version`, makes sure an older version never overwrites a newer one."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Late versions don't win",
+      "code": "from delta.tables import DeltaTable\n\npath = \"/tmp/buying/purchase_orders\"\npurchase_orders.where(\"version = 1\").write.format(\"delta\").save(path)\ntable = DeltaTable.forPath(spark, path)\n\n\ndef apply(batch):\n    (\n        table.alias(\"t\")\n        .merge(batch.alias(\"s\"), \"t.po_id = s.po_id\")\n        .whenMatchedUpdateAll(condition=\"s.version > t.version\")\n        .whenNotMatchedInsertAll()\n        .execute()\n    )\n\n\napply(purchase_orders.where(\"version = 3\"))\napply(purchase_orders.where(\"version = 2\"))  # arrived late\n\nspark.read.format(\"delta\").load(path).orderBy(\"po_id\").select(\"po_id\", \"version\", \"status\", \"expected_date\").show()\n",
+      "note": "Version 3 arrived first and moved PO00001 to `shipped`. When version 2 came in late, its condition was false for PO00001, so it stayed at 3. PO00003 had no version 3, so its version 2 still applied. Without the condition, PO00001 would have gone back to `confirmed`."
+    },
+    {
+      "kind": "text",
+      "md": "You could build the same result without MERGE, by joining the table with the source and overwriting the whole table. MERGE does it as one commit and rewrites only the files that hold matched rows. On a big table where a count touches a few rows, that's far less to write. Like every Delta write, a merge that fails commits nothing."
+    }
+  ],
+  "challenges": [
+    "PS-L063-C1",
+    "PS-L063-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "`inventory` is keyed by `warehouse_id` and `sku`. You merge a count on `t.sku = s.sku` with `whenMatchedUpdateAll`. A counted SKU is stocked in three warehouses. What happens?",
+      "choices": [
+        "Only the right warehouse's row is updated",
+        "All three rows are overwritten with the counted row",
+        "The merge fails",
+        "A new row is inserted"
+      ],
+      "answer": 1,
+      "why": "One source row may match many table rows, and each match is updated, `warehouse_id` included. Only the reverse, several source rows for one table row, raises an error."
+    },
+    {
+      "id": "k2",
+      "prompt": "A source has two rows with the same key, and that key is in the table. What does the merge do?",
+      "choices": [
+        "Applies the last one",
+        "Applies the first one",
+        "Fails and commits nothing",
+        "Inserts both"
+      ],
+      "answer": 2,
+      "why": "Delta can't pick between them, so it refuses the merge. Remove duplicate keys from the source first."
+    },
+    {
+      "id": "k3",
+      "prompt": "The table has PO00001 at version 3. A late batch brings version 2, and the merge uses `whenMatchedUpdateAll(condition=\"s.version > t.version\")`. What's PO00001 afterwards?",
+      "choices": [
+        "Version 2",
+        "Version 3",
+        "Both versions",
+        "Deleted"
+      ],
+      "answer": 1,
+      "why": "The condition is false, so no clause applies and the row stays as it is."
+    }
+  ],
+  "review": [
+    "An upsert updates rows that match and inserts the rest; on Delta it's `DeltaTable.merge(...)...execute()`, one commit.",
+    "The merge condition must cover the whole key: a partial key overwrites every row it matches, silently.",
+    "Several source rows for one table row make the merge fail: deduplicate the source first.",
+    "`whenMatchedUpdate(set=...)` changes chosen columns, `whenMatchedDelete()` removes rows, and any clause can take a condition.",
+    "A condition like `s.version > t.version` stops late, older changes from overwriting newer ones.",
+    "`history(1)` and its `operationMetrics` show how many rows a merge updated, inserted and deleted."
+  ],
+  "practice": [
+    "PS-Q0311",
+    "PS-Q0312",
+    "PS-Q0313",
+    "PS-Q0314",
+    "PS-Q0315"
+  ]
+}

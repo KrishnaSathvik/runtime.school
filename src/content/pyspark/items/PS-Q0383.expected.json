@@ -1,0 +1,69 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "task",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "weekly_email",
+     "blocked"
+    ],
+    [
+     "in_flight",
+     "blocked"
+    ],
+    [
+     "carrier_scores",
+     "blocked"
+    ],
+    [
+     "carrier_report",
+     "blocked"
+    ],
+    [
+     "late_deliveries",
+     "ok"
+    ],
+    [
+     "clean_events",
+     "ok"
+    ],
+    [
+     "known_events",
+     "failed"
+    ],
+    [
+     "delivered",
+     "skipped"
+    ],
+    [
+     "late_scans",
+     "skipped"
+    ]
+   ],
+   "row_count": 9
+  }
+ },
+ "hidden": [
+  "the full practice tables",
+  "a night where every event's shipment is known",
+  "only events for unknown shipments, and no late deliveries",
+  "empty tables"
+ ]
+}

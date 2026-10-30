@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0239",
+  "slug": "fix-the-paid-invoices-load",
+  "lesson": "PS-L048",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Fix the paid invoices load",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "The month-end job should load the paid invoices from the billing database in 4 parallel queries, but it stops with an error. Fix `solve(invoices)` so it returns `invoice_id`, `account_id` and `total_amount` for every paid invoice.",
+  "rules": [
+    "The starter saves the invoices to the database. Read them from there.",
+    "An invoice is paid when its status is `paid`. Statuses are stored in lower case.",
+    "Keep every paid invoice the database returns, whatever its total and even when the total is missing.",
+    "Return `invoice_id`, `account_id` and `total_amount` (decimal(12,2)), in that order."
+  ],
+  "hints": [
+    "Read the error message: it says which two options can't go together, and what to use instead.",
+    "A subquery in `dbtable` needs a name after it: `(SELECT ...) AS paid`.",
+    "Once it runs, the sample comes back empty. In SQLite, does `'Paid'` equal `'paid'`?"
+  ],
+  "explanation": "There are two bugs. The `query` option can't be combined with `partitionColumn`, so Spark stops before reading anything. Move the SQL into `dbtable` as a named subquery, `.option(\"dbtable\", \"(SELECT invoice_id, account_id, total_amount FROM invoices WHERE status = 'paid') AS paid\")`, and keep the partition options: Spark adds each slice's condition around the subquery. Then the read runs but returns nothing, because SQLite compares text exactly and the statuses are stored as `paid`, not `Paid`. Nothing else needs to change. The bounds 0 and 1000 don't drop a large total, and an invoice with no total is read by the first slice, whose condition includes `total_amount IS NULL`.",
+  "entry": "solve",
+  "inputs": [
+    "invoices"
+  ],
+  "starter": "def solve(invoices):\n    url = \"jdbc:sqlite:/tmp/billing.db\"\n    invoices.coalesce(1).write.jdbc(url, \"invoices\", mode=\"overwrite\")\n    # Month-end load: the paid invoices, read in 4 parallel queries split on total_amount.\n    paid = (spark.read.format(\"jdbc\")\n            .option(\"url\", url)\n            .option(\"query\", \"SELECT invoice_id, account_id, total_amount FROM invoices WHERE status = 'Paid'\")\n            .option(\"partitionColumn\", \"total_amount\")\n            .option(\"lowerBound\", 0)\n            .option(\"upperBound\", 1000)\n            .option(\"numPartitions\", 4)\n            .load())\n    return paid\n",
+  "output": {
+    "columns": [
+      "invoice_id",
+      "account_id",
+      "total_amount"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

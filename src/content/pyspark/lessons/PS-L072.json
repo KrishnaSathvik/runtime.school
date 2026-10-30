@@ -1,0 +1,126 @@
+{
+ "id": "PS-L072",
+ "minutes": 30,
+ "lede": "Streaming jobs stop: for a deploy, a crash, a full disk. A checkpoint is how a query picks up where it left off, without losing rows or counting them twice. Knowing what's inside it tells you what a restart will do, and which changes it can't survive.",
+ "objectives": [
+  "Restart a query from its checkpoint and predict which files the restart reads",
+  "Explain what the offsets, commits and state folders of a checkpoint record",
+  "Recover from a failure in `foreachBatch` and make the sink idempotent, so a re-run batch isn't written twice",
+  "Read a query's state with the `statestore` and `state-metadata` sources, and name changes that break a checkpoint"
+ ],
+ "dataset": {
+  "id": "PS-D15",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "application_logs"
+  ]
+ },
+ "blocks": [
+  {
+   "kind": "text",
+   "md": "`application_logs` has ten log lines from an online shop's services, written over 90 seconds: when (`logged_at`), how serious (`level`), which `service`, and a `message`. There's no `batch` column, so each example makes one: every 20 seconds of logs becomes one file, five files in all. `F.minute` and `F.second` pick those parts out of a timestamp.\n\nThe examples use the helpers from the earlier streaming lessons: `make_batches` writes one file per `batch` value, and `run_stream(writer)` starts a query with `trigger(availableNow=True)`, waits until it has read every file, and returns the stopped query.\n\nSome examples count lines per level with `groupBy(\"level\").count()`, the same aggregation as on a batch table. On a stream it keeps a **running** count: the counts so far live in the query's **state**, and each micro-batch adds to them. Update mode writes the counts that changed.\n\nThe `checkpointLocation` folder is where a query writes down its progress. Start the query again with the same folder and it carries on from there."
+  },
+  {
+   "kind": "example",
+   "id": "e1",
+   "title": "A restart reads only the new files",
+   "code": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\nspark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\nfor path in [\"/tmp/all\", \"/tmp/in\", \"/tmp/ck\"]:\n    shutil.rmtree(path, ignore_errors=True)\n\n# Every 20 seconds of logs becomes one file: five files in all.\nlogs = application_logs.withColumn(\"batch\", F.floor((F.minute(\"logged_at\") * 60 + F.second(\"logged_at\")) / 20))\nmake_batches(logs, \"/tmp/all\")\nfiles = sorted(os.listdir(\"/tmp/all\"))\nos.makedirs(\"/tmp/in\")\n\n\ndef deliver(names):\n    \"\"\"Copy files into the folder the stream reads, keeping their times.\"\"\"\n    for name in names:\n        shutil.copy2(f\"/tmp/all/{name}\", f\"/tmp/in/{name}\")\n\ndeliver(files[:3])\nstream = spark.readStream.schema(logs.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\n\n\ndef show(batch_df, batch_id):\n    print(\"  micro-batch\", batch_id, sorted((r[0], r[\"count\"]) for r in batch_df.collect()))\n\n\nwriter = (stream.groupBy(\"level\").count().writeStream.outputMode(\"update\").foreachBatch(show)\n          .option(\"checkpointLocation\", \"/tmp/ck\"))\nprint(\"run 1\")\nrun_stream(writer)\ndeliver(files[3:])\nprint(\"run 2, after two more files\")\nrun_stream(writer)\nprint(\"run 3, nothing new\")\nq = run_stream(writer)\nprint(\"  rows read:\", sum(p[\"numInputRows\"] for p in q.recentProgress))\n",
+   "note": "Run 1 read the three files that were there, as micro-batches 0 to 2. Run 2 started from the same checkpoint: it skipped those three, read only the two new files, numbered its micro-batches 3 and 4, and went on counting from the saved state, INFO 5 to 6 and 7. Run 3 had nothing new to read, so it read nothing and wrote nothing."
+  },
+  {
+   "kind": "text",
+   "md": "What did the checkpoint remember? It's a folder of small files:\n\n- `offsets/` has one file per micro-batch, written **before** the micro-batch runs: which input it will read (here, which files).\n- `commits/` has one file per micro-batch, written **after** it has finished and its output is written.\n- `state/` holds the running counts, one version per micro-batch.\n- `sources/` lists the files each source has already seen, and `metadata` has the query's id.\n\nOn a restart Spark compares the two lists. A micro-batch with an offset but no commit was started and never finished, so Spark runs it again, with exactly the same input. Then it plans new micro-batches for input it hasn't seen.\n\nYou can read the state yourself. `spark.read.format(\"statestore\").load(checkpoint)` gives the state as a DataFrame, with a `key` and a `value` struct. `option(\"batchId\", n)` reads it as it was after micro-batch `n`. `format(\"state-metadata\")` lists the stateful steps."
+  },
+  {
+   "kind": "example",
+   "id": "e2",
+   "title": "Look inside a checkpoint",
+   "code": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\nspark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\nfor path in [\"/tmp/all\", \"/tmp/in\", \"/tmp/ck\"]:\n    shutil.rmtree(path, ignore_errors=True)\n\n# Every 20 seconds of logs becomes one file: five files in all.\nlogs = application_logs.withColumn(\"batch\", F.floor((F.minute(\"logged_at\") * 60 + F.second(\"logged_at\")) / 20))\nmake_batches(logs, \"/tmp/in\")\nstream = spark.readStream.schema(logs.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\nrun_stream(stream.groupBy(\"level\").count().writeStream.outputMode(\"update\")\n           .foreachBatch(lambda batch_df, batch_id: batch_df.collect())\n           .option(\"checkpointLocation\", \"/tmp/ck\"))\n\nprint(\"checkpoint:\", [f for f in sorted(os.listdir(\"/tmp/ck\")) if not f.startswith(\".\")])\nprint(\"offsets:\", [f for f in sorted(os.listdir(\"/tmp/ck/offsets\")) if not f.startswith(\".\")], \"commits:\", [f for f in sorted(os.listdir(\"/tmp/ck/commits\")) if not f.startswith(\".\")])\n\nstate = spark.read.format(\"statestore\").load(\"/tmp/ck\")\nprint(\"state now:\", sorted((r.key.level, r.value[\"count\"]) for r in state.collect()))\nearlier = spark.read.format(\"statestore\").option(\"batchId\", 2).load(\"/tmp/ck\")\nprint(\"state after micro-batch 2:\", sorted((r.key.level, r.value[\"count\"]) for r in earlier.collect()))\n\nfor r in spark.read.format(\"state-metadata\").load(\"/tmp/ck\").collect():\n    print(r.operatorName, \"partitions\", r.numPartitions, \"batches\", r.minBatchId, \"to\", r.maxBatchId)\n",
+   "note": "Five micro-batches, so five offsets and five commits, numbered 0 to 4 (Spark also writes hidden `.crc` check files, left out here). The state holds the final count per level. After micro-batch 2 only INFO lines had arrived. `stateStoreSave` is the step that saves the counts, with one partition because `spark.sql.shuffle.partitions` is 1."
+  },
+  {
+   "kind": "text",
+   "md": "Now a failure. Spark calls `foreachBatch` once per micro-batch, and the commit is written only after it returns. If the function raises, the query stops with a `StreamingQueryException` and that micro-batch has no commit. Its message holds the query's random ids, so the example prints its type and condition instead.\n\nSuppose the function had already written its rows when it failed. On restart, Spark runs the same micro-batch again with the same rows and the same `batch_id`, so they're written a second time. That's **at least once**. To get **exactly once**, make the write **idempotent**: writing the same micro-batch twice must leave the same result. A simple way is to key the output by `batch_id` and overwrite it."
+  },
+  {
+   "kind": "example",
+   "id": "e3",
+   "title": "Fail, restart, and don't count twice",
+   "code": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\nspark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\nfor path in [\"/tmp/all\", \"/tmp/in\", \"/tmp/ck\"]:\n    shutil.rmtree(path, ignore_errors=True)\n\n# Every 20 seconds of logs becomes one file: five files in all.\nlogs = application_logs.withColumn(\"batch\", F.floor((F.minute(\"logged_at\") * 60 + F.second(\"logged_at\")) / 20))\nmake_batches(logs, \"/tmp/in\")\nfor path in [\"/tmp/appended\", \"/tmp/by_batch\"]:\n    shutil.rmtree(path, ignore_errors=True)\nstream = spark.readStream.schema(logs.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\ncrashed = []\n\n\ndef save(batch_df, batch_id):\n    rows = batch_df.select(\"log_id\", \"level\")\n    rows.write.mode(\"append\").json(\"/tmp/appended\")                          # adds rows every time\n    rows.write.mode(\"overwrite\").json(f\"/tmp/by_batch/batch_id={batch_id}\")  # replaces this batch's rows\n    print(\"  wrote micro-batch\", batch_id)\n    if batch_id == 2 and not crashed:\n        crashed.append(batch_id)\n        raise ConnectionError(\"sink down\")   # the connection drops after the write\n\n\ndef committed():\n    return [f for f in sorted(os.listdir(\"/tmp/ck/commits\")) if not f.startswith(\".\")]\n\n\nwriter = stream.writeStream.foreachBatch(save).option(\"checkpointLocation\", \"/tmp/ck\")\nprint(\"run 1\")\ntry:\n    run_stream(writer)\nexcept Exception as e:\n    print(\"  stopped:\", type(e).__name__, e.getCondition(), \"| sink down:\", \"sink down\" in str(e))\nprint(\"  committed:\", committed())\nprint(\"run 2, same checkpoint\")\nrun_stream(writer)\nprint(\"  committed:\", committed())\nprint(\"log lines:\", logs.count(), \"| append sink:\", spark.read.json(\"/tmp/appended\").count(),\n      \"| per-batch sink:\", spark.read.json(\"/tmp/by_batch\").count())\n",
+   "note": "Run 1 wrote micro-batch 2 to both sinks, then failed, so only 0 and 1 were committed. Run 2 ran micro-batch 2 again, then 3 and 4. The append sink now has 11 rows for 10 log lines: micro-batch 2's line twice. The per-batch sink overwrote micro-batch 2's folder, so it has each line once."
+  },
+  {
+   "kind": "text",
+   "md": "A checkpoint belongs to one query. Restarting with a changed query on the same checkpoint can go wrong in two ways.\n\n- If the new state looks the same, Spark carries on and the result is quietly wrong. Counting by `service` instead of `level` keeps a key of one text column, so Spark accepts it. The old counts per level are still in the state, under keys that no longer mean anything.\n- If the state's shape changed, Spark stops. It notices only when a micro-batch actually runs, not when the query starts.\n\nChanges that are usually fine: filters and `select`s on rows before the stateful step, and the sink of a `foreachBatch` query. Changes that break a checkpoint: different grouping keys or aggregations, a different number of stateful steps, a different watermark set-up, a different source, and changing `spark.sql.shuffle.partitions`, which is fixed when the checkpoint is created. When the logic changes, start a new checkpoint and decide how to rebuild the output."
+  },
+  {
+   "kind": "example",
+   "id": "e4",
+   "title": "Changing a query on the same checkpoint",
+   "code": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\n\ndef run_stream(writer):\n    \"\"\"Start the query, let it process every file waiting in its folder, and return it once it stops.\"\"\"\n    q = writer.trigger(availableNow=True).start()\n    q.awaitTermination()\n    return q\n\nspark.conf.set(\"spark.sql.shuffle.partitions\", \"1\")\nfor path in [\"/tmp/all\", \"/tmp/in\", \"/tmp/ck\"]:\n    shutil.rmtree(path, ignore_errors=True)\n\n# Every 20 seconds of logs becomes one file: five files in all.\nlogs = application_logs.withColumn(\"batch\", F.floor((F.minute(\"logged_at\") * 60 + F.second(\"logged_at\")) / 20))\nmake_batches(logs, \"/tmp/all\")\nfiles = sorted(os.listdir(\"/tmp/all\"))\nos.makedirs(\"/tmp/in\")\n\n\ndef deliver(names):\n    \"\"\"Copy files into the folder the stream reads, keeping their times.\"\"\"\n    for name in names:\n        shutil.copy2(f\"/tmp/all/{name}\", f\"/tmp/in/{name}\")\n\nstream = spark.readStream.schema(logs.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/in\")\n\n\ndef show(batch_df, batch_id):\n    print(\"  micro-batch\", batch_id, sorted((r[0], r[\"count\"]) for r in batch_df.collect()))\n\n\n\ndef start(*keys):\n    return run_stream(stream.groupBy(*keys).count().writeStream.outputMode(\"update\").foreachBatch(show)\n                      .option(\"checkpointLocation\", \"/tmp/ck\"))\n\n\ndeliver(files[:3])\nprint(\"count by level\")\nstart(\"level\")\ndeliver(files[3:4])\nprint(\"restart, now counting by service\")\nstart(\"service\")\nstate = spark.read.format(\"statestore\").load(\"/tmp/ck\")\nprint(\"  state now:\", sorted((r.key[0], r.value[0]) for r in state.collect()))\ndeliver(files[4:])\nprint(\"restart, now counting by level and service\")\ntry:\n    start(\"level\", \"service\")\nexcept Exception as e:\n    print(\"  stopped:\", type(e).__name__, e.getCondition())\n    print(\"  key schema doesn't match:\", \"STATE_STORE_KEY_SCHEMA_NOT_COMPATIBLE\" in str(e))\n",
+   "note": "Counting by `service` carried on from a state that held a count per level, and nothing complained. The state now mixes INFO, a count of levels from the first run, with counts of services: a key that no longer means anything sits next to the new ones. Adding a second key changed the shape of the state, and the next micro-batch failed with `STATE_STORE_KEY_SCHEMA_NOT_COMPATIBLE` inside the stream's error."
+  },
+  {
+   "kind": "text",
+   "md": "On a real cluster the checkpoint lives on shared, durable storage such as a cloud bucket, so a query restarted on another machine finds it. This environment keeps it under `/tmp` on one machine, but what a restart reads, re-runs and refuses is the same."
+  }
+ ],
+ "challenges": [
+  "PS-L072-C1",
+  "PS-L072-C2"
+ ],
+ "concept": [
+  {
+   "id": "k1",
+   "prompt": "A query read three files and stopped. Two new files arrive, and you start it again with the same `checkpointLocation`. What does it read?",
+   "choices": [
+    "All five files again",
+    "Only the two new files",
+    "Nothing: a checkpoint can only be used once",
+    "The last file it read, then the new ones"
+   ],
+   "answer": 1,
+   "why": "The checkpoint records which files were read and committed, so the restart skips those and plans micro-batches only for the new files."
+  },
+  {
+   "id": "k2",
+   "prompt": "`foreachBatch` wrote micro-batch 7 to a table, then raised an error. You restart the query from its checkpoint. What happens?",
+   "choices": [
+    "Micro-batch 7 is skipped",
+    "Micro-batch 7 runs again with the same rows and the same `batch_id`",
+    "The query starts again from micro-batch 0",
+    "Spark undoes the write first"
+   ],
+   "answer": 1,
+   "why": "Micro-batch 7 had an offset but no commit, so Spark runs it again with exactly the same input. If the write isn't idempotent, its rows land twice."
+  },
+  {
+   "id": "k3",
+   "prompt": "Which change can you usually make and still restart from the same checkpoint?",
+   "choices": [
+    "Grouping by a different column",
+    "Changing `spark.sql.shuffle.partitions`",
+    "Adding a filter before the aggregation",
+    "Adding a second aggregation"
+   ],
+   "answer": 2,
+   "why": "A filter before the stateful step doesn't change the state. Different keys, a second aggregation and a different number of shuffle partitions all change or split the state."
+  }
+ ],
+ "review": [
+  "A query with a `checkpointLocation` can be stopped and started again. It skips input it has already committed and carries its state on.",
+  "`offsets/` records what each micro-batch will read before it runs; `commits/` records that it finished. A micro-batch with no commit runs again on restart, with the same input.",
+  "A failure in `foreachBatch` stops the query with a `StreamingQueryException`. Print its type or condition: its message has random ids.",
+  "A re-run micro-batch is written twice to an append sink. Key the output by `batch_id` and overwrite it to get exactly-once results.",
+  "`spark.read.format(\"statestore\")` reads a query's state, and `format(\"state-metadata\")` lists its stateful steps.",
+  "Changing keys, aggregations, stateful steps or shuffle partitions breaks a checkpoint, sometimes silently. Start a new checkpoint when the logic changes."
+ ],
+ "practice": [
+  "PS-Q0356",
+  "PS-Q0357",
+  "PS-Q0358",
+  "PS-Q0359",
+  "PS-Q0360"
+ ]
+}

@@ -1,0 +1,80 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "pickup_zone_id",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "count",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "stages",
+     "type": "int",
+     "nullable": false
+    },
+    {
+     "name": "tasks",
+     "type": "int",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     16,
+     2,
+     2,
+     5
+    ],
+    [
+     4,
+     3,
+     2,
+     5
+    ],
+    [
+     10,
+     2,
+     2,
+     5
+    ],
+    [
+     5,
+     2,
+     2,
+     5
+    ],
+    [
+     22,
+     2,
+     2,
+     5
+    ],
+    [
+     1,
+     1,
+     2,
+     5
+    ]
+   ],
+   "row_count": 6
+  }
+ },
+ "hidden": [
+  "the full practice trips table",
+  "trips with no pickup zone",
+  "a trip recorded twice",
+  "every trip starting in the same zone",
+  "an empty trips table"
+ ]
+}

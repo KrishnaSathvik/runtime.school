@@ -1,0 +1,24 @@
+{
+ "id": "PS-Q0406",
+ "kind": "predict",
+ "slug": "which-line-fails",
+ "lesson": "PS-L082",
+ "role": "foundation",
+ "format": "concept_or_trace",
+ "difficulty": "medium",
+ "minutes": 7,
+ "title": "Which line fails?",
+ "prompt": "A new carrier's feed has one mistyped id and one missing id. This program tries four steps and says, for each, whether building the DataFrame failed, the action failed, or it worked. What does it print? Type each line on its own line.",
+ "program": "from pyspark.sql import functions as F\nfrom pyspark.errors import PySparkException\n\nfeed = spark.createDataFrame(\n    [(\"E0000101\", \"SH0002\"), (\"E00001O2\", \"SH0003\"), (None, \"SH0004\")],\n    \"event_id STRING, shipment_id STRING\",\n)\n\n\ndef numbered():\n    return feed.select(\"event_id\", F.substring(\"event_id\", 2, 20).cast(\"int\").alias(\"event_no\"))\n\n\ndef attempt(name, build, action):\n    try:\n        df = build()\n    except PySparkException as e:\n        print(name, \"build\", e.getCondition())\n        return\n    try:\n        print(name, \"ok\", action(df))\n    except PySparkException as e:\n        print(name, \"action\", e.getCondition())\n\n\nattempt(\"A\", lambda: feed.select(\"event_id\", \"shipment\"), lambda df: df.count())\nattempt(\"B\", numbered, lambda df: df.count())\nattempt(\"C\", numbered, lambda df: df.filter(F.col(\"event_id\").isNull()).count())\nattempt(\"D\", numbered, lambda df: df.filter(F.col(\"event_no\") > 100).count())\n",
+ "dataset": {
+  "id": "PS-D08",
+  "version": "1.0.0"
+ },
+ "edition": "lesson",
+ "hints": [
+  "Spark checks column names as soon as a DataFrame is built. Which step names a column `feed` doesn't have?",
+  "Value errors wait for an action, and only for the values the action needs. Does counting rows need `event_no`?",
+  "A missing id casts to NULL without an error. Which step's filter has to read `event_no` for every row?"
+ ],
+ "explanation": "Step A names `shipment`, which isn't a column, so `select` fails while the DataFrame is built, with `UNRESOLVED_COLUMN.WITH_SUGGESTION`; the action never runs. B builds fine and counts 3: counting rows doesn't need `event_no`, so Spark never runs the cast. C is the same: its filter reads only `event_id`, so the cast is still skipped and the one missing id is counted. D filters on `event_no`, so Spark must cast every id, and `00001O2` fails with `CAST_INVALID_INPUT`. A missing id isn't the problem: casting NULL gives NULL. So a step that only counts can pass on data that a write would reject."
+}

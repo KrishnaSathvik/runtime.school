@@ -12,18 +12,21 @@ import { bankQuestions } from "@/content/question-bank";
 import { rtSectionHrefs } from "@/features/rt/entry";
 import dynamic from "next/dynamic";
 import { PY_COMPARE_HREF, PY_DATASETS_HREF, PY_DBLAB_HREF, PY_PERF_HREF, PY_PLAYGROUND_HREF } from "@/content/python-v2/paths";
+import { PS_DATASETS_HREF, PS_HOME, PS_PLAYGROUND_HREF, PS_PRACTICE, PS_PROJECTS } from "@/content/pyspark/paths";
 import { useHydrated, useLearning } from "@/lib/learning-state";
 import { sqlLessonHref } from "@/platform/sql-lesson-href";
 import { useTheme } from "@/lib/theme";
 import { Keys } from "./Keys";
+import { ToolReturn } from "@/features/pyspark/ToolReturn";
 
 export type Crumb = { label: string; href?: string };
 
 /** Python search loads the course only when it's opened, so SQL pages never carry Python content. */
 const PythonPalette = dynamic(() => import("./PythonPalette").then((m) => m.PythonPalette), { ssr: false });
+const PySparkPalette = dynamic(() => import("@/features/pyspark/Palette").then((m) => m.PySparkPalette), { ssr: false });
 type Section = "learn" | "practice" | "projects" | "tools";
 /** Which subject's navigation, tools and search the shell shows. SQL is the default. */
-export type ShellSubject = "sql" | "python";
+export type ShellSubject = "sql" | "python" | "pyspark";
 
 const NAV_FALLBACK: { id: Exclude<Section, "tools">; label: string; href: string }[] = [
   { id: "learn", label: "Learn", href: "/sql" },
@@ -39,6 +42,25 @@ export const PYTHON_NAV: { id: Exclude<Section, "tools">; label: string; href: s
   { id: "practice", label: "Practice", href: "/python/practice" },
   { id: "projects", label: "Projects", href: "/python/projects" },
 ];
+
+/** PySpark navigation (hidden behind NEXT_PUBLIC_PYSPARK; docs/pyspark/plan.md §7). */
+export const PYSPARK_NAV: { id: Exclude<Section, "tools">; label: string; href: string }[] = [
+  { id: "learn", label: "Learn", href: PS_HOME },
+  { id: "practice", label: "Practice", href: PS_PRACTICE },
+  { id: "projects", label: "Projects", href: PS_PROJECTS },
+];
+
+/** PySpark's tools. Tools that don't work yet are listed as unavailable, never as links. */
+export const PYSPARK_TOOLS: ToolItem[] = [
+  { href: PS_PLAYGROUND_HREF, label: "Playground", purpose: "Run PySpark on real Spark with a dataset loaded." },
+  { href: PS_DATASETS_HREF, label: "Datasets", purpose: "Tables, columns and relationships, with real rows." },
+  { href: "/pyspark/tools/spark-sql", label: "Spark SQL Lab", purpose: "Run SQL in a clean Spark workspace." },
+  { href: "/pyspark/tools/query-plans", label: "Query Plans & Performance", purpose: "Inspect actual plans and measure controlled experiments." },
+  { href: "/pyspark/tools/compare", label: "Compare Approaches", purpose: "Compare complete results, schemas and Spark plans." },
+  { href: "/pyspark/tools/pipeline-streaming", label: "Pipeline & Streaming Lab", purpose: "Explore real stage outputs, event replay and recovery." },
+];
+
+type ToolItem = { href: string; label: string; purpose: string; unavailable?: boolean };
 
 /** Python's tools menu (plan §7). */
 export const PYTHON_TOOLS = [
@@ -84,6 +106,7 @@ export function Shell({
   const projectsHref = useLearning((s) => rtSectionHrefs(s).projects);
   const nav = useMemo(() => {
     if (subject === "python") return PYTHON_NAV;
+    if (subject === "pyspark") return PYSPARK_NAV;
     if (!ready) return NAV_FALLBACK;
     const hrefs = { learn: learnHref, practice: practiceHref, projects: projectsHref };
     return NAV_FALLBACK.map((n) => ({ ...n, href: hrefs[n.id] }));
@@ -144,7 +167,7 @@ export function Shell({
                   <button type="button" className={`rx-tools-btn ${section === "tools" ? "on" : ""}`} aria-expanded={tools} aria-haspopup="true" onClick={() => setTools((t) => !t)}>
                     Tools <ChevronDown size={13} aria-hidden="true" />
                   </button>
-                  {tools && <ToolList onPick={() => setTools(false)} className="rx-tools-menu" items={subject === "python" ? PYTHON_TOOLS : TOOLS} />}
+                  {tools && <ToolList onPick={() => setTools(false)} className="rx-tools-menu" items={subject === "python" ? PYTHON_TOOLS : subject === "pyspark" ? PYSPARK_TOOLS : TOOLS} />}
                 </div>
               )}
             </nav>
@@ -165,26 +188,33 @@ export function Shell({
           </button>
         </div>
       </header>
-      <main id="main-content" className="rx-main" tabIndex={-1}>{children}</main>
+      <main id="main-content" className="rx-main" tabIndex={-1}>{subject === "pyspark" && <ToolReturn />}{children}</main>
       {status && status.length > 0 && (
         <footer className="rx-status" aria-label="Status">
           {status.map((s, i) => <span key={i} className={i === status.length - 1 && status.length > 2 ? "push" : undefined}>{s}</span>)}
         </footer>
       )}
-      {palette && (subject === "python" ? <PythonPalette onClose={() => setPalette(false)} /> : <Palette onClose={() => setPalette(false)} />)}
+      {palette && (subject === "python" ? <PythonPalette onClose={() => setPalette(false)} /> : subject === "pyspark" ? <PySparkPalette onClose={() => setPalette(false)} /> : <Palette onClose={() => setPalette(false)} />)}
     </div>
   );
 }
 
-function ToolList({ onPick, className = "", items = TOOLS }: { onPick: () => void; className?: string; items?: { href: string; label: string; purpose: string }[] }) {
+function ToolList({ onPick, className = "", items = TOOLS }: { onPick: () => void; className?: string; items?: ToolItem[] }) {
   return (
     <ul className={`rx-toollist ${className}`}>
       {items.map((t) => (
-        <li key={t.href}>
-          <Link href={t.href} onClick={onPick}>
-            <span className="t">{t.label}</span>
-            <span className="p">{t.purpose}</span>
-          </Link>
+        <li key={t.href || t.label}>
+          {t.unavailable ? (
+            <span className="rx-toollist-off" aria-disabled="true">
+              <span className="t">{t.label}</span>
+              <span className="p">{t.purpose}</span>
+            </span>
+          ) : (
+            <Link href={t.href} onClick={onPick}>
+              <span className="t">{t.label}</span>
+              <span className="p">{t.purpose}</span>
+            </Link>
+          )}
         </li>
       ))}
     </ul>

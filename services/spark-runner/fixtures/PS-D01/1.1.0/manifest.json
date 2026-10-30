@@ -1,0 +1,115 @@
+{
+  "dataset_id": "PS-D01",
+  "version": "1.1.0",
+  "title": "Retail Commerce",
+  "source": "synthetic",
+  "licence": {
+    "status": "ours",
+    "note": "Runtime-owned deterministic synthetic data."
+  },
+  "seed": 20261023,
+  "schemas": {
+    "customers": "customer_id STRING, name STRING, city STRING, segment STRING, signup_date DATE",
+    "products": "product_id STRING, name STRING, category STRING, unit_price DECIMAL(10,2), active BOOLEAN",
+    "orders": "order_id STRING, customer_id STRING, order_date DATE, status STRING, channel STRING, total DECIMAL(10,2)",
+    "order_items": "order_id STRING, line_no INT, product_id STRING, quantity INT, unit_price DECIMAL(10,2)"
+  },
+  "keys": {
+    "primary": {
+      "customers": [
+        "customer_id"
+      ],
+      "products": [
+        "product_id"
+      ],
+      "orders": [
+        "order_id"
+      ],
+      "order_items": [
+        "order_id",
+        "line_no"
+      ]
+    },
+    "foreign": {
+      "orders.customer_id": "customers.customer_id",
+      "order_items.order_id": "orders.order_id",
+      "order_items.product_id": "products.product_id"
+    }
+  },
+  "rules": [
+    "status is one of placed, paid, shipped, delivered, cancelled, refunded, always lowercase.",
+    "total is the sum of quantity \u00d7 unit_price over the order's lines, in exact decimals.",
+    "total is missing (null) for some placed orders whose basket wasn't priced yet.",
+    "unit_price on an order line is the price at the time of the order, which may differ from today's product price.",
+    "The practice edition contains a few rows delivered twice by the ingestion job (exact duplicates); removing them is taught in the deduplication lesson.",
+    "The project edition is a raw export with problems to clean: statuses outside the six (wrong case, unknown words, missing), negative or missing totals, missing order dates, and dates outside 2026."
+  ],
+  "editions": {
+    "lesson": {
+      "customers": {
+        "file": "lesson/customers.csv",
+        "rows": 6,
+        "sha256": "0a6c4070b0213adc0aa5411830968543b10fcd2fa8e2df7eb9e54efbf9a30bb7"
+      },
+      "products": {
+        "file": "lesson/products.csv",
+        "rows": 8,
+        "sha256": "f9392a89e4b659ed954b0e675707ab9e7b476970d8c66b326203a1501323488a"
+      },
+      "orders": {
+        "file": "lesson/orders.csv",
+        "rows": 12,
+        "sha256": "27baa61dd003de204d7df48fdd7b4108129200bef82a8b110b9b5974aff8e025"
+      },
+      "order_items": {
+        "file": "lesson/order_items.csv",
+        "rows": 32,
+        "sha256": "f53e673fee35509098f09db01b73171f2d2f7ef422b2bbc3e75f2a5b6ccb2a0b"
+      }
+    },
+    "practice": {
+      "customers": {
+        "file": "practice/customers.csv",
+        "rows": 300,
+        "sha256": "fe38eba688b054a2618ac9ed4f16750517f47aaff45b8088aff1ef2e73229f0b"
+      },
+      "products": {
+        "file": "practice/products.csv",
+        "rows": 20,
+        "sha256": "c6f589b3b9e9085457eb24f00bd727896c598e8598e1494bbe92ce82cb408d7e"
+      },
+      "orders": {
+        "file": "practice/orders.csv",
+        "rows": 2006,
+        "sha256": "e4aebe34dc20fbb9b8ca549ddb5d951f8199b569b8625007638d561d55fb3117"
+      },
+      "order_items": {
+        "file": "practice/order_items.csv",
+        "rows": 4961,
+        "sha256": "d9e1aceaa1c5093e1387221fe9d4051a731ecf89cdb745c437ed05c66afd4c38"
+      }
+    },
+    "project": {
+      "customers": {
+        "file": "project/customers.csv",
+        "rows": 400,
+        "sha256": "247e4e7ac30ef3e81a1795fa2a2813fc0a44909fcc1cc9aa6ff53e8f97398fec"
+      },
+      "products": {
+        "file": "project/products.csv",
+        "rows": 20,
+        "sha256": "445f78312b0a419bcbc691a6a090d676d4097df16b4ec3391b2170ed4596b6e6"
+      },
+      "orders": {
+        "file": "project/orders.csv",
+        "rows": 3012,
+        "sha256": "fa95447dd117f2a4a4f0f5cf262b0049740147bab3b5b31354a7f3276069f2b0"
+      },
+      "order_items": {
+        "file": "project/order_items.csv",
+        "rows": 7477,
+        "sha256": "d9c969ec6307a130658b19b78e93946641ce59de6ef4698a839e34447fe6704f"
+      }
+    }
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0201",
+  "slug": "quantities-in-each-basket",
+  "lesson": "PS-L041",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Quantities in each basket",
+  "dataset": {
+    "id": "PS-D06",
+    "version": "1.0.0"
+  },
+  "prompt": "The checkout team wants each basket's quantities at a glance. Write `solve(checkout_events)` so it returns, for every checkout step, the `qty` of each item and whether every item was bought just once.",
+  "rules": [
+    "Return `event_id`, `step`, `qtys` and `single_units_only`, in that order.",
+    "`qtys` lists each item's `qty` in basket order, repeats included.",
+    "`single_units_only` is true when every item has a `qty` of 1. An empty basket gives an empty `qtys` and true.",
+    "A missing `items` gives missing values in both columns. Keep one row per checkout step, duplicates included."
+  ],
+  "hints": [
+    "`F.transform(\"items\", lambda x: ...)` gives one value per item, in the same order. `x[\"qty\"]` is the item's quantity.",
+    "One yes-or-no answer about all items is `F.forall` or `F.exists`. Which one means \"every item\"?",
+    "Don't explode: the result keeps one row per checkout step, with the quantities still in an array."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "checkout_events"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(checkout_events):\n    # Return event_id, step, qtys and single_units_only for each checkout step.\n    return checkout_events\n",
+  "output": {
+    "columns": [
+      "event_id",
+      "step",
+      "qtys",
+      "single_units_only"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Both columns work on the array in place, so the row count never changes: `F.transform(\"items\", lambda x: x[\"qty\"])` for `qtys` and `F.forall(\"items\", lambda x: x[\"qty\"] == 1)` for `single_units_only`. `forall` is true for an empty basket, because no item fails, which is what the rules ask for. With `F.exists` instead, a basket with one single item and one double would wrongly count as single units. Exploding `items` and grouping back would also work in principle, but it changes the number of rows and loses the basket order you have to keep."
+}

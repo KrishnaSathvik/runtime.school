@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0157",
+  "slug": "campaign-reach-on-mobile",
+  "lesson": "PS-L032",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Campaign reach on mobile",
+  "dataset": {
+    "id": "PS-D12",
+    "version": "1.0.0"
+  },
+  "prompt": "Advertisers pay for reach: how many different people saw an ad, not how often. Write `solve(impressions)` so it returns, for each campaign, its impressions, the different users it reached, and the different users it reached on mobile.",
+  "rules": [
+    "`impressions` counts every impression of the campaign.",
+    "`users` counts the different `user_id` values; `mobile_users` counts the different users with at least one impression whose `device` is `mobile`. A missing user isn't counted.",
+    "Every campaign in `impressions` gets a row; a campaign never shown on mobile has `mobile_users` 0.",
+    "Return `campaign_id`, `impressions`, `users` and `mobile_users`."
+  ],
+  "hints": [
+    "Different users is `F.countDistinct(\"user_id\")`.",
+    "`F.when(F.col(\"device\") == \"mobile\", F.col(\"user_id\"))` is the user on mobile rows and missing elsewhere.",
+    "`F.countDistinct` skips missing values, so wrap that `when` in it. Don't filter to mobile first, or campaigns with no mobile impressions disappear."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "impressions"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(impressions):\n    # Return campaign_id, impressions, users and mobile_users.\n    return impressions\n",
+  "output": {
+    "columns": [
+      "campaign_id",
+      "impressions",
+      "users",
+      "mobile_users"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "A conditional aggregate works with distinct counts too. `F.when(F.col(\"device\") == \"mobile\", F.col(\"user_id\"))` keeps the user on mobile rows and is missing elsewhere, and `F.countDistinct` skips missing values, so `F.countDistinct(F.when(F.col(\"device\") == \"mobile\", F.col(\"user_id\"))).alias(\"mobile_users\")` counts each mobile user once, and gives 0 for a campaign never shown on mobile. Together with `F.count(\"*\")` and `F.countDistinct(\"user_id\")` it all goes in one `groupBy(\"campaign_id\").agg(...)`. Summing a 1/0 flag would count mobile impressions, not people."
+}

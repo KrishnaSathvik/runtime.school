@@ -1,0 +1,35 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "account_id",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "ACC-0006"
+    ],
+    [
+     "ACC-0007"
+    ]
+   ],
+   "row_count": 2
+  }
+ },
+ "hidden": [
+  "the full practice CRM tables",
+  "accounts known only because the change feed added them",
+  "contacts and invoices for accounts the CRM doesn't know",
+  "contacts and invoices with no account id",
+  "every known account has a contact or an invoice"
+ ]
+}

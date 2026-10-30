@@ -1,0 +1,49 @@
+{
+ "id": "PS-L007-C2",
+ "slug": "two-test-orders",
+ "lesson": "PS-L007",
+ "difficulty": "easy",
+ "minutes": 8,
+ "title": "Two test orders",
+ "dataset": {
+  "id": "PS-D01",
+  "version": "1.1.0"
+ },
+ "prompt": "A teammate needs two made-up orders to test a report with. Write `solve()` so it returns them as a DataFrame with exactly the same columns and types as `orders`.",
+ "rules": [
+  "Columns, in order: `order_id`, `customer_id`, `order_date` (date), `status`, `channel`, `total` (decimal(10,2)). The others are text.",
+  "Order `T0001`: customer `C0001`, 1 July 2026, `placed`, `web`, and no total yet: the total is missing.",
+  "Order `T0002`: customer `C0002`, 2 July 2026, `paid`, `app`, total 45.50."
+ ],
+ "hints": [
+  "One schema string names all six columns: `\"order_id STRING, ..., total DECIMAL(10,2)\"`.",
+  "A date is `date(2026, 7, 1)` and an exact amount is `Decimal(\"45.50\")`. Both are imported in the starter.",
+  "A missing value is `None`."
+ ],
+ "entry": "solve",
+ "inputs": [],
+ "starter": "from datetime import date\nfrom decimal import Decimal\n\n\ndef solve():\n    # Build two test orders with the same columns and types as orders.\n    rows = []\n    return spark.createDataFrame(rows, \"order_id STRING\")\n",
+ "output": {
+  "columns": [
+   "order_id",
+   "customer_id",
+   "order_date",
+   "status",
+   "channel",
+   "total"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "edition": "lesson"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 45,
+  "check_timeout_s": 90,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

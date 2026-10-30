@@ -1,0 +1,50 @@
+{
+  "id": "PS-Q0430",
+  "slug": "files-each-query-opens",
+  "lesson": "PS-L086",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Files each query opens",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "Billing's dashboard runs four queries on the invoices table. Fix `write_table` so the table is partitioned by status with one file per status, and finish `files_opened` so it reports how many data files each query's read opens.",
+  "rules": [
+    "Partition the table by `status`, one file per status; invoices with no status are a partition of their own.",
+    "One row per query in `QUERIES`: the query text and the number of data files a Delta read with that condition opens.",
+    "Don't change `QUERIES` or `solve`."
+  ],
+  "hints": [
+    "Run the starter and count the files: the feed's three parts each write a file for every status they hold.",
+    "Put each status's invoices in one partition before the write.",
+    "`spark.read.format(\"delta\").load(path).where(query).inputFiles()` lists the files that read would open, after partition pruning and min/max skipping."
+  ],
+  "explanation": "`repartition(\"status\")` puts every status's invoices in one partition, so `partitionBy(\"status\")` writes one file per status. Then `len(table.where(query).inputFiles())` counts what each read opens. A condition on `status` prunes to one folder. `total_amount >= 250` keeps only files whose largest amount is at least 250, and the paid query does both, so it can open nothing at all when the paid invoices are small. Dates skip the same way by each file's latest `invoice_date`. Counting rows with `count()` answers a different question: how many invoices match, not how many files are read.",
+  "entry": "solve",
+  "inputs": [
+    "invoices"
+  ],
+  "starter": "import shutil\n\nQUERIES = [\n    \"status = 'paid'\",\n    \"total_amount >= 250\",\n    \"status = 'paid' AND total_amount >= 250\",\n    \"invoice_date >= '2026-01-01'\",\n]\n\n\ndef write_table(invoices, path):\n    # Partition by status, one file per status.\n    invoices.write.format(\"delta\").partitionBy(\"status\").save(path)\n\n\ndef files_opened(path):\n    # One row per query: the data files a read with that condition opens.\n    return spark.createDataFrame([(query, 0) for query in QUERIES], \"query STRING, files INT\")\n\n\ndef solve(invoices):\n    path = \"/tmp/billing/by_status\"\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty folder on every run\n    feed = invoices.repartition(3)  # the feed hands the invoices over in three parts\n    write_table(feed, path)\n    return files_opened(path)\n",
+  "output": {
+    "columns": [
+      "query",
+      "files"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

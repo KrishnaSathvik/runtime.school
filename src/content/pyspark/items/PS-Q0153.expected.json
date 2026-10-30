@@ -1,0 +1,63 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "lines",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "priced_lines",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "orders",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "products",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "units",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "largest_quantity",
+     "type": "int",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     32,
+     32,
+     12,
+     8,
+     75,
+     3
+    ]
+   ],
+   "row_count": 1
+  }
+ },
+ "hidden": [
+  "the full practice order lines",
+  "lines with a missing order, product, quantity or price",
+  "the same line delivered twice",
+  "lines that all have a missing quantity",
+  "a single line",
+  "an empty table"
+ ]
+}

@@ -1,0 +1,249 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "encounter_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "encounter_class",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "start_time",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "end_time",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "temperature_c",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "_source_file",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "_batch_id",
+     "type": "int",
+     "nullable": true
+    },
+    {
+     "name": "problem",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "ENC000003",
+     "ambulatory",
+     "2025-12-20T09:00:00",
+     "2025-12-20T09:20:00",
+     98.8,
+     "visits_2025.jsonl",
+     1,
+     "temperature out of range"
+    ],
+    [
+     "ENC000009",
+     "Emergency",
+     "2026-02-02T08:10:00",
+     "2026-02-02T09:40:00",
+     37.0,
+     "visits_2026.jsonl",
+     2,
+     "unknown class"
+    ],
+    [
+     "ENC000010",
+     "ambulatory",
+     "2026-02-04T10:30:00",
+     "2026-02-04T10:15:00",
+     36.5,
+     "visits_2026.jsonl",
+     2,
+     "times out of order"
+    ],
+    [
+     "ENC000012",
+     "urgent_care",
+     "2026-02-06T15:00:00",
+     "2026-02-06T15:40:00",
+     99.1,
+     "visits_2026.jsonl",
+     2,
+     "unknown class"
+    ]
+   ],
+   "row_count": 4,
+   "inputs": {
+    "encounters": [
+     [
+      "ENC000001",
+      "PAT00003",
+      "PRV0004",
+      "emergency",
+      "2025-12-03T03:00:00",
+      "2025-12-03T05:20:00",
+      "Asthma",
+      "{\"heart_rate\":96,\"systolic\":115,\"diastolic\":72,\"temperature_c\":36.2}",
+      "[\"J45.909\",\"E78.5\",\"J06.9\"]",
+      null
+     ],
+     [
+      "ENC000002",
+      "PAT00002",
+      "PRV0001",
+      "wellness",
+      "2025-12-18T11:15:00",
+      "2025-12-18T12:00:00",
+      "General adult exam",
+      "{\"heart_rate\":104,\"systolic\":107,\"diastolic\":65,\"temperature_c\":37.2}",
+      "[\"Z00.00\",\"E78.5\"]",
+      null
+     ],
+     [
+      "ENC000003",
+      "PAT00001",
+      "PRV0002",
+      "ambulatory",
+      "2025-12-20T09:00:00",
+      "2025-12-20T09:20:00",
+      "Acid reflux",
+      "{\"heart_rate\":92,\"systolic\":144,\"diastolic\":66,\"temperature_c\":98.8}",
+      "[\"K21.9\"]",
+      null
+     ],
+     [
+      "ENC000004",
+      "PAT00002",
+      "PRV0002",
+      "ambulatory",
+      "2026-01-13T13:45:00",
+      "2026-01-13T14:05:00",
+      "Acid reflux",
+      "{\"heart_rate\":91,\"systolic\":100,\"diastolic\":55,\"temperature_c\":36.3}",
+      "[\"K21.9\"]",
+      "home"
+     ],
+     [
+      "ENC000005",
+      "PAT00005",
+      "PRV0003",
+      "ambulatory",
+      "2026-01-16T10:30:00",
+      "2026-01-16T10:45:00",
+      "Urinary tract infection",
+      "{\"heart_rate\":102,\"systolic\":131,\"diastolic\":91,\"temperature_c\":null}",
+      "[\"N39.0\",\"S93.401A\"]",
+      "home"
+     ],
+     [
+      "ENC000006",
+      "PAT00006",
+      "PRV0001",
+      "inpatient",
+      "2026-01-17T11:45:00",
+      "2026-01-21T14:45:00",
+      "Ankle sprain",
+      "{\"heart_rate\":96,\"systolic\":125,\"diastolic\":64,\"temperature_c\":37.3}",
+      "[\"S93.401A\",\"J06.9\"]",
+      "left_against_advice"
+     ],
+     [
+      "ENC000007",
+      "PAT00001",
+      "PRV0005",
+      "telehealth",
+      "2026-01-30T14:30:00",
+      "2026-01-30T15:30:00",
+      "Urinary tract infection",
+      null,
+      "[\"N39.0\"]",
+      null
+     ],
+     [
+      "ENC000008",
+      "PAT00004",
+      "PRV0005",
+      "telehealth",
+      "2026-01-31T10:45:00",
+      "2026-01-31T11:30:00",
+      "Low back pain",
+      null,
+      "[\"M54.5\"]",
+      null
+     ],
+     [
+      "ENC000009",
+      "PAT00003",
+      "PRV0004",
+      "Emergency",
+      "2026-02-02T08:10:00",
+      "2026-02-02T09:40:00",
+      "Asthma",
+      "{\"heart_rate\":99,\"systolic\":120,\"diastolic\":78,\"temperature_c\":37.0}",
+      "[\"J45.909\"]",
+      null
+     ],
+     [
+      "ENC000010",
+      "PAT00005",
+      "PRV0002",
+      "ambulatory",
+      "2026-02-04T10:30:00",
+      "2026-02-04T10:15:00",
+      "Acid reflux",
+      "{\"heart_rate\":80,\"systolic\":120,\"diastolic\":78,\"temperature_c\":36.5}",
+      "[\"K21.9\"]",
+      "home"
+     ],
+     [
+      "ENC000011",
+      "PAT00006",
+      "PRV0001",
+      "inpatient",
+      "2026-02-05T07:00:00",
+      "2026-02-07T12:00:00",
+      "Asthma",
+      "{\"heart_rate\":118,\"systolic\":120,\"diastolic\":78,\"temperature_c\":42.0}",
+      "[\"J45.909\"]",
+      "home"
+     ],
+     [
+      "ENC000012",
+      "PAT00002",
+      "PRV0003",
+      "urgent_care",
+      "2026-02-06T15:00:00",
+      "2026-02-06T15:40:00",
+      "Ankle sprain",
+      "{\"heart_rate\":80,\"systolic\":120,\"diastolic\":78,\"temperature_c\":99.1}",
+      "[\"S93.401A\"]",
+      null
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice visits, with a few temperatures recorded in Fahrenheit",
+  "missing classes and end times, a visit that ends when it starts, temperatures at and just past the limits, and a visit that breaks two rules"
+ ]
+}

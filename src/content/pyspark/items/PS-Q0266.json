@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0266",
+  "slug": "age-bands-one-hot",
+  "lesson": "PS-L054",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Age bands as one-hot vectors",
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0"
+  },
+  "prompt": "A model needs each member's age band as numbers, with no band hidden. Write `solve(users)` so it returns `user_id`, `age_band` and `age_vec`: a one-hot array with one position for every age band.",
+  "rules": [
+    "Number the bands most common first, with ties in alphabetical order. Position 0 of `age_vec` is the most common band, and so on.",
+    "`age_vec` has 1.0 at the member's band and 0.0 everywhere else. Every band has a position, the last one too.",
+    "Members with no `age_band` are left out and aren't counted.",
+    "Return `user_id`, `age_band` and `age_vec` (an array of doubles), in that order."
+  ],
+  "hints": [
+    "`StringIndexer` numbers the bands in exactly this order, and `OneHotEncoder` turns each number into a vector.",
+    "By default `OneHotEncoder` drops the last band and shows it as all zeros. `dropLast=False` keeps a position for it.",
+    "Filter out the missing bands before you fit, and finish with `vector_to_array` to get a plain array."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "users"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.ml import Pipeline\nfrom pyspark.ml.feature import StringIndexer, OneHotEncoder\nfrom pyspark.ml.functions import vector_to_array\n\n\ndef solve(users):\n    # Return user_id, age_band and age_vec: one position per age band.\n    return users\n",
+  "output": {
+    "columns": [
+      "user_id",
+      "age_band",
+      "age_vec"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 60,
+    "check_timeout_s": 120,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Filter to members with a band, then fit a two-stage pipeline: `StringIndexer(inputCol=\"age_band\", outputCol=\"age_index\")` and `OneHotEncoder(inputCol=\"age_index\", outputCol=\"age_onehot\", dropLast=False)`, and select `vector_to_array(\"age_onehot\")`. In the sample, 25-34 has two members, so it gets index 0; the other four bands have one each and follow alphabetically. With the default `dropLast=True` the vector has one position fewer, and 55+ would be all zeros. That's fine for many models, but it isn't what this table asks for. The missing bands have to go before fitting: the indexer stops on a NULL by default, and `handleInvalid=\"keep\"` would keep those members with an extra position."
+}

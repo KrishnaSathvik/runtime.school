@@ -1,0 +1,66 @@
+{
+  "id": "PS-P03-M3",
+  "slug": "track-learner-progress",
+  "project": "PS-P03",
+  "milestone": "PS-P03.m3",
+  "difficulty": "medium",
+  "minutes": 35,
+  "title": "Track each learner's progress through a course",
+  "dataset": {
+    "id": "PS-D11",
+    "version": "1.0.0"
+  },
+  "prompt": "An attempt names a lesson, and `lessons` says which course each lesson belongs to. The team wants one line per learner per course they have started: how hard they tried and how far they got.\n\nWrite `learner_progress(attempts, lessons)`. It starts from your `clean_attempts(attempts)`, adds each lesson's `course_id`, and returns one row per learner and course.",
+  "rules": [
+    "Return `learner_id`, `course_id`, `attempts`, `lessons_attempted`, `lessons_passed` and `last_activity`, in that order.",
+    "`attempts` is how many clean attempts the learner made in the course, retries and abandoned tries included.",
+    "`lessons_attempted` is how many different lessons they tried. `lessons_passed` is how many different lessons they passed: a lesson passed twice is still one lesson.",
+    "`last_activity` is the day of their latest attempt in the course, as a date.",
+    "An attempt at a lesson that isn't in `lessons` belongs to no course: leave it out."
+  ],
+  "hints": [
+    "Join `lessons.select(\"lesson_id\", \"course_id\")` on `lesson_id`. An `inner` join drops lessons the catalogue doesn't know.",
+    "`groupBy(\"learner_id\", \"course_id\").agg(...)`: `F.count(\"*\")` for attempts, `F.countDistinct(\"lesson_id\")` for lessons tried, `F.max(\"activity_date\")` for the last day.",
+    "For lessons passed, count distinct lessons only where `passed` is true: `F.when(F.col(\"passed\"), F.col(\"lesson_id\"))` is the lesson on a pass and missing otherwise, and `countDistinct` skips missing values."
+  ],
+  "explanation": "The inner join gives every clean attempt its course and drops attempts at lessons nobody can place. Grouping by learner and course then turns attempts into progress. Counting distinct lessons is what stops retries from inflating it: three tries at one lesson are three attempts but one lesson attempted, and a lesson passed, then retaken to improve the score, is still one lesson passed. `F.when(passed, lesson_id)` keeps the lesson only on passing attempts, so `countDistinct` of it counts lessons passed. Because the input is `clean_attempts`, the export's copies and rows after the as-of date are already gone.",
+  "entry": "learner_progress",
+  "inputs": [
+    "attempts",
+    "lessons"
+  ],
+  "file": "pipeline.py",
+  "append": "\n\ndef learner_progress(attempts, lessons):\n    # Step 3: one row per learner and course, built from clean_attempts(attempts) and each lesson's course.\n    return clean_attempts(attempts)\n",
+  "prerequisites": [
+    "PS-L017",
+    "PS-L025",
+    "PS-L031"
+  ],
+  "output": {
+    "columns": [
+      "learner_id",
+      "course_id",
+      "attempts",
+      "lessons_attempted",
+      "lessons_passed",
+      "last_activity"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "example",
+      "sample": true
+    },
+    {
+      "id": "project",
+      "edition": "project"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 150,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

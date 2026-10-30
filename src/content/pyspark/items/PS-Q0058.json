@@ -1,0 +1,61 @@
+{
+  "id": "PS-Q0058",
+  "slug": "swap-two-column-names",
+  "lesson": "PS-L012",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Swap two column names",
+  "dataset": {
+    "id": "PS-D03",
+    "version": "1.0.0"
+  },
+  "prompt": "The new HR tool calls the employment type `status`, and today's `status` becomes `employment_status`. Write `solve(employees)` so it returns the employees table with those names.",
+  "rules": [
+    "Rename `status` (active, on leave, terminated) to `employment_status`, and `employment_type` (full time, part time, contractor) to `status`. Both stay in their places.",
+    "Remove `termination_date`, which the new tool works out itself.",
+    "The result has exactly one column of each name. Keep every row and every value unchanged, missing values and duplicates included."
+  ],
+  "hints": [
+    "Renaming `employment_type` to `status` while the old `status` is still there leaves the table with two columns called `status`.",
+    "Move the old `status` out of the way first, then give its name to `employment_type`.",
+    "`withColumnsRenamed` renames the dict's entries one after another, in the order you write them, so the order inside the dict matters too."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "employees"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(employees):\n    # Rename status to employment_status and employment_type to status.\n    return employees\n",
+  "output": {
+    "columns": [
+      "employee_id",
+      "first_name",
+      "last_name",
+      "email",
+      "phone",
+      "job_title",
+      "level",
+      "department_id",
+      "manager_id",
+      "hire_date",
+      "status",
+      "salary",
+      "employment_status"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "The order of the renames is the whole question. `employees.withColumnRenamed(\"status\", \"employment_status\").withColumnRenamed(\"employment_type\", \"status\").drop(\"termination_date\")` frees the name `status` before giving it away. The other way round, renaming `employment_type` first, leaves two columns called `status`, and the next rename renames both. Spark doesn't stop you: duplicate names are allowed until something refers to one of them. `withColumnsRenamed({\"status\": \"employment_status\", \"employment_type\": \"status\"})` works too, because it renames in the dict's order; with the entries swapped it fails the same way. Copying values with `withColumn` instead puts `employment_status` at the end rather than in its place."
+}

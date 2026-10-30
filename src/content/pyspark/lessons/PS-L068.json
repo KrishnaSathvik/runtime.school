@@ -1,0 +1,154 @@
+{
+  "id": "PS-L068",
+  "minutes": 25,
+  "lede": "Every stream comes down to three choices: where the rows come from, where the results go, and when Spark looks for new data. This lesson makes each choice for file streams, and shows the output modes that decide what a sink receives.",
+  "objectives": [
+    "Read a folder of files as a stream with a schema, and cap each micro-batch with `maxFilesPerTrigger`",
+    "Write a stream to a memory table, to `foreachBatch`, or to Parquet files with a checkpoint",
+    "Pick a trigger: `availableNow` for a run that stops, and why `once` and `processingTime` aren't used here",
+    "Tell which output mode a query can use: append, update or complete"
+  ],
+  "dataset": {
+    "id": "PS-D09",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "sensor_readings"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`sensor_readings` comes from temperature and humidity sensors that measure every 15 minutes. The table is in arrival order: `event_time` is when a sensor measured, `arrival_time` when the reading reached the platform, and `batch` the 15-minute delivery it came in, counted from 0. The measurements sit in a nested `payload` struct. Two readings are unusual: R0006 arrived late and R0011 was delivered twice. Lesson 70 deals with both.\n\nEvery stream example starts with the helper from lesson 67: `make_batches(df, folder)` writes one JSON file per `batch` value, oldest first.\n\n**Sources.** A stream reads from a source. Spark has file sources (`json`, `csv`, `parquet`, `text`, `orc`) that watch a folder and treat each new file as new data, and a Kafka source for message queues. There's no network here, so this course uses files. A file stream won't look at the data to work out a schema: the folder may be empty when the stream starts, and later files could disagree. So it needs the schema up front."
+    },
+    {
+      "kind": "error-example",
+      "id": "e1",
+      "title": "A file stream needs a schema",
+      "code": "import os\n\nos.makedirs(\"/tmp/readings\", exist_ok=True)\nreadings = spark.readStream.json(\"/tmp/readings\")\n",
+      "error": "IllegalArgumentException",
+      "note": "Without `.schema(...)` Spark won't create the stream. Give it a `StructType` or a DDL string such as `\"reading_id STRING, device_id STRING\"`; these examples use `sensor_readings.schema`, the ready-made one."
+    },
+    {
+      "kind": "text",
+      "md": "`maxFilesPerTrigger` caps how many new files one micro-batch may read. Without it, a micro-batch takes everything that's waiting. The cap keeps micro-batches a steady size when a backlog builds up, say after the stream was stopped for an hour. Spark reads the oldest files first."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Two files per micro-batch",
+      "code": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\nmake_batches(sensor_readings, \"/tmp/readings\")\nprint(sorted(os.listdir(\"/tmp/readings\")))\nstream = spark.readStream.schema(sensor_readings.schema).option(\"maxFilesPerTrigger\", 2).json(\"/tmp/readings\")\n\ndef show_batch(batch_df, batch_id):\n    print(\"micro-batch\", batch_id, sorted(r[\"reading_id\"] for r in batch_df.collect()))\n\nq = stream.writeStream.foreachBatch(show_batch).trigger(availableNow=True).start()\nq.awaitTermination()\nprint([p[\"numInputRows\"] for p in q.recentProgress])\nprint(q.lastProgress[\"sources\"][0][\"description\"])\n",
+      "note": "Four files, at most two per micro-batch, so two micro-batches. R0011 appears twice because it was delivered twice: a stream reads whatever arrives. `q.recentProgress` has one report per micro-batch; `numInputRows` counts the rows it read, and `sources[0][\"description\"]` names the folder."
+    },
+    {
+      "kind": "text",
+      "md": "**Sinks.** A sink is where a query's results go. `writeStream.format(...)` picks one:\n\n- `foreachBatch(fn)`, from lesson 67: your function gets each micro-batch as a batch DataFrame, so it can save it anywhere a batch DataFrame can go.\n- `memory`: keeps the results in a table in the driver's memory, named with `queryName`. Read it back with `spark.table(name)`. Good for tests and small examples; real data would fill the driver.\n- Files: `parquet`, `json`, `csv` and the other formats add each micro-batch's rows as new files in a folder.\n- `delta` writes to a Delta table, a common choice in production, and Kafka is another.\n\nSpark also has a `console` sink that prints each micro-batch. Here its output goes to Spark's own log, not to your screen, so this course prints from `foreachBatch` instead."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "A memory table",
+      "code": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\nmake_batches(sensor_readings, \"/tmp/readings\")\nstream = spark.readStream.schema(sensor_readings.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/readings\")\nflat = stream.select(\"reading_id\", \"device_id\", F.col(\"payload.temperature_c\").alias(\"temperature_c\"), F.col(\"payload.status\").alias(\"status\"))\nwatch = flat.filter(F.col(\"status\") != \"ok\")\n\nq = watch.writeStream.format(\"memory\").queryName(\"needs_a_look\").trigger(availableNow=True).start()\nq.awaitTermination()\n\ntable = spark.table(\"needs_a_look\")\nprint(table.isStreaming, len(q.recentProgress), \"micro-batches\")\nfor row in sorted(table.collect()):\n    print(row[\"reading_id\"], row[\"device_id\"], row[\"temperature_c\"], row[\"status\"])\nprint(q.lastProgress[\"sink\"][\"description\"])\n",
+      "note": "Four micro-batches wrote the three low-battery readings into the memory table `needs_a_look`. `spark.table` gives an ordinary batch DataFrame (`isStreaming` is `False`), so `collect()` works on it. The progress report names the sink."
+    },
+    {
+      "kind": "text",
+      "md": "A file sink needs a **checkpoint**: a folder where Spark records what each micro-batch read and which micro-batches finished. If the query stops and starts again, it carries on from there instead of reading everything again; lesson 72 covers recovery. `foreachBatch` and memory queries get a temporary checkpoint when you don't name one. A file sink won't start without one."
+    },
+    {
+      "kind": "error-example",
+      "id": "e4",
+      "title": "No checkpoint, no file sink",
+      "code": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\nmake_batches(sensor_readings, \"/tmp/readings\")\nstream = spark.readStream.schema(sensor_readings.schema).json(\"/tmp/readings\")\nq = stream.writeStream.format(\"parquet\").option(\"path\", \"/tmp/out/readings\").start()\n",
+      "error": "AnalysisException",
+      "note": "Set `option(\"checkpointLocation\", folder)` on the writer, or a default for the whole session with `spark.conf.set(\"spark.sql.streaming.checkpointLocation\", folder)`."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Parquet files with a checkpoint",
+      "code": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\nmake_batches(sensor_readings, \"/tmp/readings\")\nshutil.rmtree(\"/tmp/out\", ignore_errors=True)\nstream = spark.readStream.schema(sensor_readings.schema).option(\"maxFilesPerTrigger\", 1).json(\"/tmp/readings\")\nflat = stream.select(\"reading_id\", \"device_id\", \"event_time\", F.col(\"payload.temperature_c\").alias(\"temperature_c\"))\n\nq = (flat.writeStream.format(\"parquet\")\n     .option(\"path\", \"/tmp/out/readings\")\n     .option(\"checkpointLocation\", \"/tmp/out/checkpoint\")\n     .trigger(availableNow=True).start())\nq.awaitTermination()\n\nsaved = spark.read.parquet(\"/tmp/out/readings\")\nprint(saved.isStreaming, saved.count(), \"rows saved\")\nprint(sorted(n for n in os.listdir(\"/tmp/out/checkpoint\") if not n.startswith(\".\")))\nprint(sorted(n for n in os.listdir(\"/tmp/out/checkpoint/commits\") if not n.startswith(\".\")))\nprint(q.lastProgress[\"sink\"][\"description\"])\n",
+      "note": "After the query, the Parquet folder is an ordinary table: `spark.read.parquet` reads all 13 rows. The checkpoint has one `commits` entry per finished micro-batch, 0 to 3, next to `offsets` (what each micro-batch was given to read) and `sources` (which files it has seen). Hidden files starting with a dot are checksums, so they're left out of the listing."
+    },
+    {
+      "kind": "text",
+      "md": "**Triggers.** A trigger says when Spark looks for new data:\n\n- With no trigger, the next micro-batch starts as soon as the last one finishes, for as long as the query runs.\n- `trigger(processingTime=\"1 minute\")` starts a micro-batch every minute. It's the usual choice for a stream that runs for days. What lands in each micro-batch then depends on the clock, so this course doesn't use it: the output would change from run to run.\n- `trigger(availableNow=True)` processes everything waiting, in as many micro-batches as `maxFilesPerTrigger` allows, and then stops. It suits a stream run as a scheduled job, and it keeps every example here repeatable.\n- `trigger(once=True)` is the older form: one micro-batch with everything waiting, ignoring the file cap. It's deprecated; use `availableNow`."
+    },
+    {
+      "kind": "example",
+      "id": "e6",
+      "title": "availableNow against once",
+      "code": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\nmake_batches(sensor_readings, \"/tmp/readings\")\nstream = spark.readStream.schema(sensor_readings.schema).option(\"maxFilesPerTrigger\", 2).json(\"/tmp/readings\")\n\ndef count_rows(batch_df, batch_id):\n    print(\"micro-batch\", batch_id, batch_df.count(), \"readings\")\n\nq = stream.writeStream.foreachBatch(count_rows).trigger(availableNow=True).start()\nq.awaitTermination()\nprint(\"availableNow:\", len(q.recentProgress), \"micro-batches\")\n\nq = stream.writeStream.foreachBatch(count_rows).trigger(once=True).start()\nq.awaitTermination()\nprint(\"once:\", len(q.recentProgress), \"micro-batch\")\n",
+      "note": "Same stream, same cap of two files. `availableNow` kept the cap and ran two micro-batches; `once` read all 13 readings in one. On a big backlog that single micro-batch can be far larger than the cap was meant to allow, which is why `availableNow` replaced it."
+    },
+    {
+      "kind": "text",
+      "md": "**Output modes.** `outputMode(...)` says what the sink receives from each micro-batch:\n\n- `append`, the default: only new result rows. A row, once written, never changes.\n- `update`: only the result rows that changed in this micro-batch.\n- `complete`: the whole result table, every micro-batch.\n\nA plain `select` or `filter` query turns each input row into at most one result row that never changes, so append is all it needs; update behaves exactly like append for it, and complete isn't allowed. Update and complete matter once results can change, which means an aggregation such as a count per time window. Lesson 69 uses both."
+    },
+    {
+      "kind": "error-example",
+      "id": "e7",
+      "title": "Complete mode needs an aggregation",
+      "code": "import json, os, shutil\nfrom pyspark.sql import functions as F\n\ndef make_batches(df, folder):\n    \"\"\"Write one JSON file per value of `batch`, oldest first, so a stream can read them in order.\"\"\"\n    shutil.rmtree(folder, ignore_errors=True)\n    os.makedirs(folder)\n    files = {}\n    for line in df.toJSON().collect():\n        files.setdefault(json.loads(line)[\"batch\"], []).append(line)\n    for i, key in enumerate(sorted(files)):\n        path = f\"{folder}/part-{i}.json\"\n        with open(path, \"w\") as f:\n            f.write(\"\\n\".join(files[key]) + \"\\n\")\n        os.utime(path, (1_700_000_000 + i, 1_700_000_000 + i))  # file times set the reading order\n\nmake_batches(sensor_readings, \"/tmp/readings\")\nstream = spark.readStream.schema(sensor_readings.schema).json(\"/tmp/readings\")\nq = stream.select(\"reading_id\").writeStream.outputMode(\"complete\").format(\"memory\").queryName(\"all_ids\").start()\n",
+      "error": "AnalysisException",
+      "note": "This query only selects a column, so there's no result table to send again each time. Spark refuses at `start()`, before reading anything."
+    }
+  ],
+  "challenges": [
+    "PS-L068-C1",
+    "PS-L068-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "Why does `spark.readStream.json(folder)` need `.schema(...)` before it can start?",
+      "choices": [
+        "JSON files can't hold nested data without a schema",
+        "The folder can be empty or change while the stream runs, so Spark won't work the schema out from the files",
+        "Streams always read every column as text",
+        "A schema makes the stream read one file per micro-batch"
+      ],
+      "answer": 1,
+      "why": "A file stream starts before all its files exist, so Spark asks for the schema up front. Without one it raises an error when you create the stream."
+    },
+    {
+      "id": "k2",
+      "prompt": "Nine files are waiting. A query reads them with `maxFilesPerTrigger` set to 4 and `trigger(availableNow=True)`. How many micro-batches does it run?",
+      "choices": [
+        "1",
+        "2",
+        "3",
+        "9"
+      ],
+      "answer": 2,
+      "why": "`availableNow` keeps the cap: 4 files, then 4, then the last 1. `trigger(once=True)` would have read all nine in one micro-batch."
+    },
+    {
+      "id": "k3",
+      "prompt": "Which of these writers refuses to start without a `checkpointLocation`?",
+      "choices": [
+        "`writeStream.format(\"memory\").queryName(\"t\")`",
+        "`writeStream.foreachBatch(fn)`",
+        "`writeStream.format(\"parquet\").option(\"path\", \"/tmp/out\")`",
+        "None of them; checkpoints are optional everywhere"
+      ],
+      "answer": 2,
+      "why": "A file sink must record which micro-batches it finished, so it needs a checkpoint folder. Memory and `foreachBatch` queries get a temporary one."
+    }
+  ],
+  "review": [
+    "File sources read a folder as a stream; they need the schema up front with `.schema(...)`.",
+    "`maxFilesPerTrigger` caps the files one micro-batch reads; without it a micro-batch takes everything waiting.",
+    "Sinks: `foreachBatch` for your own code, `memory` (read with `spark.table`) for tests, files or Delta for real output.",
+    "A file sink needs a `checkpointLocation`, where Spark records what each micro-batch read and finished.",
+    "`availableNow` processes the backlog in capped micro-batches and stops; `once` is deprecated, and `processingTime` runs on the clock.",
+    "Append sends new rows only, update the changed rows, complete the whole result; update and complete are for aggregations."
+  ],
+  "practice": [
+    "PS-Q0336",
+    "PS-Q0337",
+    "PS-Q0338",
+    "PS-Q0339",
+    "PS-Q0340"
+  ]
+}

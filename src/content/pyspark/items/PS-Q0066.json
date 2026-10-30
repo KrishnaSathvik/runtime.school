@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0066",
+  "slug": "overdraft-limits-in-whole-units",
+  "lesson": "PS-L014",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Overdraft limits in whole units",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "The branch screen shows overdraft limits as whole numbers. Write `solve(accounts)` so it returns `account_id`, `overdraft_limit` and the limit as a whole number in `limit_units`.",
+  "rules": [
+    "`limit_units` is `overdraft_limit` as an `int`. The cents are dropped, not rounded: 499.99 gives 499.",
+    "Keep `overdraft_limit` unchanged. A missing limit gives a missing `limit_units`.",
+    "Return the three columns, in that order, for every account, duplicates included."
+  ],
+  "hints": [
+    "`F.col(\"overdraft_limit\").cast(\"int\")` changes the type.",
+    "Name the cast column with `.alias(\"limit_units\")`, or it gets a name like `CAST(overdraft_limit AS INT)`.",
+    "Casting a decimal to a whole number drops the fraction by itself. There's nothing to round first."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "accounts"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(accounts):\n    # account_id, overdraft_limit, limit_units\n    return accounts\n",
+  "output": {
+    "columns": [
+      "account_id",
+      "overdraft_limit",
+      "limit_units"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`accounts.select(\"account_id\", \"overdraft_limit\", F.col(\"overdraft_limit\").cast(\"int\").alias(\"limit_units\"))`. `cast(\"int\")` and `cast(IntegerType())` are the same. Casting a decimal to an `int` drops the fraction, so 499.99 becomes 499; rounding first would give 500, which isn't what's asked. `\"bigint\"` gives the right numbers but the wrong type. A missing limit stays missing after the cast."
+}

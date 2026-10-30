@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0282",
+  "slug": "load-per-partition-by-zone",
+  "lesson": "PS-L057",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Load per partition by pickup zone",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "prompt": "The platform team is thinking of splitting trips into 4 partitions keyed by pickup zone. Before they decide, they want to see the load: how many zones and trips each partition would get. Write `solve(trips)` to return that.",
+  "rules": [
+    "Spread the trips with `repartition(4, \"pickup_zone_id\")`.",
+    "Return one row per partition that holds at least one trip: `partition` (its number, from `F.spark_partition_id()`), `zones` (how many different pickup zones it holds) and `trips` (how many trips).",
+    "Trips with no pickup zone still count as trips, but a missing zone isn't counted as a zone."
+  ],
+  "hints": [
+    "Add the partition number as a column with `withColumn`, right after the `repartition`.",
+    "Then group by that column and aggregate: `F.countDistinct` for zones, `F.count(\"*\")` for trips.",
+    "`F.countDistinct` skips missing values, and `F.count(\"*\")` counts every row."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "trips"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(trips):\n    # Spread by pickup zone into 4 partitions, then count zones and trips per partition.\n    return trips\n",
+  "output": {
+    "columns": [
+      "partition",
+      "zones",
+      "trips"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "`repartition(4, \"pickup_zone_id\")` hash-partitions: each trip goes to `pmod(hash(pickup_zone_id), 4)`, so every trip of a zone lands in the same partition. `F.spark_partition_id()` right after it records where each row went; grouping by that column with `F.countDistinct(\"pickup_zone_id\")` and `F.count(\"*\")` gives the load. On the lesson trips, four of the six zones hash to the same partition, which gets 9 of the 12 trips, and one partition gets none, so it has no row. A plain `repartition(4)` would look even (3 trips each), but it scatters each zone over several partitions. Trips with no zone all hash to one partition too: they add to its trips but not its zones."
+}

@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0142",
+  "slug": "countries-we-buy-and-sell-in",
+  "lesson": "PS-L029",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Countries we buy and sell in",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "prompt": "Finance is planning local bank accounts in countries where the company both sells and buys. Write `solve(accounts, customer_cdc, suppliers)` so it returns each such `country`.",
+  "rules": [
+    "We sell in a country if it is the `country` of any row in `accounts` (the snapshot) or in `customer_cdc` (changes and new accounts since).",
+    "We buy in a country if it is the `country` of any row in `suppliers`.",
+    "Return one column, `country`, with each country once.",
+    "Compare countries exactly as written. A missing country on both sides counts as a match, as in any set operation."
+  ],
+  "hints": [
+    "Start with the selling countries: stack the `country` column of the snapshot and of the feed.",
+    "Countries in both lists are an `intersect`.",
+    "`intersect` returns each row once, so there's no need for `distinct()` at the end."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "accounts",
+    "customer_cdc",
+    "suppliers"
+  ],
+  "starter": "def solve(accounts, customer_cdc, suppliers):\n    # Return each country where we both sell and buy, once.\n    return accounts.select(\"country\")\n",
+  "output": {
+    "columns": [
+      "country"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Selling countries come from two tables, so stack them first: `accounts.select(\"country\").union(customer_cdc.select(\"country\"))`. Then keep the ones suppliers also have: `.intersect(suppliers.select(\"country\"))`. `intersect` removes repeats, so each country comes back once however many accounts or suppliers it has. Leaving out the feed misses countries where the only customers are new since the snapshot, and `intersectAll` would repeat a country once per matching pair of copies."
+}

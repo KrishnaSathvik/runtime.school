@@ -1,0 +1,130 @@
+{
+  "id": "PS-L062",
+  "minutes": 30,
+  "lede": "Jobs fail halfway, clean-ups delete the wrong rows, and auditors ask what a table said last week. Delta's log makes every change all-or-nothing and keeps old versions readable.",
+  "objectives": [
+    "Change rows in place with `DeltaTable.delete` and `update`, and see each change as a version",
+    "Read an older version with `versionAsOf`",
+    "Explain how the log makes writes atomic and isolated, and what happens when two writers collide",
+    "Undo a bad change with `restoreToVersion`"
+  ],
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "transactions"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`transactions` is a bank's card and branch activity: 14 rows, two of them `declined`, and one (`T000002`) that lost its account id.\n\nA Delta table isn't only appended and overwritten. The `DeltaTable` handle can change rows in place:\n\n- `table.delete(condition)` removes the rows that match.\n- `table.update(condition, set)` changes them. `set` maps a column to a SQL expression, so a text value needs its own quotes: `{\"status\": \"'held'\"}`. Leave out the condition to change every row.\n\nConditions are SQL text, as in `\"status = 'declined'\"`. Each call that changes rows is one commit. Delta can't edit a Parquet file, so it writes new copies of the files that held those rows and marks the old ones removed."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Deletes and updates are commits",
+      "code": "from delta.tables import DeltaTable\n\npath = \"/tmp/bank/transactions\"\ntransactions.write.format(\"delta\").save(path)\n\ntable = DeltaTable.forPath(spark, path)\ntable.delete(\"status = 'declined'\")\ntable.delete(\"status = 'reversed'\")\ntable.update(\"account_id IS NULL\", {\"status\": \"'held'\"})\n\ntable.history().select(\"version\", \"operation\").show()\nprint(spark.read.format(\"delta\").load(path).count())\n",
+      "note": "The first delete and the update are versions 1 and 2. There are no `reversed` transactions, so the second delete changed nothing and left no version at all. Version numbers depend on the data, so don't count them by hand: read the history."
+    },
+    {
+      "kind": "text",
+      "md": "Because old files stay until they're cleaned up, every version is still readable. `spark.read.format(\"delta\").option(\"versionAsOf\", n).load(path)` reads the table as it was at version `n`: **time travel**. It's how you answer \"what did the table say before that job ran?\" or rerun a report on yesterday's data.\n\n`timestampAsOf` does the same by time, but commit times change on every run, so this course uses version numbers. Old versions last until their files are deleted for good (with `VACUUM`, a later lesson)."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Read an older version",
+      "code": "from delta.tables import DeltaTable\n\npath = \"/tmp/bank/transactions\"\ntransactions.write.format(\"delta\").save(path)\ntable = DeltaTable.forPath(spark, path)\ntable.delete(\"status = 'declined'\")\ntable.update(\"account_id IS NULL\", {\"status\": \"'held'\"})\n\nfor version in range(3):\n    rows = spark.read.format(\"delta\").option(\"versionAsOf\", version).load(path).collect()\n    status = {row.transaction_id: row.status for row in rows}\n    print(version, len(rows), status.get(\"T000002\"), status.get(\"T000004\"))\n",
+      "note": "Version 0 has all 14 rows: `T000004` is still there as declined. Version 1 is after the delete, and only version 2 shows `T000002` as `held`. The rows are collected into a plain Python dict to look two of them up."
+    },
+    {
+      "kind": "text",
+      "md": "These are the **ACID** guarantees, and they all come from the log:\n\n- **Atomic.** A commit is one log file, written at once. Until it exists, none of the change is visible; if a job dies first, data files it wrote are simply never listed.\n- **Consistent.** Delta checks each write against the table's schema and refuses one that doesn't fit, so every version is a valid table.\n- **Isolated.** A read uses one version from start to finish, so it never sees half of someone else's write.\n- **Durable.** Once the commit file is written, the change is in storage, not just in memory.\n\nHere a feed sends `amount` as text. The table's `amount` is a decimal, so the append is refused."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "A write that fails changes nothing",
+      "code": "from pyspark.sql import functions as F\nfrom delta.tables import DeltaTable\n\npath = \"/tmp/bank/transactions\"\ntransactions.write.format(\"delta\").save(path)\n\n# A feed that sends the amount as text.\nbatch = transactions.select(\n    \"transaction_id\", \"account_id\", \"merchant_id\", \"posted_at\", \"txn_type\", \"channel\", \"direction\",\n    F.col(\"amount\").cast(\"string\").alias(\"amount\"), \"currency\", \"status\",\n)\ntry:\n    batch.write.format(\"delta\").mode(\"append\").save(path)\nexcept Exception as e:\n    print(type(e).__name__, e.getCondition())\n\ntable = DeltaTable.forPath(spark, path)\nprint([row.version for row in table.history().collect()])\nprint(spark.read.format(\"delta\").load(path).count())\n",
+      "note": "The error's condition is `DELTA_FAILED_TO_MERGE_FIELDS`: Delta couldn't fit text into the decimal column. The history still has only version 0 and the table still has 14 rows. With plain Parquet, the same append would have added a file with a different type next to the others."
+    },
+    {
+      "kind": "text",
+      "md": "Two jobs can write the same table at once. Delta uses **optimistic concurrency**: each writer reads the latest version, say 7, does its work, and then tries to create `...08.json`. Creating the file only succeeds if it doesn't exist yet, so exactly one writer wins.\n\nThe other one looks at what the winner did. If both only appended, they don't conflict, and it commits as version 9. If the winner deleted or rewrote files the loser read, the loser fails with a concurrent-modification error and must be rerun. This environment is one machine running one job, so this lesson explains it rather than showing it.\n\nTo undo a bad change, `table.restoreToVersion(n)` makes the table look like version `n` again. It doesn't rewrite history: the restore is a new commit, and the bad version stays readable."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Undo with restore",
+      "code": "from delta.tables import DeltaTable\n\npath = \"/tmp/bank/transactions\"\ntransactions.write.format(\"delta\").save(path)\ntable = DeltaTable.forPath(spark, path)\ntable.delete(\"status = 'declined'\")\ntable.update(set={\"currency\": \"'USD'\"})  # meant for one account, ran on all of them\n\ntable.restoreToVersion(1)\ntable.history().select(\"version\", \"operation\").show()\n\nrows = spark.read.format(\"delta\").load(path).collect()\nprint(len(rows), sorted({row.currency for row in rows}))\n",
+      "note": "The update was meant for one account and set every currency to USD. Restoring version 1 brings back the GBP rows and keeps the delete. The restore is version 3; versions 0 to 2 are all still there."
+    },
+    {
+      "kind": "error-example",
+      "id": "e5",
+      "title": "A version that doesn't exist",
+      "code": "path = \"/tmp/bank/transactions\"\ntransactions.write.format(\"delta\").save(path)\n\nspark.read.format(\"delta\").option(\"versionAsOf\", 3).load(path).show()\n",
+      "error": "AnalysisException",
+      "note": "The table has only version 0, and the message lists the range of versions you can read."
+    }
+  ],
+  "challenges": [
+    "PS-L062-C1",
+    "PS-L062-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "A table is at version 4. You run `table.delete(\"status = 'reversed'\")`, and no row has that status. What's the latest version now?",
+      "choices": [
+        "4: nothing changed, so nothing was committed",
+        "5, an empty commit",
+        "5, with every file rewritten",
+        "It raises an error"
+      ],
+      "answer": 0,
+      "why": "A delete or update that matches no rows writes no commit. That's why version numbers should be read from the history, not counted."
+    },
+    {
+      "id": "k2",
+      "prompt": "An append fails with a schema mismatch. What do readers of the table see?",
+      "choices": [
+        "The rows that fit",
+        "The table as it was before the append",
+        "An empty table",
+        "An error until the table is repaired"
+      ],
+      "answer": 1,
+      "why": "Nothing was committed, so the latest version is unchanged. Delta changes a table only by writing a whole commit."
+    },
+    {
+      "id": "k3",
+      "prompt": "You run `restoreToVersion(1)` on a table at version 3. What does the history show afterwards?",
+      "choices": [
+        "Versions 0 and 1",
+        "Versions 0 to 3, with 2 and 3 deleted",
+        "Versions 0 to 4: the restore is version 4",
+        "Version 1 only"
+      ],
+      "answer": 2,
+      "why": "A restore is a new commit that makes the table look like version 1. Versions 2 and 3 can still be read."
+    }
+  ],
+  "review": [
+    "`DeltaTable.delete(condition)` and `update(condition, set)` change rows; each one that changes something is a new version.",
+    "A change that matches no rows writes no commit, so read version numbers from `history()`.",
+    "`option(\"versionAsOf\", n)` reads the table as it was at version `n`.",
+    "A commit is one log file: a failed write leaves the table as it was, and readers see one whole version.",
+    "Concurrent writers race for the next commit number; appends retry, conflicting rewrites fail and must rerun.",
+    "`restoreToVersion(n)` undoes changes as a new commit; the history keeps every version."
+  ],
+  "practice": [
+    "PS-Q0306",
+    "PS-Q0307",
+    "PS-Q0308",
+    "PS-Q0309",
+    "PS-Q0310"
+  ]
+}

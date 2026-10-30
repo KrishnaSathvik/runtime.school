@@ -1,0 +1,117 @@
+{
+  "id": "PS-L006",
+  "minutes": 25,
+  "lede": "Between your line of PySpark and the answer, Spark turns your code into plans, then into jobs, stages and tasks. Knowing that path lets you read `explain()` and spot the expensive steps before you run them.",
+  "objectives": [
+    "Follow the path from code to logical plan, optimized plan, physical plan, then jobs, stages and tasks",
+    "Read a plan with `explain(True)` and `explain(mode=\"formatted\")`",
+    "Tell narrow transformations from wide ones, and say why wide ones start a new stage",
+    "Connect partitions to tasks, and an action to the job it starts"
+  ],
+  "dataset": { "id": "PS-D07", "version": "1.0.0", "edition": "lesson", "tables": ["trips", "taxi_zones"] },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "The tables above are taxi data: `trips` has one row per trip and `taxi_zones` one row per pickup or dropoff zone. Both are already loaded as DataFrames, and `F` is `pyspark.sql.functions`.\n\nFrom lesson 4 you know transformations only build a plan. Here's what Spark does with it:\n\n1. **Logical plan.** Your steps, written down. Spark first *parses* them, then *analyzes* them: it checks every column and type against the tables.\n2. **Optimized plan.** Spark rewrites the plan to do less work, for example dropping columns nobody uses or adding a check that skips missing values early.\n3. **Physical plan.** Spark picks how to run each step: which file reader, which way to group.\n4. **Job, stages, tasks.** When an action runs, the physical plan becomes a **job**. The job is split into **stages**, and each stage into **tasks**, one per partition. The executors from lesson 2 run the tasks."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Every plan, from your code to the physical plan",
+      "code": "from pyspark.sql import functions as F\n\ncore = taxi_zones.filter(F.col(\"service_zone\") == \"Core\").select(\"zone_name\")\ncore.explain(True)\n",
+      "note": "Read each plan from the bottom up. The parsed plan still has a name Spark hasn't checked yet, marked `'zone_name`; the analyzed plan has resolved it and knows it's a string. The optimized plan adds `isnotnull(service_zone)`. The physical plan reads only the two columns it needs from the CSV file."
+    },
+    {
+      "kind": "text",
+      "md": "`explain()` with no argument prints only the physical plan, which is what you'll usually want. `explain(mode=\"formatted\")` prints the same physical plan as a short outline with numbered steps, then the details of each step below it. It's easier to read when plans get long.\n\nNone of these run the plan: `explain` is not an action."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "The formatted physical plan",
+      "code": "from pyspark.sql import functions as F\n\ncore = taxi_zones.filter(F.col(\"service_zone\") == \"Core\").select(\"zone_name\")\ncore.explain(mode=\"formatted\")\n",
+      "note": "Three numbered steps: scan the file (1), filter (2), keep one column (3). The `*` marks steps Spark compiles together into one piece of code, so they run in a single pass over each partition."
+    },
+    {
+      "kind": "text",
+      "md": "Data is split into **partitions**, and each task handles one partition. Ask a DataFrame how many partitions it has with `df.rdd.getNumPartitions()` (lesson 5 covers `.rdd`).\n\nThis environment is honest about its size: it's Spark in **local mode**, `local[2]`. The driver and one executor share a single process on one machine, with two cores, so at most two tasks run at the same time. A real cluster has many executors, but the plans, jobs, stages and tasks are the same."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Partitions and cores in this environment",
+      "code": "print(trips.rdd.getNumPartitions(), \"partition for trips\")\nprint(spark.sparkContext.defaultParallelism, \"cores\")\nprint(spark.conf.get(\"spark.sql.shuffle.partitions\"), \"partitions after a shuffle\")\n",
+      "note": "`trips` comes from one small file, so it's one partition: a stage over it is one task. The last line is a setting this environment lowers to 4 for small data; Spark's default is 200."
+    },
+    {
+      "kind": "text",
+      "md": "An action starts a job. You don't normally count jobs by hand (lesson 81 shows the Spark UI, which lists them), but the SparkContext's `statusTracker()` can. Put work in a named *job group* with `setJobGroup`, then ask which jobs that group ran."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Building a plan runs no jobs; an action does",
+      "code": "from pyspark.sql import functions as F\n\nsc = spark.sparkContext\ntracker = sc.statusTracker()\n\nsc.setJobGroup(\"build\", \"build the plan\")\ncard = trips.filter(F.col(\"payment_type\") == \"card\").select(\"trip_id\", \"tip\")\nprint(\"jobs while building:\", len(tracker.getJobIdsForGroup(\"build\")))\n\nsc.setJobGroup(\"show\", \"show the rows\")\ncard.show(3)\nprint(\"jobs for show:\", len(tracker.getJobIdsForGroup(\"show\")))\n",
+      "note": "`filter` and `select` started nothing. `show(3)` started one job, which read the file, filtered and printed three rows."
+    },
+    {
+      "kind": "text",
+      "md": "Transformations come in two kinds:\n\n- **Narrow**: each output partition needs only one input partition. `filter`, `select` and `limit` work row by row, so Spark runs them together in one stage, partition by partition.\n- **Wide**: rows have to move between partitions. Counting trips per payment type needs every `card` trip in the same place, wherever it started. That move is a **shuffle**, shown as `Exchange` in a plan. A shuffle ends one stage and starts the next, and it's usually the most expensive part of a job.\n\nThe next example groups trips by payment type, a wide step you'll learn properly in lesson 31. Here, just look at its plan."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "A wide step adds an Exchange",
+      "code": "by_payment = trips.groupBy(\"payment_type\").count()\nby_payment.explain()\n",
+      "note": "From the bottom: read `payment_type`, count within each partition, `Exchange` (the shuffle) into 4 partitions by payment type, then add up the counts. The stage before the `Exchange` and the stage after it are two separate stages. `AdaptiveSparkPlan isFinalPlan=false` means Spark may still adjust the plan while it runs (lesson 58)."
+    }
+  ],
+  "challenges": ["PS-L006-C1", "PS-L006-C2"],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "In what order does Spark turn your DataFrame code into work?",
+      "choices": [
+        "Tasks, stages, job, then a plan",
+        "Physical plan, logical plan, optimized plan, then a job",
+        "Logical plan, optimized plan, physical plan; then an action starts a job, split into stages and tasks",
+        "A job for every transformation, then one plan for the action"
+      ],
+      "answer": 2,
+      "why": "Your steps become a logical plan, which Spark optimizes and then turns into a physical plan. Only an action turns that into a job, which is split into stages, and each stage into one task per partition."
+    },
+    {
+      "id": "k2",
+      "prompt": "Which of these is a wide transformation that needs a shuffle?",
+      "choices": [
+        "trips.filter(F.col(\"fare\") > 20)",
+        "trips.select(\"trip_id\", \"fare\")",
+        "trips.limit(5)",
+        "trips.groupBy(\"payment_type\").count()"
+      ],
+      "answer": 3,
+      "why": "Grouping needs all rows with the same payment type in one place, so rows move between partitions: an `Exchange` in the plan. `filter`, `select` and `limit` work within each partition."
+    },
+    {
+      "id": "k3",
+      "prompt": "A stage reads a DataFrame with 3 partitions. How many tasks does that stage run?",
+      "choices": [
+        "1",
+        "2, one per core",
+        "3, one per partition",
+        "As many as there are rows"
+      ],
+      "answer": 2,
+      "why": "A stage runs one task per partition. The number of cores only limits how many of those tasks run at the same time."
+    }
+  ],
+  "review": [
+    "Code becomes a logical plan (parsed, then analyzed), then an optimized plan, then a physical plan.",
+    "Only an action turns the physical plan into a job. A job is split into stages, and each stage into one task per partition.",
+    "`explain()` prints the physical plan; `explain(True)` adds the logical plans; `explain(mode=\"formatted\")` numbers the steps. None of them run anything.",
+    "Narrow steps (`filter`, `select`, `limit`) stay within a partition and run together in one stage.",
+    "Wide steps such as grouping shuffle rows between partitions, shown as `Exchange`, and start a new stage.",
+    "This environment is local mode with two cores; a cluster runs the same plans on more executors."
+  ],
+  "practice": ["PS-Q0026", "PS-Q0027", "PS-Q0028", "PS-Q0029", "PS-Q0030"]
+}

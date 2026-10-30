@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0005",
+  "kind": "predict",
+  "slug": "three-tables-at-once",
+  "lesson": "PS-L001",
+  "role": "integration",
+  "format": "concept_or_trace",
+  "difficulty": "easy",
+  "minutes": 4,
+  "title": "Three tables at once",
+  "prompt": "This program puts three DataFrames in a Python list and loops over them. What does it print? Type each line on its own line.",
+  "program": "tables = [learners, courses, lessons]\nprint([t.count() for t in tables])\nprint(sum(len(t.columns) for t in tables))\nprint(max(t.count() for t in tables))\n",
+  "dataset": {
+    "id": "PS-D11",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "A DataFrame is an ordinary Python object, so it can sit in a list like anything else.",
+    "Count the rows of `learners`, `courses` and `lessons`, in that order.",
+    "Then count the columns of each table and add them: `learners` has 5."
+  ],
+  "explanation": "Each `t.count()` gives a Python number, so the list is `[5, 4, 8]` and the largest is 8. The column counts are 5, 6 and 5, which add up to 16. DataFrames, counts and column lists mix freely with plain Python."
+}

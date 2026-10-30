@@ -1,0 +1,70 @@
+{
+ "id": "PS-P10-M2",
+ "slug": "validate-sensors-against-the-registry",
+ "project": "PS-P10",
+ "milestone": "PS-P10.m2",
+ "difficulty": "hard",
+ "minutes": 40,
+ "title": "Validate each reading against the device registry",
+ "dataset": {
+  "id": "PS-D09",
+  "version": "1.0.0"
+ },
+ "prompt": "A reading is only as good as the sensor behind it. The device registry (`devices`) says what kind of sensor each one is and whether it's still active, and `device_locations` says where it stood and when; one sensor was moved.\n\nWrite `validate_readings(sensor_readings, devices, device_locations)`, which joins each parsed reading to its sensor and site and names the first problem it has, and `stream_validated(sensor_readings, devices, device_locations)`, which runs it on the stream, joining the static tables to each micro-batch.",
+ "rules": [
+  "`validate_readings` returns `parse_readings`' columns, then `device_type`, `site` and `issue`.",
+  "`site` is where the sensor stood on the reading's date (`to_date(event_time)`): the location row with `valid_from` on or before that date and `valid_to` empty or on or after it.",
+  "`issue` is the first that applies: `unknown_device` (not in `devices`), `inactive_device` (`active` is false), `no_location` (no location row for that date), `missing_value` (`temperature_c` or `battery_v` missing, or `humidity_pct` missing on a `climate` sensor), otherwise `ok`. A `temp` sensor has no humidity sensor, so its missing humidity is fine.",
+  "`stream_validated` streams the readings through `validate_readings` into a memory table and returns `reading_id`, `device_id`, `event_time`, `device_type`, `site` and `issue`. Every delivery stays."
+ ],
+ "hints": [
+  "Left joins keep readings whose sensor isn't registered. A stream joined to a static table works like a table join, one micro-batch at a time.",
+  "The location join needs the device id and the date range in one condition. Rename the location table's `device_id` first, so the two don't clash.",
+  "Build `issue` with one `F.when(...).when(...).otherwise(\"ok\")` chain, in the order of the rules. `~F.col(\"active\")` is true for an inactive sensor."
+ ],
+ "explanation": "Joining with `left` joins keeps every reading, so a reading from an unregistered sensor shows up with an issue instead of silently disappearing. The location join has to look at time: a sensor that moved has two rows, and only the one valid on the reading's date applies. Joining on the device id alone would give that sensor's readings two rows each. The `when` chain checks the problems in a fixed order, so each reading gets exactly one label, and later steps can keep just the readings they trust (`ok` and `missing_value`). Since the static tables are joined to each micro-batch, the same function runs on a table and on a stream.",
+ "entry": "stream_validated",
+ "inputs": [
+  "sensor_readings",
+  "devices",
+  "device_locations"
+ ],
+ "file": "pipeline.py",
+ "append": "\n\ndef validate_readings(sensor_readings, devices, device_locations):\n    # Step 2: parse_readings(...) plus each sensor's type, its site on the reading's date, and an issue.\n    return parse_readings(sensor_readings)\n\n\ndef stream_validated(sensor_readings, devices, device_locations):\n    # Step 2: stream the readings through validate_readings into a memory table, return its six columns.\n    return validate_readings(sensor_readings, devices, device_locations)\n",
+ "prerequisites": [
+  "PS-L017",
+  "PS-L025",
+  "PS-L071"
+ ],
+ "output": {
+  "columns": [
+   "reading_id",
+   "device_id",
+   "event_time",
+   "device_type",
+   "site",
+   "issue"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "example",
+   "sample": true
+  },
+  {
+   "id": "project",
+   "edition": "project"
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 90,
+  "check_timeout_s": 150,
+  "preview_rows": 100,
+  "max_rows": 10000
+ },
+ "technique": {
+  "name": "a streaming query",
+  "streams": true
+ }
+}

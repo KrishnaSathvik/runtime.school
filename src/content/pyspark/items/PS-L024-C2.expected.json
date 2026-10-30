@@ -1,0 +1,45 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "received",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "clean",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "quarantined",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     14,
+     13,
+     1
+    ]
+   ],
+   "row_count": 1
+  }
+ },
+ "hidden": [
+  "the full practice events table",
+  "events marked as corrections, not corrections, and with the flag missing",
+  "events with and without a location",
+  "events for unknown shipments and with no shipment at all",
+  "a feed where every event is clean",
+  "an empty events table"
+ ]
+}

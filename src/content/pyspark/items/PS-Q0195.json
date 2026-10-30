@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0195",
+  "slug": "unit-label-json",
+  "lesson": "PS-L039",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Unit labels as JSON",
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0"
+  },
+  "prompt": "The label printer takes one line of JSON per unit, saying which unit of the line it is. Write `solve(order_items)` so it returns one row per unit with its label.",
+  "rules": [
+    "A line with `quantity` n above 0 gives n rows, numbered 1 to n in `unit_no`. A quantity of 0 or less, or a missing one, gives no rows.",
+    "`label` is JSON text with the keys `sku` (the `product_id`), `unit` (the unit number) and `of` (the line's `quantity`), in that order, for example `{\"sku\":\"P005\",\"unit\":1,\"of\":3}`.",
+    "A line with no product has no `sku` key in its labels.",
+    "Return `order_id`, `line_no`, `unit_no` and `label`."
+  ],
+  "hints": [
+    "`F.posexplode(F.array_repeat(\"product_id\", \"quantity\"))` gives one row per unit with its position, starting at 0.",
+    "Build the label as a struct with the three keys, named with `alias`, then write it with `F.to_json`.",
+    "Numbers in a struct stay numbers in the JSON. `to_json` leaves out fields that are missing."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "order_items"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(order_items):\n    # One row per unit: order_id, line_no, unit_no and a JSON label.\n    return order_items\n",
+  "output": {
+    "columns": [
+      "order_id",
+      "line_no",
+      "unit_no",
+      "label"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 12000
+  },
+  "explanation": "Explode the units with their positions, then build the label from the exploded row: `units = order_items.select(\"order_id\", \"line_no\", \"quantity\", F.posexplode(F.array_repeat(\"product_id\", \"quantity\")).alias(\"pos\", \"sku\"))`, `unit_no = F.col(\"pos\") + 1`, and `F.to_json(F.struct(\"sku\", unit_no.alias(\"unit\"), F.col(\"quantity\").alias(\"of\")))`. The struct's field names and order become the JSON keys, and whole numbers stay numbers. A line with no units has an empty or missing array, so `posexplode` gives it no rows, as the rules ask. A missing `product_id` is a missing field, which `to_json` leaves out."
+}

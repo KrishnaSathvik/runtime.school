@@ -1,0 +1,57 @@
+{
+ "id": "PS-L074-C2",
+ "slug": "overlapping-extracts",
+ "lesson": "PS-L074",
+ "format": "dataframe_coding",
+ "difficulty": "medium",
+ "minutes": 12,
+ "title": "Overlapping extracts",
+ "dataset": {
+  "id": "PS-D08",
+  "version": "1.0.0"
+ },
+ "prompt": "A carrier's tracking API returns the events of three event days at a time, and each extract overlaps the one before, so late events show up in a later extract. Fix `save(batch)` so the Delta table ends with each event day as the latest extract that covered it.",
+ "rules": [
+  "Each event day in the table holds exactly the rows of the latest extract that covered that day: no row twice because extracts overlap, none lost.",
+  "Days that no later extract covered stay as they were.",
+  "Fetching the same extract again changes nothing.",
+  "Keep the table partitioned by `event_date`. Don't change `extract` or `solve`."
+ ],
+ "hints": [
+  "Run the starter on the sample and look at 5 March: which events are there twice?",
+  "Each extract should replace the event days it contains, not add to them, and leave the other days alone.",
+  "The lesson's dynamic partition overwrite replaces only the partitions in the new data. Which column must the table be partitioned by for that to work here?"
+ ],
+ "entry": "solve",
+ "inputs": [
+  "shipment_events"
+ ],
+ "starter": "import shutil\n\nfrom pyspark.sql import functions as F\n\nTARGET = \"/tmp/tracking/events\"\n\n\ndef extract(shipment_events, days, as_of):\n    # What the carrier's tracking API returns: the events that happened on `days`\n    # and had reached it by the end of `as_of`. Don't change this.\n    return (shipment_events\n        .select(\"*\", F.to_date(\"event_time\").alias(\"event_date\"))\n        .filter(F.col(\"event_date\").isin(days) & (F.col(\"load_date\") <= as_of)))\n\n\ndef save(batch):\n    # Write one extract to the Delta table at TARGET, partitioned by event_date.\n    batch.write.format(\"delta\").mode(\"append\").partitionBy(\"event_date\").save(TARGET)\n\n\ndef solve(shipment_events):\n    shutil.rmtree(TARGET, ignore_errors=True)  # start from an empty folder on every run\n    days = sorted(r.event_date for r in shipment_events.select(F.to_date(\"event_time\").alias(\"event_date\")).distinct().collect())\n    for start in range(3):\n        window = days[start:start + 3]  # each extract covers three event days, overlapping the one before\n        save(extract(shipment_events, window, window[-1]))\n    save(extract(shipment_events, days[2:5], days[2:5][-1]))  # the last extract, fetched again\n    return spark.read.format(\"delta\").load(TARGET)\n",
+ "output": {
+  "columns": [
+   "event_id",
+   "shipment_id",
+   "warehouse_id",
+   "event_type",
+   "event_time",
+   "location",
+   "sequence",
+   "load_date",
+   "is_correction",
+   "event_date"
+  ],
+  "order_sensitive": false
+ },
+ "visible": [
+  {
+   "id": "sample",
+   "sample": true
+  }
+ ],
+ "limits": {
+  "run_timeout_s": 120,
+  "check_timeout_s": 300,
+  "preview_rows": 100,
+  "max_rows": 10000
+ }
+}

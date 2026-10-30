@@ -1,0 +1,158 @@
+{
+  "id": "PS-L065",
+  "minutes": 25,
+  "lede": "Feeds change shape: a column is added, a type changes, a new system renames things. A Delta table checks every write against its schema, so a mismatch stops the write instead of quietly spoiling the table. Then you decide how the schema should change.",
+  "objectives": [
+    "Explain schema enforcement: what a Delta append accepts and what it refuses",
+    "Add a new column to a table with `mergeSchema`, and predict the values old rows get",
+    "Make a batch fit a table by renaming and casting to its exact types",
+    "Replace a table's schema on purpose with `overwriteSchema`, and know the limits of type widening"
+  ],
+  "dataset": {
+    "id": "PS-D04",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "encounters",
+      "claims"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "`encounters` holds eight clinic visits. Three are from December 2025 and five from January 2026. On 1 January 2026 the feed started sending a new column, `discharge_disposition`: where the patient went after the visit.\n\nThe examples rebuild that history. First the table as it was in 2025, from the three oldest visits and four columns. A Delta table stores its schema in its transaction log, in the `metaData` entry (lesson 61)."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "The 2025 table",
+      "code": "cols = [\"encounter_id\", \"patient_id\", \"encounter_class\", \"start_time\"]\nvisits_2025 = encounters.orderBy(\"start_time\").limit(3).select(cols)\n\npath = \"/tmp/clinic/encounters\"\nvisits_2025.write.format(\"delta\").save(path)\n\ntable = spark.read.format(\"delta\").load(path)\ntable.printSchema()\nprint(table.count(), \"visits\")\n",
+      "note": "`orderBy(\"start_time\").limit(3)` picks the three December visits. The table's schema is the DataFrame's: four columns."
+    },
+    {
+      "kind": "text",
+      "md": "Plain Parquet files accept whatever you write next to them, and readers find out later. Delta checks first. That is **schema enforcement**: an append whose columns or types don't fit the table's schema is refused, and nothing is written."
+    },
+    {
+      "kind": "error-example",
+      "id": "e2",
+      "title": "A batch with a new column",
+      "code": "cols = [\"encounter_id\", \"patient_id\", \"encounter_class\", \"start_time\"]\npath = \"/tmp/clinic/encounters\"\nencounters.orderBy(\"start_time\").limit(3).select(cols).write.format(\"delta\").save(path)\n\nvisits_2026 = encounters.orderBy(\"start_time\", ascending=False).limit(5).select(cols + [\"discharge_disposition\"])\nvisits_2026.write.format(\"delta\").mode(\"append\").save(path)\n",
+      "error": "AnalysisException",
+      "note": "The five 2026 visits carry `discharge_disposition`, which the table doesn't have. The full message prints both schemas and names the option that allows the change. The table ID in it is different on every run."
+    },
+    {
+      "kind": "text",
+      "md": "When the new column is wanted, say so: `.option(\"mergeSchema\", \"true\")` on the append. Delta adds the batch's new columns to the table's schema, **at the end**, and writes the batch. Rows written before have no value for the new column, so they read as NULL. Nothing is rewritten: the old files stay as they were."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Add the column with mergeSchema",
+      "code": "cols = [\"encounter_id\", \"patient_id\", \"encounter_class\", \"start_time\"]\npath = \"/tmp/clinic/encounters\"\nencounters.orderBy(\"start_time\").limit(3).select(cols).write.format(\"delta\").save(path)\n\nvisits_2026 = encounters.orderBy(\"start_time\", ascending=False).limit(5).select(cols + [\"discharge_disposition\"])\nvisits_2026.write.format(\"delta\").mode(\"append\").option(\"mergeSchema\", \"true\").save(path)\n\ntable = spark.read.format(\"delta\").load(path)\nprint(table.columns)\ntable.orderBy(\"start_time\").show()\n",
+      "note": "The three 2025 visits read NULL for the new column. Two 2026 visits are NULL too, for a different reason: telehealth visits never have a disposition."
+    },
+    {
+      "kind": "text",
+      "md": "Two things that look like mismatches are fine:\n\n- **Column order.** Delta matches an append's columns to the table's by name, not position.\n- **A missing column.** A batch that lacks one of the table's columns is accepted; that column is NULL for its rows. Data from an old system that never had the column can still be appended."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "A late visit from the old system",
+      "code": "from datetime import datetime\n\ncols = [\"encounter_id\", \"patient_id\", \"encounter_class\", \"start_time\"]\npath = \"/tmp/clinic/encounters\"\nencounters.orderBy(\"start_time\").limit(3).select(cols).write.format(\"delta\").save(path)\nvisits_2026 = encounters.orderBy(\"start_time\", ascending=False).limit(5).select(cols + [\"discharge_disposition\"])\nvisits_2026.write.format(\"delta\").mode(\"append\").option(\"mergeSchema\", \"true\").save(path)\n\nlate = spark.createDataFrame(\n    [(datetime(2025, 12, 29, 9, 30), \"ambulatory\", \"PAT00006\", \"ENC000009\")],\n    \"start_time TIMESTAMP, encounter_class STRING, patient_id STRING, encounter_id STRING\",\n)\nlate.write.format(\"delta\").mode(\"append\").save(path)\n\ntable = spark.read.format(\"delta\").load(path)\nprint(table.columns)\ntable.orderBy(\"start_time\").show()\n",
+      "note": "The late visit's columns come in another order and without `discharge_disposition`. No option is needed: it's matched by name and gets NULL."
+    },
+    {
+      "kind": "text",
+      "md": "Types are checked strictly. Here `claims` stores its amounts as `decimal(12,2)`, and a partner sends them as doubles. `mergeSchema` adds columns, but it doesn't change a column's type, so it doesn't help."
+    },
+    {
+      "kind": "error-example",
+      "id": "e5",
+      "title": "An amount of the wrong type",
+      "code": "from pyspark.sql import functions as F\n\npath = \"/tmp/clinic/claims\"\nclaims.select(\"claim_id\", \"billed_amount\", \"paid_amount\").write.format(\"delta\").save(path)\n\npartner = claims.select(\"claim_id\", F.col(\"billed_amount\").cast(\"double\").alias(\"billed_amount\"), \"paid_amount\")\npartner.write.format(\"delta\").mode(\"append\").option(\"mergeSchema\", \"true\").save(path)\n",
+      "error": "AnalysisException",
+      "note": "Delta can't merge a double into a `decimal(12,2)` column, so it refuses even with `mergeSchema`."
+    },
+    {
+      "kind": "text",
+      "md": "Make the batch fit instead: cast each column to the table's **exact** type (lesson 14) and give it the table's name. Exact really means exact. In this environment, an `int` batch into a `bigint` column and a `decimal(10,2)` into a `decimal(12,2)` column are both refused. Only very small integers (`tinyint`, `smallint`) go into an `int` column without a cast.\n\nDelta can widen a column's type, if the table allows it: the table property `delta.enableTypeWidening` lets a `mergeSchema` append widen `int` to `bigint`, for example. It only ever widens. A number never narrows, and text never becomes a number."
+    },
+    {
+      "kind": "example",
+      "id": "e6",
+      "title": "Cast to fit, or let the table widen",
+      "code": "from pyspark.sql import functions as F\n\npath = \"/tmp/clinic/claims\"\nclaims.select(\"claim_id\", \"billed_amount\", \"paid_amount\").write.format(\"delta\").save(path)\nprint(dict(spark.read.format(\"delta\").load(path).dtypes))\n\npartner = claims.select(\"claim_id\", F.col(\"billed_amount\").cast(\"double\").alias(\"billed_amount\"), \"paid_amount\")\nfixed = partner.select(\"claim_id\", F.col(\"billed_amount\").cast(\"decimal(12,2)\").alias(\"billed_amount\"), \"paid_amount\")\nfixed.write.format(\"delta\").mode(\"append\").save(path)\nprint(spark.read.format(\"delta\").load(path).count(), \"claims\")\n\nbigger = spark.createDataFrame([(\"PAT00002\", 3)], \"patient_id STRING, visits BIGINT\")\nfor widening in [\"false\", \"true\"]:\n    counts = \"/tmp/clinic/visit_counts_\" + widening\n    first = spark.createDataFrame([(\"PAT00001\", 2)], \"patient_id STRING, visits INT\")\n    first.write.format(\"delta\").option(\"delta.enableTypeWidening\", widening).save(counts)\n    try:\n        bigger.write.format(\"delta\").mode(\"append\").option(\"mergeSchema\", \"true\").save(counts)\n        print(\"widening\", widening, \"->\", dict(spark.read.format(\"delta\").load(counts).dtypes)[\"visits\"])\n    except Exception as e:\n        print(\"widening\", widening, \"-> refused:\", type(e).__name__)\n",
+      "note": "After the cast, the partner's seven claims append to the seven already there. In the second part, an `int` column refuses a `bigint` batch, even with `mergeSchema`. A table created with `delta.enableTypeWidening` set to `true` accepts it, and the column becomes `bigint`."
+    },
+    {
+      "kind": "text",
+      "md": "Sometimes you want a different schema altogether: columns dropped, renamed or retyped. An append can't do that, and a plain `overwrite` replaces the rows but **keeps the old schema**. Add `.option(\"overwriteSchema\", \"true\")` to an overwrite to replace the schema too. Use it on purpose: it's the one write that can silently remove columns other jobs read."
+    },
+    {
+      "kind": "example",
+      "id": "e7",
+      "title": "overwrite keeps the schema, overwriteSchema replaces it",
+      "code": "cols = [\"encounter_id\", \"patient_id\", \"encounter_class\", \"start_time\"]\npath = \"/tmp/clinic/encounters\"\nencounters.orderBy(\"start_time\").limit(3).select(cols).write.format(\"delta\").save(path)\n\nencounters.select(\"encounter_id\", \"patient_id\").write.format(\"delta\").mode(\"overwrite\").save(path)\nprint(\"overwrite:      \", spark.read.format(\"delta\").load(path).columns)\n\nencounters.select(\"encounter_id\", \"reason\").write.format(\"delta\").mode(\"overwrite\").option(\"overwriteSchema\", \"true\").save(path)\nprint(\"overwriteSchema:\", spark.read.format(\"delta\").load(path).columns)\n",
+      "note": "The plain overwrite wrote two columns, but the table still has four; the other two are NULL now. With `overwriteSchema` the table has exactly the new DataFrame's columns."
+    }
+  ],
+  "challenges": [
+    "PS-L065-C1",
+    "PS-L065-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "A Delta table has columns `a` and `b`. You append a batch with `a`, `b` and `c`, without any option. What happens?",
+      "choices": [
+        "The batch is appended and `c` is dropped",
+        "The append is refused and nothing is written",
+        "`c` is added to the table",
+        "The table is replaced by the batch"
+      ],
+      "answer": 1,
+      "why": "Schema enforcement refuses a write whose schema doesn't fit. Add `mergeSchema` to add `c`."
+    },
+    {
+      "id": "k2",
+      "prompt": "You append the 2026 visits with `mergeSchema`, adding `discharge_disposition`. What do the 2025 visits show in that column?",
+      "choices": [
+        "An empty string",
+        "The value of the first 2026 visit",
+        "NULL",
+        "The append fails because they have no value"
+      ],
+      "answer": 2,
+      "why": "The old rows' files are not rewritten. They have no value for the new column, so they read as NULL."
+    },
+    {
+      "id": "k3",
+      "prompt": "A table's `billed_amount` is `decimal(12,2)`. A batch has it as a double. Which write works?",
+      "choices": [
+        "Append the batch with `mergeSchema`",
+        "Append the batch as it is",
+        "Cast `billed_amount` to `decimal(12,2)`, then append",
+        "Cast `billed_amount` to `decimal(10,2)`, then append"
+      ],
+      "answer": 2,
+      "why": "Delta checks types exactly, and `mergeSchema` doesn't change an existing column's type. Only the table's exact type is accepted."
+    }
+  ],
+  "review": [
+    "A Delta table keeps its schema in its log and checks every write against it: a mismatch is refused, not written.",
+    "Columns are matched by name; a missing column becomes NULL, but an extra column is refused.",
+    "`mergeSchema` on an append adds the batch's new columns at the end; older rows read NULL there.",
+    "`mergeSchema` doesn't change types. Cast and rename the batch to the table's exact names and types.",
+    "With `delta.enableTypeWidening`, a `mergeSchema` append can widen a type such as `int` to `bigint`, never narrow it.",
+    "A plain `overwrite` keeps the table's schema; `overwriteSchema` replaces it."
+  ],
+  "practice": [
+    "PS-Q0321",
+    "PS-Q0322",
+    "PS-Q0323",
+    "PS-Q0324",
+    "PS-Q0325"
+  ]
+}

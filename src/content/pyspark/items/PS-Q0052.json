@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0052",
+  "slug": "quick-watch-shelf",
+  "lesson": "PS-L011",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "The quick-watch shelf",
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0"
+  },
+  "prompt": "The app's quick-watch shelf shows the five shortest films. Write `solve(movies)` so it returns them as `movie_id`, `title` and `runtime_min`, shortest first.",
+  "rules": [
+    "Sort by `runtime_min`, shortest first. Films with the same runtime are sorted by `title` from A to Z, then by `movie_id`.",
+    "A film with no runtime goes after every film that has one.",
+    "The table may hold the same film row twice: each film takes only one place on the shelf.",
+    "Return at most five rows, with three columns in this order: `movie_id`, `title`, `runtime_min`."
+  ],
+  "hints": [
+    "Remove repeated rows first with `distinct()`, then sort, then keep five rows with `limit(5)`.",
+    "An ascending sort puts missing values first. `F.col(\"runtime_min\").asc_nulls_last()` moves them to the end.",
+    "List all three sort keys in one `orderBy`, so ties at the fifth place are settled the same way every time."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "movies"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(movies):\n    # Return the five shortest films, shortest first.\n    return movies\n",
+  "output": {
+    "columns": [
+      "movie_id",
+      "title",
+      "runtime_min"
+    ],
+    "order_sensitive": true
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Three steps, in this order: `distinct()` so a film delivered twice can't take two places, `orderBy(F.col(\"runtime_min\").asc_nulls_last(), \"title\", \"movie_id\")` so the shortest come first and every tie is settled, then `limit(5)`. A plain ascending sort puts films with no runtime first, which would fill the shelf with unknowns; `asc_nulls_last()` sends them to the end. `limit` must come after the sort: `limit` first keeps five rows from wherever they happen to be and only then sorts them. `select` can go before or after, and `dropDuplicates()` works like `distinct()`."
+}

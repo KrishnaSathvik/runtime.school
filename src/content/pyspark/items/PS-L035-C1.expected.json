@@ -1,0 +1,91 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "account_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "transaction_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "posted_at",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "amount",
+     "type": "decimal(12,2)",
+     "nullable": true
+    },
+    {
+     "name": "spend_so_far",
+     "type": "decimal(22,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     null,
+     "T000002",
+     "2026-01-16T07:14:10",
+     "60.53",
+     "60.53"
+    ],
+    [
+     "A00001",
+     "T000003",
+     "2026-01-26T16:39:39",
+     "27.90",
+     "27.90"
+    ],
+    [
+     "A00001",
+     "T000008",
+     "2026-02-19T10:23:22",
+     "15.99",
+     "43.89"
+    ],
+    [
+     "A00001",
+     "T000010",
+     "2026-02-21T13:36:29",
+     "19.23",
+     "63.12"
+    ],
+    [
+     "A00006",
+     "T000014",
+     "2026-02-28T18:17:37",
+     "60.53",
+     "60.53"
+    ],
+    [
+     "A00008",
+     "T000011",
+     "2026-02-24T12:49:59",
+     "7.60",
+     "7.60"
+    ]
+   ],
+   "row_count": 6
+  }
+ },
+ "hidden": [
+  "the full practice transactions table",
+  "two debits posted at the same moment, out of order in the file",
+  "credits and pending or declined debits between posted ones",
+  "debits with a missing account",
+  "an empty transactions table"
+ ]
+}

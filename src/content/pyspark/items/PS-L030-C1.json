@@ -1,0 +1,26 @@
+{
+  "id": "PS-L030-C1",
+  "slug": "order-lines-without-double-counting",
+  "lesson": "PS-L030",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "Order lines without double counting",
+  "dataset": { "id": "PS-D01", "version": "1.1.0" },
+  "prompt": "The sales report lists every order line with its product name, and its line count must match `order_items` exactly. Write `solve(order_items, products)` so it returns `order_id`, `line_no`, `product_id` and `name`.",
+  "rules": [
+    "The product list sometimes arrives with a product row repeated. Repeated product rows are exact copies.",
+    "Every row of `order_items` appears exactly as many times as it does in `order_items`, no more and no fewer. A line whose product isn't in `products` keeps a missing `name`.",
+    "Return only these four columns, in this order."
+  ],
+  "hints": [
+    "Repeated product rows multiply the lines that match them. Fix the side that has the problem.",
+    "`products.dropDuplicates()` removes exact copies. Do it before the join, not after.",
+    "Which join type keeps a line whose product is missing from `products`?"
+  ],
+  "entry": "solve",
+  "inputs": ["order_items", "products"],
+  "starter": "def solve(order_items, products):\n    # Return each order line once per row of order_items, with its product name.\n    return order_items.select(\"order_id\", \"line_no\", \"product_id\")\n",
+  "output": { "columns": ["order_id", "line_no", "product_id", "name"], "order_sensitive": false },
+  "visible": [{ "id": "sample", "sample": true }],
+  "limits": { "run_timeout_s": 45, "check_timeout_s": 90, "preview_rows": 100, "max_rows": 10000 }
+}

@@ -1,0 +1,51 @@
+{
+  "id": "PS-Q0330",
+  "slug": "one-file-per-pickup-day",
+  "lesson": "PS-L066",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "One file per pickup day",
+  "dataset": {
+    "id": "PS-D07",
+    "version": "1.0.0"
+  },
+  "prompt": "Analysts read the trips one day at a time. Finish `write_table` and `compact` so the table is partitioned by the day each trip was picked up, and each day ends up as a single file. `layout` reports each day's files from the log.",
+  "rules": [
+    "Partition the table by a `pickup_date` column: the date of `pickup_at`. A trip with no pickup time is in a partition of its own.",
+    "After `compact`, every day's trips are in one file, and every trip is in the table.",
+    "Don't change `layout` or `solve`."
+  ],
+  "hints": [
+    "Run the starter and look at `layout`: with no partition column, every file lands under `None`.",
+    "`F.to_date` gives the date of a timestamp. Add it with `select(\"*\", ...)` and name it with `alias`, then write with `partitionBy`.",
+    "The feed comes in three parts, so a day can start with three files. OPTIMIZE packs each partition's files together."
+  ],
+  "explanation": "Add the day with `select(\"*\", F.to_date(\"pickup_at\").alias(\"pickup_date\"))` and write with `partitionBy(\"pickup_date\")`. The feed's three parts each write a file for every day they hold, so a day starts with up to three files; `optimize().executeCompaction()` packs each partition's files into one, a day at a time. The trip picked up at 23:48 belongs to the day it started, even though it ends after midnight: partitioning by `dropoff_at` moves it to the next day. A trip with no `pickup_at` gets a NULL date, which Delta keeps as a partition of its own. Repartitioning by `pickup_date` before the write also gives one file per day without a compaction; both are fine.",
+  "entry": "solve",
+  "inputs": [
+    "trips"
+  ],
+  "starter": "import json\nimport os\nimport shutil\n\nfrom pyspark.sql import functions as F\nfrom delta.tables import DeltaTable\n\n\ndef layout(path):\n    # One row per pickup day: the table's data files and their trips, from the log. Don't change this.\n    files = {}\n    log = path + \"/_delta_log/\"\n    for name in sorted(f for f in os.listdir(log) if f.endswith(\".json\")):\n        with open(log + name) as f:\n            for line in f:\n                action = json.loads(line)\n                if \"add\" in action:\n                    add = action[\"add\"]\n                    files[add[\"path\"]] = (add[\"partitionValues\"].get(\"pickup_date\"), json.loads(add[\"stats\"])[\"numRecords\"])\n                if \"remove\" in action:\n                    files.pop(action[\"remove\"][\"path\"], None)\n    by_day = {}\n    for day, rows in files.values():\n        by_day.setdefault(day, []).append(rows)\n    return spark.createDataFrame(\n        [(day, len(rows), sum(rows)) for day, rows in by_day.items()],\n        \"pickup_date STRING, files INT, trips INT\",\n    )\n\n\ndef write_table(trips, path):\n    # Write the trips partitioned by the day they were picked up.\n    trips.write.format(\"delta\").save(path)\n\n\ndef compact(path):\n    # Compact the table so each day is one file.\n    pass\n\n\ndef solve(trips):\n    path = \"/tmp/taxi/trips_by_day\"\n    shutil.rmtree(path, ignore_errors=True)  # start from an empty folder on every run\n    feed = trips.repartition(3)  # the feed hands the trips over in three parts\n    write_table(feed, path)\n    compact(path)\n    return layout(path)\n",
+  "output": {
+    "columns": [
+      "pickup_date",
+      "files",
+      "trips"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "sample": true
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 90,
+    "check_timeout_s": 180,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "id": "PS-Q0136",
+  "slug": "shipments-from-each-stock-line",
+  "lesson": "PS-L028",
+  "role": "foundation",
+  "format": "dataframe_coding",
+  "difficulty": "easy",
+  "minutes": 8,
+  "title": "Shipments from each stock line",
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0"
+  },
+  "prompt": "Warehouse managers want each stock line next to the shipments that draw on it. Write `solve(inventory, shipments)` so it returns `warehouse_id`, `sku`, `sku_name`, `on_hand`, `shipment_id` and `quantity`.",
+  "rules": [
+    "A stock line is one warehouse and one SKU. A shipment draws on the line with the same `warehouse_id` and the same `sku`.",
+    "A stock line appears once per shipment that draws on it. A stock line with no shipments appears once, with `shipment_id` and `quantity` missing.",
+    "Shipments with no matching stock line are not listed. Return only these six columns, in this order."
+  ],
+  "hints": [
+    "The same SKU is stocked in several warehouses, so matching on `sku` alone would pair a shipment with every warehouse's stock.",
+    "Pass both key columns as a list: `on=[\"warehouse_id\", \"sku\"]`. A row pairs only when both are equal.",
+    "Every stock line must appear, so `inventory` is the left side of a left join."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "inventory",
+    "shipments"
+  ],
+  "starter": "def solve(inventory, shipments):\n    # Each stock line with the shipments that draw on it.\n    return inventory\n",
+  "output": {
+    "columns": [
+      "warehouse_id",
+      "sku",
+      "sku_name",
+      "on_hand",
+      "shipment_id",
+      "quantity"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "The key of a stock line is two columns, so join on both: `inventory.join(shipments, on=[\"warehouse_id\", \"sku\"], how=\"left\")`, then select the six columns. A left join from `inventory` keeps lines with no shipments, with NULL shipment columns. Joining on `sku` alone would pair each tape shipment with the tape stock of every warehouse, and the key columns would be ambiguous; joining on `warehouse_id` alone pairs it with every SKU in its warehouse."
+}

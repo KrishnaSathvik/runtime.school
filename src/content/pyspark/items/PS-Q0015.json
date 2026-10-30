@@ -1,0 +1,24 @@
+{
+  "id": "PS-Q0015",
+  "kind": "predict",
+  "slug": "range-from-a-setting",
+  "lesson": "PS-L003",
+  "role": "integration",
+  "format": "concept_or_trace",
+  "difficulty": "easy",
+  "minutes": 4,
+  "title": "A range from a setting",
+  "prompt": "This program builds a range from a session setting and the `courses` table. What does it print? Type each line on its own line.",
+  "program": "n = int(spark.conf.get(\"spark.sql.shuffle.partitions\"))\nnums = spark.range(n, n * courses.count())\nprint(nums.count())\nprint(nums.columns + courses.columns[:1])\nprint(nums.sparkSession is courses.sparkSession)\n",
+  "dataset": {
+    "id": "PS-D11",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "The shuffle setting is 4 in this environment, and `int` turns the text into a number.",
+    "Count the courses, then work out where the range starts and where it stops (the end is left out).",
+    "Both DataFrames were made through the session that's already running."
+  ],
+  "explanation": "`n` is 4 and there are 4 courses, so the range runs from 4 up to (not including) 16: 12 rows. `columns` lists are plain Python lists, so `+` joins `['id']` and `['course_id']`. Every DataFrame here was made by the one running session, so `is` gives `True`."
+}

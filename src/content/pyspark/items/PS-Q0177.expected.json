@@ -1,0 +1,75 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "user_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "sessions",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "multi_play_sessions",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "most_plays",
+     "type": "bigint",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "U01",
+     4,
+     1,
+     2
+    ],
+    [
+     "U02",
+     2,
+     1,
+     2
+    ],
+    [
+     "U03",
+     1,
+     0,
+     1
+    ],
+    [
+     "U04",
+     1,
+     1,
+     2
+    ],
+    [
+     "U05",
+     1,
+     0,
+     1
+    ]
+   ],
+   "row_count": 5
+  }
+ },
+ "hidden": [
+  "the full practice viewing history",
+  "gaps of exactly 30 minutes and just over",
+  "a play with no end time before the next one",
+  "a session of three plays, one starting before the previous ended",
+  "members whose sessions all have one play",
+  "an empty viewing history"
+ ]
+}

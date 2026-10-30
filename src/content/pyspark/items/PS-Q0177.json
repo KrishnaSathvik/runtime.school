@@ -1,0 +1,53 @@
+{
+  "id": "PS-Q0177",
+  "slug": "session-report-per-member",
+  "lesson": "PS-L036",
+  "role": "business",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Viewing profile per member",
+  "dataset": {
+    "id": "PS-D05",
+    "version": "1.0.0"
+  },
+  "prompt": "The product team wants a short viewing profile for each member. Write `solve(watch_sessions)` so it returns how many viewing sessions each member had, how many of them had more than one play, and the most plays in one session.",
+  "rules": [
+    "Go through each `user_id`'s plays in `started_at` order (`watch_id` settles a tie). A play starts a new session when it starts more than 30 minutes after the previous play's `ended_at`; exactly 30 minutes still continues it. A member's first play starts a session.",
+    "If the previous play has no `ended_at`, the play continues the session.",
+    "`sessions` counts the member's sessions, `multi_play_sessions` counts those with two or more plays, and `most_plays` is the largest number of plays in one session.",
+    "Return `user_id`, `sessions`, `multi_play_sessions` and `most_plays`, one row per member."
+  ],
+  "hints": [
+    "First give every play a session number: mark the plays that start a session, then take a running sum of the marks.",
+    "Group by member and session number to count the plays in each session. Then group that result by member.",
+    "A condition cast to `int` is 1 or 0, so `F.sum((F.col(\"plays\") >= 2).cast(\"int\"))` counts the sessions with two or more plays."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "watch_sessions"
+  ],
+  "starter": "from pyspark.sql import functions as F\nfrom pyspark.sql.window import Window\n\n\ndef solve(watch_sessions):\n    # One row per member: sessions, multi_play_sessions and most_plays.\n    return watch_sessions\n",
+  "output": {
+    "columns": [
+      "user_id",
+      "sessions",
+      "multi_play_sessions",
+      "most_plays"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Number the sessions first: the gap is `F.col(\"started_at\").cast(\"long\") - F.lag(F.col(\"ended_at\").cast(\"long\"), 1, 0).over(w)`, the mark is `(gap_s > 30 * 60).cast(\"int\")`, and a running `F.sum` of the marks over `w = Window.partitionBy(\"user_id\").orderBy(\"started_at\", \"watch_id\")` is the session number. `groupBy(\"user_id\", \"session_no\").agg(F.count(\"*\").alias(\"plays\"))` gives one row per session, and a second `groupBy(\"user_id\")` adds them up: `F.count(\"*\")`, `F.sum((F.col(\"plays\") >= 2).cast(\"int\"))` and `F.max(\"plays\")`. Using `>=` for the gap would split a session at exactly 30 minutes, and a gap measured from the previous play's start splits sessions too early."
+}

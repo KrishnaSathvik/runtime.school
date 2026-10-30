@@ -1,0 +1,66 @@
+{
+  "id": "PS-Q0249",
+  "slug": "fix-average-response-size",
+  "lesson": "PS-L050",
+  "role": "debugging",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 12,
+  "title": "Fix the average response size",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "This job reports the average response size per HTTP method, but the numbers don't match a hand count, and it crashes when a method has a single request. Fix `solve(api_requests)` so `avg_bytes` is the true average of `bytes_sent` per `method`.",
+  "rules": [
+    "One row per `method` that has at least one request with a `bytes_sent`. Requests with a missing `bytes_sent` are left out.",
+    "`avg_bytes` is the sum of the values divided by how many there are, not rounded.",
+    "Return `method` (text) and `avg_bytes` (`double`), in that order. Keep repeated requests."
+  ],
+  "hints": [
+    "Work the starter's function by hand on three values, 10, 20 and 60. Does it give 30?",
+    "`reduceByKey` combines values two at a time in any order, so averaging pairs isn't the average of all of them.",
+    "Carry `(sum, count)`, add both parts, and divide once at the end with `mapValues`. That also makes every result a float."
+  ],
+  "explanation": "`(a + b) / 2` averages two values at a time, so with three or more values the answer depends on the order they were combined in: 10, 20 and 60 give 37.5, 27.5 or 25, never 30. A method with one request is never combined at all, so its value stays a Python `int`, which a `double` column refuses. Carry `(bytes_sent, 1)`, add both parts in `reduceByKey`, and finish with `mapValues(lambda s: s[0] / s[1])`; `/` always gives a float.",
+  "entry": "solve",
+  "inputs": [
+    "api_requests"
+  ],
+  "starter": "def solve(api_requests):\n    averages = (\n        api_requests.rdd\n        .filter(lambda r: r[\"bytes_sent\"] is not None)\n        .map(lambda r: (r[\"method\"], r[\"bytes_sent\"]))\n        .reduceByKey(lambda a, b: (a + b) / 2)\n    )\n    return averages.toDF(\"method string, avg_bytes double\")\n",
+  "output": {
+    "columns": [
+      "method",
+      "avg_bytes"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "technique": {
+    "name": "pair RDD functions",
+    "plan": [
+      "Scan"
+    ],
+    "source": [
+      "reduceByKey",
+      "groupByKey",
+      "aggregateByKey",
+      "combineByKey",
+      "foldByKey",
+      "mapValues",
+      "flatMapValues",
+      "countByKey"
+    ]
+  }
+}

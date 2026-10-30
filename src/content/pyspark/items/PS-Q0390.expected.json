@@ -1,0 +1,234 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "observation_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "value",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "band",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "reason",
+     "type": "string",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "OBS000001",
+     8.7,
+     "diabetes",
+     null
+    ],
+    [
+     "OBS000002",
+     5.7,
+     "prediabetes",
+     null
+    ],
+    [
+     "OBS000003",
+     6.5,
+     "diabetes",
+     null
+    ],
+    [
+     "OBS000004",
+     null,
+     null,
+     "missing_value"
+    ],
+    [
+     "OBS000005",
+     "NaN",
+     null,
+     "not_a_number"
+    ],
+    [
+     "OBS000006",
+     45.0,
+     null,
+     "implausible"
+    ],
+    [
+     "OBS000007",
+     6.1,
+     null,
+     "wrong_unit"
+    ],
+    [
+     "OBS000008",
+     52.0,
+     null,
+     "wrong_unit"
+    ],
+    [
+     "OBS000009",
+     5.9,
+     null,
+     "wrong_unit"
+    ],
+    [
+     "OBS000010",
+     0.0,
+     null,
+     "implausible"
+    ],
+    [
+     "OBS000012",
+     20.0,
+     "diabetes",
+     null
+    ]
+   ],
+   "row_count": 11,
+   "inputs": {
+    "observations": [
+     [
+      "OBS000001",
+      "ENC000001",
+      "PAT00001",
+      "HBA1C",
+      "Hemoglobin A1c",
+      "8.7",
+      "%",
+      "2026-01-02T10:00:00"
+     ],
+     [
+      "OBS000002",
+      "ENC000002",
+      "PAT00001",
+      "HBA1C",
+      "Hemoglobin A1c",
+      "5.7",
+      "%",
+      "2026-01-03T10:00:00"
+     ],
+     [
+      "OBS000003",
+      "ENC000003",
+      "PAT00001",
+      "HBA1C",
+      "Hemoglobin A1c",
+      "6.5",
+      "%",
+      "2026-01-04T10:00:00"
+     ],
+     [
+      "OBS000004",
+      "ENC000004",
+      "PAT00001",
+      "HBA1C",
+      "Hemoglobin A1c",
+      null,
+      "%",
+      "2026-01-05T10:00:00"
+     ],
+     [
+      "OBS000005",
+      "ENC000005",
+      "PAT00001",
+      "HBA1C",
+      "Hemoglobin A1c",
+      "NaN",
+      "%",
+      "2026-01-06T10:00:00"
+     ],
+     [
+      "OBS000006",
+      "ENC000006",
+      "PAT00001",
+      "HBA1C",
+      "Hemoglobin A1c",
+      "45.0",
+      "%",
+      "2026-01-07T10:00:00"
+     ],
+     [
+      "OBS000007",
+      "ENC000007",
+      "PAT00001",
+      "HBA1C",
+      "Hemoglobin A1c",
+      "6.1",
+      "mmol/mol",
+      "2026-01-08T10:00:00"
+     ],
+     [
+      "OBS000008",
+      "ENC000008",
+      "PAT00001",
+      "HBA1C",
+      "Hemoglobin A1c",
+      "52.0",
+      "mmol/mol",
+      "2026-01-09T10:00:00"
+     ],
+     [
+      "OBS000009",
+      "ENC000009",
+      "PAT00001",
+      "HBA1C",
+      "Hemoglobin A1c",
+      "5.9",
+      null,
+      "2026-01-10T10:00:00"
+     ],
+     [
+      "OBS000010",
+      "ENC000010",
+      "PAT00001",
+      "HBA1C",
+      "Hemoglobin A1c",
+      "0.0",
+      "%",
+      "2026-01-11T10:00:00"
+     ],
+     [
+      "OBS000011",
+      "ENC000011",
+      "PAT00001",
+      "GLU",
+      "Glucose",
+      "131.0",
+      "mg/dL",
+      "2026-01-12T10:00:00"
+     ],
+     [
+      "OBS000012",
+      "ENC000012",
+      "PAT00001",
+      "HBA1C",
+      "Hemoglobin A1c",
+      "20.0",
+      "%",
+      "2026-01-13T10:00:00"
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice observations",
+  "the lesson observations",
+  "results with no value and values that aren't numbers",
+  "results in other units, with no unit, and values outside the plausible range",
+  "no observations"
+ ]
+}

@@ -1,0 +1,21 @@
+{
+  "id": "PS-L046-C2",
+  "kind": "predict",
+  "slug": "avro-and-merged-schemas",
+  "lesson": "PS-L046",
+  "difficulty": "medium",
+  "minutes": 6,
+  "title": "Avro and merged schemas",
+  "prompt": "This program saves the 5 lesson invoices as Avro, then as two Parquet folders with different columns, and reads them back. What does it print? Type each line on its own line.",
+  "program": "invoices.select(\"invoice_id\", \"invoice_date\", \"total_amount\").write.mode(\"overwrite\").format(\"avro\").save(\"/tmp/c2/avro\")\nprint(spark.read.format(\"avro\").load(\"/tmp/c2/avro\").dtypes)\n\ninvoices.select(\"invoice_id\").write.mode(\"overwrite\").parquet(\"/tmp/c2/a\")\ninvoices.select(\"invoice_id\", \"status\").write.mode(\"overwrite\").parquet(\"/tmp/c2/b\")\nmerged = spark.read.option(\"mergeSchema\", \"true\").parquet(\"/tmp/c2/a\", \"/tmp/c2/b\")\nprint(merged.columns, merged.count())\n",
+  "dataset": {
+    "id": "PS-D14",
+    "version": "1.0.0"
+  },
+  "edition": "lesson",
+  "hints": [
+    "Avro stores its schema with the data, so types survive the round trip.",
+    "Reading two folders gives the rows of both.",
+    "`mergeSchema` combines the columns of every file; it doesn't remove rows."
+  ]
+}

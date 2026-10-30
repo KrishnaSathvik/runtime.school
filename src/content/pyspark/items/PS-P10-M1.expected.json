@@ -1,0 +1,709 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "example": {
+   "schema": [
+    {
+     "name": "reading_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "device_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "event_time",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "arrival_time",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "temperature_c",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "humidity_pct",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "battery_v",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "firmware",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "delay_s",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "late",
+     "type": "boolean",
+     "nullable": true
+    },
+    {
+     "name": "glitch",
+     "type": "boolean",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "R9001",
+     "DEV-101",
+     "2026-05-12T00:00:00",
+     "2026-05-12T00:02:00",
+     31.0,
+     60.0,
+     3.9,
+     "ok",
+     "2.3.1",
+     120,
+     false,
+     false
+    ],
+    [
+     "R9002",
+     "DEV-101",
+     "2026-05-12T00:30:00",
+     "2026-05-12T00:31:00",
+     33.5,
+     82.0,
+     3.9,
+     "ok",
+     "2.3.1",
+     60,
+     false,
+     false
+    ],
+    [
+     "R9003",
+     "DEV-102",
+     "2026-05-12T00:15:00",
+     "2026-05-12T00:15:40",
+     2.0,
+     null,
+     3.25,
+     "low_battery",
+     "2.3.1",
+     40,
+     false,
+     false
+    ],
+    [
+     "R9002",
+     "DEV-101",
+     "2026-05-12T00:30:00",
+     "2026-05-12T00:45:00",
+     33.5,
+     82.0,
+     3.9,
+     "ok",
+     "2.3.1",
+     900,
+     true,
+     false
+    ],
+    [
+     "R9004",
+     "DEV-199",
+     "2026-05-12T01:00:00",
+     "2026-05-12T01:00:10",
+     20.0,
+     50.0,
+     3.8,
+     "ok",
+     "2.3.1",
+     10,
+     false,
+     false
+    ],
+    [
+     "R9005",
+     "DEV-103",
+     "2026-05-12T01:00:00",
+     "2026-05-12T01:00:20",
+     45.0,
+     50.0,
+     3.8,
+     "ok",
+     "2.3.1",
+     20,
+     false,
+     false
+    ],
+    [
+     "R9006",
+     "DEV-101",
+     "2026-05-12T01:20:00",
+     "2026-05-12T02:25:00",
+     34.0,
+     70.0,
+     3.9,
+     "ok",
+     "2.3.1",
+     3900,
+     true,
+     false
+    ],
+    [
+     "R9007",
+     "DEV-104",
+     "2026-05-12T02:00:00",
+     "2026-05-12T02:01:00",
+     999.0,
+     50.0,
+     3.8,
+     "ok",
+     "2.3.1",
+     60,
+     false,
+     true
+    ],
+    [
+     "R9007",
+     "DEV-104",
+     "2026-05-12T02:00:00",
+     "2026-05-12T03:05:00",
+     999.0,
+     50.0,
+     3.8,
+     "ok",
+     "2.3.1",
+     3900,
+     true,
+     true
+    ],
+    [
+     "R9008",
+     "DEV-101",
+     "2026-05-12T03:15:00",
+     "2026-05-12T03:16:00",
+     null,
+     85.0,
+     3.9,
+     null,
+     "2.3.1",
+     60,
+     false,
+     false
+    ],
+    [
+     "R9009",
+     "DEV-101",
+     "2026-05-12T00:45:00",
+     "2026-05-12T04:10:00",
+     36.0,
+     70.0,
+     3.9,
+     "ok",
+     "2.3.1",
+     12300,
+     true,
+     false
+    ],
+    [
+     "R9010",
+     "DEV-104",
+     "2026-05-12T06:30:00",
+     "2026-05-12T06:31:00",
+     25.0,
+     null,
+     3.7,
+     "ok",
+     null,
+     60,
+     false,
+     false
+    ]
+   ],
+   "row_count": 12,
+   "inputs": {
+    "sensor_readings": [
+     [
+      "R9001",
+      "DEV-101",
+      "2026-05-12T00:00:00",
+      "2026-05-12T00:02:00",
+      "0",
+      "{\"temperature_c\":31.0,\"humidity_pct\":60.0,\"battery_v\":3.9,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9002",
+      "DEV-101",
+      "2026-05-12T00:30:00",
+      "2026-05-12T00:31:00",
+      "0",
+      "{\"temperature_c\":33.5,\"humidity_pct\":82.0,\"battery_v\":3.9,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9003",
+      "DEV-102",
+      "2026-05-12T00:15:00",
+      "2026-05-12T00:15:40",
+      "0",
+      "{\"temperature_c\":2.0,\"humidity_pct\":null,\"battery_v\":3.25,\"status\":\"low_battery\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9002",
+      "DEV-101",
+      "2026-05-12T00:30:00",
+      "2026-05-12T00:45:00",
+      "0",
+      "{\"temperature_c\":33.5,\"humidity_pct\":82.0,\"battery_v\":3.9,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9004",
+      "DEV-199",
+      "2026-05-12T01:00:00",
+      "2026-05-12T01:00:10",
+      "1",
+      "{\"temperature_c\":20.0,\"humidity_pct\":50.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9005",
+      "DEV-103",
+      "2026-05-12T01:00:00",
+      "2026-05-12T01:00:20",
+      "1",
+      "{\"temperature_c\":45.0,\"humidity_pct\":50.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9006",
+      "DEV-101",
+      "2026-05-12T01:20:00",
+      "2026-05-12T02:25:00",
+      "2",
+      "{\"temperature_c\":34.0,\"humidity_pct\":70.0,\"battery_v\":3.9,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9007",
+      "DEV-104",
+      "2026-05-12T02:00:00",
+      "2026-05-12T02:01:00",
+      "2",
+      "{\"temperature_c\":999.0,\"humidity_pct\":50.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9007",
+      "DEV-104",
+      "2026-05-12T02:00:00",
+      "2026-05-12T03:05:00",
+      "3",
+      "{\"temperature_c\":999.0,\"humidity_pct\":50.0,\"battery_v\":3.8,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9008",
+      "DEV-101",
+      "2026-05-12T03:15:00",
+      "2026-05-12T03:16:00",
+      "3",
+      "{\"temperature_c\":null,\"humidity_pct\":85.0,\"battery_v\":3.9,\"status\":null,\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9009",
+      "DEV-101",
+      "2026-05-12T00:45:00",
+      "2026-05-12T04:10:00",
+      "4",
+      "{\"temperature_c\":36.0,\"humidity_pct\":70.0,\"battery_v\":3.9,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      "{\"version\":\"2.3.1\",\"build\":231}"
+     ],
+     [
+      "R9010",
+      "DEV-104",
+      "2026-05-12T06:30:00",
+      "2026-05-12T06:31:00",
+      "6",
+      "{\"temperature_c\":25.0,\"humidity_pct\":null,\"battery_v\":3.7,\"status\":\"ok\",\"tags\":[\"indoor\"]}",
+      null
+     ]
+    ]
+   }
+  },
+  "project": {
+   "schema": [
+    {
+     "name": "reading_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "device_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "event_time",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "arrival_time",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "temperature_c",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "humidity_pct",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "battery_v",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "status",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "firmware",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "delay_s",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "late",
+     "type": "boolean",
+     "nullable": true
+    },
+    {
+     "name": "glitch",
+     "type": "boolean",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "R000001",
+     "DEV-001",
+     "2026-05-11T00:00:00",
+     "2026-05-11T00:00:02",
+     2.7,
+     null,
+     3.63,
+     "ok",
+     "2.3.1",
+     2,
+     false,
+     false
+    ],
+    [
+     "R004007",
+     "DEV-015",
+     "2026-05-11T00:00:00",
+     "2026-05-11T00:00:09",
+     20.3,
+     71.2,
+     4.06,
+     "ok",
+     "2.3.1",
+     9,
+     false,
+     false
+    ],
+    [
+     "R002289",
+     "DEV-009",
+     "2026-05-11T00:00:00",
+     "2026-05-11T00:00:24",
+     2.7,
+     null,
+     3.53,
+     "ok",
+     "2.3.1",
+     24,
+     false,
+     false
+    ],
+    [
+     "R003149",
+     "DEV-012",
+     "2026-05-11T00:00:00",
+     "2026-05-11T00:01:13",
+     23.8,
+     38.3,
+     4.02,
+     "ok",
+     "2.3.1",
+     73,
+     false,
+     false
+    ],
+    [
+     "R004583",
+     "DEV-017",
+     "2026-05-11T00:01:00",
+     "2026-05-11T00:01:14",
+     2.6,
+     null,
+     3.91,
+     "ok",
+     "2.3.1",
+     14,
+     false,
+     false
+    ],
+    [
+     "R003722",
+     "DEV-014",
+     "2026-05-11T00:00:00",
+     "2026-05-11T00:01:17",
+     21.3,
+     43.6,
+     3.6,
+     "ok",
+     "2.3.1",
+     77,
+     false,
+     false
+    ],
+    [
+     "R002863",
+     "DEV-011",
+     "2026-05-11T00:01:00",
+     "2026-05-11T00:01:28",
+     19.5,
+     72.1,
+     3.4,
+     "ok",
+     "2.3.1",
+     28,
+     false,
+     false
+    ],
+    [
+     "R004295",
+     "DEV-016",
+     "2026-05-11T00:01:00",
+     "2026-05-11T00:01:39",
+     22.3,
+     39.3,
+     3.63,
+     "ok",
+     "2.3.1",
+     39,
+     false,
+     false
+    ],
+    [
+     "R003434",
+     "DEV-013",
+     "2026-05-11T00:00:00",
+     "2026-05-11T00:01:43",
+     2.7,
+     null,
+     4.01,
+     "ok",
+     "2.3.1",
+     103,
+     false,
+     false
+    ],
+    [
+     "R004871",
+     "DEV-018",
+     "2026-05-11T00:01:00",
+     "2026-05-11T00:01:52",
+     21.3,
+     41.4,
+     3.75,
+     "ok",
+     "2.3.1",
+     52,
+     false,
+     false
+    ],
+    [
+     "R002575",
+     "DEV-010",
+     "2026-05-11T00:01:00",
+     "2026-05-11T00:02:04",
+     21.1,
+     43.4,
+     3.92,
+     "ok",
+     "2.3.1",
+     64,
+     false,
+     false
+    ],
+    [
+     "R001139",
+     "DEV-005",
+     "2026-05-11T00:02:00",
+     "2026-05-11T00:02:13",
+     2.6,
+     null,
+     3.41,
+     "ok",
+     "2.3.1",
+     13,
+     false,
+     false
+    ],
+    [
+     "R001425",
+     "DEV-006",
+     "2026-05-11T00:01:00",
+     "2026-05-11T00:02:15",
+     20.0,
+     41.4,
+     3.59,
+     "ok",
+     "2.3.1",
+     75,
+     false,
+     false
+    ],
+    [
+     "R002001",
+     "DEV-008",
+     "2026-05-11T00:02:00",
+     "2026-05-11T00:02:24",
+     23.5,
+     39.6,
+     3.78,
+     "ok",
+     "2.3.1",
+     24,
+     false,
+     false
+    ],
+    [
+     "R000567",
+     "DEV-003",
+     "2026-05-11T00:01:00",
+     "2026-05-11T00:02:47",
+     19.6,
+     74.3,
+     3.41,
+     "ok",
+     "2.3.1",
+     107,
+     false,
+     false
+    ],
+    [
+     "R000287",
+     "DEV-002",
+     "2026-05-11T00:02:00",
+     "2026-05-11T00:03:18",
+     21.3,
+     42.1,
+     3.66,
+     "ok",
+     "2.3.1",
+     78,
+     false,
+     false
+    ],
+    [
+     "R001713",
+     "DEV-007",
+     "2026-05-11T00:02:00",
+     "2026-05-11T00:03:48",
+     19.6,
+     70.0,
+     3.59,
+     "ok",
+     "2.3.1",
+     108,
+     false,
+     false
+    ],
+    [
+     "R003435",
+     "DEV-013",
+     "2026-05-11T00:15:00",
+     "2026-05-11T00:15:13",
+     2.6,
+     null,
+     4.01,
+     "ok",
+     "2.3.1",
+     13,
+     false,
+     false
+    ],
+    [
+     "R003723",
+     "DEV-014",
+     "2026-05-11T00:15:00",
+     "2026-05-11T00:15:37",
+     21.0,
+     42.5,
+     3.6,
+     "ok",
+     "2.3.1",
+     37,
+     false,
+     false
+    ],
+    [
+     "R000853",
+     "DEV-004",
+     "2026-05-11T00:15:00",
+     "2026-05-11T00:16:00",
+     23.6,
+     38.3,
+     3.48,
+     "ok",
+     "2.3.1",
+     60,
+     false,
+     false
+    ]
+   ],
+   "row_count": 5384
+  }
+ },
+ "hidden": [
+  "the full practice tables: two days of readings from twelve sensors",
+  "values on and just past the sensor limits, missing payloads and firmware, delays of exactly two minutes, and many arrival hours",
+  "no readings"
+ ]
+}

@@ -1,0 +1,54 @@
+{
+  "id": "PS-Q0128",
+  "slug": "orphan-transactions",
+  "lesson": "PS-L026",
+  "role": "edge",
+  "format": "dataframe_coding",
+  "difficulty": "hard",
+  "minutes": 17,
+  "title": "Transactions with no account",
+  "dataset": {
+    "id": "PS-D02",
+    "version": "1.0.0"
+  },
+  "prompt": "Some transactions arrive for an account the bank doesn't have, or with no account at all. Write `solve(transactions, accounts)` to return those transactions and label the problem with each one.",
+  "rules": [
+    "A transaction is an orphan when its `account_id` matches no `account_id` in `accounts`. Ids match only when they are exactly equal, case included.",
+    "A missing (NULL) `account_id` never matches anything, not even a missing id in `accounts`. Those transactions are orphans too.",
+    "`issue` is `missing account` when `account_id` is missing, and `unknown account` otherwise.",
+    "Return `transaction_id`, `account_id`, `amount` and `issue`, in that order. Keep repeated rows as they come."
+  ],
+  "hints": [
+    "You want the transactions with no match in `accounts`: that's a left anti join with `transactions` on the left.",
+    "An anti join keeps a row with a missing key, because a missing key can't match. Don't drop those rows before or after the join.",
+    "To test for a missing value use `F.col(\"account_id\").isNull()` inside `F.when(...)`. Comparing with `== None` is never true."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "transactions",
+    "accounts"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\n\ndef solve(transactions, accounts):\n    # Return the transactions whose account doesn't exist, with an issue label.\n    return transactions\n",
+  "output": {
+    "columns": [
+      "transaction_id",
+      "account_id",
+      "amount",
+      "issue"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  },
+  "explanation": "Anti join with transactions on the left: `transactions.join(accounts, on=\"account_id\", how=\"left_anti\")`. A missing key equals nothing, so a transaction with no `account_id` has no match and stays in the result, which is what we want. Then label it with `F.when(F.col(\"account_id\").isNull(), \"missing account\").otherwise(\"unknown account\")` and select the four columns. Two traps: `F.col(\"account_id\") == None` is never true, so every row would be labelled unknown; and a null-safe match (`eqNullSafe`) would pair a missing id with a broken account row that has no id, hiding the orphan."
+}

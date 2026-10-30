@@ -1,0 +1,47 @@
+{
+ "generated_by": "services/spark-runner/run.py build-lesson",
+ "dataset": {
+  "id": "PS-D15",
+  "version": "1.0.0",
+  "edition": "lesson",
+  "tables": [
+   "api_requests"
+  ]
+ },
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "examples": {
+  "e1": {
+   "stdout": "[('catalog-api', 42), ('catalog-api', 38), ('auth-service', 61), ('checkout-api', 236)]\n['catalog-api', 'catalog-api', 'auth-service', 'checkout-api']\n[42, 38, 61, 236]\n",
+   "error": null
+  },
+  "e2": {
+   "stdout": "[('auth-service', 1), ('catalog-api', 5), ('checkout-api', 2), ('iot-gateway', 2), ('search-api', 2)]\n[('auth-service', 61), ('catalog-api', 51), ('checkout-api', 1240), ('iot-gateway', 24), ('search-api', 162)]\n",
+   "error": null
+  },
+  "e3": {
+   "stdout": "[('auth-service', (61, 1)), ('catalog-api', (183, 5)), ('checkout-api', (1476, 2)), ('iot-gateway', (46, 2)), ('search-api', (280, 2))]\n[('auth-service', 61.0), ('catalog-api', 36.6), ('checkout-api', 738.0), ('iot-gateway', 23.0), ('search-api', 140.0)]\n",
+   "error": null
+  },
+  "e4": {
+   "stdout": "[('auth-service', [200]), ('catalog-api', [200, 200, 200, 200, 404]), ('checkout-api', [201, 500]), ('iot-gateway', [201, 201]), ('search-api', [200, 200])]\n",
+   "error": null
+  },
+  "e5": {
+   "stdout": "+------------+--------+-------------+\n|     service|requests|server_errors|\n+------------+--------+-------------+\n|auth-service|       1|            0|\n| catalog-api|       5|            0|\n|checkout-api|       2|            1|\n| iot-gateway|       2|            0|\n|  search-api|       2|            0|\n+------------+--------+-------------+\n\n",
+   "error": null
+  },
+  "e6": {
+   "stdout": "",
+   "error": {
+    "type": "Py4JJavaError",
+    "message": "org.apache.spark.SparkException: Job aborted due to stage failure: Task 0 in stage 0.0 failed 1 times, most recent failure: Lost task 0.0 in stage 0.0 (TID 0) (localhost executor driver): org.apache.spark.api.python.PythonException: Traceback (most recent call last):",
+    "line": 2,
+    "condition": null
+   }
+  }
+ }
+}

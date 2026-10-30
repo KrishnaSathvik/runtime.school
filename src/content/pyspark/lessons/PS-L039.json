@@ -1,0 +1,128 @@
+{
+  "id": "PS-L039",
+  "minutes": 25,
+  "lede": "A basket holds several products, a post several tags, an API response several line items. Arrays keep those lists in one row; `explode` turns each element into a row of its own so you can work with them one by one.",
+  "objectives": [
+    "Turn each array element into its own row with `F.explode`, and keep empty arrays with `F.explode_outer`",
+    "Number the elements with `F.posexplode`",
+    "Build arrays from columns with `F.array` and `F.array_repeat`, and explode an array of structs into columns",
+    "Check and tidy arrays with `F.array_contains`, `F.array_distinct` and `F.sort_array`"
+  ],
+  "dataset": {
+    "id": "PS-D01",
+    "version": "1.1.0",
+    "edition": "lesson",
+    "tables": [
+      "products",
+      "order_items"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "The shop's tables keep one value per cell, but data often arrives with lists inside. Suppose the mobile app sends each basket as an order id with a list of product ids. The examples build small DataFrames like that with `spark.createDataFrame`; `products` and `order_items` are loaded as usual, and `F` is `pyspark.sql.functions`.\n\n`F.explode(col)` makes **one row per element** of the array. The other selected columns are repeated on each of those rows."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "One row per product in a basket",
+      "code": "from pyspark.sql import functions as F\n\nbaskets = spark.createDataFrame(\n    [(\"O00001\", [\"P005\", \"P005\", \"P004\"]), (\"O00002\", [\"P001\"]), (\"O00003\", [\"P001\", \"P007\", \"P003\"])],\n    \"order_id STRING, product_ids ARRAY<STRING>\",\n)\nbaskets.show(truncate=False)\n\nbaskets.select(\"order_id\", F.explode(\"product_ids\").alias(\"product_id\")).show()\n",
+      "note": "Three baskets become seven rows, one per element, and `order_id` repeats on each. Repeated elements, like O00001's two P005s, give two rows."
+    },
+    {
+      "kind": "text",
+      "md": "A row whose array is empty or missing has no elements, so `explode` gives it **no rows**: it disappears. When every row must survive, use `F.explode_outer`, which gives such a row once, with NULL for the element."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "Empty and missing arrays",
+      "code": "from pyspark.sql import functions as F\n\nbaskets = spark.createDataFrame(\n    [(\"O00001\", [\"P005\", \"P004\"]), (\"O00013\", []), (\"O00014\", None)],\n    \"order_id STRING, product_ids ARRAY<STRING>\",\n)\n\nbaskets.select(\"order_id\", F.explode(\"product_ids\").alias(\"product_id\")).show()\nbaskets.select(\"order_id\", F.explode_outer(\"product_ids\").alias(\"product_id\")).show()\n",
+      "note": "With `explode`, O00013 and O00014 vanish. With `explode_outer` each stays as one row with a NULL `product_id`."
+    },
+    {
+      "kind": "text",
+      "md": "`F.posexplode(col)` also gives each element's position, starting at 0. It makes two columns, so name both at once: `.alias(\"pos\", \"product_id\")`.\n\nYou can build arrays from columns too. `F.array(\"a\", \"b\")` puts several columns of the same type into one array. `F.array_repeat(value, n)` repeats a value `n` times, and `n` can be a column, so `F.array_repeat(\"product_id\", \"quantity\")` lists a product once per unit ordered."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Positions, and one row per unit",
+      "code": "from pyspark.sql import functions as F\n\nunits = order_items.select(\"order_id\", \"line_no\", F.array_repeat(\"product_id\", \"quantity\").alias(\"units\"))\nunits.show(3, truncate=False)\n\nunits.select(\"order_id\", \"line_no\", F.posexplode(\"units\").alias(\"pos\", \"product_id\")).show(7)\n",
+      "note": "O00001's first line ordered 3 units of P005, so its array repeats P005 three times and explodes into positions 0, 1 and 2. A quantity of 0 would give an empty array, and no rows."
+    },
+    {
+      "kind": "text",
+      "md": "Arrays can hold structs, as JSON line items often do. Exploding gives one struct per row, and `\"col.*\"` from the structs lesson spreads its fields into columns.\n\nTo put a fixed value into a struct, `F.lit(value)` makes a column holding that same value on every row. Building an array of labelled structs and exploding it turns several columns into rows, a common way to reshape a wide table into a long one."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Explode an array of structs",
+      "code": "from pyspark.sql import functions as F\n\nlong = products.select(\n    \"product_id\",\n    F.explode(F.array(\n        F.struct(F.lit(\"name\").alias(\"field\"), F.col(\"name\").alias(\"value\")),\n        F.struct(F.lit(\"category\").alias(\"field\"), F.col(\"category\").alias(\"value\")),\n    )).alias(\"entry\"),\n)\nlong.printSchema()\nlong.select(\"product_id\", \"entry.*\").show()\n",
+      "note": "Eight products become sixteen rows: each product's name and category, labelled by `field`. Every struct in an array must have the same fields and types."
+    },
+    {
+      "kind": "text",
+      "md": "Some questions don't need exploding at all; functions work on the whole array:\n\n- `F.array_contains(col, value)`: true if the value is in the array.\n- `F.array_distinct(col)`: the array without repeats, in first-seen order.\n- `F.sort_array(col)`: sorted ascending (`asc=False` for descending).\n- `F.size(col)`: how many elements, as before."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Work on the whole array",
+      "code": "from pyspark.sql import functions as F\n\nbaskets = spark.createDataFrame(\n    [(\"O00001\", [\"P005\", \"P005\", \"P004\"]), (\"O00003\", [\"P001\", \"P007\", \"P003\"]), (\"O00008\", [\"P004\", \"P002\", \"P004\"])],\n    \"order_id STRING, product_ids ARRAY<STRING>\",\n)\n\nbaskets.select(\n    \"order_id\",\n    F.array_contains(\"product_ids\", \"P004\").alias(\"has_p004\"),\n    F.array_distinct(\"product_ids\").alias(\"distinct_ids\"),\n    F.sort_array(\"product_ids\").alias(\"sorted_ids\"),\n    F.size(F.array_distinct(\"product_ids\")).alias(\"different\"),\n).show(truncate=False)\n",
+      "note": "Every row stays a single row. O00008 has P004 twice, so it has two different products, not three."
+    }
+  ],
+  "challenges": [
+    "PS-L039-C1",
+    "PS-L039-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "A DataFrame has three rows with arrays of 2, 0 and 3 elements. How many rows does `select(\"id\", F.explode(\"items\"))` return?",
+      "choices": [
+        "3",
+        "5",
+        "6",
+        "An error, because one array is empty"
+      ],
+      "answer": 1,
+      "why": "One row per element: 2 + 0 + 3 = 5. The row with an empty array disappears; `explode_outer` would keep it as one row with NULL, giving 6."
+    },
+    {
+      "id": "k2",
+      "prompt": "What positions does `F.posexplode` give for an array of three elements?",
+      "choices": [
+        "1, 2, 3",
+        "0, 1, 2",
+        "3, 2, 1",
+        "0, 0, 0"
+      ],
+      "answer": 1,
+      "why": "Positions start at 0, like array indexes."
+    },
+    {
+      "id": "k3",
+      "prompt": "What does `F.array_repeat(\"product_id\", \"quantity\")` give on a line with quantity 0?",
+      "choices": [
+        "An array with one element",
+        "NULL",
+        "An empty array, so exploding it gives no rows",
+        "An error"
+      ],
+      "answer": 2,
+      "why": "Repeating a value zero times gives an empty array, which `explode` turns into no rows."
+    }
+  ],
+  "review": [
+    "`F.explode(col)` gives one row per array element; the other selected columns repeat.",
+    "`explode` drops rows whose array is empty or missing; `explode_outer` keeps them with NULL.",
+    "`F.posexplode(col).alias(\"pos\", \"value\")` adds each element's position, from 0.",
+    "`F.array(...)` builds an array from columns; `F.array_repeat(value, n)` repeats a value `n` times.",
+    "Explode an array of structs, then use `\"col.*\"` to spread the fields; `F.lit` puts a fixed value in a column.",
+    "`array_contains`, `array_distinct`, `sort_array` and `size` work on the whole array without exploding."
+  ],
+  "practice": ["PS-Q0191", "PS-Q0192", "PS-Q0193", "PS-Q0194", "PS-Q0195"]
+}

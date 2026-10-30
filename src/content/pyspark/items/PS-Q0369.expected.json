@@ -1,0 +1,222 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "event_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "shipment_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "warehouse_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "event_type",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "event_time",
+     "type": "timestamp",
+     "nullable": true
+    },
+    {
+     "name": "location",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "sequence",
+     "type": "bigint",
+     "nullable": true
+    },
+    {
+     "name": "is_correction",
+     "type": "boolean",
+     "nullable": true
+    },
+    {
+     "name": "load_date",
+     "type": "date",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "E0000001",
+     "SH0002",
+     "WH01",
+     "created",
+     "2026-03-03T08:03:00",
+     "WH01",
+     100001,
+     false,
+     "2026-03-03"
+    ],
+    [
+     "E0000002",
+     "SH0004",
+     "WH02",
+     "created",
+     "2026-03-03T09:30:00",
+     "WH02",
+     100002,
+     false,
+     "2026-03-03"
+    ],
+    [
+     "E0000003",
+     "SH0003",
+     "WH02",
+     "created",
+     "2026-03-03T12:17:00",
+     "WH02",
+     100003,
+     false,
+     "2026-03-03"
+    ],
+    [
+     "E0000004",
+     "SH0001",
+     "WH03",
+     "created",
+     "2026-03-03T12:24:00",
+     "WH03",
+     100004,
+     false,
+     "2026-03-03"
+    ],
+    [
+     "E0000005",
+     "SH0004",
+     "WH02",
+     "departed",
+     "2026-03-03T14:29:00",
+     "WH02",
+     100005,
+     false,
+     "2026-03-03"
+    ],
+    [
+     "E0000006",
+     "SH0002",
+     "WH01",
+     "departed",
+     "2026-03-03T15:42:00",
+     "WH01",
+     100006,
+     false,
+     "2026-03-03"
+    ],
+    [
+     "E0000007",
+     "SH0001",
+     "WH03",
+     "departed",
+     "2026-03-03T16:06:00",
+     "WH03",
+     100007,
+     false,
+     "2026-03-03"
+    ],
+    [
+     "E0000008",
+     "SH0003",
+     "WH02",
+     "departed",
+     "2026-03-03T18:00:00",
+     "WH02",
+     100008,
+     false,
+     "2026-03-03"
+    ],
+    [
+     "E0000010",
+     "SH0002",
+     "WH01",
+     "delivered",
+     "2026-03-07T12:34:00",
+     "Malm\u00f6",
+     100010,
+     false,
+     "2026-03-07"
+    ],
+    [
+     "E0000011",
+     "SH0001",
+     "WH03",
+     "delivered",
+     "2026-03-07T19:50:00",
+     "Wroc\u0142aw",
+     100011,
+     false,
+     "2026-03-07"
+    ],
+    [
+     "E0000009",
+     "SH0003",
+     "WH02",
+     "delivered",
+     "2026-03-06T08:53:00",
+     "Turin",
+     100009,
+     false,
+     "2026-03-06"
+    ],
+    [
+     "E0000012",
+     "SH0004",
+     "WH02",
+     "delivered",
+     "2026-03-08T20:50:00",
+     "Graz",
+     100012,
+     false,
+     "2026-03-08"
+    ],
+    [
+     "E0000013",
+     "SH9999",
+     "WH02",
+     "departed",
+     "2026-03-08T21:20:00",
+     "WH02",
+     100013,
+     false,
+     "2026-03-08"
+    ],
+    [
+     "E0000007",
+     "SH0001",
+     "WH03",
+     "departed",
+     "2026-03-03T16:06:00",
+     "WH03",
+     100007,
+     false,
+     "2026-03-04"
+    ]
+   ],
+   "row_count": 14
+  }
+ },
+ "hidden": [
+  "the full practice feed: thirty load days, some events loaded days late",
+  "the same row twice in one load day",
+  "an event loaded again the next day",
+  "events that load days after they happened, in every delivery"
+ ]
+}

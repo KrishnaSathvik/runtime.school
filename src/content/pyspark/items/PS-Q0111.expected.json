@@ -1,0 +1,269 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "claim_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "dates_in_order",
+     "type": "boolean",
+     "nullable": false
+    },
+    {
+     "name": "billed_positive",
+     "type": "boolean",
+     "nullable": false
+    },
+    {
+     "name": "status_known",
+     "type": "boolean",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "CLM000001",
+     true,
+     true,
+     true
+    ],
+    [
+     "CLM000002",
+     true,
+     true,
+     true
+    ],
+    [
+     "CLM000003",
+     false,
+     true,
+     true
+    ],
+    [
+     "CLM000004",
+     true,
+     true,
+     true
+    ],
+    [
+     "CLM000005",
+     true,
+     true,
+     true
+    ],
+    [
+     "CLM000006",
+     true,
+     true,
+     true
+    ],
+    [
+     "CLM000007",
+     true,
+     true,
+     true
+    ],
+    [
+     "CLM000008",
+     true,
+     true,
+     true
+    ],
+    [
+     "CLM000009",
+     true,
+     false,
+     true
+    ],
+    [
+     "CLM000010",
+     false,
+     true,
+     false
+    ],
+    [
+     "CLM000010",
+     false,
+     true,
+     false
+    ]
+   ],
+   "row_count": 11,
+   "inputs": {
+    "claims": [
+     [
+      "CLM000001",
+      "ENC000001",
+      "PAT00003",
+      "PRV0004",
+      "Bluebird Health",
+      "2025-12-03",
+      "2025-12-18",
+      "2724.83",
+      null,
+      null,
+      "submitted",
+      null
+     ],
+     [
+      "CLM000002",
+      "ENC000002",
+      "PAT00002",
+      "PRV0001",
+      "Bluebird Health",
+      "2025-12-18",
+      "2026-01-01",
+      "217.82",
+      "0.00",
+      "0.00",
+      "denied",
+      "out_of_network"
+     ],
+     [
+      "CLM000003",
+      "ENC000003",
+      "PAT00001",
+      "PRV0002",
+      "Summit Senior Advantage",
+      "2025-12-20",
+      "2025-12-17",
+      "200.80",
+      "166.46",
+      "166.46",
+      "paid",
+      null
+     ],
+     [
+      "CLM000004",
+      "ENC000004",
+      "PAT00002",
+      "PRV0002",
+      "Bluebird Health",
+      "2026-01-13",
+      "2026-01-26",
+      "332.53",
+      "185.17",
+      null,
+      "approved",
+      null
+     ],
+     [
+      "CLM000005",
+      "ENC000005",
+      "PAT00005",
+      "PRV0003",
+      "Bluebird Health",
+      "2026-01-16",
+      "2026-01-19",
+      "458.05",
+      "339.79",
+      "339.79",
+      "paid",
+      null
+     ],
+     [
+      "CLM000006",
+      "ENC000006",
+      "PAT00006",
+      "PRV0001",
+      "Bluebird Health",
+      "2026-01-17",
+      "2026-02-13",
+      "23227.37",
+      "10680.23",
+      "10680.23",
+      "paid",
+      null
+     ],
+     [
+      "CLM000007",
+      "ENC000007",
+      "PAT00001",
+      "PRV0005",
+      "Summit Senior Advantage",
+      "2026-01-30",
+      "2026-02-27",
+      "154.34",
+      "134.08",
+      "134.08",
+      "paid",
+      null
+     ],
+     [
+      "CLM000008",
+      "ENC000008",
+      "PAT00003",
+      "PRV0004",
+      "Bluebird Health",
+      "2026-02-02",
+      "2026-02-02",
+      "310.00",
+      null,
+      null,
+      "submitted",
+      null
+     ],
+     [
+      "CLM000009",
+      "ENC000009",
+      "PAT00004",
+      "PRV0001",
+      "Bluebird Health",
+      "2026-02-03",
+      "2026-02-10",
+      "0.00",
+      null,
+      null,
+      "submitted",
+      null
+     ],
+     [
+      "CLM000010",
+      "ENC000010",
+      "PAT00005",
+      "PRV0002",
+      "Summit Senior Advantage",
+      null,
+      "2026-02-12",
+      "145.20",
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "CLM000010",
+      "ENC000010",
+      "PAT00005",
+      "PRV0002",
+      "Summit Senior Advantage",
+      null,
+      "2026-02-12",
+      "145.20",
+      null,
+      null,
+      null,
+      null
+     ]
+    ]
+   }
+  }
+ },
+ "hidden": [
+  "the full practice claims table",
+  "claims submitted before, on and after the visit, and claims with a missing date",
+  "billed amounts of 0.00, 0.01, below zero and missing",
+  "statuses in the wrong case, unknown and missing",
+  "the same claim row delivered twice",
+  "an empty claims table"
+ ]
+}

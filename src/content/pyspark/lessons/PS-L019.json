@@ -1,0 +1,129 @@
+{
+  "id": "PS-L019",
+  "minutes": 25,
+  "lede": "Real readings go missing in more than one way: an empty value, a number that isn't a number, or a code like -9999 that only means \"nothing here\". Each needs a different test, and getting it wrong quietly corrupts every average and filter downstream.",
+  "objectives": [
+    "Find missing values with `isNull` and `isNotNull`, and see why `== None` finds nothing",
+    "Tell NaN from NULL, find it with `isnan`, and know how it compares",
+    "Turn a sentinel code like -9999 into a real missing value with `na.replace`",
+    "Drop or fill missing values with `dropna`, `fillna` and `coalesce`"
+  ],
+  "dataset": {
+    "id": "PS-D13",
+    "version": "1.0.0",
+    "edition": "lesson",
+    "tables": [
+      "observations"
+    ]
+  },
+  "blocks": [
+    {
+      "kind": "text",
+      "md": "The `observations` table above has one weather reading per row. It's loaded as a DataFrame called `observations`, and `F` is `pyspark.sql.functions`. Three readings are broken in three different ways: one has no temperature, one rain gauge reported a fault, and one station sent its code for \"no value\" instead of a pressure.\n\nAn empty value is `NULL`. You can't find it with `==`: a comparison with `NULL` is never true (lesson 10), not even `== None`. Use `F.col(\"x\").isNull()` or `isNotNull()`."
+    },
+    {
+      "kind": "example",
+      "id": "e1",
+      "title": "Find the empty temperature",
+      "code": "from pyspark.sql import functions as F\n\nprint(observations.filter(F.col(\"temperature_c\") == None).count(), \"rows with == None\")\n\nobservations.filter(F.col(\"temperature_c\").isNull()).select(\"observation_id\", \"station_id\", \"temperature_c\").show()\n",
+      "note": "`== None` compares with `NULL`, which is never true, so it finds nothing and raises no error. `isNull()` finds the one reading."
+    },
+    {
+      "kind": "text",
+      "md": "**NaN** (\"not a number\") is different. It's a real `double` value, the result of a calculation that failed, and here it marks a rain-gauge fault. `isNull()` is false for NaN; `F.isnan(col)` finds it.\n\nNaN also compares in its own way in Spark: NaN equals NaN, and it's **bigger than every other number**. So `precipitation_mm > 0` is true for a fault, and a filter for \"rain fell\" would keep it unless you leave NaN out."
+    },
+    {
+      "kind": "example",
+      "id": "e2",
+      "title": "NaN is not NULL",
+      "code": "from pyspark.sql import functions as F\n\nobservations.select(\n    \"observation_id\",\n    \"precipitation_mm\",\n    F.col(\"precipitation_mm\").isNull().alias(\"is_null\"),\n    F.isnan(\"precipitation_mm\").alias(\"is_nan\"),\n    (F.col(\"precipitation_mm\") > 0).alias(\"more_than_0\"),\n).show()\n",
+      "note": "OBS-000006 is NaN: not null, but `isnan` is true, and so is `> 0`. Only the last two readings really had rain."
+    },
+    {
+      "kind": "text",
+      "md": "The third kind is a **sentinel**: an ordinary number that a system uses to mean \"missing\", here -9999. Spark can't know that, so it would happily average it. Turn it into a real `NULL` first. `df.na.replace(-9999, None, subset=[...])` does that in the columns you list and leaves the rest alone; `F.when` from lesson 17 works too."
+    },
+    {
+      "kind": "example",
+      "id": "e3",
+      "title": "Turn -9999 into NULL",
+      "code": "readings = [\"temperature_c\", \"humidity_pct\", \"wind_speed_kph\", \"pressure_hpa\"]\ncleaned = observations.na.replace(-9999, None, subset=readings)\n\nobservations.select(\"observation_id\", \"pressure_hpa\").show(3)\ncleaned.select(\"observation_id\", \"pressure_hpa\").show(3)\n",
+      "note": "OBS-000002's pressure of -9999.0 is `NULL` afterwards. Every other value, and every other column, is unchanged."
+    },
+    {
+      "kind": "text",
+      "md": "Once missing values are real `NULL`s, you can drop or fill them.\n\n- `df.dropna()` drops a row if any column is missing. `subset=[...]` checks only some columns, `how=\"all\"` drops a row only when all of them are missing, and `thresh=n` keeps rows with at least `n` values present. For number columns, NaN counts as missing too.\n- `df.fillna(value)` puts `value` in place of missing values, in the columns of a matching type; a dict like `{\"temperature_c\": 0.0}` fills column by column. Number columns get their NaNs filled as well.\n- `F.coalesce(a, b, ...)` takes the first value that isn't `NULL`, row by row."
+    },
+    {
+      "kind": "example",
+      "id": "e4",
+      "title": "Drop rows with missing values",
+      "code": "readings = [\"temperature_c\", \"humidity_pct\", \"precipitation_mm\", \"wind_speed_kph\", \"pressure_hpa\"]\ncleaned = observations.na.replace(-9999, None, subset=readings)\n\nprint(cleaned.count(), \"readings\")\nprint(cleaned.dropna(subset=readings).count(), \"with all five measurements\")\nprint(cleaned.dropna(subset=[\"temperature_c\"]).count(), \"with a temperature\")\nprint(cleaned.dropna(thresh=4, subset=readings).count(), \"with at least four of the five\")\n",
+      "note": "Three readings are each missing one measurement, so nine have all five. The NaN reading counts as missing. Every reading still has at least four."
+    },
+    {
+      "kind": "example",
+      "id": "e5",
+      "title": "Fill missing values",
+      "code": "from pyspark.sql import functions as F\n\nsmall = observations.select(\"observation_id\", \"temperature_c\", \"precipitation_mm\")\n\nsmall.fillna({\"precipitation_mm\": 0.0}).select(\"observation_id\", \"precipitation_mm\").show(7)\n\nsmall.select(\n    \"observation_id\",\n    \"temperature_c\",\n    F.coalesce(F.col(\"temperature_c\"), F.lit(-99.0)).alias(\"temperature_or_marker\"),\n).show(12)\n",
+      "note": "`fillna` turned the NaN fault into 0.0, which says it was dry: only fill when the value you put in is true. `coalesce` keeps each temperature and uses -99.0 only for the empty one; `F.lit(-99.0)` is a column with that same value on every row."
+    }
+  ],
+  "challenges": [
+    "PS-L019-C1",
+    "PS-L019-C2"
+  ],
+  "concept": [
+    {
+      "id": "k1",
+      "prompt": "How many rows does `observations.filter(F.col(\"temperature_c\") == None)` keep when one reading has no temperature?",
+      "choices": [
+        "0",
+        "1",
+        "All of them",
+        "It stops with an error"
+      ],
+      "answer": 0,
+      "why": "A comparison with `NULL` is never true, so nothing passes. Use `isNull()` to find empty values."
+    },
+    {
+      "id": "k2",
+      "prompt": "`precipitation_mm` is NaN on a row. Which of these is true for that row?",
+      "choices": [
+        "`isNull()` is true",
+        "`F.isnan(...)` is true and `> 0` is false",
+        "`F.isnan(...)` is true and `> 0` is true",
+        "Every comparison is NULL"
+      ],
+      "answer": 2,
+      "why": "NaN is a value, not `NULL`, so `isNull()` is false. Spark treats NaN as bigger than every other number, so `> 0` is true."
+    },
+    {
+      "id": "k3",
+      "prompt": "A pressure column holds -9999 meaning \"no reading\". What does `dropna(subset=[\"pressure_hpa\"])` do with that row?",
+      "choices": [
+        "Drops it, because -9999 means missing",
+        "Keeps it: -9999 is an ordinary number to Spark",
+        "Turns -9999 into NULL",
+        "Stops with an error"
+      ],
+      "answer": 1,
+      "why": "Spark doesn't know the code. Replace it first with `na.replace(-9999, None, subset=[...])`, then drop or fill."
+    }
+  ],
+  "review": [
+    "Find empty values with `isNull()` and `isNotNull()`; `== None` is never true.",
+    "NaN is a value, not `NULL`. Find it with `F.isnan`. In Spark NaN equals NaN and is bigger than every number.",
+    "A sentinel like -9999 is just a number to Spark. Turn it into `NULL` with `na.replace(-9999, None, subset=[...])` or `F.when`.",
+    "`dropna` drops rows with missing values; `subset`, `how` and `thresh` choose which. NaN counts as missing.",
+    "`fillna` fills missing values (and NaN in number columns); `F.coalesce` takes the first value that isn't `NULL`.",
+    "Fill only with a value that's true: a gauge fault isn't a dry hour."
+  ],
+  "practice": [
+    "PS-Q0091",
+    "PS-Q0092",
+    "PS-Q0093",
+    "PS-Q0094",
+    "PS-Q0095"
+  ]
+}

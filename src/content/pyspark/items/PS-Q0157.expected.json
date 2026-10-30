@@ -1,0 +1,69 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "campaign_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "impressions",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "users",
+     "type": "bigint",
+     "nullable": false
+    },
+    {
+     "name": "mobile_users",
+     "type": "bigint",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "CMP-0003",
+     3,
+     3,
+     0
+    ],
+    [
+     "CMP-0002",
+     3,
+     3,
+     2
+    ],
+    [
+     "CMP-0004",
+     2,
+     2,
+     1
+    ],
+    [
+     "CMP-0001",
+     4,
+     4,
+     3
+    ]
+   ],
+   "row_count": 4
+  }
+ },
+ "hidden": [
+  "the full practice impressions",
+  "the same user shown an ad many times on mobile",
+  "a campaign never shown on mobile",
+  "impressions with a missing user or device",
+  "a user seen on several devices",
+  "no impressions"
+ ]
+}

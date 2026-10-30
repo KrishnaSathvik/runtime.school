@@ -1,0 +1,56 @@
+{
+  "id": "PS-L024-C1",
+  "slug": "quarantine-bad-events",
+  "lesson": "PS-L024",
+  "difficulty": "hard",
+  "minutes": 14,
+  "title": "Quarantine bad events",
+  "dataset": {
+    "id": "PS-D08",
+    "version": "1.0.0"
+  },
+  "prompt": "Tracking events that can't be loaded go to a quarantine table, with every column and the reason. Write `solve(shipment_events, shipments)` so it returns the quarantined events.",
+  "rules": [
+    "Check in this order and use the first reason that applies: `unknown shipment` (`shipment_id` missing or not in `shipments`), `unknown event type` (missing, or not one of created, picked, departed, in_transit, out_for_delivery, delivered, exception), `missing event time`, `missing sequence`.",
+    "Event types are exact: `Delivered` is not `delivered`.",
+    "Return only the quarantined events, with every column of `shipment_events` unchanged plus `reason` at the end. Keep duplicate rows."
+  ],
+  "hints": [
+    "Get the known ids as a Python list: `[row[\"shipment_id\"] for row in shipments.collect()]`, then use `isin`.",
+    "Build the reason with a `F.when(...).when(...)` chain in the order given, with no `otherwise`. Each rule must also catch a missing value with `isNull()`.",
+    "`select(\"*\", reason.alias(\"reason\"))` keeps every column and adds the new one at the end."
+  ],
+  "entry": "solve",
+  "inputs": [
+    "shipment_events",
+    "shipments"
+  ],
+  "starter": "from pyspark.sql import functions as F\n\nEVENT_TYPES = [\"created\", \"picked\", \"departed\", \"in_transit\", \"out_for_delivery\", \"delivered\", \"exception\"]\n\n\ndef solve(shipment_events, shipments):\n    # Return the quarantined events with every column plus reason.\n    return shipment_events\n",
+  "output": {
+    "columns": [
+      "event_id",
+      "shipment_id",
+      "warehouse_id",
+      "event_type",
+      "event_time",
+      "location",
+      "sequence",
+      "load_date",
+      "is_correction",
+      "reason"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

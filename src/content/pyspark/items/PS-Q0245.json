@@ -1,0 +1,52 @@
+{
+  "id": "PS-Q0245",
+  "slug": "when-failed-spans-ended",
+  "lesson": "PS-L049",
+  "role": "integration",
+  "format": "dataframe_coding",
+  "difficulty": "medium",
+  "minutes": 10,
+  "title": "When the failed spans ended",
+  "dataset": {
+    "id": "PS-D15",
+    "version": "1.0.0"
+  },
+  "prompt": "To line traces up with the logs, the team needs the time each failed span ended. Write `solve(traces)` so it returns `span_id`, `service`, `started_at` and `ended_at` for every span whose `status` is `error`.",
+  "rules": [
+    "A span failed when `status` is exactly `error`.",
+    "`ended_at` is `started_at` plus `duration_ms` milliseconds. If either is missing, `ended_at` is missing.",
+    "Return `span_id`, `service` (text), `started_at` and `ended_at` (both timestamps), in that order. Keep repeated spans. No failed spans gives an empty result."
+  ],
+  "hints": [
+    "Keep the failed spans with a DataFrame `filter` first, or with an RDD `filter`: either works.",
+    "In a `map`, a timestamp arrives as a Python `datetime`. `datetime + timedelta(milliseconds=n)` adds milliseconds.",
+    "Return `None` for `ended_at` when a value is missing, and finish with `toDF(\"span_id string, service string, started_at timestamp, ended_at timestamp\")`."
+  ],
+  "explanation": "Filter the failed spans (`traces.filter(F.col(\"status\") == \"error\")`), then map each row to a tuple whose last item is `started_at + timedelta(milliseconds=duration_ms)`, or `None` when either part is missing. Python `datetime` values go back into a `timestamp` column through the schema string in `toDF`. `timedelta(seconds=...)` is the usual slip: it makes a 236 ms span last four minutes. Returning `isoformat()` text instead of the `datetime` would give a text column.",
+  "entry": "solve",
+  "inputs": [
+    "traces"
+  ],
+  "starter": "from datetime import timedelta\n\nfrom pyspark.sql import functions as F\n\n\ndef solve(traces):\n    # The failed spans and the time each one ended.\n    return traces\n",
+  "output": {
+    "columns": [
+      "span_id",
+      "service",
+      "started_at",
+      "ended_at"
+    ],
+    "order_sensitive": false
+  },
+  "visible": [
+    {
+      "id": "sample",
+      "edition": "lesson"
+    }
+  ],
+  "limits": {
+    "run_timeout_s": 45,
+    "check_timeout_s": 90,
+    "preview_rows": 100,
+    "max_rows": 10000
+  }
+}

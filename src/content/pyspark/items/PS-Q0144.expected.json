@@ -1,0 +1,62 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "product_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "price",
+     "type": "decimal(10,2)",
+     "nullable": true
+    }
+   ],
+   "rows": [
+    [
+     "PRD-001",
+     "12.00"
+    ],
+    [
+     "PRD-002",
+     "69.00"
+    ],
+    [
+     "PRD-003",
+     "8.90"
+    ],
+    [
+     "PRD-004",
+     "4.50"
+    ],
+    [
+     "PRD-005",
+     "39.00"
+    ],
+    [
+     "PRD-002",
+     "74.50"
+    ],
+    [
+     "PRD-002",
+     "65.00"
+    ]
+   ],
+   "row_count": 7
+  }
+ },
+ "hidden": [
+  "the full practice product feed and invoice lines",
+  "a price that appears only on an invoice line",
+  "the same price on the feed and on many lines",
+  "missing prices on both sides",
+  "no invoice lines"
+ ]
+}

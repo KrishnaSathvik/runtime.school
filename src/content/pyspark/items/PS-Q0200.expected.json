@@ -1,0 +1,153 @@
+{
+ "generated_by": "services/spark-runner/run.py build-expected",
+ "engine": {
+  "spark": "4.0.1",
+  "python": "3.11.17",
+  "java": "17.0.20.1"
+ },
+ "visible": {
+  "sample": {
+   "schema": [
+    {
+     "name": "log_id",
+     "type": "string",
+     "nullable": true
+    },
+    {
+     "name": "record",
+     "type": "struct<service:string,level:string,origin:struct<host:string,region:string>,entries:int>",
+     "nullable": false
+    }
+   ],
+   "rows": [
+    [
+     "LOG-000001",
+     {
+      "service": "catalog-api",
+      "level": "INFO",
+      "origin": {
+       "host": "catalog-api-7f9c2",
+       "region": "us-east"
+      },
+      "entries": 4
+     }
+    ],
+    [
+     "LOG-000002",
+     {
+      "service": "auth-service",
+      "level": "INFO",
+      "origin": {
+       "host": "auth-service-a41d8",
+       "region": "us-east"
+      },
+      "entries": 4
+     }
+    ],
+    [
+     "LOG-000003",
+     {
+      "service": "checkout-api",
+      "level": "INFO",
+      "origin": {
+       "host": "checkout-api-7f9c2",
+       "region": "us-west"
+      },
+      "entries": 5
+     }
+    ],
+    [
+     "LOG-000004",
+     {
+      "service": "search-api",
+      "level": "INFO",
+      "origin": {
+       "host": "search-api-c03be",
+       "region": "eu-west"
+      },
+      "entries": 5
+     }
+    ],
+    [
+     "LOG-000005",
+     {
+      "service": "iot-gateway",
+      "level": "INFO",
+      "origin": {
+       "host": "iot-gateway-a41d8",
+       "region": "ap-south"
+      },
+      "entries": 5
+     }
+    ],
+    [
+     "LOG-000006",
+     {
+      "service": "checkout-api",
+      "level": "ERROR",
+      "origin": {
+       "host": "checkout-api-a41d8",
+       "region": "us-east"
+      },
+      "entries": 5
+     }
+    ],
+    [
+     "LOG-000007",
+     {
+      "service": "iot-gateway",
+      "level": "WARN",
+      "origin": {
+       "host": "iot-gateway-a41d8",
+       "region": null
+      },
+      "entries": 3
+     }
+    ],
+    [
+     "LOG-000008",
+     {
+      "service": "iot-gateway",
+      "level": "INFO",
+      "origin": {
+       "host": "iot-gateway-a41d8",
+       "region": "ap-south"
+      },
+      "entries": 5
+     }
+    ],
+    [
+     "LOG-000009",
+     {
+      "service": "search-api",
+      "level": "INFO",
+      "origin": {
+       "host": "search-api-7f9c2",
+       "region": "us-east"
+      },
+      "entries": 5
+     }
+    ],
+    [
+     "LOG-000010",
+     {
+      "service": "notification-worker",
+      "level": "ERROR",
+      "origin": {
+       "host": "notification-worker-7f9c2",
+       "region": null
+      },
+      "entries": 2
+     }
+    ]
+   ],
+   "row_count": 10
+  }
+ },
+ "hidden": [
+  "the full practice log lines",
+  "an empty map and no map at all",
+  "lines without a region or host, or with a key stored with no value",
+  "an empty log table"
+ ]
+}
