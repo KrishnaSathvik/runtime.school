@@ -6,7 +6,7 @@
     "postinstall": "node scripts/copy-pyodide.mjs",
     "predev": "npm run datasets:canonical && npm run datasets:python && node scripts/copy-pyodide.mjs",
     "dev": "next dev --turbopack",
-    "prebuild": "npm run datasets:canonical && npm run datasets:python && node scripts/copy-pyodide.mjs",
+    "prebuild": "node scripts/prebuild-cache.mjs restore && npm run datasets:canonical && npm run datasets:python && node scripts/copy-pyodide.mjs && node scripts/prebuild-cache.mjs save",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
