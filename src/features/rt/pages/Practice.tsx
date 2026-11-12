@@ -144,15 +144,14 @@ export function PracticeTask({ slug }: { slug: string }) {
           />
         </div>
 
-        {listOpen && (
-          <div className="rx-drawer" role="dialog" aria-label="All questions">
-            <div className="rx-drawer-head">
-              <span className="rx-small" style={{ flex: 1, margin: 0 }}>Practice questions</span>
-              <button type="button" className="rx-btn ghost" onClick={() => setListOpen(false)} aria-label="Close list"><X size={14} /></button>
-            </div>
-            <PracticeIndex compact currentId={q.id} onPick={() => setListOpen(false)} />
+        {/* Always rendered, hidden until opened: the links are in the server HTML, so search engines reach every question. */}
+        <div className="rx-drawer" role="dialog" aria-label="All questions" hidden={!listOpen}>
+          <div className="rx-drawer-head">
+            <span className="rx-small" style={{ flex: 1, margin: 0 }}>Practice questions</span>
+            <button type="button" className="rx-btn ghost" onClick={() => setListOpen(false)} aria-label="Close list"><X size={14} /></button>
           </div>
-        )}
+          <PracticeIndex compact currentId={q.id} onPick={() => setListOpen(false)} />
+        </div>
 
         <div className="rx-task-split">
           <section className="rx-brief" aria-labelledby="task-title" tabIndex={0}>

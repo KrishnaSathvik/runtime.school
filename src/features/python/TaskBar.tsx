@@ -71,8 +71,8 @@ export function TaskBar({
         <span className="push" />
         <Pager prev={prev} next={next} />
       </div>
-      {open && (
-        <div className="rx-drawer p2-drawer" role="dialog" aria-label={label}>
+      {/* Always rendered, hidden until opened: the links are in the server HTML, so search engines reach every page in the course. */}
+      <div className="rx-drawer p2-drawer" role="dialog" aria-label={label} hidden={!open}>
           <div className="rx-drawer-head">
             <span className="rx-small" style={{ flex: 1, margin: 0 }}>{heading}</span>
             <button type="button" className="rx-btn ghost" onClick={() => setOpen(false)} aria-label="Close list"><X size={14} /></button>
@@ -95,8 +95,7 @@ export function TaskBar({
               </li>
             ))}
           </ol>
-        </div>
-      )}
+      </div>
       {children}
     </div>
   );

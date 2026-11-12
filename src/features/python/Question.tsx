@@ -9,7 +9,7 @@ import { runPython, type PyRunResult } from "@/engine/python/client";
 import { publicExamples } from "@/engine/python/grading";
 import { gradePrediction, type PredictResult } from "@/engine/python/predict";
 import { pyRegistry } from "@/content/python-v2/registry";
-import { pyQuestionHref, visibleQuestions } from "@/content/python-v2/content";
+import { pyLessonHref, pyQuestionHref, visibleLessons, visibleQuestions } from "@/content/python-v2/content";
 import type { VisibleQuestion } from "@/content/python-v2/content";
 import { Shell } from "@/features/rt/Shell";
 import { isGuided, usePy2, usePy2Ready } from "@/lib/python-progress-v2";
@@ -119,6 +119,8 @@ export function QuestionScreen({ slug }: { slug: string }) {
   const i = all.findIndex((q) => q.slug === slug);
   const q = all[i];
   const mod = pyRegistry.modules.find((m) => m.id === q.entry.module)!;
+  // The latest lesson this question builds on: a way back for the learner, and a link from every question into the course.
+  const lesson = visibleLessons().filter((l) => q.entry.prerequisites.includes(l.id)).at(-1);
   const rec = usePy2((s) => s.questions[q.id]);
   const progress = usePy2((s) => s.questions);
   const prev = all[i - 1];
@@ -173,6 +175,7 @@ export function QuestionScreen({ slug }: { slug: string }) {
               </>
             )}
             {q.code && <ExpectedOutput task={q.code.task} />}
+            {lesson && <p className="p2-note">Practises <Link className="rx-link" href={pyLessonHref(lesson.slug)}>lesson {String(lesson.number).padStart(2, "0")}: {lesson.title}</Link></p>}
             {(rec?.solved || rec?.assisted) && (
               <>
                 <div className="p2-label">Explanation</div>

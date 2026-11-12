@@ -248,7 +248,9 @@ html[data-theme="dark"] { --p2-signal: #9fd39a; --p2-signal-soft: #16241a; --p2-
 .p2-quiz-prompt { margin: 8px 0 0; font-size: 14px; color: var(--rx-dim); }
 .p2-q .p2-code { border: 1px solid var(--ide-border); border-radius: 6px; margin: 8px 0; }
 .p2-choices { display: flex; flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 8px; margin-top: 10px; border: 0; padding: 0; }
-.p2-choices label { display: flex; align-items: center; gap: 10px; width: 100%; box-sizing: border-box; margin: 0; padding: 10px 14px; border: 1px solid var(--rx-line-strong); border-radius: 8px; cursor: pointer; }
+/* position: relative keeps the visually hidden radio inside the scrolling work pane. Without it the radio is positioned
+   against .rx-task (overflow: hidden), and focusing it on click scrolls that box, shoving the whole lesson up. */
+.p2-choices label { position: relative; display: flex; align-items: center; gap: 10px; width: 100%; box-sizing: border-box; margin: 0; padding: 10px 14px; border: 1px solid var(--rx-line-strong); border-radius: 8px; cursor: pointer; }
 .p2-choices label:has(.c:not(.prose)) { align-items: flex-start; }
 .p2-choices label:has(input:focus-visible) { outline: 2px solid var(--rx-ink); outline-offset: 2px; }
 .p2-choices label.on:not(.right):not(.wrong) { border-color: var(--rx-ink); }

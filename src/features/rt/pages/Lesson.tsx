@@ -326,8 +326,8 @@ function LessonBar({ lessonId }: { lessonId: number }) {
           next={next !== undefined ? { href: sqlLessonHref(next), label: getLesson(next)?.title ?? "" } : null}
         />
       </div>
-      {open && (
-        <div className="rx-drawer" role="dialog" aria-label="All lessons">
+      {/* Always rendered, hidden until opened: the links are in the server HTML, so search engines reach every lesson. */}
+      <div className="rx-drawer" role="dialog" aria-label="All lessons" hidden={!open}>
           <div className="rx-drawer-head">
             <span className="rx-small" style={{ flex: 1, margin: 0 }}>Course lessons</span>
             <button type="button" className="rx-btn ghost" onClick={() => setOpen(false)} aria-label="Close list"><X size={14} /></button>
@@ -349,8 +349,7 @@ function LessonBar({ lessonId }: { lessonId: number }) {
               </li>
             ))}
           </ol>
-        </div>
-      )}
+      </div>
     </div>
   );
 }
